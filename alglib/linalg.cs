@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.00.0 (source code generated 2023-05-21)
+ALGLIB 4.01.0 (source code generated 2023-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -3098,21 +3098,21 @@ public partial class alglib
     }
     
     /*************************************************************************
-    This function creates sparse matrix in a CRS format (expert function for
-    situations when you are running out of memory).
+    This function creates sparse matrix in a CRS format - the least  flexible
+    but the most efficient format implemented in ALGLIB.
 
     This function creates CRS matrix. Typical usage scenario for a CRS matrix
     is:
-    1. creation (you have to tell number of non-zero elements at each row  at
-       this moment)
-    2. insertion of the matrix elements (row by row, from left to right)
-    3. matrix is passed to some linear algebra algorithm
+    1. creation (you have to tell the number of non-zero elements at each row
+       at this moment)
+    2. initialization of the matrix elements (row by row, from left to right)
+    3. the matrix is passed to some linear algebra algorithm
 
     This function is a memory-efficient alternative to SparseCreate(), but it
     is more complex because it requires you to know in advance how large your
     matrix is. Some  information about  different matrix formats can be found
     in comments on SparseMatrix structure.  We recommend  you  to  read  them
-    before starting to use ALGLIB sparse matrices..
+    before starting to use ALGLIB sparse matrices.
 
     INPUT PARAMETERS
         M           -   number of rows in a matrix, M>=1
@@ -3186,6 +3186,127 @@ public partial class alglib
     {
     
         sparse.sparsecreatecrsbuf(m, n, ner, s.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function creates a CRS-based sparse matrix from  the  dense  matrix.
+
+    This function is intended for situations when you already  have  a  dense
+    matrix and need a convenient way of converting it to the CRS format.
+
+    INPUT PARAMETERS
+        A           -   array[M,N]. If larger, only leading MxN submatrix
+                        will be used.
+        M           -   number of rows in a matrix, M>=1
+        N           -   number of columns in a matrix, N>=1
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix A in the CRS format
+
+    NOTE: this function completely  overwrites  S  with  new  sparse  matrix.
+          Previously allocated storage is NOT reused. If you  want  to  reuse
+          already allocated memory, call SparseCreateCRSFromDenseBuf function.
+
+      -- ALGLIB PROJECT --
+         Copyright 16.06.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreatecrsfromdense(double[,] a, int m, int n, out sparsematrix s)
+    {
+        s = new sparsematrix();
+        sparse.sparsecreatecrsfromdense(a, m, n, s.innerobj, null);
+    }
+    
+    public static void sparsecreatecrsfromdense(double[,] a, int m, int n, out sparsematrix s, alglib.xparams _params)
+    {
+        s = new sparsematrix();
+        sparse.sparsecreatecrsfromdense(a, m, n, s.innerobj, _params);
+    }
+            
+    public static void sparsecreatecrsfromdense(double[,] a, out sparsematrix s)
+    {
+        int m;
+        int n;
+    
+        s = new sparsematrix();
+        m = ap.rows(a);
+        n = ap.cols(a);
+        sparse.sparsecreatecrsfromdense(a, m, n, s.innerobj, null);
+    
+        return;
+    }
+            
+    public static void sparsecreatecrsfromdense(double[,] a, out sparsematrix s, alglib.xparams _params)
+    {
+        int m;
+        int n;
+    
+        s = new sparsematrix();
+        m = ap.rows(a);
+        n = ap.cols(a);
+        sparse.sparsecreatecrsfromdense(a, m, n, s.innerobj, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    This function creates a CRS-based sparse matrix from  the  dense  matrix.
+    A buffered version which reused memory already allocated in S as much  as
+    possible.
+
+    This function is intended for situations when you already  have  a  dense
+    matrix and need a convenient way of converting it to the CRS format.
+
+    INPUT PARAMETERS
+        A           -   array[M,N]. If larger, only leading MxN submatrix
+                        will be used.
+        M           -   number of rows in a matrix, M>=1
+        N           -   number of columns in a matrix, N>=1
+        S           -   an already allocated structure; if it already has
+                        enough memory to store the matrix, no new memory
+                        will be allocated.
+
+    OUTPUT PARAMETERS
+        S           -   sparse M*N matrix A in the CRS format.
+
+      -- ALGLIB PROJECT --
+         Copyright 16.06.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecreatecrsfromdensebuf(double[,] a, int m, int n, sparsematrix s)
+    {
+    
+        sparse.sparsecreatecrsfromdensebuf(a, m, n, s.innerobj, null);
+    }
+    
+    public static void sparsecreatecrsfromdensebuf(double[,] a, int m, int n, sparsematrix s, alglib.xparams _params)
+    {
+    
+        sparse.sparsecreatecrsfromdensebuf(a, m, n, s.innerobj, _params);
+    }
+            
+    public static void sparsecreatecrsfromdensebuf(double[,] a, sparsematrix s)
+    {
+        int m;
+        int n;
+    
+    
+        m = ap.rows(a);
+        n = ap.cols(a);
+        sparse.sparsecreatecrsfromdensebuf(a, m, n, s.innerobj, null);
+    
+        return;
+    }
+            
+    public static void sparsecreatecrsfromdensebuf(double[,] a, sparsematrix s, alglib.xparams _params)
+    {
+        int m;
+        int n;
+    
+    
+        m = ap.rows(a);
+        n = ap.cols(a);
+        sparse.sparsecreatecrsfromdensebuf(a, m, n, s.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -5087,6 +5208,59 @@ public partial class alglib
     
         return sparse.sparsegetlowercount(s.innerobj, _params);
     }
+    
+    /*************************************************************************
+    This function performs an in-place matrix conditioning scaling  such  that
+
+        A = R*Z*C
+
+    where A is an original matrix, R and C are diagonal scaling  matrices, and
+    Z is a scaled matrix. Z replaces A, R and C are returned as 1D arrays.
+
+    INPUT PARAMETERS
+        S           -   sparse M*N matrix in CRS format.
+        SclType     -   scaling type:
+                        * 0     for automatically chosen scaling
+                        * 1     for equilibration scaling
+        ScaleRows   -   if False, rows are not scaled (R=identity)
+        ScaleCols   -   if False, cols are not scaled (C=identity)
+        ColsFirst   -   scale columns first. If False, rows are  scaled  prior
+                        to scaling columns. Ignored for ScaleCols=False.
+
+    OUTPUT PARAMETERS
+        R           -   array[M], row scales, R[i]>0
+        C           -   array[N], col scales, C[i]>0
+
+    NOTE: this function throws exception when called  for  a  non-CRS  matrix.
+          You must convert your matrix with SparseConvertToCRS()  before using
+          this function.
+
+    NOTE: this  function  works  with  general  (nonsymmetric)  matrices.  See
+          sparsesymmscale() for a symmetric version. See sparsescalebuf()  for
+          a version which reuses space already present in output arrays R/C.
+
+    NOTE: if both ScaleRows=False and ScaleCols=False, this  function  returns
+          an identity scaling.
+
+    NOTE: R[] and C[] are guaranteed to be strictly positive. When the  matrix
+          has zero rows/cols, corresponding elements of R/C are set to 1.
+
+      -- ALGLIB PROJECT --
+         Copyright 12.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsescale(sparsematrix s, int scltype, bool scalerows, bool scalecols, bool colsfirst, out double[] r, out double[] c)
+    {
+        r = new double[0];
+        c = new double[0];
+        sparse.sparsescale(s.innerobj, scltype, scalerows, scalecols, colsfirst, ref r, ref c, null);
+    }
+    
+    public static void sparsescale(sparsematrix s, int scltype, bool scalerows, bool scalecols, bool colsfirst, out double[] r, out double[] c, alglib.xparams _params)
+    {
+        r = new double[0];
+        c = new double[0];
+        sparse.sparsescale(s.innerobj, scltype, scalerows, scalecols, colsfirst, ref r, ref c, _params);
+    }
 
 }
 public partial class alglib
@@ -5338,18 +5512,35 @@ public partial class alglib
 
     INPUT PARAMETERS:
         State       -   solver object
-        MType       -   matrix type:
-                        * 0 for real  symmetric  matrix  (solver  assumes that
-                          matrix  being   processed  is  symmetric;  symmetric
-                          direct eigensolver is used for  smaller  subproblems
-                          arising during solution of larger "full" task)
+        MType       -   matrix type and solver mode:
+
+                        * 0 =   real symmetric matrix A, products  of the form
+                                A*X are computed. At every step  the  basis of
+                                the  invariant  subspace  is  reorthogonalized
+                                with LQ decomposition  which  makes  the  algo
+                                more robust.
+
+                                The first mode introduced in ALGLIB, the  most
+                                precise and robust. However, it is  suboptimal
+                                for easy problems which can be solved  in  3-5
+                                iterations without LQ step.
+
+                        * 1 =   real symmetric matrix A, products  of the form
+                                A*X are computed. The  invariant  subspace  is
+                                NOT reorthogonalized,  no  error  checks.  The
+                                solver  stops  after   specified   number   of
+                                iterations which should be small, 5 at most.
+
+                                This mode is intended for easy  problems  with
+                                extremely fast convergence.
+
                         Future versions of ALGLIB may  introduce  support  for
                         other  matrix   types;   for   now,   only   symmetric
                         eigenproblems are supported.
 
 
       -- ALGLIB --
-         Copyright 16.01.2017 by Bochkanov Sergey
+         Copyright 07.06.2023 by Bochkanov Sergey
     *************************************************************************/
     public static void eigsubspaceoocstart(eigsubspacestate state, int mtype)
     {
@@ -20495,21 +20686,21 @@ public partial class alglib
 
 
         /*************************************************************************
-        This function creates sparse matrix in a CRS format (expert function for
-        situations when you are running out of memory).
+        This function creates sparse matrix in a CRS format - the least  flexible
+        but the most efficient format implemented in ALGLIB.
 
         This function creates CRS matrix. Typical usage scenario for a CRS matrix 
         is:
-        1. creation (you have to tell number of non-zero elements at each row  at 
-           this moment)
-        2. insertion of the matrix elements (row by row, from left to right) 
-        3. matrix is passed to some linear algebra algorithm
+        1. creation (you have to tell the number of non-zero elements at each row
+           at this moment)
+        2. initialization of the matrix elements (row by row, from left to right) 
+        3. the matrix is passed to some linear algebra algorithm
 
         This function is a memory-efficient alternative to SparseCreate(), but it
         is more complex because it requires you to know in advance how large your
         matrix is. Some  information about  different matrix formats can be found 
         in comments on SparseMatrix structure.  We recommend  you  to  read  them
-        before starting to use ALGLIB sparse matrices..
+        before starting to use ALGLIB sparse matrices.
 
         INPUT PARAMETERS
             M           -   number of rows in a matrix, M>=1
@@ -20611,6 +20802,120 @@ public partial class alglib
             {
                 sparseinitduidx(s, _params);
             }
+        }
+
+
+        /*************************************************************************
+        This function creates a CRS-based sparse matrix from  the  dense  matrix.
+
+        This function is intended for situations when you already  have  a  dense
+        matrix and need a convenient way of converting it to the CRS format.
+
+        INPUT PARAMETERS
+            A           -   array[M,N]. If larger, only leading MxN submatrix
+                            will be used.
+            M           -   number of rows in a matrix, M>=1
+            N           -   number of columns in a matrix, N>=1
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix A in the CRS format
+                            
+        NOTE: this function completely  overwrites  S  with  new  sparse  matrix.
+              Previously allocated storage is NOT reused. If you  want  to  reuse
+              already allocated memory, call SparseCreateCRSFromDenseBuf function.
+
+          -- ALGLIB PROJECT --
+             Copyright 16.06.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreatecrsfromdense(double[,] a,
+            int m,
+            int n,
+            sparsematrix s,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(m>0, "SparseCreateCRSFromDense: M<=0");
+            alglib.ap.assert(n>0, "SparseCreateCRSFromDense: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=m, "SparseCreateCRSFromDense: rows(A)<M");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SparseCreateCRSFromDense: cols(A)<N");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, m, n, _params), "SparseCreateCRSFromDense: A contains NAN/INF");
+            sparsecreatecrsfromdensebuf(a, m, n, s, _params);
+        }
+
+
+        /*************************************************************************
+        This function creates a CRS-based sparse matrix from  the  dense  matrix.
+        A buffered version which reused memory already allocated in S as much  as
+        possible.
+
+        This function is intended for situations when you already  have  a  dense
+        matrix and need a convenient way of converting it to the CRS format.
+
+        INPUT PARAMETERS
+            A           -   array[M,N]. If larger, only leading MxN submatrix
+                            will be used.
+            M           -   number of rows in a matrix, M>=1
+            N           -   number of columns in a matrix, N>=1
+            S           -   an already allocated structure; if it already has
+                            enough memory to store the matrix, no new memory
+                            will be allocated.
+
+        OUTPUT PARAMETERS
+            S           -   sparse M*N matrix A in the CRS format.
+
+          -- ALGLIB PROJECT --
+             Copyright 16.06.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecreatecrsfromdensebuf(double[,] a,
+            int m,
+            int n,
+            sparsematrix s,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            int nnz = 0;
+            int offs = 0;
+
+            alglib.ap.assert(m>0, "SparseCreateCRSFromDenseBuf: M<=0");
+            alglib.ap.assert(n>0, "SparseCreateCRSFromDenseBuf: N<=0");
+            alglib.ap.assert(alglib.ap.rows(a)>=m, "SparseCreateCRSFromDenseBuf: rows(A)<M");
+            alglib.ap.assert(alglib.ap.cols(a)>=n, "SparseCreateCRSFromDenseBuf: cols(A)<N");
+            alglib.ap.assert(apserv.apservisfinitematrix(a, m, n, _params), "SparseCreateCRSFromDenseBuf: A contains NAN/INF");
+            nnz = 0;
+            for(i=0; i<=m-1; i++)
+            {
+                for(j=0; j<=n-1; j++)
+                {
+                    if( a[i,j]!=0.0 )
+                    {
+                        nnz = nnz+1;
+                    }
+                }
+            }
+            s.matrixtype = 1;
+            s.ninitialized = nnz;
+            s.m = m;
+            s.n = n;
+            ablasf.iallocv(m+1, ref s.ridx, _params);
+            ablasf.iallocv(nnz, ref s.idx, _params);
+            ablasf.rallocv(nnz, ref s.vals, _params);
+            s.ridx[0] = 0;
+            offs = 0;
+            for(i=0; i<=m-1; i++)
+            {
+                for(j=0; j<=n-1; j++)
+                {
+                    if( a[i,j]!=0.0 )
+                    {
+                        s.idx[offs] = j;
+                        s.vals[offs] = a[i,j];
+                        offs = offs+1;
+                    }
+                }
+                s.ridx[i+1] = offs;
+            }
+            alglib.ap.assert(offs==nnz, "SparseCreateCRSFromDenseBuf: integrity check 6447 failed");
+            sparseinitduidx(s, _params);
         }
 
 
@@ -26472,7 +26777,20 @@ public partial class alglib
             s.ninitialized = s.ridx[m];
             for(i=0; i<=m-1; i++)
             {
-                tsort.tagsortmiddleir(ref s.idx, ref s.vals, s.ridx[i], s.ridx[i+1]-s.ridx[i], _params);
+                j0 = s.ridx[i];
+                j1 = s.ridx[i+1];
+                for(j=j0; j<=j1-2; j++)
+                {
+                    if( s.idx[j]>s.idx[j+1] )
+                    {
+                        
+                        //
+                        // Unsorted sequence, needs sorting
+                        //
+                        tsort.tagsortmiddleir(ref s.idx, ref s.vals, j0, j1-j0, _params);
+                        break;
+                    }
+                }
             }
             sparseinitduidx(s, _params);
         }
@@ -26794,6 +27112,170 @@ public partial class alglib
             }
             alglib.ap.assert(false, "SparseGetUpperCount: internal error");
             return result;
+        }
+
+
+        /*************************************************************************
+        This function performs an in-place matrix conditioning scaling  such  that
+
+            A = R*Z*C
+
+        where A is an original matrix, R and C are diagonal scaling  matrices, and
+        Z is a scaled matrix. Z replaces A, R and C are returned as 1D arrays.
+
+        INPUT PARAMETERS
+            S           -   sparse M*N matrix in CRS format.
+            SclType     -   scaling type:
+                            * 0     for automatically chosen scaling
+                            * 1     for equilibration scaling
+            ScaleRows   -   if False, rows are not scaled (R=identity)
+            ScaleCols   -   if False, cols are not scaled (C=identity)
+            ColsFirst   -   scale columns first. If False, rows are  scaled  prior
+                            to scaling columns. Ignored for ScaleCols=False.
+            
+        OUTPUT PARAMETERS
+            R           -   array[M], row scales, R[i]>0
+            C           -   array[N], col scales, C[i]>0
+            
+        NOTE: this function throws exception when called  for  a  non-CRS  matrix.
+              You must convert your matrix with SparseConvertToCRS()  before using
+              this function.
+
+        NOTE: this  function  works  with  general  (nonsymmetric)  matrices.  See
+              sparsesymmscale() for a symmetric version. See sparsescalebuf()  for
+              a version which reuses space already present in output arrays R/C.
+
+        NOTE: if both ScaleRows=False and ScaleCols=False, this  function  returns
+              an identity scaling.
+
+        NOTE: R[] and C[] are guaranteed to be strictly positive. When the  matrix
+              has zero rows/cols, corresponding elements of R/C are set to 1.
+
+          -- ALGLIB PROJECT --
+             Copyright 12.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsescale(sparsematrix s,
+            int scltype,
+            bool scalerows,
+            bool scalecols,
+            bool colsfirst,
+            ref double[] r,
+            ref double[] c,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int m = 0;
+            int axis = 0;
+            double[] tmp0 = new double[0];
+            int i = 0;
+            int j = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int jj = 0;
+            double v = 0;
+
+            r = new double[0];
+            c = new double[0];
+
+            alglib.ap.assert(s.matrixtype==1, "SparseScale: incorrect matrix type (convert your matrix to CRS)");
+            alglib.ap.assert(scltype==0 || scltype==1, "SparseScale: incorrect matrix type (convert your matrix to CRS)");
+            
+            //
+            // Initialization and quick exit
+            //
+            n = s.n;
+            m = s.m;
+            if( scltype==0 )
+            {
+                scltype = 1;
+            }
+            ablasf.rsetallocv(m, 1.0, ref r, _params);
+            ablasf.rsetallocv(n, 1.0, ref c, _params);
+            if( !scalerows && !scalecols )
+            {
+                return;
+            }
+            
+            //
+            // Equilibration scaling
+            //
+            if( scltype==1 )
+            {
+                for(axis=0; axis<=1; axis++)
+                {
+                    if( (colsfirst && axis==0) || (!colsfirst && axis==1) )
+                    {
+                        
+                        //
+                        // Scale columns
+                        //
+                        if( scalecols )
+                        {
+                            ablasf.rallocv(n, ref tmp0, _params);
+                            ablasf.rsetv(n, 0.0, c, _params);
+                            for(i=0; i<=m-1; i++)
+                            {
+                                j0 = s.ridx[i];
+                                j1 = s.ridx[i+1]-1;
+                                for(jj=j0; jj<=j1; jj++)
+                                {
+                                    j = s.idx[jj];
+                                    v = s.vals[jj];
+                                    c[j] = Math.Max(c[j], Math.Abs(v));
+                                }
+                            }
+                            for(j=0; j<=n-1; j++)
+                            {
+                                if( (double)(c[j])==(double)(0) )
+                                {
+                                    c[j] = 1;
+                                }
+                                tmp0[j] = 1/c[j];
+                            }
+                            for(i=0; i<=m-1; i++)
+                            {
+                                j0 = s.ridx[i];
+                                j1 = s.ridx[i+1]-1;
+                                for(jj=j0; jj<=j1; jj++)
+                                {
+                                    s.vals[jj] = tmp0[s.idx[jj]]*s.vals[jj];
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Scale rows
+                        //
+                        if( scalerows )
+                        {
+                            for(i=0; i<=m-1; i++)
+                            {
+                                j0 = s.ridx[i];
+                                j1 = s.ridx[i+1]-1;
+                                v = 0;
+                                for(jj=j0; jj<=j1; jj++)
+                                {
+                                    v = Math.Max(v, Math.Abs(s.vals[jj]));
+                                }
+                                if( (double)(v)==(double)(0) )
+                                {
+                                    v = 1;
+                                }
+                                r[i] = v;
+                                v = 1/v;
+                                for(jj=j0; jj<=j1; jj++)
+                                {
+                                    s.vals[jj] = v*s.vals[jj];
+                                }
+                            }
+                        }
+                    }
+                }
+                return;
+            }
         }
 
 
@@ -28579,7 +29061,7 @@ public partial class alglib
             public int maxits;
             public double eps;
             public int eigenvectorsneeded;
-            public int matrixtype;
+            public int solvermode;
             public bool usewarmstart;
             public bool firstcall;
             public hqrnd.hqrndstate rs;
@@ -28596,6 +29078,7 @@ public partial class alglib
             public double[,] dummy;
             public double[] rw;
             public double[] tw;
+            public double[] tmprow;
             public double[] wcur;
             public double[] wprev;
             public double[] wrank;
@@ -28625,6 +29108,7 @@ public partial class alglib
                 dummy = new double[0,0];
                 rw = new double[0];
                 tw = new double[0];
+                tmprow = new double[0];
                 wcur = new double[0];
                 wprev = new double[0];
                 wrank = new double[0];
@@ -28642,7 +29126,7 @@ public partial class alglib
                 _result.maxits = maxits;
                 _result.eps = eps;
                 _result.eigenvectorsneeded = eigenvectorsneeded;
-                _result.matrixtype = matrixtype;
+                _result.solvermode = solvermode;
                 _result.usewarmstart = usewarmstart;
                 _result.firstcall = firstcall;
                 _result.rs = (hqrnd.hqrndstate)rs.make_copy();
@@ -28659,6 +29143,7 @@ public partial class alglib
                 _result.dummy = (double[,])dummy.Clone();
                 _result.rw = (double[])rw.Clone();
                 _result.tw = (double[])tw.Clone();
+                _result.tmprow = (double[])tmprow.Clone();
                 _result.wcur = (double[])wcur.Clone();
                 _result.wprev = (double[])wprev.Clone();
                 _result.wrank = (double[])wrank.Clone();
@@ -28893,31 +29378,48 @@ public partial class alglib
 
         INPUT PARAMETERS:
             State       -   solver object
-            MType       -   matrix type:
-                            * 0 for real  symmetric  matrix  (solver  assumes that
-                              matrix  being   processed  is  symmetric;  symmetric
-                              direct eigensolver is used for  smaller  subproblems
-                              arising during solution of larger "full" task)
+            MType       -   matrix type and solver mode:
+            
+                            * 0 =   real symmetric matrix A, products  of the form
+                                    A*X are computed. At every step  the  basis of
+                                    the  invariant  subspace  is  reorthogonalized
+                                    with LQ decomposition  which  makes  the  algo
+                                    more robust.
+                                    
+                                    The first mode introduced in ALGLIB, the  most
+                                    precise and robust. However, it is  suboptimal
+                                    for easy problems which can be solved  in  3-5
+                                    iterations without LQ step.
+                                    
+                            * 1 =   real symmetric matrix A, products  of the form
+                                    A*X are computed. The  invariant  subspace  is
+                                    NOT reorthogonalized,  no  error  checks.  The
+                                    solver  stops  after   specified   number   of
+                                    iterations which should be small, 5 at most.
+                                    
+                                    This mode is intended for easy  problems  with
+                                    extremely fast convergence.
+                            
                             Future versions of ALGLIB may  introduce  support  for
                             other  matrix   types;   for   now,   only   symmetric
                             eigenproblems are supported.
 
 
           -- ALGLIB --
-             Copyright 16.01.2017 by Bochkanov Sergey
+             Copyright 07.06.2023 by Bochkanov Sergey
         *************************************************************************/
         public static void eigsubspaceoocstart(eigsubspacestate state,
             int mtype,
             alglib.xparams _params)
         {
             alglib.ap.assert(!state.running, "EigSubspaceStart: solver is already running");
-            alglib.ap.assert(mtype==0, "EigSubspaceStart: incorrect mtype parameter");
-            state.rstate.ia = new int[7+1];
+            alglib.ap.assert(mtype==0 || mtype==1, "EigSubspaceStart: incorrect mtype parameter");
+            state.rstate.ia = new int[8+1];
             state.rstate.ra = new double[1+1];
             state.rstate.stage = -1;
             clearrfields(state, _params);
             state.running = true;
-            state.matrixtype = mtype;
+            state.solvermode = mtype;
         }
 
 
@@ -29222,6 +29724,7 @@ public partial class alglib
             int j = 0;
             int k = 0;
             double v = 0;
+            int prevmode = 0;
             double[,] acopy = new double[0,0];
 
             w = new double[0];
@@ -29254,8 +29757,9 @@ public partial class alglib
             //
             // Start iterations
             //
-            state.matrixtype = 0;
-            state.rstate.ia = new int[7+1];
+            prevmode = state.solvermode;
+            state.solvermode = 0;
+            state.rstate.ia = new int[8+1];
             state.rstate.ra = new double[1+1];
             state.rstate.stage = -1;
             clearrfields(state, _params);
@@ -29270,6 +29774,7 @@ public partial class alglib
                 m = state.requestsize;
                 ablas.rmatrixgemm(n, m, n, 1.0, acopy, 0, 0, 0, state.x, 0, 0, 0, 0.0, state.ax, 0, 0, _params);
             }
+            state.solvermode = prevmode;
             k = state.k;
             w = new double[k];
             z = new double[n, k];
@@ -29321,14 +29826,16 @@ public partial class alglib
             int i = 0;
             int j = 0;
             int k = 0;
+            int prevmode = 0;
 
             w = new double[0];
             z = new double[0,0];
 
             alglib.ap.assert(!state.running, "EigSubspaceSolveSparseS: solver is still running");
             n = state.n;
-            state.matrixtype = 0;
-            state.rstate.ia = new int[7+1];
+            prevmode = state.solvermode;
+            state.solvermode = 0;
+            state.rstate.ia = new int[8+1];
             state.rstate.ra = new double[1+1];
             state.rstate.stage = -1;
             clearrfields(state, _params);
@@ -29338,6 +29845,7 @@ public partial class alglib
                 alglib.ap.assert(state.requestsize>0, "EigSubspaceSolveDense: integrity check failed");
                 sparse.sparsesmm(a, isupper, state.x, state.requestsize, ref state.ax, _params);
             }
+            state.solvermode = prevmode;
             k = state.k;
             w = new double[k];
             z = new double[n, k];
@@ -29376,6 +29884,7 @@ public partial class alglib
             double vv = 0;
             double v = 0;
             int convcnt = 0;
+            int iterationtype = 0;
 
             
             //
@@ -29398,6 +29907,7 @@ public partial class alglib
                 i1 = state.rstate.ia[5];
                 j = state.rstate.ia[6];
                 convcnt = state.rstate.ia[7];
+                iterationtype = state.rstate.ia[8];
                 vv = state.rstate.ra[0];
                 v = state.rstate.ra[1];
             }
@@ -29411,12 +29921,21 @@ public partial class alglib
                 i1 = 255;
                 j = 74;
                 convcnt = -788;
-                vv = 809.0;
-                v = 205.0;
+                iterationtype = 809;
+                vv = 205.0;
+                v = -838.0;
             }
             if( state.rstate.stage==0 )
             {
                 goto lbl_0;
+            }
+            if( state.rstate.stage==1 )
+            {
+                goto lbl_1;
+            }
+            if( state.rstate.stage==2 )
+            {
+                goto lbl_2;
             }
             
             //
@@ -29432,6 +29951,20 @@ public partial class alglib
             // of the entire solver.
             //
             hqrnd.hqrndseed(453, 463664, state.rs, _params);
+            
+            //
+            // Analyze solver mode.
+            //
+            // IterationType:
+            // * 0 for LQ-based reorthogonalization with checks
+            // * 1 for a quick algo without checks or reorthogonalizations
+            //
+            alglib.ap.assert(state.solvermode==0 || state.solvermode==1, "EigSubspaceIteration: unexpected MatrixType");
+            iterationtype = 0;
+            if( state.solvermode==1 )
+            {
+                iterationtype = 1;
+            }
             
             //
             // Prepare iteration
@@ -29486,11 +30019,19 @@ public partial class alglib
             // Start iteration
             //
             state.repiterationscount = 0;
+            if( iterationtype!=0 )
+            {
+                goto lbl_3;
+            }
+            
+            //
+            // Iterations with reorthogonalization and quick checks
+            //
             convcnt = 0;
-        lbl_1:
+        lbl_5:
             if( !((state.maxits==0 || state.repiterationscount<state.maxits) && convcnt<stepswithintol) )
             {
-                goto lbl_2;
+                goto lbl_6;
             }
             
             //
@@ -29512,7 +30053,7 @@ public partial class alglib
             //
             if( (double)(state.eps)>(double)(0) )
             {
-                alglib.ap.assert(state.matrixtype==0, "integrity check failed");
+                alglib.ap.assert(state.solvermode==0, "EigSubspace: integrity check failed");
                 apserv.rmatrixsetlengthatleast(ref state.r, nwork, nwork, _params);
                 ablas.rmatrixgemm(nwork, nwork, n, 1.0, state.qcur, 0, 0, 0, state.ax, 0, 0, 0, 0.0, state.r, 0, 0, _params);
                 if( !smatrixevd(state.r, nwork, 0, true, ref state.wcur, ref state.dummy, _params) )
@@ -29563,14 +30104,80 @@ public partial class alglib
             // Update iteration index
             //
             state.repiterationscount = state.repiterationscount+1;
-            goto lbl_1;
+            goto lbl_5;
+        lbl_6:
+        lbl_3:
+            if( iterationtype!=1 )
+            {
+                goto lbl_7;
+            }
+            
+            //
+            // Quick iterations without reorthogonalization, stopping after prescribed amount of its, no checks.
+            //
+            // First, we perform CNT-1 iterations without any reorthogonalization
+            //
+        lbl_9:
+            if( (double)(state.repiterationscount)>=(double)(apserv.coalesce(state.maxits, 5, _params)-1) )
+            {
+                goto lbl_10;
+            }
+            
+            //
+            // Update QCur := QNew
+            //
+            // Calculate A*Q', store to QNew
+            //
+            ablas.rmatrixtranspose(nwork, n, state.qnew, 0, 0, state.x, 0, 0, _params);
+            clearrfields(state, _params);
+            state.requesttype = 0;
+            state.requestsize = nwork;
+            state.rstate.stage = 1;
+            goto lbl_rcomm;
+        lbl_1:
+            ablas.rmatrixtranspose(n, nwork, state.ax, 0, 0, state.qnew, 0, 0, _params);
+            state.repiterationscount = state.repiterationscount+1;
+            goto lbl_9;
+        lbl_10:
+            
+            //
+            // Perform one iteration with reorthogonalization at the end
+            //
+            ablasf.rallocv(n, ref state.tmprow, _params);
+            for(i=0; i<=nwork-1; i++)
+            {
+                ablasf.rcopyrv(n, state.qnew, i, state.tmprow, _params);
+                v = Math.Sqrt(ablasf.rdotv2(n, state.tmprow, _params));
+                ablas.rowwisegramschmidt(state.qnew, i, n, state.tmprow, ref state.tmprow, false, _params);
+                vv = Math.Sqrt(ablasf.rdotv2(n, state.tmprow, _params));
+                while( (double)(v)==(double)(0) || (double)(vv)<=(double)(1000*math.machineepsilon*v) )
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        state.tmprow[j] = hqrnd.hqrnduniformr(state.rs, _params)-0.5;
+                    }
+                    v = Math.Sqrt(ablasf.rdotv2(n, state.tmprow, _params));
+                    ablas.rowwisegramschmidt(state.qnew, i, n, state.tmprow, ref state.tmprow, false, _params);
+                    vv = Math.Sqrt(ablasf.rdotv2(n, state.tmprow, _params));
+                }
+                ablasf.rmulv(n, 1/vv, state.tmprow, _params);
+                ablasf.rcopyvr(n, state.tmprow, state.qnew, i, _params);
+            }
+            ablas.rmatrixcopy(nwork, n, state.qnew, 0, 0, state.qcur, 0, 0, _params);
+            ablas.rmatrixtranspose(nwork, n, state.qcur, 0, 0, state.x, 0, 0, _params);
+            clearrfields(state, _params);
+            state.requesttype = 0;
+            state.requestsize = nwork;
+            state.rstate.stage = 2;
+            goto lbl_rcomm;
         lbl_2:
+            state.repiterationscount = state.repiterationscount+1;
+        lbl_7:
             
             //
             // Perform Rayleigh-Ritz step: find true eigenpairs in NWork-dimensional
             // subspace.
             //
-            alglib.ap.assert(state.matrixtype==0, "integrity check failed");
             alglib.ap.assert(state.eigenvectorsneeded==1);
             ablas.rmatrixgemm(nwork, nwork, n, 1.0, state.qcur, 0, 0, 0, state.ax, 0, 0, 0, 0.0, state.r, 0, 0, _params);
             if( !smatrixevd(state.r, nwork, 1, true, ref state.tw, ref state.tz, _params) )
@@ -29627,6 +30234,7 @@ public partial class alglib
             state.rstate.ia[5] = i1;
             state.rstate.ia[6] = j;
             state.rstate.ia[7] = convcnt;
+            state.rstate.ia[8] = iterationtype;
             state.rstate.ra[0] = vv;
             state.rstate.ra[1] = v;
             return result;
@@ -38806,6 +39414,7 @@ public partial class alglib
             public int[] approxd;
             public int[] optionalexactd;
             public bool[] isvertex;
+            public bool[] eligible;
             public int[] vbegin;
             public int[] vprev;
             public int[] vnext;
@@ -38818,6 +39427,7 @@ public partial class alglib
                 approxd = new int[0];
                 optionalexactd = new int[0];
                 isvertex = new bool[0];
+                eligible = new bool[0];
                 vbegin = new int[0];
                 vprev = new int[0];
                 vnext = new int[0];
@@ -38831,6 +39441,7 @@ public partial class alglib
                 _result.approxd = (int[])approxd.Clone();
                 _result.optionalexactd = (int[])optionalexactd.Clone();
                 _result.isvertex = (bool[])isvertex.Clone();
+                _result.eligible = (bool[])eligible.Clone();
                 _result.vbegin = (int[])vbegin.Clone();
                 _result.vprev = (int[])vprev.Clone();
                 _result.vnext = (int[])vnext.Clone();
@@ -38889,6 +39500,7 @@ public partial class alglib
             public bool checkexactdegrees;
             public bool[] iseliminated;
             public bool[] issupernode;
+            public bool[] iseligible;
             public amdknset setsuper;
             public amdknset seta;
             public amdknset sete;
@@ -38922,6 +39534,7 @@ public partial class alglib
             {
                 iseliminated = new bool[0];
                 issupernode = new bool[0];
+                iseligible = new bool[0];
                 setsuper = new amdknset();
                 seta = new amdknset();
                 sete = new amdknset();
@@ -38955,6 +39568,7 @@ public partial class alglib
                 _result.checkexactdegrees = checkexactdegrees;
                 _result.iseliminated = (bool[])iseliminated.Clone();
                 _result.issupernode = (bool[])issupernode.Clone();
+                _result.iseligible = (bool[])iseligible.Clone();
                 _result.setsuper = (amdknset)setsuper.make_copy();
                 _result.seta = (amdknset)seta.make_copy();
                 _result.sete = (amdknset)sete.make_copy();
@@ -39103,6 +39717,7 @@ public partial class alglib
             int cnt1 = 0;
             int tau = 0;
             double meand = 0;
+            int neligible = 0;
             int d = 0;
 
             alglib.ap.assert(amdtype==0 || amdtype==1, "GenerateAMDPermutationX: unexpected ordering type");
@@ -39115,7 +39730,7 @@ public partial class alglib
             buf.checkexactdegrees = extendeddebug;
             buf.extendeddebug = extendeddebug;
             mtxinit(n, buf.mtxl, _params);
-            knsinitfroma(a, n, buf.seta, _params);
+            knsinitfroma(a, n, true, buf.seta, _params);
             knsinit(n, n, setprealloc, buf.setsuper, _params);
             for(i=0; i<=n-1; i++)
             {
@@ -39133,7 +39748,12 @@ public partial class alglib
                 buf.invperm[i] = i;
                 buf.columnswaps[i] = i;
             }
-            vtxinit(a, n, buf.checkexactdegrees, buf.vertexdegrees, _params);
+            ablasf.bsetallocv(n, true, ref buf.iseligible, _params);
+            if( amdtype==1 )
+            {
+                ablasf.bcopyv(n, eligible, buf.iseligible, _params);
+            }
+            vtxinit(a, n, buf.iseligible, true, buf.checkexactdegrees, buf.vertexdegrees, _params);
             ablasf.bsetallocv(n, true, ref buf.issupernode, _params);
             ablasf.bsetallocv(n, false, ref buf.iseliminated, _params);
             ablasf.isetallocv(n, -1, ref buf.arrwe, _params);
@@ -39169,22 +39789,28 @@ public partial class alglib
                     buf.dbga[i,i] = 1;
                 }
             }
+            neligible = n;
             tau = 0;
             if( amdtype==1 )
             {
                 alglib.ap.assert(alglib.ap.len(eligible)>=n, "GenerateAMDPermutationX: length(Eligible)<N");
                 meand = 0.0;
+                neligible = 0;
                 for(i=0; i<=n-1; i++)
                 {
-                    d = vtxgetapprox(buf.vertexdegrees, i, _params);
-                    meand = meand+d;
+                    if( eligible[i] )
+                    {
+                        d = vtxgetapprox(buf.vertexdegrees, i, _params);
+                        meand = meand+d;
+                        neligible = neligible+1;
+                    }
                 }
-                meand = meand/n;
-                tau = (int)Math.Round(apserv.rcase2((double)(promoteabove)>(double)(0), promoteabove, 10, _params)*Math.Max(meand, 1));
+                meand = meand/apserv.coalesce(neligible, 1, _params);
+                tau = (int)Math.Round(apserv.rcase2((double)(promoteabove)>(double)(0), Math.Max(promoteabove, 1), 10, _params)*Math.Max(meand, 1));
                 tau = Math.Max(tau, 1);
                 for(i=0; i<=n-1; i++)
                 {
-                    if( !eligible[i] || vtxgetapprox(buf.vertexdegrees, i, _params)>tau )
+                    if( vtxgetapprox(buf.vertexdegrees, i, _params)>tau )
                     {
                         apstruct.nisaddelement(buf.setqsupercand, i, _params);
                     }
@@ -39195,6 +39821,10 @@ public partial class alglib
             while( k<n-apstruct.niscount(buf.setq, _params) )
             {
                 amdselectpivotelement(buf, k, ref p, ref nodesize, _params);
+                if( p<0 )
+                {
+                    break;
+                }
                 amdcomputelp(buf, p, _params);
                 amdmasselimination(buf, p, k, tau, _params);
                 amdmovetoquasidense(buf, buf.setqsupercand, p, _params);
@@ -39246,7 +39876,6 @@ public partial class alglib
                 vtxremovevertex(buf.vertexdegrees, p, _params);
                 k = k+nodesize;
             }
-            alglib.ap.assert(k+apstruct.niscount(buf.setq, _params)==n, "AMD: integrity check 6326 failed");
             alglib.ap.assert(k>0 || amdtype==1, "AMD: integrity check 9463 failed");
             result = k;
             apserv.ivectorsetlengthatleast(ref perm, n, _params);
@@ -39568,6 +40197,7 @@ public partial class alglib
         INPUT PARAMETERS
             A           -   lower triangular sparse matrix in CRS format
             N           -   problem size
+            IgnoreDiagonal- if True, diagonal elements are not included into kn-set
             
         OUTPUT PARAMETERS
             SA          -   N sets of N elements, reproducing both lower and upper
@@ -39578,6 +40208,7 @@ public partial class alglib
         *************************************************************************/
         private static void knsinitfroma(sparse.sparsematrix a,
             int n,
+            bool ignorediagonal,
             amdknset sa,
             alglib.xparams _params)
         {
@@ -39596,7 +40227,11 @@ public partial class alglib
                 alglib.ap.assert(a.didx[i]<a.uidx[i], "knsInitFromA: integrity check for diagonal of A failed");
                 j0 = a.ridx[i];
                 j1 = a.didx[i]-1;
-                sa.vallocated[i] = 1+(j1-j0+1);
+                sa.vallocated[i] = j1-j0+1;
+                if( !ignorediagonal )
+                {
+                    sa.vallocated[i] = sa.vallocated[i]+1;
+                }
                 for(jj=j0; jj<=j1; jj++)
                 {
                     j = a.idx[jj];
@@ -39619,8 +40254,11 @@ public partial class alglib
             ablasf.isetallocv(n, 0, ref sa.vcnt, _params);
             for(i=0; i<=n-1; i++)
             {
-                sa.data[sa.vbegin[i]+sa.vcnt[i]] = i;
-                sa.vcnt[i] = sa.vcnt[i]+1;
+                if( !ignorediagonal )
+                {
+                    sa.data[sa.vbegin[i]+sa.vcnt[i]] = i;
+                    sa.vcnt[i] = sa.vcnt[i]+1;
+                }
                 j0 = a.ridx[i];
                 j1 = a.didx[i]-1;
                 for(jj=j0; jj<=j1; jj++)
@@ -40435,6 +41073,9 @@ public partial class alglib
         INPUT PARAMETERS
             A           -   NxN lower triangular sparse CRS matrix
             N           -   problem size
+            Eligible    -   array[N], only eligible vertices can be extracted
+                            with vtxGetApproxMinDegree()
+            HasEligible -   if False, Eligible is ignored
             CheckExactDegrees-
                             whether we want to maintain additional exact degress
                             (the search is still done using approximate ones)
@@ -40448,6 +41089,8 @@ public partial class alglib
         *************************************************************************/
         private static void vtxinit(sparse.sparsematrix a,
             int n,
+            bool[] eligible,
+            bool haseligible,
             bool checkexactdegrees,
             amdvertexset s,
             alglib.xparams _params)
@@ -40462,6 +41105,14 @@ public partial class alglib
             s.checkexactdegrees = checkexactdegrees;
             s.smallestdegree = 0;
             ablasf.bsetallocv(n, true, ref s.isvertex, _params);
+            if( haseligible )
+            {
+                ablasf.bcopyallocv(n, eligible, ref s.eligible, _params);
+            }
+            else
+            {
+                ablasf.bsetallocv(n, true, ref s.eligible, _params);
+            }
             ablasf.isetallocv(n, 0, ref s.approxd, _params);
             for(i=0; i<=n-1; i++)
             {
@@ -40483,14 +41134,17 @@ public partial class alglib
             ablasf.isetallocv(n, -1, ref s.vnext, _params);
             for(i=0; i<=n-1; i++)
             {
-                j = s.approxd[i];
-                j0 = s.vbegin[j];
-                s.vbegin[j] = i;
-                s.vnext[i] = j0;
-                s.vprev[i] = -1;
-                if( j0>=0 )
+                if( s.eligible[i] )
                 {
-                    s.vprev[j0] = i;
+                    j = s.approxd[i];
+                    j0 = s.vbegin[j];
+                    s.vbegin[j] = i;
+                    s.vnext[i] = j0;
+                    s.vprev[i] = -1;
+                    if( j0>=0 )
+                    {
+                        s.vprev[j0] = i;
+                    }
                 }
             }
         }
@@ -40518,21 +41172,26 @@ public partial class alglib
             int idxprev = 0;
             int idxnext = 0;
 
-            d = s.approxd[p];
-            idxprev = s.vprev[p];
-            idxnext = s.vnext[p];
-            if( idxprev>=0 )
+            alglib.ap.assert(s.isvertex[p], "AMD: trying to remove already removed vertex");
+            if( s.eligible[p] )
             {
-                s.vnext[idxprev] = idxnext;
+                d = s.approxd[p];
+                idxprev = s.vprev[p];
+                idxnext = s.vnext[p];
+                if( idxprev>=0 )
+                {
+                    s.vnext[idxprev] = idxnext;
+                }
+                else
+                {
+                    s.vbegin[d] = idxnext;
+                }
+                if( idxnext>=0 )
+                {
+                    s.vprev[idxnext] = idxprev;
+                }
             }
-            else
-            {
-                s.vbegin[d] = idxnext;
-            }
-            if( idxnext>=0 )
-            {
-                s.vprev[idxnext] = idxprev;
-            }
+            s.eligible[p] = false;
             s.isvertex[p] = false;
             s.approxd[p] = -9999999;
             if( s.checkexactdegrees )
@@ -40543,7 +41202,9 @@ public partial class alglib
 
 
         /*************************************************************************
-        Get approximate degree. Result is undefined for removed vertexes.
+        Get approximate degree.
+
+        Fails for removed or non-eligible vertexes.
 
         INPUT PARAMETERS
             S           -   vertex set
@@ -40562,6 +41223,7 @@ public partial class alglib
         {
             int result = 0;
 
+            alglib.ap.assert(s.isvertex[p], "AMD: trying to call vtxGetApprox() for removed vertex");
             result = s.approxd[p];
             return result;
         }
@@ -40661,37 +41323,41 @@ public partial class alglib
             int idxnext = 0;
             int oldbegin = 0;
 
+            alglib.ap.assert(s.isvertex[p], "AMD: trying to call vtxUpdateApproximateDegree() for removed vertex");
             dold = s.approxd[p];
             if( dold==dnew )
             {
                 return;
             }
-            idxprev = s.vprev[p];
-            idxnext = s.vnext[p];
-            if( idxprev>=0 )
-            {
-                s.vnext[idxprev] = idxnext;
-            }
-            else
-            {
-                s.vbegin[dold] = idxnext;
-            }
-            if( idxnext>=0 )
-            {
-                s.vprev[idxnext] = idxprev;
-            }
-            oldbegin = s.vbegin[dnew];
-            s.vbegin[dnew] = p;
-            s.vnext[p] = oldbegin;
-            s.vprev[p] = -1;
-            if( oldbegin>=0 )
-            {
-                s.vprev[oldbegin] = p;
-            }
             s.approxd[p] = dnew;
-            if( dnew<s.smallestdegree )
+            if( s.eligible[p] )
             {
-                s.smallestdegree = dnew;
+                idxprev = s.vprev[p];
+                idxnext = s.vnext[p];
+                if( idxprev>=0 )
+                {
+                    s.vnext[idxprev] = idxnext;
+                }
+                else
+                {
+                    s.vbegin[dold] = idxnext;
+                }
+                if( idxnext>=0 )
+                {
+                    s.vprev[idxnext] = idxprev;
+                }
+                oldbegin = s.vbegin[dnew];
+                s.vbegin[dnew] = p;
+                s.vnext[p] = oldbegin;
+                s.vprev[p] = -1;
+                if( oldbegin>=0 )
+                {
+                    s.vprev[oldbegin] = p;
+                }
+                if( dnew<s.smallestdegree )
+                {
+                    s.smallestdegree = dnew;
+                }
             }
         }
 
@@ -40744,6 +41410,8 @@ public partial class alglib
             Buf.ColumnSwaps-entries [K,K+NodeSize) are initialized by permutation
             P           -   pivot supervariable
             NodeSize    -   supernode size
+            
+        If P<0, then we exhausted all eligible vertices, nothing is returned.
 
           -- ALGLIB PROJECT --
              Copyright 05.10.2020 by Bochkanov Sergey.
@@ -40761,7 +41429,10 @@ public partial class alglib
             nodesize = 0;
 
             p = vtxgetapproxmindegree(buf.vertexdegrees, _params);
-            alglib.ap.assert(p>=0, "GenerateAMDPermutation: integrity check 3634 failed");
+            if( p<0 )
+            {
+                return;
+            }
             alglib.ap.assert(vtxgetapprox(buf.vertexdegrees, p, _params)>=0, "integrity check RDFD2 failed");
             nodesize = 0;
             knsstartenumeration(buf.setsuper, p, _params);
@@ -41055,6 +41726,14 @@ public partial class alglib
                             {
                                 lpi = buf.sncandidates[i];
                                 lpj = buf.sncandidates[j];
+                                if( buf.iseligible[buf.sncandidates[i]] && !buf.iseligible[buf.sncandidates[j]] )
+                                {
+                                    continue;
+                                }
+                                if( !buf.iseligible[buf.sncandidates[i]] && buf.iseligible[buf.sncandidates[j]] )
+                                {
+                                    continue;
+                                }
                                 apstruct.nisclear(buf.adji, _params);
                                 apstruct.nisclear(buf.adjj, _params);
                                 nsaddkth(buf.adji, buf.seta, lpi, _params);
@@ -41145,6 +41824,50 @@ public partial class alglib
     }
     public partial class spchol
     {
+        /*************************************************************************
+        Temporaries for priority AMD
+        *************************************************************************/
+        public class priorityamdbuffers : apobject
+        {
+            public int[] tmpperm;
+            public int[] invtmpperm;
+            public amdordering.amdbuffer amdtmp;
+            public sparse.sparsematrix tmpa2;
+            public sparse.sparsematrix tmpbottomt;
+            public sparse.sparsematrix tmpupdate;
+            public sparse.sparsematrix tmpupdatet;
+            public sparse.sparsematrix tmpnewtailt;
+            public priorityamdbuffers()
+            {
+                init();
+            }
+            public override void init()
+            {
+                tmpperm = new int[0];
+                invtmpperm = new int[0];
+                amdtmp = new amdordering.amdbuffer();
+                tmpa2 = new sparse.sparsematrix();
+                tmpbottomt = new sparse.sparsematrix();
+                tmpupdate = new sparse.sparsematrix();
+                tmpupdatet = new sparse.sparsematrix();
+                tmpnewtailt = new sparse.sparsematrix();
+            }
+            public override alglib.apobject make_copy()
+            {
+                priorityamdbuffers _result = new priorityamdbuffers();
+                _result.tmpperm = (int[])tmpperm.Clone();
+                _result.invtmpperm = (int[])invtmpperm.Clone();
+                _result.amdtmp = (amdordering.amdbuffer)amdtmp.make_copy();
+                _result.tmpa2 = (sparse.sparsematrix)tmpa2.make_copy();
+                _result.tmpbottomt = (sparse.sparsematrix)tmpbottomt.make_copy();
+                _result.tmpupdate = (sparse.sparsematrix)tmpupdate.make_copy();
+                _result.tmpupdatet = (sparse.sparsematrix)tmpupdatet.make_copy();
+                _result.tmpnewtailt = (sparse.sparsematrix)tmpnewtailt.make_copy();
+                return _result;
+            }
+        };
+
+
         /*************************************************************************
         This structure is used  to  store supernodal dependencies  for  a Cholesky
         factorization as well as precomputed update sizes, offsets, costs, etc.
@@ -41258,16 +41981,16 @@ public partial class alglib
             public int[] rowstrides;
             public int[] rowoffsets;
             public double[] diagd;
-            public apserv.nbpool nbooleanpool;
-            public apserv.nipool nintegerpool;
+            public apserv.nbpool n1booleanpool;
+            public apserv.nipool n1integerpool;
             public apserv.nrpool nrealpool;
             public int[] currowbegin;
             public bool[] flagarray;
-            public bool[] eligible;
             public int[] curpriorities;
             public int[] tmpparent;
             public int[] node2supernode;
             public amdordering.amdbuffer amdtmp;
+            public priorityamdbuffers pamdtmp;
             public int[] tmp0;
             public int[] tmp1;
             public int[] tmp2;
@@ -41276,13 +41999,6 @@ public partial class alglib
             public int[] raw2smap;
             public sparse.sparsematrix tmpa;
             public sparse.sparsematrix tmpat;
-            public sparse.sparsematrix tmpa2;
-            public sparse.sparsematrix tmpbottomt;
-            public sparse.sparsematrix tmpupdate;
-            public sparse.sparsematrix tmpupdatet;
-            public sparse.sparsematrix tmpnewtailt;
-            public int[] tmpperm;
-            public int[] invtmpperm;
             public double[] tmpx;
             public double[] simdbuf;
             public spcholanalysis()
@@ -41312,16 +42028,16 @@ public partial class alglib
                 rowstrides = new int[0];
                 rowoffsets = new int[0];
                 diagd = new double[0];
-                nbooleanpool = new apserv.nbpool();
-                nintegerpool = new apserv.nipool();
+                n1booleanpool = new apserv.nbpool();
+                n1integerpool = new apserv.nipool();
                 nrealpool = new apserv.nrpool();
                 currowbegin = new int[0];
                 flagarray = new bool[0];
-                eligible = new bool[0];
                 curpriorities = new int[0];
                 tmpparent = new int[0];
                 node2supernode = new int[0];
                 amdtmp = new amdordering.amdbuffer();
+                pamdtmp = new priorityamdbuffers();
                 tmp0 = new int[0];
                 tmp1 = new int[0];
                 tmp2 = new int[0];
@@ -41330,13 +42046,6 @@ public partial class alglib
                 raw2smap = new int[0];
                 tmpa = new sparse.sparsematrix();
                 tmpat = new sparse.sparsematrix();
-                tmpa2 = new sparse.sparsematrix();
-                tmpbottomt = new sparse.sparsematrix();
-                tmpupdate = new sparse.sparsematrix();
-                tmpupdatet = new sparse.sparsematrix();
-                tmpnewtailt = new sparse.sparsematrix();
-                tmpperm = new int[0];
-                invtmpperm = new int[0];
                 tmpx = new double[0];
                 simdbuf = new double[0];
             }
@@ -41382,16 +42091,16 @@ public partial class alglib
                 _result.rowstrides = (int[])rowstrides.Clone();
                 _result.rowoffsets = (int[])rowoffsets.Clone();
                 _result.diagd = (double[])diagd.Clone();
-                _result.nbooleanpool = (apserv.nbpool)nbooleanpool.make_copy();
-                _result.nintegerpool = (apserv.nipool)nintegerpool.make_copy();
+                _result.n1booleanpool = (apserv.nbpool)n1booleanpool.make_copy();
+                _result.n1integerpool = (apserv.nipool)n1integerpool.make_copy();
                 _result.nrealpool = (apserv.nrpool)nrealpool.make_copy();
                 _result.currowbegin = (int[])currowbegin.Clone();
                 _result.flagarray = (bool[])flagarray.Clone();
-                _result.eligible = (bool[])eligible.Clone();
                 _result.curpriorities = (int[])curpriorities.Clone();
                 _result.tmpparent = (int[])tmpparent.Clone();
                 _result.node2supernode = (int[])node2supernode.Clone();
                 _result.amdtmp = (amdordering.amdbuffer)amdtmp.make_copy();
+                _result.pamdtmp = (priorityamdbuffers)pamdtmp.make_copy();
                 _result.tmp0 = (int[])tmp0.Clone();
                 _result.tmp1 = (int[])tmp1.Clone();
                 _result.tmp2 = (int[])tmp2.Clone();
@@ -41400,13 +42109,6 @@ public partial class alglib
                 _result.raw2smap = (int[])raw2smap.Clone();
                 _result.tmpa = (sparse.sparsematrix)tmpa.make_copy();
                 _result.tmpat = (sparse.sparsematrix)tmpat.make_copy();
-                _result.tmpa2 = (sparse.sparsematrix)tmpa2.make_copy();
-                _result.tmpbottomt = (sparse.sparsematrix)tmpbottomt.make_copy();
-                _result.tmpupdate = (sparse.sparsematrix)tmpupdate.make_copy();
-                _result.tmpupdatet = (sparse.sparsematrix)tmpupdatet.make_copy();
-                _result.tmpnewtailt = (sparse.sparsematrix)tmpnewtailt.make_copy();
-                _result.tmpperm = (int[])tmpperm.Clone();
-                _result.invtmpperm = (int[])invtmpperm.Clone();
                 _result.tmpx = (double[])tmpx.Clone();
                 _result.simdbuf = (double[])simdbuf.Clone();
                 return _result;
@@ -41486,12 +42188,22 @@ public partial class alglib
                             * zero value means that appropriate  value  for  a  soft
                               priority (between 2 and 5) is automatically chosen.
                               Specific value may change in future ALGLIB versions.
+            PromoteTo   -   controls column promotion:
+                            * columns which will be postponed due to being too dense
+                              will be promoted to the priority group #PromoteTo
+                              instead of the next group.
+                            * Ignored for PermType<>3 and PermType<>-3.
+                            * If column already belongs to a priority group #PromoteTo
+                              or higher, it will be promoted to the next priority group.
+                            * Can be zero (means default way of promoting columns).
+                            * Avoid specifying too large values (above 10) because
+                              algorithm will perform at least (PromoteTo+1) elimination rounds.
             FactType    -   factorization type:
                             * 0 for traditional Cholesky
                             * 1 for LDLT decomposition with strictly diagonal D
             PermType    -   permutation type:
-                            *-3 for debug improved AMD which debugs AMD itself and
-                                parallel block supernodal code:
+                            *-3 for debug improved AMD which debugs AMD itself, parallel
+                                block supernodal code and advanced memory management:
                                 * AMD is debugged by generating a sequence of decreasing
                                   tail sizes, ~logN in total, even if ordering can be
                                   done with just one round of AMD. This ordering is
@@ -41500,6 +42212,8 @@ public partial class alglib
                                   partitioning problems into smallest possible chunks,
                                   ignoring thresholds set by SMPActivationLevel()
                                   and SpawnLevel().
+                                * memory management is debugged by randomly switching
+                                  MemReuse between +1 and -1, ignoring its original value
                             *-2 for column count ordering (NOT RECOMMENDED!)
                             *-1 for absence of permutation
                             * 0 for best permutation available
@@ -41510,13 +42224,25 @@ public partial class alglib
                                 ordering with better  handling  of  matrices  with
                                 dense rows/columns and ability to perform priority
                                 ordering
+            MemReuse    -   the memory management strategy:
+                            * +1 means that the internally allocated memory is reused
+                                 as much as possible. What was once allocated is not
+                                 freed as long as SPCholAnalysis structure is alive.
+                                 Ideal for many small and medium-sized repeated
+                                 factorization problems.
+                            * -1 means that some potentially large memory blocks
+                                 are freed as soon as they are not needed. Whilst
+                                 some limited amount of dynamically allocated memory
+                                 is still reused, the largest block are not.
+                                 Ideal for large-scale problems that occupy almost
+                                 all available RAM.
             Analysis    -   can be uninitialized instance, or previous analysis
                             results. Previously allocated memory is reused as much
                             as possible.
             Buf         -   buffer; may be completely uninitialized, or one remained
                             from previous calls (including ones with completely
                             different matrices). Previously allocated temporary
-                            space will be reused as much as possible.
+                            space will be reused.
 
         OUTPUT PARAMETERS:
             Analysis    -   symbolic analysis of the matrix structure  which  will
@@ -41545,30 +42271,28 @@ public partial class alglib
         public static bool spsymmanalyze(sparse.sparsematrix a,
             int[] priorities,
             double promoteabove,
+            int promoteto,
             int facttype,
             int permtype,
+            int memreuse,
             spcholanalysis analysis,
             alglib.xparams _params)
         {
             bool result = new bool();
             int n = 0;
-            int m = 0;
             int i = 0;
             int j = 0;
             int jj = 0;
-            int j0 = 0;
-            int j1 = 0;
             int k = 0;
-            int range0 = 0;
-            int range1 = 0;
-            int newrange0 = 0;
-            int eligiblecnt = 0;
             bool permready = new bool();
 
+            alglib.ap.assert(math.isfinite(promoteabove) && (double)(promoteabove)>=(double)(0), "SPSymmAnalyze: PromoteAbove is negative or infinite");
+            alglib.ap.assert(promoteto>=0, "SPSymmAnalyze: PromoteTo is negative");
             alglib.ap.assert(sparse.sparseiscrs(a, _params), "SPSymmAnalyze: A is not stored in CRS format");
             alglib.ap.assert(sparse.sparsegetnrows(a, _params)==sparse.sparsegetncols(a, _params), "SPSymmAnalyze: non-square A");
             alglib.ap.assert(facttype==0 || facttype==1, "SPSymmAnalyze: unexpected FactType");
             alglib.ap.assert((((((permtype==0 || permtype==1) || permtype==2) || permtype==3) || permtype==-1) || permtype==-2) || permtype==-3, "SPSymmAnalyze: unexpected PermType");
+            alglib.ap.assert(memreuse==-1 || memreuse==1, "SPSymmAnalyze: unexpected MemType");
             alglib.ap.assert((permtype!=3 && permtype!=-3) || (math.isfinite(promoteabove) && (double)(promoteabove)>=(double)(0)), "SPSymmAnalyze: unexpected PromoteAbove - infinite or negative");
             result = true;
             n = sparse.sparsegetnrows(a, _params);
@@ -41582,6 +42306,7 @@ public partial class alglib
                 ablasf.isetallocv(n, 0, ref analysis.curpriorities, _params);
                 permtype = 3;
                 promoteabove = 0.0;
+                promoteto = 0;
             }
             analysis.tasktype = 0;
             analysis.n = n;
@@ -41611,8 +42336,8 @@ public partial class alglib
             apserv.ivectorsetlengthatleast(ref analysis.tmp3, n+1, _params);
             apserv.ivectorsetlengthatleast(ref analysis.tmp4, n+1, _params);
             apserv.bvectorsetlengthatleast(ref analysis.flagarray, n+1, _params);
-            apserv.nbpoolinit(analysis.nbooleanpool, n, _params);
-            apserv.nipoolinit(analysis.nintegerpool, n, _params);
+            apserv.nbpoolinit(analysis.n1booleanpool, n+1, _params);
+            apserv.nipoolinit(analysis.n1integerpool, n+1, _params);
             apserv.nrpoolinit(analysis.nrealpool, n, _params);
             
             //
@@ -41739,183 +42464,8 @@ public partial class alglib
                 }
                 if( permtype==3 || permtype==-3 )
                 {
-                    alglib.ap.assert(alglib.ap.len(analysis.curpriorities)>=n, "SPSymmAnalyze: integrity check failed (4653)");
-                    
-                    //
-                    // Perform iterative AMD, with nearly-dense columns being postponed to be handled later.
-                    //
-                    // The current (residual) matrix A is divided into two parts: head, with its columns being
-                    // properly ordered, and tail, with its columns being reordered at the next iteration.
-                    //
-                    // After each partial AMD we compute sparsity pattern of the tail, set it as the new residual
-                    // and repeat iteration.
-                    //
-                    ablasf.iallocv(n, ref analysis.fillinperm, _params);
-                    ablasf.iallocv(n, ref analysis.invfillinperm, _params);
-                    ablasf.iallocv(n, ref analysis.tmpperm, _params);
-                    ablasf.iallocv(n, ref analysis.invtmpperm, _params);
-                    for(i=0; i<=n-1; i++)
-                    {
-                        analysis.fillinperm[i] = i;
-                        analysis.invfillinperm[i] = i;
-                    }
                     sparse.sparsecopybuf(a, analysis.tmpa, _params);
-                    ablasf.ballocv(n, ref analysis.eligible, _params);
-                    range0 = 0;
-                    range1 = n;
-                    while( range0<range1 )
-                    {
-                        m = range1-range0;
-                        
-                        //
-                        // Perform partial AMD ordering of the residual matrix:
-                        // * determine columns in the residual part that are eligible for elimination.
-                        // * generate partial fill-in reducing permutation (leading Residual-Tail columns
-                        //   are properly ordered, the rest is unordered).
-                        // * update column elimination priorities (decrease by 1)
-                        //
-                        ablasf.bsetv(range1-range0, false, analysis.eligible, _params);
-                        eligiblecnt = 0;
-                        for(i=0; i<=n-1; i++)
-                        {
-                            j = analysis.fillinperm[i];
-                            if( (j>=range0 && j<range1) && analysis.curpriorities[i]<=0 )
-                            {
-                                analysis.eligible[j-range0] = true;
-                                eligiblecnt = eligiblecnt+1;
-                            }
-                        }
-                        if( analysis.dotrace )
-                        {
-                            alglib.ap.trace(System.String.Format("> multiround AMD, column_range=[{0,7:d},{1,7:d}] ({2,7:d} out of {3,7:d}), {4,5:F1}% eligible\n", range0, range1, range1-range0, n, (double)(100*eligiblecnt)/(double)m));
-                        }
-                        newrange0 = range0+amdordering.generateamdpermutationx(analysis.tmpa, analysis.eligible, range1-range0, promoteabove, ref analysis.tmpperm, ref analysis.invtmpperm, 1, analysis.amdtmp, _params);
-                        if( permtype==-3 )
-                        {
-                            
-                            //
-                            // Special debug ordering in order to test correctness of multiple AMD rounds
-                            //
-                            newrange0 = Math.Min(newrange0, range0+m/2+1);
-                        }
-                        for(i=0; i<=n-1; i++)
-                        {
-                            analysis.curpriorities[i] = analysis.curpriorities[i]-1;
-                        }
-                        
-                        //
-                        // If there were columns that both eligible and sparse enough,
-                        // apply permutation and recompute trail.
-                        //
-                        if( newrange0>range0 )
-                        {
-                            
-                            //
-                            // Apply permutation TmpPerm[] to the tail of the permutation FillInPerm[]
-                            //
-                            for(i=0; i<=m-1; i++)
-                            {
-                                analysis.fillinperm[analysis.invfillinperm[range0+analysis.invtmpperm[i]]] = range0+i;
-                            }
-                            for(i=0; i<=n-1; i++)
-                            {
-                                analysis.invfillinperm[analysis.fillinperm[i]] = i;
-                            }
-                            
-                            //
-                            // Compute partial Cholesky of the trailing submatrix (after applying rank-K update to the
-                            // trailing submatrix but before Cholesky-factorizing it).
-                            //
-                            if( newrange0<range1 )
-                            {
-                                sparse.sparsesymmpermtblbuf(analysis.tmpa, false, analysis.tmpperm, analysis.tmpa2, _params);
-                                partialcholeskypattern(analysis.tmpa2, newrange0-range0, range1-newrange0, analysis.tmpa, analysis.tmpparent, analysis.tmp0, analysis.tmp1, analysis.tmp2, analysis.flagarray, analysis.tmpbottomt, analysis.tmpupdatet, analysis.tmpupdate, analysis.tmpnewtailt, _params);
-                                if( analysis.extendeddebug )
-                                {
-                                    slowdebugchecks(a, analysis.fillinperm, n, range1-newrange0, analysis.tmpa, _params);
-                                }
-                            }
-                            range0 = newrange0;
-                            m = range1-range0;
-                        }
-                        
-                        //
-                        // Analyze sparsity pattern of the current submatrix (TmpA), manually move completely dense rows to the end.
-                        //
-                        if( m>0 )
-                        {
-                            alglib.ap.assert((analysis.tmpa.m==m && analysis.tmpa.n==m) && analysis.tmpa.ninitialized==analysis.tmpa.ridx[m], "SPSymmAnalyze: integrity check failed (0572)");
-                            ablasf.isetallocv(m, 1, ref analysis.tmp0, _params);
-                            for(i=0; i<=m-1; i++)
-                            {
-                                j0 = analysis.tmpa.ridx[i];
-                                j1 = analysis.tmpa.didx[i]-1;
-                                for(jj=j0; jj<=j1; jj++)
-                                {
-                                    j = analysis.tmpa.idx[jj];
-                                    analysis.tmp0[i] = analysis.tmp0[i]+1;
-                                    analysis.tmp0[j] = analysis.tmp0[j]+1;
-                                }
-                            }
-                            j = 0;
-                            k = 0;
-                            for(i=0; i<=m-1; i++)
-                            {
-                                if( analysis.tmp0[i]<m )
-                                {
-                                    analysis.invtmpperm[j] = i;
-                                    j = j+1;
-                                }
-                            }
-                            for(i=0; i<=m-1; i++)
-                            {
-                                if( analysis.tmp0[i]==m )
-                                {
-                                    analysis.invtmpperm[j] = i;
-                                    j = j+1;
-                                    k = k+1;
-                                }
-                            }
-                            for(i=0; i<=m-1; i++)
-                            {
-                                analysis.tmpperm[analysis.invtmpperm[i]] = i;
-                            }
-                            alglib.ap.assert(j==m, "SPSymmAnalyze: integrity check failed (6432)");
-                            if( k>0 )
-                            {
-                                
-                                //
-                                // K dense rows are moved to the end
-                                //
-                                if( k<m )
-                                {
-                                    
-                                    //
-                                    // There are still exist sparse rows that need reordering, apply permutation and manually truncate matrix
-                                    //
-                                    for(i=0; i<=m-1; i++)
-                                    {
-                                        analysis.fillinperm[analysis.invfillinperm[range0+analysis.invtmpperm[i]]] = range0+i;
-                                    }
-                                    for(i=0; i<=n-1; i++)
-                                    {
-                                        analysis.invfillinperm[analysis.fillinperm[i]] = i;
-                                    }
-                                    sparse.sparsesymmpermtblbuf(analysis.tmpa, false, analysis.tmpperm, analysis.tmpa2, _params);
-                                    sparse.sparsecopybuf(analysis.tmpa2, analysis.tmpa, _params);
-                                    analysis.tmpa.m = m-k;
-                                    analysis.tmpa.n = m-k;
-                                    analysis.tmpa.ninitialized = analysis.tmpa.ridx[analysis.tmpa.m];
-                                }
-                                range1 = range1-k;
-                                m = range1-range0;
-                            }
-                        }
-                    }
-                    if( analysis.dotrace )
-                    {
-                        alglib.ap.trace(System.String.Format("> multiround AMD, column_range=[{0,7:d},{1,7:d}], stopped\n", range0, range1));
-                    }
+                    generatepriorityamdpermutation(analysis.tmpa, analysis.curpriorities, promoteabove, promoteto, permtype==-3 && math.randominteger(100)>50, analysis.dotrace, analysis.n1booleanpool, analysis.n1integerpool, analysis.pamdtmp, memreuse>0, ref analysis.fillinperm, ref analysis.invfillinperm, _params);
                     permready = true;
                 }
                 alglib.ap.assert(permready, "SPSymmAnalyze: integrity check failed (pp4td)");
@@ -41989,6 +42539,10 @@ public partial class alglib
                                 and will stop immediately
                               * if ModParam0 is zero, no pivot modification is applied
                               * if ModParam1 is zero, no overflow check is performed
+                            * 2 for modified Cholesky/LDLT which handles pivots
+                              smaller than ModParam0 in the following way:
+                              * a diagonal element is set to a very large value
+                              * offdiagonal elements are zeroed
             P0, P1, P2,P3 - modification parameters #0 #1, #2 and #3.
                             Params #2 and #3 are ignored in current version.
 
@@ -42008,7 +42562,7 @@ public partial class alglib
             double p3,
             alglib.xparams _params)
         {
-            alglib.ap.assert(modstrategy==0 || modstrategy==1, "SPSymmSetModificationStrategy: unexpected ModStrategy");
+            alglib.ap.assert((modstrategy==0 || modstrategy==1) || modstrategy==2, "SPSymmSetModificationStrategy: unexpected ModStrategy");
             alglib.ap.assert(math.isfinite(p0) && (double)(p0)>=(double)(0), "SPSymmSetModificationStrategy: bad P0");
             alglib.ap.assert(math.isfinite(p1), "SPSymmSetModificationStrategy: bad P1");
             alglib.ap.assert(math.isfinite(p2), "SPSymmSetModificationStrategy: bad P2");
@@ -42987,7 +43541,7 @@ public partial class alglib
             int i1 = 0;
             int[] raw2smap = new int[0];
 
-            apserv.nipoolretrieve(analysis.nintegerpool, ref raw2smap, _params);
+            apserv.nipoolretrieve(analysis.n1integerpool, ref raw2smap, _params);
             sequencescnt = analysis.blkstruct[blkoffs+1];
             blkoffs = blkoffs+batchheadersize;
             for(seqidx=0; seqidx<=sequencescnt-1; seqidx++)
@@ -42995,36 +43549,43 @@ public partial class alglib
                 sidx = analysis.blkstruct[blkoffs+0];
                 i0 = analysis.blkstruct[blkoffs+1];
                 i1 = analysis.blkstruct[blkoffs+2];
-                cols0 = analysis.supercolrange[sidx];
-                cols1 = analysis.supercolrange[sidx+1];
-                supernodesize = cols1-cols0;
-                offss = analysis.rowoffsets[sidx];
                 
                 //
-                // Prepare mapping of raw (range 0...N-1) indexes into internal (range 0...SupernodeSize+OffdiagSize-1) ones
+                // Do we need updates (do we have children columns)?
                 //
-                for(i=cols0; i<=cols1-1; i++)
+                if( i1>i0 )
                 {
-                    raw2smap[i] = i-cols0;
+                    
+                    //
+                    // Prepare mapping of raw (range 0...N-1) indexes into internal (range 0...SupernodeSize+OffdiagSize-1) ones
+                    //
+                    cols0 = analysis.supercolrange[sidx];
+                    cols1 = analysis.supercolrange[sidx+1];
+                    supernodesize = cols1-cols0;
+                    offss = analysis.rowoffsets[sidx];
+                    for(i=cols0; i<=cols1-1; i++)
+                    {
+                        raw2smap[i] = i-cols0;
+                    }
+                    k0 = analysis.superrowridx[sidx];
+                    k1 = analysis.superrowridx[sidx+1]-1;
+                    for(k=k0; k<=k1; k++)
+                    {
+                        raw2smap[analysis.superrowidx[k]] = supernodesize+(k-k0);
+                    }
+                    
+                    //
+                    // Update current supernode with remaining updates.
+                    //
+                    updatesupernode(analysis, sidx, cols0, cols1, offss, raw2smap, i0, i1, analysis.diagd, _params);
                 }
-                k0 = analysis.superrowridx[sidx];
-                k1 = analysis.superrowridx[sidx+1]-1;
-                for(k=k0; k<=k1; k++)
-                {
-                    raw2smap[analysis.superrowidx[k]] = supernodesize+(k-k0);
-                }
-                
-                //
-                // Update current supernode with remaining updates.
-                //
-                updatesupernode(analysis, sidx, cols0, cols1, offss, raw2smap, i0, i1, analysis.diagd, _params);
                 
                 //
                 // Factorize current supernode if last update was applied
                 //
                 if( i1==analysis.ladj.rowend[sidx] && !factorizesupernode(analysis, sidx, _params) )
                 {
-                    apserv.nipoolrecycle(analysis.nintegerpool, ref raw2smap, _params);
+                    apserv.nipoolrecycle(analysis.n1integerpool, ref raw2smap, _params);
                     failureflag.val = true;
                     return;
                 }
@@ -43034,7 +43595,7 @@ public partial class alglib
                 //
                 blkoffs = blkoffs+sequenceentrysize;
             }
-            apserv.nipoolrecycle(analysis.nintegerpool, ref raw2smap, _params);
+            apserv.nipoolrecycle(analysis.n1integerpool, ref raw2smap, _params);
         }
 
 
@@ -44156,8 +44717,8 @@ public partial class alglib
             //
             // Retrieve temporary arrays from the pool
             //
-            apserv.nipoolretrieve(analysis.nintegerpool, ref heads, _params);
-            apserv.nipoolretrieve(analysis.nintegerpool, ref rootbatchsizes, _params);
+            apserv.nipoolretrieve(analysis.n1integerpool, ref heads, _params);
+            apserv.nipoolretrieve(analysis.n1integerpool, ref rootbatchsizes, _params);
             apserv.nrpoolretrieve(analysis.nrealpool, ref costs, _params);
             
             //
@@ -44292,8 +44853,8 @@ public partial class alglib
             //
             // Recycle temporary arrays
             //
-            apserv.nipoolrecycle(analysis.nintegerpool, ref heads, _params);
-            apserv.nipoolrecycle(analysis.nintegerpool, ref rootbatchsizes, _params);
+            apserv.nipoolrecycle(analysis.n1integerpool, ref heads, _params);
+            apserv.nipoolrecycle(analysis.n1integerpool, ref rootbatchsizes, _params);
             apserv.nrpoolrecycle(analysis.nrealpool, ref costs, _params);
         }
 
@@ -44466,8 +45027,8 @@ public partial class alglib
             {
                 alglib.ap.trace(System.String.Format(">> running scheduler for a block of {0,0:d} supernodes\n", blocksize));
             }
-            apserv.nbpoolretrieve(analysis.nbooleanpool, ref isfactorized, _params);
-            apserv.nipoolretrieve(analysis.nintegerpool, ref rowbegin, _params);
+            apserv.nbpoolretrieve(analysis.n1booleanpool, ref isfactorized, _params);
+            apserv.nipoolretrieve(analysis.n1integerpool, ref rowbegin, _params);
             apserv.nrpoolretrieve(analysis.nrealpool, ref nflop, _params);
             ablasf.bsetv(analysis.nsuper, false, isfactorized, _params);
             ablasf.icopyv(analysis.nsuper, analysis.ladj.rowbegin, rowbegin, _params);
@@ -44480,8 +45041,8 @@ public partial class alglib
             scheduleupdatesforablockrec(analysis, rowbegin, isfactorized, nflop, ref blkstruct, blockitemslistoffs, blocksize, 0, ref offs, ref groupscreated, ref totalflops, ref sequentialblockflops, _params);
             blkstruct[updatesheaderoffs+0] = offs-updatesheaderoffs;
             blkstruct[updatesheaderoffs+1] = groupscreated;
-            apserv.nbpoolrecycle(analysis.nbooleanpool, ref isfactorized, _params);
-            apserv.nipoolrecycle(analysis.nintegerpool, ref rowbegin, _params);
+            apserv.nbpoolrecycle(analysis.n1booleanpool, ref isfactorized, _params);
+            apserv.nipoolrecycle(analysis.n1integerpool, ref rowbegin, _params);
             apserv.nrpoolrecycle(analysis.nrealpool, ref nflop, _params);
             
             //
@@ -45153,7 +45714,7 @@ public partial class alglib
             cmpChildrenI
             tmp1,
             FlagArray
-                    -   preallocated temporary arrays, length at least Head+Tail
+                    -   preallocated temporary arrays, length at least Head+Tail+1
             tmpBottomT,
             tmpUpdateT,
             tmpUpdate-  temporary sparsematrix instances; previously allocated
@@ -45171,11 +45732,8 @@ public partial class alglib
             int head,
             int tail,
             sparse.sparsematrix atail,
-            int[] tmpparent,
-            int[] tmpchildrenr,
-            int[] tmpchildreni,
-            int[] tmp1,
-            bool[] flagarray,
+            apserv.nipool n1ipool,
+            apserv.nbpool n1bpool,
             sparse.sparsematrix tmpbottomt,
             sparse.sparsematrix tmpupdatet,
             sparse.sparsematrix tmpupdate,
@@ -45192,16 +45750,30 @@ public partial class alglib
             int kb = 0;
             int cursize = 0;
             double v = 0;
+            int[] tmpparent = new int[0];
+            int[] tmpchildrenr = new int[0];
+            int[] tmpchildreni = new int[0];
+            int[] tmp1 = new int[0];
+            bool[] flagarray = new bool[0];
 
             alglib.ap.assert(a.m==head+tail, "PartialCholeskyPattern: rows(A)!=Head+Tail");
             alglib.ap.assert(a.n==head+tail, "PartialCholeskyPattern: cols(A)!=Head+Tail");
+            
+            //
+            // Initialize and retrieve temporary arrays
+            //
+            apserv.nipoolretrieve(n1ipool, ref tmpparent, _params);
+            apserv.nipoolretrieve(n1ipool, ref tmpchildrenr, _params);
+            apserv.nipoolretrieve(n1ipool, ref tmpchildreni, _params);
+            apserv.nipoolretrieve(n1ipool, ref tmp1, _params);
+            apserv.nbpoolretrieve(n1bpool, ref flagarray, _params);
+            cursize = head+tail;
+            v = (double)1/(double)cursize;
             alglib.ap.assert(alglib.ap.len(tmpparent)>=head+tail+1, "PartialCholeskyPattern: Length(tmpParent)<Head+Tail+1");
             alglib.ap.assert(alglib.ap.len(tmpchildrenr)>=head+tail+1, "PartialCholeskyPattern: Length(tmpChildrenR)<Head+Tail+1");
             alglib.ap.assert(alglib.ap.len(tmpchildreni)>=head+tail+1, "PartialCholeskyPattern: Length(tmpChildrenI)<Head+Tail+1");
             alglib.ap.assert(alglib.ap.len(tmp1)>=head+tail+1, "PartialCholeskyPattern: Length(tmp1)<Head+Tail+1");
             alglib.ap.assert(alglib.ap.len(flagarray)>=head+tail+1, "PartialCholeskyPattern: Length(tmp1)<Head+Tail+1");
-            cursize = head+tail;
-            v = (double)1/(double)cursize;
             
             //
             // Compute leading Head columns of the Cholesky decomposition of A.
@@ -45424,6 +45996,15 @@ public partial class alglib
             }
             sparse.sparsecreatecrsinplace(tmpnewtailt, _params);
             sparse.sparsecopytransposecrsbuf(tmpnewtailt, atail, _params);
+            
+            //
+            // Recycle temporaries
+            //
+            apserv.nipoolrecycle(n1ipool, ref tmpparent, _params);
+            apserv.nipoolrecycle(n1ipool, ref tmpchildrenr, _params);
+            apserv.nipoolrecycle(n1ipool, ref tmpchildreni, _params);
+            apserv.nipoolrecycle(n1ipool, ref tmp1, _params);
+            apserv.nbpoolrecycle(n1bpool, ref flagarray, _params);
         }
 
 
@@ -45992,7 +46573,7 @@ public partial class alglib
             //
             // Handle general update, rerefence code
             //
-            apserv.nipoolretrieve(analysis.nintegerpool, ref u2smap, _params);
+            apserv.nipoolretrieve(analysis.n1integerpool, ref u2smap, _params);
             apserv.ivectorsetlengthatleast(ref u2smap, uheight, _params);
             for(i=0; i<=uheight-1; i++)
             {
@@ -46046,7 +46627,7 @@ public partial class alglib
                     }
                 }
             }
-            apserv.nipoolrecycle(analysis.nintegerpool, ref u2smap, _params);
+            apserv.nipoolrecycle(analysis.n1integerpool, ref u2smap, _params);
         }
 
 
@@ -46075,6 +46656,7 @@ public partial class alglib
             double vs = 0;
             double possignvraw = 0;
             bool controlpivot = new bool();
+            bool droppivot = new bool();
             bool controloverflow = new bool();
 
             cols0 = analysis.supercolrange[sidx];
@@ -46083,8 +46665,9 @@ public partial class alglib
             blocksize = cols1-cols0;
             offdiagsize = analysis.superrowridx[sidx+1]-analysis.superrowridx[sidx];
             sstride = analysis.rowstrides[sidx];
+            droppivot = analysis.modtype==2 && (double)(analysis.modparam0)>(double)(0);
             controlpivot = analysis.modtype==1 && (double)(analysis.modparam0)>(double)(0);
-            controloverflow = analysis.modtype==1 && (double)(analysis.modparam1)>(double)(0);
+            controloverflow = (analysis.modtype==1 || analysis.modtype==2) && (double)(analysis.modparam1)>(double)(0);
             if( analysis.unitd )
             {
                 
@@ -46209,24 +46792,36 @@ public partial class alglib
                         {
                             analysis.outputstorage[offss+k*sstride+j] = v*analysis.outputstorage[offss+k*sstride+j];
                         }
+                        continue;
                     }
-                    else
+                    if( droppivot && v/possignvraw<=analysis.modparam0 )
                     {
                         
                         //
-                        // Unmodified LDLT
+                        // Basic modified LDLT
                         //
-                        if( v==0 )
+                        analysis.diagd[cols0+j] = 1.0E50;
+                        analysis.outputstorage[offss+j*sstride+j] = 1.0;
+                        for(k=j+1; k<=blocksize+offdiagsize-1; k++)
                         {
-                            result = false;
-                            return result;
+                            analysis.outputstorage[offss+k*sstride+j] = 0.0;
                         }
-                        analysis.diagd[cols0+j] = v;
-                        v = 1/v;
-                        for(k=j; k<=blocksize+offdiagsize-1; k++)
-                        {
-                            analysis.outputstorage[offss+k*sstride+j] = v*analysis.outputstorage[offss+k*sstride+j];
-                        }
+                        continue;
+                    }
+                    
+                    //
+                    // Unmodified LDLT
+                    //
+                    if( v==0 )
+                    {
+                        result = false;
+                        return result;
+                    }
+                    analysis.diagd[cols0+j] = v;
+                    v = 1/v;
+                    for(k=j; k<=blocksize+offdiagsize-1; k++)
+                    {
+                        analysis.outputstorage[offss+k*sstride+j] = v*analysis.outputstorage[offss+k*sstride+j];
                     }
                 }
             }
@@ -47014,208 +47609,288 @@ public partial class alglib
 
 
         /*************************************************************************
-        Debug checks for sparsity structure
+        Generates sparsity-reducing permutation using priority AMD ordering
+
+        INPUT PARAMETERS:
+            Analysis        -   analysis object
+            WrkA            -   matrix being analyzed, destroyed during analysis
+            Priorities      -   element priorities, destroyed during analysis
+            PromoteAbove,
+            PromoteTo       -   parameters, see SPSymmAnalyze() for more info
+            DebugOrdering   -   whether special debug ordering which tests all
+                                algorithm branches is used.
+            DoTrace         -   whether trace is needed
+            Buf             -   temporary buffers provided by user
+            UserBuffers     -   whether to use buffers provided by user or local
+                                buffers:
+                                * if True, temporaries will be allocated by this
+                                  function in Buf and will be retained after the
+                                  function is done. Future calls to this function
+                                  will reuse previously allocated memory. Good
+                                  for many sequential tasks.
+                                * if True, the function will allocate its own
+                                  local buffers. All memory allocated by this
+                                  function will be freed upon exit. Good for
+                                  large-scale one-off problems.
 
           -- ALGLIB routine --
-             22.08.2021
+             17.11.2023
              Bochkanov Sergey
         *************************************************************************/
-        private static void slowdebugchecks(sparse.sparsematrix a,
-            int[] fillinperm,
-            int n,
-            int tail,
-            sparse.sparsematrix referencetaila,
+        private static void generatepriorityamdpermutation(sparse.sparsematrix wrka,
+            int[] wrkpriorities,
+            double promoteabove,
+            int promoteto,
+            bool debugordering,
+            bool dotrace,
+            apserv.nbpool n1bpool,
+            apserv.nipool n1ipool,
+            priorityamdbuffers buf,
+            bool userbuffers,
+            ref int[] fillinperm,
+            ref int[] invfillinperm,
             alglib.xparams _params)
         {
+            priorityamdbuffers localbuf = new priorityamdbuffers();
             int i = 0;
             int j = 0;
-            sparse.sparsematrix perma = new sparse.sparsematrix();
-            double[,] densea = new double[0,0];
+            int k = 0;
+            int jj = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int n = 0;
+            int m = 0;
+            int range0 = 0;
+            int range1 = 0;
+            int newrange0 = 0;
+            int promoteoffset = 0;
+            int npostponed = 0;
+            int eligiblecnt = 0;
+            bool[] eligible = new bool[0];
+            int[] tmp0 = new int[0];
 
-            sparse.sparsesymmpermtblbuf(a, false, fillinperm, perma, _params);
-            densea = new double[n, n];
-            for(i=0; i<=n-1; i++)
+            
+            //
+            // If local buffers have to be used, allocate one and run again
+            //
+            if( !userbuffers )
             {
-                for(j=0; j<=i; j++)
-                {
-                    if( !sparse.sparseexists(perma, i, j, _params) )
-                    {
-                        densea[i,j] = 0;
-                        continue;
-                    }
-                    if( i==j )
-                    {
-                        densea[i,j] = 1;
-                    }
-                    else
-                    {
-                        densea[i,j] = 0.01*(Math.Cos(i+1)+1.23*Math.Sin(j+1))/n;
-                    }
-                }
-            }
-            alglib.ap.assert(dbgmatrixcholesky2(densea, 0, n-tail, false, _params), "densechol failed");
-            ablas.rmatrixrighttrsm(tail, n-tail, densea, 0, 0, false, false, 1, densea, n-tail, 0, _params);
-            ablas.rmatrixsyrk(tail, n-tail, -1.0, densea, n-tail, 0, 0, 1.0, densea, n-tail, n-tail, false, _params);
-            for(i=n-tail; i<=n-1; i++)
-            {
-                for(j=n-tail; j<=i; j++)
-                {
-                    alglib.ap.assert(!((double)(densea[i,j])==(double)(0) && sparse.sparseexists(referencetaila, i-(n-tail), j-(n-tail), _params)), "SPSymmAnalyze: structure check 1 failed");
-                    alglib.ap.assert(!((double)(densea[i,j])!=(double)(0) && !sparse.sparseexists(referencetaila, i-(n-tail), j-(n-tail), _params)), "SPSymmAnalyze: structure check 2 failed");
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Dense Cholesky driver for internal integrity checks
-
-          -- ALGLIB routine --
-             22.08.2021
-             Bochkanov Sergey
-        *************************************************************************/
-        private static bool dbgmatrixcholesky2(double[,] aaa,
-            int offs,
-            int n,
-            bool isupper,
-            alglib.xparams _params)
-        {
-            bool result = new bool();
-            int i = 0;
-            int j = 0;
-            double ajj = 0;
-            double v = 0;
-            double r = 0;
-            double[] tmp = new double[0];
-            int i_ = 0;
-            int i1_ = 0;
-
-            tmp = new double[2*n];
-            result = true;
-            if( n<0 )
-            {
-                result = false;
-                return result;
+                generatepriorityamdpermutation(wrka, wrkpriorities, promoteabove, promoteto, debugordering, dotrace, n1bpool, n1ipool, buf, true, ref fillinperm, ref invfillinperm, _params);
+                return;
             }
             
             //
-            // Quick return if possible
+            // Initialize
             //
-            if( n==0 )
+            n = wrka.n;
+            alglib.ap.assert(alglib.ap.len(wrkpriorities)>=n, "SPSymmAnalyze: integrity check failed (4653)");
+            
+            //
+            // Retrieve temporary arrays
+            //
+            apserv.nbpoolretrieve(n1bpool, ref eligible, _params);
+            apserv.nipoolretrieve(n1ipool, ref tmp0, _params);
+            
+            //
+            // Perform iterative AMD, with nearly-dense columns being postponed to be handled later.
+            //
+            // The current (residual) matrix A is divided into two parts: head, with its columns being
+            // properly ordered, and tail, with its columns being reordered at the next iteration.
+            //
+            // After each partial AMD we compute sparsity pattern of the tail, set it as the new residual
+            // and repeat iteration.
+            //
+            ablasf.iallocv(n, ref fillinperm, _params);
+            ablasf.iallocv(n, ref invfillinperm, _params);
+            ablasf.iallocv(n, ref buf.tmpperm, _params);
+            ablasf.iallocv(n, ref buf.invtmpperm, _params);
+            for(i=0; i<=n-1; i++)
             {
-                return result;
+                fillinperm[i] = i;
+                invfillinperm[i] = i;
             }
-            if( isupper )
+            range0 = 0;
+            range1 = n;
+            promoteoffset = 0;
+            while( range0<range1 )
             {
+                m = range1-range0;
                 
                 //
-                // Compute the Cholesky factorization A = U'*U.
+                // Perform partial AMD ordering of the residual matrix:
+                // * determine columns in the residual part that are eligible for elimination.
+                // * generate partial fill-in reducing permutation (leading Residual-Tail columns
+                //   are properly ordered, the rest is unordered).
+                // * update column elimination priorities and promotion target (decrease by 1)
                 //
-                for(j=0; j<=n-1; j++)
+                ablasf.bsetv(range1-range0, false, eligible, _params);
+                eligiblecnt = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    j = fillinperm[i];
+                    if( (j>=range0 && j<range1) && wrkpriorities[i]<=0 )
+                    {
+                        eligible[j-range0] = true;
+                        eligiblecnt = eligiblecnt+1;
+                    }
+                }
+                if( dotrace )
+                {
+                    alglib.ap.trace(System.String.Format("> multiround AMD, column_range=[{0,7:d},{1,7:d}] ({2,7:d} out of {3,7:d}), {4,5:F1}% eligible", range0, range1, range1-range0, n, (double)(100*eligiblecnt)/(double)m));
+                }
+                newrange0 = range0+amdordering.generateamdpermutationx(wrka, eligible, range1-range0, promoteabove, ref buf.tmpperm, ref buf.invtmpperm, 1, buf.amdtmp, _params);
+                if( debugordering )
                 {
                     
                     //
-                    // Compute U(J,J) and test for non-positive-definiteness.
+                    // Special debug ordering in order to test correctness of multiple AMD rounds
                     //
-                    v = 0.0;
-                    for(i_=offs; i_<=offs+j-1;i_++)
+                    newrange0 = Math.Min(newrange0, range0+m/2+1);
+                }
+                for(i=0; i<=n-1; i++)
+                {
+                    wrkpriorities[i] = wrkpriorities[i]-1;
+                }
+                promoteto = Math.Max(promoteto-1, 0);
+                promoteoffset = promoteoffset+1;
+                npostponed = 0;
+                for(i=0; i<=range1-newrange0-1; i++)
+                {
+                    if( eligible[buf.invtmpperm[newrange0-range0+i]] )
                     {
-                        v += aaa[i_,offs+j]*aaa[i_,offs+j];
-                    }
-                    ajj = aaa[offs+j,offs+j]-v;
-                    if( (double)(ajj)<=(double)(0) )
-                    {
-                        aaa[offs+j,offs+j] = ajj;
-                        result = false;
-                        return result;
-                    }
-                    ajj = Math.Sqrt(ajj);
-                    aaa[offs+j,offs+j] = ajj;
-                    
-                    //
-                    // Compute elements J+1:N-1 of row J.
-                    //
-                    if( j<n-1 )
-                    {
-                        if( j>0 )
-                        {
-                            i1_ = (offs) - (0);
-                            for(i_=0; i_<=j-1;i_++)
-                            {
-                                tmp[i_] = -aaa[i_+i1_,offs+j];
-                            }
-                            ablas.rmatrixmv(n-j-1, j, aaa, offs, offs+j+1, 1, tmp, 0, tmp, n, _params);
-                            i1_ = (n) - (offs+j+1);
-                            for(i_=offs+j+1; i_<=offs+n-1;i_++)
-                            {
-                                aaa[offs+j,i_] = aaa[offs+j,i_] + tmp[i_+i1_];
-                            }
-                        }
-                        r = 1/ajj;
-                        for(i_=offs+j+1; i_<=offs+n-1;i_++)
-                        {
-                            aaa[offs+j,i_] = r*aaa[offs+j,i_];
-                        }
+                        
+                        //
+                        // The column was marked as eligible, but was postponed due to its density.
+                        // Promote column to a higher priority group.
+                        //
+                        wrkpriorities[range0+buf.invtmpperm[newrange0-range0+i]] = promoteto;
+                        npostponed = npostponed+1;
                     }
                 }
-            }
-            else
-            {
+                if( dotrace )
+                {
+                    if( npostponed>0 )
+                    {
+                        alglib.ap.trace(System.String.Format(", {0,5:F1}% postponed (promoted to elimination group {1,0:d})", (double)(100*npostponed)/(double)m, promoteoffset+promoteto));
+                    }
+                    alglib.ap.trace("\n");
+                }
                 
                 //
-                // Compute the Cholesky factorization A = L*L'.
+                // If there were columns that both eligible and sparse enough,
+                // apply permutation and recompute trail.
                 //
-                for(j=0; j<=n-1; j++)
+                if( newrange0>range0 )
                 {
                     
                     //
-                    // Compute L(J+1,J+1) and test for non-positive-definiteness.
+                    // Apply permutation TmpPerm[] to the tail of the permutation FillInPerm[]
                     //
-                    v = 0.0;
-                    for(i_=offs; i_<=offs+j-1;i_++)
+                    for(i=0; i<=m-1; i++)
                     {
-                        v += aaa[offs+j,i_]*aaa[offs+j,i_];
+                        fillinperm[invfillinperm[range0+buf.invtmpperm[i]]] = range0+i;
                     }
-                    ajj = aaa[offs+j,offs+j]-v;
-                    if( (double)(ajj)<=(double)(0) )
+                    for(i=0; i<=n-1; i++)
                     {
-                        aaa[offs+j,offs+j] = ajj;
-                        result = false;
-                        return result;
+                        invfillinperm[fillinperm[i]] = i;
                     }
-                    ajj = Math.Sqrt(ajj);
-                    aaa[offs+j,offs+j] = ajj;
                     
                     //
-                    // Compute elements J+1:N of column J.
+                    // Compute partial Cholesky of the trailing submatrix (after applying rank-K update to the
+                    // trailing submatrix but before Cholesky-factorizing it).
                     //
-                    if( j<n-1 )
+                    if( newrange0<range1 )
                     {
-                        r = 1/ajj;
-                        if( j>0 )
+                        sparse.sparsesymmpermtblbuf(wrka, false, buf.tmpperm, buf.tmpa2, _params);
+                        partialcholeskypattern(buf.tmpa2, newrange0-range0, range1-newrange0, wrka, n1ipool, n1bpool, buf.tmpbottomt, buf.tmpupdatet, buf.tmpupdate, buf.tmpnewtailt, _params);
+                    }
+                    range0 = newrange0;
+                    m = range1-range0;
+                }
+                
+                //
+                // Analyze sparsity pattern of the current submatrix (TmpA), manually move completely dense rows to the end.
+                //
+                if( m>0 )
+                {
+                    alglib.ap.assert((wrka.m==m && wrka.n==m) && wrka.ninitialized==wrka.ridx[m], "SPSymmAnalyze: integrity check failed (0572)");
+                    ablasf.isetv(m, 1, tmp0, _params);
+                    for(i=0; i<=m-1; i++)
+                    {
+                        j0 = wrka.ridx[i];
+                        j1 = wrka.didx[i]-1;
+                        for(jj=j0; jj<=j1; jj++)
                         {
-                            i1_ = (offs) - (0);
-                            for(i_=0; i_<=j-1;i_++)
-                            {
-                                tmp[i_] = aaa[offs+j,i_+i1_];
-                            }
-                            ablas.rmatrixmv(n-j-1, j, aaa, offs+j+1, offs, 0, tmp, 0, tmp, n, _params);
-                            for(i=0; i<=n-j-2; i++)
-                            {
-                                aaa[offs+j+1+i,offs+j] = (aaa[offs+j+1+i,offs+j]-tmp[n+i])*r;
-                            }
+                            j = wrka.idx[jj];
+                            tmp0[i] = tmp0[i]+1;
+                            tmp0[j] = tmp0[j]+1;
                         }
-                        else
+                    }
+                    j = 0;
+                    k = 0;
+                    for(i=0; i<=m-1; i++)
+                    {
+                        if( tmp0[i]<m )
                         {
-                            for(i=0; i<=n-j-2; i++)
-                            {
-                                aaa[offs+j+1+i,offs+j] = aaa[offs+j+1+i,offs+j]*r;
-                            }
+                            buf.invtmpperm[j] = i;
+                            j = j+1;
                         }
+                    }
+                    for(i=0; i<=m-1; i++)
+                    {
+                        if( tmp0[i]==m )
+                        {
+                            buf.invtmpperm[j] = i;
+                            j = j+1;
+                            k = k+1;
+                        }
+                    }
+                    for(i=0; i<=m-1; i++)
+                    {
+                        buf.tmpperm[buf.invtmpperm[i]] = i;
+                    }
+                    alglib.ap.assert(j==m, "SPSymmAnalyze: integrity check failed (6432)");
+                    if( k>0 )
+                    {
+                        
+                        //
+                        // K dense rows are moved to the end
+                        //
+                        if( k<m )
+                        {
+                            
+                            //
+                            // There are still exist sparse rows that need reordering, apply permutation and manually truncate matrix
+                            //
+                            for(i=0; i<=m-1; i++)
+                            {
+                                fillinperm[invfillinperm[range0+buf.invtmpperm[i]]] = range0+i;
+                            }
+                            for(i=0; i<=n-1; i++)
+                            {
+                                invfillinperm[fillinperm[i]] = i;
+                            }
+                            sparse.sparsesymmpermtblbuf(wrka, false, buf.tmpperm, buf.tmpa2, _params);
+                            sparse.sparsecopybuf(buf.tmpa2, wrka, _params);
+                            wrka.m = m-k;
+                            wrka.n = m-k;
+                            wrka.ninitialized = wrka.ridx[wrka.m];
+                        }
+                        range1 = range1-k;
+                        m = range1-range0;
                     }
                 }
             }
-            return result;
+            if( dotrace )
+            {
+                alglib.ap.trace(System.String.Format("> multiround AMD, column_range=[{0,7:d},{1,7:d}], stopped\n", range0, range1));
+            }
+            
+            //
+            // Recycle temporary arrays
+            //
+            apserv.nbpoolrecycle(n1bpool, ref eligible, _params);
+            apserv.nipoolrecycle(n1ipool, ref tmp0, _params);
         }
 
 
@@ -48409,6 +49084,7 @@ public partial class alglib
             sparsedecompositionanalysis analysis = new sparsedecompositionanalysis();
             int facttype = 0;
             int permtype = 0;
+            int donotreusemem = 0;
             int[] priorities = new int[0];
             double[] dummyd = new double[0];
             int[] dummyp = new int[0];
@@ -48430,13 +49106,14 @@ public partial class alglib
             //
             facttype = 0;
             permtype = -1;
+            donotreusemem = -1;
             
             //
             // Easy case - CRS matrix in lower triangle, no conversion or transposition is needed
             //
             if( sparse.sparseiscrs(a, _params) && !isupper )
             {
-                result = spchol.spsymmanalyze(a, priorities, 0.0, facttype, permtype, analysis.analysis, _params);
+                result = spchol.spsymmanalyze(a, priorities, 0.0, 0, facttype, permtype, donotreusemem, analysis.analysis, _params);
                 if( !result )
                 {
                     return result;
@@ -48462,7 +49139,7 @@ public partial class alglib
             {
                 sparse.sparsecopytocrsbuf(a, analysis.wrka, _params);
             }
-            result = spchol.spsymmanalyze(analysis.wrka, priorities, 0.0, facttype, permtype, analysis.analysis, _params);
+            result = spchol.spsymmanalyze(analysis.wrka, priorities, 0.0, 0, facttype, permtype, donotreusemem, analysis.analysis, _params);
             if( !result )
             {
                 return result;
@@ -48472,14 +49149,14 @@ public partial class alglib
             {
                 return result;
             }
-            spchol.spsymmextract(analysis.analysis, analysis.wrka, ref dummyd, ref dummyp, _params);
             if( isupper )
             {
+                spchol.spsymmextract(analysis.analysis, analysis.wrka, ref dummyd, ref dummyp, _params);
                 sparse.sparsecopytransposecrsbuf(analysis.wrka, a, _params);
             }
             else
             {
-                sparse.sparsecopybuf(analysis.wrka, a, _params);
+                spchol.spsymmextract(analysis.analysis, a, ref dummyd, ref dummyp, _params);
             }
             return result;
         }
@@ -48545,6 +49222,7 @@ public partial class alglib
             double[] dummyd = new double[0];
             int facttype = 0;
             int permtype = 0;
+            int donotreusemem = 0;
             int[] priorities = new int[0];
 
             p = new int[0];
@@ -48566,13 +49244,14 @@ public partial class alglib
             //
             facttype = 0;
             permtype = 0;
+            donotreusemem = -1;
             
             //
             // Easy case - CRS matrix in lower triangle, no conversion or transposition is needed
             //
             if( sparse.sparseiscrs(a, _params) && !isupper )
             {
-                result = spchol.spsymmanalyze(a, priorities, 0.0, facttype, permtype, analysis.analysis, _params);
+                result = spchol.spsymmanalyze(a, priorities, 0.0, 0, facttype, permtype, donotreusemem, analysis.analysis, _params);
                 if( !result )
                 {
                     return result;
@@ -48598,7 +49277,7 @@ public partial class alglib
             {
                 sparse.sparsecopytocrsbuf(a, analysis.wrka, _params);
             }
-            result = spchol.spsymmanalyze(analysis.wrka, priorities, 0.0, facttype, permtype, analysis.analysis, _params);
+            result = spchol.spsymmanalyze(analysis.wrka, priorities, 0.0, 0, facttype, permtype, donotreusemem, analysis.analysis, _params);
             if( !result )
             {
                 return result;
@@ -48608,14 +49287,14 @@ public partial class alglib
             {
                 return result;
             }
-            spchol.spsymmextract(analysis.analysis, analysis.wrka, ref dummyd, ref p, _params);
             if( isupper )
             {
+                spchol.spsymmextract(analysis.analysis, analysis.wrka, ref dummyd, ref p, _params);
                 sparse.sparsecopytransposecrsbuf(analysis.wrka, a, _params);
             }
             else
             {
-                sparse.sparsecopybuf(analysis.wrka, a, _params);
+                spchol.spsymmextract(analysis.analysis, a, ref dummyd, ref p, _params);
             }
             return result;
         }
@@ -48696,6 +49375,7 @@ public partial class alglib
         {
             bool result = new bool();
             int[] priorities = new int[0];
+            int reusemem = 0;
 
             alglib.ap.assert(sparse.sparsegetnrows(a, _params)==sparse.sparsegetncols(a, _params), "SparseCholeskyAnalyze: A is not square");
             alglib.ap.assert(facttype==0 || facttype==1, "SparseCholeskyAnalyze: unexpected FactType");
@@ -48707,6 +49387,7 @@ public partial class alglib
             analysis.n = sparse.sparsegetnrows(a, _params);
             analysis.facttype = facttype;
             analysis.permtype = permtype;
+            reusemem = 1;
             
             //
             // Prepare default priorities for the priority ordering
@@ -48731,11 +49412,11 @@ public partial class alglib
                 if( isupper )
                 {
                     sparse.sparsecopytransposecrsbuf(analysis.crsa, analysis.crsat, _params);
-                    result = spchol.spsymmanalyze(analysis.crsat, priorities, 0.0, facttype, permtype, analysis.analysis, _params);
+                    result = spchol.spsymmanalyze(analysis.crsat, priorities, 0.0, 0, facttype, permtype, reusemem, analysis.analysis, _params);
                 }
                 else
                 {
-                    result = spchol.spsymmanalyze(analysis.crsa, priorities, 0.0, facttype, permtype, analysis.analysis, _params);
+                    result = spchol.spsymmanalyze(analysis.crsa, priorities, 0.0, 0, facttype, permtype, reusemem, analysis.analysis, _params);
                 }
             }
             else
@@ -48749,11 +49430,11 @@ public partial class alglib
                 if( isupper )
                 {
                     sparse.sparsecopytransposecrsbuf(a, analysis.crsat, _params);
-                    result = spchol.spsymmanalyze(analysis.crsat, priorities, 0.0, facttype, permtype, analysis.analysis, _params);
+                    result = spchol.spsymmanalyze(analysis.crsat, priorities, 0.0, 0, facttype, permtype, reusemem, analysis.analysis, _params);
                 }
                 else
                 {
-                    result = spchol.spsymmanalyze(a, priorities, 0.0, facttype, permtype, analysis.analysis, _params);
+                    result = spchol.spsymmanalyze(a, priorities, 0.0, 0, facttype, permtype, reusemem, analysis.analysis, _params);
                 }
             }
             return result;

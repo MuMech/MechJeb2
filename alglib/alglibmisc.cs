@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.00.0 (source code generated 2023-05-21)
+ALGLIB 4.01.0 (source code generated 2023-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -4400,6 +4400,7 @@ public partial class alglib
             public double[] curboxmin;
             public double[] curboxmax;
             public double curdist;
+            public double[] xqc;
             public kdtreerequestbuffer()
             {
                 init();
@@ -4414,6 +4415,7 @@ public partial class alglib
                 buf = new double[0];
                 curboxmin = new double[0];
                 curboxmax = new double[0];
+                xqc = new double[0];
             }
             public override alglib.apobject make_copy()
             {
@@ -4432,6 +4434,7 @@ public partial class alglib
                 _result.curboxmin = (double[])curboxmin.Clone();
                 _result.curboxmax = (double[])curboxmax.Clone();
                 _result.curdist = curdist;
+                _result.xqc = (double[])xqc.Clone();
                 return _result;
             }
         };
@@ -6207,6 +6210,96 @@ public partial class alglib
             apserv.unserializeintegerarray(s, ref tree.nodes, _params);
             apserv.unserializerealarray(s, ref tree.splits, _params);
             kdtreecreaterequestbuffer(tree, tree.innerbuf, _params);
+        }
+
+
+        /*************************************************************************
+        This function returns an approximate cost (measured in CPU  cycles)  of  a
+        R-NN query with some fixed R.
+
+        A VERY CRUDE APPROXIMATION IS RETURNED, ONLY AN ORDER OF MAGNITUDE CORRECT
+
+        This approximation can be used in a multithreaded code which decides whether
+        it makes sense to activate multithreading or not.
+
+        Internally this function is implemented by performing some small (about 50)
+        amount of random queries and computing an average number of R-neighbors of
+        a node. This number is multiplied by log2(NPoints), and then  by  a  crude
+        estimate of how many CPU cycles is required to perform a split during kd-tree
+        search.
+
+        This function is deterministic, i.e. it always uses a fixed seed to initialize
+        its internal RNG.
+
+        IMPORTANT: this function can not be used in multithreaded code because  it
+                   uses internal temporary buffer of kd-tree object, which can not
+                   be shared between multiple threads.
+                   
+                   See kdtreeapproxrnnquerycost() for a thread-safe alternative.
+
+        INPUT PARAMETERS
+            KDT         -   KD-tree
+            R           -   radius of sphere (in corresponding norm), R>0
+
+        RESULT
+            double precision number, approximate query cost
+
+          -- ALGLIB --
+             Copyright 24.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static double kdtreeapproxrnnquerycost(kdtree kdt,
+            double r,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = kdtreetsapproxrnnquerycost(kdt, kdt.innerbuf, r, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns an approximate cost (measured in CPU  cycles)  of  a
+        R-NN query with some fixed R.
+
+        A thread-safe version of kdtreeapproxrnnquerycost() using a request buffer.
+
+          -- ALGLIB --
+             Copyright 24.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static double kdtreetsapproxrnnquerycost(kdtree kdt,
+            kdtreerequestbuffer buf,
+            double r,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int cnt = 0;
+            int nx = 0;
+            double log2n = 0;
+            double avgrnn = 0;
+            hqrnd.hqrndstate rs = new hqrnd.hqrndstate();
+
+            alglib.ap.assert(math.isfinite(r) && (double)(r)>(double)(0), "KDTreeApproxRNNQueryCost: incorrect R!");
+            hqrnd.hqrndseed(46532, 66356, rs, _params);
+            nx = kdt.nx;
+            cnt = Math.Min(50, kdt.n);
+            log2n = Math.Log(1+kdt.n)/Math.Log(2);
+            avgrnn = 0;
+            ablasf.rallocv(nx, ref buf.xqc, _params);
+            for(i=0; i<=cnt-1; i++)
+            {
+                k = hqrnd.hqrnduniformi(rs, kdt.n, _params);
+                for(j=0; j<=nx-1; j++)
+                {
+                    buf.xqc[j] = kdt.xy[k,nx+j];
+                }
+                avgrnn = avgrnn+(double)tsqueryrnn(kdt, buf, buf.xqc, r, true, false, _params)/(double)cnt;
+            }
+            result = avgrnn*log2n*15;
+            return result;
         }
 
 

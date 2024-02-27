@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.00.0 (source code generated 2023-05-21)
+ALGLIB 4.01.0 (source code generated 2023-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -3653,223 +3653,25 @@ public partial class alglib
     
         public sparsesolverreport()
         {
-            _innerobj = new directsparsesolvers.sparsesolverreport();
+            _innerobj = new iterativesparse.sparsesolverreport();
         }
         
         public override alglib.alglibobject make_copy()
         {
-            return new sparsesolverreport((directsparsesolvers.sparsesolverreport)_innerobj.make_copy());
+            return new sparsesolverreport((iterativesparse.sparsesolverreport)_innerobj.make_copy());
         }
     
         //
         // Although some of declarations below are public, you should not use them
         // They are intended for internal use only
         //
-        private directsparsesolvers.sparsesolverreport _innerobj;
-        public directsparsesolvers.sparsesolverreport innerobj { get { return _innerobj; } }
-        public sparsesolverreport(directsparsesolvers.sparsesolverreport obj)
+        private iterativesparse.sparsesolverreport _innerobj;
+        public iterativesparse.sparsesolverreport innerobj { get { return _innerobj; } }
+        public sparsesolverreport(iterativesparse.sparsesolverreport obj)
         {
             _innerobj = obj;
         }
     }
-    
-    /*************************************************************************
-    Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
-    definite matrix A, N*1 vectors x and b.
-
-    This solver  converts  input  matrix  to  SKS  format,  performs  Cholesky
-    factorization using  SKS  Cholesky  subroutine  (works  well  for  limited
-    bandwidth matrices) and uses sparse triangular solvers to get solution  of
-    the original system.
-
-    INPUT PARAMETERS
-        A       -   sparse matrix, must be NxN exactly
-        IsUpper -   which half of A is provided (another half is ignored)
-        B       -   array[0..N-1], right part
-
-    OUTPUT PARAMETERS
-        X       -   array[N], it contains:
-                    * rep.terminationtype>0    =>  solution
-                    * rep.terminationtype=-3   =>  filled by zeros
-        Rep     -   solver report, following fields are set:
-                    * rep.terminationtype - solver status; >0 for success,
-                      set to -3 on failure (degenerate or non-SPD system).
-
-      -- ALGLIB --
-         Copyright 26.12.2017 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsespdsolvesks(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparsespdsolvesks(a.innerobj, isupper, b, ref x, rep.innerobj, null);
-    }
-    
-    public static void sparsespdsolvesks(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparsespdsolvesks(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
-    definite matrix A, N*1 vectors x and b.
-
-    This solver  converts  input  matrix  to  CRS  format,  performs  Cholesky
-    factorization using supernodal Cholesky  decomposition  with  permutation-
-    reducing ordering and uses sparse triangular solver to get solution of the
-    original system.
-
-    INPUT PARAMETERS
-        A       -   sparse matrix, must be NxN exactly
-        IsUpper -   which half of A is provided (another half is ignored)
-        B       -   array[N], right part
-
-    OUTPUT PARAMETERS
-        X       -   array[N], it contains:
-                    * rep.terminationtype>0    =>  solution
-                    * rep.terminationtype=-3   =>  filled by zeros
-        Rep     -   solver report, following fields are set:
-                    * rep.terminationtype - solver status; >0 for success,
-                      set to -3 on failure (degenerate or non-SPD system).
-
-      -- ALGLIB --
-         Copyright 26.12.2017 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsespdsolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparsespdsolve(a.innerobj, isupper, b, ref x, rep.innerobj, null);
-    }
-    
-    public static void sparsespdsolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparsespdsolve(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    Sparse linear solver for A*x=b with N*N real  symmetric  positive definite
-    matrix A given by its Cholesky decomposition, and N*1 vectors x and b.
-
-    IMPORTANT: this solver requires input matrix to be in  the  SKS  (Skyline)
-               or CRS (compressed row storage) format. An  exception  will  be
-               generated if you pass matrix in some other format.
-
-    INPUT PARAMETERS
-        A       -   sparse NxN matrix stored in CRs or SKS format, must be NxN
-                    exactly
-        IsUpper -   which half of A is provided (another half is ignored)
-        B       -   array[N], right part
-
-    OUTPUT PARAMETERS
-        X       -   array[N], it contains:
-                    * rep.terminationtype>0    =>  solution
-                    * rep.terminationtype=-3   =>  filled by zeros
-        Rep     -   solver report, following fields are set:
-                    * rep.terminationtype - solver status; >0 for success,
-                      set to -3 on failure (degenerate or non-SPD system).
-
-      -- ALGLIB --
-         Copyright 26.12.2017 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsespdcholeskysolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparsespdcholeskysolve(a.innerobj, isupper, b, ref x, rep.innerobj, null);
-    }
-    
-    public static void sparsespdcholeskysolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparsespdcholeskysolve(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
-    matrix A, N*1 vectors x and b.
-
-    This solver converts input matrix to CRS format, performs LU factorization
-    and uses sparse triangular solvers to get solution of the original system.
-
-    INPUT PARAMETERS
-        A       -   sparse matrix, must be NxN exactly, any storage format
-        N       -   size of A, N>0
-        B       -   array[0..N-1], right part
-
-    OUTPUT PARAMETERS
-        X       -   array[N], it contains:
-                    * rep.terminationtype>0    =>  solution
-                    * rep.terminationtype=-3   =>  filled by zeros
-        Rep     -   solver report, following fields are set:
-                    * rep.terminationtype - solver status; >0 for success,
-                      set to -3 on failure (degenerate system).
-
-      -- ALGLIB --
-         Copyright 26.12.2017 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparsesolve(sparsematrix a, double[] b, out double[] x, out sparsesolverreport rep)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparsesolve(a.innerobj, b, ref x, rep.innerobj, null);
-    }
-    
-    public static void sparsesolve(sparsematrix a, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparsesolve(a.innerobj, b, ref x, rep.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
-    matrix A given by its LU factorization, N*1 vectors x and b.
-
-    IMPORTANT: this solver requires input matrix  to  be  in  the  CRS  sparse
-               storage format. An exception will  be  generated  if  you  pass
-               matrix in some other format (HASH or SKS).
-
-    INPUT PARAMETERS
-        A       -   LU factorization of the sparse matrix, must be NxN exactly
-                    in CRS storage format
-        P, Q    -   pivot indexes from LU factorization
-        N       -   size of A, N>0
-        B       -   array[0..N-1], right part
-
-    OUTPUT PARAMETERS
-        X       -   array[N], it contains:
-                    * rep.terminationtype>0    =>  solution
-                    * rep.terminationtype=-3   =>  filled by zeros
-        Rep     -   solver report, following fields are set:
-                    * rep.terminationtype - solver status; >0 for success,
-                      set to -3 on failure (degenerate system).
-
-      -- ALGLIB --
-         Copyright 26.12.2017 by Bochkanov Sergey
-    *************************************************************************/
-    public static void sparselusolve(sparsematrix a, int[] p, int[] q, double[] b, out double[] x, out sparsesolverreport rep)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparselusolve(a.innerobj, p, q, b, ref x, rep.innerobj, null);
-    }
-    
-    public static void sparselusolve(sparsematrix a, int[] p, int[] q, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
-    {
-        x = new double[0];
-        rep = new sparsesolverreport();
-        directsparsesolvers.sparselusolve(a.innerobj, p, q, b, ref x, rep.innerobj, _params);
-    }
-
-}
-public partial class alglib
-{
 
 
     /*************************************************************************
@@ -5459,6 +5261,349 @@ public partial class alglib
 public partial class alglib
 {
 
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
+    definite matrix A, N*1 vectors x and b.
+
+    This solver  converts  input  matrix  to  SKS  format,  performs  Cholesky
+    factorization using  SKS  Cholesky  subroutine  (works  well  for  limited
+    bandwidth matrices) and uses sparse triangular solvers to get solution  of
+    the original system.
+
+    IMPORTANT: this  function  is  intended  for  low  profile (variable band)
+               linear systems with dense or nearly-dense bands. Only  in  such
+               cases  it  provides  some  performance  improvement  over  more
+               general sparsrspdsolve(). If your  system  has  high  bandwidth
+               or sparse band, the general sparsrspdsolve() is  likely  to  be
+               more efficient.
+
+    INPUT PARAMETERS
+        A       -   sparse matrix, must be NxN exactly
+        IsUpper -   which half of A is provided (another half is ignored)
+        B       -   array[0..N-1], right part
+
+    OUTPUT PARAMETERS
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate or non-SPD system).
+
+      -- ALGLIB --
+         Copyright 26.12.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsespdsolvesks(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdsolvesks(a.innerobj, isupper, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsespdsolvesks(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdsolvesks(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
+    definite matrix A, N*1 vectors x and b.
+
+    This solver  converts  input  matrix  to  CRS  format,  performs  Cholesky
+    factorization using supernodal Cholesky  decomposition  with  permutation-
+    reducing ordering and uses sparse triangular solver to get solution of the
+    original system.
+
+    INPUT PARAMETERS
+        A       -   sparse matrix, must be NxN exactly.
+                    Can be stored in any sparse storage format, CRS is preferred.
+        IsUpper -   which half of A is provided (another half is ignored).
+                    It is better to store the lower triangle because it allows
+                    us to avoid one transposition during internal conversion.
+        B       -   array[N], right part
+
+    OUTPUT PARAMETERS
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate or non-SPD system).
+
+      -- ALGLIB --
+         Copyright 26.12.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsespdsolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdsolve(a.innerobj, isupper, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsespdsolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdsolve(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with N*N real  symmetric  positive definite
+    matrix A given by its Cholesky decomposition, and N*1 vectors x and b.
+
+    IMPORTANT: this solver requires input matrix to be in  the  SKS  (Skyline)
+               or CRS (compressed row storage) format. An  exception  will  be
+               generated if you pass matrix in some other format.
+
+    INPUT PARAMETERS
+        A       -   sparse NxN matrix stored in CRs or SKS format, must be NxN
+                    exactly
+        IsUpper -   which half of A is provided (another half is ignored)
+        B       -   array[N], right part
+
+    OUTPUT PARAMETERS
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate or non-SPD system).
+
+      -- ALGLIB --
+         Copyright 26.12.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsespdcholeskysolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdcholeskysolve(a.innerobj, isupper, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsespdcholeskysolve(sparsematrix a, bool isupper, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsespdcholeskysolve(a.innerobj, isupper, b, ref x, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
+    matrix A, N*1 vectors x and b.
+
+    This function internally uses several solvers:
+    * supernodal solver with static pivoting applied to  a  2N*2N  regularized
+      augmented  system, followed by iterative refinement. This solver  is   a
+      recommended option because it provides the best speed and has the lowest
+      memory requirements.
+    * sparse LU with dynamic pivoting for stability. Provides better  accuracy
+      at the cost of a significantly lower performance. Recommended  only  for
+      extremely unstable problems.
+
+    INPUT PARAMETERS
+        A       -   sparse matrix, must be NxN exactly, any storage format
+        B       -   array[N], right part
+        SolverType- solver type to use:
+                    * 0     use the best solver. It is augmented system in the
+                            current version, but may change in future releases
+                    * 10    use 'default profile' of the supernodal solver with
+                            static   pivoting.   The  'default'   profile   is
+                            intended for systems with plenty of memory; it  is
+                            optimized for the best convergence at the cost  of
+                            increased RAM usage. Recommended option.
+                    * 11    use 'limited memory'  profile  of  the  supernodal
+                            solver with static  pivoting.  The  limited-memory
+                            profile is intended for problems with millions  of
+                            variables.  On  most  systems  it  has  the   same
+                            convergence as the default profile, having somewhat
+                            worse results only for ill-conditioned systems.
+                    * 20    use sparse LU with dynamic pivoting for stability.
+                            Not intended for large-scale problems.
+
+    OUTPUT PARAMETERS
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate system).
+
+      -- ALGLIB --
+         Copyright 18.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsesolve(sparsematrix a, double[] b, int solvertype, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsesolve(a.innerobj, b, solvertype, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsesolve(sparsematrix a, double[] b, int solvertype, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsesolve(a.innerobj, b, solvertype, ref x, rep.innerobj, _params);
+    }
+            
+    public static void sparsesolve(sparsematrix a, double[] b, out double[] x, out sparsesolverreport rep)
+    {
+        int solvertype;
+    
+        x = new double[0];
+        rep = new sparsesolverreport();
+        solvertype = 0;
+        directsparsesolvers.sparsesolve(a.innerobj, b, solvertype, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void sparsesolve(sparsematrix a, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        int solvertype;
+    
+        x = new double[0];
+        rep = new sparsesolverreport();
+        solvertype = 0;
+        directsparsesolvers.sparsesolve(a.innerobj, b, solvertype, ref x, rep.innerobj, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    Sparse linear least squares solver for A*x=b with  general  (nonsymmetric)
+    N*N sparse real matrix A, N*1 vectors x and b.
+
+    This function solves a regularized linear least squares problem of the form
+
+            (                      )
+        min ( |Ax-b|^2 + reg*|x|^2 ), with reg>=sqrt(MachineAccuracy)
+            (                      )
+
+    The function internally uses supernodal  solver  to  solve  an  augmented-
+    regularized sparse system. The solver, which was initially used  to  solve
+    sparse square system, can also  be  used  to  solve  rectangular  systems,
+    provided that the system is regularized with regularizing  coefficient  at
+    least sqrt(MachineAccuracy), which is ~10^8 (double precision).
+
+    It can be used to solve both full rank and rank deficient systems.
+
+    INPUT PARAMETERS
+        A       -   sparse MxN matrix, any storage format
+        B       -   array[M], right part
+        Reg     -   regularization coefficient, Reg>=sqrt(MachineAccuracy),
+                    lower values will be silently increased.
+        SolverType- solver type to use:
+                    * 0     use the best solver. It is augmented system in the
+                            current version, but may change in future releases
+                    * 10    use 'default profile' of the supernodal solver with
+                            static   pivoting.   The  'default'   profile   is
+                            intended for systems with plenty of memory; it  is
+                            optimized for the best convergence at the cost  of
+                            increased RAM usage. Recommended option.
+                    * 11    use 'limited memory'  profile  of  the  supernodal
+                            solver with static  pivoting.  The  limited-memory
+                            profile is intended for problems with millions  of
+                            variables.  On  most  systems  it  has  the   same
+                            convergence as the default profile, having somewhat
+                            worse results only for ill-conditioned systems.
+
+    OUTPUT PARAMETERS
+        X       -   array[N], least squares solution
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success.
+
+                      Present version of the solver does NOT returns negative
+                      completion codes because  it  does  not  fail.  However,
+                      future ALGLIB versions may include solvers which  return
+                      negative completion codes.
+
+      -- ALGLIB --
+         Copyright 18.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsesolvelsreg(sparsematrix a, double[] b, double reg, int solvertype, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsesolvelsreg(a.innerobj, b, reg, solvertype, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparsesolvelsreg(sparsematrix a, double[] b, double reg, int solvertype, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparsesolvelsreg(a.innerobj, b, reg, solvertype, ref x, rep.innerobj, _params);
+    }
+            
+    public static void sparsesolvelsreg(sparsematrix a, double[] b, double reg, out double[] x, out sparsesolverreport rep)
+    {
+        int solvertype;
+    
+        x = new double[0];
+        rep = new sparsesolverreport();
+        solvertype = 0;
+        directsparsesolvers.sparsesolvelsreg(a.innerobj, b, reg, solvertype, ref x, rep.innerobj, null);
+    
+        return;
+    }
+            
+    public static void sparsesolvelsreg(sparsematrix a, double[] b, double reg, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        int solvertype;
+    
+        x = new double[0];
+        rep = new sparsesolverreport();
+        solvertype = 0;
+        directsparsesolvers.sparsesolvelsreg(a.innerobj, b, reg, solvertype, ref x, rep.innerobj, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
+    matrix A given by its LU factorization, N*1 vectors x and b.
+
+    IMPORTANT: this solver requires input matrix  to  be  in  the  CRS  sparse
+               storage format. An exception will  be  generated  if  you  pass
+               matrix in some other format (HASH or SKS).
+
+    INPUT PARAMETERS
+        A       -   LU factorization of the sparse matrix, must be NxN exactly
+                    in CRS storage format
+        P, Q    -   pivot indexes from LU factorization
+        N       -   size of A, N>0
+        B       -   array[0..N-1], right part
+
+    OUTPUT PARAMETERS
+        X       -   array[N], it contains:
+                    * rep.terminationtype>0    =>  solution
+                    * rep.terminationtype=-3   =>  filled by zeros
+        Rep     -   solver report, following fields are set:
+                    * rep.terminationtype - solver status; >0 for success,
+                      set to -3 on failure (degenerate system).
+
+      -- ALGLIB --
+         Copyright 26.12.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparselusolve(sparsematrix a, int[] p, int[] q, double[] b, out double[] x, out sparsesolverreport rep)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparselusolve(a.innerobj, p, q, b, ref x, rep.innerobj, null);
+    }
+    
+    public static void sparselusolve(sparsematrix a, int[] p, int[] q, double[] b, out double[] x, out sparsesolverreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new sparsesolverreport();
+        directsparsesolvers.sparselusolve(a.innerobj, p, q, b, ref x, rep.innerobj, _params);
+    }
+
+}
+public partial class alglib
+{
+
 
     /*************************************************************************
 
@@ -5761,13 +5906,13 @@ public partial class alglib
     {
         nleqsolve(state, func, jac, rep, obj, null);
     }
-    
     public static void nleqsolve(nleqstate state, ndimensional_func func, ndimensional_jac  jac, ndimensional_rep rep, object obj, alglib.xparams _params)
     {
         if( func==null )
             throw new alglibexception("ALGLIB: error in 'nleqsolve()' (func is null)");
         if( jac==null )
             throw new alglibexception("ALGLIB: error in 'nleqsolve()' (jac is null)");
+        alglib.nleq.nleqsetprotocolv1(state.innerobj, _params);
         while( alglib.nleqiteration(state, _params) )
         {
             if( state.needf )
@@ -10644,7 +10789,7 @@ public partial class alglib
 
 
     }
-    public class directsparsesolvers
+    public class iterativesparse
     {
         /*************************************************************************
         This structure is a sparse solver report (both direct and iterative solvers
@@ -10683,435 +10828,6 @@ public partial class alglib
         };
 
 
-
-
-        /*************************************************************************
-        Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
-        definite matrix A, N*1 vectors x and b.
-
-        This solver  converts  input  matrix  to  SKS  format,  performs  Cholesky
-        factorization using  SKS  Cholesky  subroutine  (works  well  for  limited
-        bandwidth matrices) and uses sparse triangular solvers to get solution  of
-        the original system.
-
-        INPUT PARAMETERS
-            A       -   sparse matrix, must be NxN exactly
-            IsUpper -   which half of A is provided (another half is ignored)
-            B       -   array[0..N-1], right part
-
-        OUTPUT PARAMETERS
-            X       -   array[N], it contains:
-                        * rep.terminationtype>0    =>  solution
-                        * rep.terminationtype=-3   =>  filled by zeros
-            Rep     -   solver report, following fields are set:
-                        * rep.terminationtype - solver status; >0 for success,
-                          set to -3 on failure (degenerate or non-SPD system).
-
-          -- ALGLIB --
-             Copyright 26.12.2017 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsespdsolvesks(sparse.sparsematrix a,
-            bool isupper,
-            double[] b,
-            ref double[] x,
-            sparsesolverreport rep,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            sparse.sparsematrix a2 = new sparse.sparsematrix();
-            int n = 0;
-
-            x = new double[0];
-
-            n = sparse.sparsegetnrows(a, _params);
-            alglib.ap.assert(n>0, "SparseSPDSolveSKS: N<=0");
-            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDSolveSKS: rows(A)!=N");
-            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDSolveSKS: cols(A)!=N");
-            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDSolveSKS: length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDSolveSKS: B contains infinities or NANs");
-            initsparsesolverreport(rep, _params);
-            x = new double[n];
-            sparse.sparsecopytosks(a, a2, _params);
-            if( !trfac.sparsecholeskyskyline(a2, n, isupper, _params) )
-            {
-                rep.terminationtype = -3;
-                for(i=0; i<=n-1; i++)
-                {
-                    x[i] = 0;
-                }
-                return;
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                x[i] = b[i];
-            }
-            if( isupper )
-            {
-                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
-                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
-            }
-            else
-            {
-                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
-                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
-            }
-            rep.terminationtype = 1;
-        }
-
-
-        /*************************************************************************
-        Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
-        definite matrix A, N*1 vectors x and b.
-
-        This solver  converts  input  matrix  to  CRS  format,  performs  Cholesky
-        factorization using supernodal Cholesky  decomposition  with  permutation-
-        reducing ordering and uses sparse triangular solver to get solution of the
-        original system.
-
-        INPUT PARAMETERS
-            A       -   sparse matrix, must be NxN exactly
-            IsUpper -   which half of A is provided (another half is ignored)
-            B       -   array[N], right part
-
-        OUTPUT PARAMETERS
-            X       -   array[N], it contains:
-                        * rep.terminationtype>0    =>  solution
-                        * rep.terminationtype=-3   =>  filled by zeros
-            Rep     -   solver report, following fields are set:
-                        * rep.terminationtype - solver status; >0 for success,
-                          set to -3 on failure (degenerate or non-SPD system).
-
-          -- ALGLIB --
-             Copyright 26.12.2017 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsespdsolve(sparse.sparsematrix a,
-            bool isupper,
-            double[] b,
-            ref double[] x,
-            sparsesolverreport rep,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            int j = 0;
-            sparse.sparsematrix a2 = new sparse.sparsematrix();
-            int n = 0;
-            double v = 0;
-            int[] p = new int[0];
-
-            x = new double[0];
-
-            n = sparse.sparsegetnrows(a, _params);
-            alglib.ap.assert(n>0, "SparseSPDSolve: N<=0");
-            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDSolve: rows(A)!=N");
-            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDSolve: cols(A)!=N");
-            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDSolve: length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDSolve: B contains infinities or NANs");
-            initsparsesolverreport(rep, _params);
-            sparse.sparsecopytocrs(a, a2, _params);
-            if( !trfac.sparsecholeskyp(a2, isupper, ref p, _params) )
-            {
-                rep.terminationtype = -3;
-                ablasf.rsetallocv(n, 0.0, ref x, _params);
-                return;
-            }
-            ablasf.rcopyallocv(n, b, ref x, _params);
-            for(i=0; i<=n-1; i++)
-            {
-                j = p[i];
-                v = x[i];
-                x[i] = x[j];
-                x[j] = v;
-            }
-            if( isupper )
-            {
-                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
-                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
-            }
-            else
-            {
-                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
-                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
-            }
-            for(i=n-1; i>=0; i--)
-            {
-                j = p[i];
-                v = x[i];
-                x[i] = x[j];
-                x[j] = v;
-            }
-            rep.terminationtype = 1;
-        }
-
-
-        /*************************************************************************
-        Sparse linear solver for A*x=b with N*N real  symmetric  positive definite
-        matrix A given by its Cholesky decomposition, and N*1 vectors x and b.
-
-        IMPORTANT: this solver requires input matrix to be in  the  SKS  (Skyline)
-                   or CRS (compressed row storage) format. An  exception  will  be
-                   generated if you pass matrix in some other format.
-
-        INPUT PARAMETERS
-            A       -   sparse NxN matrix stored in CRs or SKS format, must be NxN
-                        exactly
-            IsUpper -   which half of A is provided (another half is ignored)
-            B       -   array[N], right part
-
-        OUTPUT PARAMETERS
-            X       -   array[N], it contains:
-                        * rep.terminationtype>0    =>  solution
-                        * rep.terminationtype=-3   =>  filled by zeros
-            Rep     -   solver report, following fields are set:
-                        * rep.terminationtype - solver status; >0 for success,
-                          set to -3 on failure (degenerate or non-SPD system).
-
-          -- ALGLIB --
-             Copyright 26.12.2017 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsespdcholeskysolve(sparse.sparsematrix a,
-            bool isupper,
-            double[] b,
-            ref double[] x,
-            sparsesolverreport rep,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            int n = 0;
-
-            x = new double[0];
-
-            n = sparse.sparsegetnrows(a, _params);
-            alglib.ap.assert(n>0, "SparseSPDCholeskySolve: N<=0");
-            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDCholeskySolve: rows(A)!=N");
-            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDCholeskySolve: cols(A)!=N");
-            alglib.ap.assert(sparse.sparseissks(a, _params) || sparse.sparseiscrs(a, _params), "SparseSPDCholeskySolve: A is not an SKS/CRS matrix");
-            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDCholeskySolve: length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDCholeskySolve: B contains infinities or NANs");
-            initsparsesolverreport(rep, _params);
-            x = new double[n];
-            for(i=0; i<=n-1; i++)
-            {
-                if( (double)(sparse.sparseget(a, i, i, _params))==(double)(0.0) )
-                {
-                    rep.terminationtype = -3;
-                    for(i=0; i<=n-1; i++)
-                    {
-                        x[i] = 0;
-                    }
-                    return;
-                }
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                x[i] = b[i];
-            }
-            if( isupper )
-            {
-                sparse.sparsetrsv(a, isupper, false, 1, x, _params);
-                sparse.sparsetrsv(a, isupper, false, 0, x, _params);
-            }
-            else
-            {
-                sparse.sparsetrsv(a, isupper, false, 0, x, _params);
-                sparse.sparsetrsv(a, isupper, false, 1, x, _params);
-            }
-            rep.terminationtype = 1;
-        }
-
-
-        /*************************************************************************
-        Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
-        matrix A, N*1 vectors x and b.
-
-        This solver converts input matrix to CRS format, performs LU factorization
-        and uses sparse triangular solvers to get solution of the original system.
-
-        INPUT PARAMETERS
-            A       -   sparse matrix, must be NxN exactly, any storage format
-            N       -   size of A, N>0
-            B       -   array[0..N-1], right part
-
-        OUTPUT PARAMETERS
-            X       -   array[N], it contains:
-                        * rep.terminationtype>0    =>  solution
-                        * rep.terminationtype=-3   =>  filled by zeros
-            Rep     -   solver report, following fields are set:
-                        * rep.terminationtype - solver status; >0 for success,
-                          set to -3 on failure (degenerate system).
-
-          -- ALGLIB --
-             Copyright 26.12.2017 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparsesolve(sparse.sparsematrix a,
-            double[] b,
-            ref double[] x,
-            sparsesolverreport rep,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            int j = 0;
-            int n = 0;
-            double v = 0;
-            sparse.sparsematrix a2 = new sparse.sparsematrix();
-            int[] pivp = new int[0];
-            int[] pivq = new int[0];
-
-            x = new double[0];
-
-            n = sparse.sparsegetnrows(a, _params);
-            alglib.ap.assert(n>0, "SparseSolve: N<=0");
-            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSolve: rows(A)!=N");
-            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSolve: cols(A)!=N");
-            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSolve: length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSolve: B contains infinities or NANs");
-            initsparsesolverreport(rep, _params);
-            x = new double[n];
-            sparse.sparsecopytocrs(a, a2, _params);
-            if( !trfac.sparselu(a2, 0, ref pivp, ref pivq, _params) )
-            {
-                rep.terminationtype = -3;
-                for(i=0; i<=n-1; i++)
-                {
-                    x[i] = 0;
-                }
-                return;
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                x[i] = b[i];
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                j = pivp[i];
-                v = x[i];
-                x[i] = x[j];
-                x[j] = v;
-            }
-            sparse.sparsetrsv(a2, false, true, 0, x, _params);
-            sparse.sparsetrsv(a2, true, false, 0, x, _params);
-            for(i=n-1; i>=0; i--)
-            {
-                j = pivq[i];
-                v = x[i];
-                x[i] = x[j];
-                x[j] = v;
-            }
-            rep.terminationtype = 1;
-        }
-
-
-        /*************************************************************************
-        Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
-        matrix A given by its LU factorization, N*1 vectors x and b.
-
-        IMPORTANT: this solver requires input matrix  to  be  in  the  CRS  sparse
-                   storage format. An exception will  be  generated  if  you  pass
-                   matrix in some other format (HASH or SKS).
-
-        INPUT PARAMETERS
-            A       -   LU factorization of the sparse matrix, must be NxN exactly
-                        in CRS storage format
-            P, Q    -   pivot indexes from LU factorization
-            N       -   size of A, N>0
-            B       -   array[0..N-1], right part
-
-        OUTPUT PARAMETERS
-            X       -   array[N], it contains:
-                        * rep.terminationtype>0    =>  solution
-                        * rep.terminationtype=-3   =>  filled by zeros
-            Rep     -   solver report, following fields are set:
-                        * rep.terminationtype - solver status; >0 for success,
-                          set to -3 on failure (degenerate system).
-
-          -- ALGLIB --
-             Copyright 26.12.2017 by Bochkanov Sergey
-        *************************************************************************/
-        public static void sparselusolve(sparse.sparsematrix a,
-            int[] p,
-            int[] q,
-            double[] b,
-            ref double[] x,
-            sparsesolverreport rep,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            int j = 0;
-            double v = 0;
-            int n = 0;
-
-            x = new double[0];
-
-            n = sparse.sparsegetnrows(a, _params);
-            alglib.ap.assert(n>0, "SparseLUSolve: N<=0");
-            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseLUSolve: rows(A)!=N");
-            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseLUSolve: cols(A)!=N");
-            alglib.ap.assert(sparse.sparseiscrs(a, _params), "SparseLUSolve: A is not an SKS matrix");
-            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseLUSolve: length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseLUSolve: B contains infinities or NANs");
-            alglib.ap.assert(alglib.ap.len(p)>=n, "SparseLUSolve: length(P)<N");
-            alglib.ap.assert(alglib.ap.len(q)>=n, "SparseLUSolve: length(Q)<N");
-            for(i=0; i<=n-1; i++)
-            {
-                alglib.ap.assert(p[i]>=i && p[i]<n, "SparseLUSolve: P is corrupted");
-                alglib.ap.assert(q[i]>=i && q[i]<n, "SparseLUSolve: Q is corrupted");
-            }
-            initsparsesolverreport(rep, _params);
-            x = new double[n];
-            for(i=0; i<=n-1; i++)
-            {
-                if( a.didx[i]==a.uidx[i] || a.vals[a.didx[i]]==0.0 )
-                {
-                    rep.terminationtype = -3;
-                    for(i=0; i<=n-1; i++)
-                    {
-                        x[i] = 0;
-                    }
-                    return;
-                }
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                x[i] = b[i];
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                j = p[i];
-                v = x[i];
-                x[i] = x[j];
-                x[j] = v;
-            }
-            sparse.sparsetrsv(a, false, true, 0, x, _params);
-            sparse.sparsetrsv(a, true, false, 0, x, _params);
-            for(i=n-1; i>=0; i--)
-            {
-                j = q[i];
-                v = x[i];
-                x[i] = x[j];
-                x[j] = v;
-            }
-            rep.terminationtype = 1;
-        }
-
-
-        /*************************************************************************
-        Reset report fields
-
-          -- ALGLIB --
-             Copyright 26.12.2017 by Bochkanov Sergey
-        *************************************************************************/
-        public static void initsparsesolverreport(sparsesolverreport rep,
-            alglib.xparams _params)
-        {
-            rep.terminationtype = 0;
-            rep.nmv = 0;
-            rep.iterationscount = 0;
-            rep.r2 = 0;
-        }
-
-
-    }
-    public class iterativesparse
-    {
         /*************************************************************************
         This object stores state of the sparse linear solver object.
 
@@ -11256,7 +10972,7 @@ public partial class alglib
             double epsf,
             int maxits,
             ref double[] x,
-            directsparsesolvers.sparsesolverreport rep,
+            sparsesolverreport rep,
             alglib.xparams _params)
         {
             int n = 0;
@@ -11358,7 +11074,7 @@ public partial class alglib
             double epsf,
             int maxits,
             ref double[] x,
-            directsparsesolvers.sparsesolverreport rep,
+            sparsesolverreport rep,
             alglib.xparams _params)
         {
             int n = 0;
@@ -11778,7 +11494,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolverresults(sparsesolverstate state,
             ref double[] x,
-            directsparsesolvers.sparsesolverreport rep,
+            sparsesolverreport rep,
             alglib.xparams _params)
         {
             x = new double[0];
@@ -12074,7 +11790,7 @@ public partial class alglib
         *************************************************************************/
         public static void sparsesolveroocstop(sparsesolverstate state,
             ref double[] x,
-            directsparsesolvers.sparsesolverreport rep,
+            sparsesolverreport rep,
             alglib.xparams _params)
         {
             x = new double[0];
@@ -12082,7 +11798,7 @@ public partial class alglib
             alglib.ap.assert(!state.running, "SparseSolverOOCStop: the solver is still running");
             x = new double[state.n];
             ablasf.rcopyv(state.n, state.xf, x, _params);
-            directsparsesolvers.initsparsesolverreport(rep, _params);
+            initsparsesolverreport(rep, _params);
             rep.iterationscount = state.repiterationscount;
             rep.nmv = state.repnmv;
             rep.terminationtype = state.repterminationtype;
@@ -12120,6 +11836,22 @@ public partial class alglib
             alglib.xparams _params)
         {
             state.userterminationneeded = true;
+        }
+
+
+        /*************************************************************************
+        Reset report fields
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void initsparsesolverreport(sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            rep.terminationtype = 0;
+            rep.nmv = 0;
+            rep.iterationscount = 0;
+            rep.r2 = 0;
         }
 
 
@@ -14745,6 +14477,878 @@ public partial class alglib
 
 
     }
+    public class directsparsesolvers
+    {
+        /*************************************************************************
+        Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
+        definite matrix A, N*1 vectors x and b.
+
+        This solver  converts  input  matrix  to  SKS  format,  performs  Cholesky
+        factorization using  SKS  Cholesky  subroutine  (works  well  for  limited
+        bandwidth matrices) and uses sparse triangular solvers to get solution  of
+        the original system.
+
+        IMPORTANT: this  function  is  intended  for  low  profile (variable band)
+                   linear systems with dense or nearly-dense bands. Only  in  such
+                   cases  it  provides  some  performance  improvement  over  more
+                   general sparsrspdsolve(). If your  system  has  high  bandwidth
+                   or sparse band, the general sparsrspdsolve() is  likely  to  be
+                   more efficient.
+
+        INPUT PARAMETERS
+            A       -   sparse matrix, must be NxN exactly
+            IsUpper -   which half of A is provided (another half is ignored)
+            B       -   array[0..N-1], right part
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate or non-SPD system).
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsespdsolvesks(sparse.sparsematrix a,
+            bool isupper,
+            double[] b,
+            ref double[] x,
+            iterativesparse.sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            sparse.sparsematrix a2 = new sparse.sparsematrix();
+            int n = 0;
+
+            x = new double[0];
+
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseSPDSolveSKS: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDSolveSKS: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDSolveSKS: cols(A)!=N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDSolveSKS: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDSolveSKS: B contains infinities or NANs");
+            iterativesparse.initsparsesolverreport(rep, _params);
+            x = new double[n];
+            sparse.sparsecopytosks(a, a2, _params);
+            if( !trfac.sparsecholeskyskyline(a2, n, isupper, _params) )
+            {
+                rep.terminationtype = -3;
+                for(i=0; i<=n-1; i++)
+                {
+                    x[i] = 0;
+                }
+                return;
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = b[i];
+            }
+            if( isupper )
+            {
+                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
+                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
+            }
+            else
+            {
+                sparse.sparsetrsv(a2, isupper, false, 0, x, _params);
+                sparse.sparsetrsv(a2, isupper, false, 1, x, _params);
+            }
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
+        definite matrix A, N*1 vectors x and b.
+
+        This solver  converts  input  matrix  to  CRS  format,  performs  Cholesky
+        factorization using supernodal Cholesky  decomposition  with  permutation-
+        reducing ordering and uses sparse triangular solver to get solution of the
+        original system.
+
+        INPUT PARAMETERS
+            A       -   sparse matrix, must be NxN exactly.
+                        Can be stored in any sparse storage format, CRS is preferred.
+            IsUpper -   which half of A is provided (another half is ignored).
+                        It is better to store the lower triangle because it allows
+                        us to avoid one transposition during internal conversion.
+            B       -   array[N], right part
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate or non-SPD system).
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsespdsolve(sparse.sparsematrix a,
+            bool isupper,
+            double[] b,
+            ref double[] x,
+            iterativesparse.sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            sparse.sparsematrix a2 = new sparse.sparsematrix();
+            sparse.sparsematrix a3 = new sparse.sparsematrix();
+            int n = 0;
+            int[] p = new int[0];
+            int[] idummy = new int[0];
+            int donotreusemem = 0;
+            spchol.spcholanalysis analysis = new spchol.spcholanalysis();
+            bool flg = new bool();
+
+            x = new double[0];
+
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseSPDSolve: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDSolve: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDSolve: cols(A)!=N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDSolve: B contains infinities or NANs");
+            iterativesparse.initsparsesolverreport(rep, _params);
+            
+            //
+            // Perform factorization, depending on the sparse storage format and triangle being specified
+            //
+            donotreusemem = -1;
+            if( !sparse.sparseiscrs(a, _params) )
+            {
+                
+                //
+                // Non-CRS matrix, first has to be converted to CRS, then a transposition may be needed
+                //
+                sparse.sparsecopytocrs(a, a2, _params);
+                if( isupper )
+                {
+                    sparse.sparsecopytransposecrs(a2, a3, _params);
+                    flg = spchol.spsymmanalyze(a3, idummy, 0.0, 0, 0, 0, donotreusemem, analysis, _params);
+                }
+                else
+                {
+                    flg = spchol.spsymmanalyze(a2, idummy, 0.0, 0, 0, 0, donotreusemem, analysis, _params);
+                }
+            }
+            else
+            {
+                
+                //
+                // A CRS matrix
+                //
+                if( isupper )
+                {
+                    sparse.sparsecopytransposecrs(a, a2, _params);
+                    flg = spchol.spsymmanalyze(a2, idummy, 0.0, 0, 0, 0, donotreusemem, analysis, _params);
+                }
+                else
+                {
+                    flg = spchol.spsymmanalyze(a, idummy, 0.0, 0, 0, 0, donotreusemem, analysis, _params);
+                }
+            }
+            if( !flg )
+            {
+                rep.terminationtype = -3;
+                ablasf.rsetallocv(n, 0.0, ref x, _params);
+                return;
+            }
+            
+            //
+            // Factorize
+            //
+            if( !spchol.spsymmfactorize(analysis, _params) )
+            {
+                rep.terminationtype = -3;
+                ablasf.rsetallocv(n, 0.0, ref x, _params);
+                return;
+            }
+            
+            //
+            // Solve
+            //
+            ablasf.rcopyallocv(n, b, ref x, _params);
+            spchol.spsymmsolve(analysis, x, _params);
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with N*N real  symmetric  positive definite
+        matrix A given by its Cholesky decomposition, and N*1 vectors x and b.
+
+        IMPORTANT: this solver requires input matrix to be in  the  SKS  (Skyline)
+                   or CRS (compressed row storage) format. An  exception  will  be
+                   generated if you pass matrix in some other format.
+
+        INPUT PARAMETERS
+            A       -   sparse NxN matrix stored in CRs or SKS format, must be NxN
+                        exactly
+            IsUpper -   which half of A is provided (another half is ignored)
+            B       -   array[N], right part
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate or non-SPD system).
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsespdcholeskysolve(sparse.sparsematrix a,
+            bool isupper,
+            double[] b,
+            ref double[] x,
+            iterativesparse.sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int n = 0;
+
+            x = new double[0];
+
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseSPDCholeskySolve: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSPDCholeskySolve: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSPDCholeskySolve: cols(A)!=N");
+            alglib.ap.assert(sparse.sparseissks(a, _params) || sparse.sparseiscrs(a, _params), "SparseSPDCholeskySolve: A is not an SKS/CRS matrix");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSPDCholeskySolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSPDCholeskySolve: B contains infinities or NANs");
+            iterativesparse.initsparsesolverreport(rep, _params);
+            x = new double[n];
+            for(i=0; i<=n-1; i++)
+            {
+                if( (double)(sparse.sparseget(a, i, i, _params))==(double)(0.0) )
+                {
+                    rep.terminationtype = -3;
+                    for(i=0; i<=n-1; i++)
+                    {
+                        x[i] = 0;
+                    }
+                    return;
+                }
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = b[i];
+            }
+            if( isupper )
+            {
+                sparse.sparsetrsv(a, isupper, false, 1, x, _params);
+                sparse.sparsetrsv(a, isupper, false, 0, x, _params);
+            }
+            else
+            {
+                sparse.sparsetrsv(a, isupper, false, 0, x, _params);
+                sparse.sparsetrsv(a, isupper, false, 1, x, _params);
+            }
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
+        matrix A, N*1 vectors x and b.
+
+        This function internally uses several solvers:
+        * supernodal solver with static pivoting applied to  a  2N*2N  regularized
+          augmented  system, followed by iterative refinement. This solver  is   a
+          recommended option because it provides the best speed and has the lowest
+          memory requirements.
+        * sparse LU with dynamic pivoting for stability. Provides better  accuracy
+          at the cost of a significantly lower performance. Recommended  only  for
+          extremely unstable problems.
+
+        INPUT PARAMETERS
+            A       -   sparse matrix, must be NxN exactly, any storage format
+            B       -   array[N], right part
+            SolverType- solver type to use:
+                        * 0     use the best solver. It is augmented system in the
+                                current version, but may change in future releases
+                        * 10    use 'default profile' of the supernodal solver with
+                                static   pivoting.   The  'default'   profile   is
+                                intended for systems with plenty of memory; it  is
+                                optimized for the best convergence at the cost  of
+                                increased RAM usage. Recommended option.
+                        * 11    use 'limited memory'  profile  of  the  supernodal
+                                solver with static  pivoting.  The  limited-memory
+                                profile is intended for problems with millions  of
+                                variables.  On  most  systems  it  has  the   same
+                                convergence as the default profile, having somewhat
+                                worse results only for ill-conditioned systems.
+                        * 20    use sparse LU with dynamic pivoting for stability.
+                                Not intended for large-scale problems.
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate system).
+
+          -- ALGLIB --
+             Copyright 18.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsesolve(sparse.sparsematrix a,
+            double[] b,
+            int solvertype,
+            ref double[] x,
+            iterativesparse.sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            int n = 0;
+            double v = 0;
+            sparse.sparsematrix a2 = new sparse.sparsematrix();
+            int[] pivp = new int[0];
+            int[] pivq = new int[0];
+            double[] b2 = new double[0];
+            double[] sr = new double[0];
+            double[] sc = new double[0];
+            double reg = 0;
+            normestimator.normestimatorstate e = new normestimator.normestimatorstate();
+            int gmresk = 0;
+            int maxits = 0;
+
+            x = new double[0];
+
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseSolve: N<=0");
+            alglib.ap.assert((((solvertype==0 || solvertype==-19) || solvertype==10) || solvertype==11) || solvertype==20, "SparseSolve: unexpected SolverType");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseSolve: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseSolve: cols(A)!=N");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseSolve: B contains infinities or NANs");
+            
+            //
+            // Default solver
+            //
+            if( solvertype==0 )
+            {
+                solvertype = 10;
+            }
+            
+            //
+            // Initialization
+            //
+            iterativesparse.initsparsesolverreport(rep, _params);
+            ablasf.rsetallocv(n, 0.0, ref x, _params);
+            sparse.sparsecopytocrs(a, a2, _params);
+            
+            //
+            // Augmented system-based solver
+            //
+            if( (solvertype==-19 || solvertype==10) || solvertype==11 )
+            {
+                gmresk = 200;
+                maxits = 200;
+                if( solvertype==11 )
+                {
+                    
+                    //
+                    // Limited memory profile - decreased amount of GMRES memory
+                    //
+                    gmresk = 25;
+                    maxits = 200;
+                }
+                if( solvertype==-19 )
+                {
+                    
+                    //
+                    // Debug profile - deliberately limited GMRES
+                    //
+                    gmresk = 5;
+                    maxits = 200;
+                }
+                sparse.sparsescale(a2, 0, true, true, true, ref sr, ref sc, _params);
+                ablasf.rcopyallocv(n, b, ref b2, _params);
+                ablasf.rmergedivv(n, sr, b2, _params);
+                normestimator.normestimatorcreate(n, n, 5, 5, e, _params);
+                normestimator.normestimatorsetseed(e, 117, _params);
+                normestimator.normestimatorestimatesparse(e, a2, _params);
+                normestimator.normestimatorresults(e, ref v, _params);
+                reg = Math.Sqrt(math.machineepsilon)*apserv.coalesce(v, 1, _params);
+                sparsesolveaug(a2, b2, reg, reg, 0.0, 0.0, gmresk, maxits, x, rep, _params);
+                ablasf.rmergedivv(n, sc, x, _params);
+                return;
+            }
+            
+            //
+            // LU-based solver
+            //
+            if( solvertype==20 )
+            {
+                if( !trfac.sparselu(a2, 0, ref pivp, ref pivq, _params) )
+                {
+                    rep.terminationtype = -3;
+                    for(i=0; i<=n-1; i++)
+                    {
+                        x[i] = 0;
+                    }
+                    return;
+                }
+                for(i=0; i<=n-1; i++)
+                {
+                    x[i] = b[i];
+                }
+                for(i=0; i<=n-1; i++)
+                {
+                    j = pivp[i];
+                    v = x[i];
+                    x[i] = x[j];
+                    x[j] = v;
+                }
+                sparse.sparsetrsv(a2, false, true, 0, x, _params);
+                sparse.sparsetrsv(a2, true, false, 0, x, _params);
+                for(i=n-1; i>=0; i--)
+                {
+                    j = pivq[i];
+                    v = x[i];
+                    x[i] = x[j];
+                    x[j] = v;
+                }
+                rep.terminationtype = 1;
+                return;
+            }
+            
+            //
+            // unexpected solver type
+            //
+            alglib.ap.assert(false, "DIRECTSPARSESOLVERS: integrity check 1038 failed");
+        }
+
+
+        /*************************************************************************
+        Sparse linear least squares solver for A*x=b with  general  (nonsymmetric)
+        N*N sparse real matrix A, N*1 vectors x and b.
+
+        This function solves a regularized linear least squares problem of the form
+
+                (                      )
+            min ( |Ax-b|^2 + reg*|x|^2 ), with reg>=sqrt(MachineAccuracy)
+                (                      )
+
+        The function internally uses supernodal  solver  to  solve  an  augmented-
+        regularized sparse system. The solver, which was initially used  to  solve
+        sparse square system, can also  be  used  to  solve  rectangular  systems,
+        provided that the system is regularized with regularizing  coefficient  at
+        least sqrt(MachineAccuracy), which is ~10^8 (double precision).
+
+        It can be used to solve both full rank and rank deficient systems.
+
+        INPUT PARAMETERS
+            A       -   sparse MxN matrix, any storage format
+            B       -   array[M], right part
+            Reg     -   regularization coefficient, Reg>=sqrt(MachineAccuracy),
+                        lower values will be silently increased.
+            SolverType- solver type to use:
+                        * 0     use the best solver. It is augmented system in the
+                                current version, but may change in future releases
+                        * 10    use 'default profile' of the supernodal solver with
+                                static   pivoting.   The  'default'   profile   is
+                                intended for systems with plenty of memory; it  is
+                                optimized for the best convergence at the cost  of
+                                increased RAM usage. Recommended option.
+                        * 11    use 'limited memory'  profile  of  the  supernodal
+                                solver with static  pivoting.  The  limited-memory
+                                profile is intended for problems with millions  of
+                                variables.  On  most  systems  it  has  the   same
+                                convergence as the default profile, having somewhat
+                                worse results only for ill-conditioned systems.
+
+        OUTPUT PARAMETERS
+            X       -   array[N], least squares solution
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success.
+                          
+                          Present version of the solver does NOT returns negative
+                          completion codes because  it  does  not  fail.  However,
+                          future ALGLIB versions may include solvers which  return
+                          negative completion codes.
+
+          -- ALGLIB --
+             Copyright 18.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsesolvelsreg(sparse.sparsematrix a,
+            double[] b,
+            double reg,
+            int solvertype,
+            ref double[] x,
+            iterativesparse.sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int m = 0;
+            double v = 0;
+            sparse.sparsematrix a2 = new sparse.sparsematrix();
+            int[] pivp = new int[0];
+            int[] pivq = new int[0];
+            double[] b2 = new double[0];
+            double[] sr = new double[0];
+            double[] sc = new double[0];
+            double augreg = 0;
+            normestimator.normestimatorstate e = new normestimator.normestimatorstate();
+            int gmresk = 0;
+            int maxits = 0;
+
+            x = new double[0];
+
+            m = sparse.sparsegetnrows(a, _params);
+            n = sparse.sparsegetncols(a, _params);
+            alglib.ap.assert(m>0, "SparseSolveLS: M<=0");
+            alglib.ap.assert(n>0, "SparseSolveLS: N<=0");
+            alglib.ap.assert(math.isfinite(reg) && (double)(reg)>(double)(0), "SparseSolveLS: Reg is not finite or non-positive");
+            alglib.ap.assert(((solvertype==0 || solvertype==-19) || solvertype==10) || solvertype==11, "SparseSolveLS: unexpected SolverType");
+            alglib.ap.assert(alglib.ap.len(b)>=m, "SparseSolveLS: length(B)<M");
+            alglib.ap.assert(apserv.isfinitevector(b, m, _params), "SparseSolveLS: B contains infinities or NANs");
+            
+            //
+            // Default solver
+            //
+            if( solvertype==0 )
+            {
+                solvertype = 10;
+            }
+            
+            //
+            // Initialization
+            //
+            iterativesparse.initsparsesolverreport(rep, _params);
+            ablasf.rsetallocv(n, 0.0, ref x, _params);
+            sparse.sparsecopytocrs(a, a2, _params);
+            rep.terminationtype = 1;
+            
+            //
+            // Augmented system-based solver
+            //
+            if( (solvertype==-19 || solvertype==10) || solvertype==11 )
+            {
+                reg = Math.Max(reg, Math.Sqrt(math.machineepsilon));
+                gmresk = 200;
+                maxits = 200;
+                if( solvertype==11 )
+                {
+                    
+                    //
+                    // Limited memory profile
+                    //
+                    gmresk = 25;
+                    maxits = 200;
+                }
+                if( solvertype==-19 )
+                {
+                    
+                    //
+                    // Debug profile - deliberately limited GMRES
+                    //
+                    gmresk = 5;
+                    maxits = 200;
+                }
+                sparse.sparsescale(a2, 0, false, true, true, ref sr, ref sc, _params);
+                ablasf.rcopyallocv(m, b, ref b2, _params);
+                ablasf.rmergedivv(m, sr, b2, _params);
+                normestimator.normestimatorcreate(m, n, 5, 5, e, _params);
+                normestimator.normestimatorsetseed(e, 117, _params);
+                normestimator.normestimatorestimatesparse(e, a2, _params);
+                normestimator.normestimatorresults(e, ref v, _params);
+                augreg = 10*Math.Sqrt(math.machineepsilon)*apserv.coalesce(v, 1, _params);
+                sparsesolveaug(a2, b2, 1, Math.Max(math.sqr(augreg), math.sqr(reg)), 1, math.sqr(reg), gmresk, maxits, x, rep, _params);
+                ablasf.rmergedivv(n, sc, x, _params);
+                return;
+            }
+            
+            //
+            // unexpected solver type
+            //
+            alglib.ap.assert(false, "DIRECTSPARSESOLVERS: integrity check 1622 failed");
+        }
+
+
+        /*************************************************************************
+        Sparse linear solver for A*x=b with general (nonsymmetric) N*N sparse real
+        matrix A given by its LU factorization, N*1 vectors x and b.
+
+        IMPORTANT: this solver requires input matrix  to  be  in  the  CRS  sparse
+                   storage format. An exception will  be  generated  if  you  pass
+                   matrix in some other format (HASH or SKS).
+
+        INPUT PARAMETERS
+            A       -   LU factorization of the sparse matrix, must be NxN exactly
+                        in CRS storage format
+            P, Q    -   pivot indexes from LU factorization
+            N       -   size of A, N>0
+            B       -   array[0..N-1], right part
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate system).
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparselusolve(sparse.sparsematrix a,
+            int[] p,
+            int[] q,
+            double[] b,
+            ref double[] x,
+            iterativesparse.sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            double v = 0;
+            int n = 0;
+
+            x = new double[0];
+
+            n = sparse.sparsegetnrows(a, _params);
+            alglib.ap.assert(n>0, "SparseLUSolve: N<=0");
+            alglib.ap.assert(sparse.sparsegetnrows(a, _params)==n, "SparseLUSolve: rows(A)!=N");
+            alglib.ap.assert(sparse.sparsegetncols(a, _params)==n, "SparseLUSolve: cols(A)!=N");
+            alglib.ap.assert(sparse.sparseiscrs(a, _params), "SparseLUSolve: A is not an SKS matrix");
+            alglib.ap.assert(alglib.ap.len(b)>=n, "SparseLUSolve: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, n, _params), "SparseLUSolve: B contains infinities or NANs");
+            alglib.ap.assert(alglib.ap.len(p)>=n, "SparseLUSolve: length(P)<N");
+            alglib.ap.assert(alglib.ap.len(q)>=n, "SparseLUSolve: length(Q)<N");
+            for(i=0; i<=n-1; i++)
+            {
+                alglib.ap.assert(p[i]>=i && p[i]<n, "SparseLUSolve: P is corrupted");
+                alglib.ap.assert(q[i]>=i && q[i]<n, "SparseLUSolve: Q is corrupted");
+            }
+            iterativesparse.initsparsesolverreport(rep, _params);
+            x = new double[n];
+            for(i=0; i<=n-1; i++)
+            {
+                if( a.didx[i]==a.uidx[i] || a.vals[a.didx[i]]==0.0 )
+                {
+                    rep.terminationtype = -3;
+                    for(i=0; i<=n-1; i++)
+                    {
+                        x[i] = 0;
+                    }
+                    return;
+                }
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                x[i] = b[i];
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                j = p[i];
+                v = x[i];
+                x[i] = x[j];
+                x[j] = v;
+            }
+            sparse.sparsetrsv(a, false, true, 0, x, _params);
+            sparse.sparsetrsv(a, true, false, 0, x, _params);
+            for(i=n-1; i>=0; i--)
+            {
+                j = q[i];
+                v = x[i];
+                x[i] = x[j];
+                x[j] = v;
+            }
+            rep.terminationtype = 1;
+        }
+
+
+        /*************************************************************************
+        Internal function which creates and solves a sparse augmented system
+
+            (        |        )
+            ( REG1*I |   A    )
+            (        |        )
+            (-----------------)
+            (        |        )
+            (    A'  | -REG2*I)
+            (        |        )
+
+        This function uses supernodal LDLT to factorize the system,  then  applies
+        iterative refinement (actually, a preconditioned GMRES which  acts  as  an
+        improved version of the iterative refinement).
+
+        It can be   used  to  solve  square  nonsymmetric  systems,  or  to  solve
+        rectangular systems in a least squares  sense.  Its  performance  somewhat
+        deteriorates for rank-deficient systems.
+
+        INPUT PARAMETERS
+            A       -   sparse matrix, M*N, CRS format
+            B       -   array[N], right part
+            Reg1F,Reg2F-regularizing factors used during the factorization of  the
+                        system, Reg1F>0, Reg2F>0
+            Reg1R,Reg2R-regularizing factors used during the refinement stage,
+                        Reg1R>=0, Reg2R>=0
+            X       -   preallocated buffer
+
+        OUTPUT PARAMETERS
+            X       -   array[N], it contains:
+                        * rep.terminationtype>0    =>  solution
+                        * rep.terminationtype=-3   =>  filled by zeros
+            Rep     -   solver report, following fields are set:
+                        * rep.terminationtype - solver status; >0 for success,
+                          set to -3 on failure (degenerate system).
+                        * rep.iterationscount - set ot an amount of GMRES
+                          iterations performed
+
+          -- ALGLIB --
+             Copyright 26.12.2017 by Bochkanov Sergey
+        *************************************************************************/
+        private static void sparsesolveaug(sparse.sparsematrix a,
+            double[] b,
+            double reg1f,
+            double reg2f,
+            double reg1r,
+            double reg2r,
+            int gmresk,
+            int maxits,
+            double[] x,
+            iterativesparse.sparsesolverreport rep,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int k = 0;
+            int jj = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int m = 0;
+            int n = 0;
+            int nzaug = 0;
+            sparse.sparsematrix aug = new sparse.sparsematrix();
+            int[] priorities = new int[0];
+            double[] bx = new double[0];
+            spchol.spcholanalysis analysis = new spchol.spcholanalysis();
+            iterativesparse.sparsesolverstate solver = new iterativesparse.sparsesolverstate();
+            iterativesparse.sparsesolverreport innerrep = new iterativesparse.sparsesolverreport();
+            int requesttype = 0;
+            double[] rr = new double[0];
+            double[] q = new double[0];
+            double[] y = new double[0];
+            int priorityordering = 0;
+            int donotreusememory = 0;
+
+            alglib.ap.assert(sparse.sparseiscrs(a, _params), "SparseSolveAug: A is not stored in the CRS format");
+            m = sparse.sparsegetnrows(a, _params);
+            n = sparse.sparsegetncols(a, _params);
+            alglib.ap.assert(math.isfinite(reg1f) && (double)(reg1f)>(double)(0), "SparseSolveAug: Reg1F is non-positive");
+            alglib.ap.assert(math.isfinite(reg2f) && (double)(reg2f)>(double)(0), "SparseSolveAug: Reg2F is non-positive");
+            alglib.ap.assert(math.isfinite(reg1r) && (double)(reg1r)>=(double)(0), "SparseSolveAug: Reg1R is non-positive");
+            alglib.ap.assert(math.isfinite(reg2r) && (double)(reg2r)>=(double)(0), "SparseSolveAug: Reg2R is non-positive");
+            alglib.ap.assert(alglib.ap.len(b)>=m, "SparseSolveAug: length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, m, _params), "SparseSolveAug: B contains infinities or NANs");
+            alglib.ap.assert(alglib.ap.len(x)>=n, "SparseSolveAug: length(X)<N");
+            
+            //
+            // Generate augmented matrix
+            //
+            ablasf.rallocv(n+m, ref rr, _params);
+            nzaug = a.ridx[a.m]+n+m;
+            aug.matrixtype = 1;
+            aug.m = m+n;
+            aug.n = m+n;
+            ablasf.iallocv(aug.m+1, ref aug.ridx, _params);
+            ablasf.iallocv(nzaug, ref aug.idx, _params);
+            ablasf.rallocv(nzaug, ref aug.vals, _params);
+            aug.ridx[0] = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                rr[i] = -reg2f;
+                aug.idx[i] = i;
+                aug.vals[i] = rr[i];
+                aug.ridx[i+1] = i+1;
+            }
+            for(i=0; i<=m-1; i++)
+            {
+                rr[n+i] = reg1f;
+                k = aug.ridx[n+i];
+                j0 = a.ridx[i];
+                j1 = a.ridx[i+1]-1;
+                for(jj=j0; jj<=j1; jj++)
+                {
+                    aug.idx[k] = a.idx[jj];
+                    aug.vals[k] = a.vals[jj];
+                    k = k+1;
+                }
+                aug.idx[k] = n+i;
+                aug.vals[k] = rr[n+i];
+                k = k+1;
+                aug.ridx[n+i+1] = k;
+            }
+            alglib.ap.assert(aug.ridx[n+m]==nzaug, "SparseSolveAug: integrity check 2141 failed");
+            sparse.sparsecreatecrsinplace(aug, _params);
+            
+            //
+            // Factorize augmented system
+            //
+            priorityordering = 3;
+            donotreusememory = -1;
+            ablasf.isetallocv(n+m, 1, ref priorities, _params);
+            ablasf.isetv(n, 0, priorities, _params);
+            if( !spchol.spsymmanalyze(aug, priorities, 0.0, 0, 1, priorityordering, donotreusememory, analysis, _params) )
+            {
+                alglib.ap.assert(false, "SparseSolveAug: integrity check 4141 failed");
+            }
+            while( !spchol.spsymmfactorize(analysis, _params) )
+            {
+                
+                //
+                // Factorization failure. Extremely rare, almost unable to reproduce.
+                //
+                ablasf.rmulv(n+m, 10.0, rr, _params);
+                spchol.spsymmreloaddiagonal(analysis, rr, _params);
+            }
+            
+            //
+            // Solve using GMRES as an improved iterative refinement
+            //
+            ablasf.rsetallocv(n+m, reg1r, ref rr, _params);
+            ablasf.rsetv(n, -reg2r, rr, _params);
+            ablasf.rallocv(m+n, ref q, _params);
+            ablasf.rallocv(m+n, ref y, _params);
+            ablasf.rsetallocv(m+n, 0.0, ref bx, _params);
+            ablasf.rcopyvx(m, b, 0, bx, n, _params);
+            iterativesparse.sparsesolvercreate(m+n, solver, _params);
+            iterativesparse.sparsesolversetalgogmres(solver, gmresk, _params);
+            iterativesparse.sparsesolversetcond(solver, 10*math.machineepsilon, maxits, _params);
+            iterativesparse.sparsesolveroocstart(solver, bx, _params);
+            while( iterativesparse.sparsesolverooccontinue(solver, _params) )
+            {
+                iterativesparse.sparsesolveroocgetrequestinfo(solver, ref requesttype, _params);
+                alglib.ap.assert(requesttype==0, "SPARSESOLVE: integrity check 8618 failed");
+                iterativesparse.sparsesolveroocgetrequestdata(solver, ref q, _params);
+                spchol.spsymmsolve(analysis, q, _params);
+                sparse.sparsegemv(a, 1.0, 0, q, 0, 0.0, y, n, _params);
+                sparse.sparsegemv(a, 1.0, 1, q, n, 0.0, y, 0, _params);
+                ablasf.rmuladdv(m+n, q, rr, y, _params);
+                iterativesparse.sparsesolveroocsendresult(solver, y, _params);
+            }
+            iterativesparse.sparsesolveroocstop(solver, ref bx, innerrep, _params);
+            if( innerrep.terminationtype<=0 )
+            {
+                rep.terminationtype = innerrep.terminationtype;
+                return;
+            }
+            spchol.spsymmsolve(analysis, bx, _params);
+            ablasf.rcopyvx(n, bx, 0, x, 0, _params);
+            rep.terminationtype = 1;
+            rep.iterationscount = innerrep.iterationscount;
+        }
+
+
+    }
     public class nleq
     {
         public class nleqstate : apobject
@@ -15494,6 +16098,15 @@ public partial class alglib
             state.rstate.ra = new double[5+1];
             state.rstate.stage = -1;
             clearrequestfields(state, _params);
+        }
+
+
+        /*************************************************************************
+        Sets V1 reverse communication protocol
+        *************************************************************************/
+        public static void nleqsetprotocolv1(nleqstate state,
+            alglib.xparams _params)
+        {
         }
 
 

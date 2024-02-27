@@ -16,9 +16,10 @@ namespace MechJebLib.PVG
     {
         public readonly double      ZnormTerminationLevel = 1e-9;
         public          double      Znorm;
-        public          int         MaxIter          { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
-        public          double      LmEpsx           { get; set; } = EPS;    // rely more on manual termination at znorm=1e-9
-        public          double      LmDiffStep       { get; set; } = 1e-10;
+        public          int         MAXITS   { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
+        public          double      EPSX     { get; set; } = EPS;    // rely more on manual termination at znorm=1e-9
+        public          double      DIFFSTEP { get; set; } = 1e-10;
+        public          double      STPMAX = 1e-4;
         public          int         OptimizerTimeout { get; set; } = 5000; // milliseconds
         public          int         LmStatus;
         public          int         LmIterations;
@@ -30,9 +31,9 @@ namespace MechJebLib.PVG
         private readonly List<Vn>                 _terminal = new List<Vn>();
         private readonly List<Vn>                 _residual = new List<Vn>();
         private          int                      lastPhase => _phases.Count - 1;
-        private readonly alglib.minlmreport       _rep = new alglib.minlmreport();
+        private readonly alglib.minnlcreport       _rep = new alglib.minnlcreport();
         private readonly alglib.ndimensional_fvec _residualHandle;
-        private          alglib.minlmstate        _state = new alglib.minlmstate();
+        private          alglib.minnlcstate        _state = new alglib.minnlcstate();
 
         public enum OptimStatus { CREATED, BOOTSTRAPPED, SUCCESS, FAILED }
 
@@ -151,16 +152,17 @@ namespace MechJebLib.PVG
 
         private void CopyToZ(double[] z)
         {
-            for (int i = 0; i < z.Length; i++)
+            z[0] = 0;
+            for (int i = 0; i < z.Length-1; i++)
             {
-                z[i] = _residual[i / ResidualLayout.RESIDUAL_LAYOUT_LEN][i % ResidualLayout.RESIDUAL_LAYOUT_LEN];
+                z[i+1] = _residual[i / ResidualLayout.RESIDUAL_LAYOUT_LEN][i % ResidualLayout.RESIDUAL_LAYOUT_LEN];
             }
         }
 
         private void CalculateZnorm(double[] z)
         {
             Znorm = 0;
-            for (int i = 0; i < z.Length; i++)
+            for (int i = 1; i < z.Length; i++)
             {
                 Znorm += z[i] * z[i];
             }
@@ -179,14 +181,13 @@ namespace MechJebLib.PVG
 
             CopyToInitial(yin);
             Shooting();
-            // need to backwards integrate the mass costate here
             CalculateResiduals();
             CopyToZ(zout);
             CalculateZnorm(zout);
 
             if (Znorm < ZnormTerminationLevel)
             {
-                alglib.minlmrequesttermination(_state);
+                alglib.minnlcrequesttermination(_state);
                 _terminating = true;
             }
         }
@@ -255,14 +256,29 @@ namespace MechJebLib.PVG
             bndl[InputLayout.VY_INDEX] = bndu[InputLayout.VY_INDEX] = _problem.V0.y;
             bndl[InputLayout.VZ_INDEX] = bndu[InputLayout.VZ_INDEX] = _problem.V0.z;
 
+            alglib.minnlccreatef(InputLayout.INPUT_LAYOUT_LEN * _phases.Count, yGuess, DIFFSTEP, out _state);
+            alglib.minnlcsetbc(_state, bndl, bndu);
+            alglib.minnlcsetstpmax(_state, STPMAX);
+            //alglib.minnlcsetalgoslp(_state);
+            alglib.minnlcsetalgosqp(_state);
+            alglib.minnlcsetcond(_state, EPSX, MAXITS);
+            alglib.minnlcsetnlc(_state, ResidualLayout.RESIDUAL_LAYOUT_LEN * _phases.Count, 0);
+            alglib.minnlcoptimize(_state, _residualHandle, null, null);
+            alglib.minnlcresultsbuf(_state, ref yNew, _rep);
+
+            /*
             alglib.minlmcreatev(ResidualLayout.RESIDUAL_LAYOUT_LEN * _phases.Count, yGuess, LmDiffStep, out _state);
             alglib.minlmsetbc(_state, bndl, bndu);
             alglib.minlmsetcond(_state, LmEpsx, MaxIter);
             alglib.minlmoptimize(_state, _residualHandle, null, null);
             alglib.minlmresultsbuf(_state, ref yNew, _rep);
+            */
 
             LmStatus     = _rep.terminationtype;
             LmIterations = _rep.iterationscount;
+
+            Print("lmstatus: " + LmStatus);
+            Print("lmiterations: " + LmIterations);
 
             if (_rep.terminationtype != 8)
                 ResidualFunction(yNew, z, null);

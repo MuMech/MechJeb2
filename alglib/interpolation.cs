@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.00.0 (source code generated 2023-05-21)
+ALGLIB 4.01.0 (source code generated 2023-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -759,6 +759,16 @@ public partial class alglib
     scattered multidimensional interpolation. Although it has  its  drawbacks,
     it is easy to use and robust, which makes it a good first step.
 
+      ! COMMERCIAL EDITION OF ALGLIB:
+      !
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
 
     INPUT PARAMETERS:
         State   -   builder object
@@ -1159,6 +1169,17 @@ public partial class alglib
     This function fits IDW model to the dataset using current IDW construction
     algorithm. A model being built and fitting report are returned.
 
+      ! COMMERCIAL EDITION OF ALGLIB:
+      !
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
     INPUT PARAMETERS:
         State   -   builder object
 
@@ -1187,6 +1208,193 @@ public partial class alglib
         model = new idwmodel();
         rep = new idwreport();
         idw.idwfit(state.innerobj, model.innerobj, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function is used to peek into the IDW construction  process from some
+    other thread and get the progress indicator. It returns value in [0,1].
+
+    IMPORTANT: only MSTAB algorithm supports peeking into progress  indicator.
+               Legacy versions of the Shepard's method do  not support it. You
+               will always get zero as the result.
+
+    INPUT PARAMETERS:
+        S           -   RBF model object
+
+    RESULT:
+        progress value, in [0,1]
+
+      -- ALGLIB --
+         Copyright 27.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static double idwpeekprogress(idwbuilder s)
+    {
+    
+        return idw.idwpeekprogress(s.innerobj, null);
+    }
+    
+    public static double idwpeekprogress(idwbuilder s, alglib.xparams _params)
+    {
+    
+        return idw.idwpeekprogress(s.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function calculates values  of  an  IDW  model  at  a  regular  grid,
+    which  has  N0*N1 points, with Point[I,J] = (X0[I], X1[J]).  Vector-valued
+    IDW models are supported.
+
+    This function returns 0.0 when:
+    * the model is not initialized
+    * NX<>2
+
+      ! COMMERCIAL EDITION OF ALGLIB:
+      !
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
+    NOTE: Parallel  processing  is  implemented only for modern (MSTAB) IDW's.
+
+    INPUT PARAMETERS:
+        S       -   IDW model, used in read-only mode, can be  shared  between
+                    multiple   invocations  of  this  function  from  multiple
+                    threads.
+
+        X0      -   array of grid nodes, first coordinates, array[N0].
+                    Must be ordered by ascending. Exception is generated
+                    if the array is not correctly ordered.
+        N0      -   grid size (number of nodes) in the first dimension, N0>=1
+
+        X1      -   array of grid nodes, second coordinates, array[N1]
+                    Must be ordered by ascending. Exception is generated
+                    if the array is not correctly ordered.
+        N1      -   grid size (number of nodes) in the second dimension, N1>=1
+
+    OUTPUT PARAMETERS:
+        Y       -   function values, array[NY*N0*N1], where NY is a  number of
+                    "output" vector values (this  function   supports  vector-
+                    valued IDW models). Y is out-variable and  is  reallocated
+                    by this function.
+                    Y[K+NY*(I0+I1*N0)]=F_k(X0[I0],X1[I1]), for:
+                    *  K=0...NY-1
+                    * I0=0...N0-1
+                    * I1=0...N1-1
+
+    NOTE: this function supports weakly ordered grid nodes, i.e. you may  have
+          X[i]=X[i+1] for some i. It does  not  provide  you  any  performance
+          benefits  due  to   duplication  of  points,  just  convenience  and
+          flexibility.
+
+    NOTE: this  function  is  re-entrant,  i.e.  you  may  use  same  idwmodel
+          structure in multiple threads calling  this function  for  different
+          grids.
+
+    NOTE: if you need function values on some subset  of  regular  grid, which
+          may be described as "several compact and  dense  islands",  you  may
+          use idwgridcalc2vsubset().
+
+      -- ALGLIB --
+         Copyright 24.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void idwgridcalc2v(idwmodel s, double[] x0, int n0, double[] x1, int n1, out double[] y)
+    {
+        y = new double[0];
+        idw.idwgridcalc2v(s.innerobj, x0, n0, x1, n1, ref y, null);
+    }
+    
+    public static void idwgridcalc2v(idwmodel s, double[] x0, int n0, double[] x1, int n1, out double[] y, alglib.xparams _params)
+    {
+        y = new double[0];
+        idw.idwgridcalc2v(s.innerobj, x0, n0, x1, n1, ref y, _params);
+    }
+    
+    /*************************************************************************
+    This function calculates values of an  IDW  model  at  some  subset  of  a
+    regular grid:
+    * the grid has N0*N1 points, with Point[I,J] = (X0[I], X1[J])
+    * only values at some subset of the grid are required
+    Vector-valued IDW models are supported.
+
+    This function returns 0.0 when:
+    * the model is not initialized
+    * NX<>2
+
+      ! COMMERCIAL EDITION OF ALGLIB:
+      !
+      ! Commercial Edition of ALGLIB includes following important improvements
+      ! of this function:
+      ! * high-performance native backend with same C# interface (C# version)
+      ! * multithreading support (C++ and C# versions)
+      !
+      ! We recommend you to read 'Working with commercial version' section  of
+      ! ALGLIB Reference Manual in order to find out how to  use  performance-
+      ! related features provided by commercial edition of ALGLIB.
+
+    NOTE: Parallel processing is implemented only for modern (MSTAB) IDW's.
+
+    INPUT PARAMETERS:
+        S       -   IDW model, used in read-only mode, can be  shared  between
+                    multiple   invocations  of  this  function  from  multiple
+                    threads.
+
+        X0      -   array of grid nodes, first coordinates, array[N0].
+                    Must be ordered by ascending. Exception is generated
+                    if the array is not correctly ordered.
+        N0      -   grid size (number of nodes) in the first dimension, N0>=1
+
+        X1      -   array of grid nodes, second coordinates, array[N1]
+                    Must be ordered by ascending. Exception is generated
+                    if the array is not correctly ordered.
+        N1      -   grid size (number of nodes) in the second dimension, N1>=1
+
+        FlagY   -   array[N0*N1]:
+                    * Y[I0+I1*N0] corresponds to node (X0[I0],X1[I1])
+                    * it is a "bitmap" array which contains  False  for  nodes
+                      which are NOT calculated, and True for nodes  which  are
+                      required.
+
+    OUTPUT PARAMETERS:
+        Y       -   function values, array[NY*N0*N1*N2], where NY is a  number
+                    of "output" vector values (this function  supports vector-
+                    valued IDW models):
+                    * Y[K+NY*(I0+I1*N0)]=F_k(X0[I0],X1[I1]),
+                      for K=0...NY-1, I0=0...N0-1, I1=0...N1-1.
+                    * elements of Y[] which correspond  to  FlagY[]=True   are
+                      loaded by model values (which may be  exactly  zero  for
+                      some nodes).
+                    * elements of Y[] which correspond to FlagY[]=False MAY be
+                      initialized by zeros OR may  be  calculated.  Generally,
+                      they  are   not   calculated,  but  future  SIMD-capable
+                      versions may compute several elements in a batch.
+
+    NOTE: this function supports weakly ordered grid nodes, i.e. you may  have
+          X[i]=X[i+1] for some i. It does  not  provide  you  any  performance
+          benefits  due  to   duplication  of  points,  just  convenience  and
+          flexibility.
+
+    NOTE: this  function  is  re-entrant,  i.e.  you  may  use  same  idwmodel
+          structure in multiple threads calling  this function  for  different
+          grids.
+
+      -- ALGLIB --
+         Copyright 24.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void idwgridcalc2vsubset(idwmodel s, double[] x0, int n0, double[] x1, int n1, bool[] flagy, out double[] y)
+    {
+        y = new double[0];
+        idw.idwgridcalc2vsubset(s.innerobj, x0, n0, x1, n1, flagy, ref y, null);
+    }
+    
+    public static void idwgridcalc2vsubset(idwmodel s, double[] x0, int n0, double[] x1, int n1, bool[] flagy, out double[] y, alglib.xparams _params)
+    {
+        y = new double[0];
+        idw.idwgridcalc2vsubset(s.innerobj, x0, n0, x1, n1, flagy, ref y, _params);
     }
 
 }
@@ -3084,6 +3292,71 @@ public partial class alglib
     }
     
     /*************************************************************************
+    This subroutine builds modified Akima spline interpolant, with weights
+
+        W[i]=|Delta[I]-Delta[I-1]|
+
+    replaced by
+
+        W[i]=|Delta[I]-Delta[I-1]|+0.5*|Delta[I]+Delta[I-1]|
+
+    INPUT PARAMETERS:
+        X           -   spline nodes, array[0..N-1]
+        Y           -   function values, array[0..N-1]
+        N           -   points count (optional):
+                        * N>=2
+                        * if given, only first N points are used to build spline
+                        * if not given, automatically detected from X/Y sizes
+                          (len(X) must be equal to len(Y))
+
+    OUTPUT PARAMETERS:
+        C           -   spline interpolant
+
+
+    ORDER OF POINTS
+
+    Subroutine automatically sorts points, so caller may pass unsorted array.
+
+      -- ALGLIB PROJECT --
+         Copyright 24.06.2007 by Bochkanov Sergey
+    *************************************************************************/
+    public static void spline1dbuildakimamod(double[] x, double[] y, int n, out spline1dinterpolant c)
+    {
+        c = new spline1dinterpolant();
+        spline1d.spline1dbuildakimamod(x, y, n, c.innerobj, null);
+    }
+    
+    public static void spline1dbuildakimamod(double[] x, double[] y, int n, out spline1dinterpolant c, alglib.xparams _params)
+    {
+        c = new spline1dinterpolant();
+        spline1d.spline1dbuildakimamod(x, y, n, c.innerobj, _params);
+    }
+            
+    public static void spline1dbuildakimamod(double[] x, double[] y, out spline1dinterpolant c)
+    {
+        int n;
+        if( (ap.len(x)!=ap.len(y)))
+            throw new alglibexception("Error while calling 'spline1dbuildakimamod': looks like one of arguments has wrong size");
+        c = new spline1dinterpolant();
+        n = ap.len(x);
+        spline1d.spline1dbuildakimamod(x, y, n, c.innerobj, null);
+    
+        return;
+    }
+            
+    public static void spline1dbuildakimamod(double[] x, double[] y, out spline1dinterpolant c, alglib.xparams _params)
+    {
+        int n;
+        if( (ap.len(x)!=ap.len(y)))
+            throw new alglibexception("Error while calling 'spline1dbuildakimamod': looks like one of arguments has wrong size");
+        c = new spline1dinterpolant();
+        n = ap.len(x);
+        spline1d.spline1dbuildakimamod(x, y, n, c.innerobj, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
     This subroutine calculates the value of the spline at the given point X.
 
     INPUT PARAMETERS:
@@ -3582,15 +3855,6 @@ public partial class alglib
         //
         // Public declarations
         //
-        public bool needf { get { return _innerobj.needf; } set { _innerobj.needf = value; } }
-        public bool needfg { get { return _innerobj.needfg; } set { _innerobj.needfg = value; } }
-        public bool needfgh { get { return _innerobj.needfgh; } set { _innerobj.needfgh = value; } }
-        public bool xupdated { get { return _innerobj.xupdated; } set { _innerobj.xupdated = value; } }
-        public double[] c { get { return _innerobj.c; } }
-        public double f { get { return _innerobj.f; } set { _innerobj.f = value; } }
-        public double[] g { get { return _innerobj.g; } }
-        public double[,] h { get { return _innerobj.h; } }
-        public double[] x { get { return _innerobj.x; } }
     
         public lsfitstate()
         {
@@ -5902,6 +6166,20 @@ public partial class alglib
     OUTPUT PARAMETERS:
         State   -   structure which stores algorithm state
 
+    IMPORTANT: the LSFIT optimizer  supports  parallel  model  evaluation  and
+               parallel numerical  differentiation  ('callback  parallelism').
+               This feature, which is present in commercial  ALGLIB  editions,
+               greatly accelerates fits with large datasets  and/or  expensive
+               target functions.
+
+               Callback parallelism is usually beneficial when a  single  pass
+               over  the   entire   dataset   requires   more   than   several
+               milliseconds.
+
+               See ALGLIB Reference Manual, 'Working with commercial  version'
+               section,  and  comments  on  lsfitfit()   function   for   more
+               information.
+
       -- ALGLIB --
          Copyright 18.10.2008 by Bochkanov Sergey
     *************************************************************************/
@@ -5983,6 +6261,20 @@ public partial class alglib
     OUTPUT PARAMETERS:
         State   -   structure which stores algorithm state
 
+    IMPORTANT: the LSFIT optimizer  supports  parallel  model  evaluation  and
+               parallel numerical  differentiation  ('callback  parallelism').
+               This feature, which is present in commercial  ALGLIB  editions,
+               greatly accelerates fits with large datasets  and/or  expensive
+               target functions.
+
+               Callback parallelism is usually beneficial when a  single  pass
+               over  the   entire   dataset   requires   more   than   several
+               milliseconds.
+
+               See ALGLIB Reference Manual, 'Working with commercial  version'
+               section,  and  comments  on  lsfitfit()   function   for   more
+               information.
+
       -- ALGLIB --
          Copyright 18.10.2008 by Bochkanov Sergey
     *************************************************************************/
@@ -6054,14 +6346,6 @@ public partial class alglib
         N       -   number of points, N>1
         M       -   dimension of space
         K       -   number of parameters being fitted
-        CheapFG -   boolean flag, which is:
-                    * True  if both function and gradient calculation complexity
-                            are less than O(M^2).  An improved  algorithm  can
-                            be  used  which corresponds  to  FGJ  scheme  from
-                            MINLM unit.
-                    * False otherwise.
-                            Standard Jacibian-bases  Levenberg-Marquardt  algo
-                            will be used (FJ scheme).
 
     OUTPUT PARAMETERS:
         State   -   structure which stores algorithm state
@@ -6070,24 +6354,37 @@ public partial class alglib
         LSFitResults
         LSFitCreateFG (fitting without weights)
         LSFitCreateWFGH (fitting using Hessian)
-        LSFitCreateFGH (fitting using Hessian, without weights)
+
+    IMPORTANT: the LSFIT optimizer  supports  parallel  model  evaluation  and
+               parallel numerical  differentiation  ('callback  parallelism').
+               This feature, which is present in commercial  ALGLIB  editions,
+               greatly accelerates fits with large datasets  and/or  expensive
+               target functions.
+
+               Callback parallelism is usually beneficial when a  single  pass
+               over  the   entire   dataset   requires   more   than   several
+               milliseconds.
+
+               See ALGLIB Reference Manual, 'Working with commercial  version'
+               section,  and  comments  on  lsfitfit()   function   for   more
+               information.
 
       -- ALGLIB --
          Copyright 17.08.2009 by Bochkanov Sergey
     *************************************************************************/
-    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, bool cheapfg, out lsfitstate state)
+    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, out lsfitstate state)
     {
         state = new lsfitstate();
-        lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, cheapfg, state.innerobj, null);
+        lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, state.innerobj, null);
     }
     
-    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, bool cheapfg, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, out lsfitstate state, alglib.xparams _params)
     {
         state = new lsfitstate();
-        lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, cheapfg, state.innerobj, _params);
+        lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, state.innerobj, _params);
     }
             
-    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, bool cheapfg, out lsfitstate state)
+    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, out lsfitstate state)
     {
         int n;
         int m;
@@ -6098,12 +6395,12 @@ public partial class alglib
         n = ap.rows(x);
         m = ap.cols(x);
         k = ap.len(c);
-        lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, cheapfg, state.innerobj, null);
+        lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, state.innerobj, null);
     
         return;
     }
             
-    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, bool cheapfg, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatewfg(double[,] x, double[] y, double[] w, double[] c, out lsfitstate state, alglib.xparams _params)
     {
         int n;
         int m;
@@ -6114,7 +6411,7 @@ public partial class alglib
         n = ap.rows(x);
         m = ap.cols(x);
         k = ap.len(c);
-        lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, cheapfg, state.innerobj, _params);
+        lsfit.lsfitcreatewfg(x, y, w, c, n, m, k, state.innerobj, _params);
     
         return;
     }
@@ -6142,34 +6439,40 @@ public partial class alglib
         N       -   number of points, N>1
         M       -   dimension of space
         K       -   number of parameters being fitted
-        CheapFG -   boolean flag, which is:
-                    * True  if both function and gradient calculation complexity
-                            are less than O(M^2).  An improved  algorithm  can
-                            be  used  which corresponds  to  FGJ  scheme  from
-                            MINLM unit.
-                    * False otherwise.
-                            Standard Jacibian-bases  Levenberg-Marquardt  algo
-                            will be used (FJ scheme).
 
     OUTPUT PARAMETERS:
         State   -   structure which stores algorithm state
 
+    IMPORTANT: the LSFIT optimizer  supports  parallel  model  evaluation  and
+               parallel numerical  differentiation  ('callback  parallelism').
+               This feature, which is present in commercial  ALGLIB  editions,
+               greatly accelerates fits with large datasets  and/or  expensive
+               target functions.
+
+               Callback parallelism is usually beneficial when a  single  pass
+               over  the   entire   dataset   requires   more   than   several
+               milliseconds.
+
+               See ALGLIB Reference Manual, 'Working with commercial  version'
+               section,  and  comments  on  lsfitfit()   function   for   more
+               information.
+
       -- ALGLIB --
          Copyright 17.08.2009 by Bochkanov Sergey
     *************************************************************************/
-    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, int n, int m, int k, bool cheapfg, out lsfitstate state)
+    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, int n, int m, int k, out lsfitstate state)
     {
         state = new lsfitstate();
-        lsfit.lsfitcreatefg(x, y, c, n, m, k, cheapfg, state.innerobj, null);
+        lsfit.lsfitcreatefg(x, y, c, n, m, k, state.innerobj, null);
     }
     
-    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, int n, int m, int k, bool cheapfg, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, int n, int m, int k, out lsfitstate state, alglib.xparams _params)
     {
         state = new lsfitstate();
-        lsfit.lsfitcreatefg(x, y, c, n, m, k, cheapfg, state.innerobj, _params);
+        lsfit.lsfitcreatefg(x, y, c, n, m, k, state.innerobj, _params);
     }
             
-    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, bool cheapfg, out lsfitstate state)
+    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, out lsfitstate state)
     {
         int n;
         int m;
@@ -6180,12 +6483,12 @@ public partial class alglib
         n = ap.rows(x);
         m = ap.cols(x);
         k = ap.len(c);
-        lsfit.lsfitcreatefg(x, y, c, n, m, k, cheapfg, state.innerobj, null);
+        lsfit.lsfitcreatefg(x, y, c, n, m, k, state.innerobj, null);
     
         return;
     }
             
-    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, bool cheapfg, out lsfitstate state, alglib.xparams _params)
+    public static void lsfitcreatefg(double[,] x, double[] y, double[] c, out lsfitstate state, alglib.xparams _params)
     {
         int n;
         int m;
@@ -6196,157 +6499,7 @@ public partial class alglib
         n = ap.rows(x);
         m = ap.cols(x);
         k = ap.len(c);
-        lsfit.lsfitcreatefg(x, y, c, n, m, k, cheapfg, state.innerobj, _params);
-    
-        return;
-    }
-    
-    /*************************************************************************
-    Weighted nonlinear least squares fitting using gradient/Hessian.
-
-    Nonlinear task min(F(c)) is solved, where
-
-        F(c) = (w[0]*(f(c,x[0])-y[0]))^2 + ... + (w[n-1]*(f(c,x[n-1])-y[n-1]))^2,
-
-        * N is a number of points,
-        * M is a dimension of a space points belong to,
-        * K is a dimension of a space of parameters being fitted,
-        * w is an N-dimensional vector of weight coefficients,
-        * x is a set of N points, each of them is an M-dimensional vector,
-        * c is a K-dimensional vector of parameters being fitted
-
-    This subroutine uses f(c,x[i]), its gradient and its Hessian.
-
-    INPUT PARAMETERS:
-        X       -   array[0..N-1,0..M-1], points (one row = one point)
-        Y       -   array[0..N-1], function values.
-        W       -   weights, array[0..N-1]
-        C       -   array[0..K-1], initial approximation to the solution,
-        N       -   number of points, N>1
-        M       -   dimension of space
-        K       -   number of parameters being fitted
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 17.08.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lsfitcreatewfgh(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, out lsfitstate state)
-    {
-        state = new lsfitstate();
-        lsfit.lsfitcreatewfgh(x, y, w, c, n, m, k, state.innerobj, null);
-    }
-    
-    public static void lsfitcreatewfgh(double[,] x, double[] y, double[] w, double[] c, int n, int m, int k, out lsfitstate state, alglib.xparams _params)
-    {
-        state = new lsfitstate();
-        lsfit.lsfitcreatewfgh(x, y, w, c, n, m, k, state.innerobj, _params);
-    }
-            
-    public static void lsfitcreatewfgh(double[,] x, double[] y, double[] w, double[] c, out lsfitstate state)
-    {
-        int n;
-        int m;
-        int k;
-        if( (ap.rows(x)!=ap.len(y)) || (ap.rows(x)!=ap.len(w)))
-            throw new alglibexception("Error while calling 'lsfitcreatewfgh': looks like one of arguments has wrong size");
-        state = new lsfitstate();
-        n = ap.rows(x);
-        m = ap.cols(x);
-        k = ap.len(c);
-        lsfit.lsfitcreatewfgh(x, y, w, c, n, m, k, state.innerobj, null);
-    
-        return;
-    }
-            
-    public static void lsfitcreatewfgh(double[,] x, double[] y, double[] w, double[] c, out lsfitstate state, alglib.xparams _params)
-    {
-        int n;
-        int m;
-        int k;
-        if( (ap.rows(x)!=ap.len(y)) || (ap.rows(x)!=ap.len(w)))
-            throw new alglibexception("Error while calling 'lsfitcreatewfgh': looks like one of arguments has wrong size");
-        state = new lsfitstate();
-        n = ap.rows(x);
-        m = ap.cols(x);
-        k = ap.len(c);
-        lsfit.lsfitcreatewfgh(x, y, w, c, n, m, k, state.innerobj, _params);
-    
-        return;
-    }
-    
-    /*************************************************************************
-    Nonlinear least squares fitting using gradient/Hessian, without individial
-    weights.
-
-    Nonlinear task min(F(c)) is solved, where
-
-        F(c) = ((f(c,x[0])-y[0]))^2 + ... + ((f(c,x[n-1])-y[n-1]))^2,
-
-        * N is a number of points,
-        * M is a dimension of a space points belong to,
-        * K is a dimension of a space of parameters being fitted,
-        * x is a set of N points, each of them is an M-dimensional vector,
-        * c is a K-dimensional vector of parameters being fitted
-
-    This subroutine uses f(c,x[i]), its gradient and its Hessian.
-
-    INPUT PARAMETERS:
-        X       -   array[0..N-1,0..M-1], points (one row = one point)
-        Y       -   array[0..N-1], function values.
-        C       -   array[0..K-1], initial approximation to the solution,
-        N       -   number of points, N>1
-        M       -   dimension of space
-        K       -   number of parameters being fitted
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-
-      -- ALGLIB --
-         Copyright 17.08.2009 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lsfitcreatefgh(double[,] x, double[] y, double[] c, int n, int m, int k, out lsfitstate state)
-    {
-        state = new lsfitstate();
-        lsfit.lsfitcreatefgh(x, y, c, n, m, k, state.innerobj, null);
-    }
-    
-    public static void lsfitcreatefgh(double[,] x, double[] y, double[] c, int n, int m, int k, out lsfitstate state, alglib.xparams _params)
-    {
-        state = new lsfitstate();
-        lsfit.lsfitcreatefgh(x, y, c, n, m, k, state.innerobj, _params);
-    }
-            
-    public static void lsfitcreatefgh(double[,] x, double[] y, double[] c, out lsfitstate state)
-    {
-        int n;
-        int m;
-        int k;
-        if( (ap.rows(x)!=ap.len(y)))
-            throw new alglibexception("Error while calling 'lsfitcreatefgh': looks like one of arguments has wrong size");
-        state = new lsfitstate();
-        n = ap.rows(x);
-        m = ap.cols(x);
-        k = ap.len(c);
-        lsfit.lsfitcreatefgh(x, y, c, n, m, k, state.innerobj, null);
-    
-        return;
-    }
-            
-    public static void lsfitcreatefgh(double[,] x, double[] y, double[] c, out lsfitstate state, alglib.xparams _params)
-    {
-        int n;
-        int m;
-        int k;
-        if( (ap.rows(x)!=ap.len(y)))
-            throw new alglibexception("Error while calling 'lsfitcreatefgh': looks like one of arguments has wrong size");
-        state = new lsfitstate();
-        n = ap.rows(x);
-        m = ap.cols(x);
-        k = ap.len(c);
-        lsfit.lsfitcreatefgh(x, y, c, n, m, k, state.innerobj, _params);
+        lsfit.lsfitcreatefg(x, y, c, n, m, k, state.innerobj, _params);
     
         return;
     }
@@ -6630,71 +6783,96 @@ public partial class alglib
                     value func at given point x
         grad    -   callback which calculates function (or merit function)
                     value func and gradient grad at given point x
-        hess    -   callback which calculates function (or merit function)
-                    value func, gradient grad and Hessian hess at given point x
         rep     -   optional callback which is called after each iteration
                     can be null
         obj     -   optional object which is passed to func/grad/hess/jac/rep
                     can be null
 
-    NOTES:
 
-    1. this algorithm is somewhat unusual because it works with  parameterized
-       function f(C,X), where X is a function argument (we  have  many  points
-       which are characterized by different  argument  values),  and  C  is  a
-       parameter to fit.
+    CALLBACK PARALLELISM:
 
-       For example, if we want to do linear fit by f(c0,c1,x) = c0*x+c1,  then
-       x will be argument, and {c0,c1} will be parameters.
+    The  LSFIT  optimizer  supports  parallel  model  evaluation  and parallel
+    numerical differentiation ('callback parallelism'). This feature, which is
+    present in commercial ALGLIB editions, greatly accelerates fits with large
+    datasets and/or expensive target functions.
 
-       It is important to understand that this algorithm finds minimum in  the
-       space of function PARAMETERS (not arguments), so it  needs  derivatives
-       of f() with respect to C, not X.
+    Callback parallelism is usually beneficial when a  single  pass  over  the
+    entire dataset requires more than several milliseconds. In this  case  the
+    job of computing model values at  dataset  points  can  be  split  between
+    multiple threads.
 
-       In the example above it will need f=c0*x+c1 and {df/dc0,df/dc1} = {x,1}
-       instead of {df/dx} = {c0}.
+    If you employ a numerical differentiation scheme, you can also parallelize
+    computation of different components of a numerical gradient. Generally, the
+    mode computationally demanding your problem is (many points, numerical differentiation,
+    expensive model), the more you can get for multithreading.
 
-    2. Callback functions accept C as the first parameter, and X as the second
+    ALGLIB Reference Manual, 'Working with commercial  version' section,
+    describes how to activate callback parallelism for your programming language.
 
-    3. If  state  was  created  with  LSFitCreateFG(),  algorithm  needs  just
-       function   and   its   gradient,   but   if   state   was  created with
-       LSFitCreateFGH(), algorithm will need function, gradient and Hessian.
+    CALLBACK ARGUMENTS
 
-       According  to  the  said  above,  there  ase  several  versions of this
-       function, which accept different sets of callbacks.
+    This algorithm is somewhat unusual because  it  works  with  parameterized
+    function f(C,X), where X is  a  function  argument (we  have  many  points
+    which  are  characterized  by different  argument  values),  and  C  is  a
+    parameter to fit.
 
-       This flexibility opens way to subtle errors - you may create state with
-       LSFitCreateFGH() (optimization using Hessian), but call function  which
-       does not accept Hessian. So when algorithm will request Hessian,  there
-       will be no callback to call. In this case exception will be thrown.
+    For example, if we want to do linear  fit  by  f(c0,c1,x) = c0*x+c1,  then
+    x will be argument, and {c0,c1} will be parameters.
 
-       Be careful to avoid such errors because there is no way to find them at
-       compile time - you can see them at runtime only.
+    It is important to understand that this algorithm finds   minimum  in  the
+    space of function PARAMETERS (not  arguments),  so  it  needs  derivatives
+    of f() with respect to C, not X.
+
+    In the example above it will need f=c0*x+c1 and {df/dc0,df/dc1} = {x,1}
+    instead of {df/dx} = {c0}.
 
       -- ALGLIB --
-         Copyright 17.08.2009 by Bochkanov Sergey
+         Copyright 17.12.2023 by Bochkanov Sergey
 
     *************************************************************************/
     public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_rep rep, object obj)
     {
         lsfitfit(state, func, rep, obj, null);
     }
-    
     public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_rep rep, object obj, alglib.xparams _params)
     {
         if( func==null )
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (func is null)");
+        alglib.ap.rcommv2_callbacks callbacks = new alglib.ap.rcommv2_callbacks();
+        callbacks.func_p = func;
+    
+        alglib.lsfit.lsfitsetprotocolv2(state.innerobj, _params);
         while( alglib.lsfititeration(state, _params) )
         {
-            if( state.needf )
-            {
-                func(state.c, state.x, ref state.innerobj.f, obj);
+            alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
+                state.innerobj.requesttype,
+                state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
+                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, obj, "lsfit");
+            alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
+                state.innerobj.tmpx1,
+                state.innerobj.tmpc1,
+                state.innerobj.tmpf1,
+                state.innerobj.tmpg1,
+                state.innerobj.tmpj1);
+            if( state.innerobj.requesttype==3 )
+            { 
+                int njobs = request.size*request.vars+request.size;
+                for(int job_idx=0; job_idx<njobs; job_idx++)
+                    alglib.ap.process_v2request_3phase0(request, job_idx, callbacks, buffers);
+                alglib.ap.process_v2request_3phase1(request);
+                request.request = 0;
+                continue;
+            }if( state.innerobj.requesttype==4 )
+            { 
+                for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
+                    alglib.ap.process_v2request_4(request, qidx, callbacks, buffers);
+                state.innerobj.requesttype = 0;
                 continue;
             }
-            if( state.innerobj.xupdated )
+            if( state.innerobj.requesttype==-1 )
             {
                 if( rep!=null )
-                    rep(state.innerobj.c, state.innerobj.f, obj);
+                    rep(state.innerobj.reportx, state.innerobj.reportf, obj);
                 continue;
             }
             throw new alglibexception("ALGLIB: error in 'lsfitfit' (some derivatives were not provided?)");
@@ -6706,70 +6884,46 @@ public partial class alglib
     {
         lsfitfit(state, func, grad, rep, obj, null);
     }
-    
     public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_pgrad grad, ndimensional_rep rep, object obj, alglib.xparams _params)
     {
         if( func==null )
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (func is null)");
         if( grad==null )
             throw new alglibexception("ALGLIB: error in 'lsfitfit()' (grad is null)");
-        while( alglib.lsfititeration(state, _params) )
-        {
-            if( state.needf )
-            {
-                func(state.c, state.x, ref state.innerobj.f, obj);
-                continue;
-            }
-            if( state.needfg )
-            {
-                grad(state.c, state.x, ref state.innerobj.f, state.innerobj.g, obj);
-                continue;
-            }
-            if( state.innerobj.xupdated )
-            {
-                if( rep!=null )
-                    rep(state.innerobj.c, state.innerobj.f, obj);
-                continue;
-            }
-            throw new alglibexception("ALGLIB: error in 'lsfitfit' (some derivatives were not provided?)");
-        }
-    }
-
-
-    public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_pgrad grad, ndimensional_phess hess, ndimensional_rep rep, object obj)
-    {
-        lsfitfit(state, func, grad, hess, rep, obj, null);
-    }
+        alglib.ap.rcommv2_callbacks callbacks = new alglib.ap.rcommv2_callbacks();
+        callbacks.func_p = func;
+        callbacks.grad_p = grad;
     
-    public static void lsfitfit(lsfitstate state, ndimensional_pfunc func, ndimensional_pgrad grad, ndimensional_phess hess, ndimensional_rep rep, object obj, alglib.xparams _params)
-    {
-        if( func==null )
-            throw new alglibexception("ALGLIB: error in 'lsfitfit()' (func is null)");
-        if( grad==null )
-            throw new alglibexception("ALGLIB: error in 'lsfitfit()' (grad is null)");
-        if( hess==null )
-            throw new alglibexception("ALGLIB: error in 'lsfitfit()' (hess is null)");
+        alglib.lsfit.lsfitsetprotocolv2(state.innerobj, _params);
         while( alglib.lsfititeration(state, _params) )
         {
-            if( state.needf )
-            {
-                func(state.c, state.x, ref state.innerobj.f, obj);
+            alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
+                state.innerobj.requesttype,
+                state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
+                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, obj, "lsfit");
+            alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
+                state.innerobj.tmpx1,
+                state.innerobj.tmpc1,
+                state.innerobj.tmpf1,
+                state.innerobj.tmpg1,
+                state.innerobj.tmpj1);
+            if( state.innerobj.requesttype==2 )
+            { 
+                for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
+                    alglib.ap.process_v2request_2(request, qidx, callbacks, buffers);
+                state.innerobj.requesttype = 0;
+                continue;
+            }if( state.innerobj.requesttype==4 )
+            { 
+                for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
+                    alglib.ap.process_v2request_4(request, qidx, callbacks, buffers);
+                state.innerobj.requesttype = 0;
                 continue;
             }
-            if( state.needfg )
-            {
-                grad(state.c, state.x, ref state.innerobj.f, state.innerobj.g, obj);
-                continue;
-            }
-            if( state.needfgh )
-            {
-                hess(state.c, state.x, ref state.innerobj.f, state.innerobj.g, state.innerobj.h, obj);
-                continue;
-            }
-            if( state.innerobj.xupdated )
+            if( state.innerobj.requesttype==-1 )
             {
                 if( rep!=null )
-                    rep(state.innerobj.c, state.innerobj.f, obj);
+                    rep(state.innerobj.reportx, state.innerobj.reportf, obj);
                 continue;
             }
             throw new alglibexception("ALGLIB: error in 'lsfitfit' (some derivatives were not provided?)");
@@ -7110,9 +7264,6 @@ public partial class alglib
     underlying nonlinear solver:
     * stopping criteria for inner iterations
     * number of outer iterations
-    * penalty coefficient used to handle  nonlinear  constraints  (we  convert
-      unconstrained nonsmooth optimization problem ivolving max() and/or min()
-      operations to quadratically constrained smooth one).
 
     You may tweak all these parameters or only some  of  them,  leaving  other
     ones at their default state - just specify zero  value,  and  solver  will
@@ -7147,13 +7298,6 @@ public partial class alglib
                       speed up solver; 10 often results in good combination of
                       precision and speed; sometimes you may get good results
                       with just 6 outer iterations.
-                    Ignored for ProblemType=0.
-        Penalty -   penalty coefficient for NLC optimizer:
-                    * must be non-negative
-                    * use 0 to choose default value (1.0E6 in current version)
-                    * it should be really large, 1.0E6...1.0E7 is a good value
-                      to start from;
-                    * generally, default value is good enough
                     Ignored for ProblemType=0.
 
     OUTPUT PARAMETERS:
@@ -7252,20 +7396,20 @@ public partial class alglib
       -- ALGLIB --
          Copyright 14.04.2017 by Bochkanov Sergey
     *************************************************************************/
-    public static void fitspherex(double[,] xy, int npoints, int nx, int problemtype, double epsx, int aulits, double penalty, out double[] cx, out double rlo, out double rhi)
+    public static void fitspherex(double[,] xy, int npoints, int nx, int problemtype, double epsx, int aulits, out double[] cx, out double rlo, out double rhi)
     {
         cx = new double[0];
         rlo = 0;
         rhi = 0;
-        fitsphere.fitspherex(xy, npoints, nx, problemtype, epsx, aulits, penalty, ref cx, ref rlo, ref rhi, null);
+        fitsphere.fitspherex(xy, npoints, nx, problemtype, epsx, aulits, ref cx, ref rlo, ref rhi, null);
     }
     
-    public static void fitspherex(double[,] xy, int npoints, int nx, int problemtype, double epsx, int aulits, double penalty, out double[] cx, out double rlo, out double rhi, alglib.xparams _params)
+    public static void fitspherex(double[,] xy, int npoints, int nx, int problemtype, double epsx, int aulits, out double[] cx, out double rlo, out double rhi, alglib.xparams _params)
     {
         cx = new double[0];
         rlo = 0;
         rhi = 0;
-        fitsphere.fitspherex(xy, npoints, nx, problemtype, epsx, aulits, penalty, ref cx, ref rlo, ref rhi, _params);
+        fitsphere.fitspherex(xy, npoints, nx, problemtype, epsx, aulits, ref cx, ref rlo, ref rhi, _params);
     }
 
 }
@@ -8769,27 +8913,36 @@ public partial class alglib
     }
     
     /*************************************************************************
-    This subroutine builds bicubic vector-valued spline.
+    This subroutine builds a bicubic vector-valued spline using  parabolically
+    terminated end conditions.
 
-    This function produces C2-continuous spline, i.e. the has smooth first and
-    second derivatives both inside spline cells and at the boundaries.
+    This function produces a C2-continuous spline, i.e. the  spline has smooth
+    first and second  derivatives  both  inside  spline  cells  and  at  their
+    boundaries.
 
-    Input parameters:
-        X   -   spline abscissas, array[0..N-1]
-        Y   -   spline ordinates, array[0..M-1]
-        F   -   function values, array[0..M*N*D-1]:
+    INPUT PARAMETERS:
+        X   -   spline abscissas, array[N]
+        N   -   N>=2:
+                * if not given, automatically determined as len(X)
+                * if given, only leading N elements of X are used
+        Y   -   spline ordinates, array[M]
+        M   -   M>=2:
+                * if not given, automatically determined as len(Y)
+                * if given, only leading M elements of Y are used
+        F   -   function values, array[M*N*D]:
                 * first D elements store D values at (X[0],Y[0])
                 * next D elements store D values at (X[1],Y[0])
                 * general form - D function values at (X[i],Y[j]) are stored
                   at F[D*(J*N+I)...D*(J*N+I)+D-1].
-        M,N -   grid size, M>=2, N>=2
-        D   -   vector dimension, D>=1
+        D   -   vector dimension, D>=1:
+                * D=1 means scalar-valued bicubic spline
+                * D>1 means vector-valued bicubic spline
 
-    Output parameters:
+    OUTPUT PARAMETERS:
         C   -   spline interpolant
 
       -- ALGLIB PROJECT --
-         Copyright 16.04.2012 by Bochkanov Sergey
+         Copyright 2012-2023 by Bochkanov Sergey
     *************************************************************************/
     public static void spline2dbuildbicubicv(double[] x, int n, double[] y, int m, double[] f, int d, out spline2dinterpolant c)
     {
@@ -8801,6 +8954,275 @@ public partial class alglib
     {
         c = new spline2dinterpolant();
         spline2d.spline2dbuildbicubicv(x, n, y, m, f, d, c.innerobj, _params);
+    }
+            
+    public static void spline2dbuildbicubicv(double[] x, double[] y, double[] f, int d, out spline2dinterpolant c)
+    {
+        int n;
+        int m;
+    
+        c = new spline2dinterpolant();
+        n = ap.len(x);
+        m = ap.len(y);
+        spline2d.spline2dbuildbicubicv(x, n, y, m, f, d, c.innerobj, null);
+    
+        return;
+    }
+            
+    public static void spline2dbuildbicubicv(double[] x, double[] y, double[] f, int d, out spline2dinterpolant c, alglib.xparams _params)
+    {
+        int n;
+        int m;
+    
+        c = new spline2dinterpolant();
+        n = ap.len(x);
+        m = ap.len(y);
+        spline2d.spline2dbuildbicubicv(x, n, y, m, f, d, c.innerobj, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    This subroutine  builds  a  bicubic  vector-valued  spline  using  clamped
+    boundary conditions:
+    * spline values at the grid nodes are specified
+    * boundary conditions for  first,  second  derivatives  or  for  parabolic
+      termination at four boundaries (bottom  y=min(Y[]), top y=max(Y[]), left
+      x=min(X[]), right x=max(X[])) are specified
+    * mixed derivatives at corners are specified
+    * it is possible to  have  different  boundary  conditions  for  different
+      boundaries (first derivatives along  one  boundary,  second  derivatives
+      along other one, parabolic termination along the rest and so on)
+    * it is possible to have either a scalar (D=1) or a vector-valued spline
+
+    This function produces a C2-continuous spline, i.e. the  spline has smooth
+    first and second  derivatives  both  inside  spline  cells  and  at  their
+    boundaries.
+
+    INPUT PARAMETERS:
+        X           -   spline  abscissas,  array[N].  Can  be  unsorted,  the
+                        function will sort it together with boundary conditions
+                        and F[] array (the same set of  permutations  will  be
+                        applied to X[] and F[]).
+        N           -   N>=2:
+                        * if not given, automatically determined as len(X)
+                        * if given, only leading N elements of X are used
+        Y           -   spline ordinates, array[M].  Can   be   unsorted,  the
+                        function will sort it together with boundary conditions
+                        and F[] array (the same set of  permutations  will  be
+                        applied to X[] and F[]).
+        M           -   M>=2:
+                        * if not given, automatically determined as len(Y)
+                        * if given, only leading M elements of Y are used
+        BndBtm      -   array[D*N], boundary conditions at the bottom boundary
+                        of the interpolation area  (corresponds to y=min(Y[]):
+                        * if  BndTypeBtm=0,  the  spline  has   a   'parabolic
+                          termination' boundary condition across that specific
+                          boundary. In this case BndBtm is not even referenced
+                          by the function and can be unallocated.
+                        * otherwise contains derivatives with respect to X
+                        * if BndTypeBtm=1, first derivatives are given
+                        * if BndTypeBtm=2, second derivatives are given
+                        * first D entries store derivatives at x=X[0], y=minY,
+                          subsequent D entries store  derivatives  at  x=X[1],
+                          y=minY and so on
+        BndTop      -   array[D*N],  boundary  conditions  at the top boundary
+                        of the interpolation area  (corresponds to y=max(Y[]):
+                        * if  BndTypeTop=0,  the  spline  has   a   'parabolic
+                          termination' boundary condition across that specific
+                          boundary. In this case BndTop is not even referenced
+                          by the function and can be unallocated.
+                        * otherwise contains derivatives with respect to X
+                        * if BndTypeTop=1, first derivatives are given
+                        * if BndTypeTop=2, second derivatives are given
+                        * first D entries store derivatives at x=X[0], y=maxY,
+                          subsequent D entries store  derivatives  at  x=X[1],
+                          y=maxY and so on
+        BndLft      -   array[D*M], boundary conditions at  the  left boundary
+                        of the  interpolation area (corresponds to x=min(X[]):
+                        * if  BndTypeLft=0,  the  spline  has   a   'parabolic
+                          termination' boundary condition across that specific
+                          boundary. In this case BndLft is not even referenced
+                          by the function and can be unallocated.
+                        * otherwise contains derivatives with respect to Y
+                        * if BndTypeLft=1, first derivatives are given
+                        * if BndTypeLft=2, second derivatives are given
+                        * first D entries store derivatives at x=minX, y=Y[0],
+                          subsequent D entries store  derivatives  at  x=minX,
+                          y=Y[1] and so on
+        BndRgt      -   array[D*M], boundary conditions at  the right boundary
+                        of the  interpolation area (corresponds to x=max(X[]):
+                        * if  BndTypeRgt=0,  the  spline  has   a   'parabolic
+                          termination' boundary condition across that specific
+                          boundary. In this case BndRgt is not even referenced
+                          by the function and can be unallocated.
+                        * otherwise contains derivatives with respect to Y
+                        * if BndTypeRgt=1, first derivatives are given
+                        * if BndTypeRgt=2, second derivatives are given
+                        * first D entries store derivatives at x=maxX, y=Y[0],
+                          subsequent D entries store  derivatives  at  x=maxX,
+                          y=Y[1] and so on
+        MixedD      -   array[D*4], mixed derivatives  at  4  corners  of  the
+                        interpolation area:
+                        * derivative order depends on the order  of   boundary
+                          conditions (bottom/top and left/right)  intersecting
+                          at that corner:
+                          **  for BndType(Btm|Top)=BndType(Lft|Rgt)=1 user has
+                              to provide d2S/dXdY
+                          **  for BndType(Btm|Top)=BndType(Lft|Rgt)=2 user has
+                              to provide d4S/(dX^2*dY^2)
+                          **  for BndType(Btm|Top)=1, BndType(Lft|Rgt)=2  user
+                              has to provide d3S/(dX^2*dY)
+                          **  for BndType(Btm|Top)=2, BndType(Lft|Rgt)=1  user
+                              has to provide d3S/(dX*dY^2)
+                          **  if one of the intersecting bounds has 'parabolic
+                              termination'  condition,   this  specific  mixed
+                              derivative is not used
+                        * first D entries store derivatives at the bottom left
+                          corner x=min(X[]), y=min(Y[])
+                        * subsequent D entries store derivatives at the bottom
+                          right corner x=max(X[]), y=min(Y[])
+                        * subsequent D entries store derivatives  at  the  top
+                          left corner  x=min(X[]), y=max(Y[])
+                        * subsequent D entries store derivatives  at  the  top
+                          right corner x=max(X[]), y=max(Y[])
+                        * if all bounds have 'parabolic termination' condition,
+                          MixedD[]  is  not  referenced  at  all  and  can  be
+                          unallocated.
+        F           -   function values, array[M*N*D]:
+                        * first D elements store D values at (X[0],Y[0])
+                        * next D elements store D values at (X[1],Y[0])
+                        * general form - D function values at (X[i],Y[j])  are
+                          stored at F[D*(J*N+I)...D*(J*N+I)+D-1].
+        D           -   vector dimension, D>=1:
+                        * D=1 means scalar-valued bicubic spline
+                        * D>1 means vector-valued bicubic spline
+
+    OUTPUT PARAMETERS:
+        C   -   spline interpolant
+
+      -- ALGLIB PROJECT --
+         Copyright 2012-2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void spline2dbuildclampedv(double[] x, int n, double[] y, int m, double[] bndbtm, int bndtypebtm, double[] bndtop, int bndtypetop, double[] bndlft, int bndtypelft, double[] bndrgt, int bndtypergt, double[] mixedd, double[] f, int d, out spline2dinterpolant c)
+    {
+        c = new spline2dinterpolant();
+        spline2d.spline2dbuildclampedv(x, n, y, m, bndbtm, bndtypebtm, bndtop, bndtypetop, bndlft, bndtypelft, bndrgt, bndtypergt, mixedd, f, d, c.innerobj, null);
+    }
+    
+    public static void spline2dbuildclampedv(double[] x, int n, double[] y, int m, double[] bndbtm, int bndtypebtm, double[] bndtop, int bndtypetop, double[] bndlft, int bndtypelft, double[] bndrgt, int bndtypergt, double[] mixedd, double[] f, int d, out spline2dinterpolant c, alglib.xparams _params)
+    {
+        c = new spline2dinterpolant();
+        spline2d.spline2dbuildclampedv(x, n, y, m, bndbtm, bndtypebtm, bndtop, bndtypetop, bndlft, bndtypelft, bndrgt, bndtypergt, mixedd, f, d, c.innerobj, _params);
+    }
+            
+    public static void spline2dbuildclampedv(double[] x, double[] y, double[] bndbtm, int bndtypebtm, double[] bndtop, int bndtypetop, double[] bndlft, int bndtypelft, double[] bndrgt, int bndtypergt, double[] mixedd, double[] f, int d, out spline2dinterpolant c)
+    {
+        int n;
+        int m;
+    
+        c = new spline2dinterpolant();
+        n = ap.len(x);
+        m = ap.len(y);
+        spline2d.spline2dbuildclampedv(x, n, y, m, bndbtm, bndtypebtm, bndtop, bndtypetop, bndlft, bndtypelft, bndrgt, bndtypergt, mixedd, f, d, c.innerobj, null);
+    
+        return;
+    }
+            
+    public static void spline2dbuildclampedv(double[] x, double[] y, double[] bndbtm, int bndtypebtm, double[] bndtop, int bndtypetop, double[] bndlft, int bndtypelft, double[] bndrgt, int bndtypergt, double[] mixedd, double[] f, int d, out spline2dinterpolant c, alglib.xparams _params)
+    {
+        int n;
+        int m;
+    
+        c = new spline2dinterpolant();
+        n = ap.len(x);
+        m = ap.len(y);
+        spline2d.spline2dbuildclampedv(x, n, y, m, bndbtm, bndtypebtm, bndtop, bndtypetop, bndlft, bndtypelft, bndrgt, bndtypergt, mixedd, f, d, c.innerobj, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    This subroutine builds a Hermite bicubic vector-valued spline.
+
+    This function produces merely C1-continuous spline, i.e. the   spline  has
+    smooth first derivatives.
+
+    INPUT PARAMETERS:
+        X   -   spline abscissas, array[N]
+        N   -   N>=2:
+                * if not given, automatically determined as len(X)
+                * if given, only leading N elements of X are used
+        Y   -   spline ordinates, array[M]
+        M   -   M>=2:
+                * if not given, automatically determined as len(Y)
+                * if given, only leading M elements of Y are used
+        F   -   function values, array[M*N*D]:
+                * first D elements store D values at (X[0],Y[0])
+                * next D elements store D values at (X[1],Y[0])
+                * general form - D function values at (X[i],Y[j]) are stored
+                  at F[D*(J*N+I)...D*(J*N+I)+D-1].
+        dFdX-   spline derivatives with respect to X, array[M*N*D]:
+                * first D elements store D values at (X[0],Y[0])
+                * next D elements store D values at (X[1],Y[0])
+                * general form - D function values at (X[i],Y[j]) are stored
+                  at F[D*(J*N+I)...D*(J*N+I)+D-1].
+        dFdY-   spline derivatives with respect to Y, array[M*N*D]:
+                * first D elements store D values at (X[0],Y[0])
+                * next D elements store D values at (X[1],Y[0])
+                * general form - D function values at (X[i],Y[j]) are stored
+                  at F[D*(J*N+I)...D*(J*N+I)+D-1].
+        d2FdXdY-mixed derivatives with respect to X and Y, array[M*N*D]:
+                * first D elements store D values at (X[0],Y[0])
+                * next D elements store D values at (X[1],Y[0])
+                * general form - D function values at (X[i],Y[j]) are stored
+                  at F[D*(J*N+I)...D*(J*N+I)+D-1].
+        D   -   vector dimension, D>=1:
+                * D=1 means scalar-valued bicubic spline
+                * D>1 means vector-valued bicubic spline
+
+    OUTPUT PARAMETERS:
+        C   -   spline interpolant
+
+      -- ALGLIB PROJECT --
+         Copyright 2012-2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void spline2dbuildhermitev(double[] x, int n, double[] y, int m, double[] f, double[] dfdx, double[] dfdy, double[] d2fdxdy, int d, out spline2dinterpolant c)
+    {
+        c = new spline2dinterpolant();
+        spline2d.spline2dbuildhermitev(x, n, y, m, f, dfdx, dfdy, d2fdxdy, d, c.innerobj, null);
+    }
+    
+    public static void spline2dbuildhermitev(double[] x, int n, double[] y, int m, double[] f, double[] dfdx, double[] dfdy, double[] d2fdxdy, int d, out spline2dinterpolant c, alglib.xparams _params)
+    {
+        c = new spline2dinterpolant();
+        spline2d.spline2dbuildhermitev(x, n, y, m, f, dfdx, dfdy, d2fdxdy, d, c.innerobj, _params);
+    }
+            
+    public static void spline2dbuildhermitev(double[] x, double[] y, double[] f, double[] dfdx, double[] dfdy, double[] d2fdxdy, int d, out spline2dinterpolant c)
+    {
+        int n;
+        int m;
+    
+        c = new spline2dinterpolant();
+        n = ap.len(x);
+        m = ap.len(y);
+        spline2d.spline2dbuildhermitev(x, n, y, m, f, dfdx, dfdy, d2fdxdy, d, c.innerobj, null);
+    
+        return;
+    }
+            
+    public static void spline2dbuildhermitev(double[] x, double[] y, double[] f, double[] dfdx, double[] dfdy, double[] d2fdxdy, int d, out spline2dinterpolant c, alglib.xparams _params)
+    {
+        int n;
+        int m;
+    
+        c = new spline2dinterpolant();
+        n = ap.len(x);
+        m = ap.len(y);
+        spline2d.spline2dbuildhermitev(x, n, y, m, f, dfdx, dfdy, d2fdxdy, d, c.innerobj, _params);
+    
+        return;
     }
     
     /*************************************************************************
@@ -13852,6 +14274,44 @@ public partial class alglib
 
 
         /*************************************************************************
+        Temporaries for MSTABBasecase
+        *************************************************************************/
+        public class mstabbuffer : apobject
+        {
+            public double[] dist;
+            public double[] x;
+            public double[] w;
+            public double[] wy;
+            public int[] tags;
+            public nearestneighbor.kdtreerequestbuffer requestbuffer;
+            public mstabbuffer()
+            {
+                init();
+            }
+            public override void init()
+            {
+                dist = new double[0];
+                x = new double[0];
+                w = new double[0];
+                wy = new double[0];
+                tags = new int[0];
+                requestbuffer = new nearestneighbor.kdtreerequestbuffer();
+            }
+            public override alglib.apobject make_copy()
+            {
+                mstabbuffer _result = new mstabbuffer();
+                _result.dist = (double[])dist.Clone();
+                _result.x = (double[])x.Clone();
+                _result.w = (double[])w.Clone();
+                _result.wy = (double[])wy.Clone();
+                _result.tags = (int[])tags.Clone();
+                _result.requestbuffer = (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy();
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
         IDW (Inverse Distance Weighting) model object.
         *************************************************************************/
         public class idwmodel : apobject
@@ -13867,6 +14327,7 @@ public partial class alglib
             public double lambdalast;
             public double lambdadecay;
             public double shepardp;
+            public bool debugprofile;
             public nearestneighbor.kdtree tree;
             public int npoints;
             public double[] shepardxy;
@@ -13896,6 +14357,7 @@ public partial class alglib
                 _result.lambdalast = lambdalast;
                 _result.lambdadecay = lambdadecay;
                 _result.shepardp = shepardp;
+                _result.debugprofile = debugprofile;
                 _result.tree = (nearestneighbor.kdtree)tree.make_copy();
                 _result.npoints = npoints;
                 _result.shepardxy = (double[])shepardxy.Clone();
@@ -13920,6 +14382,9 @@ public partial class alglib
             public double lambdalast;
             public double lambdadecay;
             public double shepardp;
+            public bool debugprofile;
+            public int mbatchsize;
+            public double mprogress;
             public double[] xy;
             public int npoints;
             public int nx;
@@ -13928,9 +14393,6 @@ public partial class alglib
             public double[,] tmplayers;
             public int[] tmptags;
             public double[] tmpdist;
-            public double[] tmpx;
-            public double[] tmpwy;
-            public double[] tmpw;
             public nearestneighbor.kdtree tmptree;
             public double[] tmpmean;
             public idwbuilder()
@@ -13945,9 +14407,6 @@ public partial class alglib
                 tmplayers = new double[0,0];
                 tmptags = new int[0];
                 tmpdist = new double[0];
-                tmpx = new double[0];
-                tmpwy = new double[0];
-                tmpw = new double[0];
                 tmptree = new nearestneighbor.kdtree();
                 tmpmean = new double[0];
             }
@@ -13964,6 +14423,9 @@ public partial class alglib
                 _result.lambdalast = lambdalast;
                 _result.lambdadecay = lambdadecay;
                 _result.shepardp = shepardp;
+                _result.debugprofile = debugprofile;
+                _result.mbatchsize = mbatchsize;
+                _result.mprogress = mprogress;
                 _result.xy = (double[])xy.Clone();
                 _result.npoints = npoints;
                 _result.nx = nx;
@@ -13972,9 +14434,6 @@ public partial class alglib
                 _result.tmplayers = (double[,])tmplayers.Clone();
                 _result.tmptags = (int[])tmptags.Clone();
                 _result.tmpdist = (double[])tmpdist.Clone();
-                _result.tmpx = (double[])tmpx.Clone();
-                _result.tmpwy = (double[])tmpwy.Clone();
-                _result.tmpw = (double[])tmpw.Clone();
                 _result.tmptree = (nearestneighbor.kdtree)tmptree.make_copy();
                 _result.tmpmean = (double[])tmpmean.Clone();
                 return _result;
@@ -14020,6 +14479,7 @@ public partial class alglib
         public const double meps = 1.0E-50;
         public const int defaultnlayers = 16;
         public const double defaultlambda0 = 0.3333;
+        public const int idwbatchsize = 128;
 
 
         /*************************************************************************
@@ -14143,6 +14603,7 @@ public partial class alglib
             state.lambda0 = defaultlambda0;
             state.lambdalast = 0;
             state.lambdadecay = 1.0;
+            state.debugprofile = false;
             
             //
             // Other parameters, not used but initialized
@@ -14155,6 +14616,11 @@ public partial class alglib
             state.npoints = 0;
             state.nx = nx;
             state.ny = ny;
+            
+            //
+            // Initial progress is zero
+            //
+            state.mprogress = 0;
         }
 
 
@@ -14259,6 +14725,16 @@ public partial class alglib
         scattered multidimensional interpolation. Although it has  its  drawbacks,
         it is easy to use and robust, which makes it a good first step.
 
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! 
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
 
         INPUT PARAMETERS:
             State   -   builder object
@@ -14974,6 +15450,17 @@ public partial class alglib
         This function fits IDW model to the dataset using current IDW construction
         algorithm. A model being built and fitting report are returned.
 
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! 
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
         INPUT PARAMETERS:
             State   -   builder object
 
@@ -14996,20 +15483,20 @@ public partial class alglib
             alglib.xparams _params)
         {
             int i = 0;
-            int i0 = 0;
             int j = 0;
-            int k = 0;
             int layeridx = 0;
-            int srcidx = 0;
             double v = 0;
-            double vv = 0;
             int npoints = 0;
             int nx = 0;
             int ny = 0;
-            double rcur = 0;
-            double lambdacur = 0;
             double rss = 0;
             double tss = 0;
+            mstabbuffer mbuffer = new mstabbuffer();
+            alglib.smp.shared_pool mbpool = new alglib.smp.shared_pool();
+            double[] layerrad = new double[0];
+            double[] layerlambda = new double[0];
+            double[] querycosts = new double[0];
+            double totalcost = 0;
 
             nx = state.nx;
             ny = state.ny;
@@ -15022,6 +15509,7 @@ public partial class alglib
             rep.avgerror = 0;
             rep.maxerror = 0;
             rep.r2 = 1.0;
+            state.mprogress = 0;
             
             //
             // Quick exit for empty dataset
@@ -15044,7 +15532,9 @@ public partial class alglib
                 model.lambdadecay = 1;
                 model.shepardp = 2;
                 model.npoints = 0;
+                model.debugprofile = false;
                 idwcreatecalcbuffer(model, model.buffer, _params);
+                state.mprogress = 1.0;
                 return;
             }
             
@@ -15130,6 +15620,7 @@ public partial class alglib
                 model.lambdalast = 0;
                 model.lambdadecay = 1;
                 model.shepardp = state.shepardp;
+                model.debugprofile = false;
                 
                 //
                 // Copy dataset
@@ -15154,6 +15645,7 @@ public partial class alglib
                 //
                 idwcreatecalcbuffer(model, model.buffer, _params);
                 errormetricsviacalc(state, model, rep, _params);
+                state.mprogress = 1.0;
                 return;
             }
             
@@ -15176,6 +15668,7 @@ public partial class alglib
                 model.lambdalast = 0;
                 model.lambdadecay = 1;
                 model.shepardp = 0;
+                model.debugprofile = false;
                 
                 //
                 // Build kd-tree search structure
@@ -15200,6 +15693,7 @@ public partial class alglib
                 //
                 idwcreatecalcbuffer(model, model.buffer, _params);
                 errormetricsviacalc(state, model, rep, _params);
+                state.mprogress = 1.0;
                 return;
             }
             
@@ -15223,6 +15717,7 @@ public partial class alglib
                 model.lambdadecay = 1.0;
                 model.lambdalast = meps;
                 model.shepardp = 0;
+                model.debugprofile = false;
                 
                 //
                 // Build kd-tree search structure,
@@ -15248,58 +15743,74 @@ public partial class alglib
                 nearestneighbor.kdtreebuildtagged(state.tmpxy, state.tmptags, npoints, nx, 0, 2, state.tmptree, _params);
                 
                 //
-                // Iteratively build layer by layer
+                // Evaluate per-layer parameters:
+                // * query radius R
+                // * smoothing parameter Lambda
+                // * cost of a R-nn query (the biggest part of the model evaluation)
                 //
-                apserv.rvectorsetlengthatleast(ref state.tmpx, nx, _params);
-                apserv.rvectorsetlengthatleast(ref state.tmpwy, ny, _params);
-                apserv.rvectorsetlengthatleast(ref state.tmpw, ny, _params);
+                // Set global fields depending on the profile and cost of computations.
+                //
+                ablasf.rallocv(state.nlayers, ref layerrad, _params);
+                ablasf.rallocv(state.nlayers, ref layerlambda, _params);
+                ablasf.rallocv(state.nlayers, ref querycosts, _params);
+                totalcost = 0;
                 for(layeridx=0; layeridx<=state.nlayers-1; layeridx++)
                 {
                     
                     //
                     // Determine layer metrics
                     //
-                    rcur = model.r0*Math.Pow(model.rdecay, layeridx);
-                    lambdacur = model.lambda0*Math.Pow(model.lambdadecay, layeridx);
+                    layerrad[layeridx] = model.r0*Math.Pow(model.rdecay, layeridx);
+                    layerlambda[layeridx] = model.lambda0*Math.Pow(model.lambdadecay, layeridx);
                     if( layeridx==state.nlayers-1 )
                     {
-                        lambdacur = model.lambdalast;
+                        layerlambda[layeridx] = model.lambdalast;
                     }
+                    querycosts[layeridx] = nearestneighbor.kdtreeapproxrnnquerycost(state.tmptree, layerrad[layeridx], _params);
+                    totalcost = totalcost+querycosts[layeridx]*npoints;
+                }
+                if( state.debugprofile )
+                {
+                    
+                    //
+                    // Use debug profile for the model construction
+                    //
+                    state.mbatchsize = 1+math.randominteger(3);
+                }
+                else
+                {
+                    
+                    //
+                    // Use performance profile for the model construction
+                    //
+                    state.mbatchsize = idwbatchsize;
+                }
+                
+                //
+                // Prepare temporary buffer for MSTABBasecase
+                //
+                ablasf.rallocv(nx, ref mbuffer.x, _params);
+                ablasf.rallocv(ny, ref mbuffer.w, _params);
+                ablasf.rallocv(ny, ref mbuffer.wy, _params);
+                nearestneighbor.kdtreecreaterequestbuffer(state.tmptree, mbuffer.requestbuffer, _params);
+                
+                //
+                // Iteratively build layer by layer
+                //
+                for(layeridx=0; layeridx<=state.nlayers-1; layeridx++)
+                {
                     
                     //
                     // For each point compute residual from fitting with current layer
                     //
-                    for(i=0; i<=npoints-1; i++)
+                    if( npoints>state.mbatchsize && ((double)(npoints*querycosts[layeridx])>(double)(apserv.smpactivationlevel(_params)) || state.debugprofile) )
                     {
-                        for(j=0; j<=nx-1; j++)
-                        {
-                            state.tmpx[j] = state.tmplayers[i,j];
-                        }
-                        k = nearestneighbor.kdtreequeryrnn(state.tmptree, state.tmpx, rcur, true, _params);
-                        nearestneighbor.kdtreequeryresultstags(state.tmptree, ref state.tmptags, _params);
-                        nearestneighbor.kdtreequeryresultsdistances(state.tmptree, ref state.tmpdist, _params);
-                        for(j=0; j<=ny-1; j++)
-                        {
-                            state.tmpwy[j] = 0;
-                            state.tmpw[j] = w0;
-                        }
-                        for(i0=0; i0<=k-1; i0++)
-                        {
-                            vv = state.tmpdist[i0]/rcur;
-                            vv = vv*vv;
-                            v = (1-vv)*(1-vv)/(vv+lambdacur);
-                            srcidx = state.tmptags[i0];
-                            for(j=0; j<=ny-1; j++)
-                            {
-                                state.tmpwy[j] = state.tmpwy[j]+v*state.tmplayers[srcidx,nx+layeridx*ny+j];
-                                state.tmpw[j] = state.tmpw[j]+v;
-                            }
-                        }
-                        for(j=0; j<=ny-1; j++)
-                        {
-                            v = state.tmplayers[i,nx+layeridx*ny+j];
-                            state.tmplayers[i,nx+(layeridx+1)*ny+j] = v-state.tmpwy[j]/state.tmpw[j];
-                        }
+                        alglib.smp.ae_shared_pool_set_seed(mbpool, mbuffer);
+                        mstabrec(state, layerrad[layeridx], layerlambda[layeridx], layeridx, mbpool, 0, npoints, true, querycosts[layeridx], totalcost, state.tmplayers, _params);
+                    }
+                    else
+                    {
+                        mstabbasecase(state, layerrad[layeridx], layerlambda[layeridx], layeridx, mbuffer, 0, npoints, querycosts[layeridx], totalcost, state.tmplayers, _params);
                     }
                 }
                 nearestneighbor.kdtreebuild(state.tmplayers, npoints, nx, ny*state.nlayers, 2, model.tree, _params);
@@ -15327,6 +15838,7 @@ public partial class alglib
                 rep.rmserror = Math.Sqrt(rep.rmserror/(npoints*ny));
                 rep.avgerror = rep.avgerror/(npoints*ny);
                 rep.r2 = 1.0-rss/apserv.coalesce(tss, 1.0, _params);
+                state.mprogress = 1.0;
                 
                 //
                 // Prepare internal buffer
@@ -15339,6 +15851,339 @@ public partial class alglib
             // Unknown algorithm
             //
             alglib.ap.assert(false, "IDWFit: integrity check failed, unexpected algorithm");
+        }
+
+
+        /*************************************************************************
+        This function is used to peek into the IDW construction  process from some
+        other thread and get the progress indicator. It returns value in [0,1].
+
+        IMPORTANT: only MSTAB algorithm supports peeking into progress  indicator.
+                   Legacy versions of the Shepard's method do  not support it. You
+                   will always get zero as the result.
+
+        INPUT PARAMETERS:
+            S           -   RBF model object
+
+        RESULT:
+            progress value, in [0,1]
+
+          -- ALGLIB --
+             Copyright 27.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static double idwpeekprogress(idwbuilder s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = s.mprogress;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function calculates values  of  an  IDW  model  at  a  regular  grid,
+        which  has  N0*N1 points, with Point[I,J] = (X0[I], X1[J]).  Vector-valued
+        IDW models are supported.
+
+        This function returns 0.0 when:
+        * the model is not initialized
+        * NX<>2
+
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! 
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
+        NOTE: Parallel  processing  is  implemented only for modern (MSTAB) IDW's.
+
+        INPUT PARAMETERS:
+            S       -   IDW model, used in read-only mode, can be  shared  between
+                        multiple   invocations  of  this  function  from  multiple
+                        threads.
+            
+            X0      -   array of grid nodes, first coordinates, array[N0].
+                        Must be ordered by ascending. Exception is generated
+                        if the array is not correctly ordered.
+            N0      -   grid size (number of nodes) in the first dimension, N0>=1
+            
+            X1      -   array of grid nodes, second coordinates, array[N1]
+                        Must be ordered by ascending. Exception is generated
+                        if the array is not correctly ordered.
+            N1      -   grid size (number of nodes) in the second dimension, N1>=1
+
+        OUTPUT PARAMETERS:
+            Y       -   function values, array[NY*N0*N1], where NY is a  number of
+                        "output" vector values (this  function   supports  vector-
+                        valued IDW models). Y is out-variable and  is  reallocated
+                        by this function.
+                        Y[K+NY*(I0+I1*N0)]=F_k(X0[I0],X1[I1]), for:
+                        *  K=0...NY-1
+                        * I0=0...N0-1
+                        * I1=0...N1-1
+
+        NOTE: this function supports weakly ordered grid nodes, i.e. you may  have                
+              X[i]=X[i+1] for some i. It does  not  provide  you  any  performance
+              benefits  due  to   duplication  of  points,  just  convenience  and
+              flexibility.
+              
+        NOTE: this  function  is  re-entrant,  i.e.  you  may  use  same  idwmodel
+              structure in multiple threads calling  this function  for  different
+              grids.
+              
+        NOTE: if you need function values on some subset  of  regular  grid, which
+              may be described as "several compact and  dense  islands",  you  may
+              use idwgridcalc2vsubset().
+
+          -- ALGLIB --
+             Copyright 24.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void idwgridcalc2v(idwmodel s,
+            double[] x0,
+            int n0,
+            double[] x1,
+            int n1,
+            ref double[] y,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            bool[] dummy = new bool[0];
+
+            y = new double[0];
+
+            alglib.ap.assert(n0>0, "IDWGridCalc2V: invalid value for N0 (N0<=0)!");
+            alglib.ap.assert(n1>0, "IDWGridCalc2V: invalid value for N1 (N1<=0)!");
+            alglib.ap.assert(alglib.ap.len(x0)>=n0, "IDWGridCalc2V: Length(X0)<N0");
+            alglib.ap.assert(alglib.ap.len(x1)>=n1, "IDWGridCalc2V: Length(X1)<N1");
+            alglib.ap.assert(apserv.isfinitevector(x0, n0, _params), "IDWGridCalc2V: X0 contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(x1, n1, _params), "IDWGridCalc2V: X1 contains infinite or NaN values!");
+            for(i=0; i<=n0-2; i++)
+            {
+                alglib.ap.assert((double)(x0[i])<=(double)(x0[i+1]), "IDWGridCalc2V: X0 is not ordered by ascending");
+            }
+            for(i=0; i<=n1-2; i++)
+            {
+                alglib.ap.assert((double)(x1[i])<=(double)(x1[i+1]), "IDWGridCalc2V: X1 is not ordered by ascending");
+            }
+            idwgridcalc2vx(s, x0, n0, x1, n1, dummy, false, ref y, _params);
+        }
+
+
+        /*************************************************************************
+        This function calculates values of an  IDW  model  at  some  subset  of  a
+        regular grid:
+        * the grid has N0*N1 points, with Point[I,J] = (X0[I], X1[J])
+        * only values at some subset of the grid are required
+        Vector-valued IDW models are supported.
+
+        This function returns 0.0 when:
+        * the model is not initialized
+        * NX<>2
+
+          ! COMMERCIAL EDITION OF ALGLIB:
+          ! 
+          ! Commercial Edition of ALGLIB includes following important improvements
+          ! of this function:
+          ! * high-performance native backend with same C# interface (C# version)
+          ! * multithreading support (C++ and C# versions)
+          ! 
+          ! We recommend you to read 'Working with commercial version' section  of
+          ! ALGLIB Reference Manual in order to find out how to  use  performance-
+          ! related features provided by commercial edition of ALGLIB.
+
+        NOTE: Parallel processing is implemented only for modern (MSTAB) IDW's.
+
+        INPUT PARAMETERS:
+            S       -   IDW model, used in read-only mode, can be  shared  between
+                        multiple   invocations  of  this  function  from  multiple
+                        threads.
+            
+            X0      -   array of grid nodes, first coordinates, array[N0].
+                        Must be ordered by ascending. Exception is generated
+                        if the array is not correctly ordered.
+            N0      -   grid size (number of nodes) in the first dimension, N0>=1
+            
+            X1      -   array of grid nodes, second coordinates, array[N1]
+                        Must be ordered by ascending. Exception is generated
+                        if the array is not correctly ordered.
+            N1      -   grid size (number of nodes) in the second dimension, N1>=1
+            
+            FlagY   -   array[N0*N1]:
+                        * Y[I0+I1*N0] corresponds to node (X0[I0],X1[I1])
+                        * it is a "bitmap" array which contains  False  for  nodes
+                          which are NOT calculated, and True for nodes  which  are
+                          required.
+
+        OUTPUT PARAMETERS:
+            Y       -   function values, array[NY*N0*N1*N2], where NY is a  number
+                        of "output" vector values (this function  supports vector-
+                        valued IDW models):
+                        * Y[K+NY*(I0+I1*N0)]=F_k(X0[I0],X1[I1]),
+                          for K=0...NY-1, I0=0...N0-1, I1=0...N1-1.
+                        * elements of Y[] which correspond  to  FlagY[]=True   are
+                          loaded by model values (which may be  exactly  zero  for
+                          some nodes).
+                        * elements of Y[] which correspond to FlagY[]=False MAY be
+                          initialized by zeros OR may  be  calculated.  Generally,
+                          they  are   not   calculated,  but  future  SIMD-capable
+                          versions may compute several elements in a batch.
+
+        NOTE: this function supports weakly ordered grid nodes, i.e. you may  have                
+              X[i]=X[i+1] for some i. It does  not  provide  you  any  performance
+              benefits  due  to   duplication  of  points,  just  convenience  and
+              flexibility.
+              
+        NOTE: this  function  is  re-entrant,  i.e.  you  may  use  same  idwmodel
+              structure in multiple threads calling  this function  for  different
+              grids.
+
+          -- ALGLIB --
+             Copyright 24.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void idwgridcalc2vsubset(idwmodel s,
+            double[] x0,
+            int n0,
+            double[] x1,
+            int n1,
+            bool[] flagy,
+            ref double[] y,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            y = new double[0];
+
+            alglib.ap.assert(n0>0, "IDWGridCalc2VSubset: invalid value for N0 (N0<=0)!");
+            alglib.ap.assert(n1>0, "IDWGridCalc2VSubset: invalid value for N1 (N1<=0)!");
+            alglib.ap.assert(alglib.ap.len(x0)>=n0, "IDWGridCalc2VSubset: Length(X0)<N0");
+            alglib.ap.assert(alglib.ap.len(x1)>=n1, "IDWGridCalc2VSubset: Length(X1)<N1");
+            alglib.ap.assert(alglib.ap.len(flagy)>=n0*n1, "IDWGridCalc2VSubset: Length(FlagY)<N0*N1*N2");
+            alglib.ap.assert(apserv.isfinitevector(x0, n0, _params), "IDWGridCalc2VSubset: X0 contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(x1, n1, _params), "IDWGridCalc2VSubset: X1 contains infinite or NaN values!");
+            for(i=0; i<=n0-2; i++)
+            {
+                alglib.ap.assert((double)(x0[i])<=(double)(x0[i+1]), "IDWGridCalc2VSubset: X0 is not ordered by ascending");
+            }
+            for(i=0; i<=n1-2; i++)
+            {
+                alglib.ap.assert((double)(x1[i])<=(double)(x1[i+1]), "IDWGridCalc2VSubset: X1 is not ordered by ascending");
+            }
+            idwgridcalc2vx(s, x0, n0, x1, n1, flagy, true, ref y, _params);
+        }
+
+
+        /*************************************************************************
+        This function, depending on SparseY, acts as IDWGridCalc2V (SparseY=False)
+        or IDWGridCalc2VSubset (SparseY=True) function.  See  comments  for  these
+        functions for more information
+
+          -- ALGLIB --
+             Copyright 04.03.2016 by Bochkanov Sergey
+        *************************************************************************/
+        public static void idwgridcalc2vx(idwmodel s,
+            double[] x0,
+            int n0,
+            double[] x1,
+            int n1,
+            bool[] flagy,
+            bool sparsey,
+            ref double[] y,
+            alglib.xparams _params)
+        {
+            int nx = 0;
+            int ny = 0;
+            int i = 0;
+            int k = 0;
+            double rcur = 0;
+            int ylen = 0;
+            double evalcost = 0;
+            alglib.smp.shared_pool cbpool = new alglib.smp.shared_pool();
+            idwcalcbuffer calcbuf = null;
+
+            alglib.ap.assert(n0>0, "IDWGridCalc2VX: invalid value for N0 (N0<=0)!");
+            alglib.ap.assert(n1>0, "IDWGridCalc2VX: invalid value for N1 (N1<=0)!");
+            alglib.ap.assert(alglib.ap.len(x0)>=n0, "IDWGridCalc2VX: Length(X0)<N0");
+            alglib.ap.assert(alglib.ap.len(x1)>=n1, "IDWGridCalc2VX: Length(X1)<N1");
+            alglib.ap.assert(apserv.isfinitevector(x0, n0, _params), "IDWGridCalc2VX: X0 contains infinite or NaN values!");
+            alglib.ap.assert(apserv.isfinitevector(x1, n1, _params), "IDWGridCalc2VX: X1 contains infinite or NaN values!");
+            for(i=0; i<=n0-2; i++)
+            {
+                alglib.ap.assert((double)(x0[i])<=(double)(x0[i+1]), "IDWGridCalc2VX: X0 is not ordered by ascending");
+            }
+            for(i=0; i<=n1-2; i++)
+            {
+                alglib.ap.assert((double)(x1[i])<=(double)(x1[i+1]), "IDWGridCalc2VX: X1 is not ordered by ascending");
+            }
+            
+            //
+            // Prepare local variables
+            //
+            nx = s.nx;
+            ny = s.ny;
+            alglib.smp.ae_shared_pool_set_seed(cbpool, s.buffer);
+            
+            //
+            // Prepare output array
+            //
+            ylen = ny*n0*n1;
+            y = new double[ylen];
+            ablasf.rsetv(ylen, 0.0, y, _params);
+            if( nx!=2 )
+            {
+                return;
+            }
+            
+            //
+            // Evaluate cost (in CPU cycles) of a single model evaluation.
+            // Very crude approximation is used.
+            //
+            evalcost = 0;
+            alglib.ap.assert((s.algotype==0 || s.algotype==1) || s.algotype==2, "IDW: integrity check 9144 failed");
+            if( s.algotype==0 )
+            {
+                
+                //
+                // Original Shepard: single evaluation cost is O(NPoints)
+                //
+                evalcost = evalcost+s.npoints*(5*nx+5*ny+50);
+            }
+            if( s.algotype==1 )
+            {
+                
+                //
+                // Modified Shepard: single evaluation cost is mostly kd-tree request
+                //
+                alglib.smp.ae_shared_pool_retrieve(cbpool, ref calcbuf);
+                evalcost = evalcost+nearestneighbor.kdtreetsapproxrnnquerycost(s.tree, calcbuf.requestbuffer, s.r0, _params);
+                alglib.smp.ae_shared_pool_recycle(cbpool, ref calcbuf);
+            }
+            if( s.algotype==2 )
+            {
+                
+                //
+                // MSTAB: single evaluation cost is a sum of per-layer costs
+                //
+                alglib.smp.ae_shared_pool_retrieve(cbpool, ref calcbuf);
+                rcur = s.r0;
+                for(k=0; k<=s.nlayers-1; k++)
+                {
+                    evalcost = evalcost+(nearestneighbor.kdtreetsapproxrnnquerycost(s.tree, calcbuf.requestbuffer, rcur, _params)+50);
+                    rcur = rcur*s.rdecay;
+                }
+                alglib.smp.ae_shared_pool_recycle(cbpool, ref calcbuf);
+            }
+            evalcost = apserv.coalesce(evalcost, 50, _params);
+            
+            //
+            // Perform the evaluation
+            //
+            idwgridcalc2rec(s, x0, 0, n0, n0, x1, 0, n1, n1, flagy, sparsey, cbpool, true, evalcost, y, _params);
         }
 
 
@@ -15480,6 +16325,7 @@ public partial class alglib
             model.lambdalast = s.unserialize_double();
             model.lambdadecay = s.unserialize_double();
             model.shepardp = s.unserialize_double();
+            model.debugprofile = false;
             
             //
             // Algorithm-specific fields
@@ -15502,6 +16348,138 @@ public partial class alglib
             // Temporary buffers
             //
             idwcreatecalcbuffer(model, model.buffer, _params);
+        }
+
+
+        /*************************************************************************
+        This function, depending on SparseY, acts as IDWGridCalc2V (SparseY=False)
+        or IDWGridCalc2VSubset (SparseY=True) function.  See  comments  for  these
+        functions for more information
+
+          -- ALGLIB --
+             Copyright 04.03.2016 by Bochkanov Sergey
+        *************************************************************************/
+        private static void idwgridcalc2rec(idwmodel s,
+            double[] x0,
+            int begin0,
+            int end0,
+            int n0,
+            double[] x1,
+            int begin1,
+            int end1,
+            int n1,
+            bool[] flagy,
+            bool sparsey,
+            alglib.smp.shared_pool cbpool,
+            bool isrootcall,
+            double evalcost,
+            double[] y,
+            alglib.xparams _params)
+        {
+            int nx = 0;
+            int ny = 0;
+            int batchsize = 0;
+            int chunksize = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            bool abovepexeclevel = new bool();
+            bool abovespawnlevel = new bool();
+            idwcalcbuffer calcbuf = null;
+
+            nx = s.nx;
+            ny = s.ny;
+            batchsize = apserv.icase2(s.debugprofile, 1, idwbatchsize, _params);
+            chunksize = (end0-begin0)*(end1-begin1);
+            alglib.ap.assert(nx==2, "IDW: integrity check 5621 failed");
+            
+            //
+            // Perform parallel execution if needed
+            //
+            abovepexeclevel = (double)(chunksize*evalcost)>(double)(apserv.smpactivationlevel(_params)) || s.debugprofile;
+            if( (isrootcall && chunksize>batchsize) && abovepexeclevel )
+            {
+                if( _trypexec_idwgridcalc2rec(s,x0,begin0,end0,n0,x1,begin1,end1,n1,flagy,sparsey,cbpool,isrootcall,evalcost,y, _params) )
+                {
+                    return;
+                }
+            }
+            
+            //
+            // Perform subdivision
+            //
+            abovespawnlevel = (double)(chunksize*evalcost)>(double)(apserv.spawnlevel(_params)) || s.debugprofile;
+            if( chunksize>batchsize && abovespawnlevel )
+            {
+                
+                //
+                // Subdivision
+                //
+                alglib.ap.assert(Math.Max(end0-begin0, end1-begin1)>1, "IDW: integrity check 6712 failed");
+                if( end0-begin0>end1-begin1 )
+                {
+                    
+                    //
+                    // Split on variable 0
+                    //
+                    k = begin0+(end0-begin0)/2;
+                    idwgridcalc2rec(s, x0, begin0, k, n0, x1, begin1, end1, n1, flagy, sparsey, cbpool, false, evalcost, y, _params);
+                    idwgridcalc2rec(s, x0, k, end0, n0, x1, begin1, end1, n1, flagy, sparsey, cbpool, false, evalcost, y, _params);
+                }
+                else
+                {
+                    k = begin1+(end1-begin1)/2;
+                    idwgridcalc2rec(s, x0, begin0, end0, n0, x1, begin1, k, n1, flagy, sparsey, cbpool, false, evalcost, y, _params);
+                    idwgridcalc2rec(s, x0, begin0, end0, n0, x1, k, end1, n1, flagy, sparsey, cbpool, false, evalcost, y, _params);
+                }
+                return;
+            }
+            
+            //
+            // Basecase code
+            //
+            alglib.smp.ae_shared_pool_retrieve(cbpool, ref calcbuf);
+            ablasf.rallocv(nx, ref calcbuf.x, _params);
+            for(i=begin0; i<=end0-1; i++)
+            {
+                for(j=begin1; j<=end1-1; j++)
+                {
+                    if( !sparsey || flagy[i+j*n0] )
+                    {
+                        calcbuf.x[0] = x0[i];
+                        calcbuf.x[1] = x1[j];
+                        idwtscalcbuf(s, calcbuf, calcbuf.x, ref calcbuf.y, _params);
+                        for(k=0; k<=ny-1; k++)
+                        {
+                            y[k+ny*(i+j*n0)] = calcbuf.y[k];
+                        }
+                    }
+                }
+            }
+            alglib.smp.ae_shared_pool_recycle(cbpool, ref calcbuf);
+        }
+
+
+        /*************************************************************************
+        Serial stub for GPL edition.
+        *************************************************************************/
+        public static bool _trypexec_idwgridcalc2rec(idwmodel s,
+            double[] x0,
+            int begin0,
+            int end0,
+            int n0,
+            double[] x1,
+            int begin1,
+            int end1,
+            int n1,
+            bool[] flagy,
+            bool sparsey,
+            alglib.smp.shared_pool cbpool,
+            bool isrootcall,
+            double evalcost,
+            double[] y, alglib.xparams _params)
+        {
+            return false;
         }
 
 
@@ -15574,6 +16552,169 @@ public partial class alglib
             rep.rmserror = Math.Sqrt(rep.rmserror/(npoints*ny));
             rep.avgerror = rep.avgerror/(npoints*ny);
             rep.r2 = 1.0-rss/apserv.coalesce(tss, 1.0, _params);
+        }
+
+
+        /*************************************************************************
+        Basecase for IDW-MSTAB model construction algorithm
+           
+          -- ALGLIB --
+             Copyright 22.10.2018 by Bochkanov Sergey
+        *************************************************************************/
+        private static void mstabrec(idwbuilder state,
+            double rcur,
+            double lambdacur,
+            int layeridx,
+            alglib.smp.shared_pool mbpool,
+            int idx0,
+            int idx1,
+            bool isrootcall,
+            double querycost,
+            double totalcost,
+            double[,] layers,
+            alglib.xparams _params)
+        {
+            int tile0 = 0;
+            int tile1 = 0;
+            mstabbuffer mbuffer = null;
+            bool abovepexeclevel = new bool();
+            bool abovespawnlevel = new bool();
+
+            
+            //
+            // Try parallel execution, if needed
+            //
+            abovepexeclevel = (double)((idx1-idx0)*querycost)>(double)(apserv.smpactivationlevel(_params)) || state.debugprofile;
+            if( (isrootcall && idx1-idx0>state.mbatchsize) && abovepexeclevel )
+            {
+                if( _trypexec_mstabrec(state,rcur,lambdacur,layeridx,mbpool,idx0,idx1,isrootcall,querycost,totalcost,layers, _params) )
+                {
+                    return;
+                }
+            }
+            
+            //
+            // Handle basecase or recursively subdivide
+            //
+            abovespawnlevel = (double)((idx1-idx0)*querycost)>(double)(apserv.spawnlevel(_params)) || state.debugprofile;
+            if( idx1-idx0>state.mbatchsize && abovespawnlevel )
+            {
+                
+                //
+                // Subdivision
+                //
+                apserv.tiledsplit(idx1-idx0, state.mbatchsize, ref tile0, ref tile1, _params);
+                mstabrec(state, rcur, lambdacur, layeridx, mbpool, idx0, idx0+tile0, false, querycost, totalcost, layers, _params);
+                mstabrec(state, rcur, lambdacur, layeridx, mbpool, idx0+tile0, idx1, false, querycost, totalcost, layers, _params);
+                return;
+            }
+            
+            //
+            // Basecase
+            //
+            alglib.smp.ae_shared_pool_retrieve(mbpool, ref mbuffer);
+            mstabbasecase(state, rcur, lambdacur, layeridx, mbuffer, idx0, idx1, querycost, totalcost, layers, _params);
+            alglib.smp.ae_shared_pool_recycle(mbpool, ref mbuffer);
+        }
+
+
+        /*************************************************************************
+        Serial stub for GPL edition.
+        *************************************************************************/
+        public static bool _trypexec_mstabrec(idwbuilder state,
+            double rcur,
+            double lambdacur,
+            int layeridx,
+            alglib.smp.shared_pool mbpool,
+            int idx0,
+            int idx1,
+            bool isrootcall,
+            double querycost,
+            double totalcost,
+            double[,] layers, alglib.xparams _params)
+        {
+            return false;
+        }
+
+
+        /*************************************************************************
+        Basecase for IDW-MSTAB model construction algorithm
+           
+          -- ALGLIB --
+             Copyright 22.10.2018 by Bochkanov Sergey
+        *************************************************************************/
+        private static void mstabbasecase(idwbuilder state,
+            double rcur,
+            double lambdacur,
+            int layeridx,
+            mstabbuffer buf,
+            int idx0,
+            int idx1,
+            double querycost,
+            double totalcost,
+            double[,] layers,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int i0 = 0;
+            int srcidx = 0;
+            int nx = 0;
+            int ny = 0;
+            double v = 0;
+            double vv = 0;
+            double localprogress = 0;
+
+            nx = state.nx;
+            ny = state.ny;
+            localprogress = 0.0;
+            for(i=idx0; i<=idx1-1; i++)
+            {
+                
+                //
+                // Build the model
+                //
+                for(j=0; j<=nx-1; j++)
+                {
+                    buf.x[j] = layers[i,j];
+                }
+                k = nearestneighbor.kdtreetsqueryrnn(state.tmptree, buf.requestbuffer, buf.x, rcur, true, _params);
+                nearestneighbor.kdtreetsqueryresultstags(state.tmptree, buf.requestbuffer, ref buf.tags, _params);
+                nearestneighbor.kdtreetsqueryresultsdistances(state.tmptree, buf.requestbuffer, ref buf.dist, _params);
+                for(j=0; j<=ny-1; j++)
+                {
+                    buf.wy[j] = 0;
+                    buf.w[j] = w0;
+                }
+                for(i0=0; i0<=k-1; i0++)
+                {
+                    vv = buf.dist[i0]/rcur;
+                    vv = vv*vv;
+                    v = (1-vv)*(1-vv)/(vv+lambdacur);
+                    srcidx = buf.tags[i0];
+                    for(j=0; j<=ny-1; j++)
+                    {
+                        buf.wy[j] = buf.wy[j]+v*layers[srcidx,nx+layeridx*ny+j];
+                        buf.w[j] = buf.w[j]+v;
+                    }
+                }
+                for(j=0; j<=ny-1; j++)
+                {
+                    v = layers[i,nx+layeridx*ny+j];
+                    layers[i,nx+(layeridx+1)*ny+j] = v-buf.wy[j]/buf.w[j];
+                }
+                
+                //
+                // Update progress
+                //
+                localprogress = localprogress+querycost/apserv.coalesce(totalcost, 1, _params);
+                if( (double)(localprogress)>=(double)(0.001) || i==idx1-1 )
+                {
+                    apserv.rthreadunsafeset(ref state.mprogress, apserv.boundval(apserv.rthreadunsafeget(ref state.mprogress, _params)+localprogress, 0, 1, _params), _params);
+                    localprogress = 0.0;
+                }
+            }
         }
 
 
@@ -19066,73 +20207,46 @@ public partial class alglib
             spline1dinterpolant c,
             alglib.xparams _params)
         {
-            int i = 0;
-            double[] d = new double[0];
-            double[] w = new double[0];
-            double[] diff = new double[0];
+            buildakimax(x, y, n, false, c, _params);
+        }
 
-            x = (double[])x.Clone();
-            y = (double[])y.Clone();
 
-            alglib.ap.assert(n>=2, "Spline1DBuildAkima: N<2!");
-            alglib.ap.assert(alglib.ap.len(x)>=n, "Spline1DBuildAkima: Length(X)<N!");
-            alglib.ap.assert(alglib.ap.len(y)>=n, "Spline1DBuildAkima: Length(Y)<N!");
-            
-            //
-            // check and sort points
-            //
-            alglib.ap.assert(apserv.isfinitevector(x, n, _params), "Spline1DBuildAkima: X contains infinite or NAN values!");
-            alglib.ap.assert(apserv.isfinitevector(y, n, _params), "Spline1DBuildAkima: Y contains infinite or NAN values!");
-            heapsortpoints(ref x, ref y, n, _params);
-            alglib.ap.assert(apserv.aredistinct(x, n, _params), "Spline1DBuildAkima: at least two consequent points are too close!");
-            
-            //
-            // Handle special cases: N=2, N=3, N=4
-            //
-            if( n<=4 )
-            {
-                spline1dbuildcubic(x, y, n, 0, 0.0, 0, 0.0, c, _params);
-                return;
-            }
-            
-            //
-            // Prepare W (weights), Diff (divided differences)
-            //
-            w = new double[n-1];
-            diff = new double[n-1];
-            for(i=0; i<=n-2; i++)
-            {
-                diff[i] = (y[i+1]-y[i])/(x[i+1]-x[i]);
-            }
-            for(i=1; i<=n-2; i++)
-            {
-                w[i] = Math.Abs(diff[i]-diff[i-1]);
-            }
-            
-            //
-            // Prepare Hermite interpolation scheme
-            //
-            d = new double[n];
-            for(i=2; i<=n-3; i++)
-            {
-                if( (double)(Math.Abs(w[i-1])+Math.Abs(w[i+1]))!=(double)(0) )
-                {
-                    d[i] = (w[i+1]*diff[i-1]+w[i-1]*diff[i])/(w[i+1]+w[i-1]);
-                }
-                else
-                {
-                    d[i] = ((x[i+1]-x[i])*diff[i-1]+(x[i]-x[i-1])*diff[i])/(x[i+1]-x[i-1]);
-                }
-            }
-            d[0] = diffthreepoint(x[0], x[0], y[0], x[1], y[1], x[2], y[2], _params);
-            d[1] = diffthreepoint(x[1], x[0], y[0], x[1], y[1], x[2], y[2], _params);
-            d[n-2] = diffthreepoint(x[n-2], x[n-3], y[n-3], x[n-2], y[n-2], x[n-1], y[n-1], _params);
-            d[n-1] = diffthreepoint(x[n-1], x[n-3], y[n-3], x[n-2], y[n-2], x[n-1], y[n-1], _params);
-            
-            //
-            // Build Akima spline using Hermite interpolation scheme
-            //
-            spline1dbuildhermite(x, y, d, n, c, _params);
+        /*************************************************************************
+        This subroutine builds modified Akima spline interpolant, with weights
+
+            W[i]=|Delta[I]-Delta[I-1]|
+
+        replaced by
+
+            W[i]=|Delta[I]-Delta[I-1]|+0.5*|Delta[I]+Delta[I-1]|
+
+        INPUT PARAMETERS:
+            X           -   spline nodes, array[0..N-1]
+            Y           -   function values, array[0..N-1]
+            N           -   points count (optional):
+                            * N>=2
+                            * if given, only first N points are used to build spline
+                            * if not given, automatically detected from X/Y sizes
+                              (len(X) must be equal to len(Y))
+
+        OUTPUT PARAMETERS:
+            C           -   spline interpolant
+
+
+        ORDER OF POINTS
+
+        Subroutine automatically sorts points, so caller may pass unsorted array.
+
+          -- ALGLIB PROJECT --
+             Copyright 24.06.2007 by Bochkanov Sergey
+        *************************************************************************/
+        public static void spline1dbuildakimamod(double[] x,
+            double[] y,
+            int n,
+            spline1dinterpolant c,
+            alglib.xparams _params)
+        {
+            buildakimax(x, y, n, true, c, _params);
         }
 
 
@@ -20334,6 +21448,200 @@ public partial class alglib
             if( dotrace )
             {
                 alglib.ap.trace(System.String.Format("> done in {0,0:d} ms\n", unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-tstart));
+            }
+        }
+
+
+        /*************************************************************************
+        Internal version of Spline1DGridDiffCubic.
+
+        Accepts pre-ordered X/Y, temporary arrays (which may be  preallocated,  if
+        you want to save time, or not) and output array (which may be preallocated
+        too).
+
+        Y is passed as var-parameter because we may need to force last element  to
+        be equal to the first one (if periodic boundary conditions are specified).
+
+          -- ALGLIB PROJECT --
+             Copyright 03.09.2010 by Bochkanov Sergey
+        *************************************************************************/
+        public static void spline1dgriddiffcubicinternal(double[] x,
+            ref double[] y,
+            int n,
+            int boundltype,
+            double boundl,
+            int boundrtype,
+            double boundr,
+            ref double[] d,
+            ref double[] a1,
+            ref double[] a2,
+            ref double[] a3,
+            ref double[] b,
+            ref double[] dt,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int i_ = 0;
+
+            
+            //
+            // allocate arrays
+            //
+            if( alglib.ap.len(d)<n )
+            {
+                d = new double[n];
+            }
+            if( alglib.ap.len(a1)<n )
+            {
+                a1 = new double[n];
+            }
+            if( alglib.ap.len(a2)<n )
+            {
+                a2 = new double[n];
+            }
+            if( alglib.ap.len(a3)<n )
+            {
+                a3 = new double[n];
+            }
+            if( alglib.ap.len(b)<n )
+            {
+                b = new double[n];
+            }
+            if( alglib.ap.len(dt)<n )
+            {
+                dt = new double[n];
+            }
+            
+            //
+            // Special cases:
+            // * N=2, parabolic terminated boundary condition on both ends
+            // * N=2, periodic boundary condition
+            //
+            if( (n==2 && boundltype==0) && boundrtype==0 )
+            {
+                d[0] = (y[1]-y[0])/(x[1]-x[0]);
+                d[1] = d[0];
+                return;
+            }
+            if( (n==2 && boundltype==-1) && boundrtype==-1 )
+            {
+                d[0] = 0;
+                d[1] = 0;
+                return;
+            }
+            
+            //
+            // Periodic and non-periodic boundary conditions are
+            // two separate classes
+            //
+            if( boundrtype==-1 && boundltype==-1 )
+            {
+                
+                //
+                // Periodic boundary conditions
+                //
+                y[n-1] = y[0];
+                
+                //
+                // Boundary conditions at N-1 points
+                // (one point less because last point is the same as first point).
+                //
+                a1[0] = x[1]-x[0];
+                a2[0] = 2*(x[1]-x[0]+x[n-1]-x[n-2]);
+                a3[0] = x[n-1]-x[n-2];
+                b[0] = 3*(y[n-1]-y[n-2])/(x[n-1]-x[n-2])*(x[1]-x[0])+3*(y[1]-y[0])/(x[1]-x[0])*(x[n-1]-x[n-2]);
+                for(i=1; i<=n-2; i++)
+                {
+                    
+                    //
+                    // Altough last point is [N-2], we use X[N-1] and Y[N-1]
+                    // (because of periodicity)
+                    //
+                    a1[i] = x[i+1]-x[i];
+                    a2[i] = 2*(x[i+1]-x[i-1]);
+                    a3[i] = x[i]-x[i-1];
+                    b[i] = 3*(y[i]-y[i-1])/(x[i]-x[i-1])*(x[i+1]-x[i])+3*(y[i+1]-y[i])/(x[i+1]-x[i])*(x[i]-x[i-1]);
+                }
+                
+                //
+                // Solve, add last point (with index N-1)
+                //
+                solvecyclictridiagonal(a1, a2, a3, b, n-1, ref dt, _params);
+                for(i_=0; i_<=n-2;i_++)
+                {
+                    d[i_] = dt[i_];
+                }
+                d[n-1] = d[0];
+            }
+            else
+            {
+                
+                //
+                // Non-periodic boundary condition.
+                // Left boundary conditions.
+                //
+                if( boundltype==0 )
+                {
+                    a1[0] = 0;
+                    a2[0] = 1;
+                    a3[0] = 1;
+                    b[0] = 2*(y[1]-y[0])/(x[1]-x[0]);
+                }
+                if( boundltype==1 )
+                {
+                    a1[0] = 0;
+                    a2[0] = 1;
+                    a3[0] = 0;
+                    b[0] = boundl;
+                }
+                if( boundltype==2 )
+                {
+                    a1[0] = 0;
+                    a2[0] = 2;
+                    a3[0] = 1;
+                    b[0] = 3*(y[1]-y[0])/(x[1]-x[0])-0.5*boundl*(x[1]-x[0]);
+                }
+                
+                //
+                // Central conditions
+                //
+                for(i=1; i<=n-2; i++)
+                {
+                    a1[i] = x[i+1]-x[i];
+                    a2[i] = 2*(x[i+1]-x[i-1]);
+                    a3[i] = x[i]-x[i-1];
+                    b[i] = 3*(y[i]-y[i-1])/(x[i]-x[i-1])*(x[i+1]-x[i])+3*(y[i+1]-y[i])/(x[i+1]-x[i])*(x[i]-x[i-1]);
+                }
+                
+                //
+                // Right boundary conditions
+                //
+                if( boundrtype==0 )
+                {
+                    a1[n-1] = 1;
+                    a2[n-1] = 1;
+                    a3[n-1] = 0;
+                    b[n-1] = 2*(y[n-1]-y[n-2])/(x[n-1]-x[n-2]);
+                }
+                if( boundrtype==1 )
+                {
+                    a1[n-1] = 0;
+                    a2[n-1] = 1;
+                    a3[n-1] = 0;
+                    b[n-1] = boundr;
+                }
+                if( boundrtype==2 )
+                {
+                    a1[n-1] = 1;
+                    a2[n-1] = 2;
+                    a3[n-1] = 0;
+                    b[n-1] = 3*(y[n-1]-y[n-2])/(x[n-1]-x[n-2])+0.5*boundr*(x[n-1]-x[n-2]);
+                }
+                
+                //
+                // Solve
+                //
+                solvetridiagonal(a1, a2, a3, b, n, ref d, _params);
             }
         }
 
@@ -22388,196 +23696,88 @@ public partial class alglib
 
 
         /*************************************************************************
-        Internal version of Spline1DGridDiffCubic.
-
-        Accepts pre-ordered X/Y, temporary arrays (which may be  preallocated,  if
-        you want to save time, or not) and output array (which may be preallocated
-        too).
-
-        Y is passed as var-parameter because we may need to force last element  to
-        be equal to the first one (if periodic boundary conditions are specified).
+        This subroutine builds Akima spline interpolant, either original or modified
+        one.
 
           -- ALGLIB PROJECT --
-             Copyright 03.09.2010 by Bochkanov Sergey
+             Copyright 24.06.2007 by Bochkanov Sergey
         *************************************************************************/
-        private static void spline1dgriddiffcubicinternal(double[] x,
-            ref double[] y,
+        private static void buildakimax(double[] x,
+            double[] y,
             int n,
-            int boundltype,
-            double boundl,
-            int boundrtype,
-            double boundr,
-            ref double[] d,
-            ref double[] a1,
-            ref double[] a2,
-            ref double[] a3,
-            ref double[] b,
-            ref double[] dt,
+            bool modakima,
+            spline1dinterpolant c,
             alglib.xparams _params)
         {
             int i = 0;
-            int i_ = 0;
+            double modmult = 0;
+            double[] d = new double[0];
+            double[] w = new double[0];
+            double[] diff = new double[0];
 
+            x = (double[])x.Clone();
+            y = (double[])y.Clone();
+
+            alglib.ap.assert(n>=2, "Spline1DBuildAkima(Mod): N<2!");
+            alglib.ap.assert(alglib.ap.len(x)>=n, "Spline1DBuildAkima(Mod): Length(X)<N!");
+            alglib.ap.assert(alglib.ap.len(y)>=n, "Spline1DBuildAkima(Mod): Length(Y)<N!");
             
             //
-            // allocate arrays
+            // check and sort points
             //
-            if( alglib.ap.len(d)<n )
-            {
-                d = new double[n];
-            }
-            if( alglib.ap.len(a1)<n )
-            {
-                a1 = new double[n];
-            }
-            if( alglib.ap.len(a2)<n )
-            {
-                a2 = new double[n];
-            }
-            if( alglib.ap.len(a3)<n )
-            {
-                a3 = new double[n];
-            }
-            if( alglib.ap.len(b)<n )
-            {
-                b = new double[n];
-            }
-            if( alglib.ap.len(dt)<n )
-            {
-                dt = new double[n];
-            }
+            alglib.ap.assert(apserv.isfinitevector(x, n, _params), "Spline1DBuildAkima(Mod): X contains infinite or NAN values!");
+            alglib.ap.assert(apserv.isfinitevector(y, n, _params), "Spline1DBuildAkima(Mod): Y contains infinite or NAN values!");
+            heapsortpoints(ref x, ref y, n, _params);
+            alglib.ap.assert(apserv.aredistinct(x, n, _params), "Spline1DBuildAkima(Mod): at least two consequent points are too close!");
             
             //
-            // Special cases:
-            // * N=2, parabolic terminated boundary condition on both ends
-            // * N=2, periodic boundary condition
+            // Handle special cases: N=2, N=3, N=4
             //
-            if( (n==2 && boundltype==0) && boundrtype==0 )
+            if( n<=4 )
             {
-                d[0] = (y[1]-y[0])/(x[1]-x[0]);
-                d[1] = d[0];
-                return;
-            }
-            if( (n==2 && boundltype==-1) && boundrtype==-1 )
-            {
-                d[0] = 0;
-                d[1] = 0;
+                spline1dbuildcubic(x, y, n, 0, 0.0, 0, 0.0, c, _params);
                 return;
             }
             
             //
-            // Periodic and non-periodic boundary conditions are
-            // two separate classes
+            // Prepare W (weights), Diff (divided differences)
             //
-            if( boundrtype==-1 && boundltype==-1 )
+            modmult = apserv.rcase2(modakima, 0.5, 0, _params);
+            w = new double[n-1];
+            diff = new double[n-1];
+            for(i=0; i<=n-2; i++)
             {
-                
-                //
-                // Periodic boundary conditions
-                //
-                y[n-1] = y[0];
-                
-                //
-                // Boundary conditions at N-1 points
-                // (one point less because last point is the same as first point).
-                //
-                a1[0] = x[1]-x[0];
-                a2[0] = 2*(x[1]-x[0]+x[n-1]-x[n-2]);
-                a3[0] = x[n-1]-x[n-2];
-                b[0] = 3*(y[n-1]-y[n-2])/(x[n-1]-x[n-2])*(x[1]-x[0])+3*(y[1]-y[0])/(x[1]-x[0])*(x[n-1]-x[n-2]);
-                for(i=1; i<=n-2; i++)
-                {
-                    
-                    //
-                    // Altough last point is [N-2], we use X[N-1] and Y[N-1]
-                    // (because of periodicity)
-                    //
-                    a1[i] = x[i+1]-x[i];
-                    a2[i] = 2*(x[i+1]-x[i-1]);
-                    a3[i] = x[i]-x[i-1];
-                    b[i] = 3*(y[i]-y[i-1])/(x[i]-x[i-1])*(x[i+1]-x[i])+3*(y[i+1]-y[i])/(x[i+1]-x[i])*(x[i]-x[i-1]);
-                }
-                
-                //
-                // Solve, add last point (with index N-1)
-                //
-                solvecyclictridiagonal(a1, a2, a3, b, n-1, ref dt, _params);
-                for(i_=0; i_<=n-2;i_++)
-                {
-                    d[i_] = dt[i_];
-                }
-                d[n-1] = d[0];
+                diff[i] = (y[i+1]-y[i])/(x[i+1]-x[i]);
             }
-            else
+            for(i=1; i<=n-2; i++)
             {
-                
-                //
-                // Non-periodic boundary condition.
-                // Left boundary conditions.
-                //
-                if( boundltype==0 )
-                {
-                    a1[0] = 0;
-                    a2[0] = 1;
-                    a3[0] = 1;
-                    b[0] = 2*(y[1]-y[0])/(x[1]-x[0]);
-                }
-                if( boundltype==1 )
-                {
-                    a1[0] = 0;
-                    a2[0] = 1;
-                    a3[0] = 0;
-                    b[0] = boundl;
-                }
-                if( boundltype==2 )
-                {
-                    a1[0] = 0;
-                    a2[0] = 2;
-                    a3[0] = 1;
-                    b[0] = 3*(y[1]-y[0])/(x[1]-x[0])-0.5*boundl*(x[1]-x[0]);
-                }
-                
-                //
-                // Central conditions
-                //
-                for(i=1; i<=n-2; i++)
-                {
-                    a1[i] = x[i+1]-x[i];
-                    a2[i] = 2*(x[i+1]-x[i-1]);
-                    a3[i] = x[i]-x[i-1];
-                    b[i] = 3*(y[i]-y[i-1])/(x[i]-x[i-1])*(x[i+1]-x[i])+3*(y[i+1]-y[i])/(x[i+1]-x[i])*(x[i]-x[i-1]);
-                }
-                
-                //
-                // Right boundary conditions
-                //
-                if( boundrtype==0 )
-                {
-                    a1[n-1] = 1;
-                    a2[n-1] = 1;
-                    a3[n-1] = 0;
-                    b[n-1] = 2*(y[n-1]-y[n-2])/(x[n-1]-x[n-2]);
-                }
-                if( boundrtype==1 )
-                {
-                    a1[n-1] = 0;
-                    a2[n-1] = 1;
-                    a3[n-1] = 0;
-                    b[n-1] = boundr;
-                }
-                if( boundrtype==2 )
-                {
-                    a1[n-1] = 1;
-                    a2[n-1] = 2;
-                    a3[n-1] = 0;
-                    b[n-1] = 3*(y[n-1]-y[n-2])/(x[n-1]-x[n-2])+0.5*boundr*(x[n-1]-x[n-2]);
-                }
-                
-                //
-                // Solve
-                //
-                solvetridiagonal(a1, a2, a3, b, n, ref d, _params);
+                w[i] = Math.Abs(diff[i]-diff[i-1])+modmult*Math.Abs(diff[i]+diff[i-1]);
             }
+            
+            //
+            // Prepare Hermite interpolation scheme
+            //
+            d = new double[n];
+            for(i=2; i<=n-3; i++)
+            {
+                if( (double)(Math.Abs(w[i-1])+Math.Abs(w[i+1]))!=(double)(0) )
+                {
+                    d[i] = (w[i+1]*diff[i-1]+w[i-1]*diff[i])/(w[i+1]+w[i-1]);
+                }
+                else
+                {
+                    d[i] = ((x[i+1]-x[i])*diff[i-1]+(x[i]-x[i-1])*diff[i])/(x[i+1]-x[i-1]);
+                }
+            }
+            d[0] = diffthreepoint(x[0], x[0], y[0], x[1], y[1], x[2], y[2], _params);
+            d[1] = diffthreepoint(x[1], x[0], y[0], x[1], y[1], x[2], y[2], _params);
+            d[n-2] = diffthreepoint(x[n-2], x[n-3], y[n-3], x[n-2], y[n-2], x[n-1], y[n-1], _params);
+            d[n-1] = diffthreepoint(x[n-1], x[n-3], y[n-3], x[n-2], y[n-2], x[n-1], y[n-1], _params);
+            
+            //
+            // Build Akima spline using Hermite interpolation scheme
+            //
+            spline1dbuildhermitebuf(x, y, d, n, c, _params);
         }
 
 
@@ -23041,6 +24241,7 @@ public partial class alglib
         *************************************************************************/
         public class lsfitstate : apobject
         {
+            public int protocolversion;
             public int optalgo;
             public int m;
             public int k;
@@ -23068,14 +24269,30 @@ public partial class alglib
             public bool xupdated;
             public bool needf;
             public bool needfg;
-            public bool needfgh;
             public int pointindex;
             public double[] x;
             public double[] c;
             public double f;
             public double[] g;
-            public double[,] h;
+            public int requesttype;
+            public double[] reportx;
+            public double reportf;
+            public int querysize;
+            public int queryfuncs;
+            public int queryvars;
+            public int querydim;
+            public int queryformulasize;
+            public double[] querydata;
+            public double[] replyfi;
+            public double[] replydj;
+            public sparse.sparsematrix replysj;
+            public double[] tmpx1;
+            public double[] tmpc1;
+            public double[] tmpf1;
+            public double[] tmpg1;
+            public double[,] tmpj1;
             public double[] wcur;
+            public double[] tmpwk;
             public int[] tmpct;
             public double[] tmp;
             public double[] tmpf;
@@ -23114,8 +24331,18 @@ public partial class alglib
                 x = new double[0];
                 c = new double[0];
                 g = new double[0];
-                h = new double[0,0];
+                reportx = new double[0];
+                querydata = new double[0];
+                replyfi = new double[0];
+                replydj = new double[0];
+                replysj = new sparse.sparsematrix();
+                tmpx1 = new double[0];
+                tmpc1 = new double[0];
+                tmpf1 = new double[0];
+                tmpg1 = new double[0];
+                tmpj1 = new double[0,0];
                 wcur = new double[0];
+                tmpwk = new double[0];
                 tmpct = new int[0];
                 tmp = new double[0];
                 tmpf = new double[0];
@@ -23129,6 +24356,7 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 lsfitstate _result = new lsfitstate();
+                _result.protocolversion = protocolversion;
                 _result.optalgo = optalgo;
                 _result.m = m;
                 _result.k = k;
@@ -23156,14 +24384,30 @@ public partial class alglib
                 _result.xupdated = xupdated;
                 _result.needf = needf;
                 _result.needfg = needfg;
-                _result.needfgh = needfgh;
                 _result.pointindex = pointindex;
                 _result.x = (double[])x.Clone();
                 _result.c = (double[])c.Clone();
                 _result.f = f;
                 _result.g = (double[])g.Clone();
-                _result.h = (double[,])h.Clone();
+                _result.requesttype = requesttype;
+                _result.reportx = (double[])reportx.Clone();
+                _result.reportf = reportf;
+                _result.querysize = querysize;
+                _result.queryfuncs = queryfuncs;
+                _result.queryvars = queryvars;
+                _result.querydim = querydim;
+                _result.queryformulasize = queryformulasize;
+                _result.querydata = (double[])querydata.Clone();
+                _result.replyfi = (double[])replyfi.Clone();
+                _result.replydj = (double[])replydj.Clone();
+                _result.replysj = (sparse.sparsematrix)replysj.make_copy();
+                _result.tmpx1 = (double[])tmpx1.Clone();
+                _result.tmpc1 = (double[])tmpc1.Clone();
+                _result.tmpf1 = (double[])tmpf1.Clone();
+                _result.tmpg1 = (double[])tmpg1.Clone();
+                _result.tmpj1 = (double[,])tmpj1.Clone();
                 _result.wcur = (double[])wcur.Clone();
+                _result.tmpwk = (double[])tmpwk.Clone();
                 _result.tmpct = (int[])tmpct.Clone();
                 _result.tmp = (double[])tmp.Clone();
                 _result.tmpf = (double[])tmpf.Clone();
@@ -26492,6 +27736,20 @@ public partial class alglib
         OUTPUT PARAMETERS:
             State   -   structure which stores algorithm state
 
+        IMPORTANT: the LSFIT optimizer  supports  parallel  model  evaluation  and
+                   parallel numerical  differentiation  ('callback  parallelism').
+                   This feature, which is present in commercial  ALGLIB  editions,
+                   greatly accelerates fits with large datasets  and/or  expensive
+                   target functions.
+                   
+                   Callback parallelism is usually beneficial when a  single  pass
+                   over  the   entire   dataset   requires   more   than   several
+                   milliseconds.
+                   
+                   See ALGLIB Reference Manual, 'Working with commercial  version'
+                   section,  and  comments  on  lsfitfit()   function   for   more
+                   information.
+
           -- ALGLIB --
              Copyright 18.10.2008 by Bochkanov Sergey
         *************************************************************************/
@@ -26523,6 +27781,7 @@ public partial class alglib
             alglib.ap.assert(apserv.apservisfinitematrix(x, n, m, _params), "LSFitCreateWF: X contains infinite or NaN values!");
             alglib.ap.assert(math.isfinite(diffstep), "LSFitCreateWF: DiffStep is not finite!");
             alglib.ap.assert((double)(diffstep)>(double)(0), "LSFitCreateWF: DiffStep<=0!");
+            state.protocolversion = 1;
             state.teststep = 0;
             state.diffstep = diffstep;
             state.npoints = n;
@@ -26576,8 +27835,8 @@ public partial class alglib
             state.nic = 0;
             minlm.minlmcreatev(k, n, state.c0, diffstep, state.optstate, _params);
             lsfitclearrequestfields(state, _params);
-            state.rstate.ia = new int[5+1];
-            state.rstate.ra = new double[8+1];
+            state.rstate.ia = new int[6+1];
+            state.rstate.ra = new double[10+1];
             state.rstate.stage = -1;
         }
 
@@ -26616,6 +27875,20 @@ public partial class alglib
         OUTPUT PARAMETERS:
             State   -   structure which stores algorithm state
 
+        IMPORTANT: the LSFIT optimizer  supports  parallel  model  evaluation  and
+                   parallel numerical  differentiation  ('callback  parallelism').
+                   This feature, which is present in commercial  ALGLIB  editions,
+                   greatly accelerates fits with large datasets  and/or  expensive
+                   target functions.
+                   
+                   Callback parallelism is usually beneficial when a  single  pass
+                   over  the   entire   dataset   requires   more   than   several
+                   milliseconds.
+                   
+                   See ALGLIB Reference Manual, 'Working with commercial  version'
+                   section,  and  comments  on  lsfitfit()   function   for   more
+                   information.
+                   
           -- ALGLIB --
              Copyright 18.10.2008 by Bochkanov Sergey
         *************************************************************************/
@@ -26647,6 +27920,7 @@ public partial class alglib
             alglib.ap.assert(apserv.apservisfinitematrix(x, n, m, _params), "LSFitCreateF: X contains infinite or NaN values!");
             alglib.ap.assert(math.isfinite(diffstep), "LSFitCreateF: DiffStep is not finite!");
             alglib.ap.assert((double)(diffstep)>(double)(0), "LSFitCreateF: DiffStep<=0!");
+            state.protocolversion = 1;
             state.teststep = 0;
             state.diffstep = diffstep;
             state.npoints = n;
@@ -26694,8 +27968,8 @@ public partial class alglib
             state.nic = 0;
             minlm.minlmcreatev(k, n, state.c0, diffstep, state.optstate, _params);
             lsfitclearrequestfields(state, _params);
-            state.rstate.ia = new int[5+1];
-            state.rstate.ra = new double[8+1];
+            state.rstate.ia = new int[6+1];
+            state.rstate.ra = new double[10+1];
             state.rstate.stage = -1;
         }
 
@@ -26724,14 +27998,6 @@ public partial class alglib
             N       -   number of points, N>1
             M       -   dimension of space
             K       -   number of parameters being fitted
-            CheapFG -   boolean flag, which is:
-                        * True  if both function and gradient calculation complexity
-                                are less than O(M^2).  An improved  algorithm  can
-                                be  used  which corresponds  to  FGJ  scheme  from
-                                MINLM unit.
-                        * False otherwise.
-                                Standard Jacibian-bases  Levenberg-Marquardt  algo
-                                will be used (FJ scheme).
 
         OUTPUT PARAMETERS:
             State   -   structure which stores algorithm state
@@ -26740,8 +28006,21 @@ public partial class alglib
             LSFitResults
             LSFitCreateFG (fitting without weights)
             LSFitCreateWFGH (fitting using Hessian)
-            LSFitCreateFGH (fitting using Hessian, without weights)
 
+        IMPORTANT: the LSFIT optimizer  supports  parallel  model  evaluation  and
+                   parallel numerical  differentiation  ('callback  parallelism').
+                   This feature, which is present in commercial  ALGLIB  editions,
+                   greatly accelerates fits with large datasets  and/or  expensive
+                   target functions.
+                   
+                   Callback parallelism is usually beneficial when a  single  pass
+                   over  the   entire   dataset   requires   more   than   several
+                   milliseconds.
+                   
+                   See ALGLIB Reference Manual, 'Working with commercial  version'
+                   section,  and  comments  on  lsfitfit()   function   for   more
+                   information.
+                   
           -- ALGLIB --
              Copyright 17.08.2009 by Bochkanov Sergey
         *************************************************************************/
@@ -26752,7 +28031,6 @@ public partial class alglib
             int n,
             int m,
             int k,
-            bool cheapfg,
             lsfitstate state,
             alglib.xparams _params)
         {
@@ -26771,6 +28049,7 @@ public partial class alglib
             alglib.ap.assert(alglib.ap.rows(x)>=n, "LSFitCreateWFG: rows(X)<N!");
             alglib.ap.assert(alglib.ap.cols(x)>=m, "LSFitCreateWFG: cols(X)<M!");
             alglib.ap.assert(apserv.apservisfinitematrix(x, n, m, _params), "LSFitCreateWFG: X contains infinite or NaN values!");
+            state.protocolversion = 1;
             state.teststep = 0;
             state.diffstep = 0;
             state.npoints = n;
@@ -26823,17 +28102,10 @@ public partial class alglib
             state.prevalgo = -1;
             state.nec = 0;
             state.nic = 0;
-            if( cheapfg )
-            {
-                minlm.minlmcreatevgj(k, n, state.c0, state.optstate, _params);
-            }
-            else
-            {
-                minlm.minlmcreatevj(k, n, state.c0, state.optstate, _params);
-            }
+            minlm.minlmcreatevj(k, n, state.c0, state.optstate, _params);
             lsfitclearrequestfields(state, _params);
-            state.rstate.ia = new int[5+1];
-            state.rstate.ra = new double[8+1];
+            state.rstate.ia = new int[6+1];
+            state.rstate.ra = new double[10+1];
             state.rstate.stage = -1;
         }
 
@@ -26861,18 +28133,24 @@ public partial class alglib
             N       -   number of points, N>1
             M       -   dimension of space
             K       -   number of parameters being fitted
-            CheapFG -   boolean flag, which is:
-                        * True  if both function and gradient calculation complexity
-                                are less than O(M^2).  An improved  algorithm  can
-                                be  used  which corresponds  to  FGJ  scheme  from
-                                MINLM unit.
-                        * False otherwise.
-                                Standard Jacibian-bases  Levenberg-Marquardt  algo
-                                will be used (FJ scheme).
 
         OUTPUT PARAMETERS:
             State   -   structure which stores algorithm state
 
+        IMPORTANT: the LSFIT optimizer  supports  parallel  model  evaluation  and
+                   parallel numerical  differentiation  ('callback  parallelism').
+                   This feature, which is present in commercial  ALGLIB  editions,
+                   greatly accelerates fits with large datasets  and/or  expensive
+                   target functions.
+                   
+                   Callback parallelism is usually beneficial when a  single  pass
+                   over  the   entire   dataset   requires   more   than   several
+                   milliseconds.
+                   
+                   See ALGLIB Reference Manual, 'Working with commercial  version'
+                   section,  and  comments  on  lsfitfit()   function   for   more
+                   information.
+                   
           -- ALGLIB --
              Copyright 17.08.2009 by Bochkanov Sergey
         *************************************************************************/
@@ -26882,7 +28160,6 @@ public partial class alglib
             int n,
             int m,
             int k,
-            bool cheapfg,
             lsfitstate state,
             alglib.xparams _params)
         {
@@ -26902,6 +28179,7 @@ public partial class alglib
             alglib.ap.assert(alglib.ap.rows(x)>=n, "LSFitCreateFG: rows(X)<N!");
             alglib.ap.assert(alglib.ap.cols(x)>=m, "LSFitCreateFG: cols(X)<M!");
             alglib.ap.assert(apserv.apservisfinitematrix(x, n, m, _params), "LSFitCreateFG: X contains infinite or NaN values!");
+            state.protocolversion = 1;
             state.teststep = 0;
             state.diffstep = 0;
             state.npoints = n;
@@ -26948,242 +28226,10 @@ public partial class alglib
             state.prevalgo = -1;
             state.nec = 0;
             state.nic = 0;
-            if( cheapfg )
-            {
-                minlm.minlmcreatevgj(k, n, state.c0, state.optstate, _params);
-            }
-            else
-            {
-                minlm.minlmcreatevj(k, n, state.c0, state.optstate, _params);
-            }
+            minlm.minlmcreatevj(k, n, state.c0, state.optstate, _params);
             lsfitclearrequestfields(state, _params);
-            state.rstate.ia = new int[5+1];
-            state.rstate.ra = new double[8+1];
-            state.rstate.stage = -1;
-        }
-
-
-        /*************************************************************************
-        Weighted nonlinear least squares fitting using gradient/Hessian.
-
-        Nonlinear task min(F(c)) is solved, where
-
-            F(c) = (w[0]*(f(c,x[0])-y[0]))^2 + ... + (w[n-1]*(f(c,x[n-1])-y[n-1]))^2,
-
-            * N is a number of points,
-            * M is a dimension of a space points belong to,
-            * K is a dimension of a space of parameters being fitted,
-            * w is an N-dimensional vector of weight coefficients,
-            * x is a set of N points, each of them is an M-dimensional vector,
-            * c is a K-dimensional vector of parameters being fitted
-
-        This subroutine uses f(c,x[i]), its gradient and its Hessian.
-
-        INPUT PARAMETERS:
-            X       -   array[0..N-1,0..M-1], points (one row = one point)
-            Y       -   array[0..N-1], function values.
-            W       -   weights, array[0..N-1]
-            C       -   array[0..K-1], initial approximation to the solution,
-            N       -   number of points, N>1
-            M       -   dimension of space
-            K       -   number of parameters being fitted
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 17.08.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lsfitcreatewfgh(double[,] x,
-            double[] y,
-            double[] w,
-            double[] c,
-            int n,
-            int m,
-            int k,
-            lsfitstate state,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            int i_ = 0;
-
-            alglib.ap.assert(n>=1, "LSFitCreateWFGH: N<1!");
-            alglib.ap.assert(m>=1, "LSFitCreateWFGH: M<1!");
-            alglib.ap.assert(k>=1, "LSFitCreateWFGH: K<1!");
-            alglib.ap.assert(alglib.ap.len(c)>=k, "LSFitCreateWFGH: length(C)<K!");
-            alglib.ap.assert(apserv.isfinitevector(c, k, _params), "LSFitCreateWFGH: C contains infinite or NaN values!");
-            alglib.ap.assert(alglib.ap.len(y)>=n, "LSFitCreateWFGH: length(Y)<N!");
-            alglib.ap.assert(apserv.isfinitevector(y, n, _params), "LSFitCreateWFGH: Y contains infinite or NaN values!");
-            alglib.ap.assert(alglib.ap.len(w)>=n, "LSFitCreateWFGH: length(W)<N!");
-            alglib.ap.assert(apserv.isfinitevector(w, n, _params), "LSFitCreateWFGH: W contains infinite or NaN values!");
-            alglib.ap.assert(alglib.ap.rows(x)>=n, "LSFitCreateWFGH: rows(X)<N!");
-            alglib.ap.assert(alglib.ap.cols(x)>=m, "LSFitCreateWFGH: cols(X)<M!");
-            alglib.ap.assert(apserv.apservisfinitematrix(x, n, m, _params), "LSFitCreateWFGH: X contains infinite or NaN values!");
-            state.teststep = 0;
-            state.diffstep = 0;
-            state.npoints = n;
-            state.nweights = n;
-            state.wkind = 1;
-            state.m = m;
-            state.k = k;
-            lsfitsetcond(state, 0.0, 0, _params);
-            lsfitsetstpmax(state, 0.0, _params);
-            lsfitsetxrep(state, false, _params);
-            state.taskx = new double[n, m];
-            state.tasky = new double[n];
-            state.taskw = new double[n];
-            state.c = new double[k];
-            state.c0 = new double[k];
-            state.c1 = new double[k];
-            for(i_=0; i_<=k-1;i_++)
-            {
-                state.c0[i_] = c[i_];
-            }
-            for(i_=0; i_<=k-1;i_++)
-            {
-                state.c1[i_] = c[i_];
-            }
-            state.h = new double[k, k];
-            state.x = new double[m];
-            state.g = new double[k];
-            for(i_=0; i_<=n-1;i_++)
-            {
-                state.taskw[i_] = w[i_];
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                for(i_=0; i_<=m-1;i_++)
-                {
-                    state.taskx[i,i_] = x[i,i_];
-                }
-                state.tasky[i] = y[i];
-            }
-            state.s = new double[k];
-            state.bndl = new double[k];
-            state.bndu = new double[k];
-            for(i=0; i<=k-1; i++)
-            {
-                state.s[i] = 1.0;
-                state.bndl[i] = Double.NegativeInfinity;
-                state.bndu[i] = Double.PositiveInfinity;
-            }
-            state.optalgo = 2;
-            state.prevnpt = -1;
-            state.prevalgo = -1;
-            state.nec = 0;
-            state.nic = 0;
-            minlm.minlmcreatefgh(k, state.c0, state.optstate, _params);
-            lsfitclearrequestfields(state, _params);
-            state.rstate.ia = new int[5+1];
-            state.rstate.ra = new double[8+1];
-            state.rstate.stage = -1;
-        }
-
-
-        /*************************************************************************
-        Nonlinear least squares fitting using gradient/Hessian, without individial
-        weights.
-
-        Nonlinear task min(F(c)) is solved, where
-
-            F(c) = ((f(c,x[0])-y[0]))^2 + ... + ((f(c,x[n-1])-y[n-1]))^2,
-
-            * N is a number of points,
-            * M is a dimension of a space points belong to,
-            * K is a dimension of a space of parameters being fitted,
-            * x is a set of N points, each of them is an M-dimensional vector,
-            * c is a K-dimensional vector of parameters being fitted
-
-        This subroutine uses f(c,x[i]), its gradient and its Hessian.
-
-        INPUT PARAMETERS:
-            X       -   array[0..N-1,0..M-1], points (one row = one point)
-            Y       -   array[0..N-1], function values.
-            C       -   array[0..K-1], initial approximation to the solution,
-            N       -   number of points, N>1
-            M       -   dimension of space
-            K       -   number of parameters being fitted
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-
-          -- ALGLIB --
-             Copyright 17.08.2009 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lsfitcreatefgh(double[,] x,
-            double[] y,
-            double[] c,
-            int n,
-            int m,
-            int k,
-            lsfitstate state,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            int i_ = 0;
-
-            alglib.ap.assert(n>=1, "LSFitCreateFGH: N<1!");
-            alglib.ap.assert(m>=1, "LSFitCreateFGH: M<1!");
-            alglib.ap.assert(k>=1, "LSFitCreateFGH: K<1!");
-            alglib.ap.assert(alglib.ap.len(c)>=k, "LSFitCreateFGH: length(C)<K!");
-            alglib.ap.assert(apserv.isfinitevector(c, k, _params), "LSFitCreateFGH: C contains infinite or NaN values!");
-            alglib.ap.assert(alglib.ap.len(y)>=n, "LSFitCreateFGH: length(Y)<N!");
-            alglib.ap.assert(apserv.isfinitevector(y, n, _params), "LSFitCreateFGH: Y contains infinite or NaN values!");
-            alglib.ap.assert(alglib.ap.rows(x)>=n, "LSFitCreateFGH: rows(X)<N!");
-            alglib.ap.assert(alglib.ap.cols(x)>=m, "LSFitCreateFGH: cols(X)<M!");
-            alglib.ap.assert(apserv.apservisfinitematrix(x, n, m, _params), "LSFitCreateFGH: X contains infinite or NaN values!");
-            state.teststep = 0;
-            state.diffstep = 0;
-            state.npoints = n;
-            state.wkind = 0;
-            state.m = m;
-            state.k = k;
-            lsfitsetcond(state, 0.0, 0, _params);
-            lsfitsetstpmax(state, 0.0, _params);
-            lsfitsetxrep(state, false, _params);
-            state.taskx = new double[n, m];
-            state.tasky = new double[n];
-            state.c = new double[k];
-            state.c0 = new double[k];
-            state.c1 = new double[k];
-            for(i_=0; i_<=k-1;i_++)
-            {
-                state.c0[i_] = c[i_];
-            }
-            for(i_=0; i_<=k-1;i_++)
-            {
-                state.c1[i_] = c[i_];
-            }
-            state.h = new double[k, k];
-            state.x = new double[m];
-            state.g = new double[k];
-            for(i=0; i<=n-1; i++)
-            {
-                for(i_=0; i_<=m-1;i_++)
-                {
-                    state.taskx[i,i_] = x[i,i_];
-                }
-                state.tasky[i] = y[i];
-            }
-            state.s = new double[k];
-            state.bndl = new double[k];
-            state.bndu = new double[k];
-            for(i=0; i<=k-1; i++)
-            {
-                state.s[i] = 1.0;
-                state.bndl[i] = Double.NegativeInfinity;
-                state.bndu[i] = Double.PositiveInfinity;
-            }
-            state.optalgo = 2;
-            state.prevnpt = -1;
-            state.prevalgo = -1;
-            state.nec = 0;
-            state.nic = 0;
-            minlm.minlmcreatefgh(k, state.c0, state.optstate, _params);
-            lsfitclearrequestfields(state, _params);
-            state.rstate.ia = new int[5+1];
-            state.rstate.ra = new double[8+1];
+            state.rstate.ia = new int[6+1];
+            state.rstate.ra = new double[10+1];
             state.rstate.stage = -1;
         }
 
@@ -27496,42 +28542,46 @@ public partial class alglib
 
 
         /*************************************************************************
-        NOTES:
 
-        1. this algorithm is somewhat unusual because it works with  parameterized
-           function f(C,X), where X is a function argument (we  have  many  points
-           which are characterized by different  argument  values),  and  C  is  a
-           parameter to fit.
+        CALLBACK PARALLELISM:
 
-           For example, if we want to do linear fit by f(c0,c1,x) = c0*x+c1,  then
-           x will be argument, and {c0,c1} will be parameters.
-           
-           It is important to understand that this algorithm finds minimum in  the
-           space of function PARAMETERS (not arguments), so it  needs  derivatives
-           of f() with respect to C, not X.
-           
-           In the example above it will need f=c0*x+c1 and {df/dc0,df/dc1} = {x,1}
-           instead of {df/dx} = {c0}.
+        The  LSFIT  optimizer  supports  parallel  model  evaluation  and parallel
+        numerical differentiation ('callback parallelism'). This feature, which is
+        present in commercial ALGLIB editions, greatly accelerates fits with large
+        datasets and/or expensive target functions.
 
-        2. Callback functions accept C as the first parameter, and X as the second
+        Callback parallelism is usually beneficial when a  single  pass  over  the
+        entire dataset requires more than several milliseconds. In this  case  the
+        job of computing model values at  dataset  points  can  be  split  between
+        multiple threads.
 
-        3. If  state  was  created  with  LSFitCreateFG(),  algorithm  needs  just
-           function   and   its   gradient,   but   if   state   was  created with
-           LSFitCreateFGH(), algorithm will need function, gradient and Hessian.
-           
-           According  to  the  said  above,  there  ase  several  versions of this
-           function, which accept different sets of callbacks.
-           
-           This flexibility opens way to subtle errors - you may create state with
-           LSFitCreateFGH() (optimization using Hessian), but call function  which
-           does not accept Hessian. So when algorithm will request Hessian,  there
-           will be no callback to call. In this case exception will be thrown.
-           
-           Be careful to avoid such errors because there is no way to find them at
-           compile time - you can see them at runtime only.
+        If you employ a numerical differentiation scheme, you can also parallelize
+        computation of different components of a numerical gradient. Generally, the
+        mode computationally demanding your problem is (many points, numerical differentiation,
+        expensive model), the more you can get for multithreading.
+
+        ALGLIB Reference Manual, 'Working with commercial  version' section,
+        describes how to activate callback parallelism for your programming language.
+
+        CALLBACK ARGUMENTS
+
+        This algorithm is somewhat unusual because  it  works  with  parameterized
+        function f(C,X), where X is  a  function  argument (we  have  many  points
+        which  are  characterized  by different  argument  values),  and  C  is  a
+        parameter to fit.
+
+        For example, if we want to do linear  fit  by  f(c0,c1,x) = c0*x+c1,  then
+        x will be argument, and {c0,c1} will be parameters.
+
+        It is important to understand that this algorithm finds   minimum  in  the
+        space of function PARAMETERS (not  arguments),  so  it  needs  derivatives
+        of f() with respect to C, not X.
+
+        In the example above it will need f=c0*x+c1 and {df/dc0,df/dc1} = {x,1}
+        instead of {df/dx} = {c0}.
 
           -- ALGLIB --
-             Copyright 17.08.2009 by Bochkanov Sergey
+             Copyright 17.12.2023 by Bochkanov Sergey
         *************************************************************************/
         public static bool lsfititeration(lsfitstate state,
             alglib.xparams _params)
@@ -27548,10 +28598,13 @@ public partial class alglib
             int k = 0;
             double v = 0;
             double vv = 0;
+            double v1 = 0;
+            double v2 = 0;
             double relcnt = 0;
             int i = 0;
             int j = 0;
             int j1 = 0;
+            int offs = 0;
             int i_ = 0;
 
             
@@ -27573,6 +28626,7 @@ public partial class alglib
                 i = state.rstate.ia[3];
                 j = state.rstate.ia[4];
                 j1 = state.rstate.ia[5];
+                offs = state.rstate.ia[6];
                 lx = state.rstate.ra[0];
                 lf = state.rstate.ra[1];
                 ld = state.rstate.ra[2];
@@ -27581,7 +28635,9 @@ public partial class alglib
                 rd = state.rstate.ra[5];
                 v = state.rstate.ra[6];
                 vv = state.rstate.ra[7];
-                relcnt = state.rstate.ra[8];
+                v1 = state.rstate.ra[8];
+                v2 = state.rstate.ra[9];
+                relcnt = state.rstate.ra[10];
             }
             else
             {
@@ -27591,15 +28647,18 @@ public partial class alglib
                 i = -909;
                 j = 81;
                 j1 = 255;
-                lx = 74.0;
-                lf = -788.0;
-                ld = 809.0;
-                rx = 205.0;
-                rf = -838.0;
-                rd = 939.0;
-                v = -526.0;
-                vv = 763.0;
-                relcnt = -541.0;
+                offs = 74;
+                lx = -788.0;
+                lf = 809.0;
+                ld = 205.0;
+                rx = -838.0;
+                rf = 939.0;
+                rd = -526.0;
+                v = 763.0;
+                vv = -541.0;
+                v1 = -698.0;
+                v2 = -900.0;
+                relcnt = -318.0;
             }
             if( state.rstate.stage==0 )
             {
@@ -27657,6 +28716,42 @@ public partial class alglib
             {
                 goto lbl_13;
             }
+            if( state.rstate.stage==14 )
+            {
+                goto lbl_14;
+            }
+            if( state.rstate.stage==15 )
+            {
+                goto lbl_15;
+            }
+            if( state.rstate.stage==16 )
+            {
+                goto lbl_16;
+            }
+            if( state.rstate.stage==17 )
+            {
+                goto lbl_17;
+            }
+            if( state.rstate.stage==18 )
+            {
+                goto lbl_18;
+            }
+            if( state.rstate.stage==19 )
+            {
+                goto lbl_19;
+            }
+            if( state.rstate.stage==20 )
+            {
+                goto lbl_20;
+            }
+            if( state.rstate.stage==21 )
+            {
+                goto lbl_21;
+            }
+            if( state.rstate.stage==22 )
+            {
+                goto lbl_22;
+            }
             
             //
             // Routine body
@@ -27688,14 +28783,30 @@ public partial class alglib
             minlm.minlmsetscale(state.optstate, state.s, _params);
             minlm.minlmsetbc(state.optstate, state.bndl, state.bndu, _params);
             minlm.minlmsetlc(state.optstate, state.cleic, state.tmpct, state.nec+state.nic, _params);
+            state.requesttype = 0;
+            
+            //
+            // Allocate temporaries, as mandated by the V2 protocol
+            //
+            if( state.protocolversion==2 )
+            {
+                ablasf.rallocm(1, k, ref state.tmpj1, _params);
+                ablasf.rallocv(1, ref state.tmpf1, _params);
+                ablasf.rallocv(k, ref state.tmpg1, _params);
+                ablasf.rallocv(k, ref state.tmpx1, _params);
+                ablasf.rallocv(m, ref state.tmpc1, _params);
+            }
             
             //
             //  Check that user-supplied gradient is correct
             //
-            lsfitclearrequestfields(state, _params);
+            if( state.protocolversion==1 )
+            {
+                lsfitclearrequestfields(state, _params);
+            }
             if( !((double)(state.teststep)>(double)(0) && state.optalgo==1) )
             {
-                goto lbl_14;
+                goto lbl_23;
             }
             for(i=0; i<=k-1; i++)
             {
@@ -27709,20 +28820,118 @@ public partial class alglib
                     state.c[i] = Math.Min(state.c[i], state.bndu[i]);
                 }
             }
-            state.needfg = true;
             i = 0;
-        lbl_16:
+        lbl_25:
             if( i>k-1 )
             {
-                goto lbl_18;
+                goto lbl_27;
             }
             alglib.ap.assert((double)(state.bndl[i])<=(double)(state.c[i]) && (double)(state.c[i])<=(double)(state.bndu[i]), "LSFitIteration: internal error(State.C is out of bounds)");
-            v = state.c[i];
+            if( state.protocolversion!=2 )
+            {
+                goto lbl_28;
+            }
+            
+            //
+            // Test using V2 protocol
+            //
+            ablasf.rallocv(k+m, ref state.querydata, _params);
             j = 0;
-        lbl_19:
+        lbl_30:
             if( j>n-1 )
             {
-                goto lbl_21;
+                goto lbl_32;
+            }
+            
+            //
+            // Query value at the left point
+            //
+            state.requesttype = 2;
+            state.querysize = 1;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            ablasf.rcopyv(k, state.c, state.querydata, _params);
+            state.querydata[i] = state.c[i]-state.teststep*state.s[i];
+            if( math.isfinite(state.bndl[i]) && state.querydata[i]<state.bndl[i] )
+            {
+                state.querydata[i] = state.bndl[i];
+            }
+            lx = state.querydata[i];
+            for(j1=0; j1<=m-1; j1++)
+            {
+                state.querydata[k+j1] = state.taskx[j,j1];
+            }
+            ablasf.rallocv(1, ref state.replyfi, _params);
+            ablasf.rallocv(k, ref state.replydj, _params);
+            state.rstate.stage = 0;
+            goto lbl_rcomm;
+        lbl_0:
+            lf = state.replyfi[0];
+            ld = state.replydj[i];
+            
+            //
+            // Query value at the right point
+            //
+            state.requesttype = 2;
+            state.querysize = 1;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            ablasf.rcopyv(k, state.c, state.querydata, _params);
+            state.querydata[i] = state.c[i]+state.teststep*state.s[i];
+            if( math.isfinite(state.bndu[i]) && state.querydata[i]>state.bndu[i] )
+            {
+                state.querydata[i] = state.bndu[i];
+            }
+            rx = state.querydata[i];
+            state.rstate.stage = 1;
+            goto lbl_rcomm;
+        lbl_1:
+            rf = state.replyfi[0];
+            rd = state.replydj[i];
+            
+            //
+            // Query value at the middle, perform derivative check
+            //
+            state.requesttype = 2;
+            state.querysize = 1;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            ablasf.rcopyv(k, state.c, state.querydata, _params);
+            state.querydata[i] = (lx+rx)/2;
+            if( math.isfinite(state.bndl[i]) && state.querydata[i]<state.bndl[i] )
+            {
+                state.querydata[i] = state.bndl[i];
+            }
+            if( math.isfinite(state.bndu[i]) && state.querydata[i]>state.bndu[i] )
+            {
+                state.querydata[i] = state.bndu[i];
+            }
+            state.rstate.stage = 2;
+            goto lbl_rcomm;
+        lbl_2:
+            state.needfg = false;
+            if( !optserv.derivativecheck(lf, ld, rf, rd, state.replyfi[0], state.replydj[i], rx-lx, _params) )
+            {
+                state.repvaridx = i;
+                state.repterminationtype = -7;
+                result = false;
+                return result;
+            }
+            j = j+1;
+            goto lbl_30;
+        lbl_32:
+            goto lbl_29;
+        lbl_28:
+            alglib.ap.assert(state.protocolversion==1, "LSFIT: integrity check 8428 failed");
+            v = state.c[i];
+            j = 0;
+        lbl_33:
+            if( j>n-1 )
+            {
+                goto lbl_35;
             }
             for(i_=0; i_<=m-1;i_++)
             {
@@ -27734,9 +28943,11 @@ public partial class alglib
                 state.c[i] = Math.Max(state.c[i], state.bndl[i]);
             }
             lx = state.c[i];
-            state.rstate.stage = 0;
+            state.needfg = true;
+            state.rstate.stage = 3;
             goto lbl_rcomm;
-        lbl_0:
+        lbl_3:
+            state.needfg = false;
             lf = state.f;
             ld = state.g[i];
             state.c[i] = v+state.teststep*state.s[i];
@@ -27745,9 +28956,11 @@ public partial class alglib
                 state.c[i] = Math.Min(state.c[i], state.bndu[i]);
             }
             rx = state.c[i];
-            state.rstate.stage = 1;
+            state.needfg = true;
+            state.rstate.stage = 4;
             goto lbl_rcomm;
-        lbl_1:
+        lbl_4:
+            state.needfg = false;
             rf = state.f;
             rd = state.g[i];
             state.c[i] = (lx+rx)/2;
@@ -27759,9 +28972,11 @@ public partial class alglib
             {
                 state.c[i] = Math.Min(state.c[i], state.bndu[i]);
             }
-            state.rstate.stage = 2;
+            state.needfg = true;
+            state.rstate.stage = 5;
             goto lbl_rcomm;
-        lbl_2:
+        lbl_5:
+            state.needfg = false;
             state.c[i] = v;
             if( !optserv.derivativecheck(lf, ld, rf, rd, state.f, state.g[i], rx-lx, _params) )
             {
@@ -27771,13 +28986,13 @@ public partial class alglib
                 return result;
             }
             j = j+1;
-            goto lbl_19;
-        lbl_21:
+            goto lbl_33;
+        lbl_35:
+        lbl_29:
             i = i+1;
-            goto lbl_16;
-        lbl_18:
-            state.needfg = false;
-        lbl_14:
+            goto lbl_25;
+        lbl_27:
+        lbl_23:
             
             //
             // Fill WCur by weights:
@@ -27785,6 +29000,7 @@ public partial class alglib
             // * for WKind=1 we use user-supplied weights stored in State.TaskW
             //
             apserv.rvectorsetlengthatleast(ref state.wcur, n, _params);
+            ablasf.rallocv(n*k, ref state.tmpwk, _params);
             for(i=0; i<=n-1; i++)
             {
                 state.wcur[i] = 1.0;
@@ -27792,29 +29008,46 @@ public partial class alglib
                 {
                     state.wcur[i] = state.taskw[i];
                 }
+                for(j=0; j<=k-1; j++)
+                {
+                    state.tmpwk[i*k+j] = state.wcur[i];
+                }
             }
             
             //
             // Optimize
             //
-        lbl_22:
+            if( state.protocolversion==1 )
+            {
+                minlm.minlmsetprotocolv1(state.optstate, _params);
+            }
+            else
+            {
+                alglib.ap.assert(state.protocolversion==2, "LSFIT: integrity check 2839 failed");
+                minlm.minlmsetprotocolv2(state.optstate, _params);
+            }
+        lbl_36:
             if( !minlm.minlmiteration(state.optstate, _params) )
             {
-                goto lbl_23;
+                goto lbl_37;
+            }
+            if( state.protocolversion!=1 )
+            {
+                goto lbl_38;
             }
             if( !state.optstate.needfi )
             {
-                goto lbl_24;
+                goto lbl_40;
             }
             
             //
             // calculate f[] = wi*(f(xi,c)-yi)
             //
             i = 0;
-        lbl_26:
+        lbl_42:
             if( i>n-1 )
             {
-                goto lbl_28;
+                goto lbl_44;
             }
             for(i_=0; i_<=k-1;i_++)
             {
@@ -27827,20 +29060,20 @@ public partial class alglib
             state.pointindex = i;
             lsfitclearrequestfields(state, _params);
             state.needf = true;
-            state.rstate.stage = 3;
+            state.rstate.stage = 6;
             goto lbl_rcomm;
-        lbl_3:
+        lbl_6:
             state.needf = false;
             vv = state.wcur[i];
             state.optstate.fi[i] = vv*(state.f-state.tasky[i]);
             i = i+1;
-            goto lbl_26;
-        lbl_28:
-            goto lbl_22;
-        lbl_24:
+            goto lbl_42;
+        lbl_44:
+            goto lbl_36;
+        lbl_40:
             if( !state.optstate.needf )
             {
-                goto lbl_29;
+                goto lbl_45;
             }
             
             //
@@ -27848,10 +29081,10 @@ public partial class alglib
             //
             state.optstate.f = 0;
             i = 0;
-        lbl_31:
+        lbl_47:
             if( i>n-1 )
             {
-                goto lbl_33;
+                goto lbl_49;
             }
             for(i_=0; i_<=k-1;i_++)
             {
@@ -27864,20 +29097,20 @@ public partial class alglib
             state.pointindex = i;
             lsfitclearrequestfields(state, _params);
             state.needf = true;
-            state.rstate.stage = 4;
+            state.rstate.stage = 7;
             goto lbl_rcomm;
-        lbl_4:
+        lbl_7:
             state.needf = false;
             vv = state.wcur[i];
             state.optstate.f = state.optstate.f+math.sqr(vv*(state.f-state.tasky[i]));
             i = i+1;
-            goto lbl_31;
-        lbl_33:
-            goto lbl_22;
-        lbl_29:
+            goto lbl_47;
+        lbl_49:
+            goto lbl_36;
+        lbl_45:
             if( !state.optstate.needfg )
             {
-                goto lbl_34;
+                goto lbl_50;
             }
             
             //
@@ -27889,10 +29122,10 @@ public partial class alglib
                 state.optstate.g[i] = 0;
             }
             i = 0;
-        lbl_36:
+        lbl_52:
             if( i>n-1 )
             {
-                goto lbl_38;
+                goto lbl_54;
             }
             for(i_=0; i_<=k-1;i_++)
             {
@@ -27905,9 +29138,9 @@ public partial class alglib
             state.pointindex = i;
             lsfitclearrequestfields(state, _params);
             state.needfg = true;
-            state.rstate.stage = 5;
+            state.rstate.stage = 8;
             goto lbl_rcomm;
-        lbl_5:
+        lbl_8:
             state.needfg = false;
             vv = state.wcur[i];
             state.optstate.f = state.optstate.f+math.sqr(vv*(state.f-state.tasky[i]));
@@ -27917,23 +29150,23 @@ public partial class alglib
                 state.optstate.g[i_] = state.optstate.g[i_] + v*state.g[i_];
             }
             i = i+1;
+            goto lbl_52;
+        lbl_54:
             goto lbl_36;
-        lbl_38:
-            goto lbl_22;
-        lbl_34:
+        lbl_50:
             if( !state.optstate.needfij )
             {
-                goto lbl_39;
+                goto lbl_55;
             }
             
             //
             // calculate Fi/jac(Fi)
             //
             i = 0;
-        lbl_41:
+        lbl_57:
             if( i>n-1 )
             {
-                goto lbl_43;
+                goto lbl_59;
             }
             for(i_=0; i_<=k-1;i_++)
             {
@@ -27946,9 +29179,9 @@ public partial class alglib
             state.pointindex = i;
             lsfitclearrequestfields(state, _params);
             state.needfg = true;
-            state.rstate.stage = 6;
+            state.rstate.stage = 9;
             goto lbl_rcomm;
-        lbl_6:
+        lbl_9:
             state.needfg = false;
             vv = state.wcur[i];
             state.optstate.fi[i] = vv*(state.f-state.tasky[i]);
@@ -27957,79 +29190,13 @@ public partial class alglib
                 state.optstate.j[i,i_] = vv*state.g[i_];
             }
             i = i+1;
-            goto lbl_41;
-        lbl_43:
-            goto lbl_22;
-        lbl_39:
-            if( !state.optstate.needfgh )
-            {
-                goto lbl_44;
-            }
-            
-            //
-            // calculate F/grad(F)/hess(F)
-            //
-            state.optstate.f = 0;
-            for(i=0; i<=k-1; i++)
-            {
-                state.optstate.g[i] = 0;
-            }
-            for(i=0; i<=k-1; i++)
-            {
-                for(j=0; j<=k-1; j++)
-                {
-                    state.optstate.h[i,j] = 0;
-                }
-            }
-            i = 0;
-        lbl_46:
-            if( i>n-1 )
-            {
-                goto lbl_48;
-            }
-            for(i_=0; i_<=k-1;i_++)
-            {
-                state.c[i_] = state.optstate.x[i_];
-            }
-            for(i_=0; i_<=m-1;i_++)
-            {
-                state.x[i_] = state.taskx[i,i_];
-            }
-            state.pointindex = i;
-            lsfitclearrequestfields(state, _params);
-            state.needfgh = true;
-            state.rstate.stage = 7;
-            goto lbl_rcomm;
-        lbl_7:
-            state.needfgh = false;
-            vv = state.wcur[i];
-            state.optstate.f = state.optstate.f+math.sqr(vv*(state.f-state.tasky[i]));
-            v = math.sqr(vv)*2*(state.f-state.tasky[i]);
-            for(i_=0; i_<=k-1;i_++)
-            {
-                state.optstate.g[i_] = state.optstate.g[i_] + v*state.g[i_];
-            }
-            for(j=0; j<=k-1; j++)
-            {
-                v = 2*math.sqr(vv)*state.g[j];
-                for(i_=0; i_<=k-1;i_++)
-                {
-                    state.optstate.h[j,i_] = state.optstate.h[j,i_] + v*state.g[i_];
-                }
-                v = 2*math.sqr(vv)*(state.f-state.tasky[i]);
-                for(i_=0; i_<=k-1;i_++)
-                {
-                    state.optstate.h[j,i_] = state.optstate.h[j,i_] + v*state.h[j,i_];
-                }
-            }
-            i = i+1;
-            goto lbl_46;
-        lbl_48:
-            goto lbl_22;
-        lbl_44:
+            goto lbl_57;
+        lbl_59:
+            goto lbl_36;
+        lbl_55:
             if( !state.optstate.xupdated )
             {
-                goto lbl_49;
+                goto lbl_60;
             }
             
             //
@@ -28042,14 +29209,188 @@ public partial class alglib
             state.f = state.optstate.f;
             lsfitclearrequestfields(state, _params);
             state.xupdated = true;
-            state.rstate.stage = 8;
+            state.rstate.stage = 10;
             goto lbl_rcomm;
-        lbl_8:
+        lbl_10:
             state.xupdated = false;
-            goto lbl_22;
-        lbl_49:
-            goto lbl_22;
-        lbl_23:
+            goto lbl_36;
+        lbl_60:
+        lbl_38:
+            if( state.protocolversion!=2 )
+            {
+                goto lbl_62;
+            }
+            if( state.optstate.requesttype!=-1 )
+            {
+                goto lbl_64;
+            }
+            
+            //
+            // Report current point
+            //
+            state.requesttype = -1;
+            state.queryvars = k;
+            state.reportf = state.optstate.reportf;
+            ablasf.rcopyallocv(k, state.optstate.reportx, ref state.reportx, _params);
+            state.rstate.stage = 11;
+            goto lbl_rcomm;
+        lbl_11:
+            goto lbl_36;
+        lbl_64:
+            if( state.optstate.requesttype!=2 )
+            {
+                goto lbl_66;
+            }
+            
+            //
+            // Request a batch of dense derivatives, repack request by MinLM (one query for N
+            // functions) to the format used by LSFit (N single-function queries)
+            //
+            alglib.ap.assert(state.optstate.querysize==1, "LSFIT: integrity check 5248 failed");
+            alglib.ap.assert(state.optstate.queryfuncs==n, "LSFIT: integrity check 5249 failed");
+            alglib.ap.assert(state.optstate.queryvars==k, "LSFIT: integrity check 5250 failed");
+            alglib.ap.assert(state.optstate.querydim==0, "LSFIT: integrity check 5251 failed");
+            state.requesttype = 2;
+            state.querysize = n;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            ablasf.rallocv(n*(k+m), ref state.querydata, _params);
+            offs = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    state.querydata[offs] = state.optstate.querydata[j];
+                    offs = offs+1;
+                }
+                for(j=0; j<=m-1; j++)
+                {
+                    state.querydata[offs] = state.taskx[i,j];
+                    offs = offs+1;
+                }
+            }
+            ablasf.rallocv(n, ref state.replyfi, _params);
+            ablasf.rallocv(n*k, ref state.replydj, _params);
+            state.rstate.stage = 12;
+            goto lbl_rcomm;
+        lbl_12:
+            
+            //
+            // Handle reply: replace f by weight*(f-y), scale gradient
+            //
+            state.optstate.requesttype = 0;
+            ablasf.rcopyv(n, state.replyfi, state.optstate.replyfi, _params);
+            ablasf.raddv(n, -1.0, state.tasky, state.optstate.replyfi, _params);
+            ablasf.rmergemulv(n, state.wcur, state.optstate.replyfi, _params);
+            ablasf.rcopyv(n*k, state.replydj, state.optstate.replydj, _params);
+            ablasf.rmergemulv(n*k, state.tmpwk, state.optstate.replydj, _params);
+            goto lbl_36;
+        lbl_66:
+            if( state.optstate.requesttype!=3 )
+            {
+                goto lbl_68;
+            }
+            
+            //
+            // Numerical differentiation request: repack request by MinLM (one query for N
+            // functions) to the format used by LSFit (N single-function queries)
+            //
+            alglib.ap.assert(state.optstate.querysize==1, "LSFIT: integrity check 3348 failed");
+            alglib.ap.assert(state.optstate.queryfuncs==n, "LSFIT: integrity check 3349 failed");
+            alglib.ap.assert(state.optstate.queryvars==k, "LSFIT: integrity check 3350 failed");
+            alglib.ap.assert(state.optstate.querydim==0, "LSFIT: integrity check 3351 failed");
+            alglib.ap.assert(state.optstate.queryformulasize>=2, "LSFIT: integrity check 3352 failed");
+            state.requesttype = 3;
+            state.querysize = n;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            state.queryformulasize = state.optstate.queryformulasize;
+            ablasf.rallocv(n*(k+m+k*2*state.queryformulasize), ref state.querydata, _params);
+            offs = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    state.querydata[offs] = state.optstate.querydata[j];
+                    offs = offs+1;
+                }
+                for(j=0; j<=m-1; j++)
+                {
+                    state.querydata[offs] = state.taskx[i,j];
+                    offs = offs+1;
+                }
+                for(j=0; j<=k*2*state.queryformulasize-1; j++)
+                {
+                    state.querydata[offs] = state.optstate.querydata[k+j];
+                    offs = offs+1;
+                }
+            }
+            ablasf.rallocv(n, ref state.replyfi, _params);
+            ablasf.rallocv(n*k, ref state.replydj, _params);
+            state.rstate.stage = 13;
+            goto lbl_rcomm;
+        lbl_13:
+            
+            //
+            // Handle reply: replace f by weight*(f-y), scale gradient
+            //
+            state.optstate.requesttype = 0;
+            ablasf.rcopyv(n, state.replyfi, state.optstate.replyfi, _params);
+            ablasf.raddv(n, -1.0, state.tasky, state.optstate.replyfi, _params);
+            ablasf.rmergemulv(n, state.wcur, state.optstate.replyfi, _params);
+            ablasf.rcopyv(n*k, state.replydj, state.optstate.replydj, _params);
+            ablasf.rmergemulv(n*k, state.tmpwk, state.optstate.replydj, _params);
+            goto lbl_36;
+        lbl_68:
+            if( state.optstate.requesttype!=4 )
+            {
+                goto lbl_70;
+            }
+            
+            //
+            // Request a batch of target values, repack request by MinLM (one query for N
+            // functions) to the format used by LSFit (N single-function queries)
+            //
+            alglib.ap.assert(state.optstate.querysize==1, "LSFIT: integrity check 5248 failed");
+            alglib.ap.assert(state.optstate.queryfuncs==n, "LSFIT: integrity check 5249 failed");
+            alglib.ap.assert(state.optstate.queryvars==k, "LSFIT: integrity check 5250 failed");
+            alglib.ap.assert(state.optstate.querydim==0, "LSFIT: integrity check 5251 failed");
+            state.requesttype = 4;
+            state.querysize = n;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            ablasf.rallocv(n*(k+m), ref state.querydata, _params);
+            offs = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    state.querydata[offs] = state.optstate.querydata[j];
+                    offs = offs+1;
+                }
+                for(j=0; j<=m-1; j++)
+                {
+                    state.querydata[offs] = state.taskx[i,j];
+                    offs = offs+1;
+                }
+            }
+            ablasf.rallocv(n, ref state.replyfi, _params);
+            state.rstate.stage = 14;
+            goto lbl_rcomm;
+        lbl_14:
+            state.optstate.requesttype = 0;
+            ablasf.rcopyv(n, state.replyfi, state.optstate.replyfi, _params);
+            ablasf.raddv(n, -1.0, state.tasky, state.optstate.replyfi, _params);
+            ablasf.rmergemulv(n, state.wcur, state.optstate.replyfi, _params);
+            goto lbl_36;
+        lbl_70:
+        lbl_62:
+            alglib.ap.assert(false, "LSFIT: integrity check 2012 failed (unexpected request)");
+            goto lbl_36;
+        lbl_37:
             
             //
             // Extract results
@@ -28068,7 +29409,7 @@ public partial class alglib
             //
             if( state.repterminationtype<=0 )
             {
-                goto lbl_51;
+                goto lbl_72;
             }
             
             //
@@ -28079,12 +29420,20 @@ public partial class alglib
             state.repavgerror = 0;
             state.repavgrelerror = 0;
             state.repmaxerror = 0;
-            relcnt = 0;
+            if( state.protocolversion!=1 )
+            {
+                goto lbl_74;
+            }
+            
+            //
+            // Get target values using V1 protocol, load them to ReplyFi (it is not used anyway)
+            //
+            ablasf.rallocv(n, ref state.replyfi, _params);
             i = 0;
-        lbl_53:
+        lbl_76:
             if( i>n-1 )
             {
-                goto lbl_55;
+                goto lbl_78;
             }
             for(i_=0; i_<=k-1;i_++)
             {
@@ -28097,24 +29446,61 @@ public partial class alglib
             state.pointindex = i;
             lsfitclearrequestfields(state, _params);
             state.needf = true;
-            state.rstate.stage = 9;
+            state.rstate.stage = 15;
             goto lbl_rcomm;
-        lbl_9:
+        lbl_15:
             state.needf = false;
-            v = state.f;
-            vv = state.wcur[i];
-            state.reprmserror = state.reprmserror+math.sqr(v-state.tasky[i]);
-            state.repwrmserror = state.repwrmserror+math.sqr(vv*(v-state.tasky[i]));
-            state.repavgerror = state.repavgerror+Math.Abs(v-state.tasky[i]);
-            if( (double)(state.tasky[i])!=(double)(0) )
-            {
-                state.repavgrelerror = state.repavgrelerror+Math.Abs(v-state.tasky[i])/Math.Abs(state.tasky[i]);
-                relcnt = relcnt+1;
-            }
-            state.repmaxerror = Math.Max(state.repmaxerror, Math.Abs(v-state.tasky[i]));
+            state.replyfi[i] = state.f;
             i = i+1;
-            goto lbl_53;
-        lbl_55:
+            goto lbl_76;
+        lbl_78:
+            goto lbl_75;
+        lbl_74:
+            
+            //
+            // Get target values using V2 protocol
+            //
+            alglib.ap.assert(state.protocolversion==2, "LSFIT: integrity check 7320 failed");
+            state.requesttype = 4;
+            state.querysize = n;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            ablasf.rallocv(n*(k+m), ref state.querydata, _params);
+            offs = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    state.querydata[offs] = state.c1[j];
+                    offs = offs+1;
+                }
+                for(j=0; j<=m-1; j++)
+                {
+                    state.querydata[offs] = state.taskx[i,j];
+                    offs = offs+1;
+                }
+            }
+            ablasf.rallocv(n, ref state.replyfi, _params);
+            state.rstate.stage = 16;
+            goto lbl_rcomm;
+        lbl_16:
+        lbl_75:
+            relcnt = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = state.replyfi[i];
+                vv = state.wcur[i];
+                state.reprmserror = state.reprmserror+math.sqr(v-state.tasky[i]);
+                state.repwrmserror = state.repwrmserror+math.sqr(vv*(v-state.tasky[i]));
+                state.repavgerror = state.repavgerror+Math.Abs(v-state.tasky[i]);
+                if( (double)(state.tasky[i])!=(double)(0) )
+                {
+                    state.repavgrelerror = state.repavgrelerror+Math.Abs(v-state.tasky[i])/Math.Abs(state.tasky[i]);
+                    relcnt = relcnt+1;
+                }
+                state.repmaxerror = Math.Max(state.repmaxerror, Math.Abs(v-state.tasky[i]));
+            }
             state.reprmserror = Math.Sqrt(state.reprmserror/n);
             state.repwrmserror = Math.Sqrt(state.repwrmserror/n);
             state.repavgerror = state.repavgerror/n;
@@ -28131,34 +29517,42 @@ public partial class alglib
             apserv.rvectorsetlengthatleast(ref state.tmp, k, _params);
             if( (double)(state.diffstep)<=(double)(0) )
             {
-                goto lbl_56;
+                goto lbl_79;
             }
             
             //
             // Compute Jacobian by means of numerical differentiation
             //
+            if( state.protocolversion!=1 )
+            {
+                goto lbl_81;
+            }
+            
+            //
+            // Use V1 protocol
+            //
             lsfitclearrequestfields(state, _params);
             state.needf = true;
             i = 0;
-        lbl_58:
+        lbl_83:
             if( i>n-1 )
             {
-                goto lbl_60;
+                goto lbl_85;
             }
             for(i_=0; i_<=m-1;i_++)
             {
                 state.x[i_] = state.taskx[i,i_];
             }
             state.pointindex = i;
-            state.rstate.stage = 10;
+            state.rstate.stage = 17;
             goto lbl_rcomm;
-        lbl_10:
+        lbl_17:
             state.tmpf[i] = state.f;
             j = 0;
-        lbl_61:
+        lbl_86:
             if( j>k-1 )
             {
-                goto lbl_63;
+                goto lbl_88;
             }
             v = state.c[j];
             lx = v-state.diffstep*state.s[j];
@@ -28167,9 +29561,9 @@ public partial class alglib
             {
                 state.c[j] = Math.Max(state.c[j], state.bndl[j]);
             }
-            state.rstate.stage = 11;
+            state.rstate.stage = 18;
             goto lbl_rcomm;
-        lbl_11:
+        lbl_18:
             lf = state.f;
             rx = v+state.diffstep*state.s[j];
             state.c[j] = rx;
@@ -28177,9 +29571,9 @@ public partial class alglib
             {
                 state.c[j] = Math.Min(state.c[j], state.bndu[j]);
             }
-            state.rstate.stage = 12;
+            state.rstate.stage = 19;
             goto lbl_rcomm;
-        lbl_12:
+        lbl_19:
             rf = state.f;
             state.c[j] = v;
             if( (double)(rx)!=(double)(lx) )
@@ -28191,50 +29585,169 @@ public partial class alglib
                 state.tmpjac[i,j] = 0;
             }
             j = j+1;
-            goto lbl_61;
-        lbl_63:
+            goto lbl_86;
+        lbl_88:
             i = i+1;
-            goto lbl_58;
-        lbl_60:
+            goto lbl_83;
+        lbl_85:
             state.needf = false;
-            goto lbl_57;
-        lbl_56:
+            goto lbl_82;
+        lbl_81:
+            
+            //
+            // Use V2 protocol
+            //
+            state.requesttype = 3;
+            state.querysize = n;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            state.queryformulasize = 2;
+            ablasf.rallocv(n*(k+m+k*2*state.queryformulasize), ref state.querydata, _params);
+            offs = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    state.querydata[offs] = state.c1[j];
+                    offs = offs+1;
+                }
+                for(j=0; j<=m-1; j++)
+                {
+                    state.querydata[offs] = state.taskx[i,j];
+                    offs = offs+1;
+                }
+                for(j=0; j<=k-1; j++)
+                {
+                    
+                    //
+                    // We guard X[J] from leaving [BndL,BndU].
+                    // In case BndL=BndU, we assume that derivative in this direction is zero.
+                    //
+                    v = state.diffstep*state.s[j];
+                    v1 = state.c1[j]-v;
+                    if( math.isfinite(state.bndl[j]) && v1<state.bndl[j] )
+                    {
+                        v1 = state.bndl[j];
+                    }
+                    v2 = state.c1[j]+v;
+                    if( math.isfinite(state.bndu[j]) && v2>state.bndu[j] )
+                    {
+                        v2 = state.bndu[j];
+                    }
+                    v = 0;
+                    if( v1<v2 )
+                    {
+                        v = 1/(v2-v1);
+                    }
+                    state.querydata[offs+0*2+0] = v1;
+                    state.querydata[offs+0*2+1] = -v;
+                    state.querydata[offs+1*2+0] = v2;
+                    state.querydata[offs+1*2+1] = v;
+                    offs = offs+2*state.queryformulasize;
+                }
+            }
+            ablasf.rallocv(n, ref state.replyfi, _params);
+            ablasf.rallocv(n*k, ref state.replydj, _params);
+            state.rstate.stage = 20;
+            goto lbl_rcomm;
+        lbl_20:
+            ablasf.rcopyv(n, state.replyfi, state.tmpf, _params);
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    state.tmpjac[i,j] = state.replydj[i*k+j];
+                }
+            }
+        lbl_82:
+            goto lbl_80;
+        lbl_79:
             
             //
             // Jacobian is calculated with user-provided analytic gradient
             //
+            if( state.protocolversion!=1 )
+            {
+                goto lbl_89;
+            }
+            
+            //
+            // Use V1 protocol
+            //
             lsfitclearrequestfields(state, _params);
             state.needfg = true;
             i = 0;
-        lbl_64:
+        lbl_91:
             if( i>n-1 )
             {
-                goto lbl_66;
+                goto lbl_93;
             }
             for(i_=0; i_<=m-1;i_++)
             {
                 state.x[i_] = state.taskx[i,i_];
             }
             state.pointindex = i;
-            state.rstate.stage = 13;
+            state.rstate.stage = 21;
             goto lbl_rcomm;
-        lbl_13:
+        lbl_21:
             state.tmpf[i] = state.f;
             for(j=0; j<=k-1; j++)
             {
                 state.tmpjac[i,j] = state.g[j];
             }
             i = i+1;
-            goto lbl_64;
-        lbl_66:
+            goto lbl_91;
+        lbl_93:
             state.needfg = false;
-        lbl_57:
+            goto lbl_90;
+        lbl_89:
+            
+            //
+            // Use V2 protocol
+            //
+            alglib.ap.assert(state.protocolversion==2, "LSFIT: integrity check 7321 failed");
+            state.requesttype = 2;
+            state.querysize = n;
+            state.queryfuncs = 1;
+            state.queryvars = k;
+            state.querydim = m;
+            ablasf.rallocv(n*(k+m), ref state.querydata, _params);
+            offs = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    state.querydata[offs] = state.c1[j];
+                    offs = offs+1;
+                }
+                for(j=0; j<=m-1; j++)
+                {
+                    state.querydata[offs] = state.taskx[i,j];
+                    offs = offs+1;
+                }
+            }
+            ablasf.rallocv(n, ref state.replyfi, _params);
+            ablasf.rallocv(n*k, ref state.replydj, _params);
+            state.rstate.stage = 22;
+            goto lbl_rcomm;
+        lbl_22:
+            ablasf.rcopyv(n, state.replyfi, state.tmpf, _params);
+            for(i=0; i<=n-1; i++)
+            {
+                for(j=0; j<=k-1; j++)
+                {
+                    state.tmpjac[i,j] = state.replydj[i*k+j];
+                }
+            }
+        lbl_90:
+        lbl_80:
             for(i=0; i<=k-1; i++)
             {
                 state.tmp[i] = 0.0;
             }
             estimateerrors(state.tmpjac, state.tmpf, state.tasky, state.wcur, state.tmp, state.s, n, k, state.rep, ref state.tmpjacw, 0, _params);
-        lbl_51:
+        lbl_72:
             result = false;
             return result;
             
@@ -28249,6 +29762,7 @@ public partial class alglib
             state.rstate.ia[3] = i;
             state.rstate.ia[4] = j;
             state.rstate.ia[5] = j1;
+            state.rstate.ia[6] = offs;
             state.rstate.ra[0] = lx;
             state.rstate.ra[1] = lf;
             state.rstate.ra[2] = ld;
@@ -28257,7 +29771,9 @@ public partial class alglib
             state.rstate.ra[5] = rd;
             state.rstate.ra[6] = v;
             state.rstate.ra[7] = vv;
-            state.rstate.ra[8] = relcnt;
+            state.rstate.ra[8] = v1;
+            state.rstate.ra[9] = v2;
+            state.rstate.ra[10] = relcnt;
             return result;
         }
 
@@ -28443,6 +29959,26 @@ public partial class alglib
             alglib.ap.assert(math.isfinite(teststep), "LSFitSetGradientCheck: TestStep contains NaN or Infinite");
             alglib.ap.assert((double)(teststep)>=(double)(0), "LSFitSetGradientCheck: invalid argument TestStep(TestStep<0)");
             state.teststep = teststep;
+        }
+
+
+        /*************************************************************************
+        Set V1 reverse communication protocol
+        *************************************************************************/
+        public static void lsfitsetprotocolv1(lsfitstate state,
+            alglib.xparams _params)
+        {
+            state.protocolversion = 1;
+        }
+
+
+        /*************************************************************************
+        Set V2 reverse communication protocol
+        *************************************************************************/
+        public static void lsfitsetprotocolv2(lsfitstate state,
+            alglib.xparams _params)
+        {
+            state.protocolversion = 2;
         }
 
 
@@ -29492,9 +31028,9 @@ public partial class alglib
         private static void lsfitclearrequestfields(lsfitstate state,
             alglib.xparams _params)
         {
+            alglib.ap.assert(state.protocolversion==1, "LSFIT: unexpected protocol");
             state.needf = false;
             state.needfg = false;
-            state.needfgh = false;
             state.xupdated = false;
         }
 
@@ -30545,7 +32081,7 @@ public partial class alglib
             cx = new double[0];
             r = 0;
 
-            fitspherex(xy, npoints, nx, 0, 0.0, 0, 0.0, ref cx, ref dummy, ref r, _params);
+            fitspherex(xy, npoints, nx, 0, 0.0, 0, ref cx, ref dummy, ref r, _params);
         }
 
 
@@ -30590,7 +32126,7 @@ public partial class alglib
             cx = new double[0];
             rhi = 0;
 
-            fitspherex(xy, npoints, nx, 1, 0.0, 0, 0.0, ref cx, ref dummy, ref rhi, _params);
+            fitspherex(xy, npoints, nx, 1, 0.0, 0, ref cx, ref dummy, ref rhi, _params);
         }
 
 
@@ -30635,7 +32171,7 @@ public partial class alglib
             cx = new double[0];
             rlo = 0;
 
-            fitspherex(xy, npoints, nx, 2, 0.0, 0, 0.0, ref cx, ref rlo, ref dummy, _params);
+            fitspherex(xy, npoints, nx, 2, 0.0, 0, ref cx, ref rlo, ref dummy, _params);
         }
 
 
@@ -30681,7 +32217,7 @@ public partial class alglib
             rlo = 0;
             rhi = 0;
 
-            fitspherex(xy, npoints, nx, 3, 0.0, 0, 0.0, ref cx, ref rlo, ref rhi, _params);
+            fitspherex(xy, npoints, nx, 3, 0.0, 0, ref cx, ref rlo, ref rhi, _params);
         }
 
 
@@ -30694,9 +32230,6 @@ public partial class alglib
         underlying nonlinear solver:
         * stopping criteria for inner iterations
         * number of outer iterations
-        * penalty coefficient used to handle  nonlinear  constraints  (we  convert
-          unconstrained nonsmooth optimization problem ivolving max() and/or min()
-          operations to quadratically constrained smooth one).
 
         You may tweak all these parameters or only some  of  them,  leaving  other
         ones at their default state - just specify zero  value,  and  solver  will
@@ -30731,13 +32264,6 @@ public partial class alglib
                           speed up solver; 10 often results in good combination of
                           precision and speed; sometimes you may get good results
                           with just 6 outer iterations.
-                        Ignored for ProblemType=0.
-            Penalty -   penalty coefficient for NLC optimizer:
-                        * must be non-negative
-                        * use 0 to choose default value (1.0E6 in current version)
-                        * it should be really large, 1.0E6...1.0E7 is a good value
-                          to start from;
-                        * generally, default value is good enough
                         Ignored for ProblemType=0.
 
         OUTPUT PARAMETERS:
@@ -30842,7 +32368,6 @@ public partial class alglib
             int problemtype,
             double epsx,
             int aulits,
-            double penalty,
             ref double[] cx,
             ref double rlo,
             ref double rhi,
@@ -30854,10 +32379,9 @@ public partial class alglib
             rlo = 0;
             rhi = 0;
 
-            alglib.ap.assert(math.isfinite(penalty) && (double)(penalty)>=(double)(0), "FitSphereX: Penalty<0 or is not finite");
             alglib.ap.assert(math.isfinite(epsx) && (double)(epsx)>=(double)(0), "FitSphereX: EpsX<0 or is not finite");
             alglib.ap.assert(aulits>=0, "FitSphereX: AULIts<0");
-            fitsphereinternal(xy, npoints, nx, problemtype, 0, epsx, aulits, penalty, ref cx, ref rlo, ref rhi, rep, _params);
+            fitsphereinternal(xy, npoints, nx, problemtype, 0, epsx, aulits, ref cx, ref rlo, ref rhi, rep, _params);
         }
 
 
@@ -30908,14 +32432,6 @@ public partial class alglib
                           speed up solver; 10 often results in good combination of
                           precision and speed
                         Ignored for ProblemType=0.
-            Penalty -   penalty coefficient for NLC optimizer (ignored  for  SLP):
-                        * must be non-negative
-                        * use 0 to choose default value (1.0E6 in current version)
-                        * it should be really large, 1.0E6...1.0E7 is a good value
-                          to start from;
-                        * generally, default value is good enough
-                        * ignored by SLP optimizer
-                        Ignored for ProblemType=0.
 
         OUTPUT PARAMETERS:
             CX      -   central point for a sphere
@@ -30938,7 +32454,6 @@ public partial class alglib
             int solvertype,
             double epsx,
             int aulits,
-            double penalty,
             ref double[] cx,
             ref double rlo,
             ref double rhi,
@@ -30991,16 +32506,11 @@ public partial class alglib
             alglib.ap.assert(apserv.apservisfinitematrix(xy, npoints, nx, _params), "FitSphereX: XY contains infinite or NAN values");
             alglib.ap.assert(problemtype>=0 && problemtype<=3, "FitSphereX: ProblemType is neither 0, 1, 2 or 3");
             alglib.ap.assert(solvertype>=0 && solvertype<=3, "FitSphereX: ProblemType is neither 1, 2 or 3");
-            alglib.ap.assert(math.isfinite(penalty) && (double)(penalty)>=(double)(0), "FitSphereX: Penalty<0 or is not finite");
             alglib.ap.assert(math.isfinite(epsx) && (double)(epsx)>=(double)(0), "FitSphereX: EpsX<0 or is not finite");
             alglib.ap.assert(aulits>=0, "FitSphereX: AULIts<0");
             if( solvertype==0 )
             {
                 solvertype = 1;
-            }
-            if( (double)(penalty)==(double)(0) )
-            {
-                penalty = 1.0E6;
             }
             if( (double)(epsx)==(double)(0) )
             {
@@ -31205,16 +32715,16 @@ public partial class alglib
                     minnlc.minnlcsetbc(nlcstate, bl, bu, _params);
                     minnlc.minnlcsetnlc(nlcstate, 0, cpr*npoints, _params);
                     minnlc.minnlcsetcond(nlcstate, epsx, maxits, _params);
-                    minnlc.minnlcsetprecexactrobust(nlcstate, 5, _params);
                     minnlc.minnlcsetstpmax(nlcstate, 0.1, _params);
                     if( solvertype==1 )
                     {
-                        minnlc.minnlcsetalgoaul(nlcstate, penalty, aulits, _params);
+                        minnlc.minnlcsetalgoaul2(nlcstate, aulits, _params);
                     }
                     else
                     {
                         minnlc.minnlcsetalgoslp(nlcstate, _params);
                     }
+                    minnlc.minnlcsetalgosqp(nlcstate, _params);
                     minnlc.minnlcrestartfrom(nlcstate, pcr, _params);
                     while( minnlc.minnlciteration(nlcstate, _params) )
                     {
@@ -38050,7 +39560,7 @@ public partial class alglib
             int[] idummy = new int[0];
             sparse.sparsematrix sp = new sparse.sparsematrix();
             iterativesparse.sparsesolverstate ss = new iterativesparse.sparsesolverstate();
-            directsparsesolvers.sparsesolverreport ssrep = new directsparsesolvers.sparsesolverreport();
+            iterativesparse.sparsesolverreport ssrep = new iterativesparse.sparsesolverreport();
             rbf3ddmsolver ddmsolver = new rbf3ddmsolver();
             double resnrm = 0;
             double res0nrm = 0;
@@ -45963,12 +47473,21 @@ public partial class alglib
             double[] x = new double[0];
             double[] y = new double[0];
             double[] f = new double[0];
+            double[] dfdx = new double[0];
+            double[] dfdy = new double[0];
+            double[] d2fdxdy = new double[0];
             double[] v = new double[0];
             bool[] missing = new bool[0];
             bool missingv = new bool();
             int i = 0;
             int j = 0;
             int k = 0;
+            double s = 0;
+            double dsdx = 0;
+            double dsdy = 0;
+            double d2sdx2 = 0;
+            double d2sdxdy = 0;
+            double d2sdy2 = 0;
 
             alglib.ap.assert(c.stype==-3 || c.stype==-1, "Spline2DLinTransXY: incorrect C (incorrect parameter C.SType)");
             alglib.ap.assert(math.isfinite(ax), "Spline2DLinTransXY: AX is infinite or NaN");
@@ -45978,6 +47497,9 @@ public partial class alglib
             x = new double[c.n];
             y = new double[c.m];
             f = new double[c.m*c.n*c.d];
+            dfdx = new double[c.m*c.n*c.d];
+            dfdy = new double[c.m*c.n*c.d];
+            d2fdxdy = new double[c.m*c.n*c.d];
             for(j=0; j<=c.n-1; j++)
             {
                 x[j] = c.x[j];
@@ -46005,38 +47527,69 @@ public partial class alglib
             {
                 for(i=0; i<=c.m-1; i++)
                 {
-                    spline2dcalcvbuf(c, bx, y[i], ref v, _params);
-                    y[i] = (y[i]-by)/ay;
-                    missingv = !math.isfinite(v[0]);
                     for(j=0; j<=c.n-1; j++)
                     {
+                        missingv = false;
                         for(k=0; k<=c.d-1; k++)
                         {
-                            f[c.d*(i*c.n+j)+k] = v[k];
+                            spline2ddiff2vi(c, bx, y[i], k, ref s, ref dsdx, ref dsdy, ref d2sdx2, ref d2sdxdy, ref d2sdy2, _params);
+                            f[c.d*(i*c.n+j)+k] = s;
+                            dfdx[c.d*(i*c.n+j)+k] = 0;
+                            dfdy[c.d*(i*c.n+j)+k] = ay*dsdy;
+                            d2fdxdy[c.d*(i*c.n+j)+k] = 0;
+                            missingv = missingv || !math.isfinite(s);
                         }
                         missing[i*c.n+j] = missingv;
                     }
+                }
+                for(i=0; i<=c.m-1; i++)
+                {
+                    y[i] = (y[i]-by)/ay;
                 }
             }
             if( (double)(ax)!=(double)(0) && (double)(ay)==(double)(0) )
             {
                 for(j=0; j<=c.n-1; j++)
                 {
-                    spline2dcalcvbuf(c, x[j], by, ref v, _params);
-                    x[j] = (x[j]-bx)/ax;
-                    missingv = !math.isfinite(v[0]);
                     for(i=0; i<=c.m-1; i++)
                     {
+                        missingv = false;
                         for(k=0; k<=c.d-1; k++)
                         {
-                            f[c.d*(i*c.n+j)+k] = v[k];
+                            spline2ddiff2vi(c, x[j], by, k, ref s, ref dsdx, ref dsdy, ref d2sdx2, ref d2sdxdy, ref d2sdy2, _params);
+                            f[c.d*(i*c.n+j)+k] = s;
+                            dfdx[c.d*(i*c.n+j)+k] = ax*dsdx;
+                            dfdy[c.d*(i*c.n+j)+k] = 0;
+                            d2fdxdy[c.d*(i*c.n+j)+k] = 0;
+                            missingv = missingv || !math.isfinite(s);
                         }
                         missing[i*c.n+j] = missingv;
                     }
                 }
+                for(j=0; j<=c.n-1; j++)
+                {
+                    x[j] = (x[j]-bx)/ax;
+                }
             }
             if( (double)(ax)!=(double)(0) && (double)(ay)!=(double)(0) )
             {
+                for(j=0; j<=c.n-1; j++)
+                {
+                    for(i=0; i<=c.m-1; i++)
+                    {
+                        missingv = false;
+                        for(k=0; k<=c.d-1; k++)
+                        {
+                            spline2ddiff2vi(c, x[j], y[i], k, ref s, ref dsdx, ref dsdy, ref d2sdx2, ref d2sdxdy, ref d2sdy2, _params);
+                            f[c.d*(i*c.n+j)+k] = s;
+                            dfdx[c.d*(i*c.n+j)+k] = ax*dsdx;
+                            dfdy[c.d*(i*c.n+j)+k] = ay*dsdy;
+                            d2fdxdy[c.d*(i*c.n+j)+k] = ax*ay*d2sdxdy;
+                            missingv = missingv || !math.isfinite(s);
+                        }
+                        missing[i*c.n+j] = missingv;
+                    }
+                }
                 for(j=0; j<=c.n-1; j++)
                 {
                     x[j] = (x[j]-bx)/ax;
@@ -46044,10 +47597,6 @@ public partial class alglib
                 for(i=0; i<=c.m-1; i++)
                 {
                     y[i] = (y[i]-by)/ay;
-                }
-                if( c.hasmissingcells )
-                {
-                    ablasf.bcopyv(c.n*c.m, c.ismissingnode, missing, _params);
                 }
             }
             if( (double)(ax)==(double)(0) && (double)(ay)==(double)(0) )
@@ -46060,6 +47609,9 @@ public partial class alglib
                         for(k=0; k<=c.d-1; k++)
                         {
                             f[c.d*(i*c.n+j)+k] = v[k];
+                            dfdx[c.d*(i*c.n+j)+k] = 0;
+                            dfdy[c.d*(i*c.n+j)+k] = 0;
+                            d2fdxdy[c.d*(i*c.n+j)+k] = 0;
                         }
                     }
                 }
@@ -46073,7 +47625,7 @@ public partial class alglib
             {
                 if( c.stype==-3 )
                 {
-                    spline2dbuildbicubicvbuf(x, c.n, y, c.m, f, c.d, c, _params);
+                    spline2dbuildhermitevbuf(x, c.n, y, c.m, f, dfdx, dfdy, d2fdxdy, c.d, c, _params);
                 }
                 if( c.stype==-1 )
                 {
@@ -46164,22 +47716,14 @@ public partial class alglib
                     //
                     // Quick code for a spline without missing cells
                     //
-                    x = new double[c.n];
-                    y = new double[c.m];
-                    f = new double[c.m*c.n*c.d];
-                    for(j=0; j<=c.n-1; j++)
-                    {
-                        x[j] = c.x[j];
-                    }
-                    for(i=0; i<=c.m-1; i++)
-                    {
-                        y[i] = c.y[i];
-                    }
                     for(i=0; i<=c.m*c.n*c.d-1; i++)
                     {
-                        f[i] = a*c.f[i]+b;
+                        c.f[i] = a*c.f[i]+b;
                     }
-                    spline2dbuildbicubicvbuf(x, c.n, y, c.m, f, c.d, c, _params);
+                    for(i=c.m*c.n*c.d; i<=4*c.m*c.n*c.d-1; i++)
+                    {
+                        c.f[i] = a*c.f[i];
+                    }
                 }
                 else
                 {
@@ -46817,27 +48361,36 @@ public partial class alglib
 
 
         /*************************************************************************
-        This subroutine builds bicubic vector-valued spline.
+        This subroutine builds a bicubic vector-valued spline using  parabolically
+        terminated end conditions.
 
-        This function produces C2-continuous spline, i.e. the has smooth first and
-        second derivatives both inside spline cells and at the boundaries.
+        This function produces a C2-continuous spline, i.e. the  spline has smooth
+        first and second  derivatives  both  inside  spline  cells  and  at  their
+        boundaries.
 
-        Input parameters:
-            X   -   spline abscissas, array[0..N-1]
-            Y   -   spline ordinates, array[0..M-1]
-            F   -   function values, array[0..M*N*D-1]:
+        INPUT PARAMETERS:
+            X   -   spline abscissas, array[N]
+            N   -   N>=2:
+                    * if not given, automatically determined as len(X)
+                    * if given, only leading N elements of X are used
+            Y   -   spline ordinates, array[M]
+            M   -   M>=2:
+                    * if not given, automatically determined as len(Y)
+                    * if given, only leading M elements of Y are used
+            F   -   function values, array[M*N*D]:
                     * first D elements store D values at (X[0],Y[0])
                     * next D elements store D values at (X[1],Y[0])
                     * general form - D function values at (X[i],Y[j]) are stored
                       at F[D*(J*N+I)...D*(J*N+I)+D-1].
-            M,N -   grid size, M>=2, N>=2
-            D   -   vector dimension, D>=1
+            D   -   vector dimension, D>=1:
+                    * D=1 means scalar-valued bicubic spline
+                    * D>1 means vector-valued bicubic spline
 
-        Output parameters:
+        OUTPUT PARAMETERS:
             C   -   spline interpolant
 
           -- ALGLIB PROJECT --
-             Copyright 16.04.2012 by Bochkanov Sergey
+             Copyright 2012-2023 by Bochkanov Sergey
         *************************************************************************/
         public static void spline2dbuildbicubicv(double[] x,
             int n,
@@ -46848,9 +48401,370 @@ public partial class alglib
             spline2dinterpolant c,
             alglib.xparams _params)
         {
+            spline2dbuildbicubicvbuf(x, n, y, m, f, d, c, _params);
+        }
+
+
+        /*************************************************************************
+        This subroutine  builds  a  bicubic  vector-valued  spline  using  clamped
+        boundary conditions:
+        * spline values at the grid nodes are specified
+        * boundary conditions for  first,  second  derivatives  or  for  parabolic
+          termination at four boundaries (bottom  y=min(Y[]), top y=max(Y[]), left
+          x=min(X[]), right x=max(X[])) are specified
+        * mixed derivatives at corners are specified
+        * it is possible to  have  different  boundary  conditions  for  different
+          boundaries (first derivatives along  one  boundary,  second  derivatives
+          along other one, parabolic termination along the rest and so on)
+        * it is possible to have either a scalar (D=1) or a vector-valued spline
+
+        This function produces a C2-continuous spline, i.e. the  spline has smooth
+        first and second  derivatives  both  inside  spline  cells  and  at  their
+        boundaries.
+
+        INPUT PARAMETERS:
+            X           -   spline  abscissas,  array[N].  Can  be  unsorted,  the
+                            function will sort it together with boundary conditions
+                            and F[] array (the same set of  permutations  will  be
+                            applied to X[] and F[]).
+            N           -   N>=2:
+                            * if not given, automatically determined as len(X)
+                            * if given, only leading N elements of X are used
+            Y           -   spline ordinates, array[M].  Can   be   unsorted,  the
+                            function will sort it together with boundary conditions
+                            and F[] array (the same set of  permutations  will  be
+                            applied to X[] and F[]).
+            M           -   M>=2:
+                            * if not given, automatically determined as len(Y)
+                            * if given, only leading M elements of Y are used
+            BndBtm      -   array[D*N], boundary conditions at the bottom boundary
+                            of the interpolation area  (corresponds to y=min(Y[]):
+                            * if  BndTypeBtm=0,  the  spline  has   a   'parabolic
+                              termination' boundary condition across that specific
+                              boundary. In this case BndBtm is not even referenced
+                              by the function and can be unallocated.
+                            * otherwise contains derivatives with respect to X
+                            * if BndTypeBtm=1, first derivatives are given
+                            * if BndTypeBtm=2, second derivatives are given
+                            * first D entries store derivatives at x=X[0], y=minY,
+                              subsequent D entries store  derivatives  at  x=X[1],
+                              y=minY and so on
+            BndTop      -   array[D*N],  boundary  conditions  at the top boundary
+                            of the interpolation area  (corresponds to y=max(Y[]):
+                            * if  BndTypeTop=0,  the  spline  has   a   'parabolic
+                              termination' boundary condition across that specific
+                              boundary. In this case BndTop is not even referenced
+                              by the function and can be unallocated.
+                            * otherwise contains derivatives with respect to X
+                            * if BndTypeTop=1, first derivatives are given
+                            * if BndTypeTop=2, second derivatives are given
+                            * first D entries store derivatives at x=X[0], y=maxY,
+                              subsequent D entries store  derivatives  at  x=X[1],
+                              y=maxY and so on
+            BndLft      -   array[D*M], boundary conditions at  the  left boundary
+                            of the  interpolation area (corresponds to x=min(X[]):
+                            * if  BndTypeLft=0,  the  spline  has   a   'parabolic
+                              termination' boundary condition across that specific
+                              boundary. In this case BndLft is not even referenced
+                              by the function and can be unallocated.
+                            * otherwise contains derivatives with respect to Y
+                            * if BndTypeLft=1, first derivatives are given
+                            * if BndTypeLft=2, second derivatives are given
+                            * first D entries store derivatives at x=minX, y=Y[0],
+                              subsequent D entries store  derivatives  at  x=minX,
+                              y=Y[1] and so on
+            BndRgt      -   array[D*M], boundary conditions at  the right boundary
+                            of the  interpolation area (corresponds to x=max(X[]):
+                            * if  BndTypeRgt=0,  the  spline  has   a   'parabolic
+                              termination' boundary condition across that specific
+                              boundary. In this case BndRgt is not even referenced
+                              by the function and can be unallocated.
+                            * otherwise contains derivatives with respect to Y
+                            * if BndTypeRgt=1, first derivatives are given
+                            * if BndTypeRgt=2, second derivatives are given
+                            * first D entries store derivatives at x=maxX, y=Y[0],
+                              subsequent D entries store  derivatives  at  x=maxX,
+                              y=Y[1] and so on
+            MixedD      -   array[D*4], mixed derivatives  at  4  corners  of  the
+                            interpolation area:
+                            * derivative order depends on the order  of   boundary
+                              conditions (bottom/top and left/right)  intersecting
+                              at that corner:
+                              **  for BndType(Btm|Top)=BndType(Lft|Rgt)=1 user has
+                                  to provide d2S/dXdY
+                              **  for BndType(Btm|Top)=BndType(Lft|Rgt)=2 user has
+                                  to provide d4S/(dX^2*dY^2)
+                              **  for BndType(Btm|Top)=1, BndType(Lft|Rgt)=2  user
+                                  has to provide d3S/(dX^2*dY)
+                              **  for BndType(Btm|Top)=2, BndType(Lft|Rgt)=1  user
+                                  has to provide d3S/(dX*dY^2)
+                              **  if one of the intersecting bounds has 'parabolic
+                                  termination'  condition,   this  specific  mixed
+                                  derivative is not used
+                            * first D entries store derivatives at the bottom left
+                              corner x=min(X[]), y=min(Y[])
+                            * subsequent D entries store derivatives at the bottom
+                              right corner x=max(X[]), y=min(Y[])
+                            * subsequent D entries store derivatives  at  the  top
+                              left corner  x=min(X[]), y=max(Y[])
+                            * subsequent D entries store derivatives  at  the  top
+                              right corner x=max(X[]), y=max(Y[])
+                            * if all bounds have 'parabolic termination' condition,
+                              MixedD[]  is  not  referenced  at  all  and  can  be
+                              unallocated.
+            F           -   function values, array[M*N*D]:
+                            * first D elements store D values at (X[0],Y[0])
+                            * next D elements store D values at (X[1],Y[0])
+                            * general form - D function values at (X[i],Y[j])  are
+                              stored at F[D*(J*N+I)...D*(J*N+I)+D-1].
+            D           -   vector dimension, D>=1:
+                            * D=1 means scalar-valued bicubic spline
+                            * D>1 means vector-valued bicubic spline
+
+        OUTPUT PARAMETERS:
+            C   -   spline interpolant
+
+          -- ALGLIB PROJECT --
+             Copyright 2012-2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void spline2dbuildclampedv(double[] x,
+            int n,
+            double[] y,
+            int m,
+            double[] bndbtm,
+            int bndtypebtm,
+            double[] bndtop,
+            int bndtypetop,
+            double[] bndlft,
+            int bndtypelft,
+            double[] bndrgt,
+            int bndtypergt,
+            double[] mixedd,
+            double[] f,
+            int d,
+            spline2dinterpolant c,
+            alglib.xparams _params)
+        {
+            double[,] tf = new double[0,0];
+            double[,] dx = new double[0,0];
+            double[,] dy = new double[0,0];
+            double[,] dxy = new double[0,0];
+            double[] bndbtm1 = new double[0];
+            double[] bndtop1 = new double[0];
+            double[] bndlft1 = new double[0];
+            double[] bndrgt1 = new double[0];
+            double[] mixed1 = new double[0];
+            double[] dummy = new double[0];
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int di = 0;
+            bool allzero = new bool();
+
+            bndbtm = (double[])bndbtm.Clone();
+            bndtop = (double[])bndtop.Clone();
+            bndlft = (double[])bndlft.Clone();
+            bndrgt = (double[])bndrgt.Clone();
             f = (double[])f.Clone();
 
-            spline2dbuildbicubicvbuf(x, n, y, m, f, d, c, _params);
+            allzero = apserv.imin4(bndtypebtm, bndtypetop, bndtypelft, bndtypergt, _params)==0 && apserv.imax4(bndtypebtm, bndtypetop, bndtypelft, bndtypergt, _params)==0;
+            alglib.ap.assert(n>=2, "Spline2DBuildClampedV: N is less than 2");
+            alglib.ap.assert(m>=2, "Spline2DBuildClampedV: M is less than 2");
+            alglib.ap.assert(d>=1, "Spline2DBuildClampedV: invalid argument D (D<1)");
+            alglib.ap.assert(alglib.ap.len(x)>=n && alglib.ap.len(y)>=m, "Spline2DBuildClampedV: length of X or Y is too short (Length(X/Y)<N/M)");
+            alglib.ap.assert(apserv.isfinitevector(x, n, _params) && apserv.isfinitevector(y, m, _params), "Spline2DBuildClampedV: X or Y contains NaN or Infinite value");
+            alglib.ap.assert(bndtypebtm==0 || alglib.ap.len(bndbtm)>=n*d, "Spline2DBuildClampedV: length of BndBtm is less than N*D");
+            alglib.ap.assert(bndtypebtm==0 || apserv.isfinitevector(bndbtm, n*d, _params), "Spline2DBuildClampedV: BndBtm contains NaN or Infinite value");
+            alglib.ap.assert(bndtypetop==0 || alglib.ap.len(bndtop)>=n*d, "Spline2DBuildClampedV: length of BndTop is less than N*D");
+            alglib.ap.assert(bndtypetop==0 || apserv.isfinitevector(bndtop, n*d, _params), "Spline2DBuildClampedV: BndTop contains NaN or Infinite value");
+            alglib.ap.assert(bndtypelft==0 || alglib.ap.len(bndlft)>=m*d, "Spline2DBuildClampedV: length of BndLft is less than M*D");
+            alglib.ap.assert(bndtypelft==0 || apserv.isfinitevector(bndlft, m*d, _params), "Spline2DBuildClampedV: BndLft contains NaN or Infinite value");
+            alglib.ap.assert(bndtypergt==0 || alglib.ap.len(bndrgt)>=m*d, "Spline2DBuildClampedV: length of BndRgt is less than M*D");
+            alglib.ap.assert(bndtypergt==0 || apserv.isfinitevector(bndrgt, m*d, _params), "Spline2DBuildClampedV: BndRgt contains NaN or Infinite value");
+            alglib.ap.assert(allzero || alglib.ap.len(mixedd)>=4*d, "Spline2DBuildClampedV: length of MixedD is less than 4*D");
+            alglib.ap.assert(allzero || apserv.isfinitevector(mixedd, 4*d, _params), "Spline2DBuildClampedV: MixedD contains NaN or Infinite value");
+            alglib.ap.assert((bndtypebtm==0 || bndtypebtm==1) || bndtypebtm==2, "Spline2DBuildClampedV: BndTypeBtm is neither 0, 1 or 2");
+            alglib.ap.assert((bndtypetop==0 || bndtypetop==1) || bndtypetop==2, "Spline2DBuildClampedV: BndTypeTop is neither 0, 1 or 2");
+            alglib.ap.assert((bndtypelft==0 || bndtypelft==1) || bndtypelft==2, "Spline2DBuildClampedV: BndTypeLft is neither 0, 1 or 2");
+            alglib.ap.assert((bndtypergt==0 || bndtypergt==1) || bndtypergt==2, "Spline2DBuildClampedV: BndTypeRgt is neither 0, 1 or 2");
+            k = n*m*d;
+            alglib.ap.assert(alglib.ap.len(f)>=k, "Spline2DBuildClampedV: length of F is too short (Length(F)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(f, k, _params), "Spline2DBuildClampedV: F contains NaN or Infinite value");
+            
+            //
+            // Fill interpolant:
+            //  F[0]...F[N*M*D-1]:
+            //      f(i,j) table. f(0,0), f(0, 1), f(0,2) and so on...
+            //  F[N*M*D]...F[2*N*M*D-1]:
+            //      df(i,j)/dx table.
+            //  F[2*N*M*D]...F[3*N*M*D-1]:
+            //      df(i,j)/dy table.
+            //  F[3*N*M*D]...F[4*N*M*D-1]:
+            //      d2f(i,j)/dxdy table.
+            //
+            c.d = d;
+            c.n = n;
+            c.m = m;
+            c.stype = -3;
+            c.hasmissingcells = false;
+            k = 4*k;
+            c.x = new double[c.n];
+            c.y = new double[c.m];
+            c.f = new double[k];
+            tf = new double[c.m, c.n];
+            bndbtm1 = new double[n];
+            bndtop1 = new double[n];
+            bndlft1 = new double[m];
+            bndrgt1 = new double[m];
+            mixed1 = new double[4];
+            for(i=0; i<=c.n-1; i++)
+            {
+                c.x[i] = x[i];
+            }
+            for(i=0; i<=c.m-1; i++)
+            {
+                c.y[i] = y[i];
+            }
+            sortgrid(c.x, n, c.y, m, bndbtm, bndtypebtm!=0, bndtop, bndtypetop!=0, bndlft, bndtypelft!=0, bndrgt, bndtypergt!=0, f, d, dummy, dummy, dummy, false, _params);
+            for(di=0; di<=c.d-1; di++)
+            {
+                for(i=0; i<=c.m-1; i++)
+                {
+                    for(j=0; j<=c.n-1; j++)
+                    {
+                        tf[i,j] = f[c.d*(i*c.n+j)+di];
+                    }
+                }
+                if( bndtypebtm!=0 )
+                {
+                    for(i=0; i<=c.n-1; i++)
+                    {
+                        bndbtm1[i] = bndbtm[i*d+di];
+                    }
+                }
+                if( bndtypetop!=0 )
+                {
+                    for(i=0; i<=c.n-1; i++)
+                    {
+                        bndtop1[i] = bndtop[i*d+di];
+                    }
+                }
+                if( bndtypelft!=0 )
+                {
+                    for(i=0; i<=c.m-1; i++)
+                    {
+                        bndlft1[i] = bndlft[i*d+di];
+                    }
+                }
+                if( bndtypergt!=0 )
+                {
+                    for(i=0; i<=c.m-1; i++)
+                    {
+                        bndrgt1[i] = bndrgt[i*d+di];
+                    }
+                }
+                if( !allzero )
+                {
+                    for(i=0; i<=3; i++)
+                    {
+                        mixed1[i] = mixedd[i*d+di];
+                    }
+                }
+                bicubiccalcderivatives(tf, c.x, c.y, c.m, c.n, bndbtm1, bndtypebtm, bndtop1, bndtypetop, bndlft1, bndtypelft, bndrgt1, bndtypergt, mixed1, ref dx, ref dy, ref dxy, _params);
+                for(i=0; i<=c.m-1; i++)
+                {
+                    for(j=0; j<=c.n-1; j++)
+                    {
+                        k = c.d*(i*c.n+j)+di;
+                        c.f[k] = tf[i,j];
+                        c.f[c.n*c.m*c.d+k] = dx[i,j];
+                        c.f[2*c.n*c.m*c.d+k] = dy[i,j];
+                        c.f[3*c.n*c.m*c.d+k] = dxy[i,j];
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This subroutine builds a Hermite bicubic vector-valued spline.
+
+        This function produces merely C1-continuous spline, i.e. the   spline  has
+        smooth first derivatives.
+
+        INPUT PARAMETERS:
+            X   -   spline abscissas, array[N]
+            N   -   N>=2:
+                    * if not given, automatically determined as len(X)
+                    * if given, only leading N elements of X are used
+            Y   -   spline ordinates, array[M]
+            M   -   M>=2:
+                    * if not given, automatically determined as len(Y)
+                    * if given, only leading M elements of Y are used
+            F   -   function values, array[M*N*D]:
+                    * first D elements store D values at (X[0],Y[0])
+                    * next D elements store D values at (X[1],Y[0])
+                    * general form - D function values at (X[i],Y[j]) are stored
+                      at F[D*(J*N+I)...D*(J*N+I)+D-1].
+            dFdX-   spline derivatives with respect to X, array[M*N*D]:
+                    * first D elements store D values at (X[0],Y[0])
+                    * next D elements store D values at (X[1],Y[0])
+                    * general form - D function values at (X[i],Y[j]) are stored
+                      at F[D*(J*N+I)...D*(J*N+I)+D-1].
+            dFdY-   spline derivatives with respect to Y, array[M*N*D]:
+                    * first D elements store D values at (X[0],Y[0])
+                    * next D elements store D values at (X[1],Y[0])
+                    * general form - D function values at (X[i],Y[j]) are stored
+                      at F[D*(J*N+I)...D*(J*N+I)+D-1].
+            d2FdXdY-mixed derivatives with respect to X and Y, array[M*N*D]:
+                    * first D elements store D values at (X[0],Y[0])
+                    * next D elements store D values at (X[1],Y[0])
+                    * general form - D function values at (X[i],Y[j]) are stored
+                      at F[D*(J*N+I)...D*(J*N+I)+D-1].
+            D   -   vector dimension, D>=1:
+                    * D=1 means scalar-valued bicubic spline
+                    * D>1 means vector-valued bicubic spline
+
+        OUTPUT PARAMETERS:
+            C   -   spline interpolant
+
+          -- ALGLIB PROJECT --
+             Copyright 2012-2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void spline2dbuildhermitev(double[] x,
+            int n,
+            double[] y,
+            int m,
+            double[] f,
+            double[] dfdx,
+            double[] dfdy,
+            double[] d2fdxdy,
+            int d,
+            spline2dinterpolant c,
+            alglib.xparams _params)
+        {
+            int k = 0;
+
+            f = (double[])f.Clone();
+            dfdx = (double[])dfdx.Clone();
+            dfdy = (double[])dfdy.Clone();
+            d2fdxdy = (double[])d2fdxdy.Clone();
+
+            alglib.ap.assert(n>=2, "Spline2DBuildHermiteV: N is less than 2");
+            alglib.ap.assert(m>=2, "Spline2DBuildHermiteV: M is less than 2");
+            alglib.ap.assert(d>=1, "Spline2DBuildHermiteV: invalid argument D (D<1)");
+            alglib.ap.assert(alglib.ap.len(x)>=n && alglib.ap.len(y)>=m, "Spline2DBuildHermiteV: X or Y is too short (Length(X/Y)<N/M)");
+            alglib.ap.assert(apserv.isfinitevector(x, n, _params) && apserv.isfinitevector(y, m, _params), "Spline2DBuildHermiteV: X or Y contains NaN or Infinite value");
+            k = n*m*d;
+            alglib.ap.assert(alglib.ap.len(f)>=k, "Spline2DBuildHermiteV: F is too short (Length(F)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(f, k, _params), "Spline2DBuildHermiteV: F contains NaN or Infinite value");
+            alglib.ap.assert(alglib.ap.len(dfdx)>=k, "Spline2DBuildHermiteV: dFdX is too short (Length(dFdX)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(dfdx, k, _params), "Spline2DBuildHermiteV: dFdX contains NaN or Infinite value");
+            alglib.ap.assert(alglib.ap.len(dfdy)>=k, "Spline2DBuildHermiteV: dFdY is too short (Length(dFdY)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(dfdy, k, _params), "Spline2DBuildHermiteV: dFdY contains NaN or Infinite value");
+            alglib.ap.assert(alglib.ap.len(d2fdxdy)>=k, "Spline2DBuildHermiteV: d2FdXdY is too short (Length(d2FdXdY)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(d2fdxdy, k, _params), "Spline2DBuildHermiteV: d2FdXdY contains NaN or Infinite value");
+            spline2dbuildhermitevbuf(x, n, y, m, f, dfdx, dfdy, d2fdxdy, d, c, _params);
         }
 
 
@@ -46876,7 +48790,7 @@ public partial class alglib
             double[,] dx = new double[0,0];
             double[,] dy = new double[0,0];
             double[,] dxy = new double[0,0];
-            double t = 0;
+            double[] dummy = new double[0];
             int i = 0;
             int j = 0;
             int k = 0;
@@ -46922,62 +48836,7 @@ public partial class alglib
             {
                 c.y[i] = y[i];
             }
-            
-            //
-            // Sort points
-            //
-            for(j=0; j<=c.n-1; j++)
-            {
-                k = j;
-                for(i=j+1; i<=c.n-1; i++)
-                {
-                    if( (double)(c.x[i])<(double)(c.x[k]) )
-                    {
-                        k = i;
-                    }
-                }
-                if( k!=j )
-                {
-                    for(i=0; i<=c.m-1; i++)
-                    {
-                        for(di=0; di<=c.d-1; di++)
-                        {
-                            t = f[c.d*(i*c.n+j)+di];
-                            f[c.d*(i*c.n+j)+di] = f[c.d*(i*c.n+k)+di];
-                            f[c.d*(i*c.n+k)+di] = t;
-                        }
-                    }
-                    t = c.x[j];
-                    c.x[j] = c.x[k];
-                    c.x[k] = t;
-                }
-            }
-            for(i=0; i<=c.m-1; i++)
-            {
-                k = i;
-                for(j=i+1; j<=c.m-1; j++)
-                {
-                    if( (double)(c.y[j])<(double)(c.y[k]) )
-                    {
-                        k = j;
-                    }
-                }
-                if( k!=i )
-                {
-                    for(j=0; j<=c.n-1; j++)
-                    {
-                        for(di=0; di<=c.d-1; di++)
-                        {
-                            t = f[c.d*(i*c.n+j)+di];
-                            f[c.d*(i*c.n+j)+di] = f[c.d*(k*c.n+j)+di];
-                            f[c.d*(k*c.n+j)+di] = t;
-                        }
-                    }
-                    t = c.y[i];
-                    c.y[i] = c.y[k];
-                    c.y[k] = t;
-                }
-            }
+            sortgrid(c.x, n, c.y, m, c.x, false, c.x, false, c.y, false, c.y, false, f, d, dummy, dummy, dummy, false, _params);
             for(di=0; di<=c.d-1; di++)
             {
                 for(i=0; i<=c.m-1; i++)
@@ -46987,7 +48846,7 @@ public partial class alglib
                         tf[i,j] = f[c.d*(i*c.n+j)+di];
                     }
                 }
-                bicubiccalcderivatives(tf, c.x, c.y, c.m, c.n, ref dx, ref dy, ref dxy, _params);
+                bicubiccalcderivatives(tf, c.x, c.y, c.m, c.n, dummy, 0, dummy, 0, dummy, 0, dummy, 0, dummy, ref dx, ref dy, ref dxy, _params);
                 for(i=0; i<=c.m-1; i++)
                 {
                     for(j=0; j<=c.n-1; j++)
@@ -47571,6 +49430,7 @@ public partial class alglib
             int i = 0;
             int j = 0;
             int k = 0;
+            double[] dummy = new double[0];
 
             f = (double[,])f.Clone();
 
@@ -47661,7 +49521,7 @@ public partial class alglib
                     c.y[k] = t;
                 }
             }
-            bicubiccalcderivatives(f, c.x, c.y, c.m, c.n, ref dx, ref dy, ref dxy, _params);
+            bicubiccalcderivatives(f, c.x, c.y, c.m, c.n, dummy, 0, dummy, 0, dummy, 0, dummy, 0, dummy, ref dx, ref dy, ref dxy, _params);
             for(i=0; i<=c.m-1; i++)
             {
                 for(j=0; j<=c.n-1; j++)
@@ -49001,6 +50861,15 @@ public partial class alglib
             double[] y,
             int m,
             int n,
+            double[] bndbtm,
+            int bndtypebtm,
+            double[] bndtop,
+            int bndtypetop,
+            double[] bndlft,
+            int bndtypelft,
+            double[] bndrgt,
+            int bndtypergt,
+            double[] dfmixed,
             ref double[,] dx,
             ref double[,] dy,
             ref double[,] dxy,
@@ -49009,16 +50878,28 @@ public partial class alglib
             int i = 0;
             int j = 0;
             double[] xt = new double[0];
+            double[] yt = new double[0];
             double[] ft = new double[0];
+            double[] dt = new double[0];
+            double[] dleft = new double[0];
+            double[] dright = new double[0];
+            double[] tmp0 = new double[0];
+            double[] tmp1 = new double[0];
+            double[] tmp2 = new double[0];
+            double[] tmp3 = new double[0];
+            double[] tmp4 = new double[0];
             double s = 0;
             double ds = 0;
             double d2s = 0;
+            double v0 = 0;
+            double v1 = 0;
             spline1d.spline1dinterpolant c = new spline1d.spline1dinterpolant();
 
             dx = new double[0,0];
             dy = new double[0,0];
             dxy = new double[0,0];
 
+            alglib.ap.assert(apserv.imax4(bndtypebtm, bndtypetop, bndtypelft, bndtypergt, _params)<=2 && apserv.imin4(bndtypebtm, bndtypetop, bndtypelft, bndtypergt, _params)>=0, "SPLINE2D: integrity check 9513 failed");
             dx = new double[m, n];
             dy = new double[m, n];
             dxy = new double[m, n];
@@ -49028,6 +50909,8 @@ public partial class alglib
             //
             xt = new double[n];
             ft = new double[n];
+            v0 = 0;
+            v1 = 0;
             for(i=0; i<=m-1; i++)
             {
                 for(j=0; j<=n-1; j++)
@@ -49035,11 +50918,19 @@ public partial class alglib
                     xt[j] = x[j];
                     ft[j] = a[i,j];
                 }
-                spline1d.spline1dbuildcubic(xt, ft, n, 0, 0.0, 0, 0.0, c, _params);
+                if( bndtypelft!=0 )
+                {
+                    v0 = bndlft[i];
+                }
+                if( bndtypergt!=0 )
+                {
+                    v1 = bndrgt[i];
+                }
+                ablasf.rallocv(n, ref dt, _params);
+                spline1d.spline1dgriddiffcubicinternal(xt, ref ft, n, bndtypelft, v0, bndtypergt, v1, ref dt, ref tmp0, ref tmp1, ref tmp2, ref tmp3, ref tmp4, _params);
                 for(j=0; j<=n-1; j++)
                 {
-                    spline1d.spline1ddiff(c, x[j], ref s, ref ds, ref d2s, _params);
-                    dx[i,j] = ds;
+                    dx[i,j] = dt[j];
                 }
             }
             
@@ -49048,6 +50939,8 @@ public partial class alglib
             //
             xt = new double[m];
             ft = new double[m];
+            v0 = 0;
+            v1 = 0;
             for(j=0; j<=n-1; j++)
             {
                 for(i=0; i<=m-1; i++)
@@ -49055,19 +50948,51 @@ public partial class alglib
                     xt[i] = y[i];
                     ft[i] = a[i,j];
                 }
-                spline1d.spline1dbuildcubic(xt, ft, m, 0, 0.0, 0, 0.0, c, _params);
+                if( bndtypebtm!=0 )
+                {
+                    v0 = bndbtm[j];
+                }
+                if( bndtypetop!=0 )
+                {
+                    v1 = bndtop[j];
+                }
+                ablasf.rallocv(m, ref dt, _params);
+                spline1d.spline1dgriddiffcubicinternal(xt, ref ft, m, bndtypebtm, v0, bndtypetop, v1, ref dt, ref tmp0, ref tmp1, ref tmp2, ref tmp3, ref tmp4, _params);
                 for(i=0; i<=m-1; i++)
                 {
-                    spline1d.spline1ddiff(c, y[i], ref s, ref ds, ref d2s, _params);
-                    dy[i,j] = ds;
+                    dy[i,j] = dt[i];
                 }
             }
             
             //
             // d2F/dXdY
             //
-            xt = new double[n];
-            ft = new double[n];
+            ablasf.rsetallocv(m, 0.0, ref dleft, _params);
+            ablasf.rsetallocv(m, 0.0, ref dright, _params);
+            if( bndtypelft!=0 )
+            {
+                ablasf.rcopyallocv(m, y, ref yt, _params);
+                ablasf.rcopyallocv(m, bndlft, ref dt, _params);
+                spline1d.spline1dbuildcubic(yt, dt, m, bndtypebtm, apserv.rcase2(bndtypebtm!=0, dfmixed[0], 0.0, _params), bndtypetop, apserv.rcase2(bndtypetop!=0, dfmixed[2], 0, _params), c, _params);
+                for(j=0; j<=m-1; j++)
+                {
+                    spline1d.spline1ddiff(c, y[j], ref s, ref ds, ref d2s, _params);
+                    dleft[j] = ds;
+                }
+            }
+            if( bndtypergt!=0 )
+            {
+                ablasf.rcopyallocv(m, y, ref yt, _params);
+                ablasf.rcopyallocv(m, bndrgt, ref dt, _params);
+                spline1d.spline1dbuildcubic(yt, dt, m, bndtypebtm, apserv.rcase2(bndtypebtm!=0, dfmixed[1], 0.0, _params), bndtypetop, apserv.rcase2(bndtypetop!=0, dfmixed[3], 0, _params), c, _params);
+                for(j=0; j<=m-1; j++)
+                {
+                    spline1d.spline1ddiff(c, y[j], ref s, ref ds, ref d2s, _params);
+                    dright[j] = ds;
+                }
+            }
+            ablasf.rallocv(n, ref xt, _params);
+            ablasf.rallocv(n, ref ft, _params);
             for(i=0; i<=m-1; i++)
             {
                 for(j=0; j<=n-1; j++)
@@ -49075,11 +51000,11 @@ public partial class alglib
                     xt[j] = x[j];
                     ft[j] = dy[i,j];
                 }
-                spline1d.spline1dbuildcubic(xt, ft, n, 0, 0.0, 0, 0.0, c, _params);
+                ablasf.rallocv(n, ref dt, _params);
+                spline1d.spline1dgriddiffcubicinternal(xt, ref ft, n, bndtypelft, dleft[i], bndtypergt, dright[i], ref dt, ref tmp0, ref tmp1, ref tmp2, ref tmp3, ref tmp4, _params);
                 for(j=0; j<=n-1; j++)
                 {
-                    spline1d.spline1ddiff(c, x[j], ref s, ref ds, ref d2s, _params);
-                    dxy[i,j] = ds;
+                    dxy[i,j] = dt[j];
                 }
             }
         }
@@ -49332,6 +51257,95 @@ public partial class alglib
                 result = true;
             }
             return result;
+        }
+
+
+        /*************************************************************************
+        Actual construction of a Hermite spline
+
+          -- ALGLIB PROJECT --
+             Copyright 2012-2023 by Bochkanov Sergey
+        *************************************************************************/
+        private static void spline2dbuildhermitevbuf(double[] x,
+            int n,
+            double[] y,
+            int m,
+            double[] f,
+            double[] dfdx,
+            double[] dfdy,
+            double[] d2fdxdy,
+            int d,
+            spline2dinterpolant c,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int di = 0;
+
+            f = (double[])f.Clone();
+            dfdx = (double[])dfdx.Clone();
+            dfdy = (double[])dfdy.Clone();
+            d2fdxdy = (double[])d2fdxdy.Clone();
+
+            alglib.ap.assert(n>=2, "Spline2DBuildHermiteV: N is less than 2");
+            alglib.ap.assert(m>=2, "Spline2DBuildHermiteV: M is less than 2");
+            alglib.ap.assert(d>=1, "Spline2DBuildHermiteV: invalid argument D (D<1)");
+            alglib.ap.assert(alglib.ap.len(x)>=n && alglib.ap.len(y)>=m, "Spline2DBuildHermiteV: X or Y is too short (Length(X/Y)<N/M)");
+            alglib.ap.assert(apserv.isfinitevector(x, n, _params) && apserv.isfinitevector(y, m, _params), "Spline2DBuildHermiteV: X or Y contains NaN or Infinite value");
+            k = n*m*d;
+            alglib.ap.assert(alglib.ap.len(f)>=k, "Spline2DBuildHermiteV: F is too short (Length(F)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(f, k, _params), "Spline2DBuildHermiteV: F contains NaN or Infinite value");
+            alglib.ap.assert(alglib.ap.len(dfdx)>=k, "Spline2DBuildHermiteV: dFdX is too short (Length(dFdX)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(dfdx, k, _params), "Spline2DBuildHermiteV: dFdX contains NaN or Infinite value");
+            alglib.ap.assert(alglib.ap.len(dfdy)>=k, "Spline2DBuildHermiteV: dFdY is too short (Length(dFdY)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(dfdy, k, _params), "Spline2DBuildHermiteV: dFdY contains NaN or Infinite value");
+            alglib.ap.assert(alglib.ap.len(d2fdxdy)>=k, "Spline2DBuildHermiteV: d2FdXdY is too short (Length(d2FdXdY)<N*M*D)");
+            alglib.ap.assert(apserv.isfinitevector(d2fdxdy, k, _params), "Spline2DBuildHermiteV: d2FdXdY contains NaN or Infinite value");
+            
+            //
+            // Fill interpolant:
+            //  F[0]...F[N*M*D-1]:
+            //      f(i,j) table. f(0,0), f(0, 1), f(0,2) and so on...
+            //  F[N*M*D]...F[2*N*M*D-1]:
+            //      df(i,j)/dx table.
+            //  F[2*N*M*D]...F[3*N*M*D-1]:
+            //      df(i,j)/dy table.
+            //  F[3*N*M*D]...F[4*N*M*D-1]:
+            //      d2f(i,j)/dxdy table.
+            //
+            c.d = d;
+            c.n = n;
+            c.m = m;
+            c.stype = -3;
+            c.hasmissingcells = false;
+            k = 4*k;
+            c.x = new double[c.n];
+            c.y = new double[c.m];
+            c.f = new double[k];
+            for(i=0; i<=c.n-1; i++)
+            {
+                c.x[i] = x[i];
+            }
+            for(i=0; i<=c.m-1; i++)
+            {
+                c.y[i] = y[i];
+            }
+            sortgrid(c.x, n, c.y, m, c.x, false, c.x, false, c.y, false, c.y, false, f, d, dfdx, dfdy, d2fdxdy, true, _params);
+            for(di=0; di<=c.d-1; di++)
+            {
+                for(i=0; i<=c.m-1; i++)
+                {
+                    for(j=0; j<=c.n-1; j++)
+                    {
+                        k = c.d*(i*c.n+j)+di;
+                        c.f[k] = f[c.d*(i*c.n+j)+di];
+                        c.f[c.n*c.m*c.d+k] = dfdx[c.d*(i*c.n+j)+di];
+                        c.f[2*c.n*c.m*c.d+k] = dfdy[c.d*(i*c.n+j)+di];
+                        c.f[3*c.n*c.m*c.d+k] = d2fdxdy[c.d*(i*c.n+j)+di];
+                    }
+                }
+            }
         }
 
 
@@ -50818,181 +52832,6 @@ public partial class alglib
 
 
         /*************************************************************************
-        This function generates squared design matrix stored in block band format.
-
-        We use adaptation of block skyline storage format, with
-        TOWERSIZE*KX skyline bands (towers) stored sequentially;
-        here TOWERSIZE=(BlockBandwidth+1)*KX. So, we have KY
-        "towers", stored one below other, in BlockATA matrix.
-        Every "tower" is a sequence of BlockBandwidth+1 cells,
-        each of them being KX*KX in size.
-
-        INPUT PARAMETERS:
-            AH      -   sparse matrix, [KX*KY,ARows] in size. "Horizontal" version
-                        of design matrix, cols [0,NPoints] contain values of basis
-                        functions at dataset  points.  Other  cols  are  used  for
-                        nonlinearity penalty and other stuff like that.
-            KY0, KY1-   subset of output matrix bands to process; on entry it MUST
-                        be set to 0 and KY respectively.
-            KX, KY  -   grid size
-            BlockATA-   array[KY*(BlockBandwidth+1)*KX,KX],  preallocated  storage
-                        for output matrix in compressed block band format
-            MXATA   -   on entry MUST be zero
-
-        OUTPUT PARAMETERS:
-            BlockATA-   AH*AH', stored in compressed block band format
-
-          -- ALGLIB --
-             Copyright 05.02.2018 by Bochkanov Sergey
-        *************************************************************************/
-        private static void blockllsgenerateata(sparse.sparsematrix ah,
-            int ky0,
-            int ky1,
-            int kx,
-            int ky,
-            double[,] blockata,
-            apserv.sreal mxata,
-            alglib.xparams _params)
-        {
-            int blockbandwidth = 0;
-            double avgrowlen = 0;
-            double cellcost = 0;
-            double totalcost = 0;
-            apserv.sreal tmpmxata = new apserv.sreal();
-            int i = 0;
-            int j = 0;
-            int i0 = 0;
-            int i1 = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int celloffset = 0;
-            double v = 0;
-            int srci = 0;
-            int srcj = 0;
-            int idxi = 0;
-            int idxj = 0;
-            int endi = 0;
-            int endj = 0;
-
-            alglib.ap.assert((double)(mxata.val)>=(double)(0), "BlockLLSGenerateATA: integrity check failed");
-            blockbandwidth = 3;
-            
-            //
-            // Determine problem cost, perform recursive subdivision
-            // (with optional parallelization)
-            //
-            avgrowlen = (double)ah.ridx[kx*ky]/(double)(kx*ky);
-            cellcost = apserv.rmul3(kx, 1+2*blockbandwidth, avgrowlen, _params);
-            totalcost = apserv.rmul3(ky1-ky0, 1+2*blockbandwidth, cellcost, _params);
-            if( ky1-ky0>=2 && (double)(totalcost)>(double)(apserv.smpactivationlevel(_params)) )
-            {
-                if( _trypexec_blockllsgenerateata(ah,ky0,ky1,kx,ky,blockata,mxata, _params) )
-                {
-                    return;
-                }
-            }
-            if( ky1-ky0>=2 )
-            {
-                
-                //
-                // Split X: X*A = (X1 X2)^T*A
-                //
-                j = (ky1-ky0)/2;
-                blockllsgenerateata(ah, ky0, ky0+j, kx, ky, blockata, tmpmxata, _params);
-                blockllsgenerateata(ah, ky0+j, ky1, kx, ky, blockata, mxata, _params);
-                mxata.val = Math.Max(mxata.val, tmpmxata.val);
-                return;
-            }
-            
-            //
-            // Splitting in Y-dimension is done, fill I1-th "tower"
-            //
-            alglib.ap.assert(ky1==ky0+1, "BlockLLSGenerateATA: integrity check failed");
-            i1 = ky0;
-            for(j1=i1; j1<=Math.Min(ky-1, i1+blockbandwidth); j1++)
-            {
-                celloffset = getcelloffset(kx, ky, blockbandwidth, i1, j1, _params);
-                
-                //
-                // Clear cell (I1,J1)
-                //
-                for(i0=0; i0<=kx-1; i0++)
-                {
-                    for(j0=0; j0<=kx-1; j0++)
-                    {
-                        blockata[celloffset+i0,j0] = 0.0;
-                    }
-                }
-                
-                //
-                // Initialize cell internals
-                //
-                for(i0=0; i0<=kx-1; i0++)
-                {
-                    for(j0=0; j0<=kx-1; j0++)
-                    {
-                        if( Math.Abs(i0-j0)<=blockbandwidth )
-                        {
-                            
-                            //
-                            // Nodes are close enough, calculate product of columns I and J of A.
-                            //
-                            v = 0;
-                            i = i1*kx+i0;
-                            j = j1*kx+j0;
-                            srci = ah.ridx[i];
-                            srcj = ah.ridx[j];
-                            endi = ah.ridx[i+1];
-                            endj = ah.ridx[j+1];
-                            while( true )
-                            {
-                                if( srci>=endi || srcj>=endj )
-                                {
-                                    break;
-                                }
-                                idxi = ah.idx[srci];
-                                idxj = ah.idx[srcj];
-                                if( idxi==idxj )
-                                {
-                                    v = v+ah.vals[srci]*ah.vals[srcj];
-                                    srci = srci+1;
-                                    srcj = srcj+1;
-                                    continue;
-                                }
-                                if( idxi<idxj )
-                                {
-                                    srci = srci+1;
-                                }
-                                else
-                                {
-                                    srcj = srcj+1;
-                                }
-                            }
-                            blockata[celloffset+i0,j0] = v;
-                            mxata.val = Math.Max(mxata.val, Math.Abs(v));
-                        }
-                    }
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Serial stub for GPL edition.
-        *************************************************************************/
-        public static bool _trypexec_blockllsgenerateata(sparse.sparsematrix ah,
-            int ky0,
-            int ky1,
-            int kx,
-            int ky,
-            double[,] blockata,
-            apserv.sreal mxata, alglib.xparams _params)
-        {
-            return false;
-        }
-
-
-        /*************************************************************************
         This function performs Cholesky decomposition of squared design matrix
         stored in block band format.
 
@@ -52357,6 +54196,158 @@ public partial class alglib
                 u = (y-s.y[iy])*du;
             }
             return result;
+        }
+
+
+        /*************************************************************************
+        This subroutine sorts grid nodes by  ascending  and  also  sorts  boundary
+        conditions and target values
+
+          -- ALGLIB PROJECT --
+             Copyright 16.04.2012 by Bochkanov Sergey
+        *************************************************************************/
+        private static void sortgrid(double[] x,
+            int n,
+            double[] y,
+            int m,
+            double[] bndbtm,
+            bool hasbndbtm,
+            double[] bndtop,
+            bool hasbndtop,
+            double[] bndlft,
+            bool hasbndlft,
+            double[] bndrgt,
+            bool hasbndrgt,
+            double[] f,
+            int d,
+            double[] dfdx,
+            double[] dfdy,
+            double[] d2fdxdy,
+            bool hasderivatives,
+            alglib.xparams _params)
+        {
+            double t = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int di = 0;
+
+            alglib.ap.assert(n>=2, "Spline2DSortGrid: N is less than 2");
+            alglib.ap.assert(m>=2, "Spline2DSortGrid: M is less than 2");
+            alglib.ap.assert(d>=1, "Spline2DSortGrid: invalid argument D (D<1)");
+            k = n*m*d;
+            for(j=0; j<=n-1; j++)
+            {
+                k = j;
+                for(i=j+1; i<=n-1; i++)
+                {
+                    if( (double)(x[i])<(double)(x[k]) )
+                    {
+                        k = i;
+                    }
+                }
+                if( k!=j )
+                {
+                    for(i=0; i<=m-1; i++)
+                    {
+                        for(di=0; di<=d-1; di++)
+                        {
+                            t = f[d*(i*n+j)+di];
+                            f[d*(i*n+j)+di] = f[d*(i*n+k)+di];
+                            f[d*(i*n+k)+di] = t;
+                            if( hasderivatives )
+                            {
+                                t = dfdx[d*(i*n+j)+di];
+                                dfdx[d*(i*n+j)+di] = dfdx[d*(i*n+k)+di];
+                                dfdx[d*(i*n+k)+di] = t;
+                                t = dfdy[d*(i*n+j)+di];
+                                dfdy[d*(i*n+j)+di] = dfdy[d*(i*n+k)+di];
+                                dfdy[d*(i*n+k)+di] = t;
+                                t = d2fdxdy[d*(i*n+j)+di];
+                                d2fdxdy[d*(i*n+j)+di] = d2fdxdy[d*(i*n+k)+di];
+                                d2fdxdy[d*(i*n+k)+di] = t;
+                            }
+                        }
+                    }
+                    t = x[j];
+                    x[j] = x[k];
+                    x[k] = t;
+                    if( hasbndbtm )
+                    {
+                        for(di=0; di<=d-1; di++)
+                        {
+                            t = bndbtm[j*d+di];
+                            bndbtm[j*d+di] = bndbtm[k*d+di];
+                            bndbtm[k*d+di] = t;
+                        }
+                    }
+                    if( hasbndtop )
+                    {
+                        for(di=0; di<=d-1; di++)
+                        {
+                            t = bndtop[j*d+di];
+                            bndtop[j*d+di] = bndtop[k*d+di];
+                            bndtop[k*d+di] = t;
+                        }
+                    }
+                }
+            }
+            for(i=0; i<=m-1; i++)
+            {
+                k = i;
+                for(j=i+1; j<=m-1; j++)
+                {
+                    if( (double)(y[j])<(double)(y[k]) )
+                    {
+                        k = j;
+                    }
+                }
+                if( k!=i )
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        for(di=0; di<=d-1; di++)
+                        {
+                            t = f[d*(i*n+j)+di];
+                            f[d*(i*n+j)+di] = f[d*(k*n+j)+di];
+                            f[d*(k*n+j)+di] = t;
+                            if( hasderivatives )
+                            {
+                                t = dfdx[d*(i*n+j)+di];
+                                dfdx[d*(i*n+j)+di] = dfdx[d*(k*n+j)+di];
+                                dfdx[d*(k*n+j)+di] = t;
+                                t = dfdy[d*(i*n+j)+di];
+                                dfdy[d*(i*n+j)+di] = dfdy[d*(k*n+j)+di];
+                                dfdy[d*(k*n+j)+di] = t;
+                                t = d2fdxdy[d*(i*n+j)+di];
+                                d2fdxdy[d*(i*n+j)+di] = d2fdxdy[d*(k*n+j)+di];
+                                d2fdxdy[d*(k*n+j)+di] = t;
+                            }
+                        }
+                    }
+                    t = y[i];
+                    y[i] = y[k];
+                    y[k] = t;
+                    if( hasbndlft )
+                    {
+                        for(di=0; di<=d-1; di++)
+                        {
+                            t = bndlft[i*d+di];
+                            bndlft[i*d+di] = bndlft[k*d+di];
+                            bndlft[k*d+di] = t;
+                        }
+                    }
+                    if( hasbndrgt )
+                    {
+                        for(di=0; di<=d-1; di++)
+                        {
+                            t = bndrgt[i*d+di];
+                            bndrgt[i*d+di] = bndrgt[k*d+di];
+                            bndrgt[k*d+di] = t;
+                        }
+                    }
+                }
+            }
         }
 
 
@@ -57890,7 +59881,7 @@ public partial class alglib
             rlo = 0;
             rhi = 0;
 
-            fitsphere.fitspherex(xy, npoints, nx, problemtype, epsx, aulits, penalty, ref cx, ref rlo, ref rhi, _params);
+            fitsphere.fitspherex(xy, npoints, nx, problemtype, epsx, aulits, ref cx, ref rlo, ref rhi, _params);
         }
 
 

@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.00.0 (source code generated 2023-05-21)
+ALGLIB 4.01.0 (source code generated 2023-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -484,6 +484,37 @@ public partial class alglib
         };
 
 
+        /*************************************************************************
+        Debug timer used to measure wall clock time for tracing:
+        * no warranties regarding accuracy
+        * when ALGLIB is compiled in OS-agnostic mode, returns zeros
+
+          -- ALGLIB --
+             Copyright 06.07.2022 by Bochkanov Sergey
+        *************************************************************************/
+        public class stimer : apobject
+        {
+            public int ttotal;
+            public int tcurrent;
+            public bool isrunning;
+            public stimer()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                stimer _result = new stimer();
+                _result.ttotal = ttotal;
+                _result.tcurrent = tcurrent;
+                _result.isrunning = isrunning;
+                return _result;
+            }
+        };
+
+
 
 
         public const int maxtemporariesinnpool = 1000;
@@ -507,7 +538,7 @@ public partial class alglib
             double s,
             alglib.xparams _params)
         {
-            alglib.ap.seterrorflag(ref flag, (double)(Math.Abs(val-refval))>(double)(tol*Math.Max(Math.Abs(refval), s)), "apserv.ap:238");
+            alglib.ap.seterrorflag(ref flag, (double)(Math.Abs(val-refval))>(double)(tol*Math.Max(Math.Abs(refval), s)), "apserv.ap:254");
         }
 
 
@@ -2513,6 +2544,50 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function is used to increment value of a real variable;  name of  the
+        function suggests that increment is done in multithreaded setting  in  the
+        thread-unsafe manner (optional progress reports which do not need guaranteed
+        correctness)
+        *************************************************************************/
+        public static void rthreadunsafeincby(ref double v,
+            double x,
+            alglib.xparams _params)
+        {
+            v = v+x;
+        }
+
+
+        /*************************************************************************
+        This function is used to set value of a real variable;  name of  the
+        function suggests that increment is done in multithreaded setting  in  the
+        thread-unsafe manner (optional progress reports which do not need guaranteed
+        correctness), although the library may try to use safe options, if available.
+        *************************************************************************/
+        public static void rthreadunsafeset(ref double v,
+            double x,
+            alglib.xparams _params)
+        {
+            v = x;
+        }
+
+
+        /*************************************************************************
+        This function is used to read value of a real variable;  name of  the
+        function suggests that read is done in multithreaded setting  in  the
+        thread-unsafe manner (optional progress reports which do not need guaranteed
+        correctness), although the library may try to use safe options, if available.
+        *************************************************************************/
+        public static double rthreadunsafeget(ref double v,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = v;
+            return result;
+        }
+
+
+        /*************************************************************************
         This function performs two operations:
         1. decrements value of integer variable, if it is positive
         2. explicitly sets variable to zero if it is non-positive
@@ -2540,6 +2615,27 @@ public partial class alglib
             alglib.xparams _params)
         {
             double result = 0;
+
+            if( (double)(x)>=(double)(0) )
+            {
+                result = 1;
+            }
+            else
+            {
+                result = -1;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns +1 or -1 depending on sign of X.
+        x=0 results in +1 being returned.
+        *************************************************************************/
+        public static int ipossign(double x,
+            alglib.xparams _params)
+        {
+            int result = 0;
 
             if( (double)(x)>=(double)(0) )
             {
@@ -2662,6 +2758,34 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function returns min(i0,i1,i2,i3)
+        *************************************************************************/
+        public static int imin4(int i0,
+            int i1,
+            int i2,
+            int i3,
+            alglib.xparams _params)
+        {
+            int result = 0;
+
+            result = i0;
+            if( i1<result )
+            {
+                result = i1;
+            }
+            if( i2<result )
+            {
+                result = i2;
+            }
+            if( i3<result )
+            {
+                result = i3;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
         This function returns max(i0,i1)
         *************************************************************************/
         public static int imax2(int i0,
@@ -2697,6 +2821,34 @@ public partial class alglib
             if( i2>result )
             {
                 result = i2;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns max(i0,i1,i2,i3)
+        *************************************************************************/
+        public static int imax4(int i0,
+            int i1,
+            int i2,
+            int i3,
+            alglib.xparams _params)
+        {
+            int result = 0;
+
+            result = i0;
+            if( i1>result )
+            {
+                result = i1;
+            }
+            if( i2>result )
+            {
+                result = i2;
+            }
+            if( i3>result )
+            {
+                result = i3;
             }
             return result;
         }
@@ -4419,6 +4571,21 @@ public partial class alglib
 
 
         /*************************************************************************
+        Outputs specified number of ">" symbols
+        *************************************************************************/
+        public static void traceangles(int cnt,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=cnt-1; i++)
+            {
+                alglib.ap.trace(">");
+            }
+        }
+
+
+        /*************************************************************************
         Minimum speedup feasible for multithreading
         *************************************************************************/
         public static double minspeedup(alglib.xparams _params)
@@ -4558,7 +4725,7 @@ public partial class alglib
                 if( left==right )
                 {
                     result = c.elems[left];
-                    return result;
+                    break;
                 }
                 pivotindex = left+(right-left)/2;
                 pivotvalue = c.elems[pivotindex];
@@ -4577,7 +4744,7 @@ public partial class alglib
                 if( pivotindex==k )
                 {
                     result = c.elems[k];
-                    return result;
+                    break;
                 }
                 if( k<pivotindex )
                 {
@@ -4588,6 +4755,55 @@ public partial class alglib
                     left = pivotindex+1;
                 }
             }
+            return result;
+        }
+
+
+        /*************************************************************************
+        Initialize timer
+        *************************************************************************/
+        public static void stimerinit(stimer t,
+            alglib.xparams _params)
+        {
+            t.ttotal = 0;
+            t.isrunning = false;
+        }
+
+
+        /*************************************************************************
+        Start measurement
+        *************************************************************************/
+        public static void stimerstart(stimer t,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!t.isrunning, "STimerStart: attempt to start already started timer");
+            t.isrunning = true;
+            t.tcurrent = unchecked((int)(System.DateTime.UtcNow.Ticks/10000));
+        }
+
+
+        /*************************************************************************
+        Stop measurement, add time to already accumulated
+        *************************************************************************/
+        public static void stimerstop(stimer t,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(t.isrunning, "STimerStop: attempt to stop already stopped timer");
+            t.isrunning = false;
+            t.ttotal = t.ttotal+unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-t.tcurrent;
+        }
+
+
+        /*************************************************************************
+        Retrieve time in milliseconds, accuracy unknown
+        *************************************************************************/
+        public static double stimergetms(stimer t,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            alglib.ap.assert(!t.isrunning, "STimerGetMS: attempt to get time from the running timer");
+            result = t.ttotal;
             return result;
         }
 
@@ -6595,18 +6811,18 @@ public partial class alglib
             ref int[] x,
             alglib.xparams _params)
         {
-            int[] oldx = new int[0];
-            int oldn = 0;
-
+            
+            //
+            // If no growth is required, exit. Call worker function otherwise.
+            //
+            // The idea is that we call function which works with dynamic arrays
+            // (and utilizes stack unwinding) only when absolutely necessary.
+            //
             if( alglib.ap.len(x)>=newn )
             {
                 return;
             }
-            oldn = alglib.ap.len(x);
-            newn = Math.Max(newn, (int)Math.Round(1.8*oldn+1));
-            alglib.ap.swap(ref x, ref oldx);
-            x = new int[newn];
-            icopyv(oldn, oldx, x, _params);
+            igrowvinternal(newn, ref x, _params);
         }
 
 
@@ -6618,24 +6834,24 @@ public partial class alglib
            without reallocation
 
           -- ALGLIB --
-             Copyright 20.03.2009 by Bochkanov Sergey
+             Copyright 07.06.2023 by Bochkanov Sergey
         *************************************************************************/
         public static void rgrowv(int newn,
             ref double[] x,
             alglib.xparams _params)
         {
-            double[] oldx = new double[0];
-            int oldn = 0;
-
+            
+            //
+            // If no growth is required, exit. Call worker function otherwise.
+            //
+            // The idea is that we call function which works with dynamic arrays
+            // (and utilizes stack unwinding) only when absolutely necessary.
+            //
             if( alglib.ap.len(x)>=newn )
             {
                 return;
             }
-            oldn = alglib.ap.len(x);
-            newn = Math.Max(newn, (int)Math.Round(1.8*oldn+1));
-            alglib.ap.swap(ref x, ref oldx);
-            x = new double[newn];
-            rcopyv(oldn, oldx, x, _params);
+            rgrowvinternal(newn, ref x, _params);
         }
 
 
@@ -9229,6 +9445,56 @@ public partial class alglib
                 }
                 i = i+4;
             }
+        }
+
+
+        /*************************************************************************
+        Internal function that actually works with dynamic arrays.
+
+          -- ALGLIB --
+             Copyright 07.06.2023 by Bochkanov Sergey
+        *************************************************************************/
+        private static void igrowvinternal(int newn,
+            ref int[] x,
+            alglib.xparams _params)
+        {
+            int[] oldx = new int[0];
+            int oldn = 0;
+
+            if( alglib.ap.len(x)>=newn )
+            {
+                return;
+            }
+            oldn = alglib.ap.len(x);
+            newn = Math.Max(newn, (int)Math.Round(1.8*oldn+1));
+            alglib.ap.swap(ref x, ref oldx);
+            x = new int[newn];
+            icopyv(oldn, oldx, x, _params);
+        }
+
+
+        /*************************************************************************
+        Internal function which actually works with dynamic arrays
+
+          -- ALGLIB --
+             Copyright 07.06.2023 by Bochkanov Sergey
+        *************************************************************************/
+        private static void rgrowvinternal(int newn,
+            ref double[] x,
+            alglib.xparams _params)
+        {
+            double[] oldx = new double[0];
+            int oldn = 0;
+
+            if( alglib.ap.len(x)>=newn )
+            {
+                return;
+            }
+            oldn = alglib.ap.len(x);
+            newn = Math.Max(newn, (int)Math.Round(1.8*oldn+1));
+            alglib.ap.swap(ref x, ref oldx);
+            x = new double[newn];
+            rcopyv(oldn, oldx, x, _params);
         }
 
 

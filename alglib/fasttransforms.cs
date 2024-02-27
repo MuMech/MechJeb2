@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.00.0 (source code generated 2023-05-21)
+ALGLIB 4.01.0 (source code generated 2023-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -158,6 +158,9 @@ public partial class alglib
         F   -   DFT of a input array, array[0..N-1]
                 F[j] = SUM(A[k]*exp(-2*pi*sqrt(-1)*j*k/N), k = 0..N-1)
 
+    NOTE: there is a buffered version  of  this  function, FFTR1DBuf(),  which
+          reuses memory previously allocated for A as much as possible.
+
     NOTE:
         F[] satisfies symmetry property F[k] = conj(F[N-k]),  so just one half
     of  array  is  usually needed. But for convinience subroutine returns full
@@ -203,6 +206,48 @@ public partial class alglib
     }
     
     /*************************************************************************
+    1-dimensional real FFT, a buffered function which does not reallocate  F[]
+    if its length is enough to store the result  (i.e.  it  reuses  previously
+    allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 01.06.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void fftr1dbuf(double[] a, int n, ref complex[] f)
+    {
+    
+        fft.fftr1dbuf(a, n, ref f, null);
+    }
+    
+    public static void fftr1dbuf(double[] a, int n, ref complex[] f, alglib.xparams _params)
+    {
+    
+        fft.fftr1dbuf(a, n, ref f, _params);
+    }
+            
+    public static void fftr1dbuf(double[] a, ref complex[] f)
+    {
+        int n;
+    
+    
+        n = ap.len(a);
+        fft.fftr1dbuf(a, n, ref f, null);
+    
+        return;
+    }
+            
+    public static void fftr1dbuf(double[] a, ref complex[] f, alglib.xparams _params)
+    {
+        int n;
+    
+    
+        n = ap.len(a);
+        fft.fftr1dbuf(a, n, ref f, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
     1-dimensional real inverse FFT.
 
     Algorithm has O(N*logN) complexity for any N (composite or prime).
@@ -213,6 +258,9 @@ public partial class alglib
 
     OUTPUT PARAMETERS
         A   -   inverse DFT of a input array, array[0..N-1]
+
+    NOTE: there is a buffered version of this function, FFTR1DInvBuf(),  which
+          reuses memory previously allocated for A as much as possible.
 
     NOTE:
         F[] should satisfy symmetry property F[k] = conj(F[N-k]), so just  one
@@ -232,7 +280,6 @@ public partial class alglib
     If you call this function using reduced arguments list -  "FFTR1DInv(F,A)"
     - you must pass FULL array with N elements (although higher  N/2 are still
     not used) because array size is used to automatically determine FFT length
-
 
       -- ALGLIB --
          Copyright 01.06.2009 by Bochkanov Sergey
@@ -267,6 +314,48 @@ public partial class alglib
         a = new double[0];
         n = ap.len(f);
         fft.fftr1dinv(f, n, ref a, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    1-dimensional real inverse FFT, buffered version, which does not reallocate
+    A[] if its length is enough to store the result (i.e. it reuses previously
+    allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 01.06.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void fftr1dinvbuf(complex[] f, int n, ref double[] a)
+    {
+    
+        fft.fftr1dinvbuf(f, n, ref a, null);
+    }
+    
+    public static void fftr1dinvbuf(complex[] f, int n, ref double[] a, alglib.xparams _params)
+    {
+    
+        fft.fftr1dinvbuf(f, n, ref a, _params);
+    }
+            
+    public static void fftr1dinvbuf(complex[] f, ref double[] a)
+    {
+        int n;
+    
+    
+        n = ap.len(f);
+        fft.fftr1dinvbuf(f, n, ref a, null);
+    
+        return;
+    }
+            
+    public static void fftr1dinvbuf(complex[] f, ref double[] a, alglib.xparams _params)
+    {
+        int n;
+    
+    
+        n = ap.len(f);
+        fft.fftr1dinvbuf(f, n, ref a, _params);
     
         return;
     }
@@ -345,24 +434,27 @@ public partial class alglib
     choose between three implementations: straightforward O(M*N)  formula  for
     very small N (or M), overlap-add algorithm for  cases  where  max(M,N)  is
     significantly larger than min(M,N), but O(M*N) algorithm is too slow,  and
-    general FFT-based formula for cases where two previois algorithms are  too
+    general FFT-based formula for cases where two previous algorithms are  too
     slow.
 
     Algorithm has max(M,N)*log(max(M,N)) complexity for any M/N.
 
     INPUT PARAMETERS
-        A   -   array[0..M-1] - complex function to be transformed
+        A   -   array[M] - complex function to be transformed
         M   -   problem size
-        B   -   array[0..N-1] - complex function to be transformed
+        B   -   array[N] - complex function to be transformed
         N   -   problem size
 
     OUTPUT PARAMETERS
-        R   -   convolution: A*B. array[0..N+M-2].
+        R   -   convolution: A*B. array[N+M-1]
 
     NOTE:
         It is assumed that A is zero at T<0, B is zero too.  If  one  or  both
-    functions have non-zero values at negative T's, you  can  still  use  this
-    subroutine - just shift its result correspondingly.
+        functions have non-zero values at negative T's, you can still use this
+        subroutine - just shift its result correspondingly.
+
+    NOTE: there is a buffered version of this  function,  ConvC1DBuf(),  which
+          can reuse space previously allocated in its output parameter R.
 
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
@@ -377,6 +469,26 @@ public partial class alglib
     {
         r = new complex[0];
         conv.convc1d(a, m, b, n, ref r, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional complex convolution, buffered version of ConvC1DBuf(), which
+    does not reallocate R[] if its length is enough to store the result  (i.e.
+    it reuses previously allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 30.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void convc1dbuf(complex[] a, int m, complex[] b, int n, ref complex[] r)
+    {
+    
+        conv.convc1dbuf(a, m, b, n, ref r, null);
+    }
+    
+    public static void convc1dbuf(complex[] a, int m, complex[] b, int n, ref complex[] r, alglib.xparams _params)
+    {
+    
+        conv.convc1dbuf(a, m, b, n, ref r, _params);
     }
     
     /*************************************************************************
@@ -402,6 +514,9 @@ public partial class alglib
     functions have non-zero values at negative T's, you  can  still  use  this
     subroutine - just shift its result correspondingly.
 
+    NOTE: there is a buffered version of this  function,  ConvC1DInvBuf(),
+          which can reuse space previously allocated in its output parameter R
+
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
     *************************************************************************/
@@ -418,6 +533,28 @@ public partial class alglib
     }
     
     /*************************************************************************
+    1-dimensional complex non-circular deconvolution (inverse of ConvC1D()).
+
+    A buffered version, which does not reallocate R[] if its length is  enough
+    to store the result (i.e. it reuses previously allocated memory as much as
+    possible).
+
+      -- ALGLIB --
+         Copyright 30.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void convc1dinvbuf(complex[] a, int m, complex[] b, int n, ref complex[] r)
+    {
+    
+        conv.convc1dinvbuf(a, m, b, n, ref r, null);
+    }
+    
+    public static void convc1dinvbuf(complex[] a, int m, complex[] b, int n, ref complex[] r, alglib.xparams _params)
+    {
+    
+        conv.convc1dinvbuf(a, m, b, n, ref r, _params);
+    }
+    
+    /*************************************************************************
     1-dimensional circular complex convolution.
 
     For given S/R returns conv(S,R) (circular). Algorithm has linearithmic
@@ -429,18 +566,21 @@ public partial class alglib
     function with limited length.
 
     INPUT PARAMETERS
-        S   -   array[0..M-1] - complex periodic signal
+        S   -   array[M] - complex periodic signal
         M   -   problem size
-        B   -   array[0..N-1] - complex non-periodic response
+        B   -   array[N] - complex non-periodic response
         N   -   problem size
 
     OUTPUT PARAMETERS
-        R   -   convolution: A*B. array[0..M-1].
+        R   -   convolution: A*B. array[M].
 
     NOTE:
         It is assumed that B is zero at T<0. If  it  has  non-zero  values  at
     negative T's, you can still use this subroutine - just  shift  its  result
     correspondingly.
+
+    NOTE: there is a buffered version of this  function,  ConvC1DCircularBuf(),
+          which can reuse space previously allocated in its output parameter R.
 
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
@@ -455,6 +595,28 @@ public partial class alglib
     {
         c = new complex[0];
         conv.convc1dcircular(s, m, r, n, ref c, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional circular complex convolution.
+
+    Buffered version of ConvC1DCircular(), which does not  reallocate  C[]  if
+    its length is enough to  store  the  result  (i.e.  it  reuses  previously
+    allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 30.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void convc1dcircularbuf(complex[] s, int m, complex[] r, int n, ref complex[] c)
+    {
+    
+        conv.convc1dcircularbuf(s, m, r, n, ref c, null);
+    }
+    
+    public static void convc1dcircularbuf(complex[] s, int m, complex[] r, int n, ref complex[] c, alglib.xparams _params)
+    {
+    
+        conv.convc1dcircularbuf(s, m, r, n, ref c, _params);
     }
     
     /*************************************************************************
@@ -480,6 +642,9 @@ public partial class alglib
     negative T's, you can still use this subroutine - just  shift  its  result
     correspondingly.
 
+    NOTE: there is a buffered version of this  function,  ConvC1DCircularInvBuf(),
+          which can reuse space previously allocated in its output parameter R.
+
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
     *************************************************************************/
@@ -493,6 +658,28 @@ public partial class alglib
     {
         r = new complex[0];
         conv.convc1dcircularinv(a, m, b, n, ref r, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional circular complex deconvolution (inverse of ConvC1DCircular()).
+
+    Buffered version of ConvC1DCircularInv(), which does not reallocate R[] if
+    its length is enough to  store  the  result  (i.e.  it  reuses  previously
+    allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 30.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void convc1dcircularinvbuf(complex[] a, int m, complex[] b, int n, ref complex[] r)
+    {
+    
+        conv.convc1dcircularinvbuf(a, m, b, n, ref r, null);
+    }
+    
+    public static void convc1dcircularinvbuf(complex[] a, int m, complex[] b, int n, ref complex[] r, alglib.xparams _params)
+    {
+    
+        conv.convc1dcircularinvbuf(a, m, b, n, ref r, _params);
     }
     
     /*************************************************************************
@@ -514,6 +701,10 @@ public partial class alglib
     functions have non-zero values at negative T's, you  can  still  use  this
     subroutine - just shift its result correspondingly.
 
+    NOTE: there is a buffered version of this  function,  ConvR1DBuf(),
+          which can reuse space previously allocated in its output parameter R.
+
+
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
     *************************************************************************/
@@ -527,6 +718,28 @@ public partial class alglib
     {
         r = new double[0];
         conv.convr1d(a, m, b, n, ref r, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional real convolution.
+
+    Buffered version of ConvR1D(), which does not reallocate R[] if its length
+    is enough to store the result (i.e. it reuses previously allocated  memory
+    as much as possible).
+
+      -- ALGLIB --
+         Copyright 30.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void convr1dbuf(double[] a, int m, double[] b, int n, ref double[] r)
+    {
+    
+        conv.convr1dbuf(a, m, b, n, ref r, null);
+    }
+    
+    public static void convr1dbuf(double[] a, int m, double[] b, int n, ref double[] r, alglib.xparams _params)
+    {
+    
+        conv.convr1dbuf(a, m, b, n, ref r, _params);
     }
     
     /*************************************************************************
@@ -552,6 +765,9 @@ public partial class alglib
     functions have non-zero values at negative T's, you  can  still  use  this
     subroutine - just shift its result correspondingly.
 
+    NOTE: there is a buffered version of this  function,  ConvR1DInvBuf(),
+          which can reuse space previously allocated in its output parameter R.
+
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
     *************************************************************************/
@@ -565,6 +781,27 @@ public partial class alglib
     {
         r = new double[0];
         conv.convr1dinv(a, m, b, n, ref r, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional real deconvolution (inverse of ConvR1D()), buffered version,
+    which does not reallocate R[] if its length is enough to store the  result
+    (i.e. it reuses previously allocated memory as much as possible).
+
+
+      -- ALGLIB --
+         Copyright 30.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void convr1dinvbuf(double[] a, int m, double[] b, int n, ref double[] r)
+    {
+    
+        conv.convr1dinvbuf(a, m, b, n, ref r, null);
+    }
+    
+    public static void convr1dinvbuf(double[] a, int m, double[] b, int n, ref double[] r, alglib.xparams _params)
+    {
+    
+        conv.convr1dinvbuf(a, m, b, n, ref r, _params);
     }
     
     /*************************************************************************
@@ -586,6 +823,9 @@ public partial class alglib
     negative T's, you can still use this subroutine - just  shift  its  result
     correspondingly.
 
+    NOTE: there is a buffered version of this  function,  ConvR1DCurcularBuf(),
+          which can reuse space previously allocated in its output parameter R.
+
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
     *************************************************************************/
@@ -599,6 +839,26 @@ public partial class alglib
     {
         c = new double[0];
         conv.convr1dcircular(s, m, r, n, ref c, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional circular real convolution, buffered version, which  does not
+    reallocate C[] if its length is enough to store the result (i.e. it reuses
+    previously allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 30.11.2023 by Bochkanov Sergey
+    *************************************************************************/
+    public static void convr1dcircularbuf(double[] s, int m, double[] r, int n, ref double[] c)
+    {
+    
+        conv.convr1dcircularbuf(s, m, r, n, ref c, null);
+    }
+    
+    public static void convr1dcircularbuf(double[] s, int m, double[] r, int n, ref double[] c, alglib.xparams _params)
+    {
+    
+        conv.convr1dcircularbuf(s, m, r, n, ref c, _params);
     }
     
     /*************************************************************************
@@ -638,6 +898,28 @@ public partial class alglib
         r = new double[0];
         conv.convr1dcircularinv(a, m, b, n, ref r, _params);
     }
+    
+    /*************************************************************************
+    1-dimensional complex deconvolution, inverse of ConvR1DCircular().
+
+    Buffered version, which does not reallocate R[] if its length is enough to
+    store the result (i.e. it reuses previously allocated memory  as  much  as
+    possible).
+
+      -- ALGLIB --
+         Copyright 21.07.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void convr1dcircularinvbuf(double[] a, int m, double[] b, int n, ref double[] r)
+    {
+    
+        conv.convr1dcircularinvbuf(a, m, b, n, ref r, null);
+    }
+    
+    public static void convr1dcircularinvbuf(double[] a, int m, double[] b, int n, ref double[] r, alglib.xparams _params)
+    {
+    
+        conv.convr1dcircularinvbuf(a, m, b, n, ref r, _params);
+    }
 
 }
 public partial class alglib
@@ -663,7 +945,7 @@ public partial class alglib
                     signal containing pattern
         N       -   problem size
         Pattern -   array[0..M-1] - complex function to be transformed,
-                    pattern to search withing signal
+                    pattern to 'search' within a signal
         M       -   problem size
 
     OUTPUT PARAMETERS
@@ -676,6 +958,9 @@ public partial class alglib
     NOTE:
         It is assumed that pattern domain is [0..M-1].  If Pattern is non-zero
     on [-K..M-1],  you can still use this subroutine, just shift result by K.
+
+    NOTE: there is a buffered version of this  function,  CorrC1DBuf(), which
+         can reuse space previously allocated in its output parameter R.
 
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
@@ -690,6 +975,26 @@ public partial class alglib
     {
         r = new complex[0];
         corr.corrc1d(signal, n, pattern, m, ref r, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional complex cross-correlation, a buffered version  of  CorrC1D()
+    which does not reallocate R[] if its length is enough to store the  result
+    (i.e. it reuses previously allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 21.07.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void corrc1dbuf(complex[] signal, int n, complex[] pattern, int m, ref complex[] r)
+    {
+    
+        corr.corrc1dbuf(signal, n, pattern, m, ref r, null);
+    }
+    
+    public static void corrc1dbuf(complex[] signal, int n, complex[] pattern, int m, ref complex[] r, alglib.xparams _params)
+    {
+    
+        corr.corrc1dbuf(signal, n, pattern, m, ref r, _params);
     }
     
     /*************************************************************************
@@ -709,12 +1014,14 @@ public partial class alglib
                     periodic signal containing pattern
         N       -   problem size
         Pattern -   array[0..M-1] - complex function to be transformed,
-                    non-periodic pattern to search withing signal
+                    non-periodic pattern to 'search' within a signal
         M       -   problem size
 
     OUTPUT PARAMETERS
         R   -   convolution: A*B. array[0..M-1].
 
+    NOTE: there is a buffered version of this  function,  CorrC1DCircular(),
+          which can reuse space previously allocated in its output parameter R.
 
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
@@ -729,6 +1036,28 @@ public partial class alglib
     {
         c = new complex[0];
         corr.corrc1dcircular(signal, m, pattern, n, ref c, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional circular complex cross-correlation.
+
+    A buffered function which does not reallocate C[] if its length is  enough
+    to store the result (i.e. it reuses previously allocated memory as much as
+    possible).
+
+      -- ALGLIB --
+         Copyright 21.07.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void corrc1dcircularbuf(complex[] signal, int m, complex[] pattern, int n, ref complex[] c)
+    {
+    
+        corr.corrc1dcircularbuf(signal, m, pattern, n, ref c, null);
+    }
+    
+    public static void corrc1dcircularbuf(complex[] signal, int m, complex[] pattern, int n, ref complex[] c, alglib.xparams _params)
+    {
+    
+        corr.corrc1dcircularbuf(signal, m, pattern, n, ref c, _params);
     }
     
     /*************************************************************************
@@ -750,7 +1079,7 @@ public partial class alglib
                     signal containing pattern
         N       -   problem size
         Pattern -   array[0..M-1] - real function to be transformed,
-                    pattern to search withing signal
+                    pattern to 'search' withing signal
         M       -   problem size
 
     OUTPUT PARAMETERS
@@ -763,6 +1092,9 @@ public partial class alglib
     NOTE:
         It is assumed that pattern domain is [0..M-1].  If Pattern is non-zero
     on [-K..M-1],  you can still use this subroutine, just shift result by K.
+
+    NOTE: there is a buffered version of this  function,  CorrR1DBuf(),  which
+          can reuse space previously allocated in its output parameter R.
 
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
@@ -777,6 +1109,26 @@ public partial class alglib
     {
         r = new double[0];
         corr.corrr1d(signal, n, pattern, m, ref r, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional real cross-correlation, buffered function,  which  does  not
+    reallocate R[] if its length is enough to store the result (i.e. it reuses
+    previously allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 21.07.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void corrr1dbuf(double[] signal, int n, double[] pattern, int m, ref double[] r)
+    {
+    
+        corr.corrr1dbuf(signal, n, pattern, m, ref r, null);
+    }
+    
+    public static void corrr1dbuf(double[] signal, int n, double[] pattern, int m, ref double[] r, alglib.xparams _params)
+    {
+    
+        corr.corrr1dbuf(signal, n, pattern, m, ref r, _params);
     }
     
     /*************************************************************************
@@ -802,6 +1154,8 @@ public partial class alglib
     OUTPUT PARAMETERS
         R   -   convolution: A*B. array[0..M-1].
 
+    NOTE: there is a buffered version of this  function,  CorrR1DCircularBuf(),
+          which can reuse space previously allocated in its output parameter C.
 
       -- ALGLIB --
          Copyright 21.07.2009 by Bochkanov Sergey
@@ -816,6 +1170,26 @@ public partial class alglib
     {
         c = new double[0];
         corr.corrr1dcircular(signal, m, pattern, n, ref c, _params);
+    }
+    
+    /*************************************************************************
+    1-dimensional circular real cross-correlation,  buffered  version ,  which
+    does not reallocate C[] if its length is enough to store the result  (i.e.
+    it reuses previously allocated memory as much as possible).
+
+      -- ALGLIB --
+         Copyright 21.07.2009 by Bochkanov Sergey
+    *************************************************************************/
+    public static void corrr1dcircularbuf(double[] signal, int m, double[] pattern, int n, ref double[] c)
+    {
+    
+        corr.corrr1dcircularbuf(signal, m, pattern, n, ref c, null);
+    }
+    
+    public static void corrr1dcircularbuf(double[] signal, int m, double[] pattern, int n, ref double[] c, alglib.xparams _params)
+    {
+    
+        corr.corrr1dcircularbuf(signal, m, pattern, n, ref c, _params);
     }
 
 }
@@ -874,7 +1248,7 @@ public partial class alglib
             }
             
             //
-            // convert input array to the more convinient format
+            // convert input array to the more convenient format
             //
             buf = new double[2*n];
             for(i=0; i<=n-1; i++)
@@ -967,6 +1341,9 @@ public partial class alglib
             F   -   DFT of a input array, array[0..N-1]
                     F[j] = SUM(A[k]*exp(-2*pi*sqrt(-1)*j*k/N), k = 0..N-1)
 
+        NOTE: there is a buffered version  of  this  function, FFTR1DBuf(),  which
+              reuses memory previously allocated for A as much as possible.
+
         NOTE:
             F[] satisfies symmetry property F[k] = conj(F[N-k]),  so just one half
         of  array  is  usually needed. But for convinience subroutine returns full
@@ -982,6 +1359,28 @@ public partial class alglib
             ref complex[] f,
             alglib.xparams _params)
         {
+            f = new complex[0];
+
+            alglib.ap.assert(n>0, "FFTR1D: incorrect N!");
+            alglib.ap.assert(alglib.ap.len(a)>=n, "FFTR1D: Length(A)<N!");
+            alglib.ap.assert(apserv.isfinitevector(a, n, _params), "FFTR1D: A contains infinite or NAN values!");
+            fftr1dbuf(a, n, ref f, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional real FFT, a buffered function which does not reallocate  F[]
+        if its length is enough to store the result  (i.e.  it  reuses  previously
+        allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 01.06.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void fftr1dbuf(double[] a,
+            int n,
+            ref complex[] f,
+            alglib.xparams _params)
+        {
             int i = 0;
             int n2 = 0;
             int idx = 0;
@@ -992,11 +1391,9 @@ public partial class alglib
             ftbase.fasttransformplan plan = new ftbase.fasttransformplan();
             int i_ = 0;
 
-            f = new complex[0];
-
-            alglib.ap.assert(n>0, "FFTR1D: incorrect N!");
-            alglib.ap.assert(alglib.ap.len(a)>=n, "FFTR1D: Length(A)<N!");
-            alglib.ap.assert(apserv.isfinitevector(a, n, _params), "FFTR1D: A contains infinite or NAN values!");
+            alglib.ap.assert(n>0, "FFTR1DBuf: incorrect N!");
+            alglib.ap.assert(alglib.ap.len(a)>=n, "FFTR1DBuf: Length(A)<N!");
+            alglib.ap.assert(apserv.isfinitevector(a, n, _params), "FFTR1DBuf: A contains infinite or NAN values!");
             
             //
             // Special cases:
@@ -1007,13 +1404,13 @@ public partial class alglib
             //
             if( n==1 )
             {
-                f = new complex[1];
+                ablasf.callocv(1, ref f, _params);
                 f[0] = a[0];
                 return;
             }
             if( n==2 )
             {
-                f = new complex[2];
+                ablasf.callocv(2, ref f, _params);
                 f[0].x = a[0]+a[1];
                 f[0].y = 0;
                 f[1].x = a[0]-a[1];
@@ -1038,7 +1435,7 @@ public partial class alglib
                 }
                 ftbase.ftcomplexfftplan(n2, 1, plan, _params);
                 ftbase.ftapplyplan(plan, buf, 0, 1, _params);
-                f = new complex[n];
+                ablasf.callocv(n, ref f, _params);
                 for(i=0; i<=n2; i++)
                 {
                     idx = 2*(i%n2);
@@ -1064,7 +1461,7 @@ public partial class alglib
                 //
                 // use complex FFT
                 //
-                f = new complex[n];
+                ablasf.callocv(n, ref f, _params);
                 for(i=0; i<=n-1; i++)
                 {
                     f[i] = a[i];
@@ -1086,6 +1483,9 @@ public partial class alglib
         OUTPUT PARAMETERS
             A   -   inverse DFT of a input array, array[0..N-1]
 
+        NOTE: there is a buffered version of this function, FFTR1DInvBuf(),  which
+              reuses memory previously allocated for A as much as possible.
+
         NOTE:
             F[] should satisfy symmetry property F[k] = conj(F[N-k]), so just  one
         half of frequencies array is needed - elements from 0 to floor(N/2).  F[0]
@@ -1104,7 +1504,6 @@ public partial class alglib
         If you call this function using reduced arguments list -  "FFTR1DInv(F,A)"
         - you must pass FULL array with N elements (although higher  N/2 are still
         not used) because array size is used to automatically determine FFT length
-
 
           -- ALGLIB --
              Copyright 01.06.2009 by Bochkanov Sergey
@@ -1132,6 +1531,39 @@ public partial class alglib
             {
                 alglib.ap.assert(math.isfinite(f[(int)Math.Floor((double)n/(double)2)].y), "FFTR1DInv: F contains infinite or NAN values!");
             }
+            fftr1dinvbuf(f, n, ref a, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional real inverse FFT, buffered version, which does not reallocate
+        A[] if its length is enough to store the result (i.e. it reuses previously
+        allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 01.06.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void fftr1dinvbuf(complex[] f,
+            int n,
+            ref double[] a,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            double[] h = new double[0];
+            complex[] fh = new complex[0];
+
+            alglib.ap.assert(n>0, "FFTR1DInvBuf: incorrect N!");
+            alglib.ap.assert(alglib.ap.len(f)>=(int)Math.Floor((double)n/(double)2)+1, "FFTR1DInvBuf: Length(F)<Floor(N/2)+1!");
+            alglib.ap.assert(math.isfinite(f[0].x), "FFTR1DInvBuf: F contains infinite or NAN values!");
+            for(i=1; i<=(int)Math.Floor((double)n/(double)2)-1; i++)
+            {
+                alglib.ap.assert(math.isfinite(f[i].x) && math.isfinite(f[i].y), "FFTR1DInvBuf: F contains infinite or NAN values!");
+            }
+            alglib.ap.assert(math.isfinite(f[(int)Math.Floor((double)n/(double)2)].x), "FFTR1DInvBuf: F contains infinite or NAN values!");
+            if( n%2!=0 )
+            {
+                alglib.ap.assert(math.isfinite(f[(int)Math.Floor((double)n/(double)2)].y), "FFTR1DInvBuf: F contains infinite or NAN values!");
+            }
             
             //
             // Special case: N=1, FFT is just identity transform.
@@ -1139,7 +1571,7 @@ public partial class alglib
             //
             if( n==1 )
             {
-                a = new double[1];
+                ablasf.rallocv(1, ref a, _params);
                 a[0] = f[0].x;
                 return;
             }
@@ -1152,7 +1584,7 @@ public partial class alglib
             // Don't worry, it is really compact and efficient reduction :)
             //
             h = new double[n];
-            a = new double[n];
+            ablasf.rallocv(n, ref a, _params);
             h[0] = f[0].x;
             for(i=1; i<=(int)Math.Floor((double)n/(double)2)-1; i++)
             {
@@ -1416,24 +1848,27 @@ public partial class alglib
         choose between three implementations: straightforward O(M*N)  formula  for
         very small N (or M), overlap-add algorithm for  cases  where  max(M,N)  is
         significantly larger than min(M,N), but O(M*N) algorithm is too slow,  and
-        general FFT-based formula for cases where two previois algorithms are  too
+        general FFT-based formula for cases where two previous algorithms are  too
         slow.
 
         Algorithm has max(M,N)*log(max(M,N)) complexity for any M/N.
 
         INPUT PARAMETERS
-            A   -   array[0..M-1] - complex function to be transformed
+            A   -   array[M] - complex function to be transformed
             M   -   problem size
-            B   -   array[0..N-1] - complex function to be transformed
+            B   -   array[N] - complex function to be transformed
             N   -   problem size
 
         OUTPUT PARAMETERS
-            R   -   convolution: A*B. array[0..N+M-2].
+            R   -   convolution: A*B. array[N+M-1]
 
         NOTE:
             It is assumed that A is zero at T<0, B is zero too.  If  one  or  both
-        functions have non-zero values at negative T's, you  can  still  use  this
-        subroutine - just shift its result correspondingly.
+            functions have non-zero values at negative T's, you can still use this
+            subroutine - just shift its result correspondingly.
+            
+        NOTE: there is a buffered version of this  function,  ConvC1DBuf(),  which
+              can reuse space previously allocated in its output parameter R.
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
@@ -1448,6 +1883,26 @@ public partial class alglib
             r = new complex[0];
 
             alglib.ap.assert(n>0 && m>0, "ConvC1D: incorrect N or M!");
+            convc1dbuf(a, m, b, n, ref r, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional complex convolution, buffered version of ConvC1DBuf(), which
+        does not reallocate R[] if its length is enough to store the result  (i.e.
+        it reuses previously allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 30.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void convc1dbuf(complex[] a,
+            int m,
+            complex[] b,
+            int n,
+            ref complex[] r,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(n>0 && m>0, "ConvC1DBuf: incorrect N or M!");
             
             //
             // normalize task: make M>=N,
@@ -1455,7 +1910,7 @@ public partial class alglib
             //
             if( m<n )
             {
-                convc1d(b, n, a, m, ref r, _params);
+                convc1dbuf(b, n, a, m, ref r, _params);
                 return;
             }
             convc1dx(a, m, b, n, false, -1, 0, ref r, _params);
@@ -1484,11 +1939,38 @@ public partial class alglib
             It is assumed that A is zero at T<0, B is zero too.  If  one  or  both
         functions have non-zero values at negative T's, you  can  still  use  this
         subroutine - just shift its result correspondingly.
+            
+        NOTE: there is a buffered version of this  function,  ConvC1DInvBuf(),
+              which can reuse space previously allocated in its output parameter R
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void convc1dinv(complex[] a,
+            int m,
+            complex[] b,
+            int n,
+            ref complex[] r,
+            alglib.xparams _params)
+        {
+            r = new complex[0];
+
+            alglib.ap.assert((n>0 && m>0) && n<=m, "ConvC1DInv: incorrect N or M!");
+            convc1dinvbuf(a, m, b, n, ref r, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional complex non-circular deconvolution (inverse of ConvC1D()).
+
+        A buffered version, which does not reallocate R[] if its length is  enough
+        to store the result (i.e. it reuses previously allocated memory as much as
+        possible).
+
+          -- ALGLIB --
+             Copyright 30.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void convc1dinvbuf(complex[] a,
             int m,
             complex[] b,
             int n,
@@ -1505,9 +1987,7 @@ public partial class alglib
             complex c3 = 0;
             double t = 0;
 
-            r = new complex[0];
-
-            alglib.ap.assert((n>0 && m>0) && n<=m, "ConvC1DInv: incorrect N or M!");
+            alglib.ap.assert((n>0 && m>0) && n<=m, "ConvC1DInvBuf: incorrect N or M!");
             p = ftbase.ftbasefindsmooth(m, _params);
             ftbase.ftcomplexfftplan(p, 1, plan, _params);
             buf = new double[2*p];
@@ -1546,7 +2026,7 @@ public partial class alglib
             }
             ftbase.ftapplyplan(plan, buf, 0, 1, _params);
             t = (double)1/(double)p;
-            r = new complex[m-n+1];
+            ablasf.callocv(m-n+1, ref r, _params);
             for(i=0; i<=m-n; i++)
             {
                 r[i].x = t*buf[2*i+0];
@@ -1567,23 +2047,50 @@ public partial class alglib
         function with limited length.
 
         INPUT PARAMETERS
-            S   -   array[0..M-1] - complex periodic signal
+            S   -   array[M] - complex periodic signal
             M   -   problem size
-            B   -   array[0..N-1] - complex non-periodic response
+            B   -   array[N] - complex non-periodic response
             N   -   problem size
 
         OUTPUT PARAMETERS
-            R   -   convolution: A*B. array[0..M-1].
+            R   -   convolution: A*B. array[M].
 
         NOTE:
             It is assumed that B is zero at T<0. If  it  has  non-zero  values  at
         negative T's, you can still use this subroutine - just  shift  its  result
         correspondingly.
+            
+        NOTE: there is a buffered version of this  function,  ConvC1DCircularBuf(),
+              which can reuse space previously allocated in its output parameter R.
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void convc1dcircular(complex[] s,
+            int m,
+            complex[] r,
+            int n,
+            ref complex[] c,
+            alglib.xparams _params)
+        {
+            c = new complex[0];
+
+            alglib.ap.assert(n>0 && m>0, "ConvC1DCircular: incorrect N or M!");
+            convc1dcircularbuf(s, m, r, n, ref c, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional circular complex convolution.
+
+        Buffered version of ConvC1DCircular(), which does not  reallocate  C[]  if
+        its length is enough to  store  the  result  (i.e.  it  reuses  previously
+        allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 30.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void convc1dcircularbuf(complex[] s,
             int m,
             complex[] r,
             int n,
@@ -1596,8 +2103,6 @@ public partial class alglib
             int j2 = 0;
             int i_ = 0;
             int i1_ = 0;
-
-            c = new complex[0];
 
             alglib.ap.assert(n>0 && m>0, "ConvC1DCircular: incorrect N or M!");
             
@@ -1624,7 +2129,7 @@ public partial class alglib
                     }
                     i1 = i1+m;
                 }
-                convc1dcircular(s, m, buf, m, ref c, _params);
+                convc1dcircularbuf(s, m, buf, m, ref c, _params);
                 return;
             }
             convc1dx(s, m, r, n, true, -1, 0, ref c, _params);
@@ -1653,11 +2158,38 @@ public partial class alglib
             It is assumed that B is zero at T<0. If  it  has  non-zero  values  at
         negative T's, you can still use this subroutine - just  shift  its  result
         correspondingly.
+            
+        NOTE: there is a buffered version of this  function,  ConvC1DCircularInvBuf(),
+              which can reuse space previously allocated in its output parameter R.
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void convc1dcircularinv(complex[] a,
+            int m,
+            complex[] b,
+            int n,
+            ref complex[] r,
+            alglib.xparams _params)
+        {
+            r = new complex[0];
+
+            alglib.ap.assert(n>0 && m>0, "ConvC1DCircularInv: incorrect N or M!");
+            convc1dcircularinvbuf(a, m, b, n, ref r, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional circular complex deconvolution (inverse of ConvC1DCircular()).
+
+        Buffered version of ConvC1DCircularInv(), which does not reallocate R[] if
+        its length is enough to  store  the  result  (i.e.  it  reuses  previously
+        allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 30.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void convc1dcircularinvbuf(complex[] a,
             int m,
             complex[] b,
             int n,
@@ -1678,8 +2210,6 @@ public partial class alglib
             double t = 0;
             int i_ = 0;
             int i1_ = 0;
-
-            r = new complex[0];
 
             alglib.ap.assert(n>0 && m>0, "ConvC1DCircularInv: incorrect N or M!");
             
@@ -1706,7 +2236,7 @@ public partial class alglib
                     }
                     i1 = i1+m;
                 }
-                convc1dcircularinv(a, m, cbuf, m, ref r, _params);
+                convc1dcircularinvbuf(a, m, cbuf, m, ref r, _params);
                 return;
             }
             
@@ -1745,7 +2275,7 @@ public partial class alglib
             }
             ftbase.ftapplyplan(plan, buf, 0, 1, _params);
             t = (double)1/(double)m;
-            r = new complex[m];
+            ablasf.callocv(m, ref r, _params);
             for(i=0; i<=m-1; i++)
             {
                 r[i].x = t*buf[2*i+0];
@@ -1772,6 +2302,10 @@ public partial class alglib
             It is assumed that A is zero at T<0, B is zero too.  If  one  or  both
         functions have non-zero values at negative T's, you  can  still  use  this
         subroutine - just shift its result correspondingly.
+            
+        NOTE: there is a buffered version of this  function,  ConvR1DBuf(),
+              which can reuse space previously allocated in its output parameter R.
+
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
@@ -1786,6 +2320,28 @@ public partial class alglib
             r = new double[0];
 
             alglib.ap.assert(n>0 && m>0, "ConvR1D: incorrect N or M!");
+            convr1dbuf(a, m, b, n, ref r, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional real convolution.
+
+        Buffered version of ConvR1D(), which does not reallocate R[] if its length
+        is enough to store the result (i.e. it reuses previously allocated  memory
+        as much as possible).
+
+          -- ALGLIB --
+             Copyright 30.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void convr1dbuf(double[] a,
+            int m,
+            double[] b,
+            int n,
+            ref double[] r,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(n>0 && m>0, "ConvR1DBuf: incorrect N or M!");
             
             //
             // normalize task: make M>=N,
@@ -1793,7 +2349,7 @@ public partial class alglib
             //
             if( m<n )
             {
-                convr1d(b, n, a, m, ref r, _params);
+                convr1dbuf(b, n, a, m, ref r, _params);
                 return;
             }
             convr1dx(a, m, b, n, false, -1, 0, ref r, _params);
@@ -1822,11 +2378,37 @@ public partial class alglib
             It is assumed that A is zero at T<0, B is zero too.  If  one  or  both
         functions have non-zero values at negative T's, you  can  still  use  this
         subroutine - just shift its result correspondingly.
+            
+        NOTE: there is a buffered version of this  function,  ConvR1DInvBuf(),
+              which can reuse space previously allocated in its output parameter R.
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void convr1dinv(double[] a,
+            int m,
+            double[] b,
+            int n,
+            ref double[] r,
+            alglib.xparams _params)
+        {
+            r = new double[0];
+
+            alglib.ap.assert((n>0 && m>0) && n<=m, "ConvR1DInv: incorrect N or M!");
+            convr1dinvbuf(a, m, b, n, ref r, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional real deconvolution (inverse of ConvR1D()), buffered version,
+        which does not reallocate R[] if its length is enough to store the  result
+        (i.e. it reuses previously allocated memory as much as possible).
+
+
+          -- ALGLIB --
+             Copyright 30.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void convr1dinvbuf(double[] a,
             int m,
             double[] b,
             int n,
@@ -1844,9 +2426,7 @@ public partial class alglib
             complex c3 = 0;
             int i_ = 0;
 
-            r = new double[0];
-
-            alglib.ap.assert((n>0 && m>0) && n<=m, "ConvR1DInv: incorrect N or M!");
+            alglib.ap.assert((n>0 && m>0) && n<=m, "ConvR1DInvBuf: incorrect N or M!");
             p = ftbase.ftbasefindsmootheven(m, _params);
             buf = new double[p];
             for(i_=0; i_<=m-1;i_++)
@@ -1883,7 +2463,7 @@ public partial class alglib
                 buf[2*i+1] = c3.y;
             }
             fft.fftr1dinvinternaleven(ref buf, p, ref buf3, plan, _params);
-            r = new double[m-n+1];
+            ablasf.rallocv(m-n+1, ref r, _params);
             for(i_=0; i_<=m-n;i_++)
             {
                 r[i_] = buf[i_];
@@ -1909,11 +2489,36 @@ public partial class alglib
             It is assumed that B is zero at T<0. If  it  has  non-zero  values  at
         negative T's, you can still use this subroutine - just  shift  its  result
         correspondingly.
+            
+        NOTE: there is a buffered version of this  function,  ConvR1DCurcularBuf(),
+              which can reuse space previously allocated in its output parameter R.
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void convr1dcircular(double[] s,
+            int m,
+            double[] r,
+            int n,
+            ref double[] c,
+            alglib.xparams _params)
+        {
+            c = new double[0];
+
+            alglib.ap.assert(n>0 && m>0, "ConvC1DCircular: incorrect N or M!");
+            convr1dcircularbuf(s, m, r, n, ref c, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional circular real convolution, buffered version, which  does not
+        reallocate C[] if its length is enough to store the result (i.e. it reuses
+        previously allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 30.11.2023 by Bochkanov Sergey
+        *************************************************************************/
+        public static void convr1dcircularbuf(double[] s,
             int m,
             double[] r,
             int n,
@@ -1927,9 +2532,7 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            c = new double[0];
-
-            alglib.ap.assert(n>0 && m>0, "ConvC1DCircular: incorrect N or M!");
+            alglib.ap.assert(n>0 && m>0, "ConvC1DCircularBuf: incorrect N or M!");
             
             //
             // normalize task: make M>=N,
@@ -1954,7 +2557,7 @@ public partial class alglib
                     }
                     i1 = i1+m;
                 }
-                convr1dcircular(s, m, buf, m, ref c, _params);
+                convr1dcircularbuf(s, m, buf, m, ref c, _params);
                 return;
             }
             
@@ -1998,6 +2601,30 @@ public partial class alglib
             ref double[] r,
             alglib.xparams _params)
         {
+            r = new double[0];
+
+            alglib.ap.assert(n>0 && m>0, "ConvR1DCircularInv: incorrect N or M!");
+            convr1dcircularinvbuf(a, m, b, n, ref r, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional complex deconvolution, inverse of ConvR1DCircular().
+
+        Buffered version, which does not reallocate R[] if its length is enough to
+        store the result (i.e. it reuses previously allocated memory  as  much  as
+        possible).
+
+          -- ALGLIB --
+             Copyright 21.07.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void convr1dcircularinvbuf(double[] a,
+            int m,
+            double[] b,
+            int n,
+            ref double[] r,
+            alglib.xparams _params)
+        {
             int i = 0;
             int i1 = 0;
             int i2 = 0;
@@ -2013,8 +2640,6 @@ public partial class alglib
             complex c3 = 0;
             int i_ = 0;
             int i1_ = 0;
-
-            r = new double[0];
 
             alglib.ap.assert(n>0 && m>0, "ConvR1DCircularInv: incorrect N or M!");
             
@@ -2041,7 +2666,7 @@ public partial class alglib
                     }
                     i1 = i1+m;
                 }
-                convr1dcircularinv(a, m, buf, m, ref r, _params);
+                convr1dcircularinvbuf(a, m, buf, m, ref r, _params);
                 return;
             }
             
@@ -2085,7 +2710,7 @@ public partial class alglib
                     buf[2*i+1] = c3.y;
                 }
                 fft.fftr1dinvinternaleven(ref buf, m, ref buf3, plan, _params);
-                r = new double[m];
+                ablasf.rallocv(m, ref r, _params);
                 for(i_=0; i_<=m-1;i_++)
                 {
                     r[i_] = buf[i_];
@@ -2112,7 +2737,7 @@ public partial class alglib
                 {
                     cbuf[i] = cbuf[i]/cbuf2[i];
                 }
-                fft.fftr1dinv(cbuf, m, ref r, _params);
+                fft.fftr1dinvbuf(cbuf, m, ref r, _params);
             }
         }
 
@@ -2177,8 +2802,6 @@ public partial class alglib
             double[] buf2 = new double[0];
             int i_ = 0;
             int i1_ = 0;
-
-            r = new complex[0];
 
             alglib.ap.assert(n>0 && m>0, "ConvC1DX: incorrect N or M!");
             alglib.ap.assert(n<=m, "ConvC1DX: N<M assumption is false!");
@@ -2280,7 +2903,7 @@ public partial class alglib
                 //
                 if( n==1 )
                 {
-                    r = new complex[m];
+                    ablasf.callocv(m, ref r, _params);
                     v = b[0];
                     for(i_=0; i_<=m-1;i_++)
                     {
@@ -2298,7 +2921,7 @@ public partial class alglib
                     //
                     // circular convolution
                     //
-                    r = new complex[m];
+                    ablasf.callocv(m, ref r, _params);
                     v = b[0];
                     for(i_=0; i_<=m-1;i_++)
                     {
@@ -2333,7 +2956,7 @@ public partial class alglib
                     //
                     // non-circular convolution
                     //
-                    r = new complex[m+n-1];
+                    ablasf.callocv(m+n-1, ref r, _params);
                     for(i=0; i<=m+n-2; i++)
                     {
                         r[i] = 0;
@@ -2402,7 +3025,7 @@ public partial class alglib
                     }
                     ftbase.ftapplyplan(plan, buf, 0, 1, _params);
                     t = (double)1/(double)m;
-                    r = new complex[m];
+                    ablasf.callocv(m, ref r, _params);
                     for(i=0; i<=m-1; i++)
                     {
                         r[i].x = t*buf[2*i+0];
@@ -2465,7 +3088,7 @@ public partial class alglib
                         //
                         // circular, add tail to head
                         //
-                        r = new complex[m];
+                        ablasf.callocv(m, ref r, _params);
                         for(i=0; i<=m-1; i++)
                         {
                             r[i].x = t*buf[2*i+0];
@@ -2483,7 +3106,7 @@ public partial class alglib
                         //
                         // non-circular, just copy
                         //
-                        r = new complex[m+n-1];
+                        ablasf.callocv(m+n-1, ref r, _params);
                         for(i=0; i<=m+n-2; i++)
                         {
                             r[i].x = t*buf[2*i+0];
@@ -2513,7 +3136,7 @@ public partial class alglib
                 //
                 if( circular )
                 {
-                    r = new complex[m];
+                    ablasf.callocv(m, ref r, _params);
                     for(i=0; i<=m-1; i++)
                     {
                         r[i] = 0;
@@ -2521,7 +3144,7 @@ public partial class alglib
                 }
                 else
                 {
-                    r = new complex[m+n-1];
+                    ablasf.callocv(m+n-1, ref r, _params);
                     for(i=0; i<=m+n-2; i++)
                     {
                         r[i] = 0;
@@ -2665,10 +3288,8 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            r = new double[0];
-
-            alglib.ap.assert(n>0 && m>0, "ConvC1DX: incorrect N or M!");
-            alglib.ap.assert(n<=m, "ConvC1DX: N<M assumption is false!");
+            alglib.ap.assert(n>0 && m>0, "ConvR1DX: incorrect N or M!");
+            alglib.ap.assert(n<=m, "ConvR1DX: N<M assumption is false!");
             
             //
             // handle special cases
@@ -2775,7 +3396,7 @@ public partial class alglib
                 //
                 if( n==1 )
                 {
-                    r = new double[m];
+                    ablasf.rallocv(m, ref r, _params);
                     v = b[0];
                     for(i_=0; i_<=m-1;i_++)
                     {
@@ -2793,7 +3414,7 @@ public partial class alglib
                     //
                     // circular convolution
                     //
-                    r = new double[m];
+                    ablasf.rallocv(m, ref r, _params);
                     v = b[0];
                     for(i_=0; i_<=m-1;i_++)
                     {
@@ -2828,7 +3449,7 @@ public partial class alglib
                     //
                     // non-circular convolution
                     //
-                    r = new double[m+n-1];
+                    ablasf.rallocv(m+n-1, ref r, _params);
                     for(i=0; i<=m+n-2; i++)
                     {
                         r[i] = 0;
@@ -2899,7 +3520,7 @@ public partial class alglib
                         buf[2*i+1] = ty;
                     }
                     fft.fftr1dinvinternaleven(ref buf, m, ref buf3, plan, _params);
-                    r = new double[m];
+                    ablasf.rallocv(m, ref r, _params);
                     for(i_=0; i_<=m-1;i_++)
                     {
                         r[i_] = buf[i_];
@@ -2959,7 +3580,7 @@ public partial class alglib
                         //
                         // circular, add tail to head
                         //
-                        r = new double[m];
+                        ablasf.rallocv(m, ref r, _params);
                         for(i_=0; i_<=m-1;i_++)
                         {
                             r[i_] = buf[i_];
@@ -2979,7 +3600,7 @@ public partial class alglib
                         //
                         // non-circular, just copy
                         //
-                        r = new double[m+n-1];
+                        ablasf.rallocv(m+n-1, ref r, _params);
                         for(i_=0; i_<=m+n-2;i_++)
                         {
                             r[i_] = buf[i_];
@@ -3005,7 +3626,7 @@ public partial class alglib
                 //
                 if( circular )
                 {
-                    r = new double[m];
+                    ablasf.rallocv(m, ref r, _params);
                     for(i=0; i<=m-1; i++)
                     {
                         r[i] = 0;
@@ -3013,7 +3634,7 @@ public partial class alglib
                 }
                 else
                 {
-                    r = new double[m+n-1];
+                    ablasf.rallocv(m+n-1, ref r, _params);
                     for(i=0; i<=m+n-2; i++)
                     {
                         r[i] = 0;
@@ -3116,7 +3737,7 @@ public partial class alglib
                         signal containing pattern
             N       -   problem size
             Pattern -   array[0..M-1] - complex function to be transformed,
-                        pattern to search withing signal
+                        pattern to 'search' within a signal
             M       -   problem size
 
         OUTPUT PARAMETERS
@@ -3129,11 +3750,36 @@ public partial class alglib
         NOTE:
             It is assumed that pattern domain is [0..M-1].  If Pattern is non-zero
         on [-K..M-1],  you can still use this subroutine, just shift result by K.
+            
+        NOTE: there is a buffered version of this  function,  CorrC1DBuf(), which
+             can reuse space previously allocated in its output parameter R.
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void corrc1d(complex[] signal,
+            int n,
+            complex[] pattern,
+            int m,
+            ref complex[] r,
+            alglib.xparams _params)
+        {
+            r = new complex[0];
+
+            alglib.ap.assert(n>0 && m>0, "CorrC1D: incorrect N or M!");
+            corrc1dbuf(signal, n, pattern, m, ref r, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional complex cross-correlation, a buffered version  of  CorrC1D()
+        which does not reallocate R[] if its length is enough to store the  result
+        (i.e. it reuses previously allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 21.07.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void corrc1dbuf(complex[] signal,
             int n,
             complex[] pattern,
             int m,
@@ -3146,16 +3792,14 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            r = new complex[0];
-
-            alglib.ap.assert(n>0 && m>0, "CorrC1D: incorrect N or M!");
+            alglib.ap.assert(n>0 && m>0, "CorrC1DBuf: incorrect N or M!");
             p = new complex[m];
             for(i=0; i<=m-1; i++)
             {
                 p[m-1-i] = math.conj(pattern[i]);
             }
             conv.convc1d(p, m, signal, n, ref b, _params);
-            r = new complex[m+n-1];
+            ablasf.callocv(m+n-1, ref r, _params);
             i1_ = (m-1) - (0);
             for(i_=0; i_<=n-1;i_++)
             {
@@ -3189,12 +3833,14 @@ public partial class alglib
                         periodic signal containing pattern
             N       -   problem size
             Pattern -   array[0..M-1] - complex function to be transformed,
-                        non-periodic pattern to search withing signal
+                        non-periodic pattern to 'search' within a signal
             M       -   problem size
 
         OUTPUT PARAMETERS
             R   -   convolution: A*B. array[0..M-1].
-
+            
+        NOTE: there is a buffered version of this  function,  CorrC1DCircular(),
+              which can reuse space previously allocated in its output parameter R.
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
@@ -3273,6 +3919,87 @@ public partial class alglib
 
 
         /*************************************************************************
+        1-dimensional circular complex cross-correlation.
+
+        A buffered function which does not reallocate C[] if its length is  enough
+        to store the result (i.e. it reuses previously allocated memory as much as
+        possible).
+
+          -- ALGLIB --
+             Copyright 21.07.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void corrc1dcircularbuf(complex[] signal,
+            int m,
+            complex[] pattern,
+            int n,
+            ref complex[] c,
+            alglib.xparams _params)
+        {
+            complex[] p = new complex[0];
+            complex[] b = new complex[0];
+            int i1 = 0;
+            int i2 = 0;
+            int i = 0;
+            int j2 = 0;
+            int i_ = 0;
+            int i1_ = 0;
+
+            alglib.ap.assert(n>0 && m>0, "ConvC1DCircular: incorrect N or M!");
+            
+            //
+            // normalize task: make M>=N,
+            // so A will be longer (at least - not shorter) that B.
+            //
+            if( m<n )
+            {
+                b = new complex[m];
+                for(i1=0; i1<=m-1; i1++)
+                {
+                    b[i1] = 0;
+                }
+                i1 = 0;
+                while( i1<n )
+                {
+                    i2 = Math.Min(i1+m-1, n-1);
+                    j2 = i2-i1;
+                    i1_ = (i1) - (0);
+                    for(i_=0; i_<=j2;i_++)
+                    {
+                        b[i_] = b[i_] + pattern[i_+i1_];
+                    }
+                    i1 = i1+m;
+                }
+                corrc1dcircularbuf(signal, m, b, m, ref c, _params);
+                return;
+            }
+            
+            //
+            // Task is normalized
+            //
+            p = new complex[n];
+            for(i=0; i<=n-1; i++)
+            {
+                p[n-1-i] = math.conj(pattern[i]);
+            }
+            conv.convc1dcircular(signal, m, p, n, ref b, _params);
+            ablasf.callocv(m, ref c, _params);
+            i1_ = (n-1) - (0);
+            for(i_=0; i_<=m-n;i_++)
+            {
+                c[i_] = b[i_+i1_];
+            }
+            if( m-n+1<=m-1 )
+            {
+                i1_ = (0) - (m-n+1);
+                for(i_=m-n+1; i_<=m-1;i_++)
+                {
+                    c[i_] = b[i_+i1_];
+                }
+            }
+        }
+
+
+        /*************************************************************************
         1-dimensional real cross-correlation.
 
         For given Pattern/Signal returns corr(Pattern,Signal) (non-circular).
@@ -3291,7 +4018,7 @@ public partial class alglib
                         signal containing pattern
             N       -   problem size
             Pattern -   array[0..M-1] - real function to be transformed,
-                        pattern to search withing signal
+                        pattern to 'search' withing signal
             M       -   problem size
 
         OUTPUT PARAMETERS
@@ -3305,10 +4032,35 @@ public partial class alglib
             It is assumed that pattern domain is [0..M-1].  If Pattern is non-zero
         on [-K..M-1],  you can still use this subroutine, just shift result by K.
 
+        NOTE: there is a buffered version of this  function,  CorrR1DBuf(),  which
+              can reuse space previously allocated in its output parameter R.
+
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void corrr1d(double[] signal,
+            int n,
+            double[] pattern,
+            int m,
+            ref double[] r,
+            alglib.xparams _params)
+        {
+            r = new double[0];
+
+            alglib.ap.assert(n>0 && m>0, "CorrR1D: incorrect N or M!");
+            corrr1dbuf(signal, n, pattern, m, ref r, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional real cross-correlation, buffered function,  which  does  not
+        reallocate R[] if its length is enough to store the result (i.e. it reuses
+        previously allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 21.07.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void corrr1dbuf(double[] signal,
             int n,
             double[] pattern,
             int m,
@@ -3321,16 +4073,14 @@ public partial class alglib
             int i_ = 0;
             int i1_ = 0;
 
-            r = new double[0];
-
-            alglib.ap.assert(n>0 && m>0, "CorrR1D: incorrect N or M!");
+            alglib.ap.assert(n>0 && m>0, "CorrR1DBuf: incorrect N or M!");
             p = new double[m];
             for(i=0; i<=m-1; i++)
             {
                 p[m-1-i] = pattern[i];
             }
             conv.convr1d(p, m, signal, n, ref b, _params);
-            r = new double[m+n-1];
+            ablasf.rallocv(m+n-1, ref r, _params);
             i1_ = (m-1) - (0);
             for(i_=0; i_<=n-1;i_++)
             {
@@ -3370,11 +4120,35 @@ public partial class alglib
         OUTPUT PARAMETERS
             R   -   convolution: A*B. array[0..M-1].
 
+        NOTE: there is a buffered version of this  function,  CorrR1DCircularBuf(),
+              which can reuse space previously allocated in its output parameter C.
 
           -- ALGLIB --
              Copyright 21.07.2009 by Bochkanov Sergey
         *************************************************************************/
         public static void corrr1dcircular(double[] signal,
+            int m,
+            double[] pattern,
+            int n,
+            ref double[] c,
+            alglib.xparams _params)
+        {
+            c = new double[0];
+
+            alglib.ap.assert(n>0 && m>0, "ConvC1DCircular: incorrect N or M!");
+            corrr1dcircularbuf(signal, m, pattern, n, ref c, _params);
+        }
+
+
+        /*************************************************************************
+        1-dimensional circular real cross-correlation,  buffered  version ,  which
+        does not reallocate C[] if its length is enough to store the result  (i.e.
+        it reuses previously allocated memory as much as possible).
+
+          -- ALGLIB --
+             Copyright 21.07.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void corrr1dcircularbuf(double[] signal,
             int m,
             double[] pattern,
             int n,
@@ -3389,8 +4163,6 @@ public partial class alglib
             int j2 = 0;
             int i_ = 0;
             int i1_ = 0;
-
-            c = new double[0];
 
             alglib.ap.assert(n>0 && m>0, "ConvC1DCircular: incorrect N or M!");
             
@@ -3417,7 +4189,7 @@ public partial class alglib
                     }
                     i1 = i1+m;
                 }
-                corrr1dcircular(signal, m, b, m, ref c, _params);
+                corrr1dcircularbuf(signal, m, b, m, ref c, _params);
                 return;
             }
             
@@ -3429,8 +4201,8 @@ public partial class alglib
             {
                 p[n-1-i] = pattern[i];
             }
-            conv.convr1dcircular(signal, m, p, n, ref b, _params);
-            c = new double[m];
+            conv.convr1dcircularbuf(signal, m, p, n, ref b, _params);
+            ablasf.rallocv(m, ref c, _params);
             i1_ = (n-1) - (0);
             for(i_=0; i_<=m-n;i_++)
             {
