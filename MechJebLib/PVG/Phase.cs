@@ -22,6 +22,7 @@ namespace MechJebLib.PVG
         public          double maxt;
         public          double mint;
         public          double ve;
+        public          double c => ve; // alias for normalized ve
         public readonly double a0;
         public          double tau;
         public          double mdot;
@@ -151,11 +152,11 @@ namespace MechJebLib.PVG
             return phase;
         }
 
-        public static Phase NewFixedCoast(double m0, double ct, int kspStage, int mjPhase) => new Phase(m0, 0, 0, m0, ct, kspStage, mjPhase);
+        public static Phase NewFixedCoast(double m0, double ct, int kspStage, int mjPhase) => new Phase(m0, 0, double.PositiveInfinity, m0, ct, kspStage, mjPhase);
 
         public static Phase NewOptimizedCoast(double m0, double mint, double maxt, int kspStage, int mjPhase)
         {
-            var phase = new Phase(m0, 0, 0, m0, mint, kspStage, mjPhase) { OptimizeTime = true, mint = mint, maxt = maxt };
+            var phase = new Phase(m0, 0, double.PositiveInfinity, m0, mint, kspStage, mjPhase) { OptimizeTime = true, mint = mint, maxt = maxt };
             return phase;
         }
 
