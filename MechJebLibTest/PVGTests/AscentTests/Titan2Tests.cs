@@ -8,13 +8,22 @@ using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PVG;
+using MechJebLib.Utils;
 using Xunit;
+using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.PVGTests.AscentTests
 {
     public class Titan2Tests
     {
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public Titan2Tests(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
+
         // this is a forced periapsis attachment problem, which chooses an ApR such that it winds up burning the whole rocket.
         [Fact]
         public void FlightPathAngle4AllRocket()
@@ -230,6 +239,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
         [Fact]
         public void CircularTest()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
             var v0 = new V3(0, 407.862893197274, 0);
             double t0 = 0;

@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 4.00.0 (source code generated 2023-05-21)
+ALGLIB 4.01.0 (source code generated 2023-12-27)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -26,6 +26,7 @@ using Intrinsics = System.Runtime.Intrinsics;
 #endif
 #pragma warning disable 1691
 #pragma warning disable 8981
+#pragma warning disable 649
 using System;
 public partial class alglib
 {
@@ -79,12 +80,87 @@ public partial class alglib
     public delegate void ndimensional_pgrad(double[] p, double[] q, ref double func, double[] grad, object obj);
     public delegate void ndimensional_phess(double[] p, double[] q, ref double func, double[] grad, double[,] hess, object obj);
     
+    public delegate void ndimensional_pfvec (double[] p, double[] q, double[] fi, object obj);
+    public delegate void ndimensional_pjac  (double[] p, double[] q, double[] fi, double[,] jac, object obj);
+    
     public delegate void ndimensional_rep(double[] arg, double func, object obj);
 
     public delegate void ndimensional_ode_rp (double[] y, double x, double[] dy, object obj);
 
     public delegate void integrator1_func (double x, double xminusa, double bminusx, ref double f, object obj);
-
+    
+    /********************************************************************
+    IronPython compatibility wrappers
+    (the language does not support ref-parameters)
+    ********************************************************************/
+    public delegate double _ipy_ndimensional_func (double[] arg);
+    public delegate double _ipy_ndimensional_grad (double[] arg, double[] grad);
+    public delegate double _ipy_ndimensional_pfunc(double[] p, double[] q);
+    public delegate double _ipy_ndimensional_pgrad(double[] p, double[] q, double[] grad);
+    public class _ipy_func_wrapper
+    {
+        private _ipy_ndimensional_func cb;
+        public _ipy_func_wrapper(_ipy_ndimensional_func _cb)
+        { cb = _cb; }
+        
+        public void func(double[] arg, ref double f, object obj)
+        {
+            AE_CRITICAL_ASSERT(obj==null);
+            f = cb(arg);
+        }
+        
+        public ndimensional_func get_delegate()
+        { return this.func; }
+    }
+    public class _ipy_pfunc_wrapper
+    {
+        private _ipy_ndimensional_pfunc cb;
+        
+        public _ipy_pfunc_wrapper(_ipy_ndimensional_pfunc _cb)
+        { cb = _cb; }
+        
+        public void func(double[] arg, double[] par, ref double f, object obj)
+        {
+            AE_CRITICAL_ASSERT(obj==null);
+            f = cb(arg, par);
+        }
+        
+        public ndimensional_pfunc get_delegate()
+        { return this.func; }
+    }
+    public class _ipy_grad_wrapper
+    {
+        private _ipy_ndimensional_grad cb;
+        
+        public _ipy_grad_wrapper(_ipy_ndimensional_grad _cb)
+        { cb = _cb; }
+        
+        public void grad(double[] arg, ref double f, double[] g, object obj)
+        {
+            AE_CRITICAL_ASSERT(obj==null);
+            f = cb(arg, g);
+        }
+        
+        public ndimensional_grad get_delegate()
+        { return this.grad; }
+    }
+    public class _ipy_pgrad_wrapper
+    {
+        private _ipy_ndimensional_pgrad cb;
+        
+        public _ipy_pgrad_wrapper(_ipy_ndimensional_pgrad _cb)
+        { cb = _cb; }
+        
+        public void grad(double[] arg, double[] par, ref double f, double[] g, object obj)
+        {
+            AE_CRITICAL_ASSERT(obj==null);
+            f = cb(arg, par, g);
+        }
+        
+        public ndimensional_pgrad get_delegate()
+        { return this.grad; }
+    }
+    
     /********************************************************************
     Class defining a complex number with double precision.
     ********************************************************************/
@@ -258,14 +334,25 @@ public partial class alglib
         {
             flags = v;
         }
+        public static xparams operator|(xparams lft, xparams rgt)
+        {
+            return new xparams(lft.flags|rgt.flags);
+        }
     }
-    private static ulong FLG_THREADING_MASK          = 0x7;
-    private static   int FLG_THREADING_SHIFT         = 0;
-    private static ulong FLG_THREADING_USE_GLOBAL    = 0x0;
-    private static ulong FLG_THREADING_SERIAL        = 0x1;
-    private static ulong FLG_THREADING_PARALLEL      = 0x2;
-    public static xparams serial   = new xparams(FLG_THREADING_SERIAL);
-    public static xparams parallel = new xparams(FLG_THREADING_PARALLEL);
+    private static ulong FLG_THREADING_MASK_WRK             = 0x7;
+    private static ulong FLG_THREADING_MASK_CBK             = (0x7<<3);
+    private static ulong FLG_THREADING_MASK_ALL             = (0x7|(0x7<<3));
+    private static   int FLG_THREADING_SHIFT                = 0;
+    private static ulong FLG_THREADING_DEFAULT              = 0x0;
+    private static ulong FLG_THREADING_SERIAL               = 0x1;
+    private static ulong FLG_THREADING_PARALLEL             = 0x2;
+    private static ulong FLG_THREADING_SERIAL_CALLBACKS     = (0x1<<3);
+    private static ulong FLG_THREADING_PARALLEL_CALLBACKS   = (0x2<<3);
+    public static xparams xdefault          = new xparams(0x0);
+    public static xparams serial            = new xparams(FLG_THREADING_SERIAL);
+    public static xparams parallel          = new xparams(FLG_THREADING_PARALLEL);
+    public static xparams serial_callbacks  = new xparams(FLG_THREADING_SERIAL_CALLBACKS);
+    public static xparams parallel_callbacks= new xparams(FLG_THREADING_PARALLEL_CALLBACKS);
 
     /********************************************************************
     Global flags, split into several char-sized variables in order
@@ -285,21 +372,19 @@ public partial class alglib
     
     public static void ae_set_global_threading(ulong flg_value)
     {
-        flg_value = flg_value&FLG_THREADING_MASK;
-        AE_CRITICAL_ASSERT(flg_value==FLG_THREADING_SERIAL || flg_value==FLG_THREADING_PARALLEL);
+        flg_value = flg_value&FLG_THREADING_MASK_ALL;
+        AE_CRITICAL_ASSERT((flg_value&FLG_THREADING_MASK_WRK)==FLG_THREADING_SERIAL ||
+                           (flg_value&FLG_THREADING_MASK_WRK)==FLG_THREADING_PARALLEL ||
+                           (flg_value&FLG_THREADING_MASK_WRK)==FLG_THREADING_DEFAULT);
+        AE_CRITICAL_ASSERT((flg_value&FLG_THREADING_MASK_CBK)==FLG_THREADING_SERIAL_CALLBACKS ||
+                           (flg_value&FLG_THREADING_MASK_CBK)==FLG_THREADING_PARALLEL_CALLBACKS ||
+                           (flg_value&FLG_THREADING_MASK_CBK)==FLG_THREADING_DEFAULT);
         global_threading_flags = (byte)(flg_value>>FLG_THREADING_SHIFT);
     }
     
     public static ulong ae_get_global_threading()
     {
         return ((ulong)global_threading_flags)<<FLG_THREADING_SHIFT;
-    }
-    
-    static ulong ae_get_effective_threading(xparams p)
-    {
-        if( p==null || (p.flags&FLG_THREADING_MASK)==FLG_THREADING_USE_GLOBAL )
-            return ((ulong)global_threading_flags)<<FLG_THREADING_SHIFT;
-        return p.flags&FLG_THREADING_MASK;
     }
     
     /********************************************************************
@@ -462,8 +547,125 @@ public partial class alglib
     /********************************************************************
     internal functions
     ********************************************************************/
-    public class ap
+    public partial class ap
     {
+        /********************************************************************
+        Class encapsulating callbacks
+        ********************************************************************/
+        public class rcommv2_callbacks
+        {
+            public ndimensional_func func;
+            public ndimensional_grad grad;
+            public ndimensional_fvec fvec;
+            public ndimensional_jac  jac;
+            public ndimensional_pfunc func_p;
+            public ndimensional_pgrad grad_p;
+            public ndimensional_pfvec fvec_p;
+            public ndimensional_pjac  jac_p;
+        }
+
+        /********************************************************************
+        Class encapsulating request information
+        ********************************************************************/
+        public class rcommv2_request
+        {
+            public rcommv2_request(int _rq, int _sz, int _fn, int _vc, int _di, int _fs, double[] _qd,  double[] _rf, double[] _rj, object _obj, string _sp)
+            {
+                request = _rq;
+                size    = _sz;
+                funcs   = _fn;
+                vars    = _vc;
+                dim     = _di;
+                formulasize = _fs;
+                query_data  = _qd;
+                reply_fi    = _rf;
+                reply_dj    = _rj;
+                obj         = _obj;
+                subpackage  = _sp;
+            }
+            
+            //
+            // Subpackage name
+            //
+            public string subpackage;
+            
+            //
+            // Parameter for user callback
+            //
+            public object obj;
+            
+            //
+            // Query
+            //
+            public double[] query_data;
+            
+            //
+            // Params
+            //
+            public int request, size, funcs, vars, dim, formulasize;
+            
+            //
+            // Reply
+            //
+            public double[] reply_fi, reply_dj;
+        }
+        
+        public class rcommv2_buffers
+        {
+            //
+            // Initialize locals by attaching to buffers provided according to the V2 protocol;
+            //
+            public rcommv2_buffers(double[] t_x, double[] t_c, double[] t_f, double[] t_g, double[,] t_j)
+            {
+                tmpX = t_x;
+                tmpC = t_c;
+                tmpF = t_f;
+                tmpG = t_g;
+                tmpJ = t_j;
+            }
+            
+            //
+            // initialize locals by allocating our own temporary storage
+            //
+            public rcommv2_buffers(rcommv2_request rq)
+            {
+                tmpX = new double[rq.vars];
+                if( rq.dim>0 )
+                    tmpC = new double[rq.dim];
+                tmpF = new double[rq.funcs];
+                tmpG = new double[rq.vars];
+                tmpJ = new double[rq.funcs, rq.vars];
+            }
+            
+            //
+            // initialize locals by null's
+            //
+            public rcommv2_buffers()
+            {
+            }
+            
+            //
+            // resize buffers according to the current request size.
+            // Does not change size, if requested size is too small.
+            //
+            public void resize(rcommv2_request rq)
+            {
+                if( tmpX==null || tmpX.Length<rq.vars )
+                    tmpX = new double[rq.vars];
+                if( rq.dim>0 && (tmpC==null || tmpC.Length<rq.dim) )
+                    tmpC = new double[rq.dim];
+                if( tmpF==null || tmpF.Length<rq.funcs )
+                    tmpF = new double[rq.funcs];
+                if( tmpG==null || tmpG.Length<rq.vars )
+                    tmpG = new double[rq.vars];
+                if( tmpJ==null || tmpJ.GetLength(0)<rq.funcs || tmpJ.GetLength(1)<rq.vars )
+                    tmpJ = new double[rq.funcs, rq.vars];
+            }
+            
+            public double[] tmpX, tmpC, tmpF, tmpG;
+            public double[,] tmpJ;
+        }
+
         public static int len<T>(T[] a)
         { return a.Length; }
         public static int rows<T>(T[,] a)
@@ -2131,27 +2333,6 @@ public partial class alglib
      */
     public partial class smp
     {
-        #pragma warning disable 420
-        public const int AE_LOCK_CYCLES = 512;
-        public const int AE_LOCK_TESTS_BEFORE_YIELD = 16;
-        
-        /*
-         * This variable is used to perform spin-wait loops in a platform-independent manner
-         * (loops which should work same way on Mono and Microsoft NET). You SHOULD NEVER
-         * change this field - it must be zero during all program life.
-         */
-        public static volatile int never_change_it = 0;
-        
-        /*************************************************************************
-        Lock.
-
-        This class provides lightweight spin lock
-        *************************************************************************/
-        public class ae_lock
-        {
-            public volatile int is_locked;
-        }
-
         /********************************************************************
         Shared pool: data structure used to provide thread-safe access to pool
         of temporary variables.
@@ -2247,84 +2428,6 @@ public partial class alglib
     
                 return result;
             }
-        }
-        
-
-        /************************************************************************
-        This function performs given number of spin-wait iterations
-        ************************************************************************/
-        public static void ae_spin_wait(int cnt)
-        {
-            /*
-             * these strange operations with ae_never_change_it are necessary to
-             * prevent compiler optimization of the loop.
-             */
-            int i;
-            
-            /* very unlikely because no one will wait for such amount of cycles */
-            if( cnt>0x12345678 )
-                never_change_it = cnt%10;
-            
-            /* spin wait, test condition which will never be true */
-            for(i=0; i<cnt; i++)
-                if( never_change_it>0 )
-                    never_change_it--;
-        }
-
-
-        /************************************************************************
-        This function causes the calling thread to relinquish the CPU. The thread
-        is moved to the end of the queue and some other thread gets to run.
-        ************************************************************************/
-        public static void ae_yield()
-        {
-            System.Threading.Thread.Sleep(0);
-        }
-
-        /************************************************************************
-        This function initializes ae_lock structure and sets lock in a free mode.
-        ************************************************************************/
-        public static void ae_init_lock(ref ae_lock obj)
-        {
-            obj = new ae_lock();
-            obj.is_locked = 0;
-        }
-
-
-        /************************************************************************
-        This function acquires lock. In case lock is busy, we perform several
-        iterations inside tight loop before trying again.
-        ************************************************************************/
-        public static void ae_acquire_lock(ae_lock obj)
-        {
-            int cnt = 0;
-            for(;;)
-            {
-                if( System.Threading.Interlocked.CompareExchange(ref obj.is_locked, 1, 0)==0 )
-                    return;
-                ae_spin_wait(AE_LOCK_CYCLES);
-                cnt++;
-                if( cnt%AE_LOCK_TESTS_BEFORE_YIELD==0 )
-                    ae_yield();
-            }
-        }
-
-
-        /************************************************************************
-        This function releases lock.
-        ************************************************************************/
-        public static void ae_release_lock(ae_lock obj)
-        {
-            System.Threading.Interlocked.Exchange(ref obj.is_locked, 0);
-        }
-
-
-        /************************************************************************
-        This function frees ae_lock structure.
-        ************************************************************************/
-        public static void ae_free_lock(ref ae_lock obj)
-        {
-            obj = null;
         }
         
         
@@ -7738,6 +7841,7 @@ public partial class alglib
     }
 }
 #endif
+
 public partial class alglib
 {
     public partial class smp
@@ -7764,4 +7868,449 @@ public partial class alglib
     {
         return alglib.smp.cores_to_use;
     }
+    public static int getcorestouse()
+    {
+        return 1;
+    }
 }
+
+public partial class alglib
+{
+    /*
+     * Parts of alglib class that are shared between all (commercial and free) managed editions of ALGLIB
+     */
+    static internal ulong ae_get_effective_threading_wrk(xparams p)
+    {
+        if( p==null || (p.flags&FLG_THREADING_MASK_WRK)==FLG_THREADING_DEFAULT )
+            return (((ulong)global_threading_flags)<<FLG_THREADING_SHIFT)&FLG_THREADING_MASK_WRK;
+        return p.flags&FLG_THREADING_MASK_WRK;
+    }
+    
+    static internal ulong ae_get_effective_threading_cbk(xparams p)
+    {
+        if( p==null || (p.flags&FLG_THREADING_MASK_CBK)==FLG_THREADING_DEFAULT )
+            return (((ulong)global_threading_flags)<<FLG_THREADING_SHIFT)&FLG_THREADING_MASK_CBK;
+        return p.flags&FLG_THREADING_MASK_CBK;
+    }
+    
+}
+public partial class alglib
+{
+    /*
+     * Parts of alglib.smp class that are shared between all ALGLIB editions (free managed, commercial managed, commercial native)
+     */
+    public partial class smp
+    {
+        #pragma warning disable 420
+        public const int AE_LOCK_CYCLES = 512;
+        public const int AE_LOCK_TESTS_BEFORE_YIELD = 16;
+        
+        /*
+         * This variable is used to perform spin-wait loops in a platform-independent manner
+         * (loops which should work same way on Mono and Microsoft NET). You SHOULD NEVER
+         * change this field - it must be zero during all program life.
+         */
+        public static volatile int never_change_it = 0;
+        
+        /*************************************************************************
+        Lock.
+
+        This class provides lightweight spin lock
+        *************************************************************************/
+        public class ae_lock
+        {
+            public volatile int is_locked;
+        }
+
+        /************************************************************************
+        This function performs given number of spin-wait iterations
+        ************************************************************************/
+        public static void ae_spin_wait(int cnt)
+        {
+            /*
+             * these strange operations with ae_never_change_it are necessary to
+             * prevent compiler optimization of the loop.
+             */
+            int i;
+            
+            /* very unlikely because no one will wait for such amount of cycles */
+            if( cnt>0x12345678 )
+                never_change_it = cnt%10;
+            
+            /* spin wait, test condition which will never be true */
+            for(i=0; i<cnt; i++)
+                if( never_change_it>0 )
+                    never_change_it--;
+        }
+
+
+        /************************************************************************
+        This function causes the calling thread to relinquish the CPU. The thread
+        is moved to the end of the queue and some other thread gets to run.
+        ************************************************************************/
+        public static void ae_yield()
+        {
+            System.Threading.Thread.Sleep(0);
+        }
+
+        /************************************************************************
+        This function initializes ae_lock structure and sets lock in a free mode.
+        ************************************************************************/
+        public static void ae_init_lock(ref ae_lock obj)
+        {
+            obj = new ae_lock();
+            obj.is_locked = 0;
+        }
+
+
+        /************************************************************************
+        This function acquires lock. In case lock is busy, we perform several
+        iterations inside tight loop before trying again.
+        ************************************************************************/
+        public static void ae_acquire_lock(ae_lock obj)
+        {
+            int cnt = 0;
+            for(;;)
+            {
+                if( System.Threading.Interlocked.CompareExchange(ref obj.is_locked, 1, 0)==0 )
+                    return;
+                ae_spin_wait(AE_LOCK_CYCLES);
+                cnt++;
+                if( cnt%AE_LOCK_TESTS_BEFORE_YIELD==0 )
+                    ae_yield();
+            }
+        }
+
+
+        /************************************************************************
+        This function releases lock.
+        ************************************************************************/
+        public static void ae_release_lock(ae_lock obj)
+        {
+            System.Threading.Interlocked.Exchange(ref obj.is_locked, 0);
+        }
+
+
+        /************************************************************************
+        This function frees ae_lock structure.
+        ************************************************************************/
+        public static void ae_free_lock(ref ae_lock obj)
+        {
+            obj = null;
+        }
+    }
+    
+    /*
+     * Parts of alglib.ap class that are shared between commercial and free ALGLIB
+     */
+    public partial class ap
+    {        
+        #if _ALGLIB_HPC
+        unsafe
+        #endif
+        internal static void process_v2request_2(rcommv2_request request, int query_idx, rcommv2_callbacks callbacks, rcommv2_buffers buffers)
+        {   
+            //
+            // Query and reply offsets
+            //
+            int query_data_offs = query_idx*(request.vars+request.dim);
+            int reply_fi_offs   = query_idx*request.funcs;
+            int reply_dj_offs   = query_idx*request.funcs*request.vars;
+            
+            //
+            // Copy inputs to buffers
+            //
+            for(int i=0; i<request.vars; i++)
+                buffers.tmpX[i] = request.query_data[query_data_offs+i];
+            if( request.dim>0 )
+                for(int i=0; i<request.dim; i++)
+                    buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+            
+            //
+            // Callback
+            //
+            if( callbacks.grad!=null )
+            {
+                double f0 = 0;
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && request.funcs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                callbacks.grad(buffers.tmpX, ref f0, buffers.tmpG, request.obj);
+                request.reply_fi[reply_fi_offs] = f0;
+                for(int i=0; i<request.vars; i++)
+                    request.reply_dj[reply_dj_offs+i] = buffers.tmpG[i];
+                return;
+            }
+            if( callbacks.grad_p!=null )
+            {
+                double f0 = 0;
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && request.funcs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                callbacks.grad_p(buffers.tmpX, buffers.tmpC, ref f0, buffers.tmpG, request.obj);
+                request.reply_fi[reply_fi_offs] = f0;
+                for(int i=0; i<request.vars; i++)
+                    request.reply_dj[reply_dj_offs+i] = buffers.tmpG[i];
+                return;
+            }
+            if( callbacks.jac!=null )
+            {
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                callbacks.jac(buffers.tmpX, buffers.tmpF, buffers.tmpJ, request.obj);
+                for(int ridx=0; ridx<request.funcs; ridx++)
+                {
+                    int doffs = reply_dj_offs+ridx*request.vars;
+                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                    for(int i=0; i<request.vars; i++)
+                        request.reply_dj[doffs+i] = buffers.tmpJ[ridx,i];
+                }
+                return;
+            }
+            if( callbacks.jac_p!=null )
+            {
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                callbacks.jac_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, buffers.tmpJ, request.obj);
+                for(int ridx=0; ridx<request.funcs; ridx++)
+                {
+                    int doffs = reply_dj_offs+ridx*request.vars;
+                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                    for(int i=0; i<request.vars; i++)
+                        request.reply_dj[doffs+i] = buffers.tmpJ[ridx,i];
+                }
+                return;
+            }
+            alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
+        }
+
+        #if _ALGLIB_HPC
+        unsafe
+        #endif
+        internal static void process_v2request_3phase0(rcommv2_request request, int job_idx, rcommv2_callbacks callbacks, rcommv2_buffers buffers)
+        {
+            //
+            // Phase 0: compute target at the origin and compute parts of the numerical differentiation formula that do NOT depend
+            // on the value at origin.
+            //
+            // This job can be completely parallelized without synchronization.
+            //
+            if( job_idx<request.size*request.vars )
+            {
+                //
+                // Compute parts of the numerical differentiation formula that do NOT depend
+                // on the value at origin.
+                //
+                int query_idx = job_idx/request.vars;
+                int var_idx   = job_idx%request.vars;
+                int n = request.vars;
+                int m = request.funcs;
+                int fs = request.formulasize;
+                int query_data_offs   = query_idx*(n+request.dim+n*request.formulasize*2);
+                int formula_data_offs = query_data_offs+n+request.dim+var_idx*fs*2;
+                int reply_dj_offs     = query_idx*n*m;
+                
+                //
+                // Copy inputs to buffers
+                //
+                for(int i=0; i<request.vars; i++)
+                    buffers.tmpX[i] = request.query_data[query_data_offs+i];
+                if( request.dim>0 )
+                    for(int i=0; i<request.dim; i++)
+                        buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+                
+                //
+                // compute gradient using numerical differentiation formula provided by the optimizer
+                //
+                double xprev = buffers.tmpX[var_idx];
+                for(int t=0; t<m; t++)
+                    request.reply_dj[reply_dj_offs+t*n+var_idx] = 0;
+                for(int idx=0; idx<fs; idx++)
+                {
+                    double xx=request.query_data[formula_data_offs+idx*2+0], coeff=request.query_data[formula_data_offs+idx*2+1];
+                    if( coeff==0 )
+                        continue;
+                    if( xx==request.query_data[query_data_offs+var_idx] ) // skip terms that depend on the target value at origin - it is still computed
+                        continue;
+                    buffers.tmpX[var_idx] = xx;
+                    if( callbacks.func!=null )
+                    {
+                        double f = 0;
+                        //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                        callbacks.func(buffers.tmpX, ref f, request.obj);
+                        buffers.tmpF[0] = f;
+                    }
+                    else if( callbacks.func_p!=null )
+                    {
+                        double f = 0;
+                        //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                        callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
+                        buffers.tmpF[0] = f;
+                    }
+                    else if( callbacks.fvec!=null )
+                    {
+                        //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                        callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
+                    }
+                    else if( callbacks.fvec_p!=null )
+                    {
+                        //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                        callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
+                    }
+                    else
+                        alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
+                    buffers.tmpX[var_idx] = xprev;
+                    for(int t=0; t<m; t++)
+                        request.reply_dj[reply_dj_offs+t*n+var_idx] += coeff*buffers.tmpF[t];
+                }
+            }
+            else
+            {
+                //
+                // Compute target value at the origin
+                //
+                int query_idx = job_idx-request.size*request.vars;
+                int query_data_offs = query_idx*(request.vars+request.dim+request.vars*request.formulasize*2);
+                int reply_fi_offs   = query_idx*request.funcs;
+                int m = request.funcs;
+                
+                //
+                // Copy inputs to buffers
+                //
+                for(int i=0; i<request.vars; i++)
+                    buffers.tmpX[i] = request.query_data[query_data_offs+i];
+                if( request.dim>0 )
+                    for(int i=0; i<request.dim; i++)
+                        buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+                
+                //
+                // Callback
+                //
+                if( callbacks.func!=null )
+                {
+                    double f = 0;
+                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    callbacks.func(buffers.tmpX, ref f, request.obj);
+                    buffers.tmpF[0] = f;
+                }
+                else if( callbacks.func_p!=null )
+                {
+                    double f = 0;
+                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
+                    buffers.tmpF[0] = f;
+                }
+                else if( callbacks.fvec!=null )
+                {
+                    //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
+                }
+                else if( callbacks.fvec_p!=null )
+                {
+                    //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
+                }
+                else
+                    alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
+                for(int t=0; t<m; t++)
+                    request.reply_fi[reply_fi_offs+t] = buffers.tmpF[t];
+            }
+        }
+
+        #if _ALGLIB_HPC
+        unsafe
+        #endif
+        internal static void process_v2request_3phase1(rcommv2_request request)
+        {
+            //
+            // Phase 1: compute parts of the numerical differentiation formula that DO depend on the value at origin.
+            //
+            // This phase does not need parallelism because all what we need is to add request.size*request.vars precomputed values.
+            //
+            for(int query_idx=0; query_idx<request.size; query_idx++)
+                for(int var_idx=0; var_idx<request.vars; var_idx++)
+                {
+                    //
+                    // Compute parts of the numerical differentiation formula that do NOT depend
+                    // on the value at origin.
+                    //
+                    int n = request.vars;
+                    int m = request.funcs;
+                    int fs = request.formulasize;
+                    int query_data_offs   = query_idx*(n+request.dim+n*request.formulasize*2);
+                    int formula_data_offs = query_data_offs+n+request.dim+var_idx*fs*2;
+                    int reply_fi_offs     = query_idx*m;
+                    int reply_dj_offs     = query_idx*n*m;
+                    for(int idx=0; idx<fs; idx++)
+                    {
+                        double xx=request.query_data[formula_data_offs+idx*2+0], coeff=request.query_data[formula_data_offs+idx*2+1];
+                        if( coeff==0 || xx!=request.query_data[query_data_offs+var_idx] )
+                            continue;
+                        for(int t=0; t<m; t++)
+                            request.reply_dj[reply_dj_offs+t*n+var_idx] += coeff*request.reply_fi[reply_fi_offs+t];
+                    }
+                }
+        }
+        
+        #if _ALGLIB_HPC
+        unsafe
+        #endif
+        internal static void process_v2request_4(rcommv2_request request, int query_idx, rcommv2_callbacks callbacks, rcommv2_buffers buffers)
+        {   
+            //
+            // Query and reply offsets
+            //
+            int query_data_offs = query_idx*(request.vars+request.dim);
+            int reply_fi_offs   = query_idx*request.funcs;
+            
+            //
+            // Copy inputs to buffers
+            //
+            for(int i=0; i<request.vars; i++)
+                buffers.tmpX[i] = request.query_data[query_data_offs+i];
+            if( request.dim>0 )
+                for(int i=0; i<request.dim; i++)
+                    buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+            
+            //
+            // Callback
+            //
+            if( callbacks.func!=null )
+            {
+                double f0 = 0;
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && request.funcs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                callbacks.func(buffers.tmpX, ref f0, request.obj);
+                request.reply_fi[reply_fi_offs] = f0;
+                return;
+            }
+            if( callbacks.func_p!=null )
+            {
+                double f0 = 0;
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && request.funcs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f0, request.obj);
+                request.reply_fi[reply_fi_offs] = f0;
+                return;
+            }
+            if( callbacks.fvec!=null )
+            {
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
+                for(int ridx=0; ridx<request.funcs; ridx++)
+                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                return;
+            }
+            if( callbacks.fvec_p!=null )
+            {
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
+                for(int ridx=0; ridx<request.funcs; ridx++)
+                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                return;
+            }
+            alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
+        }
+    }
+}
+
+public partial class alglib
+{
+    public partial class ap
+    {
+        public static readonly bool is_commercial = false;
+    }
+}
+
