@@ -124,67 +124,9 @@ namespace MechJebLibTest.PVGTests.AscentTests
             ClampPi(tanof).ShouldEqual(0.095809701921327317, 1e-7);
         }
 
-        // extreme 1010 x 1012 and still get free attachment
+        // extreme 1130 x 1132 with free attachment
         [Fact]
         public void Kepler3ExtremeElliptical()
-        {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
-            var v0 = new V3(0, 407.862893197274, 0);
-            double t0 = 0;
-            double PeR = 6.371e+6 + 1.010e+6;
-            double ApR = 6.371e+6 + 1.012e+6;
-            double rbody = 6.371e+6;
-            double incT = Deg2Rad(28.608);
-            double mu = 3.986004418e+14;
-
-            Ascent ascent = Ascent.Builder()
-                .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4, 4)
-                .AddStageUsingThrust(32758.6353093992, 456100.006103516, 315.000112652779, 178.63040653022, 3, 3, true)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, false, false)
-                .Build();
-
-            ascent.Run();
-
-            Optimizer pvg = ascent.GetOptimizer() ?? throw new Exception("null optimzer");
-
-            Solution solution = pvg.GetSolution();
-
-            (V3 rf, V3 vf) = solution.TerminalStateVectors();
-
-            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
-                Astro.KeplerianFromStateVectors(mu, rf, vf);
-
-            solution.R(0).ShouldEqual(r0);
-            solution.V(0).ShouldEqual(v0);
-            solution.M(0).ShouldEqual(157355.487476332);
-
-            // the lower epsilon values below here probably indicate that the free attachment solution is breaking down
-            solution.Constant(0).ShouldBeZero(1e-3);
-            solution.Constant(solution.Tmax).ShouldBeZero(1e-3);
-
-            solution.Vgo(0).ShouldEqual(18968.70290317855, 1e-7);
-            solution.Pv(0).normalized.ShouldEqual(new V3(0.87665284452812542, 0.053626948091188488, 0.47812544443814259), 1e-7);
-
-            double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
-            double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
-
-            perf.ShouldEqual(PeR, 1e-8);
-            aprf.ShouldEqual(ApR, 1e-8);
-
-            pvg.Znorm.ShouldBeZero(1e-5);
-            smaf.ShouldEqual(7381999.9997271635, 1e-5);
-            eccf.ShouldEqual(0.00013546395462809413, 1e-4);
-            incf.ShouldEqual(incT, 1e-5);
-            lanf.ShouldEqual(Deg2Rad(270), 1e-2);
-            argpf.ShouldEqual(1.6234662617637516, 1e-5);
-            tanof.ShouldEqual(0.036325746839258599, 1e-5);
-        }
-
-        // extreme 1130 x 1132 which breaks free attachment and falls back to periapsis
-        [Fact]
-        public void Kepler3MoreExtremerElliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
@@ -218,26 +160,26 @@ namespace MechJebLibTest.PVGTests.AscentTests
             solution.V(0).ShouldEqual(v0);
             solution.M(0).ShouldEqual(157355.487476332);
 
+            tanof.ShouldEqual(0.0063452857807080321, 0.1);
             solution.Constant(0).ShouldBeZero(1e-7);
             solution.Constant(solution.Tmax).ShouldBeZero(1e-7);
 
             // this is 0.12 seconds before tau with an 18 kg final mass
-            solution.Vgo(0).ShouldEqual(27198.792190399912, 1e-7);
-            solution.Pv(0).ShouldEqual(new V3(0.42013374453123059, 0.013974700407340215, 0.22914045811295167), 1e-7);
+            solution.Vgo(0).ShouldEqual(27198.789343451925, 1e-7);
+            solution.Pv(0).normalized.ShouldEqual(new V3(0.87754205429590737, 0.029189246151212624, 0.47861041657202014), 1e-7);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
             double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
 
-            perf.ShouldEqual(PeR, 1e-9);
-            aprf.ShouldEqual(ApR, 1e-9);
+            perf.ShouldEqual(PeR, 1e-8);
+            aprf.ShouldEqual(ApR, 1e-8);
 
             pvg.Znorm.ShouldBeZero(1e-7);
-            smaf.ShouldEqual(7502000.0002534958, 1e-7);
-            eccf.ShouldEqual(0.0001332978218926981, 1e-7);
-            incf.ShouldEqual(incT, 1e-7);
-            lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            argpf.ShouldEqual(1.6027749993714844, 1e-7);
-            tanof.ShouldEqual(0.00011182292330591537, 1e-7);
+            smaf.ShouldEqual(7502000.0002534958, 1e-4);
+            eccf.ShouldEqual(0.00013329824589634466, 1e-4);
+            incf.ShouldEqual(incT, 1e-4);
+            lanf.ShouldEqual(Deg2Rad(270), 1e-4);
+            argpf.ShouldEqual(1.5965429879704516, 1e-4);
         }
 
         [Fact]

@@ -72,13 +72,15 @@ namespace MechJebLibTest.PVGTests.AscentTests
             ClampPi(tanof).ShouldBeZero(1e-7);
         }
 
+
         [Fact]
+        // this is a buggy rocket, not an actual delta4 heavy, but it is being used to test that
+        // some of the worst possible targets still converge and to test the fallback from failure
+        // with the analytic thrust integrals to doing numerical integration.
         private void BuggyDelta4ExtremelyHeavy()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            // this is a buggy rocket, not an actual delta4 heavy, but it is being used to test that
-            // some of the worst possible targets still converge and to test the fallback from failure
-            // with the analytic thrust integrals to doing numerical integration.
+
             var r0 = new V3(5591854.96465599, 126079.439022067, 3050616.55737457);
             var v0 = new V3(-9.1936944030452, 407.764494724287, 0.000353003400966649);
             var u0 = new V3(0.877712545724556, 0.0197197822130759, 0.478781640529633);
