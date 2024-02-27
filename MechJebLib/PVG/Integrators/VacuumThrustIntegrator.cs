@@ -43,10 +43,6 @@ namespace MechJebLib.PVG.Integrators
                 dy.PV = -y.PR;
                 dy.PR = y.PV / r3 - 3 / r5 * V3.Dot(y.R, y.PV) * y.R;
                 dy.M  = Phase.thrust == 0 || Phase.Infinite ? 0 : -Phase.mdot;
-                dy.Pm = 0;
-                /*dy.Pm = _phase.FinalMassProblem && !_phase.Infinite
-                    ? _phase.ThrustBar * V3.Dot(y.PV, u) / (y.M * y.M)
-                    : 0; */
                 dy.DV = at;
 
                 dy.CopyTo(dyout);
