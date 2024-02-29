@@ -115,7 +115,7 @@ namespace MuMech
             bool hasRCS = Vessel.hasEnabledRCSModules() &&
                           VesselState.rcsThrustAvailable.Up > 0.1 * VesselState.rcsThrustAvailable.MaxMagnitude();
 
-            return hasRCS && Status != PVGStatus.TERMINAL_RCS;
+            return hasRCS && Status != PVGStatus.TERMINAL_RCS && Vessel.currentStage == _ascentSettings.LastStage;
         }
 
         private void HandleTerminal()
@@ -200,7 +200,18 @@ namespace MuMech
             Vector3d v1 = VesselState.orbitalVelocity + a0 * dt;
             Vector3d x1 = VesselState.orbitalPosition + VesselState.orbitalVelocity * dt + 0.5 * a0 * dt * dt;
 
+            bool shouldEndTerminal = false;
+
+            if (Status == PVGStatus.TERMINAL && VesselState.thrustCurrent == 0)
+            {
+                Debug.Log("[MechJebModuleGuidanceController] no thrust in TERMINAL state.");
+                shouldEndTerminal = true;
+            }
+
             if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), solutionIndex))
+                shouldEndTerminal = true;
+
+            if (shouldEndTerminal)
             {
                 if (WillDoRCSButNotYet())
                 {

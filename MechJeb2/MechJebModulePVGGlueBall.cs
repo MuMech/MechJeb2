@@ -140,6 +140,10 @@ namespace MuMech
                     double dv = Core.StageStats.VacStats[mjPhase].DeltaV;
                     int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
 
+                    // skip the current stage if we are doing a coast after it
+                    if (IsCurrentCoastAfterStage(kspStage))
+                        continue;
+
                     // skip the zero length stages
                     if (dv == 0)
                         continue;
@@ -241,6 +245,14 @@ namespace MuMech
             _task.Start();
 
             _blockOptimizerUntilTime = VesselState.time + 1;
+        }
+
+        private bool IsCurrentCoastAfterStage(int kspStage)
+        {
+            if (kspStage == Vessel.currentStage && Core.Guidance.IsCoasting() && !_ascentSettings.CoastBeforeFlag)
+                return true;
+
+            return false;
         }
     }
 }
