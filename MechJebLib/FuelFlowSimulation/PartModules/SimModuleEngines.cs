@@ -62,7 +62,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public double ModuleResiduals;
         public double ModuleSpoolupTime;
         public bool   NoPropellants;
-        public bool   isModuleEnginesRF;
+        public bool   IsModuleEnginesRf;
+        public bool   UnrestartableDeadEngine;
 
         public readonly H1 ThrustCurve                 = H1.Get(true);
         public readonly H1 ThrottleIspCurve            = H1.Get(true);

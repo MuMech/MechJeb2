@@ -153,7 +153,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void UpdateModuleEngines(SimPart part, SimModuleEngines engine, ModuleEngines? kspEngine)
+            private void UpdateModuleEngines(SimPart part, SimModuleEngines engine, ModuleEngines? kspEngine)
             {
                 if (kspEngine is null)
                 {
@@ -161,14 +161,15 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     return;
                 }
 
-                engine.IsEnabled       = kspEngine.isEnabled;
-                engine.IsOperational   = kspEngine.isOperational;
-                engine.ThrottleLimiter = kspEngine.thrustPercentage;
-                engine.MultIsp         = kspEngine.multIsp;
-                engine.NoPropellants   = kspEngine is { flameout: true, statusL2: "No propellants" };
-                engine.ModuleResiduals = 0;
+                engine.UnrestartableDeadEngine = kspEngine.UnrestartableDeadEngine() && !_vessel.HasLaunchClamp;
+                engine.IsEnabled               = kspEngine.isEnabled;
+                engine.IsOperational           = kspEngine.isOperational;
+                engine.ThrottleLimiter         = kspEngine.thrustPercentage;
+                engine.MultIsp                 = kspEngine.multIsp;
+                engine.NoPropellants           = kspEngine is { flameout: true, statusL2: "No propellants" };
+                engine.ModuleResiduals         = 0;
 
-                if (engine.isModuleEnginesRF && _rfPredictedMaximumResiduals!.GetValue(kspEngine) is double doubleVal)
+                if (engine.IsModuleEnginesRf && _rfPredictedMaximumResiduals!.GetValue(kspEngine) is double doubleVal)
                     engine.ModuleResiduals = doubleVal;
 
                 part.EngineResiduals = Max(part.EngineResiduals, engine.ModuleResiduals);

@@ -26,6 +26,7 @@ namespace MechJebLib.FuelFlowSimulation
         public readonly List<SimModuleEngines>             ActiveEngines           = new List<SimModuleEngines>(10);
         public readonly List<SimModuleRCS>                 ActiveRcs               = new List<SimModuleRCS>(10);
 
+        public bool   HasLaunchClamp;
         public int    CurrentStage;
         public double MainThrottle = 1.0;
         public double Mass;
@@ -106,6 +107,9 @@ namespace MechJebLib.FuelFlowSimulation
                 {
                     if (e.MassFlowRate <= 0) continue;
 
+                    if (e.UnrestartableDeadEngine)
+                        continue;
+
                     e.UpdateEngineStatus();
 
                     if (!e.IsOperational)
@@ -167,7 +171,9 @@ namespace MechJebLib.FuelFlowSimulation
             for (int i = 0; i < ActiveEngines.Count; i++)
             {
                 SimModuleEngines e = ActiveEngines[i];
-                if (!e.IsOperational) continue;
+
+                if (!e.IsOperational)
+                    continue;
 
                 SpoolupCurrent += e.ThrustCurrent.magnitude * e.ModuleSpoolupTime;
 
@@ -197,6 +203,7 @@ namespace MechJebLib.FuelFlowSimulation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Clear(SimVessel v)
         {
+            v.HasLaunchClamp = false;
             v.Parts.Clear();
             v.PartsRemainingInStage.Clear();
             v.EnginesDroppedInStage.Clear();

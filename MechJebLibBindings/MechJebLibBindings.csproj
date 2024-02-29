@@ -60,6 +60,7 @@
         <Compile Include="FuelFlowSimulation\SimVesselUpdater.cs"/>
         <Compile Include="H1Extensions.cs"/>
         <Compile Include="MathExtensions.cs"/>
+        <Compile Include="PartExtensions.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <Compile Include="ReflectionUtils.cs"/>
     </ItemGroup>

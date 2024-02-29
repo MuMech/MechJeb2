@@ -202,7 +202,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private SimLaunchClamp BuildLaunchClamp(SimPart part)
             {
-                part.IsLaunchClamp = true;
+                part.IsLaunchClamp     = true;
+                _vessel.HasLaunchClamp = true;
                 return SimLaunchClamp.Borrow(part);
             }
 
@@ -256,13 +257,13 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 part.IsEngine         = true;
 
                 engine.ModuleSpoolupTime = 0;
-                engine.isModuleEnginesRF = false;
+                engine.IsModuleEnginesRf = false;
 
                 if (ReflectionUtils.IsAssemblyLoaded("RealFuels"))
                 {
-                    engine.isModuleEnginesRF = _rfType!.IsInstanceOfType(kspEngine);
+                    engine.IsModuleEnginesRf = _rfType!.IsInstanceOfType(kspEngine);
 
-                    if (engine.isModuleEnginesRF && _rfSpoolUpTime!.GetValue(kspEngine) is float floatVal)
+                    if (engine.IsModuleEnginesRf && _rfSpoolUpTime!.GetValue(kspEngine) is float floatVal)
                         engine.ModuleSpoolupTime = floatVal;
                 }
 
