@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
+using MechJebLibBindings;
 using Smooth.Slinq;
 using UnityEngine;
 

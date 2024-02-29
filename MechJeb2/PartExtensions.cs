@@ -67,33 +67,6 @@ namespace MuMech
             return false;
         }
 
-        public static bool UnrestartableDeadEngine(this Part p)
-        {
-            if (!VesselState.isLoadedRealFuels) // stock doesn't have this concept
-                return false;
-
-            ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
-
-            if (eng is null) // this case probably doesn't make any sense
-                return false;
-
-            if (eng.finalThrust > 0)
-                return false;
-
-            try
-            {
-                if (VesselState.RFignitedField.GetValue(eng) is bool ignited && ignited)
-                    return false;
-                if (VesselState.RFignitionsField.GetValue(eng) is int ignitions)
-                    return ignitions == 0;
-            }
-            catch (ArgumentException)
-            {
-            }
-
-            return false;
-        }
-
         public static double FlowRateAtConditions(this ModuleEngines e, double throttle, double flowMultiplier)
         {
             float minFuelFlow = e.minFuelFlow;
