@@ -499,7 +499,7 @@ namespace MuMech
 
             if (!p.IsSepratron() && !IsBurnedOutSrbDecoupledInNextStage(p))
             {
-                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel() && !p.UnrestartableDeadEngine())
+                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel() && !p.IsUnrestartableDeadEngine())
                 {
                     return true; // TODO: properly check if ModuleEngines is active
                 }
