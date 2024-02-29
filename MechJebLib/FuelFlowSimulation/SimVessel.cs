@@ -107,7 +107,7 @@ namespace MechJebLib.FuelFlowSimulation
                 {
                     if (e.MassFlowRate <= 0) continue;
 
-                    if (e.UnrestartableDeadEngine)
+                    if (e.IsUnrestartableDeadEngine)
                         continue;
 
                     e.UpdateEngineStatus();

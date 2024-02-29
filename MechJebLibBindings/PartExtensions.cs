@@ -21,15 +21,13 @@ namespace MechJebLibBindings
 
         /// <summary>
         ///     Checks that all engine modules on the part are unrestartable and dead.
-        ///
         ///     Note that the caller must ensure that the vessel does not have any launch clamps, which always allows the engine
         ///     to start.
-        ///
         ///     When called on a part with no engine modules, this method returns false.
         /// </summary>
         /// <param name="p">the Part</param>
         /// <returns>if the Part's engine modules are all unrestable dead engines</returns>
-        public static bool UnrestartableDeadEngine(this Part p)
+        public static bool IsUnrestartableDeadEngine(this Part p)
         {
             if (CheatOptions.InfinitePropellant)
                 return false;
@@ -43,7 +41,7 @@ namespace MechJebLibBindings
 
             foreach (ModuleEngines e in enginelist)
             {
-                if (!e.UnrestartableDeadEngine())
+                if (!e.IsUnrestartableDeadEngine())
                     return false;
             }
 
@@ -52,13 +50,12 @@ namespace MechJebLibBindings
 
         /// <summary>
         ///     Checks that the engine module is unrestartable and dead.
-        ///
         ///     Note that the caller must ensure that the vessel does not have any launch clamps, which always allows the engine
         ///     to start.
         /// </summary>
         /// <param name="e">the ModulEngines</param>
         /// <returns>if the engine module is an unrestartable dead engine</returns>
-        public static bool UnrestartableDeadEngine(this ModuleEngines e)
+        public static bool IsUnrestartableDeadEngine(this ModuleEngines e)
         {
             if (CheatOptions.InfinitePropellant)
                 return false;

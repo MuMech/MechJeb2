@@ -163,13 +163,13 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                 // we need to check for launch clamps since non-airlightable engines have zero restarts but magically start
                 // when the vessel has a launch clamp
-                engine.UnrestartableDeadEngine = kspEngine.UnrestartableDeadEngine() && !_vessel.HasLaunchClamp;
-                engine.IsEnabled               = kspEngine.isEnabled;
-                engine.IsOperational           = kspEngine.isOperational;
-                engine.ThrottleLimiter         = kspEngine.thrustPercentage;
-                engine.MultIsp                 = kspEngine.multIsp;
-                engine.NoPropellants           = kspEngine is { flameout: true, statusL2: "No propellants" };
-                engine.ModuleResiduals         = 0;
+                engine.IsUnrestartableDeadEngine = kspEngine.IsUnrestartableDeadEngine() && !_vessel.HasLaunchClamp;
+                engine.IsEnabled                 = kspEngine.isEnabled;
+                engine.IsOperational             = kspEngine.isOperational;
+                engine.ThrottleLimiter           = kspEngine.thrustPercentage;
+                engine.MultIsp                   = kspEngine.multIsp;
+                engine.NoPropellants             = kspEngine is { flameout: true, statusL2: "No propellants" };
+                engine.ModuleResiduals           = 0;
 
                 if (engine.IsModuleEnginesRf && _rfPredictedMaximumResiduals!.GetValue(kspEngine) is double doubleVal)
                     engine.ModuleResiduals = doubleVal;
