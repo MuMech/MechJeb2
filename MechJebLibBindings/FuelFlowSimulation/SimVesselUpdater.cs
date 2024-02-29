@@ -161,6 +161,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     return;
                 }
 
+                // we need to check for launch clamps since non-airlightable engines have zero restarts but magically start
+                // when the vessel has a launch clamp
                 engine.UnrestartableDeadEngine = kspEngine.UnrestartableDeadEngine() && !_vessel.HasLaunchClamp;
                 engine.IsEnabled               = kspEngine.isEnabled;
                 engine.IsOperational           = kspEngine.isOperational;
