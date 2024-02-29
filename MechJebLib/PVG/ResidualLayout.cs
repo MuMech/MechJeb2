@@ -10,7 +10,7 @@ namespace MechJebLib.PVG
 {
     public class ResidualLayout
     {
-        public const int RESIDUAL_LAYOUT_LEN = 15;
+        public const int RESIDUAL_LAYOUT_LEN = 14;
 
         public  V3     R;
         public  V3     V;
@@ -18,7 +18,6 @@ namespace MechJebLib.PVG
         private V3     _terminal1;
         public  double M;
         public  double Bt;
-        public  double Pm;
 
         public (double a, double b, double c, double d, double e, double f) Terminal
         {
@@ -44,8 +43,7 @@ namespace MechJebLib.PVG
             other[10] = _terminal1[0];
             other[11] = _terminal1[1];
             other[12] = _terminal1[2];
-            other[13] = Pm;
-            other[14] = Bt;
+            other[13] = Bt;
         }
 
         public void CopyFrom(IList<double> other)
@@ -55,8 +53,7 @@ namespace MechJebLib.PVG
             M          = other[6];
             _terminal0 = new V3(other[7], other[8], other[9]);
             _terminal1 = new V3(other[10], other[11], other[12]);
-            Pm         = other[13];
-            Bt         = other[14];
+            Bt         = other[13];
         }
 
         public static ResidualLayout CreateFrom(IList<double> other)
