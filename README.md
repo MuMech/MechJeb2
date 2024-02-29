@@ -144,7 +144,7 @@ make install
 
 1. Install the version of Unity that KSP uses ( Currently 2019.2.2f1 )
 
-2. Configure your system environement variables and add:
+2. Configure your system environment variables and add:
 
 - KSPDIR set to where your KSP install is ( usually **C:\Program Files (x86)\Steam\SteamApps\Common\Kerbal Space Program
   ** )
@@ -156,6 +156,10 @@ make install
 3. Load MechJeb2.sln and open the properties of the MechJeb2 project (Right-Click=>properties). In the "Reference Path"
    section add the KSP libs folder to the list ( usually **C:\Program Files (x86)\Steam\SteamApps\Common\Kerbal Space
    Program\KSP_x64_Data\Managed** )
+
+4. Repeat step 3 for the MechJebLib, MechJebLibBindings, and MechJebLibTest projects.
+
+5. Perform `nuget restore` to get external dependencies such as JetBrains.Annotations.
 
 ## License
 
