@@ -25,12 +25,19 @@ namespace MechJebLib.PVG.Terminal
 
         public IPVGTerminal Rescale(Scale scale) => new Intercept6Cartesian(_rT / scale.LengthScale, _vT / scale.VelocityScale);
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
+        public int TerminalConstraints(IntegratorRecord yf, double[] zout, int offset)
         {
             V3 rmiss = yf.R - _rT;
             V3 vmiss = yf.V - _vT;
 
-            return (rmiss[0], rmiss[1], rmiss[2], vmiss[0], vmiss[1], vmiss[2]);
+            zout[offset]     = rmiss[0];
+            zout[offset + 1] = rmiss[1];
+            zout[offset + 2] = rmiss[2];
+            zout[offset + 3] = vmiss[0];
+            zout[offset + 4] = vmiss[1];
+            zout[offset + 5] = vmiss[2];
+
+            return offset + 6;
         }
     }
 }

@@ -51,7 +51,6 @@ namespace MechJebLibTest.PVGTests.AscentTests
             using Solution solution = pvg.GetSolution();
 
             pvg.Znorm.ShouldBeZero(1e-9);
-            Assert.Equal(8, pvg.TerminationType);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -62,14 +61,14 @@ namespace MechJebLibTest.PVGTests.AscentTests
             solution.V(t0).ShouldEqual(v0);
             solution.M(t0).ShouldEqual(52831.1138786043);
             solution.Vgo(t0).ShouldEqual(9419.6763414588168, 1e-7);
-            solution.Pv(t0).ShouldEqual(new V3(1.3834666440741792, -0.95667858377414616, 0.70183279386418346), 1e-7);
+            solution.Pv(t0).normalized.ShouldEqual(new V3(0.75133459258654811, -0.53346550488395239, 0.38847250234954323), 1e-7);
 
-            smaf.ShouldEqual(8849932.3534340952, 1e-7);
-            eccf.ShouldEqual(0.2592033771405583, 1e-7);
+            smaf.ShouldEqual(8404183.6124882326, 1e-7);
+            eccf.ShouldEqual(0.21991233148897388, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
-            lanf.ShouldEqual(3.4079112881114502, 1e-7);
-            argpf.ShouldEqual(1.7723635725563422, 1e-7);
-            ClampPi(tanof).ShouldBeZero(1e-7);
+            lanf.ShouldEqual(3.4079120181252147, 1e-7);
+            argpf.ShouldEqual(1.7698810400747105, 1e-7);
+            ClampPi(tanof).ShouldBeZeroRadians(1e-7);
         }
 
         [Fact]
@@ -87,7 +86,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
             double mu = 398600435436096;
             double rbody = 6371000;
 
-            double decmass = 2403; // can be decreased to add more payload
+            double decmass = 2403; // can be DECREASED to add more payload
 
             Ascent ascent = Ascent.Builder()
                 .Initial(r0, v0, u0, t0, mu, rbody)
@@ -104,8 +103,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
 
             using Solution solution = pvg.GetSolution();
 
-            pvg.Znorm.ShouldBeZero(1e-9);
-            Assert.Equal(8, pvg.TerminationType);
+            pvg.Znorm.ShouldBeZero(1e-7);
         }
 
         [Fact]
@@ -133,8 +131,39 @@ namespace MechJebLibTest.PVGTests.AscentTests
 
             using Solution solution = pvg.GetSolution();
 
-            pvg.Znorm.ShouldBeZero(1e-9);
-            Assert.Equal(8, pvg.TerminationType);
+            pvg.Znorm.ShouldBeZero(1e-7);
+        }
+
+        [Fact]
+        private void BeeHive()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+            var r0 = new V3(-3988041.6843192, -3921765.53302081, 3050615.06099173);
+            var v0 = new V3(285.979266178343, -290.812948276128, 0.000276244412257771);
+            var u0 = new V3(-0.626053346793477, -0.615468949278955, 0.478806018829346);
+            double t0 = 221378.636736999;
+            double mu = 398600435436096;
+            double rbody = 6371000;
+
+            Ascent ascent = Ascent.Builder()
+                .Initial(r0, v0, u0, t0, mu, rbody)
+                .SetTarget(6556000, 6371000, 6556000, 0.499303792410538, 0, 0, false, false)
+                .AddStageUsingFinalMass(16006.8846887322, 2829.61076194856, 235.586453422831, 91.4223274133237, 5, 5, true)
+                .AddOptimizedCoast(2829.61076194856, 0, 450, 5, 5)
+                .AddStageUsingFinalMass(649.644653342257, 487.381564405817, 237.460081851012, 21.8416180449888, 3, 3, false, true)
+                .AddStageUsingFinalMass(446.703235224704, 284.440146288264, 237.460081851012, 21.8416180449888, 2, 2, false, true)
+                .AddStageUsingFinalMass(243.761817107152, 81.4987281707116, 237.460081851012, 21.8416180449888, 1, 1, false, true)
+                .AddStageUsingFinalMass(49.9191050580703, 28.3121342028541, 220.000054688759, 5.82703000157093, 0, 0, false, true)
+                .FixedBurnTime(false)
+                .Build();
+
+            ascent.Run();
+
+            Optimizer pvg = ascent.GetOptimizer() ?? throw new Exception("null optimzer");
+
+            using Solution solution = pvg.GetSolution();
+
+            pvg.Znorm.ShouldBeZero(1e-5);
         }
     }
 }

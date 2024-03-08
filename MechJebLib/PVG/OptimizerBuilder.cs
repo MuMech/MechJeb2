@@ -4,9 +4,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using MechJebLib.Primitives;
 using MechJebLib.PVG.Terminal;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PVG
 {
@@ -14,18 +14,20 @@ namespace MechJebLib.PVG
     {
         public class OptimizerBuilder : IDisposable
         {
-            private IPVGTerminal? _terminal;
-            private List<Phase>   _phases = null!;
-            private V3            _r0;
-            private V3            _v0;
-            private V3            _u0;
-            private double        _t0;
-            private double        _mu;
-            private double        _rbody;
-            private double        _hT;
+            private IPVGTerminal?   _terminal;
+            private PhaseCollection _phases = null!;
+            private V3              _r0;
+            private V3              _v0;
+            private V3              _u0;
+            private double          _t0;
+            private double          _mu;
+            private double          _rbody;
+            private double          _hT;
 
-            public Optimizer Build(List<Phase> phases)
+            public Optimizer Build(PhaseCollection phases)
             {
+                Print(phases.ToString());
+
                 _phases = phases;
 
                 double m0 = _phases[0].m0;
@@ -35,7 +37,7 @@ namespace MechJebLib.PVG
 
                 var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody, _terminal);
 
-                var normalizedPhases = new List<Phase>();
+                var normalizedPhases = new PhaseCollection();
 
                 foreach (Phase phase in _phases)
                 {

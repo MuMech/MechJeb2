@@ -37,7 +37,7 @@ namespace MechJebLib.PVG.Terminal
 
         public IPVGTerminal Rescale(Scale scale) => new Kepler3Reduced(_smaT / scale.LengthScale, _eccT, _incT);
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
+        public int TerminalConstraints(IntegratorRecord yf, double[] zout, int offset)
         {
             var hf = V3.Cross(yf.R, yf.V);
             var n = new V3(0, 0, 1);
@@ -47,14 +47,14 @@ namespace MechJebLib.PVG.Terminal
 
             // empirically found this combination worked better and tolerates ecc > 1e-4
             // the use of energy, eccentricity and sma did not converge as well
-            double con1 = V3.Dot(hf, hf) * 0.5 - _hTm * _hTm * 0.5;                 // angular momentum
-            double con2 = Astro.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT; // periapsis
-            double con3 = V3.Dot(n, hf.normalized) - Math.Cos(_incT);               // inclination
-            double tv1 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), hf); // free Argp
-            double tv2 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), n);  // free LAN
-            double tv3 = V3.Dot(yf.PR, yf.V) - V3.Dot(yf.PV, yf.R) / rf3;           // free TA
+            zout[offset]     = V3.Dot(hf, hf) * 0.5 - _hTm * _hTm * 0.5;                  // angular momentum
+            zout[offset + 1] = Astro.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT;  // periapsis
+            zout[offset + 2] = V3.Dot(n, hf.normalized) - Math.Cos(_incT);                // inclination
+            zout[offset + 3] = V3.Dot(V3.Cross(yf.Pr, yf.R) + V3.Cross(yf.Pv, yf.V), hf); // free Argp
+            zout[offset + 4] = V3.Dot(V3.Cross(yf.Pr, yf.R) + V3.Cross(yf.Pv, yf.V), n);  // free LAN
+            zout[offset + 5] = V3.Dot(yf.Pr, yf.V) - V3.Dot(yf.Pv, yf.R) / rf3;           // free TA
 
-            return (con1, con2, con3, tv1, tv2, tv3);
+            return offset + 6;
         }
     }
 }

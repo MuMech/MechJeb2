@@ -45,7 +45,6 @@ namespace MechJebLib.PVG
 
         public          bool Unguided;
         public readonly bool MassContinuity = false;
-        public          bool LastFreeBurn   = false;
         public          bool Normalized;
         public readonly int  KSPStage;
         public readonly int  MJPhase;
@@ -110,9 +109,7 @@ namespace MechJebLib.PVG
             return phase;
         }
 
-        public void Integrate(Vn y0, Vn yf, double t0, double tf) => _integrator.Integrate(y0, yf, this, t0, tf);
-
-        public void Integrate(Vn y0, Vn yf, double t0, double tf, Solution solution) => _integrator.Integrate(y0, yf, this, t0, tf, solution);
+        public Hn Integrate(Vn y0, Vn yf, double t0, double tf) => _integrator.Integrate(y0, yf, this, t0, tf);
 
         public static Phase NewStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, int mjPhase, bool optimizeTime = false,
             bool unguided = false)
@@ -152,7 +149,8 @@ namespace MechJebLib.PVG
             return phase;
         }
 
-        public static Phase NewFixedCoast(double m0, double ct, int kspStage, int mjPhase) => new Phase(m0, 0, double.PositiveInfinity, m0, ct, kspStage, mjPhase);
+        public static Phase NewFixedCoast(double m0, double ct, int kspStage, int mjPhase) =>
+            new Phase(m0, 0, double.PositiveInfinity, m0, ct, kspStage, mjPhase);
 
         public static Phase NewOptimizedCoast(double m0, double mint, double maxt, int kspStage, int mjPhase)
         {

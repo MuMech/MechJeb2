@@ -38,7 +38,7 @@ namespace MechJebLibTest.PVGTests.Integrators
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            InputLayout.CreateFrom(y0);
+            IntegratorRecord.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 
@@ -49,13 +49,13 @@ namespace MechJebLibTest.PVGTests.Integrators
 
             integrator.Integrate(y0, yf, normalizedPhase, 0, 0.21143859334689075);
 
-            var expected = OutputLayout.CreateFrom(terminal);
-            var actual = OutputLayout.CreateFrom(yf);
+            var expected = IntegratorRecord.CreateFrom(terminal);
+            var actual = IntegratorRecord.CreateFrom(yf);
 
             _testOutputHelper.WriteLine($"{(actual.R - expected.R).magnitude / expected.R.magnitude}");
             _testOutputHelper.WriteLine($"{(actual.V - expected.V).magnitude / expected.V.magnitude}");
-            _testOutputHelper.WriteLine($"{(actual.PV - expected.PV).magnitude / expected.PV.magnitude}");
-            _testOutputHelper.WriteLine($"{(actual.PR - expected.PR).magnitude / expected.PR.magnitude}\n");
+            _testOutputHelper.WriteLine($"{(actual.Pv - expected.Pv).magnitude / expected.Pv.magnitude}");
+            _testOutputHelper.WriteLine($"{(actual.Pr - expected.Pr).magnitude / expected.Pr.magnitude}\n");
             for (int i = 0; i < yf.Count; i++)
                 _testOutputHelper.WriteLine($"{yf[i] / terminal[i]}");
 
@@ -86,7 +86,7 @@ namespace MechJebLibTest.PVGTests.Integrators
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            InputLayout.CreateFrom(y0);
+            IntegratorRecord.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 
@@ -128,7 +128,7 @@ namespace MechJebLibTest.PVGTests.Integrators
 
             using var y0 = Vn.Rent(initial);
             using var yf = Vn.Rent(initial.Length);
-            InputLayout.CreateFrom(y0);
+            IntegratorRecord.CreateFrom(y0);
 
             var scale = Scale.Create(mu, r0.magnitude, m0);
 

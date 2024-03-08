@@ -40,18 +40,19 @@ namespace MechJebLib.PVG.Terminal
         public IPVGTerminal Rescale(Scale scale) =>
             new FlightPathAngle5Reduced(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT, _lanT);
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
+        public int TerminalConstraints(IntegratorRecord yf, double[] zout, int offset)
         {
             var hf = V3.Cross(yf.R, yf.V);
             V3 hmiss = hf - _hT;
 
-            double con1 = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
-            double con2 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
-            double con3 = hmiss[0];
-            double con4 = hmiss[1];
-            double con5 = hmiss[2];
-            double tv1 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), hf); // free argP
-            return (con1, con2, con3, con4, con5, tv1);
+            zout[offset]     = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
+            zout[offset + 1] = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
+            zout[offset + 2] = hmiss[0];
+            zout[offset + 3] = hmiss[1];
+            zout[offset + 4] = hmiss[2];
+            zout[offset + 5] = V3.Dot(V3.Cross(yf.Pr, yf.R) + V3.Cross(yf.Pv, yf.V), hf); // free argP
+
+            return offset + 6;
         }
     }
 }

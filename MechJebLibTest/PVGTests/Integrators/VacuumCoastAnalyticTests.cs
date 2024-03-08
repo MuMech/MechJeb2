@@ -35,18 +35,18 @@ namespace MechJebLibTest.PVGTests.Integrators
                 var pv0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 40 * random.NextDouble() - 20;
 
-                using var yin = Vn.Rent(InputLayout.INPUT_LAYOUT_LEN);
-                using var yout = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
-                using var yout2 = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
+                using var yin = Vn.Rent(IntegratorRecord.INTEGRATOR_REC_LEN);
+                using var yout = Vn.Rent(IntegratorRecord.INTEGRATOR_REC_LEN);
+                using var yout2 = Vn.Rent(IntegratorRecord.INTEGRATOR_REC_LEN);
 
-                var y0 = new InputLayout();
-                var yf = OutputLayout.CreateFrom(yout);
-                var yf2 = OutputLayout.CreateFrom(yout2);
+                var y0 = new IntegratorRecord();
+                var yf = IntegratorRecord.CreateFrom(yout);
+                var yf2 = IntegratorRecord.CreateFrom(yout2);
 
                 y0.R  = r0;
                 y0.V  = v0;
-                y0.PV = pv0;
-                y0.PR = pr0;
+                y0.Pv = pv0;
+                y0.Pr = pr0;
                 y0.M  = 1;
 
                 y0.CopyTo(yin);
@@ -67,15 +67,15 @@ namespace MechJebLibTest.PVGTests.Integrators
 
                 analytic.Integrate(yin, yout2, phase, 0, dt);
 
-                if (!NearlyEqual(yf.R, yf2.R, 1e-8) || !NearlyEqual(yf.V, yf2.V, 1e-8) || !NearlyEqual(yf.PV, yf2.PV, 1e-8) ||
-                    !NearlyEqual(yf.PR, yf2.PR, 1e-8))
+                if (!NearlyEqual(yf.R, yf2.R, 1e-8) || !NearlyEqual(yf.V, yf2.V, 1e-8) || !NearlyEqual(yf.Pv, yf2.Pv, 1e-8) ||
+                    !NearlyEqual(yf.Pr, yf2.Pr, 1e-8))
                 {
                     _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + yf.R + " vf:" + yf.V + "\nrf2:" + yf2.R +
                                                 " vf2:" +
                                                 yf2.V + "\n");
-                    _testOutputHelper.WriteLine("pr0 :" + pr0 + " pv0:" + pv0 + " dt:" + dt + "\npv:" + yf.PV + " pr:" + yf.PR + "\npv2:" + yf2.PV +
+                    _testOutputHelper.WriteLine("pr0 :" + pr0 + " pv0:" + pv0 + " dt:" + dt + "\npv:" + yf.Pv + " pr:" + yf.Pr + "\npv2:" + yf2.Pv +
                                                 " pr2:" +
-                                                yf2.PR + "\n");
+                                                yf2.Pr + "\n");
                 }
             }
         }

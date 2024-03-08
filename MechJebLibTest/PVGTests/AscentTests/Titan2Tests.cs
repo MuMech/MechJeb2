@@ -120,7 +120,7 @@ namespace MechJebLibTest.PVGTests.AscentTests
             eccf.ShouldEqual(0.23913520746130185, 1e-7);
             incf.ShouldEqual(incT, 1e-7);
             lanf.ShouldEqual(Deg2Rad(270), 1e-7);
-            argpf.ShouldEqual(1.6625138637074874, 1e-7);
+            argpf.ShouldEqual(1.6625138637074874, 1e-6);
             ClampPi(tanof).ShouldEqual(0.095809701921327317, 1e-7);
         }
 

@@ -417,7 +417,7 @@ namespace MechJebLib.Utils
             var sb = new StringBuilder();
 
             for (int i = 0; i <= user.GetUpperBound(0); i++)
-                sb.AppendLine(DoubleArraySparsity(GetRow(user, i), GetRow(numerical, i), tol));
+                sb.AppendLine($"{i} {DoubleArraySparsity(GetRow(user, i), GetRow(numerical, i), tol)}");
 
             return sb.ToString();
         }

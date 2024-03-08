@@ -9,7 +9,7 @@ namespace MechJebLib.PVG.Terminal
 {
     public interface IPVGTerminal
     {
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf);
+        public int TerminalConstraints(IntegratorRecord yf, double[] zout, int offset);
 
         public IPVGTerminal Rescale(Scale scale);
     }

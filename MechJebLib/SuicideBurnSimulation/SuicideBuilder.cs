@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using MechJebLib.Primitives;
+﻿using MechJebLib.Primitives;
 using MechJebLib.PVG;
 
 namespace MechJebLib.SuicideBurnSimulation
@@ -8,7 +7,7 @@ namespace MechJebLib.SuicideBurnSimulation
     {
         public class SuicideBuilder
         {
-            private readonly List<Phase> _phases = new List<Phase>();
+            private readonly PhaseCollection _phases = new PhaseCollection();
 
             public Suicide Build()
             {

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System.Collections.Generic;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
@@ -14,7 +13,7 @@ namespace MechJebLib.PVG
     {
         public class AscentBuilder
         {
-            public readonly List<Phase> _phases = new List<Phase>();
+            public readonly PhaseCollection _phases = new PhaseCollection();
 
             public V3        _r0                  { get; private set; }
             public V3        _v0                  { get; private set; }

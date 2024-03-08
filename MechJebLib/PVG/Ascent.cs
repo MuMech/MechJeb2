@@ -4,7 +4,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
@@ -18,26 +17,26 @@ namespace MechJebLib.PVG
     {
         private readonly AscentBuilder _input;
 
-        private List<Phase> _phases              => _input._phases;
-        private V3          _r0                  => _input._r0;
-        private V3          _v0                  => _input._v0;
-        private V3          _u0                  => _input._u0;
-        private double      _t0                  => _input._t0;
-        private double      _mu                  => _input._mu;
-        private double      _rbody               => _input._rbody;
-        private double      _peR                 => _input._peR;
-        private double      _apR                 => _input._apR;
-        private double      _attR                => _input._attR;
-        private double      _incT                => _input._incT;
-        private double      _lanT                => _input._lanT;
-        private double      _fpaT                => _input._fpaT;
-        private double      _hT                  => _input._hT;
-        private bool        _attachAltFlag       => _input._attachAltFlag;
-        private bool        _lanflag             => _input._lanflag;
-        private bool        _fixedBurnTime       => _input._fixedBurnTime;
-        private Solution?   _solution            => _input._solution;
-        private int         _optimizedPhase      => _input._optimizedPhase;
-        private int         _optimizedCoastPhase => _input._optimizedCoastPhase;
+        private PhaseCollection _phases              => _input._phases;
+        private V3              _r0                  => _input._r0;
+        private V3              _v0                  => _input._v0;
+        private V3              _u0                  => _input._u0;
+        private double          _t0                  => _input._t0;
+        private double          _mu                  => _input._mu;
+        private double          _rbody               => _input._rbody;
+        private double          _peR                 => _input._peR;
+        private double          _apR                 => _input._apR;
+        private double          _attR                => _input._attR;
+        private double          _incT                => _input._incT;
+        private double          _lanT                => _input._lanT;
+        private double          _fpaT                => _input._fpaT;
+        private double          _hT                  => _input._hT;
+        private bool            _attachAltFlag       => _input._attachAltFlag;
+        private bool            _lanflag             => _input._lanflag;
+        private bool            _fixedBurnTime       => _input._fixedBurnTime;
+        private Solution?       _solution            => _input._solution;
+        private int             _optimizedPhase      => _input._optimizedPhase;
+        private int             _optimizedCoastPhase => _input._optimizedCoastPhase;
 
         private double     _vT;
         private double     _gammaT;
@@ -143,6 +142,15 @@ namespace MechJebLib.PVG
             return pvg2.Success() ? pvg2 : pvg;
         }
 
+        private void ApplyFPAToFixed(Optimizer.OptimizerBuilder builder)
+        {
+            (_vT, _gammaT) = Astro.ConvertApsidesTargetToFPA(_attR, _attR, _attR, _mu);
+            if (_lanflag)
+                builder.TerminalFPA5(_attR, _vT, _gammaT, _incT, _lanT);
+            else
+                builder.TerminalFPA4(_attR, _vT, _gammaT, _incT);
+        }
+
         private void ApplyFPA(Optimizer.OptimizerBuilder builder)
         {
             // If _attachAltFlag is NOT set then we are bootstrapping with ApplyFPA prior to
@@ -178,58 +186,141 @@ namespace MechJebLib.PVG
 
         private Optimizer InitialBootstrappingFixed(Optimizer.OptimizerBuilder builder)
         {
-            ApplyEnergy(builder);
+            /*
+             * Analytic initial bootstrapping with infinite upper stage and no coast, forced FPA attachment with circular orbit
+             */
+
+            Print("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
+            ApplyFPAToFixed(builder);
 
             // guess the initial launch direction
             V3 enu = Astro.ENUHeadingForInclination(_incT, _r0);
             enu.z = 1.0; // add 45 degrees up
-            V3 pvGuess = Astro.ENUToECI(_r0, enu).normalized;
+            V3 pvGuess = Astro.ENUToECI(_r0, enu).normalized / Sqrt(2);
 
-            List<Phase> bootphases = DupPhases(_phases);
-
-            // FIXME: we may want to convert this to an optimized burntime circular orbit problem with an infinite upper stage for bootstrapping
-            for (int p = 0; p < bootphases.Count; p++)
-            {
-                bootphases[p].Unguided = false;
-
-                if (p == _optimizedCoastPhase)
-                {
-                    bootphases[p].OptimizeTime = false;
-                    // FIXME: a problem here is that if we require a coast to hit the target then we'll never converge
-                    bootphases[p].bt = 0;
-                }
-            }
+            PhaseCollection bootphases = InfiniteUpperNoCoast();
 
             using Optimizer pvg = builder.Build(bootphases);
-            pvg.Bootstrap(pvGuess, _r0.normalized);
+            pvg.Bootstrap(pvGuess, _r0.normalized / Sqrt(2));
             pvg.Run();
 
             if (!pvg.Success())
-                throw new Exception("Target unreachable (fixed bootstrapping)");
+                throw new Exception("Target unreachable (infinite ISP");
 
+            /*
+             * Adding coast to infinite upper stage with circular FPA target
+             */
+
+            //if (_optimizedCoastPhase > -1)
+            //{
+            Print("*** PHASE 2: ADDING COAST TO INFINITE UPPER STAGE ***");
             using Solution solution = pvg.GetSolution();
             ApplyOldBurnTimesToPhases(solution);
 
-            List<Phase> bootphases2 = DupPhases(_phases);
+            PhaseCollection bootphases2 = DupPhases(_phases);
 
-            if (_optimizedCoastPhase > -1)
+            for (int i = 0; i < bootphases2.Count; i++)
             {
-                double total = 0.0;
+                // set the coast to the total burntime / 2
+                if (i == _optimizedCoastPhase)
+                    bootphases2[i].bt = Clamp(TotalBurntime(solution) / 2, bootphases2[i].mint, bootphases2[i].maxt);
 
-                for (int i = 0; i < bootphases2.Count; i++)
-                    total += bootphases2[i].bt;
-
-                bootphases2[_optimizedCoastPhase].bt = total;
+                // make all stages guided and unoptimized
+                bootphases2[i].Unguided     = false;
+                bootphases2[i].OptimizeTime = false;
             }
+
+            // set the top stage to infinite + optimized
+            bootphases2[bootphases2.Count - 1].Infinite     = true;
+            bootphases2[bootphases2.Count - 1].OptimizeTime = true;
 
             Optimizer pvg2 = builder.Build(bootphases2);
             pvg2.Bootstrap(solution);
             pvg2.Run();
 
             if (!pvg2.Success())
+                throw new Exception("Target unreachable (infinite ISP w/coast)");
+            //}
+
+            /*
+             * Solving problem with all guided stages
+             */
+
+            Print("*** PHASE 3: DOING FINITE GUIDED STAGES ***");
+
+            using Solution solution2 = pvg2.GetSolution();
+            ApplyOldBurnTimesToPhases(solution2);
+
+            PhaseCollection bootphases3 = DupPhases(_phases);
+
+            for (int i = 0; i < bootphases3.Count; i++)
+            {
+                // make all stages guided
+                bootphases3[i].Unguided = false;
+            }
+
+            bootphases3[bootphases3.Count - 1].OptimizeTime = true;
+
+            Optimizer pvg3 = builder.Build(bootphases3);
+            pvg3.Bootstrap(solution2);
+            pvg3.Run();
+
+            if (!pvg3.Success())
+                throw new Exception("Target unreachable (finite guided stages)");
+
+            /*
+             * Solving problem with unguided stages
+             */
+
+            Print("*** PHASE 4: ADDING UNGUIDED STAGES ***");
+            ApplyEnergy(builder);
+
+            using Solution solution3 = pvg3.GetSolution();
+            ApplyOldBurnTimesToPhases(solution3);
+
+            Optimizer pvg4 = builder.Build(_phases);
+            pvg4.Bootstrap(solution3);
+            pvg4.Run();
+
+            if (!pvg4.Success())
+                throw new Exception("Target unreachable (analytic)");
+
+            Print("*** PHASE 5: NUMERICAL INTEGRATION ***");
+            ApplyEnergy(builder);
+            ForceNumericalIntegration();
+
+            using Solution solution4 = pvg4.GetSolution();
+            ApplyOldBurnTimesToPhases(solution4);
+
+            Optimizer pvg5 = builder.Build(_phases);
+            pvg5.Bootstrap(solution3);
+            pvg5.Run();
+
+            if (!pvg5.Success())
                 throw new Exception("Target unreachable");
 
-            return pvg2;
+            return pvg5;
+        }
+
+        private PhaseCollection InfiniteUpperNoCoast()
+        {
+            PhaseCollection bootphases = DupPhases(_phases);
+
+            for (int i = 0; i < bootphases.Count; i++)
+            {
+                // remove the coast phase by setting burntime to zero
+                if (i == _optimizedCoastPhase)
+                    bootphases[i].bt = 0;
+
+                // make all stages guided and unoptimized
+                bootphases[i].Unguided     = false;
+                bootphases[i].OptimizeTime = false;
+            }
+
+            // set only the top stage to infinite + optimized
+            bootphases[bootphases.Count - 1].Infinite     = true;
+            bootphases[bootphases.Count - 1].OptimizeTime = true;
+            return bootphases;
         }
 
         private Optimizer InitialBootstrappingOptimized(Optimizer.OptimizerBuilder builder)
@@ -238,33 +329,18 @@ namespace MechJebLib.PVG
              * Analytic initial bootstrapping with infinite upper stage and no coast, forced FPA attachment
              */
 
+            Print("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
             ApplyFPA(builder);
 
             // guess the initial launch direction
             V3 enu = Astro.ENUHeadingForInclination(_incT, _r0);
             enu.z = 1.0; // add 45 degrees up
-            V3 pvGuess = Astro.ENUToECI(_r0, enu).normalized;
+            V3 pvGuess = Astro.ENUToECI(_r0, enu).normalized / Sqrt(2);
 
-            List<Phase> bootphases = DupPhases(_phases);
+            PhaseCollection bootphases = InfiniteUpperNoCoast();
 
-            // set the coast phase to fixed time of zero
-            if (_optimizedCoastPhase > -1)
-            {
-                bootphases[_optimizedCoastPhase].OptimizeTime = false;
-                bootphases[_optimizedCoastPhase].bt           = 0;
-            }
-
-            // switch the optimized phase to the top stage of the rocket
-            bootphases[_optimizedPhase].OptimizeTime = false;
-
-            // set the top stage to infinite + optimized + unguided
-            bootphases[bootphases.Count - 1].Infinite     = true;
-            bootphases[bootphases.Count - 1].Unguided     = false;
-            bootphases[bootphases.Count - 1].OptimizeTime = true;
-
-            Print("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
             using Optimizer pvg = builder.Build(bootphases);
-            pvg.Bootstrap(pvGuess, _r0.normalized);
+            pvg.Bootstrap(pvGuess, _r0.normalized / Sqrt(2));
             pvg.Run();
 
             if (!pvg.Success())
@@ -316,7 +392,7 @@ namespace MechJebLib.PVG
                 pvg3.Run();
 
                 if (!pvg3.Success())
-                     throw new Exception("Target unreachable");
+                    throw new Exception("Target unreachable");
             }
 
             if (_attachAltFlag || _eccT < 1e-4)
@@ -350,9 +426,10 @@ namespace MechJebLib.PVG
 
             if (solution3.Vgo(solution3.T0) < solution4.Vgo(solution4.T0))
             {
-                 // this probably means apoapsis attachment or wrong side of the periapsis
-                 Print($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution3.Vgo(solution3.T0)} < {solution4.Vgo(solution4.T0)}) THAN FREE ATTACHMENT SOLN ***");
-                 return pvg3;
+                // this probably means apoapsis attachment or wrong side of the periapsis
+                Print(
+                    $"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution3.Vgo(solution3.T0)} < {solution4.Vgo(solution4.T0)}) THAN FREE ATTACHMENT SOLN ***");
+                return pvg3;
             }
 
             return pvg4;
@@ -364,30 +441,31 @@ namespace MechJebLib.PVG
                 _phases[i].Analytic = false;
         }
 
+        private double TotalBurntime(Solution solution) => solution.Tgo(solution.T0);
+
         private void ApplyOldBurnTimesToPhases(Solution oldSolution)
         {
+            PhaseCollection oldphases = oldSolution.Phases;
+
             for (int i = 0; i < _phases.Count; i++)
             {
-                if (!_phases[i].OptimizeTime)
+                if (!_phases[i].OptimizeTime || _phases[i].Coast)
                     continue;
 
-                for (int j = 0; j < oldSolution.Segments; j++)
+                for (int j = 0; j < oldphases.Count; j++)
                 {
-                    if (!oldSolution.OptimizeTime(j))
+                    if (!oldphases[j].OptimizeTime || oldphases[j].Coast)
                         continue;
 
-                    if (oldSolution.CoastPhase(j) != _phases[i].Coast)
-                        continue;
-
-                    _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].tau * 0.99);
+                    _phases[i].bt = Min(oldSolution.Bt(j, _t0), _phases[i].tau * (1 - 1e-5));
                 }
             }
         }
 
         // FIXME: this obviously creates garbage and needs to return an IDisposable wrapping List<Phases> that has a pool
-        private List<Phase> DupPhases(List<Phase> oldphases)
+        private PhaseCollection DupPhases(PhaseCollection oldphases)
         {
-            var newphases = new List<Phase>();
+            var newphases = new PhaseCollection();
 
             foreach (Phase phase in oldphases)
                 newphases.Add(phase.DeepCopy());

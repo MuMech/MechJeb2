@@ -39,7 +39,7 @@ namespace MechJebLib.PVG.Terminal
 
         public IPVGTerminal Rescale(Scale scale) => new Kepler4Reduced(_smaT / scale.LengthScale, _eccT, _incT, _lanT);
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
+        public int TerminalConstraints(IntegratorRecord yf, double[] zout, int offset)
         {
             double rfm = yf.R.magnitude;
             double rf3 = rfm * rfm * rfm;
@@ -47,14 +47,14 @@ namespace MechJebLib.PVG.Terminal
             var hf = V3.Cross(yf.R, yf.V);
             V3 hmiss = hf - _hT;
 
-            double con1 = Astro.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT; // periapsis
-            double con2 = hmiss[0];
-            double con3 = hmiss[1];
-            double con4 = hmiss[2];
-            double tv1 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), hf); // free Argp
-            double tv2 = V3.Dot(yf.PR, yf.V) - V3.Dot(yf.PV, yf.R) / rf3;           // free TA
+            zout[offset]     = Astro.PeriapsisFromStateVectors(1.0, yf.R, yf.V) - _peRT; // periapsis
+            zout[offset + 1] = hmiss[0];
+            zout[offset + 2] = hmiss[1];
+            zout[offset + 3] = hmiss[2];
+            zout[offset + 4] = V3.Dot(V3.Cross(yf.Pr, yf.R) + V3.Cross(yf.Pv, yf.V), hf); // free Argp
+            zout[offset + 5] = V3.Dot(yf.Pr, yf.V) - V3.Dot(yf.Pv, yf.R) / rf3;           // free TA
 
-            return (con1, con2, con3, con4, tv1, tv2);
+            return offset + 6;
         }
     }
 }

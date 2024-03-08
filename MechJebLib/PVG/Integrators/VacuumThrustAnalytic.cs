@@ -12,12 +12,12 @@ namespace MechJebLib.PVG.Integrators
     // from: https://www.researchgate.net/publication/245433631_Rapid_Optimal_Multi-Burn_Ascent_Planning_and_Guidance/link/54cbc8ea0cf29ca810f43929/download
     public class VacuumThrustAnalytic : IPVGIntegrator
     {
-        public void Integrate(Vn yin, Vn yfout, Phase phase, double t0, double tf)
+        public void IntegrateInternal(Vn yin, Vn yfout, Phase phase, double t0, double tf)
         {
             Check.True(phase.Normalized);
 
-            var y0 = OutputLayout.CreateFrom(yin);
-            var yf = new OutputLayout();
+            var y0 = IntegratorRecord.CreateFrom(yin);
+            var yf = new IntegratorRecord();
 
             double rm = y0.R.magnitude;
 
@@ -58,17 +58,17 @@ namespace MechJebLib.PVG.Integrators
             double at4 = thrust / m4;
 
             // equation 14 (pv for the quadrature points, and terminal pr)
-            V3 pv1 = comega1 * y0.PV - somega1 * y0.PR / omega;
-            V3 pv2 = comega2 * y0.PV - somega2 * y0.PR / omega;
-            V3 pv3 = comega3 * y0.PV - somega3 * y0.PR / omega;
-            V3 pv4 = comega4 * y0.PV - somega4 * y0.PR / omega;
-            V3 pr4 = somega4 * y0.PV * omega + comega4 * y0.PR;
+            V3 pv1 = comega1 * y0.Pv - somega1 * y0.Pr / omega;
+            V3 pv2 = comega2 * y0.Pv - somega2 * y0.Pr / omega;
+            V3 pv3 = comega3 * y0.Pv - somega3 * y0.Pr / omega;
+            V3 pv4 = comega4 * y0.Pv - somega4 * y0.Pr / omega;
+            V3 pr4 = somega4 * y0.Pv * omega + comega4 * y0.Pr;
 
             bool unguided = phase.Unguided;
             V3 u0 = phase.u0.normalized;
 
             // equations 15 + 16 (for the quadrature points)
-            V3 ic0 = (unguided ? u0 : y0.PV.normalized) * at0;
+            V3 ic0 = (unguided ? u0 : y0.Pv.normalized) * at0;
             V3 is0 = V3.zero;
             V3 ic1 = (unguided ? u0 : pv1.normalized) * Math.Cos(omega * 1 * delta) * at1;
             V3 is1 = (unguided ? u0 : pv1.normalized) * Math.Sin(omega * 1 * delta) * at1;
@@ -89,8 +89,8 @@ namespace MechJebLib.PVG.Integrators
 
             yf.R  = rf;
             yf.V  = vf;
-            yf.PV = pv4;
-            yf.PR = pr4;
+            yf.Pv = pv4;
+            yf.Pr = pr4;
             yf.M  = m4;
 
             /*
@@ -106,10 +106,10 @@ namespace MechJebLib.PVG.Integrators
             yf.CopyTo(yfout);
         }
 
-        public void Integrate(Vn y0in, Vn yfout, Phase phase, double t0, double tf, Solution solution)
+        public Hn Integrate(Vn y0in, Vn yfout, Phase phase, double t0, double tf)
         {
             // kinda janky way to compute interpolants with intermediate points
-            var interpolant = Hn.Get(OutputLayout.OUTPUT_LAYOUT_LEN);
+            var interpolant = Hn.Get(IntegratorRecord.INTEGRATOR_REC_LEN);
             interpolant.Add(t0, y0in);
             const int SEGMENTS = 20;
 
@@ -117,12 +117,12 @@ namespace MechJebLib.PVG.Integrators
             {
                 double dt = (tf - t0) / SEGMENTS * i;
                 double t = t0 + dt;
-                Integrate(y0in, yfout, phase, t0, t);
+                IntegrateInternal(y0in, yfout, phase, t0, t);
 
                 interpolant.Add(t, yfout);
             }
 
-            solution.AddSegment(t0, tf, interpolant, phase);
+            return interpolant;
         }
     }
 }

@@ -108,6 +108,12 @@ namespace MechJebLib.Utils
             DoCheck(IsFinite(d));
         }
 
+        [Conditional("DEBUG")]
+        public static void Equal(int a, int b) => DoCheck(a == b);
+
+        [Conditional("DEBUG")]
+        public static void NearlyEqual(double a, double b, double eps) => DoCheck(Statics.NearlyEqual(a, b, eps));
+
         /*
          * Vectors
          */

@@ -57,7 +57,7 @@ namespace MechJebLib.PVG.Terminal
 
         public IPVGTerminal Rescale(Scale scale) => new Kepler5Reduced(_smaT / scale.LengthScale, _eccT, _incT, _lanT, _argpT);
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
+        public int TerminalConstraints(IntegratorRecord yf, double[] zout, int offset)
         {
             double rfm = yf.R.magnitude;
             double rf3 = rfm * rfm * rfm;
@@ -69,9 +69,16 @@ namespace MechJebLib.PVG.Terminal
             double emiss1 = _e1 - V3.Dot(ef, _ehat1);
             double emiss2 = _e2 - V3.Dot(ef, _ehat2);
 
-            double t1 = V3.Dot(yf.PR, yf.V) - V3.Dot(yf.PV, yf.R) / rf3;
+            double t1 = V3.Dot(yf.Pr, yf.V) - V3.Dot(yf.Pv, yf.R) / rf3;
 
-            return (hmiss[0], hmiss[1], hmiss[2], emiss1, emiss2, t1);
+            zout[offset]     = hmiss[0];
+            zout[offset + 1] = hmiss[1];
+            zout[offset + 2] = hmiss[2];
+            zout[offset + 3] = emiss1;
+            zout[offset + 4] = emiss2;
+            zout[offset + 5] = t1;
+
+            return offset + 6;
         }
     }
 }

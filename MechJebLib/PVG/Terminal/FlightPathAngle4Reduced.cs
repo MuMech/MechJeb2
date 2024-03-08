@@ -38,18 +38,19 @@ namespace MechJebLib.PVG.Terminal
 
         public IPVGTerminal Rescale(Scale scale) => new FlightPathAngle4Reduced(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT);
 
-        public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
+        public int TerminalConstraints(IntegratorRecord yf, double[] zout, int offset)
         {
             var n = new V3(0, 0, 1);
             var hf = V3.Cross(yf.R, yf.V);
 
-            double con1 = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
-            double con2 = (yf.V.sqrMagnitude - _vT * _vT) * 0.5;
-            double con3 = V3.Dot(n, hf.normalized) - Math.Cos(_incT);
-            double con4 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
-            double tv1 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), hf); // free ArgP
-            double tv2 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), n);  // free LAN
-            return (con1, con2, con3, con4, tv1, tv2);
+            zout[offset]     = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
+            zout[offset + 1] = (yf.V.sqrMagnitude - _vT * _vT) * 0.5;
+            zout[offset + 2] = V3.Dot(n, hf.normalized) - Math.Cos(_incT);
+            zout[offset + 3] = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
+            zout[offset + 4] = V3.Dot(V3.Cross(yf.Pr, yf.R) + V3.Cross(yf.Pv, yf.V), hf); // free ArgP
+            zout[offset + 5] = V3.Dot(V3.Cross(yf.Pr, yf.R) + V3.Cross(yf.Pv, yf.V), n);  // free LAN
+
+            return offset + 6;
         }
     }
 }

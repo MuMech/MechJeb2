@@ -15,15 +15,15 @@ namespace MechJebLib.PVG
 {
     public class Solution : IDisposable
     {
-        public           double       T0;
-        public           double       Tf => T0 + Tmax * _timeScale;
-        private readonly Scale        _scale;
-        private readonly List<double> _tmin         = new List<double>();
-        private readonly List<double> _tmax         = new List<double>();
-        private readonly List<Hn>     _interpolants = new List<Hn>();
-        private readonly List<Phase>  Phases        = new List<Phase>();
-        private readonly double       _mu;
-        private readonly double       _rbody;
+        public           double          T0;
+        public           double          Tf => T0 + Tmax * _timeScale;
+        private readonly Scale           _scale;
+        private readonly List<double>    _tmin         = new List<double>();
+        private readonly List<double>    _tmax         = new List<double>();
+        private readonly List<Hn>        _interpolants = new List<Hn>();
+        public readonly  PhaseCollection Phases        = new PhaseCollection();
+        private readonly double          _mu;
+        private readonly double          _rbody;
 
         public  int    Segments       => Phases.Count;
         private double _timeScale     => _scale.TimeScale;
@@ -68,7 +68,7 @@ namespace MechJebLib.PVG
         {
             double tbar = (t - T0) / _timeScale;
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
+            var x = IntegratorRecord.CreateFrom(xraw);
             return x.R * _lengthScale;
         }
 
@@ -76,15 +76,15 @@ namespace MechJebLib.PVG
         public V3 Constant(double tbar)
         {
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
-            return V3.Cross(x.PR, x.R) + V3.Cross(x.PV, x.V);
+            var x = IntegratorRecord.CreateFrom(xraw);
+            return V3.Cross(x.Pr, x.R) + V3.Cross(x.Pv, x.V);
         }
 
         public V3 V(double t)
         {
             double tbar = (t - T0) / _timeScale;
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
+            var x = IntegratorRecord.CreateFrom(xraw);
             return x.V * _velocityScale;
         }
 
@@ -97,8 +97,8 @@ namespace MechJebLib.PVG
         public V3 PvBar(double tbar)
         {
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
-            return x.PV;
+            var x = IntegratorRecord.CreateFrom(xraw);
+            return x.Pv;
         }
 
         public V3 Pr(double t)
@@ -110,15 +110,15 @@ namespace MechJebLib.PVG
         public V3 PrBar(double tbar)
         {
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
-            return x.PR;
+            var x = IntegratorRecord.CreateFrom(xraw);
+            return x.Pr;
         }
 
         public double M(double t)
         {
             double tbar = (t - T0) / _timeScale;
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
+            var x = IntegratorRecord.CreateFrom(xraw);
             return x.M * _massScale;
         }
 
@@ -142,7 +142,7 @@ namespace MechJebLib.PVG
         {
             double tbar = (t - T0) / _timeScale;
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
+            var x = IntegratorRecord.CreateFrom(xraw);
             return x.DV * _velocityScale;
         }
 
@@ -152,9 +152,9 @@ namespace MechJebLib.PVG
             double min = tbar > _tmin[n] ? tbar : _tmin[n];
             double max = _tmax[n];
             using Vn ddmin = Interpolate(n, min);
-            var xmin = OutputLayout.CreateFrom(ddmin);
+            var xmin = IntegratorRecord.CreateFrom(ddmin);
             using Vn ddmax = Interpolate(n, max);
-            var xmax = OutputLayout.CreateFrom(ddmax);
+            var xmax = IntegratorRecord.CreateFrom(ddmax);
             return Max(xmax.DV - xmin.DV, 0) * _velocityScale;
         }
 
@@ -243,7 +243,7 @@ namespace MechJebLib.PVG
             V3 u;
 
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
+            var x = IntegratorRecord.CreateFrom(xraw);
 
             int phase = IndexForTbar(tbar);
 
@@ -258,7 +258,7 @@ namespace MechJebLib.PVG
             }
             else
             {
-                u = x.PV.normalized;
+                u = x.Pv.normalized;
             }
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(x.R, u);
@@ -270,7 +270,7 @@ namespace MechJebLib.PVG
         public (V3 r, V3 v) StateVectors(double tbar)
         {
             using Vn xraw = Interpolate(tbar);
-            var x = OutputLayout.CreateFrom(xraw);
+            var x = IntegratorRecord.CreateFrom(xraw);
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
 
@@ -322,9 +322,16 @@ namespace MechJebLib.PVG
             return -1;
         }
 
-        private Vn Interpolate(double tbar) => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
+        private Vn Interpolate(double tbar)
+        {
+            int segment = IndexForTbar(tbar);
+            return _interpolants[segment].Evaluate(tbar - _tmin[segment]);
+        }
 
-        private Vn Interpolate(int segment, double tbar) => _interpolants[segment].Evaluate(tbar);
+        private Vn Interpolate(int segment, double tbar)
+        {
+            return _interpolants[segment].Evaluate(tbar - _tmin[segment]);
+        }
 
         // this is for terminal guidance.
         public bool TerminalGuidanceSatisfied(V3 pos, V3 vel, int index)
