@@ -1384,7 +1384,8 @@ namespace MuMech
             public readonly Vector6 torqueDiffThrottle = new Vector6();
 
             // lowestUllage is always VeryStable without RealFuels installed
-            public double lowestUllage;
+            // Don't wait for Update, set it now so we don't invite a race condition.
+            public double lowestUllage = 1.0;
 
             public struct FuelRequirement
             {
