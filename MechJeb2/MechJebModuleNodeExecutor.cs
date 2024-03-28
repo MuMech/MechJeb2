@@ -1,5 +1,6 @@
 ﻿extern alias JetBrainsAnnotations;
 using MechJebLib.FuelFlowSimulation;
+using MechJebLibBindings;
 using UnityEngine;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
@@ -8,6 +9,13 @@ namespace MuMech
 {
     public class MechJebModuleNodeExecutor : ComputerModule
     {
+        private static readonly bool realfuelsLoaded;
+
+        static MechJebModuleNodeExecutor()
+        {
+            realfuelsLoaded = ReflectionUtils.IsAssemblyLoaded("RealFuels");
+        }
+
         // whether to auto-warp to nodes
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool Autowarp = true;
@@ -137,7 +145,7 @@ namespace MuMech
             if (State != States.LEAD || RCSOnly)
                 return;
 
-            if (!Core.Thrust.AutoRCSUllaging)
+            if (!Core.Thrust.AutoRCSUllaging || !realfuelsLoaded)
                 return;
 
             // always apply MIN_RCS_TIME of ullage right before the ignition time
