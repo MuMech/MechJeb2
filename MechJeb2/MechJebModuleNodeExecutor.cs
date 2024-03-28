@@ -9,11 +9,13 @@ namespace MuMech
 {
     public class MechJebModuleNodeExecutor : ComputerModule
     {
-        private static readonly bool realfuelsLoaded;
+        private static readonly bool _isLoadedRealFuels;
+        private static readonly bool _isLoadedPrincipia;
 
         static MechJebModuleNodeExecutor()
         {
-            realfuelsLoaded = ReflectionUtils.IsAssemblyLoaded("RealFuels");
+            _isLoadedRealFuels = ReflectionUtils.IsAssemblyLoaded("RealFuels");
+            _isLoadedPrincipia = ReflectionUtils.IsAssemblyLoaded("principia.ksp_plugin_adapter");
         }
 
         // whether to auto-warp to nodes
@@ -35,7 +37,7 @@ namespace MuMech
                 return "-";
 
             double dV;
-            if (VesselState.isLoadedPrincipia && _dvLeft > 0)
+            if (_isLoadedPrincipia && _dvLeft > 0)
             {
                 dV = _dvLeft;
             }
@@ -103,6 +105,7 @@ namespace MuMech
         {
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
+            State = States.IDLE;
         }
 
         protected override void OnModuleDisabled()
@@ -110,6 +113,7 @@ namespace MuMech
             Core.Attitude.attitudeDeactivate();
             Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
+            State   = States.IDLE;
             _dvLeft = 0;
         }
 
@@ -120,18 +124,20 @@ namespace MuMech
         private Mode   _mode = Mode.ONE_NODE;
         public  States State = States.IDLE;
 
-        private        double   _dvLeft;    // for Principia
-        private        Vector3d _direction; // de-rotated world vector
-        private        Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
-        private        double   _ignitionUT;
-        private static bool     _isLoadedPrincipia => VesselState.isLoadedPrincipia;
-        private        bool     _hasNodes          => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
-        private        double   _ullageUntil;
+        private double   _dvLeft;    // for Principia
+        private Vector3d _direction; // de-rotated world vector
+        private Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
+        private double   _ignitionUT;
+        private bool     _hasNodes => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
+        private double   _ullageUntil;
 
         public override void Drive(FlightCtrlState s) => DoRCS(s);
 
         private void DoRCS(FlightCtrlState s)
         {
+            if (State == States.IDLE)
+                return;
+
             // seconds to continue to apply RCS after ullage has settled to VeryStable
             const double MIN_RCS_TIME = 0.25;
 
@@ -145,7 +151,7 @@ namespace MuMech
             if (State != States.LEAD || RCSOnly)
                 return;
 
-            if (!Core.Thrust.AutoRCSUllaging || !realfuelsLoaded)
+            if (!Core.Thrust.AutoRCSUllaging || !_isLoadedRealFuels)
                 return;
 
             // always apply MIN_RCS_TIME of ullage right before the ignition time
