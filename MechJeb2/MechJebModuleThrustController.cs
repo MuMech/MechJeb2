@@ -4,12 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
+using MechJebLibBindings;
 using UnityEngine;
 
 namespace MuMech
 {
     public class MechJebModuleThrustController : ComputerModule
     {
+        private static readonly bool _isLoadedRealFuels;
+
+        static MechJebModuleThrustController()
+        {
+            _isLoadedRealFuels = ReflectionUtils.IsAssemblyLoaded("RealFuels");
+        }
+
         public enum DifferentialThrottleStatus
         {
             SUCCESS,
@@ -873,6 +881,11 @@ namespace MuMech
         /// <param name="s"></param>
         private void ProcessUllage(FlightCtrlState s)
         {
+            // because we don't always return when ullage is stable below, we have to
+            // explicitly check for RF being loaded.
+            if (!_isLoadedRealFuels)
+                return;
+
             if (!AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)
                 return;
 
@@ -885,6 +898,13 @@ namespace MuMech
             // we cannot "detect" low ullage and compensate, but must apply RCS until thrust has come
             // up sufficiently.
             if (stableUllage && VesselState.thrustCurrent > VesselState.rcsThrustAvailable.Up)
+                return;
+
+            // if desiredThrust is less than the RCS thrust then don't worry about ullage.  avoids RCS
+            // being applied when the user is doing dribble throttle (unlikely with RF loaded, but possible).
+            double desiredThrust = (VesselState.thrustAvailable - VesselState.thrustMinimum) * s.mainThrottle;
+
+            if (stableUllage && desiredThrust < VesselState.rcsThrustAvailable.Up)
                 return;
 
             // limit the throttle only if we aren't already burning (don't waste ignitions)
