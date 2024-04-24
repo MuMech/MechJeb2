@@ -236,6 +236,7 @@ namespace MuMech
 
             if (timeToBurn > 600)
             {
+                Core.Attitude.SetAxisControl(false, false, false);
                 Core.Warp.WarpToUT(_ignitionUT - 600);
                 return;
             }
