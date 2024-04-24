@@ -297,7 +297,7 @@ namespace MuMech
             double spooldownDV = VesselState.currentThrustAccel * VesselState.maxEngineResponseTime;
             double desiredAcceleration = (dV - spooldownDV) / timeConstant;
 
-            TargetThrottle = Mathf.Clamp01((float)(desiredAcceleration / VesselState.maxThrustAccel));
+            TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / VesselState.maxThrustAccel), 0.01f, 1.00f);
         }
 
         /* the current throttle limit, this may include transient condition such as limiting to zero due to unstable propellants in RF */
