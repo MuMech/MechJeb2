@@ -90,22 +90,26 @@ namespace MuMech
             _direction = Vector3d.zero;
             _dvLeft    = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
             Core.Thrust.ThrustOff();
+            Core.Attitude.Users.Add(this);
+            Core.Thrust.Users.Add(this);
         }
 
         public void Abort()
         {
             Core.Warp.MinimumWarp();
             Core.Thrust.ThrustOff();
+            Core.Attitude.attitudeDeactivate();
             Users.Clear();
-            _dvLeft = 0;
-            State   = States.IDLE;
+            _direction = Vector3d.zero;
+            _dvLeft    = 0;
+            State      = States.IDLE;
         }
 
         protected override void OnModuleEnabled()
         {
-            Core.Attitude.Users.Add(this);
-            Core.Thrust.Users.Add(this);
-            State = States.IDLE;
+            State      = States.IDLE;
+            _direction = Vector3d.zero;
+            _dvLeft    = 0;
         }
 
         protected override void OnModuleDisabled()
@@ -366,13 +370,15 @@ namespace MuMech
         {
             var invRot = QuaternionD.Inverse(Planetarium.fetch.rotation);
 
-            if (_direction != Vector3d.zero) // handle initialization
-            {
-                if (_isLoadedPrincipia && SafeCurrentPrincipiaNode() == null) return _direction;
+            if (_direction == Vector3d.zero)
+                return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized; // handle initialization
 
-                // FIXME: need to deal with RCS forward thrust accel here if we're RCSOnly
-                if (!_isLoadedPrincipia && _dvLeft < VesselState.minThrustAccel) return _direction;
-            }
+            if (_isLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
+                return _direction;
+
+            // FIXME: need to deal with RCS forward thrust accel here if we're RCSOnly
+            if (!_isLoadedPrincipia && _dvLeft < VesselState.maxThrustAccel)
+                return _direction;
 
             return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
         }
