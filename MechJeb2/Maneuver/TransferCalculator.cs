@@ -372,10 +372,10 @@ namespace MuMech
             //
             alglib.minnlccreatef(VARS, x, DIFFSTEP, out alglib.minnlcstate state);
             alglib.minnlcsetstpmax(state, 1e-3);
-            int outerits = 5;
-            alglib.minnlcsetalgoaul2(state, outerits);
+            //int outerits = 5;
+            //alglib.minnlcsetalgoaul2(state, outerits);
             //alglib.minnlcsetalgoslp(state);
-            //alglib.minnlcsetalgosqp(state);
+            alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, EPSX, MAXITS);
 
             alglib.minnlcsetnlc(state, EQUALITYCONSTRAINTS, INEQUALITYCONSTRAINTS);
