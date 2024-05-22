@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using MechJebLib.Primitives;
 using static System.Math;
@@ -349,6 +350,40 @@ namespace MechJebLib.Utils
             return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
         }
         */
+
+        [StructLayout(LayoutKind.Explicit)]
+        private struct DoubleLongUnion
+        {
+            [FieldOffset(0)]
+            public long i;
+
+            [FieldOffset(0)]
+            public double d;
+        }
+
+        //  Returns the next float after x in the direction of y.
+        public static double NextAfter(double x, double y)
+        {
+            if (double.IsNaN(x) || double.IsNaN(y)) return x + y;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (x == y) return y;
+
+            DoubleLongUnion u;
+            u.i = 0;
+            u.d = x;
+
+            if (x == 0)
+            {
+                u.i = 1;
+                return y > 0 ? u.d : -u.d;
+            }
+
+            if (x > 0 == y > x)
+                u.i++;
+            else
+                u.i--;
+            return u.d;
+        }
 
         /// <summary>
         ///     Debugging helper for printing double arrays to logs

@@ -227,7 +227,7 @@ namespace MechJebLib.Rootfinding
                 Check.Finite(fa);
 
                 if (i++ >= maxiter && maxiter > 0)
-                    throw new TimeoutException("Brent's rootfinding method: maximum iterations exceeded: " + Abs(a - c));
+                    throw new InvalidOperationException("Brent's rootfinding method: maximum iterations exceeded: " + Abs(a - c));
             }
 
             if (sign != 0 && Sign(fb) != sign)

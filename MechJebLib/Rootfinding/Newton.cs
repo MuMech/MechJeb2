@@ -83,7 +83,7 @@ namespace MechJebLib.Rootfinding
                     b = c;
             }
 
-            throw new Exception("Newton's method: maximum iterations exceeded");
+            throw new InvalidOperationException("Newton's method: maximum iterations exceeded");
         }
     }
 }

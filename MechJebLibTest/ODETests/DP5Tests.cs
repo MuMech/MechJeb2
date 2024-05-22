@@ -8,7 +8,10 @@ using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
+using MechJebLibTest.PVGTests.AscentTests;
 using Xunit;
+using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -16,6 +19,13 @@ namespace MechJebLibTest.ODETests
 {
     public class DP5Tests
     {
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public DP5Tests(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
+
         private class SimpleOscillator
         {
             private readonly double _k;
@@ -188,6 +198,34 @@ namespace MechJebLibTest.ODETests
             solver.Solve(ode.dydt, y0, yf, 0, 10, events: e);
 
             e[0].Time.ShouldEqual(Astro.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-9);
+        }
+
+        private class Asymptotic
+        {
+            public int N => 1;
+
+            public void dydt(IList<double> yin, double x, IList<double> dyout)
+            {
+                dyout[0] = 1 / yin[1];
+                dyout[1] = -1;
+            }
+        }
+
+        [Fact]
+        public void MinStepSizeTest()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var ode = new Asymptotic();
+            var solver = new DP5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 0 };
+
+            double[] y0 = new double[2];
+            double[] yf = new double[2];
+
+            y0[0] = 0;
+            y0[1] = 1;
+
+            Assert.Throws<InvalidOperationException>(() => solver.Solve(ode.dydt, y0, yf, 0, 1));
         }
     }
 }

@@ -44,16 +44,25 @@ namespace MechJebLib.ODE
             {
                 CancellationToken.ThrowIfCancellationRequested();
 
+                double minStep = 10 * Abs(NextAfter(T, Direction*double.PositiveInfinity) - T);
+                minStep = Max(minStep, MinStep);
+
                 if (Habs > MaxStep)
                     Habs = MaxStep;
-                else if (Habs < MinStep)
-                    Habs = MinStep;
+
+                if (Habs < minStep)
+                {
+                    if (ThrowOnMinStep)
+                        throw new InvalidOperationException($"Step size is smaller than minimum step size {T}: {Habs} < {minStep}");
+                    Habs = minStep;
+                }
 
                 RKStep(f);
 
                 double errorNorm = ScaledErrorNorm();
 
-                if (errorNorm < 1)
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (errorNorm < 1 || (Habs == minStep && !ThrowOnMinStep))
                 {
                     double factor = errorNorm == 0 ? MAX_FACTOR : Min(MAX_FACTOR, SAFETY * Pow(errorNorm, -_alpha) * Pow(_lastErrorNorm, Beta));
 

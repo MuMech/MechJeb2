@@ -24,7 +24,7 @@ namespace MechJebLib.ODE
         /// <summary>
         ///     Minimum h step (may be violated on the last step or before an event).
         /// </summary>
-        public double Hmin { get; set; } = EPS;
+        public double Hmin { get; set; } = 0;
 
         /// <summary>
         ///     Maximum h step.
@@ -60,6 +60,11 @@ namespace MechJebLib.ODE
         ///     Throw exception when MaxIter is hit (PVG optimizer works better with this set to false).
         /// </summary>
         public bool ThrowOnMaxIter { get; set; } = true;
+
+        /// <summary>
+        ///     Throw exception when MinStep is hit.
+        /// </summary>
+        public bool ThrowOnMinStep { get; set; } = true;
 
         public CancellationToken CancellationToken { get; }
 
@@ -220,7 +225,7 @@ namespace MechJebLib.ODE
                 if (Maxiter > 0 && niter++ > Maxiter)
                 {
                     if (ThrowOnMaxIter)
-                        throw new ArgumentException("maximum iterations exceeded");
+                        throw new InvalidOperationException("maximum iterations exceeded");
 
                     break;
                 }
