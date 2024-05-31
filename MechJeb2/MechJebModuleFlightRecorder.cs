@@ -165,7 +165,19 @@ namespace MuMech
         public double SteeringLosses;
 
         [ValueInfoItem("#MechJeb_PhaseAngleFromMark", InfoItem.Category.Recorder, format = "F2", units = "º")] //Phase angle from mark
-        public double PhaseAngleFromMark;
+        public double PhaseAngleFromMark()
+        {
+            // "Phase angle from mark" is the difference between the angle traversed by the vessel, and the angle
+            // traversed by a hypothetical vessel that was in a circular orbit for the same time.
+
+            // markVector is the position of the mark, as it was at the time the mark was made.
+            CelestialBody markBody = FlightGlobals.Bodies[MarkBodyIndex];
+            Vector3d markVector = markBody.GetSurfaceNVector(MarkLatitude, MarkLongitude - TimeSinceMark * 360.0 / markBody.rotationPeriod);
+            Vector3d vesselVector = VesselState.CoM - markBody.transform.position;
+            double traversedAngle = Vector3d.Angle(markVector, vesselVector);
+            double circularOrbitAngle = 360 * TimeSinceMark / Orbit.CircularOrbitPeriod();
+            return MuUtils.ClampDegrees360(circularOrbitAngle - traversedAngle);
+        }
 
         [Persistent(pass = (int)Pass.LOCAL)]
         [ValueInfoItem("#MechJeb_MarkLAN", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)] //Mark LAN
@@ -219,7 +231,6 @@ namespace MuMech
         {
             MarkUT             = VesselState.time;
             DeltaVExpended     = DragLosses = GravityLosses = SteeringLosses = 0;
-            PhaseAngleFromMark = 0;
             MarkLatitude       = VesselState.latitude;
             MarkLongitude      = VesselState.longitude;
             MarkLAN            = VesselState.orbitLAN;
@@ -273,10 +284,6 @@ namespace MuMech
                               (1 - Vector3d.Dot(VesselState.orbitalVelocity.normalized, VesselState.forward));
 
             MaxDragGees = Math.Max(MaxDragGees, VesselState.drag / 9.81);
-
-            double circularPeriod = Orbit.CircularOrbitPeriod();
-            double angleTraversed = VesselState.longitude - MarkLongitude + 360 * (VesselState.time - MarkUT) / Part.vessel.mainBody.rotationPeriod;
-            PhaseAngleFromMark = MuUtils.ClampDegrees360(360 * (VesselState.time - MarkUT) / circularPeriod - angleTraversed);
 
             if (_paused)
                 return;
