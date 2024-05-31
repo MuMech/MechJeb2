@@ -692,7 +692,8 @@ namespace MuMech
             if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return "N/A";
             if (double.IsNaN(Core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
-            return Orbit.PhaseAngle(Core.Target.TargetOrbit, VesselState.time).ToString("F2") + "º";
+            double phaseAngle = 360 - Core.Target.TargetOrbit.PhaseAngle(Orbit, VesselState.time);
+            return phaseAngle.ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetPlanetPhaseAngle", InfoItem.Category.Target)] //Target planet phase angle
