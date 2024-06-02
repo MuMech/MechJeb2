@@ -1,9 +1,11 @@
 ﻿extern alias JetBrainsAnnotations;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
@@ -232,6 +234,7 @@ namespace MuMech
             editedWindow = null;
 
             RegisterInfoItems(VesselState);
+
             foreach (ComputerModule m in Core.GetComputerModules<ComputerModule>())
             {
                 RegisterInfoItems(m);
@@ -339,10 +342,12 @@ namespace MuMech
             {
                 foreach (Attribute attribute in member.GetCustomAttributes(true))
                 {
-                    if (attribute is ValueInfoItemAttribute) registry.Add(new ValueInfoItem(obj, member, (ValueInfoItemAttribute)attribute));
+                    if (attribute is ValueInfoItemAttribute)
+                        registry.Add(new ValueInfoItem(obj, member, (ValueInfoItemAttribute)attribute));
                     else if (attribute is ActionInfoItemAttribute)
                         registry.Add(new ActionInfoItem(obj, (MethodInfo)member, (ActionInfoItemAttribute)attribute));
-                    else if (attribute is ToggleInfoItemAttribute) registry.Add(new ToggleInfoItem(obj, member, (ToggleInfoItemAttribute)attribute));
+                    else if (attribute is ToggleInfoItemAttribute)
+                        registry.Add(new ToggleInfoItem(obj, member, (ToggleInfoItemAttribute)attribute));
                     else if (attribute is GeneralInfoItemAttribute)
                         registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, (GeneralInfoItemAttribute)attribute));
                     else if (attribute is EditableInfoItemAttribute)
@@ -652,7 +657,9 @@ namespace MuMech
         private readonly int    siMaxPrecision;    //only used with the "SI" format
         private readonly int    timeDecimalPlaces; //only used with the "TIME" format
 
-        private readonly Func<object> getValue;
+        private Func<object, object> getValue;
+        private static readonly ConcurrentDictionary<MemberInfo, Func<object, object>> _getterCache = new ConcurrentDictionary<MemberInfo, Func<object, object>>();
+        private readonly object _obj;
 
         private string stringValue;
         private int    cacheValidity = -1;
@@ -669,16 +676,57 @@ namespace MuMech
             siMaxPrecision    = attribute.siMaxPrecision;
             timeDecimalPlaces = attribute.timeDecimalPlaces;
 
-            // This ugly stuff compiles a small function to grab the value of member, so that we don't
-            // have to use reflection to get it every frame.
-            ParameterExpression objExpr = Expression.Parameter(typeof(object), ""); // obj
-            Expression castObjExpr = Expression.Convert(objExpr, obj.GetType());    // (T)obj
-            Expression memberExpr;
-            if (member is MethodInfo) memberExpr = Expression.Call(castObjExpr, (MethodInfo)member);
-            else memberExpr                      = Expression.MakeMemberAccess(castObjExpr, member); // ((T)obj).member
-            Expression castMemberExpr = Expression.Convert(memberExpr, typeof(object));              // (object)(((T)obj).member);
-            Func<object, object> getFromObj = Expression.Lambda<Func<object, object>>(castMemberExpr, objExpr).Compile();
-            getValue = () => getFromObj(obj);
+            _obj = obj;
+
+            getValue = _getterCache.GetOrAdd(member, CompileAccessor(obj, member));
+
+            CompileAccessor(obj, member);
+        }
+
+        private Func<object, object> CompileAccessor(object obj, MemberInfo member)
+        {
+            Type objType = obj.GetType();
+            var dynamicMethod = new DynamicMethod("GetMemberValue", typeof(object), new Type[] { typeof(object) }, objType, true);
+
+            ILGenerator il = dynamicMethod.GetILGenerator();
+
+            // Load the argument (object)
+            il.Emit(OpCodes.Ldarg_0);
+            // Cast it to the correct type
+            il.Emit(OpCodes.Castclass, objType);
+
+            switch (member)
+            {
+                case MethodInfo methodInfo:
+                    il.Emit(OpCodes.Callvirt, methodInfo);
+                    break;
+                case PropertyInfo propertyInfo:
+                    il.Emit(OpCodes.Callvirt, propertyInfo.GetGetMethod());
+                    break;
+                case FieldInfo fieldInfo:
+                    il.Emit(OpCodes.Ldfld, fieldInfo);
+                    break;
+                default:
+                    throw new ArgumentException("MemberInfo must be of type MethodInfo, PropertyInfo, or FieldInfo", nameof(member));
+            }
+
+            // Box the value if necessary
+            if (member is PropertyInfo { PropertyType: { IsValueType: true } } ||
+                member is FieldInfo { FieldType: { IsValueType: true } } ||
+                member is MethodInfo { ReturnType: { IsValueType: true } })
+            {
+                il.Emit(OpCodes.Box, member switch
+                {
+                    PropertyInfo p => p.PropertyType,
+                    FieldInfo f => f.FieldType,
+                    _ => ((MethodInfo)member).ReturnType
+                });
+            }
+
+            // Return the value
+            il.Emit(OpCodes.Ret);
+
+            return (Func<object, object>)dynamicMethod.CreateDelegate(typeof(Func<object, object>));
         }
 
         private string GetStringValue(object value)
@@ -710,7 +758,7 @@ namespace MuMech
             int frameCount = Time.frameCount;
             if (frameCount != cacheValidity)
             {
-                object value = getValue();
+                object value = getValue(_obj);
                 stringValue   = Localizer.Format(GetStringValue(value));
                 cacheValidity = frameCount;
             }
