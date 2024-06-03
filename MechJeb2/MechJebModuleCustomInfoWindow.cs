@@ -2,8 +2,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using JetBrainsAnnotations::JetBrains.Annotations;
@@ -233,12 +233,16 @@ namespace MuMech
             registry.Clear();
             editedWindow = null;
 
+            var sw = new Stopwatch();
+            sw.Start();
+
             RegisterInfoItems(VesselState);
 
             foreach (ComputerModule m in Core.GetComputerModules<ComputerModule>())
-            {
                 RegisterInfoItems(m);
-            }
+
+            sw.Stop();
+            Print($"Registered {registry.Count} info items in {sw.ElapsedMilliseconds} ms");
 
             if (global == null) return;
 
