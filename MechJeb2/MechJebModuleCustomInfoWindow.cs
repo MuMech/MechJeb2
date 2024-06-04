@@ -9,7 +9,9 @@ using System.Reflection.Emit;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
+using UnityEngine.Profiling;
 using static MechJebLib.Utils.Statics;
+using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 namespace MuMech
@@ -93,6 +95,8 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
+            Profiler.BeginSample("MechJebModuleCustomInfoWindow.WindowGUI");
+
             GUI.skin         = isCompact ? GuiUtils.CompactSkin : GuiUtils.Skin;
             GUI.contentColor = text;
 
@@ -136,6 +140,8 @@ namespace MuMech
             }
 
             base.WindowGUI(windowID);
+
+            Profiler.EndSample();
         }
 
         protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
@@ -226,12 +232,26 @@ namespace MuMech
         private bool editingBackground;
         private bool editingText;
 
+        private readonly Stopwatch _valueInfoItemStopwatch = new Stopwatch();
+        private readonly Stopwatch _actionInfoItemStopwatch = new Stopwatch();
+        private readonly Stopwatch _toggleInfoItemStopwatch = new Stopwatch();
+        private readonly Stopwatch _generalInfoItemStopwatch = new Stopwatch();
+        private readonly Stopwatch _editableInfoItemStopwatch = new Stopwatch();
+
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
+            Profiler.BeginSample("MechJebModuleCustomInfoEditor.OnLoad");
+
             base.OnLoad(local, type, global);
 
             registry.Clear();
             editedWindow = null;
+
+            _valueInfoItemStopwatch.Reset();
+            _actionInfoItemStopwatch.Reset();
+            _toggleInfoItemStopwatch.Reset();
+            _generalInfoItemStopwatch.Reset();
+            _editableInfoItemStopwatch.Reset();
 
             var sw = new Stopwatch();
             sw.Start();
@@ -242,7 +262,7 @@ namespace MuMech
                 RegisterInfoItems(m);
 
             sw.Stop();
-            Print($"Registered {registry.Count} info items in {sw.ElapsedMilliseconds} ms");
+            Print($"Registered {registry.Count} info items:  value:{_valueInfoItemStopwatch.ElapsedMilliseconds} ms action:{_actionInfoItemStopwatch.ElapsedMilliseconds} ms  toggle:{_toggleInfoItemStopwatch.ElapsedMilliseconds} ms  general:{_generalInfoItemStopwatch.ElapsedMilliseconds} ms  editable:{_editableInfoItemStopwatch.ElapsedMilliseconds} ms  total:{sw.ElapsedMilliseconds} ms");
 
             if (global == null) return;
 
@@ -311,10 +331,14 @@ namespace MuMech
 
                 Core.AddComputerModuleLater(window);
             }
+
+            Profiler.EndSample();
         }
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
+            Profiler.BeginSample("MechJebModuleCustomInfoEditor.OnSave");
+
             base.OnSave(local, type, global);
 
             //Save custom info windows within our ConfigNode:
@@ -335,29 +359,83 @@ namespace MuMech
                 windowNode.CopyTo(global.AddNode(name));
                 window.Dirty = false;
             }
+
+            Profiler.EndSample();
         }
 
         public override void OnStart(PartModule.StartState state) => editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
 
+        private static readonly Dictionary<Type, List<Tuple<MemberInfo, Attribute>>> _cache = new Dictionary<Type, List<Tuple<MemberInfo, Attribute>>>();
+
         private void RegisterInfoItems(object obj)
         {
-            foreach (MemberInfo member in obj.GetType().GetMembers(BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Instance |
-                                                                   BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy))
+            Profiler.BeginSample("MechJebModuleCustomInfoEditor.RegisterInfoItems");
+
+            Type objType = obj.GetType();
+
+            if (!_cache.ContainsKey(objType))
             {
-                foreach (Attribute attribute in member.GetCustomAttributes(true))
+                _cache.Add(objType, new List<Tuple<MemberInfo, Attribute>>());
+
+                foreach (MemberInfo member in objType.GetMembers(BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy))
                 {
-                    if (attribute is ValueInfoItemAttribute)
-                        registry.Add(new ValueInfoItem(obj, member, (ValueInfoItemAttribute)attribute));
-                    else if (attribute is ActionInfoItemAttribute)
-                        registry.Add(new ActionInfoItem(obj, (MethodInfo)member, (ActionInfoItemAttribute)attribute));
-                    else if (attribute is ToggleInfoItemAttribute)
-                        registry.Add(new ToggleInfoItem(obj, member, (ToggleInfoItemAttribute)attribute));
-                    else if (attribute is GeneralInfoItemAttribute)
-                        registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, (GeneralInfoItemAttribute)attribute));
-                    else if (attribute is EditableInfoItemAttribute)
-                        registry.Add(new EditableInfoItem(obj, member, (EditableInfoItemAttribute)attribute));
+                    foreach (Attribute attribute in member.GetCustomAttributes(true))
+                    {
+                        switch (attribute)
+                        {
+                            case ValueInfoItemAttribute _:
+                                _cache[objType].Add(new Tuple<MemberInfo, Attribute>(member, attribute));
+                                break;
+                            case ActionInfoItemAttribute _:
+                                _cache[objType].Add(new Tuple<MemberInfo, Attribute>(member, attribute));
+                                break;
+                            case ToggleInfoItemAttribute _:
+                                _cache[objType].Add(new Tuple<MemberInfo, Attribute>(member, attribute));
+                                break;
+                            case GeneralInfoItemAttribute _:
+                                _cache[objType].Add(new Tuple<MemberInfo, Attribute>(member, attribute));
+                                break;
+                            case EditableInfoItemAttribute _:
+                                _cache[objType].Add(new Tuple<MemberInfo, Attribute>(member, attribute));
+                                break;
+                        }
+                    }
                 }
             }
+
+            foreach ((MemberInfo member, Attribute attribute) in _cache[objType])
+            {
+                    switch (attribute)
+                    {
+                        case ValueInfoItemAttribute item:
+                            _valueInfoItemStopwatch.Start();
+                            registry.Add(new ValueInfoItem(obj, member, item));
+                            _valueInfoItemStopwatch.Stop();
+                            break;
+                        case ActionInfoItemAttribute item:
+                            _actionInfoItemStopwatch.Start();
+                            registry.Add(new ActionInfoItem(obj, (MethodInfo)member, item));
+                            _actionInfoItemStopwatch.Stop();
+                            break;
+                        case ToggleInfoItemAttribute item:
+                            _toggleInfoItemStopwatch.Start();
+                            registry.Add(new ToggleInfoItem(obj, member, item));
+                            _toggleInfoItemStopwatch.Stop();
+                            break;
+                        case GeneralInfoItemAttribute item:
+                            _generalInfoItemStopwatch.Start();
+                            registry.Add(new GeneralInfoItem(obj, (MethodInfo)member, item));
+                            _generalInfoItemStopwatch.Stop();
+                            break;
+                        case EditableInfoItemAttribute item:
+                            _editableInfoItemStopwatch.Start();
+                            registry.Add(new EditableInfoItem(obj, member, item));
+                            _editableInfoItemStopwatch.Stop();
+                            break;
+                    }
+            }
+
+            Profiler.EndSample();
         }
 
         private void AddNewWindow()
@@ -380,6 +458,8 @@ namespace MuMech
 
         public override void DrawGUI(bool inEditor)
         {
+            Profiler.BeginSample("MechJebModuleCustomWindowEditor.DrawGUI");
+
             base.DrawGUI(inEditor);
 
             if (editingBackground)
@@ -412,12 +492,16 @@ namespace MuMech
                     }
                 }
             }
+
+            Profiler.EndSample();
         }
 
         private Vector2 scrollPos, scrollPos2;
 
         protected override void WindowGUI(int windowID)
         {
+            Profiler.BeginSample("MechJebModuleCustomWindowEditor.WindowGUI");
+
             GUILayout.BeginVertical();
 
             if (editedWindow == null) editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
@@ -558,6 +642,8 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+
+            Profiler.EndSample();
         }
 
         protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(540) };
@@ -575,6 +661,8 @@ namespace MuMech
 
         public void AddDefaultWindows()
         {
+            Profiler.BeginSample("MechJebModuleCustomWindowEditor.AddDefaultWindows");
+
             CreateWindowFromSharingString(CustomWindowPresets.presets[0].sharingString).Enabled  = false;
             CreateWindowFromSharingString(CustomWindowPresets.presets[1].sharingString).Enabled  = false;
             CreateWindowFromSharingString(CustomWindowPresets.presets[2].sharingString).Enabled  = false;
@@ -584,6 +672,8 @@ namespace MuMech
             CreateWindowFromSharingString(CustomWindowPresets.presets[6].sharingString).Enabled  = false;
             CreateWindowFromSharingString(CustomWindowPresets.presets[7].sharingString).Enabled  = false;
             CreateWindowFromSharingString(CustomWindowPresets.presets[10].sharingString).Enabled = false;
+
+            Profiler.EndSample();
         }
 
         public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)
@@ -662,7 +752,7 @@ namespace MuMech
         private readonly int    timeDecimalPlaces; //only used with the "TIME" format
 
         private Func<object, object> getValue;
-        private static readonly ConcurrentDictionary<MemberInfo, Func<object, object>> _getterCache = new ConcurrentDictionary<MemberInfo, Func<object, object>>();
+        private static readonly Dictionary<MemberInfo, Func<object, object>> _getterCache = new Dictionary<MemberInfo, Func<object, object>>();
         private readonly object _obj;
 
         private string stringValue;
@@ -672,6 +762,8 @@ namespace MuMech
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {
+            Profiler.BeginSample("ValueInfoItem.ValueInfoItem");
+
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             units             = attribute.units;
@@ -682,13 +774,18 @@ namespace MuMech
 
             _obj = obj;
 
-            getValue = _getterCache.GetOrAdd(member, CompileAccessor(obj, member));
+            if (!_getterCache.ContainsKey(member))
+                _getterCache.Add(member, CompileAccessor(obj, member));
 
-            CompileAccessor(obj, member);
+            getValue = _getterCache[member];
+
+            Profiler.EndSample();
         }
 
         private Func<object, object> CompileAccessor(object obj, MemberInfo member)
         {
+            Profiler.BeginSample("ValueInfoItem.CompileAccessor");
+
             Type objType = obj.GetType();
             var dynamicMethod = new DynamicMethod("GetMemberValue", typeof(object), new Type[] { typeof(object) }, objType, true);
 
@@ -730,7 +827,11 @@ namespace MuMech
             // Return the value
             il.Emit(OpCodes.Ret);
 
-            return (Func<object, object>)dynamicMethod.CreateDelegate(typeof(Func<object, object>));
+            var @delegate = (Func<object, object>)dynamicMethod.CreateDelegate(typeof(Func<object, object>));
+
+            Profiler.EndSample();
+
+            return @delegate;
         }
 
         private string GetStringValue(object value)
@@ -792,9 +893,13 @@ namespace MuMech
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
         {
+            Profiler.BeginSample("ActionInfoItem.ActionInfoItem");
+
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             action = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
+
+            Profiler.EndSample();
         }
 
         public override void DrawItem()
@@ -811,10 +916,14 @@ namespace MuMech
         public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
             : base(attribute)
         {
+            Profiler.BeginSample("ToggleInfoItem.ToggleInfoItem");
+
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             this.obj    = obj;
             this.member = member;
+
+            Profiler.EndSample();
         }
 
         public override void DrawItem()
@@ -841,10 +950,14 @@ namespace MuMech
         public GeneralInfoItem(object obj, MethodInfo method, GeneralInfoItemAttribute attribute)
             : base(attribute)
         {
+            Profiler.BeginSample("GeneralInfoItem.GeneralInfoItem");
+
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + method.Name;
 
             draw     = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
             this.obj = obj;
+
+            Profiler.EndSample();
         }
 
         public override void DrawItem() => draw();
@@ -865,6 +978,8 @@ namespace MuMech
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
         {
+            Profiler.BeginSample("EditableInfoItem.EditableInfoItem");
+
             id = GetType().Name.Replace("InfoItem", "") + ":" + obj.GetType().Name.Replace("MechJebModule", "") + "." + member.Name;
 
             rightLabel = attribute.rightLabel;
@@ -872,6 +987,8 @@ namespace MuMech
 
             if (member is FieldInfo) val         = (IEditable)((FieldInfo)member).GetValue(obj);
             else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
+
+            Profiler.EndSample();
         }
 
         public override void DrawItem()
