@@ -518,7 +518,7 @@ namespace MechJebLib.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToSI(this float f, int maxPrecision = -99, int sigFigs = 4) => ((double)f).ToSI(maxPrecision, sigFigs);
+        public static string ToSI(this float f, int sigFigs = 4, int maxPrecision = int.MaxValue) => ((double)f).ToSI(sigFigs, maxPrecision);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Print(string message) => Logger.Print(message);
