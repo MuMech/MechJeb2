@@ -180,7 +180,7 @@ namespace MuMech
                 }
             }
 
-            _stats = $"{Count} waypoints over {distance.ToSI(-1)}m";
+            _stats = $"{Count} waypoints over {distance.ToSI()}m";
         }
 
         public MechJebWaypointRoute(string name = "", CelestialBody body = null, string mode = "Rover")
