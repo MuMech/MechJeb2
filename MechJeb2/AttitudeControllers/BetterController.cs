@@ -23,15 +23,15 @@ namespace MuMech.AttitudeControllers
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble VelKp = new EditableDouble(10);
+        public readonly EditableDouble VelKp = new EditableDouble(18.9);
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble VelKi = new EditableDouble(20);
+        public readonly EditableDouble VelKi = new EditableDouble(8.85);
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble VelKd = new EditableDouble(0.425);
+        public readonly EditableDouble VelKd = new EditableDouble(0.847);
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -39,11 +39,11 @@ namespace MuMech.AttitudeControllers
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble VelB = new EditableDouble(0.994);
+        public readonly EditableDouble VelB = new EditableDouble(1);
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble VelC = new EditableDouble(0.0185);
+        public readonly EditableDouble VelC = new EditableDouble(1);
 
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -93,18 +93,18 @@ namespace MuMech.AttitudeControllers
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public int Version = -1;
 
-        private const int SETTINGS_VERSION = 5;
+        private const int SETTINGS_VERSION = 6;
 
         private void Defaults()
         {
             PosKp.Val            = 1.98;
             PosDeadband.Val      = 0.002;
-            VelKp.Val            = 10;
-            VelKi.Val            = 20;
-            VelKd.Val            = 0.425;
+            VelKp.Val            = 18.9;
+            VelKi.Val            = 8.85;
+            VelKd.Val            = 0.847;
             VelN.Val             = 84.1994541201249;
-            VelB.Val             = 0.994;
-            VelC.Val             = 0.0185;
+            VelB.Val             = 1.0;
+            VelC.Val             = 1.0;
             VelDeadband.Val      = 0.0001;
             VelClegg             = false;
             VelSmoothIn.Val      = 1.0;
