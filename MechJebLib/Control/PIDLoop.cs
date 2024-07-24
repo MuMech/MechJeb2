@@ -47,7 +47,7 @@ namespace MechJebLib.Control
                 delta -= Sign(delta) * Deadband;
 
             // clegg filtering on zero-crossing to remove integral windup
-            if (IsFinite(_delta1) && Clegg && ((delta < 0 && _delta1 > 0) || (delta > 0 && _delta1 < 0)))
+            if (IsFinite(_delta1) && Clegg && ((delta <= 0 && _delta1 > 0) || (delta >= 0 && _delta1 < 0)))
                 _d1 = _d2 = 0;
 
             double ep = B * delta;
