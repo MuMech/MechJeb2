@@ -168,6 +168,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.IsOperational             = kspEngine.isOperational;
                 engine.ThrottleLimiter           = kspEngine.thrustPercentage;
                 engine.MultIsp                   = kspEngine.multIsp;
+                engine.FlowMultiplier            = kspEngine.flowMultiplier;
+                engine.MultFlow                  = kspEngine.multFlow;
                 engine.NoPropellants             = kspEngine is { flameout: true, statusL2: "No propellants" };
                 engine.ModuleResiduals           = 0;
 

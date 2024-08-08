@@ -214,7 +214,6 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.ThrottleLocked       = kspEngine.throttleLocked;
                 engine.MaxFuelFlow          = kspEngine.maxFuelFlow;
                 engine.MinFuelFlow          = kspEngine.minFuelFlow;
-                engine.FlowMultiplier       = kspEngine.flowMultiplier;
                 engine.G                    = kspEngine.g;
                 engine.MaxThrust            = kspEngine.maxThrust;
                 engine.MinThrust            = kspEngine.minThrust;
