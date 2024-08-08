@@ -36,6 +36,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
         public bool   IsOperational;
         public double FlowMultiplier;
+        public double MultFlow;
         public V3     ThrustCurrent;
         public V3     ThrustMax;
         public V3     ThrustMin;
@@ -246,12 +247,12 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
             double thrustLimiter = ThrottleLimiter / 100f;
 
-            double maxThrust = MaxFuelFlow * FlowMultiplier * ISP * G * MultIsp;
-            double minThrust = MinFuelFlow * FlowMultiplier * ISP * G * MultIsp;
+            double maxThrust = MaxFuelFlow * FlowMultiplier * ISP * G * MultIsp * MultFlow;
+            double minThrust = MinFuelFlow * FlowMultiplier * ISP * G * MultIsp * MultFlow;
 
             double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
             double eMinThrust = ThrottleLocked ? eMaxThrust : minThrust;
-            double eCurrentThrust = MassFlowRate * ISP * G * MultIsp;
+            double eCurrentThrust = MassFlowRate * ISP * G * MultIsp * MultFlow;
 
             for (int i = 0; i < ThrustDirectionVectors.Count; i++)
             {
