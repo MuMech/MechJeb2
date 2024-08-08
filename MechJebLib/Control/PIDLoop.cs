@@ -8,59 +8,53 @@ using static System.Math;
 
 namespace MechJebLib.Control
 {
-    public class PIDLoop
+    public class PIDLoop : IPIDLoop
     {
-        public double Kp        { get; set; } = 1.0;
-        public double Ki        { get; set; }
-        public double Kd        { get; set; }
-        public double Ts        { get; set; } = 0.02;
-        public double N         { get; set; } = 50; // N = (4/Ts) * (1 - e^(-Ts/(2*Tf))) (trapezoidal discretization)
-        public double B         { get; set; } = 1;
-        public double C         { get; set; } = 1;
-        public double SmoothIn  { get; set; } = 1.0;
-        public double SmoothOut { get; set; } = 1.0;
-        public double Deadband  { get; set; }
-        public double MinOutput { get; set; } = double.MinValue;
-        public double MaxOutput { get; set; } = double.MaxValue;
-        public bool   Clegg     { get; set; } = true;
-
         // internal state for PID filter
         private double _d1, _d2;
+        private double _u1 = double.NaN;
 
         // internal state for last measured and last output for low pass filters
-        private double _m1 = double.NaN;
-        private double _o1 = double.NaN;
+        private double _y1 = double.NaN;
+        public double Kp { get; set; } = 1.0;
+        public double Ki { get; set; }
+        public double Kd { get; set; }
+        public double H { get; set; } = 0.02;
+        public double N { get; set; } = 50; // N = (4/Ts) * (1 - e^(-Ts/(2*Tf))) (trapezoidal discretization)
+        public double B { get; set; } = 1;
+        public double C { get; set; } = 1;
+        public double SmoothIn { get; set; } = 1.0;
+        public double SmoothOut { get; set; } = 1.0;
+        public double ProportionalDeadband { get; set; }
+        public double IntegralDeadband { get; set; }
+        public double DerivativeDeadband { get; set; }
+        public double OutputDeadband { get; set; }
+        public double MinOutput { get; set; } = double.MinValue;
+        public double MaxOutput { get; set; } = double.MaxValue;
 
-        // for zero crossing logic
-        private double _delta1 = double.NaN;
-
-        public double Update(double reference, double measured)
+        /// <summary>
+        /// </summary>
+        /// <param name="r">reference signal</param>
+        /// <param name="y">measured control signal</param>
+        /// <returns></returns>
+        public double Update(double r, double y)
         {
             // lowpass filter the input
-            measured = IsFinite(_m1) ? _m1 + SmoothIn * (measured - _m1) : measured;
+            y = IsFinite(_y1) ? _y1 + SmoothIn * (y - _y1) : y;
 
-            double delta = reference - measured;
-
-            if (Abs(delta) < Deadband)
-                delta = 0;
-            else
-                delta -= Sign(delta) * Deadband;
-
-            // clegg filtering on zero-crossing to remove integral windup
-            if (IsFinite(_delta1) && Clegg && ((delta <= 0 && _delta1 > 0) || (delta >= 0 && _delta1 < 0)))
-                _d1 = _d2 = 0;
-
-            double ep = B * delta;
-            double ei = delta;
-            double ed = C * delta;
+            double ep = ApplyDeadband(B * r - y, ProportionalDeadband);
+            double ei = ApplyDeadband(r - y, IntegralDeadband);
+            double ed = ApplyDeadband(C * r - y, DerivativeDeadband);
 
             // trapezoidal PID with derivative filtering as a digital biquad filter
-            double a0 = 2 * N * Ts + 4;
+            double a0 = 2 * N * H + 4;
             double a1 = -8 / a0;
-            double a2 = (-2 * N * Ts + 4) / a0;
-            double b0 = (4 * Kp * ep + 4 * Kd * ed * N + 2 * Ki * ei * Ts + 2 * Kp * ep * N * Ts + Ki * ei * N * Ts * Ts) / a0;
-            double b1 = (2 * Ki * ei * N * Ts * Ts - 8 * Kp * ep - 8 * Kd * ed * N) / a0;
-            double b2 = (4 * Kp * ep + 4 * Kd * ed * N - 2 * Ki * ei * Ts - 2 * Kp * ep * N * Ts + Ki * ei * N * Ts * Ts) / a0;
+            double a2 = (-2 * N * H + 4) / a0;
+            double b0 = (4 * Kp * ep + 4 * Kd * ed * N + 2 * Ki * ei * H + 2 * Kp * ep * N * H + Ki * ei * N * H * H) /
+                        a0;
+            double b1 = (2 * Ki * ei * N * H * H - 8 * Kp * ep - 8 * Kd * ed * N) / a0;
+            double b2 = (4 * Kp * ep + 4 * Kd * ed * N - 2 * Ki * ei * H - 2 * Kp * ep * N * H + Ki * ei * N * H * H) /
+                        a0;
 
             // if we have NaN values saved into internal state that needs to be cleared here or it won't reset
             if (!IsFinite(_d1))
@@ -69,24 +63,30 @@ namespace MechJebLib.Control
                 _d2 = 0;
 
             // transposed direct form 2
-            double u0 = b0 + _d1;
-            u0  = Clamp(u0, MinOutput, MaxOutput);
-            _d1 = b1 - a1 * u0 + _d2;
-            _d2 = b2 - a2 * u0;
+            double z = ApplyDeadband(b0 + _d1, OutputDeadband);
+            double u = Clamp(z, MinOutput, MaxOutput);
+            _d1 = b1 - a1 * u + _d2;
+            _d2 = b2 - a2 * u;
 
             // low pass filter the output
-            _o1 = IsFinite(_o1) ? _o1 + SmoothOut * (u0 - _o1) : u0;
+            _u1 = IsFinite(_u1) ? _u1 + SmoothOut * (u - _u1) : u;
 
-            _m1     = measured;
-            _delta1 = delta;
+            _y1 = y;
 
-            return _o1;
+            return _u1;
+        }
+
+        private double ApplyDeadband(double v, double deadband)
+        {
+            if (Abs(v) < deadband)
+                return 0;
+            return v - Sign(v) * deadband;
         }
 
         public void Reset()
         {
             _d1 = _d2 = 0;
-            _m1 = _o1 = _delta1 = double.NaN;
+            _y1 = _u1 = double.NaN;
         }
     }
 }
