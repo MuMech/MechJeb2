@@ -46,7 +46,9 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Control\IPIDLoop.cs"/>
         <Compile Include="Control\PIDLoop.cs"/>
+        <Compile Include="Control\PIDLoop2.cs"/>
         <Compile Include="FuelFlowSimulation\DecouplingAnalyzer.cs"/>
         <Compile Include="FuelFlowSimulation\FuelFlowSimulation.cs"/>
         <Compile Include="FuelFlowSimulation\FuelStats.cs"/>
@@ -80,7 +82,7 @@
         <Compile Include="ODE\DP5.cs"/>
         <Compile Include="ODE\DP8.cs"/>
         <Compile Include="ODE\Event.cs"/>
-        <Compile Include="ODE\Tsit5.cs" />
+        <Compile Include="ODE\Tsit5.cs"/>
         <Compile Include="Primitives\Dual.cs"/>
         <Compile Include="Primitives\DualV3.cs"/>
         <Compile Include="Primitives\H1.cs"/>

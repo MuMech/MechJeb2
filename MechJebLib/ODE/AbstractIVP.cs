@@ -21,6 +21,23 @@ namespace MechJebLib.ODE
     //  - Needs working event API
     public abstract class AbstractIVP
     {
+        private readonly List<Event> _activeEvents = new List<Event>();
+
+        private Func<double, IList<double>, AbstractIVP, double> _eventFunc = null!;
+        private double _habsNext;
+        protected int Direction;
+        protected double[] Dy = new double[1];
+        protected double[] Dynew = new double[1];
+        protected double Habs;
+        protected double MaxStep;
+        protected double MinStep;
+
+        protected int N;
+        protected double T, Tnew;
+
+        protected double[] Y = new double[1];
+        protected double[] Ynew = new double[1];
+
         /// <summary>
         ///     Minimum h step (may be violated on the last step or before an event).
         /// </summary>
@@ -68,7 +85,7 @@ namespace MechJebLib.ODE
 
         public CancellationToken CancellationToken { get; }
 
-        protected int N;
+        private Func<double, object?, double> _eventFunctionDelegate => EventFuncWrapper;
 
         /// <summary>
         ///     Dormand Prince 5(4)7FM ODE integrator (aka DOPRI5 aka ODE45)
@@ -81,15 +98,16 @@ namespace MechJebLib.ODE
         /// <param name="interpolant"></param>
         /// <param name="events"></param>
         /// <exception cref="ArgumentException"></exception>
-        public void Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant = null,
+        public void Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf,
+            Hn? interpolant = null,
             IReadOnlyList<Event>? events = null)
         {
             try
             {
-                N     = y0.Count;
-                Y     = Y.Expand(N);
-                Dy    = Dy.Expand(N);
-                Ynew  = Ynew.Expand(N);
+                N = y0.Count;
+                Y = Y.Expand(N);
+                Dy = Dy.Expand(N);
+                Ynew = Ynew.Expand(N);
                 Dynew = Dynew.Expand(N);
 
                 Init();
@@ -102,22 +120,6 @@ namespace MechJebLib.ODE
             }
         }
 
-        protected        double[]    Y     = new double[1];
-        protected        double[]    Ynew  = new double[1];
-        protected        double[]    Dy    = new double[1];
-        protected        double[]    Dynew = new double[1];
-        protected        double      Habs;
-        protected        int         Direction;
-        protected        double      T, Tnew;
-        protected        double      MaxStep;
-        protected        double      MinStep;
-        private          double      _habsNext;
-        private readonly List<Event> _activeEvents = new List<Event>();
-
-        private Func<double, IList<double>, AbstractIVP, double> _eventFunc = null!;
-
-        private Func<double, object?, double> _eventFunctionDelegate => EventFuncWrapper;
-
         private double EventFuncWrapper(double x, object? o)
         {
             using var yinterp = Vn.Rent(N);
@@ -125,12 +127,13 @@ namespace MechJebLib.ODE
             return _eventFunc(x, yinterp, this);
         }
 
-        private void _Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf, Hn? interpolant,
+        private void _Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf,
+            Hn? interpolant,
             IReadOnlyList<Event>? events)
         {
             Direction = t0 != tf ? Math.Sign(tf - t0) : 1;
-            MaxStep   = Hmax;
-            MinStep   = Hmin;
+            MaxStep = Hmax;
+            MinStep = Hmin;
 
             T = t0;
             Y.CopyFrom(y0);
@@ -140,6 +143,7 @@ namespace MechJebLib.ODE
             f(Y, T, Dy);
 
             Habs = Hstart > 0 ? Hstart : SelectInitialStep(f, T, Y, Dy, Direction);
+            Habs = Clamp(Habs, MinStep, MaxStep);
 
             interpolant?.Add(T, Y, Dy);
 
@@ -183,8 +187,8 @@ namespace MechJebLib.ODE
 
                         for (int i = 0; i < _activeEvents.Count; i++)
                         {
-                            _eventFunc            = _activeEvents[i].F;
-                            (double tevent, _)    = Bisection.Solve(_eventFunctionDelegate, T, Tnew, null, EPS);
+                            _eventFunc = _activeEvents[i].F;
+                            (double tevent, _) = Bisection.Solve(_eventFunctionDelegate, T, Tnew, null, EPS);
                             _activeEvents[i].Time = tevent;
                         }
 
@@ -215,7 +219,7 @@ namespace MechJebLib.ODE
                 // take a step
                 Y.CopyFrom(Ynew);
                 Dy.CopyFrom(Dynew);
-                T    = Tnew;
+                T = Tnew;
                 Habs = _habsNext;
 
                 if (terminate)
@@ -267,7 +271,10 @@ namespace MechJebLib.ODE
         }
 
         protected abstract (double, double) Step(IVPFunc f);
-        protected abstract double SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0, IReadOnlyList<double> f0, int direction);
+
+        protected abstract double SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0,
+            IReadOnlyList<double> f0, int direction);
+
         protected abstract void InitInterpolant();
         protected abstract void Interpolate(double x, Vn yout);
         protected abstract void Init();
