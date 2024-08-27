@@ -342,7 +342,11 @@ namespace MuMech
             base.OnSave(local, type, global);
 
             //Save custom info windows within our ConfigNode:
-            if (global == null) return;
+            if (global == null)
+            {
+                Profiler.EndSample();
+                return;
+            }
 
             foreach (MechJebModuleCustomInfoWindow window in Core.GetComputerModules<MechJebModuleCustomInfoWindow>())
             {
