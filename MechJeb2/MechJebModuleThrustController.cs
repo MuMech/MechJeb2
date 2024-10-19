@@ -979,7 +979,7 @@ namespace MuMech
             alglib.minqpsetquadraticterm(state, a, false);
             alglib.minqpsetlinearterm(state, b);
             alglib.minqpsetbc(state, boundL, boundU);
-            alglib.minqpsetalgodenseipm(state, 0.0);
+            alglib.minqpsetalgodensegenipm(state, 0.0);
             //var t1 = stopwatch.ElapsedMilliseconds;
             alglib.minqpoptimize(state);
             //var t2 = stopwatch.ElapsedMilliseconds;
