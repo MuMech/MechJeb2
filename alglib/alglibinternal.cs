@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.01.0 (source code generated 2023-12-27)
+ALGLIB 4.03.0 (source code generated 2024-09-26)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -308,123 +308,6 @@ public partial class alglib
 
 
         /*************************************************************************
-        Thread-safe pool used to store/retrieve/recycle N-length boolean arrays.
-
-          -- ALGLIB --
-             Copyright 06.07.2022 by Bochkanov Sergey
-        *************************************************************************/
-        public class nbpool : apobject
-        {
-            public int n;
-            public int temporariescount;
-            public alglib.smp.shared_pool sourcepool;
-            public alglib.smp.shared_pool temporarypool;
-            public sbooleanarray seed0;
-            public sbooleanarray seedn;
-            public nbpool()
-            {
-                init();
-            }
-            public override void init()
-            {
-                sourcepool = new alglib.smp.shared_pool();
-                temporarypool = new alglib.smp.shared_pool();
-                seed0 = new sbooleanarray();
-                seedn = new sbooleanarray();
-            }
-            public override alglib.apobject make_copy()
-            {
-                nbpool _result = new nbpool();
-                _result.n = n;
-                _result.temporariescount = temporariescount;
-                _result.sourcepool = (alglib.smp.shared_pool)sourcepool.make_copy();
-                _result.temporarypool = (alglib.smp.shared_pool)temporarypool.make_copy();
-                _result.seed0 = (sbooleanarray)seed0.make_copy();
-                _result.seedn = (sbooleanarray)seedn.make_copy();
-                return _result;
-            }
-        };
-
-
-        /*************************************************************************
-        Thread-safe pool used to store/retrieve/recycle N-length integer arrays.
-
-          -- ALGLIB --
-             Copyright 06.07.2022 by Bochkanov Sergey
-        *************************************************************************/
-        public class nipool : apobject
-        {
-            public int n;
-            public int temporariescount;
-            public alglib.smp.shared_pool sourcepool;
-            public alglib.smp.shared_pool temporarypool;
-            public sintegerarray seed0;
-            public sintegerarray seedn;
-            public nipool()
-            {
-                init();
-            }
-            public override void init()
-            {
-                sourcepool = new alglib.smp.shared_pool();
-                temporarypool = new alglib.smp.shared_pool();
-                seed0 = new sintegerarray();
-                seedn = new sintegerarray();
-            }
-            public override alglib.apobject make_copy()
-            {
-                nipool _result = new nipool();
-                _result.n = n;
-                _result.temporariescount = temporariescount;
-                _result.sourcepool = (alglib.smp.shared_pool)sourcepool.make_copy();
-                _result.temporarypool = (alglib.smp.shared_pool)temporarypool.make_copy();
-                _result.seed0 = (sintegerarray)seed0.make_copy();
-                _result.seedn = (sintegerarray)seedn.make_copy();
-                return _result;
-            }
-        };
-
-
-        /*************************************************************************
-        Thread-safe pool used to store/retrieve/recycle N-length real arrays.
-
-          -- ALGLIB --
-             Copyright 06.07.2022 by Bochkanov Sergey
-        *************************************************************************/
-        public class nrpool : apobject
-        {
-            public int n;
-            public int temporariescount;
-            public alglib.smp.shared_pool sourcepool;
-            public alglib.smp.shared_pool temporarypool;
-            public srealarray seed0;
-            public srealarray seedn;
-            public nrpool()
-            {
-                init();
-            }
-            public override void init()
-            {
-                sourcepool = new alglib.smp.shared_pool();
-                temporarypool = new alglib.smp.shared_pool();
-                seed0 = new srealarray();
-                seedn = new srealarray();
-            }
-            public override alglib.apobject make_copy()
-            {
-                nrpool _result = new nrpool();
-                _result.n = n;
-                _result.temporariescount = temporariescount;
-                _result.sourcepool = (alglib.smp.shared_pool)sourcepool.make_copy();
-                _result.temporarypool = (alglib.smp.shared_pool)temporarypool.make_copy();
-                _result.seed0 = (srealarray)seed0.make_copy();
-                _result.seedn = (srealarray)seedn.make_copy();
-                return _result;
-            }
-        };
-
-
-        /*************************************************************************
         Counter used to compute average value of a set of numbers
 
           -- ALGLIB --
@@ -517,9 +400,6 @@ public partial class alglib
 
 
 
-        public const int maxtemporariesinnpool = 1000;
-
-
         /*************************************************************************
         Internally calls SetErrorFlag() with condition:
 
@@ -538,7 +418,7 @@ public partial class alglib
             double s,
             alglib.xparams _params)
         {
-            alglib.ap.seterrorflag(ref flag, (double)(Math.Abs(val-refval))>(double)(tol*Math.Max(Math.Abs(refval), s)), "apserv.ap:254");
+            alglib.ap.seterrorflag(ref flag, (double)(Math.Abs(val-refval))>(double)(tol*Math.Max(Math.Abs(refval), s)), "apserv.ap:206");
         }
 
 
@@ -1573,7 +1453,7 @@ public partial class alglib
             v = 0;
             for(i=0; i<=n-1; i++)
             {
-                v = 0.01*v+x[i];
+                v = 1+0.01*v+x[i];
             }
             result = math.isfinite(v);
             return result;
@@ -2544,6 +2424,36 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function is used to set value of an int variable;  name of  the
+        function suggests that increment is done in multithreaded setting  in  the
+        thread-unsafe manner (optional progress reports which do not need guaranteed
+        correctness), although the library may try to use safe options, if available.
+        *************************************************************************/
+        public static void threadunsafeset(ref int v,
+            int x,
+            alglib.xparams _params)
+        {
+            v = x;
+        }
+
+
+        /*************************************************************************
+        This function is used to read value of an int variable;  name of  the
+        function suggests that read is done in multithreaded setting  in  the
+        thread-unsafe manner (optional progress reports which do not need guaranteed
+        correctness), although the library may try to use safe options, if available.
+        *************************************************************************/
+        public static int threadunsafeget(ref int v,
+            alglib.xparams _params)
+        {
+            int result = 0;
+
+            result = v;
+            return result;
+        }
+
+
+        /*************************************************************************
         This function is used to increment value of a real variable;  name of  the
         function suggests that increment is done in multithreaded setting  in  the
         thread-unsafe manner (optional progress reports which do not need guaranteed
@@ -2584,6 +2494,107 @@ public partial class alglib
 
             result = v;
             return result;
+        }
+
+
+        /*************************************************************************
+        This function performs weak atomic fetch-add. Atomicity is  guaranteed  on
+        C# targets and on C++ targets with AE_OS #defined.
+
+        It returns result prior to the addition.
+        *************************************************************************/
+        public static int weakatomicfetchadd(ref int v,
+            int n,
+            alglib.xparams _params)
+        {
+            int result = 0;
+            int provisional = 0;
+
+            while( true )
+            {
+                provisional = v;
+                result = System.Threading.Interlocked.CompareExchange(ref v, provisional+n, provisional);
+                if( result==provisional )
+                {
+                    return result;
+                }
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function performs weak atomic spinlock acquisition. The function waits
+        for the spinlock to become EXPECTED and then assigns NEWVAL.
+
+        Atomicity is guaranteed on C# targets and on C++ targets with AE_OS #defined.
+        *************************************************************************/
+        public static void weakatomicacquirelock(ref int v,
+            int expected,
+            int newval,
+            alglib.xparams _params)
+        {
+            while( true )
+            {
+                while( System.Threading.Thread.VolatileRead(ref v)!=expected )
+                {
+                }
+                if( System.Threading.Interlocked.CompareExchange(ref v, newval, expected)==expected )
+                {
+                    return;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function performs weak atomic spinlock acquisition. The function waits
+        for the spinlock to become EXPECTED and then assigns NEWVAL.
+
+        Atomicity is guaranteed on C# targets and on C++ targets with AE_OS #defined.
+        *************************************************************************/
+        public static void weakatomicacquirelockv(int[] v,
+            int idx,
+            int expected,
+            int newval,
+            alglib.xparams _params)
+        {
+            while( true )
+            {
+                while( System.Threading.Thread.VolatileRead(ref v[idx])!=expected )
+                {
+                }
+                if( System.Threading.Interlocked.CompareExchange(ref v[idx], newval, expected)==expected )
+                {
+                    return;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        This function waits for a variable to become equal to EXPECTED.  It  waits
+        for at most WAITFOR iterations.
+
+        It returns after the variable has become EXPECTED, or the timer has expired.
+        It does not return the specific for stopping because it  may  be  possible
+        that the variable status has changed in the meantime.
+        *************************************************************************/
+        public static void weakatomicwaitforv(int[] v,
+            int idx,
+            int expected,
+            int waitfor,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            for(i=0; i<=waitfor-1; i++)
+            {
+                if( System.Threading.Thread.VolatileRead(ref v[idx])==expected )
+                {
+                    return;
+                }
+            }
         }
 
 
@@ -2872,6 +2883,26 @@ public partial class alglib
             if( (double)(r2)>(double)(result) )
             {
                 result = r2;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns max(|r0|,|r1|,|r2|)
+        *************************************************************************/
+        public static double rmaxabs2(double r0,
+            double r1,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            r0 = Math.Abs(r0);
+            r1 = Math.Abs(r1);
+            result = r0;
+            if( (double)(r1)>(double)(result) )
+            {
+                result = r1;
             }
             return result;
         }
@@ -3579,294 +3610,6 @@ public partial class alglib
 
 
         /*************************************************************************
-        Initialize nbPool - prepare it to store N-length arrays, N>=0.
-        Tries to reuse previously allocated memory as much as possible.
-        *************************************************************************/
-        public static void nbpoolinit(nbpool pool,
-            int n,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(n>=0, "niPoolInit: N<0");
-            pool.n = n;
-            pool.temporariescount = 0;
-            if( n==0 )
-            {
-                return;
-            }
-            if( alglib.ap.len(pool.seed0.val)!=0 )
-            {
-                pool.seed0.val = new bool[0];
-            }
-            if( alglib.ap.len(pool.seedn.val)!=n )
-            {
-                pool.seedn.val = new bool[n];
-            }
-            alglib.smp.ae_shared_pool_set_seed(pool.sourcepool, pool.seedn);
-            alglib.smp.ae_shared_pool_set_seed(pool.temporarypool, pool.seed0);
-        }
-
-
-        /*************************************************************************
-        Thread-safe retrieval of array from the nbPool. If there are enough arrays
-        in the pool, it is performed without additional dynamic allocations.
-
-        INPUT PARAMETERS:
-            Pool        -   nbPool properly initialized with nbPoolInit
-            A           -   array[0], must have exactly zero length (exception will
-                            be generated if length is different from zero)
-                            
-        OUTPUT PARAMETERS:
-            A           -   array[N], contents undefined
-        *************************************************************************/
-        public static void nbpoolretrieve(nbpool pool,
-            ref bool[] a,
-            alglib.xparams _params)
-        {
-            sbooleanarray tmp = null;
-
-            alglib.ap.assert(alglib.ap.len(a)==0, "nbPoolRetrieve: A has non-zero length on entry");
-            if( pool.n==0 )
-            {
-                return;
-            }
-            alglib.smp.ae_shared_pool_retrieve(pool.sourcepool, ref tmp);
-            alglib.ap.swap(ref tmp.val, ref a);
-            alglib.smp.ae_shared_pool_recycle(pool.temporarypool, ref tmp);
-            threadunsafeinc(ref pool.temporariescount, _params);
-            if( pool.temporariescount>maxtemporariesinnpool )
-            {
-                pool.temporariescount = 0;
-                alglib.smp.ae_shared_pool_clear_recycled(pool.temporarypool);
-            }
-        }
-
-
-        /*************************************************************************
-        Thread-safe recycling of N-length array to the nbPool.
-
-        INPUT PARAMETERS:
-            Pool        -   nbPool properly initialized with nbPoolInit
-            A           -   array[N], length must be N exactly (exception will
-                            be generated if length is different from N)
-                            
-        OUTPUT PARAMETERS:
-            A           -   array[0], length is exactly zero on exit
-        *************************************************************************/
-        public static void nbpoolrecycle(nbpool pool,
-            ref bool[] a,
-            alglib.xparams _params)
-        {
-            sbooleanarray tmp = null;
-
-            alglib.ap.assert(alglib.ap.len(a)==pool.n, "nbPoolRecycle: A has length<>N on entry");
-            if( pool.n==0 )
-            {
-                return;
-            }
-            alglib.smp.ae_shared_pool_retrieve(pool.temporarypool, ref tmp);
-            alglib.ap.swap(ref tmp.val, ref a);
-            alglib.smp.ae_shared_pool_recycle(pool.sourcepool, ref tmp);
-            threadunsafeincby(ref pool.temporariescount, -1, _params);
-            if( pool.temporariescount<0 )
-            {
-                pool.temporariescount = 0;
-            }
-        }
-
-
-        /*************************************************************************
-        Initialize niPool - prepare it to store N-length arrays, N>=0.
-        Tries to reuse previously allocated memory as much as possible.
-        *************************************************************************/
-        public static void nipoolinit(nipool pool,
-            int n,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(n>=0, "niPoolInit: N<0");
-            pool.n = n;
-            pool.temporariescount = 0;
-            if( n==0 )
-            {
-                return;
-            }
-            if( alglib.ap.len(pool.seed0.val)!=0 )
-            {
-                pool.seed0.val = new int[0];
-            }
-            if( alglib.ap.len(pool.seedn.val)!=n )
-            {
-                pool.seedn.val = new int[n];
-            }
-            alglib.smp.ae_shared_pool_set_seed(pool.sourcepool, pool.seedn);
-            alglib.smp.ae_shared_pool_set_seed(pool.temporarypool, pool.seed0);
-        }
-
-
-        /*************************************************************************
-        Thread-safe retrieval of array from the nrPool. If there are enough arrays
-        in the pool, it is performed without additional dynamic allocations.
-
-        INPUT PARAMETERS:
-            Pool        -   niPool properly initialized with niPoolInit
-            A           -   array[0], must have exactly zero length (exception will
-                            be generated if length is different from zero)
-                            
-        OUTPUT PARAMETERS:
-            A           -   array[N], contents undefined
-        *************************************************************************/
-        public static void nipoolretrieve(nipool pool,
-            ref int[] a,
-            alglib.xparams _params)
-        {
-            sintegerarray tmp = null;
-
-            alglib.ap.assert(alglib.ap.len(a)==0, "niPoolRetrieve: A has non-zero length on entry");
-            if( pool.n==0 )
-            {
-                return;
-            }
-            alglib.smp.ae_shared_pool_retrieve(pool.sourcepool, ref tmp);
-            alglib.ap.swap(ref tmp.val, ref a);
-            alglib.smp.ae_shared_pool_recycle(pool.temporarypool, ref tmp);
-            threadunsafeinc(ref pool.temporariescount, _params);
-            if( pool.temporariescount>maxtemporariesinnpool )
-            {
-                pool.temporariescount = 0;
-                alglib.smp.ae_shared_pool_clear_recycled(pool.temporarypool);
-            }
-        }
-
-
-        /*************************************************************************
-        Thread-safe recycling of N-length array to the niPool.
-
-        INPUT PARAMETERS:
-            Pool        -   niPool properly initialized with niPoolInit
-            A           -   array[N], length must be N exactly (exception will
-                            be generated if length is different from N)
-                            
-        OUTPUT PARAMETERS:
-            A           -   array[0], length is exactly zero on exit
-        *************************************************************************/
-        public static void nipoolrecycle(nipool pool,
-            ref int[] a,
-            alglib.xparams _params)
-        {
-            sintegerarray tmp = null;
-
-            alglib.ap.assert(alglib.ap.len(a)==pool.n, "niPoolRecycle: A has length<>N on entry");
-            if( pool.n==0 )
-            {
-                return;
-            }
-            alglib.smp.ae_shared_pool_retrieve(pool.temporarypool, ref tmp);
-            alglib.ap.swap(ref tmp.val, ref a);
-            alglib.smp.ae_shared_pool_recycle(pool.sourcepool, ref tmp);
-            threadunsafeincby(ref pool.temporariescount, -1, _params);
-            if( pool.temporariescount<0 )
-            {
-                pool.temporariescount = 0;
-            }
-        }
-
-
-        /*************************************************************************
-        Initialize nrPool - prepare it to store N-length arrays, N>=0.
-        Tries to reuse previously allocated memory as much as possible.
-        *************************************************************************/
-        public static void nrpoolinit(nrpool pool,
-            int n,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(n>=0, "nrPoolInit: N<0");
-            pool.n = n;
-            pool.temporariescount = 0;
-            if( n==0 )
-            {
-                return;
-            }
-            if( alglib.ap.len(pool.seed0.val)!=0 )
-            {
-                pool.seed0.val = new double[0];
-            }
-            if( alglib.ap.len(pool.seedn.val)!=n )
-            {
-                pool.seedn.val = new double[n];
-            }
-            alglib.smp.ae_shared_pool_set_seed(pool.sourcepool, pool.seedn);
-            alglib.smp.ae_shared_pool_set_seed(pool.temporarypool, pool.seed0);
-        }
-
-
-        /*************************************************************************
-        Thread-safe retrieval of array from the nrPool. If there are enough arrays
-        in the pool, it is performed without additional dynamic allocations.
-
-        INPUT PARAMETERS:
-            Pool        -   nrPool properly initialized with nrPoolInit
-            A           -   array[0], must have exactly zero length (exception will
-                            be generated if length is different from zero)
-                            
-        OUTPUT PARAMETERS:
-            A           -   array[N], contents undefined
-        *************************************************************************/
-        public static void nrpoolretrieve(nrpool pool,
-            ref double[] a,
-            alglib.xparams _params)
-        {
-            srealarray tmp = null;
-
-            alglib.ap.assert(alglib.ap.len(a)==0, "nrPoolRetrieve: A has non-zero length on entry");
-            if( pool.n==0 )
-            {
-                return;
-            }
-            alglib.smp.ae_shared_pool_retrieve(pool.sourcepool, ref tmp);
-            alglib.ap.swap(ref tmp.val, ref a);
-            alglib.smp.ae_shared_pool_recycle(pool.temporarypool, ref tmp);
-            threadunsafeinc(ref pool.temporariescount, _params);
-            if( pool.temporariescount>maxtemporariesinnpool )
-            {
-                pool.temporariescount = 0;
-                alglib.smp.ae_shared_pool_clear_recycled(pool.temporarypool);
-            }
-        }
-
-
-        /*************************************************************************
-        Thread-safe recycling of N-length array to the nrPool.
-
-        INPUT PARAMETERS:
-            Pool        -   nrPool properly initialized with nrPoolInit
-            A           -   array[N], length must be N exactly (exception will
-                            be generated if length is different from N)
-                            
-        OUTPUT PARAMETERS:
-            A           -   array[0], length is exactly zero on exit
-        *************************************************************************/
-        public static void nrpoolrecycle(nrpool pool,
-            ref double[] a,
-            alglib.xparams _params)
-        {
-            srealarray tmp = null;
-
-            alglib.ap.assert(alglib.ap.len(a)==pool.n, "nrPoolRecycle: A has length<>N on entry");
-            if( pool.n==0 )
-            {
-                return;
-            }
-            alglib.smp.ae_shared_pool_retrieve(pool.temporarypool, ref tmp);
-            alglib.ap.swap(ref tmp.val, ref a);
-            alglib.smp.ae_shared_pool_recycle(pool.sourcepool, ref tmp);
-            threadunsafeincby(ref pool.temporariescount, -1, _params);
-            if( pool.temporariescount<0 )
-            {
-                pool.temporariescount = 0;
-            }
-        }
-
-
-        /*************************************************************************
         This function is used in parallel functions for recurrent division of large
         task into two smaller tasks.
 
@@ -3901,6 +3644,117 @@ public partial class alglib
             alglib.ap.assert(task1>=1, "TiledSplit: internal error");
             alglib.ap.assert(task0%tilesize==0, "TiledSplit: internal error");
             alglib.ap.assert(task0>=task1, "TiledSplit: internal error");
+        }
+
+
+        /*************************************************************************
+        Binary search in an integer array. If an element is present twice or more,
+        returns the leftmost one. If the element is not present, returns position
+        where this element can be inserted.
+
+        The range [I0,I1) is searched.
+
+          -- ALGLIB --
+             Copyright 11.06.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static int ibinarysearchlft(int[] a,
+            int i0,
+            int i1,
+            int v,
+            alglib.xparams _params)
+        {
+            int result = 0;
+            int m = 0;
+
+            while( i0<i1 )
+            {
+                m = (i0+i1)/2;
+                if( a[m]<v )
+                {
+                    i0 = m+1;
+                }
+                else
+                {
+                    i1 = m;
+                }
+            }
+            result = i0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Binary search in an integer array. If an element is not present, raises an
+        exception. Returns element position.
+
+        The range [I0,I1) is searched.
+
+          -- ALGLIB --
+             Copyright 11.06.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static int ibinarysearchexisting(int[] a,
+            int i0,
+            int i1,
+            int v,
+            alglib.xparams _params)
+        {
+            int result = 0;
+            int ori1 = 0;
+            int m = 0;
+
+            ori1 = i1;
+            while( i0<i1 )
+            {
+                m = (i0+i1)/2;
+                if( a[m]<v )
+                {
+                    i0 = m+1;
+                }
+                else
+                {
+                    i1 = m;
+                }
+            }
+            alglib.ap.assert(i0<ori1 && a[i0]==v, "iBinarySearchExisting: the element is not found");
+            result = i0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Binary search in an integer array for a specific element, returns True or
+        False.
+
+        The range [I0,I1) is searched.
+
+          -- ALGLIB --
+             Copyright 11.06.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool ibinarysearchispresent(int[] a,
+            int i0,
+            int i1,
+            int v,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+            int ori1 = 0;
+            int m = 0;
+
+            ori1 = i1;
+            while( i0<i1 )
+            {
+                m = (i0+i1)/2;
+                if( a[m]<v )
+                {
+                    i0 = m+1;
+                }
+                else
+                {
+                    i1 = m;
+                }
+            }
+            result = i0<ori1 && a[i0]==v;
+            return result;
         }
 
 
@@ -4771,7 +4625,11 @@ public partial class alglib
 
 
         /*************************************************************************
-        Start measurement
+        Start measurement.
+
+        This function may be slow on some systems  because  it  accesses  internal
+        timer. Depending on the implementation, it may have negligible or significant
+        cost.
         *************************************************************************/
         public static void stimerstart(stimer t,
             alglib.xparams _params)
@@ -4783,7 +4641,11 @@ public partial class alglib
 
 
         /*************************************************************************
-        Stop measurement, add time to already accumulated
+        Stop measurement, add time to the already accumulated
+
+        This function may be slow on some systems  because  it  accesses  internal
+        timer. Depending on the implementation, it may have negligible or significant
+        cost.
         *************************************************************************/
         public static void stimerstop(stimer t,
             alglib.xparams _params)
@@ -4795,7 +4657,52 @@ public partial class alglib
 
 
         /*************************************************************************
-        Retrieve time in milliseconds, accuracy unknown
+        Start measurement if Cond is True; do nothing otherwise.
+
+        Accessing timer can be slow on some systems, thus one should not use timers
+        too frequently. This function allows to access the timer when Cond is True,
+        but completely skip timer-related infrastructure and perform a quick  exit
+        when Cond is False.
+        *************************************************************************/
+        public static void stimerstartcond(stimer t,
+            bool cond,
+            alglib.xparams _params)
+        {
+            if( !cond )
+            {
+                return;
+            }
+            alglib.ap.assert(!t.isrunning, "STimerStart: attempt to start already started timer");
+            t.isrunning = true;
+            t.tcurrent = unchecked((int)(System.DateTime.UtcNow.Ticks/10000));
+        }
+
+
+        /*************************************************************************
+        Stop measurement, add time to the already accumulated, if Cond is True.
+        Do nothing otherwise.
+
+        Accessing timer can be slow on some systems, thus one should not use timers
+        too frequently. This function allows to access the timer when Cond is True,
+        but completely skip timer-related infrastructure and perform a quick  exit
+        when Cond is False.
+        *************************************************************************/
+        public static void stimerstopcond(stimer t,
+            bool cond,
+            alglib.xparams _params)
+        {
+            if( !cond )
+            {
+                return;
+            }
+            alglib.ap.assert(t.isrunning, "STimerStop: attempt to stop already stopped timer");
+            t.isrunning = false;
+            t.ttotal = t.ttotal+unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-t.tcurrent;
+        }
+
+
+        /*************************************************************************
+        Retrieve time in milliseconds for the stopped timer, accuracy unknown
         *************************************************************************/
         public static double stimergetms(stimer t,
             alglib.xparams _params)
@@ -4804,6 +4711,23 @@ public partial class alglib
 
             alglib.ap.assert(!t.isrunning, "STimerGetMS: attempt to get time from the running timer");
             result = t.ttotal;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Retrieve time in milliseconds for the running or stopped timer, accuracy unknown
+        *************************************************************************/
+        public static double stimergetmsrunning(stimer t,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = t.ttotal;
+            if( t.isrunning )
+            {
+                result = result+(unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-t.tcurrent);
+            }
             return result;
         }
 
@@ -6834,6 +6758,35 @@ public partial class alglib
            without reallocation
 
           -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void bgrowv(int newn,
+            ref bool[] x,
+            alglib.xparams _params)
+        {
+            
+            //
+            // If no growth is required, exit. Call worker function otherwise.
+            //
+            // The idea is that we call function which works with dynamic arrays
+            // (and utilizes stack unwinding) only when absolutely necessary.
+            //
+            if( alglib.ap.len(x)>=newn )
+            {
+                return;
+            }
+            bgrowvinternal(newn, ref x, _params);
+        }
+
+
+        /*************************************************************************
+        Grows X, i.e. changes its size in such a way that:
+        a) contents is preserved
+        b) new size is at least N
+        c) actual size can be larger than N, so subsequent grow() calls can return
+           without reallocation
+
+          -- ALGLIB --
              Copyright 07.06.2023 by Bochkanov Sergey
         *************************************************************************/
         public static void rgrowv(int newn,
@@ -6852,6 +6805,116 @@ public partial class alglib
                 return;
             }
             rgrowvinternal(newn, ref x, _params);
+        }
+
+
+        /*************************************************************************
+        Grows X by calling rGrowV() and sets the element X[NewN-1] to the specified
+        value
+
+          -- ALGLIB --
+             Copyright 07.09.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rgrowappendv(int newn,
+            ref double[] x,
+            double v,
+            alglib.xparams _params)
+        {
+            rgrowv(newn, ref x, _params);
+            x[newn-1] = v;
+        }
+
+
+        /*************************************************************************
+        Grows X by calling bGrowV() and sets the element X[NewN-1] to the specified
+        value
+
+          -- ALGLIB --
+             Copyright 07.09.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static void bgrowappendv(int newn,
+            ref bool[] x,
+            bool v,
+            alglib.xparams _params)
+        {
+            bgrowv(newn, ref x, _params);
+            x[newn-1] = v;
+        }
+
+
+        /*************************************************************************
+        Appends several rows to the matrix A, so it has at least M rows, in such a
+        way that:
+
+        a) if cols(A)=ColsCnt, the new matrix row count is at  least  M,  and  the
+           former contents is preserved. This function usually increases matrix size
+           by multiplying it by approximately 2 in order to avoid frequent reallocations.
+        b) if cols(A)<>ColsCnt (including cols(A)>ColsCnt), then the matrix is
+           completely reallocated, its new size will be at least MxColsCnt, but
+           likely to be greater than that
+           
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rgrowrowsfixedcolsm(int m,
+            int colscnt,
+            ref double[,] a,
+            alglib.xparams _params)
+        {
+            if( alglib.ap.cols(a)!=colscnt )
+            {
+                a = new double[(int)Math.Round(1.25*m+8), colscnt];
+                return;
+            }
+            if( alglib.ap.rows(a)<m )
+            {
+                rincreaserowsfixedcolsminternal(m, ref a, _params);
+                return;
+            }
+        }
+
+
+        /*************************************************************************
+        Appends a row to the NxColsCnt matrix A in such a way that:
+
+        a) if cols(A)=ColsCnt, the new matrix row count is at least N+1,  and  the
+           former contents is preserved. This function usually increases matrix size
+           by multiplying it by approximately 2 in order to avoid frequent reallocations.
+           If rows(A)<N, then an exception is generated.
+        b) if cols(A)<>ColsCnt (including cols(A)>ColsCnt) AND N=0, then the matrix
+           is completely reallocated, its new size will be at least 1xColsCnt, but
+           likely to be greater than that
+        c) if cols(A)<>ColsCnt (including cols(A)>ColsCnt) AND N<>0, an  exception
+           is generated
+           
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rappendrowfixedcolsm(int n,
+            int colscnt,
+            ref double[,] a,
+            alglib.xparams _params)
+        {
+            if( alglib.ap.cols(a)!=colscnt )
+            {
+                if( n!=0 )
+                {
+                    alglib.ap.assert(false, "APSERV: integrity check 3225 failed");
+                }
+                a = new double[8, colscnt];
+                return;
+            }
+            if( alglib.ap.rows(a)<n )
+            {
+                alglib.ap.assert(false, "APSERV: integrity check 3827 failed");
+            }
+            if( alglib.ap.rows(a)==n )
+            {
+                rincreaserowsfixedcolsminternal(n+1, ref a, _params);
+                return;
+            }
         }
 
 
@@ -9474,6 +9537,31 @@ public partial class alglib
 
 
         /*************************************************************************
+        Internal function that actually works with dynamic arrays.
+
+          -- ALGLIB --
+             Copyright 07.06.2023 by Bochkanov Sergey
+        *************************************************************************/
+        private static void bgrowvinternal(int newn,
+            ref bool[] x,
+            alglib.xparams _params)
+        {
+            bool[] oldx = new bool[0];
+            int oldn = 0;
+
+            if( alglib.ap.len(x)>=newn )
+            {
+                return;
+            }
+            oldn = alglib.ap.len(x);
+            newn = Math.Max(newn, (int)Math.Round(1.8*oldn+1));
+            alglib.ap.swap(ref x, ref oldx);
+            x = new bool[newn];
+            bcopyv(oldn, oldx, x, _params);
+        }
+
+
+        /*************************************************************************
         Internal function which actually works with dynamic arrays
 
           -- ALGLIB --
@@ -9495,6 +9583,26 @@ public partial class alglib
             alglib.ap.swap(ref x, ref oldx);
             x = new double[newn];
             rcopyv(oldn, oldx, x, _params);
+        }
+
+
+        /*************************************************************************
+        Internal function which actually works with dynamic arrays. We need it to
+        be a separate function in order to minimize penalty associated with maintaining
+        a local dynamically allocated variable.
+
+          -- ALGLIB --
+             Copyright 20.03.2009 by Bochkanov Sergey
+        *************************************************************************/
+        private static void rincreaserowsfixedcolsminternal(int newrows,
+            ref double[,] a,
+            alglib.xparams _params)
+        {
+            double[,] olda = new double[0,0];
+
+            alglib.ap.swap(ref a, ref olda);
+            a = new double[(int)Math.Round(Math.Max(1.8*alglib.ap.rows(olda)+8, 1.25*newrows)), alglib.ap.cols(olda)];
+            rcopym(alglib.ap.rows(olda), alglib.ap.cols(olda), olda, a, _params);
         }
 
 
@@ -11704,6 +11812,133 @@ public partial class alglib
                     a[p0] = ak;
                     b[p0] = b[p1];
                     b[p1] = bt;
+                    t = k;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Sorting function optimized for integer keys and real labels, can be used
+        to sort middle of the array
+
+        A is sorted, and same permutations are applied to B and C.
+
+        Elements beyond [offs:offs+N-1] are not modified or referenced.
+
+        NOTES:
+            this function assumes that A[] is finite; it doesn't checks that
+            condition. All other conditions (size of input arrays, etc.) are not
+            checked too.
+
+          -- ALGLIB --
+             Copyright 11.12.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static void tagsortmiddleirr(int[] a,
+            double[] b,
+            double[] c,
+            int offset,
+            int n,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int k = 0;
+            int t = 0;
+            int tmp = 0;
+            double tmpr = 0;
+            double tmpr2 = 0;
+            int p0 = 0;
+            int p1 = 0;
+            int at = 0;
+            int ak = 0;
+            int ak1 = 0;
+            double bt = 0;
+            double ct = 0;
+
+            
+            //
+            // Special cases
+            //
+            if( n<=1 )
+            {
+                return;
+            }
+            
+            //
+            // General case, N>1: sort, update B and C
+            //
+            for(i=2; i<=n; i++)
+            {
+                t = i;
+                while( t!=1 )
+                {
+                    k = t/2;
+                    p0 = offset+k-1;
+                    p1 = offset+t-1;
+                    ak = a[p0];
+                    at = a[p1];
+                    if( ak>=at )
+                    {
+                        break;
+                    }
+                    a[p0] = at;
+                    a[p1] = ak;
+                    tmpr = b[p0];
+                    b[p0] = b[p1];
+                    b[p1] = tmpr;
+                    tmpr2 = c[p0];
+                    c[p0] = c[p1];
+                    c[p1] = tmpr2;
+                    t = k;
+                }
+            }
+            for(i=n-1; i>=1; i--)
+            {
+                p0 = offset+0;
+                p1 = offset+i;
+                tmp = a[p1];
+                a[p1] = a[p0];
+                a[p0] = tmp;
+                at = tmp;
+                tmpr = b[p1];
+                b[p1] = b[p0];
+                b[p0] = tmpr;
+                bt = tmpr;
+                tmpr2 = c[p1];
+                c[p1] = c[p0];
+                c[p0] = tmpr2;
+                ct = tmpr2;
+                t = 0;
+                while( true )
+                {
+                    k = 2*t+1;
+                    if( k+1>i )
+                    {
+                        break;
+                    }
+                    p0 = offset+t;
+                    p1 = offset+k;
+                    ak = a[p1];
+                    if( k+1<i )
+                    {
+                        ak1 = a[p1+1];
+                        if( ak1>ak )
+                        {
+                            ak = ak1;
+                            p1 = p1+1;
+                            k = k+1;
+                        }
+                    }
+                    if( at>=ak )
+                    {
+                        break;
+                    }
+                    a[p1] = at;
+                    a[p0] = ak;
+                    b[p0] = b[p1];
+                    b[p1] = bt;
+                    c[p0] = c[p1];
+                    c[p1] = ct;
                     t = k;
                 }
             }

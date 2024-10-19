@@ -319,8 +319,8 @@ namespace MechJebLib.Maneuvers
             //double rho = 1000.0;
             //int outerits = 5;
             //alglib.minnlcsetalgoaul(state, rho, outerits);
-            alglib.minnlcsetalgoslp(state);
-            //alglib.minnlcsetalgosqp(state);
+            //alglib.minnlcsetalgoslp(state);
+            alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, EPSX, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
 

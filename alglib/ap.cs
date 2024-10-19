@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 4.01.0 (source code generated 2023-12-27)
+ALGLIB 4.03.0 (source code generated 2024-09-26)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -30,6 +30,7 @@ using Intrinsics = System.Runtime.Intrinsics;
 using System;
 public partial class alglib
 {
+#if !ALGLIB_CORE_ONLY
     /********************************************************************
     Callback definitions for optimizers/fitters/solvers.
     
@@ -46,6 +47,9 @@ public partial class alglib
                                 stores result to fi
     * ndimensional_jac          calculates f[i] = fi(arg)
                                 jac[i,j] = df[i](arg)/d(arg[j])
+    * ndimensional_sjac         calculates f[i] = fi(arg)
+                                sjac[i,j] = df[i](arg)/d(arg[j]),
+                                with sjac being a sparse matrix
                                 
     Callbacks for  parameterized  functions,  i.e.  for  functions  which 
     depend on two vectors: P and Q.  Gradient  and Hessian are calculated 
@@ -75,6 +79,7 @@ public partial class alglib
     
     public delegate void ndimensional_fvec (double[] arg, double[] fi, object obj);
     public delegate void ndimensional_jac  (double[] arg, double[] fi, double[,] jac, object obj);
+    public delegate void ndimensional_sjac (double[] arg, double[] fi, sparsematrix sjac, object obj);
     
     public delegate void ndimensional_pfunc(double[] p, double[] q, ref double func, object obj);
     public delegate void ndimensional_pgrad(double[] p, double[] q, ref double func, double[] grad, object obj);
@@ -82,17 +87,20 @@ public partial class alglib
     
     public delegate void ndimensional_pfvec (double[] p, double[] q, double[] fi, object obj);
     public delegate void ndimensional_pjac  (double[] p, double[] q, double[] fi, double[,] jac, object obj);
+    public delegate void ndimensional_psjac  (double[] p, double[] q, double[] fi, sparsematrix sjac, object obj);
     
     public delegate void ndimensional_rep(double[] arg, double func, object obj);
 
     public delegate void ndimensional_ode_rp (double[] y, double x, double[] dy, object obj);
 
     public delegate void integrator1_func (double x, double xminusa, double bminusx, ref double f, object obj);
-    
+#endif
+
     /********************************************************************
     IronPython compatibility wrappers
     (the language does not support ref-parameters)
     ********************************************************************/
+    #if !ALGLIB_CORE_ONLY
     public delegate double _ipy_ndimensional_func (double[] arg);
     public delegate double _ipy_ndimensional_grad (double[] arg, double[] grad);
     public delegate double _ipy_ndimensional_pfunc(double[] p, double[] q);
@@ -160,6 +168,7 @@ public partial class alglib
         public ndimensional_pgrad get_delegate()
         { return this.grad; }
     }
+    #endif
     
     /********************************************************************
     Class defining a complex number with double precision.
@@ -283,6 +292,15 @@ public partial class alglib
     {
         if( !x )
             System.Environment.FailFast("ALGLIB: critical error");
+    }
+    
+    /********************************************************************
+    Critical failure, resilts in immediate termination of entire program.
+    ********************************************************************/
+    public static void AE_CRITICAL_ASSERT(bool x, string msg)
+    {
+        if( !x )
+            System.Environment.FailFast("ALGLIB: critical error with message '"+msg+"'");
     }
     
     /********************************************************************
@@ -549,19 +567,22 @@ public partial class alglib
     ********************************************************************/
     public partial class ap
     {
+#if !ALGLIB_CORE_ONLY
         /********************************************************************
         Class encapsulating callbacks
         ********************************************************************/
         public class rcommv2_callbacks
         {
-            public ndimensional_func func;
-            public ndimensional_grad grad;
-            public ndimensional_fvec fvec;
-            public ndimensional_jac  jac;
+            public ndimensional_func  func;
+            public ndimensional_grad  grad;
+            public ndimensional_fvec  fvec;
+            public ndimensional_jac   jac;
+            public ndimensional_sjac  sjac;
             public ndimensional_pfunc func_p;
             public ndimensional_pgrad grad_p;
             public ndimensional_pfvec fvec_p;
             public ndimensional_pjac  jac_p;
+            public ndimensional_psjac sjac_p;
         }
 
         /********************************************************************
@@ -569,7 +590,7 @@ public partial class alglib
         ********************************************************************/
         public class rcommv2_request
         {
-            public rcommv2_request(int _rq, int _sz, int _fn, int _vc, int _di, int _fs, double[] _qd,  double[] _rf, double[] _rj, object _obj, string _sp)
+            public rcommv2_request(int _rq, int _sz, int _fn, int _vc, int _di, int _fs, double[] _qd,  double[] _rf, double[] _rj, alglib.sparse.sparsematrix _rs, object _obj, string _sp)
             {
                 request = _rq;
                 size    = _sz;
@@ -580,6 +601,7 @@ public partial class alglib
                 query_data  = _qd;
                 reply_fi    = _rf;
                 reply_dj    = _rj;
+                reply_sj    = new alglib.sparsematrix(_rs);
                 obj         = _obj;
                 subpackage  = _sp;
             }
@@ -608,6 +630,7 @@ public partial class alglib
             // Reply
             //
             public double[] reply_fi, reply_dj;
+            public alglib.sparsematrix reply_sj;
         }
         
         public class rcommv2_buffers
@@ -615,19 +638,20 @@ public partial class alglib
             //
             // Initialize locals by attaching to buffers provided according to the V2 protocol;
             //
-            public rcommv2_buffers(double[] t_x, double[] t_c, double[] t_f, double[] t_g, double[,] t_j)
+            public rcommv2_buffers(double[] t_x, double[] t_c, double[] t_f, double[] t_g, double[,] t_j, alglib.sparse.sparsematrix t_s)
             {
                 tmpX = t_x;
                 tmpC = t_c;
                 tmpF = t_f;
                 tmpG = t_g;
                 tmpJ = t_j;
+                tmpS = new alglib.sparsematrix(t_s);
             }
             
             //
             // initialize locals by allocating our own temporary storage
             //
-            public rcommv2_buffers(rcommv2_request rq)
+            public rcommv2_buffers(rcommv2_request rq, bool is_sparse)
             {
                 tmpX = new double[rq.vars];
                 if( rq.dim>0 )
@@ -635,6 +659,8 @@ public partial class alglib
                 tmpF = new double[rq.funcs];
                 tmpG = new double[rq.vars];
                 tmpJ = new double[rq.funcs, rq.vars];
+                if( is_sparse )
+                    alglib.sparsecreatecrsempty(rq.vars, out tmpS);
             }
             
             //
@@ -662,9 +688,18 @@ public partial class alglib
                     tmpJ = new double[rq.funcs, rq.vars];
             }
             
+            //
+            // deallocate native memory (does nothing in the managed version)
+            //
+            public void _deallocate()
+            {
+            }
+            
             public double[] tmpX, tmpC, tmpF, tmpG;
             public double[,] tmpJ;
+            public alglib.sparsematrix tmpS;
         }
+#endif
 
         public static int len<T>(T[] a)
         { return a.Length; }
@@ -1148,7 +1183,319 @@ public partial class alglib
                 arr[idx] = ptr;
             }
         }
+        
+        
+        /********************************************************************
+        a pool of arrays of length N, for some fixed N
+        ********************************************************************/
+        public class nxpool : apobject
+        {
+            private int datatype;
+            private int array_size;
+            private int capacity;
+            private int nstored;
+            private object[] storage;
+            private smp.ae_lock pool_lock;
+            
+        
+            private nxpool(int dt)
+            {
+                init();
+                datatype = dt;
+            }
+            
+            public static nxpool new_nbpool()
+            {
+                return new nxpool(0);
+            }
+            
+            public static nxpool new_nipool()
+            {
+                return new nxpool(1);
+            }
+            
+            public static nxpool new_nrpool()
+            {
+                return new nxpool(2);
+            }
+            
+            public override void init()
+            {
+                datatype = -1;
+                array_size = 0;
+                capacity = 0;
+                nstored = 0;
+                storage = null;
+                smp.ae_init_lock(ref pool_lock);
+            }
+            
+            public override apobject make_copy()
+            {
+                int i;
+                nxpool result = new nxpool(datatype);
+                result.array_size = array_size;
+                result.capacity = capacity;
+                result.nstored = nstored;
+                if( capacity>0 )
+                {
+                    result.storage = new object[capacity];
+                    for(i=0; i<nstored; i++)
+                        result.storage[i] = storage[i];
+                }
+                return result;
+            }
+            
+            
+            /************************************************************************
+            This function  configures  the  pool  to  work  with  N-sized  arrays  of
+            type bool.
+            
+            All arrays that are stored in the pool are freed, unless new N  is  equal
+            to the old one and datatypes match.
 
+            pool                pool
+            size                new array size, N>=0
+
+            NOTE: this function is NOT thread-safe. It does not acquire pool lock, so
+                  you should NOT call it when lock can be used by another thread.
+            ************************************************************************/
+            public void alloc_bool(int size)
+            {
+                alloc_internal(size, 0);
+            }
+            
+            
+            /************************************************************************
+            This function  configures  the  pool  to  work  with  N-sized  arrays  of
+            type int.
+            
+            All arrays that are stored in the pool are freed, unless new N  is  equal
+            to the old one, and datatypes match.
+
+            pool                pool
+            size                new array size, N>=0
+
+            NOTE: this function is NOT thread-safe. It does not acquire pool lock, so
+                  you should NOT call it when lock can be used by another thread.
+            ************************************************************************/
+            public void alloc_int(int size)
+            {
+                alloc_internal(size, 1);
+            }
+            
+            
+            /************************************************************************
+            This function  configures  the  pool  to  work  with  N-sized  arrays  of
+            type double.
+            
+            All arrays that are stored in the pool are freed, unless new N  is  equal
+            to the old one, and datatypes match.
+
+            pool                pool
+            size                new array size, N>=0
+
+            NOTE: this function is NOT thread-safe. It does not acquire pool lock, so
+                  you should NOT call it when lock can be used by another thread.
+            ************************************************************************/
+            public void alloc_double(int size)
+            {
+                alloc_internal(size, 2);
+            }
+            
+            
+            private void alloc_internal(int size, int dt)
+            {
+                /* integrity checks */
+                AE_CRITICAL_ASSERT(size>=0, "nxpool.alloc(): size<0");
+                AE_CRITICAL_ASSERT(dt==0 || dt==1 || dt==2, "nxpool.alloc(): datatype is incorrect");
+                
+                /* quick exit if nothing have to be done */
+                if( size==array_size && dt==datatype )
+                    return;
+                
+                /* update pool settings */
+                array_size = size;
+                datatype = dt;
+                
+                /* remove all currently allocated arrays from the pool */
+                for(int i=0; i<nstored; i++)
+                    storage[i] = null;
+                nstored = 0;
+            }
+            
+            /************************************************************************
+            This function retrieves array of type bool  from  the  pool,  either  one
+            stored in the pool, or a completely new one (if the pool is empty).
+
+            pool                pool
+            dst                 array instance; on entry must have zero length and
+                                exactly the same datatype as the pool
+
+            NOTE: this function IS thread-safe.  It  acquires  pool  lock  during its
+                  operation and can be used simultaneously from several threads.
+            ************************************************************************/
+            public void retrieve(ref bool[] dst)
+            {
+                AE_CRITICAL_ASSERT(datatype==0 || (datatype==-1 && array_size==0), "nxpool.retrieve(): datatype does not match");
+                AE_CRITICAL_ASSERT(dst==null || dst.Length==0, "nxpool.alloc(): dst array is non-empty");
+                dst = (bool[])retrieve_internal();
+            }
+            
+            /************************************************************************
+            This function retrieves array of type int  from  the  pool,  either  one
+            stored in the pool, or a completely new one (if the pool is empty).
+
+            pool                pool
+            dst                 array instance; on entry must have zero length and
+                                exactly the same datatype as the pool
+
+            NOTE: this function IS thread-safe.  It  acquires  pool  lock  during its
+                  operation and can be used simultaneously from several threads.
+            ************************************************************************/
+            public void retrieve(ref int[] dst)
+            {
+                AE_CRITICAL_ASSERT(datatype==1 || (datatype==-1 && array_size==0), "nxpool.retrieve(): datatype does not match");
+                AE_CRITICAL_ASSERT(dst==null || dst.Length==0, "nxpool.alloc(): dst array is non-empty");
+                dst = (int[])retrieve_internal();
+            }
+            
+            /************************************************************************
+            This function retrieves array of type double from  the  pool,  either one
+            stored in the pool, or a completely new one (if the pool is empty).
+
+            pool                pool
+            dst                 array instance; on entry must have zero length and
+                                exactly the same datatype as the pool
+
+            NOTE: this function IS thread-safe.  It  acquires  pool  lock  during its
+                  operation and can be used simultaneously from several threads.
+            ************************************************************************/
+            public void retrieve(ref double[] dst)
+            {
+                AE_CRITICAL_ASSERT(datatype==2 || (datatype==-1 && array_size==0), "nxpool.retrieve(): datatype does not match");
+                AE_CRITICAL_ASSERT(dst==null || dst.Length==0, "nxpool.alloc(): dst array is non-empty");
+                dst = (double[])retrieve_internal();
+            }
+            
+            object retrieve_internal()
+            {
+                smp.ae_acquire_lock(pool_lock);
+                
+                /* quick exit if the pool is empty */
+                if( nstored==0 )
+                {
+                    smp.ae_release_lock(pool_lock);
+                    if( datatype==0 )
+                        return new bool[array_size];
+                    if( datatype==1 )
+                        return new int[array_size];
+                    if( datatype==2 )
+                        return new double[array_size];
+                    AE_CRITICAL_ASSERT(false, "nxpool.retrieve(): unexpected datatype");
+                }
+                
+                /* retrieve from the pool */
+                object result = storage[nstored-1];
+                storage[nstored-1] = null;
+                nstored = nstored-1;
+                
+                /* release lock */
+                smp.ae_release_lock(pool_lock);
+                
+                /* done */
+                return result;
+            }
+
+
+            /************************************************************************
+            This function recycles an array of type bool into  the  pool,  either one
+            previously retrieved from the pool, or one  allocated somewhere else, but
+            having exactly the same size and elements type.
+
+            pool                pool
+            src                 array instance; on entry must have length=N and
+                                exactly the same datatype as the pool. On exit it's
+                                length is set to zero.
+
+            NOTE: this function IS thread-safe.  It  acquires  pool  lock  during its
+                  operation and can be used simultaneously from several threads.
+            ************************************************************************/
+            public void recycle(ref bool[] src)
+            {
+                AE_CRITICAL_ASSERT(datatype==0);
+                AE_CRITICAL_ASSERT(src==null ? array_size==0 : src.Length==array_size);
+                recycle_internal(src);
+                src = new bool[0]; //!!!!!!!!!!!!!! use null!!!!!!!!!!!!!!!!!
+            }
+
+
+            /************************************************************************
+            This function recycles an array of type int  into  the  pool,  either one
+            previously retrieved from the pool, or one  allocated somewhere else, but
+            having exactly the same size and elements type.
+
+            pool                pool
+            src                 array instance; on entry must have length=N and
+                                exactly the same datatype as the pool. On exit it's
+                                length is set to zero.
+
+            NOTE: this function IS thread-safe.  It  acquires  pool  lock  during its
+                  operation and can be used simultaneously from several threads.
+            ************************************************************************/
+            public void recycle(ref int[] src)
+            {
+                AE_CRITICAL_ASSERT(datatype==1);
+                AE_CRITICAL_ASSERT(src==null ? array_size==0 : src.Length==array_size);
+                recycle_internal(src);
+                src = new int[0]; //!!!!!!!!!!!!!! use null!!!!!!!!!!!!!!!!!
+            }
+
+
+            /************************************************************************
+            This function recycles an array of type double into  the pool, either one
+            previously retrieved from the pool, or one  allocated somewhere else, but
+            having exactly the same size and elements type.
+
+            pool                pool
+            src                 array instance; on entry must have length=N and
+                                exactly the same datatype as the pool. On exit it's
+                                length is set to zero.
+
+            NOTE: this function IS thread-safe.  It  acquires  pool  lock  during its
+                  operation and can be used simultaneously from several threads.
+            ************************************************************************/
+            public void recycle(ref double[] src)
+            {
+                AE_CRITICAL_ASSERT(datatype==2);
+                AE_CRITICAL_ASSERT(src==null ? array_size==0 : src.Length==array_size);
+                recycle_internal(src);
+                src = new double[0]; //!!!!!!!!!!!!!! use null!!!!!!!!!!!!!!!!!
+            }
+            
+            private void recycle_internal(object src)
+            {   
+                /* acquire lock */
+                smp.ae_acquire_lock(pool_lock);
+                
+                /* if full, reallocate storage */
+                if( nstored==capacity )
+                {
+                    int new_capacity = 2*capacity+5;
+                    object[] old_storage = storage;
+                    storage = new object[new_capacity];
+                    for(int i=0; i<capacity; i++)
+                        storage[i] = old_storage[i];
+                    capacity = new_capacity;
+                }
+                
+                /* store */
+                storage[nstored] = src;
+                nstored = nstored+1;
+                
+                /* release lock */
+                smp.ae_release_lock(pool_lock);
+            }
+        }
     };
     
     /********************************************************************
@@ -8004,7 +8351,51 @@ public partial class alglib
      * Parts of alglib.ap class that are shared between commercial and free ALGLIB
      */
     public partial class ap
-    {        
+    {
+        #if !ALGLIB_CORE_ONLY
+        #if _ALGLIB_HPC
+        unsafe
+        #endif
+        internal static void process_v2request_1(rcommv2_request request, int query_idx, rcommv2_callbacks callbacks, rcommv2_buffers buffers, alglib.sparsematrix dst_jacobian)
+        {   
+            //
+            // Query and reply offsets
+            //
+            int query_data_offs = query_idx*(request.vars+request.dim);
+            int reply_fi_offs   = query_idx*request.funcs;
+            
+            //
+            // Copy inputs to buffers
+            //
+            for(int i=0; i<request.vars; i++)
+                buffers.tmpX[i] = request.query_data[query_data_offs+i];
+            if( request.dim>0 )
+                for(int i=0; i<request.dim; i++)
+                    buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+            alglib.sparsecreatecrsemptybuf(request.vars, buffers.tmpS, alglib.xdefault);
+            
+            //
+            // Callback
+            //
+            if( callbacks.sjac!=null )
+            {
+                callbacks.sjac(buffers.tmpX, buffers.tmpF, buffers.tmpS, request.obj);
+                for(int ridx=0; ridx<request.funcs; ridx++)
+                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                alglib.sparseappendmatrix(dst_jacobian, buffers.tmpS);
+                return;
+            }
+            if( callbacks.sjac_p!=null )
+            {
+                callbacks.sjac_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, buffers.tmpS, request.obj);
+                for(int ridx=0; ridx<request.funcs; ridx++)
+                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                alglib.sparseappendmatrix(dst_jacobian, buffers.tmpS);
+                return;
+            }
+            alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
+        }
+
         #if _ALGLIB_HPC
         unsafe
         #endif
@@ -8245,6 +8636,264 @@ public partial class alglib
                     }
                 }
         }
+
+        #if _ALGLIB_HPC
+        unsafe
+        #endif
+        internal static void process_v2request_5phase0(rcommv2_request request, int job_idx, rcommv2_callbacks callbacks, rcommv2_buffers buffers)
+        {
+            //
+            // Phase 0: compute target at the origin and compute parts of the numerical differentiation formula that do NOT depend
+            // on the value at origin.
+            //
+            // This job can be completely parallelized without synchronization.
+            //
+            if( job_idx<request.size*request.vars )
+            {
+                //
+                // Compute parts of the numerical differentiation formula that do NOT depend
+                // on the value at origin.
+                //
+                int query_idx = job_idx/request.vars;
+                int var_idx   = job_idx%request.vars;
+                int n = request.vars;
+                int m = request.funcs;
+                int fs = request.formulasize;
+                int query_data_offs   = query_idx*(n+request.dim+n*request.formulasize*3);
+                int formula_data_offs = query_data_offs+n+request.dim+var_idx*fs*3;
+                int reply_dj_offs     = query_idx*n*m;
+                
+                //
+                // Copy inputs to buffers
+                //
+                for(int i=0; i<request.vars; i++)
+                    buffers.tmpX[i] = request.query_data[query_data_offs+i];
+                if( request.dim>0 )
+                    for(int i=0; i<request.dim; i++)
+                        buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+                
+                //
+                // compute gradient using numerical differentiation formula provided by the optimizer
+                //
+                double xprev = buffers.tmpX[var_idx];
+                for(int t=0; t<m; t++)
+                    request.reply_dj[reply_dj_offs+t*n+var_idx] = 0;
+                for(int idx=0; idx<fs; idx++)
+                {
+                    bool wait_for_value_at_origin = false;
+                    
+                    //
+                    // Multiplier
+                    //
+                    double w = request.query_data[formula_data_offs+idx*3+2];
+                    if( w==0 )
+                        continue;
+                    
+                    //
+                    // The first term
+                    //
+                    if( request.query_data[formula_data_offs+idx*3+0]!=xprev )
+                    {
+                        buffers.tmpX[var_idx] = request.query_data[formula_data_offs+idx*3+0];
+                        if( callbacks.func!=null )
+                        {
+                            double f = 0;
+                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            callbacks.func(buffers.tmpX, ref f, request.obj);
+                            buffers.tmpF[0] = f;
+                        }
+                        else if( callbacks.func_p!=null )
+                        {
+                            double f = 0;
+                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
+                            buffers.tmpF[0] = f;
+                        }
+                        else if( callbacks.fvec!=null )
+                        {
+                            //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
+                        }
+                        else if( callbacks.fvec_p!=null )
+                        {
+                            //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
+                        }
+                        else
+                            alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
+                        buffers.tmpX[var_idx] = xprev;
+                        for(int t=0; t<m; t++)
+                            request.reply_dj[reply_dj_offs+t*n+var_idx] += buffers.tmpF[t];
+                    }
+                    else 
+                    {
+                        // skip terms that depend on the target value at origin - it is still computed
+                        //!!!!!!! _ALGLIB_ASSERT_THROW_OR_BREAK(idx==fs-1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; a numdiff formula with size>1 references value at the origin");
+                        wait_for_value_at_origin = true;
+                    }
+                    
+                    //
+                    // The second term
+                    //
+                    if( request.query_data[formula_data_offs+idx*3+1]!=xprev )
+                    {
+                        buffers.tmpX[var_idx] = request.query_data[formula_data_offs+idx*3+1];
+                        if( callbacks.func!=null )
+                        {
+                            double f = 0;
+                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            callbacks.func(buffers.tmpX, ref f, request.obj);
+                            buffers.tmpF[0] = f;
+                        }
+                        else if( callbacks.func_p!=null )
+                        {
+                            double f = 0;
+                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
+                            buffers.tmpF[0] = f;
+                        }
+                        else if( callbacks.fvec!=null )
+                        {
+                            //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
+                        }
+                        else if( callbacks.fvec_p!=null )
+                        {
+                            //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
+                        }
+                        else
+                            alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
+                        buffers.tmpX[var_idx] = xprev;
+                        for(int t=0; t<m; t++)
+                            request.reply_dj[reply_dj_offs+t*n+var_idx] -= buffers.tmpF[t];
+                    }
+                    else 
+                    {
+                        // skip terms that depend on the target value at origin - it is still computed
+                        //!!!!!!! _ALGLIB_ASSERT_THROW_OR_BREAK(idx==fs-1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; a numdiff formula with size>1 references value at the origin");
+                        wait_for_value_at_origin = true;
+                    }
+
+                    //
+                    // Multiplier
+                    //
+                    if( wait_for_value_at_origin )
+                        break;
+                    for(int t=0; t<m; t++)
+                        request.reply_dj[reply_dj_offs+t*n+var_idx] *= w;
+                }
+            }
+            else
+            {
+                //
+                // Compute target value at the origin
+                //
+                int query_idx = job_idx-request.size*request.vars;
+                int query_data_offs = query_idx*(request.vars+request.dim+request.vars*request.formulasize*3);
+                int reply_fi_offs   = query_idx*request.funcs;
+                int m = request.funcs;
+                
+                //
+                // Copy inputs to buffers
+                //
+                for(int i=0; i<request.vars; i++)
+                    buffers.tmpX[i] = request.query_data[query_data_offs+i];
+                if( request.dim>0 )
+                    for(int i=0; i<request.dim; i++)
+                        buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+                
+                //
+                // Callback
+                //
+                if( callbacks.func!=null )
+                {
+                    double f = 0;
+                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    callbacks.func(buffers.tmpX, ref f, request.obj);
+                    buffers.tmpF[0] = f;
+                }
+                else if( callbacks.func_p!=null )
+                {
+                    double f = 0;
+                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
+                    buffers.tmpF[0] = f;
+                }
+                else if( callbacks.fvec!=null )
+                {
+                    //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
+                }
+                else if( callbacks.fvec_p!=null )
+                {
+                    //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
+                }
+                else
+                    alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
+                for(int t=0; t<m; t++)
+                    request.reply_fi[reply_fi_offs+t] = buffers.tmpF[t];
+            }
+        }
+
+        #if _ALGLIB_HPC
+        unsafe
+        #endif
+        internal static void process_v2request_5phase1(rcommv2_request request)
+        {
+            //
+            // Phase 1: compute parts of the numerical differentiation formula that DO depend on the value at origin.
+            //
+            // This phase does not need parallelism because all what we need is to add request.size*request.vars precomputed values.
+            //
+            for(int query_idx=0; query_idx<request.size; query_idx++)
+                for(int var_idx=0; var_idx<request.vars; var_idx++)
+                {
+                    //
+                    // Compute parts of the numerical differentiation formula that do NOT depend
+                    // on the value at origin.
+                    //
+                    int n = request.vars;
+                    int m = request.funcs;
+                    int fs = request.formulasize;
+                    int query_data_offs   = query_idx*(n+request.dim+n*request.formulasize*3);
+                    int formula_data_offs = query_data_offs+n+request.dim+var_idx*fs*3;
+                    int reply_fi_offs     = query_idx*m;
+                    int reply_dj_offs     = query_idx*n*m;
+                    double xx = request.query_data[query_data_offs+var_idx];
+                    for(int idx=0; idx<fs; idx++)
+                    {
+                        bool uses_value_at_origin = false;
+                        double w = request.query_data[formula_data_offs+idx*3+2];
+                        if( w==0 )
+                            continue;
+                        if( request.query_data[formula_data_offs+idx*3+0]==xx )
+                        {
+                            // TODO: integrity check for fs-1!!!!!!!!!
+                            uses_value_at_origin = true;
+                            for(int t=0; t<m; t++)
+                                request.reply_dj[reply_dj_offs+t*n+var_idx] += request.reply_fi[reply_fi_offs+t];
+                        }
+                        if( request.query_data[formula_data_offs+idx*3+1]==xx )
+                        {
+                            // TODO: integrity check for fs-1!!!!!!!!!
+                            uses_value_at_origin = true;
+                            for(int t=0; t<m; t++)
+                                request.reply_dj[reply_dj_offs+t*n+var_idx] -= request.reply_fi[reply_fi_offs+t];
+                        }
+
+                        //
+                        // Multiplier
+                        //
+                        if( !uses_value_at_origin )
+                            continue;
+                        // TODO: integrity check for fs-1!!!!!!!!!
+                        for(int t=0; t<m; t++)
+                            request.reply_dj[reply_dj_offs+t*n+var_idx] *= w;
+                    }
+                }
+        }
         
         #if _ALGLIB_HPC
         unsafe
@@ -8303,6 +8952,7 @@ public partial class alglib
             }
             alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
         }
+        #endif
     }
 }
 

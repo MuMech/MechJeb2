@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.01.0 (source code generated 2023-12-27)
+ALGLIB 4.03.0 (source code generated 2024-09-26)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -2436,8 +2436,11 @@ public partial class alglib
     (calculated at the same nodes x[]).
 
     This function yields same result as Spline1DBuildCubic() call followed  by
-    sequence of Spline1DDiff() calls, but it can be several times faster  when
-    called for ordered X[] and X2[].
+    sequence of Spline1DDiff() calls, but it  can  be  several  times  faster,
+    whilst still having the same O(N*logN) running time.
+
+    When called for ordered X[], this function has O(N) running  time  instead
+    of O(N*logN).
 
     INPUT PARAMETERS:
         X           -   spline nodes
@@ -2549,8 +2552,12 @@ public partial class alglib
     function derivatives d1[] and d2[] (calculated at the same nodes x[]).
 
     This function yields same result as Spline1DBuildCubic() call followed  by
-    sequence of Spline1DDiff() calls, but it can be several times faster  when
-    called for ordered X[] and X2[].
+    sequence of Spline1DDiff2() calls, but it  can  be  several  times faster,
+    whilst still having the same O(N*logN) running time.
+
+    When called for ordered X[], this function has O(N) running  time  instead
+    of O(N*logN).
+
 
     INPUT PARAMETERS:
         X           -   spline nodes
@@ -2667,8 +2674,11 @@ public partial class alglib
     function values y2[] (calculated at x2[]).
 
     This function yields same result as Spline1DBuildCubic() call followed  by
-    sequence of Spline1DDiff() calls, but it can be several times faster  when
-    called for ordered X[] and X2[].
+    sequence of Spline1DCalc() calls, but it  can  be  several  times  faster,
+    whilst still having the same O(N*logN) running time.
+
+    When called for ordered X[], this function has O(N) running  time  instead
+    of O(N*logN).
 
     INPUT PARAMETERS:
         X           -   old spline nodes
@@ -2789,8 +2799,11 @@ public partial class alglib
     function values y2[] and derivatives d2[] (calculated at x2[]).
 
     This function yields same result as Spline1DBuildCubic() call followed  by
-    sequence of Spline1DDiff() calls, but it can be several times faster  when
-    called for ordered X[] and X2[].
+    sequence of Spline1DDiff() calls, but it  can  be  several  times  faster,
+    whilst still having the same O(N*logN) running time.
+
+    When called for ordered X[], this function has O(N) running  time  instead
+    of O(N*logN).
 
     INPUT PARAMETERS:
         X           -   old spline nodes
@@ -2917,8 +2930,11 @@ public partial class alglib
     (calculated at x2[]).
 
     This function yields same result as Spline1DBuildCubic() call followed  by
-    sequence of Spline1DDiff() calls, but it can be several times faster  when
-    called for ordered X[] and X2[].
+    sequence of Spline1DDiff2() calls, but it  can  be  several  times faster,
+    whilst still having the same O(N*logN) running time.
+
+    When called for ordered X[], this function has O(N) running  time  instead
+    of O(N*logN).
 
     INPUT PARAMETERS:
         X           -   old spline nodes
@@ -6505,6 +6521,51 @@ public partial class alglib
     }
     
     /*************************************************************************
+    This function is used  to  activate/deactivate  nonmonotonic  steps.  Such
+    steps may improve  convergence  on  noisy  problems  or  ones  with  minor
+    smoothness defects.
+
+    In  its  standard  mode,  LSFIT solver compares squared errors f[1] at the
+    trial point with the value at the current  point  f[0].  Only  steps  that
+    decrease f() are accepted.
+
+    When the nonmonotonic mode is activated, f[1]  is  compared  with  maximum
+    over several previous  locations:  max(f[0],f[-1],...,f[-CNT]).  We  still
+    accept only steps that decrease  f(),  however  our  reference  value  has
+    changed. The net results is that f[1]>f[0] are now allowed.
+
+    Nonmonotonic steps can help to handle minor defects in the objective (e.g.
+    small  noise,  discontinuous  jumps  or  nonsmoothness).  However,  it  is
+    important  that  the  overall  shape  of  the  problem  is  still  smooth.
+    It  may  also  help  to  minimize  perfectly  smooth  targets with complex
+    geometries by allowing to jump through curved valleys.
+
+    However, sometimes nonmonotonic steps degrade convergence by  allowing  an
+    optimizer to wander too far away from the solution, so this feature should
+    be used only after careful testing.
+
+    INPUT PARAMETERS:
+        State   -   structure stores algorithm state
+        Cnt     -   nonmonotonic memory length, Cnt>=0:
+                    * 0 for traditional monotonic steps
+                    * 2..3 is recommended for the nonmonotonic optimization
+
+      -- ALGLIB --
+         Copyright 07.04.2024 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lsfitsetnonmonotonicsteps(lsfitstate state, int cnt)
+    {
+    
+        lsfit.lsfitsetnonmonotonicsteps(state.innerobj, cnt, null);
+    }
+    
+    public static void lsfitsetnonmonotonicsteps(lsfitstate state, int cnt, alglib.xparams _params)
+    {
+    
+        lsfit.lsfitsetnonmonotonicsteps(state.innerobj, cnt, _params);
+    }
+    
+    /*************************************************************************
     Stopping conditions for nonlinear least squares fitting.
 
     INPUT PARAMETERS:
@@ -6847,19 +6908,29 @@ public partial class alglib
             alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
                 state.innerobj.requesttype,
                 state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
-                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, obj, "lsfit");
+                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, state.innerobj.replysj, obj, "lsfit");
             alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
                 state.innerobj.tmpx1,
                 state.innerobj.tmpc1,
                 state.innerobj.tmpf1,
                 state.innerobj.tmpg1,
-                state.innerobj.tmpj1);
+                state.innerobj.tmpj1,
+                state.innerobj.tmps1);
             if( state.innerobj.requesttype==3 )
             { 
                 int njobs = request.size*request.vars+request.size;
                 for(int job_idx=0; job_idx<njobs; job_idx++)
                     alglib.ap.process_v2request_3phase0(request, job_idx, callbacks, buffers);
                 alglib.ap.process_v2request_3phase1(request);
+                request.request = 0;
+                continue;
+            }
+            if( state.innerobj.requesttype==5 )
+            { 
+                int njobs = request.size*request.vars+request.size;
+                for(int job_idx=0; job_idx<njobs; job_idx++)
+                    alglib.ap.process_v2request_5phase0(request, job_idx, callbacks, buffers);
+                alglib.ap.process_v2request_5phase1(request);
                 request.request = 0;
                 continue;
             }if( state.innerobj.requesttype==4 )
@@ -6900,13 +6971,14 @@ public partial class alglib
             alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
                 state.innerobj.requesttype,
                 state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
-                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, obj, "lsfit");
+                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, state.innerobj.replysj, obj, "lsfit");
             alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
                 state.innerobj.tmpx1,
                 state.innerobj.tmpc1,
                 state.innerobj.tmpf1,
                 state.innerobj.tmpg1,
-                state.innerobj.tmpj1);
+                state.innerobj.tmpj1,
+                state.innerobj.tmps1);
             if( state.innerobj.requesttype==2 )
             { 
                 for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
@@ -19036,8 +19108,11 @@ public partial class alglib
         (calculated at the same nodes x[]).
 
         This function yields same result as Spline1DBuildCubic() call followed  by
-        sequence of Spline1DDiff() calls, but it can be several times faster  when
-        called for ordered X[] and X2[].
+        sequence of Spline1DDiff() calls, but it  can  be  several  times  faster,
+        whilst still having the same O(N*logN) running time.
+
+        When called for ordered X[], this function has O(N) running  time  instead
+        of O(N*logN).
 
         INPUT PARAMETERS:
             X           -   spline nodes
@@ -19182,8 +19257,12 @@ public partial class alglib
         function derivatives d1[] and d2[] (calculated at the same nodes x[]).
 
         This function yields same result as Spline1DBuildCubic() call followed  by
-        sequence of Spline1DDiff() calls, but it can be several times faster  when
-        called for ordered X[] and X2[].
+        sequence of Spline1DDiff2() calls, but it  can  be  several  times faster,
+        whilst still having the same O(N*logN) running time.
+
+        When called for ordered X[], this function has O(N) running  time  instead
+        of O(N*logN).
+
 
         INPUT PARAMETERS:
             X           -   spline nodes
@@ -19372,8 +19451,11 @@ public partial class alglib
         function values y2[] (calculated at x2[]).
 
         This function yields same result as Spline1DBuildCubic() call followed  by
-        sequence of Spline1DDiff() calls, but it can be several times faster  when
-        called for ordered X[] and X2[].
+        sequence of Spline1DCalc() calls, but it  can  be  several  times  faster,
+        whilst still having the same O(N*logN) running time.
+
+        When called for ordered X[], this function has O(N) running  time  instead
+        of O(N*logN).
 
         INPUT PARAMETERS:
             X           -   old spline nodes
@@ -19552,8 +19634,11 @@ public partial class alglib
         function values y2[] and derivatives d2[] (calculated at x2[]).
 
         This function yields same result as Spline1DBuildCubic() call followed  by
-        sequence of Spline1DDiff() calls, but it can be several times faster  when
-        called for ordered X[] and X2[].
+        sequence of Spline1DDiff() calls, but it  can  be  several  times  faster,
+        whilst still having the same O(N*logN) running time.
+
+        When called for ordered X[], this function has O(N) running  time  instead
+        of O(N*logN).
 
         INPUT PARAMETERS:
             X           -   old spline nodes
@@ -19743,8 +19828,11 @@ public partial class alglib
         (calculated at x2[]).
 
         This function yields same result as Spline1DBuildCubic() call followed  by
-        sequence of Spline1DDiff() calls, but it can be several times faster  when
-        called for ordered X[] and X2[].
+        sequence of Spline1DDiff2() calls, but it  can  be  several  times faster,
+        whilst still having the same O(N*logN) running time.
+
+        When called for ordered X[], this function has O(N) running  time  instead
+        of O(N*logN).
 
         INPUT PARAMETERS:
             X           -   old spline nodes
@@ -24266,6 +24354,7 @@ public partial class alglib
             public double[,] cleic;
             public int nec;
             public int nic;
+            public int nonmonotoniccnt;
             public bool xupdated;
             public bool needf;
             public bool needfg;
@@ -24291,6 +24380,7 @@ public partial class alglib
             public double[] tmpf1;
             public double[] tmpg1;
             public double[,] tmpj1;
+            public sparse.sparsematrix tmps1;
             public double[] wcur;
             public double[] tmpwk;
             public int[] tmpct;
@@ -24341,6 +24431,7 @@ public partial class alglib
                 tmpf1 = new double[0];
                 tmpg1 = new double[0];
                 tmpj1 = new double[0,0];
+                tmps1 = new sparse.sparsematrix();
                 wcur = new double[0];
                 tmpwk = new double[0];
                 tmpct = new int[0];
@@ -24381,6 +24472,7 @@ public partial class alglib
                 _result.cleic = (double[,])cleic.Clone();
                 _result.nec = nec;
                 _result.nic = nic;
+                _result.nonmonotoniccnt = nonmonotoniccnt;
                 _result.xupdated = xupdated;
                 _result.needf = needf;
                 _result.needfg = needfg;
@@ -24406,6 +24498,7 @@ public partial class alglib
                 _result.tmpf1 = (double[])tmpf1.Clone();
                 _result.tmpg1 = (double[])tmpg1.Clone();
                 _result.tmpj1 = (double[,])tmpj1.Clone();
+                _result.tmps1 = (sparse.sparsematrix)tmps1.make_copy();
                 _result.wcur = (double[])wcur.Clone();
                 _result.tmpwk = (double[])tmpwk.Clone();
                 _result.tmpct = (int[])tmpct.Clone();
@@ -27833,6 +27926,7 @@ public partial class alglib
             state.prevalgo = -1;
             state.nec = 0;
             state.nic = 0;
+            state.nonmonotoniccnt = 0;
             minlm.minlmcreatev(k, n, state.c0, diffstep, state.optstate, _params);
             lsfitclearrequestfields(state, _params);
             state.rstate.ia = new int[6+1];
@@ -27966,6 +28060,7 @@ public partial class alglib
             state.prevalgo = -1;
             state.nec = 0;
             state.nic = 0;
+            state.nonmonotoniccnt = 0;
             minlm.minlmcreatev(k, n, state.c0, diffstep, state.optstate, _params);
             lsfitclearrequestfields(state, _params);
             state.rstate.ia = new int[6+1];
@@ -28102,6 +28197,7 @@ public partial class alglib
             state.prevalgo = -1;
             state.nec = 0;
             state.nic = 0;
+            state.nonmonotoniccnt = 0;
             minlm.minlmcreatevj(k, n, state.c0, state.optstate, _params);
             lsfitclearrequestfields(state, _params);
             state.rstate.ia = new int[6+1];
@@ -28226,11 +28322,54 @@ public partial class alglib
             state.prevalgo = -1;
             state.nec = 0;
             state.nic = 0;
+            state.nonmonotoniccnt = 0;
             minlm.minlmcreatevj(k, n, state.c0, state.optstate, _params);
             lsfitclearrequestfields(state, _params);
             state.rstate.ia = new int[6+1];
             state.rstate.ra = new double[10+1];
             state.rstate.stage = -1;
+        }
+
+
+        /*************************************************************************
+        This function is used  to  activate/deactivate  nonmonotonic  steps.  Such
+        steps may improve  convergence  on  noisy  problems  or  ones  with  minor
+        smoothness defects.
+
+        In  its  standard  mode,  LSFIT solver compares squared errors f[1] at the
+        trial point with the value at the current  point  f[0].  Only  steps  that
+        decrease f() are accepted.
+
+        When the nonmonotonic mode is activated, f[1]  is  compared  with  maximum
+        over several previous  locations:  max(f[0],f[-1],...,f[-CNT]).  We  still
+        accept only steps that decrease  f(),  however  our  reference  value  has
+        changed. The net results is that f[1]>f[0] are now allowed.
+
+        Nonmonotonic steps can help to handle minor defects in the objective (e.g.
+        small  noise,  discontinuous  jumps  or  nonsmoothness).  However,  it  is
+        important  that  the  overall  shape  of  the  problem  is  still  smooth.
+        It  may  also  help  to  minimize  perfectly  smooth  targets with complex
+        geometries by allowing to jump through curved valleys.
+
+        However, sometimes nonmonotonic steps degrade convergence by  allowing  an
+        optimizer to wander too far away from the solution, so this feature should
+        be used only after careful testing.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            Cnt     -   nonmonotonic memory length, Cnt>=0:
+                        * 0 for traditional monotonic steps
+                        * 2..3 is recommended for the nonmonotonic optimization
+
+          -- ALGLIB --
+             Copyright 07.04.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lsfitsetnonmonotonicsteps(lsfitstate state,
+            int cnt,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(cnt>=0, "LSFitSetNonmonotonicSteps: incorrect AccType!");
+            state.nonmonotoniccnt = cnt;
         }
 
 
@@ -28783,6 +28922,7 @@ public partial class alglib
             minlm.minlmsetscale(state.optstate, state.s, _params);
             minlm.minlmsetbc(state.optstate, state.bndl, state.bndu, _params);
             minlm.minlmsetlc(state.optstate, state.cleic, state.tmpct, state.nec+state.nic, _params);
+            minlm.minlmsetnonmonotonicsteps(state.optstate, state.nonmonotoniccnt, _params);
             state.requesttype = 0;
             
             //
@@ -32414,13 +32554,12 @@ public partial class alglib
                             see comments below.
                             NOT RECOMMENDED UNLESS YOU REALLY NEED HIGH PERFORMANCE
                             AT THE COST OF SOME PRECISION.
-                        * 3 use nonlinearly constrained optimization approach, SLP
-                            (most robust one, but somewhat slower than AUL)
+                        * 3 use nonlinearly constrained optimization approach, SQP
                         Ignored for ProblemType=0.
-            EpsX    -   stopping criteria for SLP and NLC optimizers:
+            EpsX    -   stopping criteria for SQP and NLC optimizers:
                         * must be non-negative
                         * use 0 to choose default value (1.0E-12 is used by default)
-                        * if you use SLP solver, you should use default values
+                        * if you use SQP solver, you should use default values
                         * if you use NLC solver, you may specify larger values, up
                           to 1.0E-6, if you want to speed-up  solver;  NLC  solver
                           performs several preconditioned outer iterations, so final
@@ -32706,7 +32845,7 @@ public partial class alglib
                 
                 //
                 // Solve with NLC solver; problem is treated as general nonlinearly constrained
-                // programming, with augmented Lagrangian solver or SLP being used.
+                // programming, with augmented Lagrangian solver or SQP being used.
                 //
                 if( solvertype==1 || solvertype==3 )
                 {
@@ -32722,7 +32861,7 @@ public partial class alglib
                     }
                     else
                     {
-                        minnlc.minnlcsetalgoslp(nlcstate, _params);
+                        minnlc.minnlcsetalgosqp(nlcstate, _params);
                     }
                     minnlc.minnlcsetalgosqp(nlcstate, _params);
                     minnlc.minnlcrestartfrom(nlcstate, pcr, _params);
@@ -32818,7 +32957,7 @@ public partial class alglib
                 }
                 
                 //
-                // Solve problem with SLP (sequential LP) approach; this approach
+                // Solve problem with SQP (sequential QP) approach; this approach
                 // is much faster than NLP, but often fails for MI and MC (for MZ
                 // it performs well enough).
                 //
@@ -41242,7 +41381,7 @@ public partial class alglib
             double[] coordbuf,
             int idx0,
             int idx1,
-            apserv.nrpool nxpool,
+            alglib.ap.nxpool nxpool,
             alglib.xparams _params)
         {
             int result = 0;
@@ -41342,8 +41481,8 @@ public partial class alglib
             //
             // Prepare temporaries
             //
-            apserv.nrpoolretrieve(nxpool, ref boxmin, _params);
-            apserv.nrpoolretrieve(nxpool, ref boxmax, _params);
+            nxpool.retrieve(ref boxmin);
+            nxpool.retrieve(ref boxmax);
             
             //
             // Prepare to split large panel:
@@ -41381,8 +41520,8 @@ public partial class alglib
             //
             // Return temporaries back to nxPool and perform recursive processing
             //
-            apserv.nrpoolrecycle(nxpool, ref boxmin, _params);
-            apserv.nrpoolrecycle(nxpool, ref boxmax, _params);
+            nxpool.recycle(ref boxmin);
+            nxpool.recycle(ref boxmax);
             panel.paneltype = 1;
             panel.childa = fastevaluatorinitrec(eval, xx, ptidx, coordbuf, idx0, idxmid, nxpool, _params);
             panel.childb = fastevaluatorinitrec(eval, xx, ptidx, coordbuf, idxmid, idx1, nxpool, _params);
@@ -41410,7 +41549,7 @@ public partial class alglib
         {
             double[] coordbuf = new double[0];
             int rootidx = 0;
-            apserv.nrpool nxpool = new apserv.nrpool();
+            alglib.ap.nxpool nxpool = alglib.ap.nxpool.new_nrpool();
             int i = 0;
             rbf3evaluatorbuffer bufseed = new rbf3evaluatorbuffer();
 
@@ -41447,7 +41586,7 @@ public partial class alglib
                 eval.origptidx[i] = i;
             }
             ablasf.rallocv(n, ref coordbuf, _params);
-            apserv.nrpoolinit(nxpool, nx, _params);
+            nxpool.alloc_double(nx);
             rootidx = fastevaluatorinitrec(eval, x, eval.origptidx, coordbuf, 0, n, nxpool, _params);
             alglib.ap.assert(rootidx==0, "FastEvaluatorInit: integrity check for RootIdx failed");
         }
