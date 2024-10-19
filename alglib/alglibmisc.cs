@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.01.0 (source code generated 2023-12-27)
+ALGLIB 4.03.0 (source code generated 2024-09-26)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -4256,6 +4256,62 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function returns HQRNDMax
+
+        L'Ecuyer, Efficient and portable combined random number generators
+        *************************************************************************/
+        public static int hqrndgetmax(alglib.xparams _params)
+        {
+            int result = 0;
+
+            result = hqrndmax;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns random integer in [0,HQRNDMax], basecase for other
+        RNG functions.
+
+        L'Ecuyer, Efficient and portable combined random number generators
+        *************************************************************************/
+        public static int hqrndintegerbase(hqrndstate state,
+            alglib.xparams _params)
+        {
+            int result = 0;
+            int k = 0;
+
+            if( state.magicv!=hqrndmagic )
+            {
+                alglib.ap.assert(false, "HQRNDIntegerBase: State is not correctly initialized!");
+            }
+            k = state.s1/53668;
+            state.s1 = 40014*(state.s1-k*53668)-k*12211;
+            if( state.s1<0 )
+            {
+                state.s1 = state.s1+2147483563;
+            }
+            k = state.s2/52774;
+            state.s2 = 40692*(state.s2-k*52774)-k*3791;
+            if( state.s2<0 )
+            {
+                state.s2 = state.s2+2147483399;
+            }
+            
+            //
+            // Result
+            //
+            result = state.s1-state.s2;
+            if( result<1 )
+            {
+                result = result+2147483562;
+            }
+            result = result-1;
+            return result;
+        }
+
+
+        /*************************************************************************
         This function generates  random number from discrete distribution given by
         finite sample X.
 
@@ -4333,44 +4389,6 @@ public partial class alglib
             {
                 result = mn;
             }
-            return result;
-        }
-
-
-        /*************************************************************************
-        This function returns random integer in [0,HQRNDMax]
-
-        L'Ecuyer, Efficient and portable combined random number generators
-        *************************************************************************/
-        private static int hqrndintegerbase(hqrndstate state,
-            alglib.xparams _params)
-        {
-            int result = 0;
-            int k = 0;
-
-            alglib.ap.assert(state.magicv==hqrndmagic, "HQRNDIntegerBase: State is not correctly initialized!");
-            k = state.s1/53668;
-            state.s1 = 40014*(state.s1-k*53668)-k*12211;
-            if( state.s1<0 )
-            {
-                state.s1 = state.s1+2147483563;
-            }
-            k = state.s2/52774;
-            state.s2 = 40692*(state.s2-k*52774)-k*3791;
-            if( state.s2<0 )
-            {
-                state.s2 = state.s2+2147483399;
-            }
-            
-            //
-            // Result
-            //
-            result = state.s1-state.s2;
-            if( result<1 )
-            {
-                result = result+2147483562;
-            }
-            result = result-1;
             return result;
         }
 

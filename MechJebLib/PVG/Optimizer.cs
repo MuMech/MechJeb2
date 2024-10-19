@@ -232,8 +232,8 @@ namespace MechJebLib.PVG
             alglib.minnlccreatef(InputLayout.INPUT_LAYOUT_LEN * _phases.Count, yGuess, DIFFSTEP, out _state);
             alglib.minnlcsetbc(_state, bndl, bndu);
             alglib.minnlcsetstpmax(_state, STPMAX);
-            alglib.minnlcsetalgoslp(_state);
-            //alglib.minnlcsetalgosqp(_state);
+            //alglib.minnlcsetalgoslp(_state);
+            alglib.minnlcsetalgosqp(_state);
             alglib.minnlcsetcond(_state, EPSX, MAXITS);
             alglib.minnlcsetnlc(_state, ResidualLayout.RESIDUAL_LAYOUT_LEN * _phases.Count, 0);
             alglib.minnlcoptimize(_state, _residualHandle, null, null);
