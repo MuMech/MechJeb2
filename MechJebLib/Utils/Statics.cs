@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -36,6 +37,12 @@ namespace MechJebLib.Utils
         /// </summary>
         public const float G0 = 9.80665f;
 
+        public const double DEG2RAD = PI / 180.0;
+        public const double RAD2DEG = 180.0 / PI;
+
+        private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" };
+        private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y", "r", "q" };
+
         /// <summary>
         ///     Clamp first value between min and max by truncating.
         /// </summary>
@@ -63,9 +70,6 @@ namespace MechJebLib.Utils
         /// <returns>Clamped value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Clamp01(double x) => Clamp(x, 0, 1);
-
-        public const double DEG2RAD = PI / 180.0;
-        public const double RAD2DEG = 180.0 / PI;
 
         /// <summary>
         ///     Convert Degrees to Radians.
@@ -175,7 +179,7 @@ namespace MechJebLib.Utils
                 {
                     y *= x;
                     x *= x;
-                    n =  (n - 1) / 2;
+                    n = (n - 1) / 2;
                 }
             }
 
@@ -337,30 +341,6 @@ namespace MechJebLib.Utils
             return true;
         }
 
-        /*
-        /// <summary>
-        ///     Compares two Vector3d values with a relative tolerance.
-        /// </summary>
-        /// <param name="a">first vector</param>
-        /// <param name="b">second vector</param>
-        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
-        /// <returns>true if the values are nearly the same</returns>
-        public static bool NearlyEqual(Vector3d a, Vector3d b, double epsilon = EPS)
-        {
-            return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
-        }
-        */
-
-        [StructLayout(LayoutKind.Explicit)]
-        private struct DoubleLongUnion
-        {
-            [FieldOffset(0)]
-            public long i;
-
-            [FieldOffset(0)]
-            public double d;
-        }
-
         //  Returns the next float after x in the direction of y.
         public static double NextAfter(double x, double y)
         {
@@ -483,9 +463,6 @@ namespace MechJebLib.Utils
             return Sqrt(sumsq);
         }
 
-        private static readonly string[] _posPrefix = { " ", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q" };
-        private static readonly string[] _negPrefix = { " ", "m", "μ", "n", "p", "f", "a", "z", "y", "r", "q" };
-
         public static string ToSI(this double d, int sigFigs = 4, int maxPrecision = int.MaxValue)
         {
             if (!IsFinite(d)) return d.ToString();
@@ -500,7 +477,7 @@ namespace MechJebLib.Utils
             int exponent = (int)Floor(Log10(Abs(d) + offset));
 
             int index = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
-            if (index > 10) index = 10;                               // there's only 10 SI prefixes
+            if (index > 10) index = 10; // there's only 10 SI prefixes
 
             int siExponent = Sign(exponent) * index * 3; // the SI prefix exponent
 
@@ -518,10 +495,15 @@ namespace MechJebLib.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToSI(this float f, int sigFigs = 4, int maxPrecision = int.MaxValue) => ((double)f).ToSI(sigFigs, maxPrecision);
+        public static string ToSI(this float f, int sigFigs = 4, int maxPrecision = int.MaxValue) =>
+            ((double)f).ToSI(sigFigs, maxPrecision);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Print(string message) => Logger.Print(message);
+
+        [Conditional("DEBUG")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void DebugPrint(string message) => Logger.Print(message);
 
         public static void CopyFrom(this double[] dest, double[] source)
         {
@@ -549,7 +531,7 @@ namespace MechJebLib.Utils
 
         public static void Set(this IList<double> a, int index, V3 v)
         {
-            a[index]     = v.x;
+            a[index] = v.x;
             a[index + 1] = v.y;
             a[index + 2] = v.z;
         }
@@ -558,7 +540,7 @@ namespace MechJebLib.Utils
 
         public static void Set(this double[] a, int index, V3 v)
         {
-            a[index]     = v.x;
+            a[index] = v.x;
             a[index + 1] = v.y;
             a[index + 2] = v.z;
         }
@@ -566,5 +548,27 @@ namespace MechJebLib.Utils
         public static V3 Get(this double[] a, int index) => new V3(a[index], a[index + 1], a[index + 2]);
 
         public static double[] Expand(this double[] a, int n) => a.Length < n ? new double[n] : a;
+
+        /*
+        /// <summary>
+        ///     Compares two Vector3d values with a relative tolerance.
+        /// </summary>
+        /// <param name="a">first vector</param>
+        /// <param name="b">second vector</param>
+        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
+        /// <returns>true if the values are nearly the same</returns>
+        public static bool NearlyEqual(Vector3d a, Vector3d b, double epsilon = EPS)
+        {
+            return NearlyEqual(a[0], b[0], epsilon) && NearlyEqual(a[1], b[1], epsilon) && NearlyEqual(a[2], b[2], epsilon);
+        }
+        */
+
+        [StructLayout(LayoutKind.Explicit)]
+        private struct DoubleLongUnion
+        {
+            [FieldOffset(0)] public long i;
+
+            [FieldOffset(0)] public double d;
+        }
     }
 }

@@ -17,38 +17,38 @@ namespace MechJebLib.PVG
     public partial class Ascent
     {
         private readonly AscentBuilder _input;
-
-        private List<Phase> _phases              => _input._phases;
-        private V3          _r0                  => _input._r0;
-        private V3          _v0                  => _input._v0;
-        private V3          _u0                  => _input._u0;
-        private double      _t0                  => _input._t0;
-        private double      _mu                  => _input._mu;
-        private double      _rbody               => _input._rbody;
-        private double      _peR                 => _input._peR;
-        private double      _apR                 => _input._apR;
-        private double      _attR                => _input._attR;
-        private double      _incT                => _input._incT;
-        private double      _lanT                => _input._lanT;
-        private double      _fpaT                => _input._fpaT;
-        private double      _hT                  => _input._hT;
-        private bool        _attachAltFlag       => _input._attachAltFlag;
-        private bool        _lanflag             => _input._lanflag;
-        private bool        _fixedBurnTime       => _input._fixedBurnTime;
-        private Solution?   _solution            => _input._solution;
-        private int         _optimizedPhase      => _input._optimizedPhase;
-        private int         _optimizedCoastPhase => _input._optimizedCoastPhase;
-
-        private double     _vT;
-        private double     _gammaT;
-        private double     _smaT;
-        private double     _eccT;
+        private double _eccT;
+        private double _gammaT;
         private Optimizer? _optimizer;
+        private double _smaT;
+
+        private double _vT;
 
         private Ascent(AscentBuilder builder)
         {
             _input = builder;
         }
+
+        private List<Phase> _phases => _input._phases;
+        private V3 _r0 => _input._r0;
+        private V3 _v0 => _input._v0;
+        private V3 _u0 => _input._u0;
+        private double _t0 => _input._t0;
+        private double _mu => _input._mu;
+        private double _rbody => _input._rbody;
+        private double _peR => _input._peR;
+        private double _apR => _input._apR;
+        private double _attR => _input._attR;
+        private double _incT => _input._incT;
+        private double _lanT => _input._lanT;
+        private double _fpaT => _input._fpaT;
+        private double _hT => _input._hT;
+        private bool _attachAltFlag => _input._attachAltFlag;
+        private bool _lanflag => _input._lanflag;
+        private bool _fixedBurnTime => _input._fixedBurnTime;
+        private Solution? _solution => _input._solution;
+        private int _optimizedPhase => _input._optimizedPhase;
+        private int _optimizedCoastPhase => _input._optimizedCoastPhase;
 
         public void Run()
         {
@@ -60,7 +60,9 @@ namespace MechJebLib.PVG
 
             if (_solution == null)
             {
-                _optimizer = _fixedBurnTime ? InitialBootstrappingFixed(builder) : InitialBootstrappingOptimized(builder);
+                _optimizer = _fixedBurnTime
+                    ? InitialBootstrappingFixed(builder)
+                    : InitialBootstrappingOptimized(builder);
             }
             else
             {
@@ -251,18 +253,18 @@ namespace MechJebLib.PVG
             if (_optimizedCoastPhase > -1)
             {
                 bootphases[_optimizedCoastPhase].OptimizeTime = false;
-                bootphases[_optimizedCoastPhase].bt           = 0;
+                bootphases[_optimizedCoastPhase].bt = 0;
             }
 
             // switch the optimized phase to the top stage of the rocket
             bootphases[_optimizedPhase].OptimizeTime = false;
 
             // set the top stage to infinite + optimized + unguided
-            bootphases[bootphases.Count - 1].Infinite     = true;
-            bootphases[bootphases.Count - 1].Unguided     = false;
+            bootphases[bootphases.Count - 1].Infinite = true;
+            bootphases[bootphases.Count - 1].Unguided = false;
             bootphases[bootphases.Count - 1].OptimizeTime = true;
 
-            Print("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
+            DebugPrint("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
             using Optimizer pvg = builder.Build(bootphases);
             pvg.Bootstrap(pvGuess, _r0.normalized);
             pvg.Run();
@@ -285,10 +287,10 @@ namespace MechJebLib.PVG
                     total += _phases[i].bt;
 
                 _phases[_optimizedCoastPhase].OptimizeTime = true;
-                _phases[_optimizedCoastPhase].bt           = total;
+                _phases[_optimizedCoastPhase].bt = total;
             }
 
-            Print("*** PHASE 2: ADDING COAST AND FINITE UPPER STAGE ***");
+            DebugPrint("*** PHASE 2: ADDING COAST AND FINITE UPPER STAGE ***");
             using Optimizer pvg2 = builder.Build(_phases);
             pvg2.Bootstrap(solution);
             pvg2.Run();
@@ -301,7 +303,7 @@ namespace MechJebLib.PVG
             Optimizer pvg3 = builder.Build(_phases);
             if (pvg2.Success())
             {
-                Print("*** PHASE 3: REDOING WITH NUMERICAL INTEGRATION ***");
+                DebugPrint("*** PHASE 3: REDOING WITH NUMERICAL INTEGRATION ***");
                 using Solution solution2 = pvg2.GetSolution();
                 pvg3.Bootstrap(solution2);
                 pvg3.Run();
@@ -311,12 +313,12 @@ namespace MechJebLib.PVG
             }
             else
             {
-                Print("*** PHASE 3: ATTEMPTING NUMERICAL INTEGRATION AFTER ANALYTICAL FAILURE ***");
+                DebugPrint("*** PHASE 3: ATTEMPTING NUMERICAL INTEGRATION AFTER ANALYTICAL FAILURE ***");
                 pvg3.Bootstrap(solution);
                 pvg3.Run();
 
                 if (!pvg3.Success())
-                     throw new Exception("Target unreachable");
+                    throw new Exception("Target unreachable");
             }
 
             if (_attachAltFlag || _eccT < 1e-4)
@@ -331,14 +333,14 @@ namespace MechJebLib.PVG
             ApplyKepler(builder);
             ApplyOldBurnTimesToPhases(solution3);
 
-            Print("*** PHASE 4: RELAXING TO FREE ATTACHMENT ***");
+            DebugPrint("*** PHASE 4: RELAXING TO FREE ATTACHMENT ***");
             Optimizer pvg4 = builder.Build(_phases);
             pvg4.Bootstrap(solution3);
             pvg4.Run();
 
             if (!pvg4.Success())
             {
-                Print("*** FREE ATTACHMENT FAILED, FALLING BACK TO PERIAPSIS ***");
+                DebugPrint("*** FREE ATTACHMENT FAILED, FALLING BACK TO PERIAPSIS ***");
                 return pvg3;
             }
 
@@ -350,9 +352,10 @@ namespace MechJebLib.PVG
 
             if (solution3.Vgo(solution3.T0) < solution4.Vgo(solution4.T0))
             {
-                 // this probably means apoapsis attachment or wrong side of the periapsis
-                 Print($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution3.Vgo(solution3.T0)} < {solution4.Vgo(solution4.T0)}) THAN FREE ATTACHMENT SOLN ***");
-                 return pvg3;
+                // this probably means apoapsis attachment or wrong side of the periapsis
+                DebugPrint(
+                    $"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution3.Vgo(solution3.T0)} < {solution4.Vgo(solution4.T0)}) THAN FREE ATTACHMENT SOLN ***");
+                return pvg3;
             }
 
             return pvg4;

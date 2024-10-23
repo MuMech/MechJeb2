@@ -14,35 +14,45 @@ namespace MechJebLib.PVG
 {
     public partial class Optimizer : IDisposable
     {
-        public double      ZnormTerminationLevel = 1e-9;
-        public double      Znorm;
-        public int         MAXITS   { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
-        public double      EPSX     { get; set; } = EPS;    // rely more on manual termination at znorm=1e-9
-        public double      DIFFSTEP { get; set; } = 1e-9;
-        public double      STPMAX = 1e-4;
-        public int         OptimizerTimeout { get; set; } = 5000; // milliseconds
-        public int         TerminationType;
-        public int         Iterations;
-        public OptimStatus Status;
-
-        private readonly Problem                  _problem;
-        private readonly List<Phase>              _phases;
-        private readonly List<Vn>                 _initial  = new List<Vn>();
-        private readonly List<Vn>                 _terminal = new List<Vn>();
-        private readonly List<Vn>                 _residual = new List<Vn>();
-        private          int                      lastPhase => _phases.Count - 1;
-        private readonly alglib.minnlcreport      _rep = new alglib.minnlcreport();
-        private readonly alglib.ndimensional_fvec _residualHandle;
-        private          alglib.minnlcstate       _state = new alglib.minnlcstate();
-
         public enum OptimStatus { CREATED, BOOTSTRAPPED, SUCCESS, FAILED }
+
+        private readonly List<Vn> _initial = new List<Vn>();
+        private readonly List<Phase> _phases;
+
+        private readonly Problem _problem;
+        private readonly alglib.minnlcreport _rep = new alglib.minnlcreport();
+        private readonly List<Vn> _residual = new List<Vn>();
+        private readonly alglib.ndimensional_fvec _residualHandle;
+        private readonly List<Vn> _terminal = new List<Vn>();
+        private alglib.minnlcstate _state = new alglib.minnlcstate();
+
+        private bool _terminating;
+
+        private CancellationToken _timeoutToken;
+        public int Iterations;
+        public OptimStatus Status;
+        public double STPMAX = 1e-4;
+        public int TerminationType;
+        public double Znorm;
+        public double ZnormTerminationLevel = 1e-9;
 
         private Optimizer(Problem problem, IEnumerable<Phase> phases)
         {
-            _phases         = new List<Phase>(phases);
-            _problem        = problem;
+            _phases = new List<Phase>(phases);
+            _problem = problem;
             _residualHandle = ResidualFunction;
-            Status          = OptimStatus.CREATED;
+            Status = OptimStatus.CREATED;
+        }
+
+        public int MAXITS { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
+        public double EPSX { get; set; } = EPS; // rely more on manual termination at znorm=1e-9
+        public double DIFFSTEP { get; set; } = 1e-9;
+        public int OptimizerTimeout { get; set; } = 5000; // milliseconds
+        private int lastPhase => _phases.Count - 1;
+
+        public void Dispose()
+        {
+            // FIXME: ObjectPooling
         }
 
         private void ExpandArrays()
@@ -84,11 +94,11 @@ namespace MechJebLib.PVG
             var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
             var z = ResidualLayout.CreateFrom(_residual[0]);
 
-            z.R        = y0.R - _problem.R0;
-            z.V        = y0.V - _problem.V0;
-            z.M        = y0.M - _problem.M0;
+            z.R = y0.R - _problem.R0;
+            z.V = y0.V - _problem.V0;
+            z.M = y0.M - _problem.M0;
             z.Terminal = _problem.Terminal.TerminalConstraints(yf);
-            z.Bt       = CalcBTConstraint(0);
+            z.Bt = CalcBTConstraint(0);
             //z.Pm_transversality = yf_scratch[phases.Count - 1].Pm - 1;
             z.CopyTo(_residual[0]);
         }
@@ -101,8 +111,8 @@ namespace MechJebLib.PVG
                 var yf = OutputLayout.CreateFrom(_terminal[p - 1]);
                 var z = ContinuityLayout.CreateFrom(_residual[p]);
 
-                z.R  = yf.R - y0.R;
-                z.V  = yf.V - y0.V;
+                z.R = yf.R - y0.R;
+                z.V = yf.V - y0.V;
                 z.Pv = yf.PV - y0.PV;
                 z.Pr = yf.PR - y0.PR;
 
@@ -143,8 +153,6 @@ namespace MechJebLib.PVG
             Znorm = Sqrt(Znorm);
         }
 
-        private bool _terminating;
-
         internal void ResidualFunction(double[] yin, double[] zout, object? o)
         {
             if (_terminating)
@@ -179,8 +187,6 @@ namespace MechJebLib.PVG
             if (lastFreeBurnPhase >= 0)
                 _phases[lastFreeBurnPhase].LastFreeBurn = true;
         }
-
-        private CancellationToken _timeoutToken;
 
         private void UnSafeRun()
         {
@@ -248,10 +254,10 @@ namespace MechJebLib.PVG
             */
 
             TerminationType = _rep.terminationtype;
-            Iterations      = _rep.iterationscount;
+            Iterations = _rep.iterationscount;
 
-            Print("terminationtype: " + TerminationType);
-            Print("iterations: " + Iterations);
+            DebugPrint("terminationtype: " + TerminationType);
+            DebugPrint("iterations: " + Iterations);
 
             if (_rep.terminationtype != 8)
                 ResidualFunction(yNew, z, null);
@@ -275,28 +281,28 @@ namespace MechJebLib.PVG
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(_phases[p].ToString());
+                DebugPrint(_phases[p].ToString());
             }
 
-            Print("solved initial: ");
+            DebugPrint("solved initial: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_initial[p]));
+                DebugPrint(DoubleArrayString(_initial[p]));
             }
 
-            Print("solved terminal: ");
+            DebugPrint("solved terminal: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_terminal[p]));
+                DebugPrint(DoubleArrayString(_terminal[p]));
             }
 
-            Print("solved residuals: ");
+            DebugPrint("solved residuals: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_residual[p]));
+                DebugPrint(DoubleArrayString(_residual[p]));
             }
 
             Status = Success() ? OptimStatus.SUCCESS : OptimStatus.FAILED;
@@ -369,8 +375,8 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R  = _problem.R0;
-                    y0.V  = _problem.V0;
+                    y0.R = _problem.R0;
+                    y0.V = _problem.V0;
                     y0.PV = pv0;
                     y0.PR = pr0;
                     y0.Bt = phase.bt;
@@ -405,28 +411,28 @@ namespace MechJebLib.PVG
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(_phases[p].ToString());
+                DebugPrint(_phases[p].ToString());
             }
 
-            Print("bootstrap1 initial: ");
+            DebugPrint("bootstrap1 initial: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_initial[p]));
+                DebugPrint(DoubleArrayString(_initial[p]));
             }
 
-            Print("bootstrap1 terminal: ");
+            DebugPrint("bootstrap1 terminal: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_terminal[p]));
+                DebugPrint(DoubleArrayString(_terminal[p]));
             }
 
-            Print("bootstrap1 residuals: ");
+            DebugPrint("bootstrap1 residuals: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_residual[p]));
+                DebugPrint(DoubleArrayString(_residual[p]));
             }
 
             Status = OptimStatus.BOOTSTRAPPED;
@@ -456,8 +462,8 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R  = _problem.R0;
-                    y0.V  = _problem.V0;
+                    y0.R = _problem.R0;
+                    y0.V = _problem.V0;
                     y0.Bt = phase.bt;
                     y0.PV = solution.Pv(_problem.T0);
                     y0.PR = solution.Pr(_problem.T0);
@@ -493,28 +499,28 @@ namespace MechJebLib.PVG
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(_phases[p].ToString());
+                DebugPrint(_phases[p].ToString());
             }
 
-            Print("bootstrap2 initial: ");
+            DebugPrint("bootstrap2 initial: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_initial[p]));
+                DebugPrint(DoubleArrayString(_initial[p]));
             }
 
-            Print("bootstrap2 terminal: ");
+            DebugPrint("bootstrap2 terminal: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_terminal[p]));
+                DebugPrint(DoubleArrayString(_terminal[p]));
             }
 
-            Print("bootstrap2 residuals: ");
+            DebugPrint("bootstrap2 residuals: ");
 
             for (int p = 0; p <= lastPhase; p++)
             {
-                Print(DoubleArrayString(_residual[p]));
+                DebugPrint(DoubleArrayString(_residual[p]));
             }
 
             Status = OptimStatus.BOOTSTRAPPED;
@@ -550,10 +556,5 @@ namespace MechJebLib.PVG
             Znorm < 1e-5;
 
         public static OptimizerBuilder Builder() => new OptimizerBuilder();
-
-        public void Dispose()
-        {
-            // FIXME: ObjectPooling
-        }
     }
 }
