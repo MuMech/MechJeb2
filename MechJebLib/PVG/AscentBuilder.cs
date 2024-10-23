@@ -16,31 +16,32 @@ namespace MechJebLib.PVG
         {
             public readonly List<Phase> _phases = new List<Phase>();
 
-            public V3        _r0                  { get; private set; }
-            public V3        _v0                  { get; private set; }
-            public V3        _u0                  { get; private set; }
-            public double    _t0                  { get; private set; }
-            public double    _mu                  { get; private set; }
-            public double    _rbody               { get; private set; }
-            public double    _apR                 { get; private set; }
-            public double    _peR                 { get; private set; }
-            public double    _attR                { get; private set; }
-            public double    _incT                { get; private set; }
-            public double    _lanT                { get; private set; }
-            public double    _fpaT                { get; private set; }
-            public double    _hT                  { get; private set; }
-            public bool      _attachAltFlag       { get; private set; }
-            public bool      _lanflag             { get; private set; }
-            public bool      _fixedBurnTime       { get; private set; }
-            public int       _optimizedPhase      { get; private set; }
-            public int       _optimizedCoastPhase { get; private set; } = -1;
-            public Solution? _solution            { get; private set; }
+            public V3 _r0 { get; private set; }
+            public V3 _v0 { get; private set; }
+            public V3 _u0 { get; private set; }
+            public double _t0 { get; private set; }
+            public double _mu { get; private set; }
+            public double _rbody { get; private set; }
+            public double _apR { get; private set; }
+            public double _peR { get; private set; }
+            public double _attR { get; private set; }
+            public double _incT { get; private set; }
+            public double _lanT { get; private set; }
+            public double _fpaT { get; private set; }
+            public double _hT { get; private set; }
+            public bool _attachAltFlag { get; private set; }
+            public bool _lanflag { get; private set; }
+            public bool _fixedBurnTime { get; private set; }
+            public int _optimizedPhase { get; private set; }
+            public int _optimizedCoastPhase { get; private set; } = -1;
+            public Solution? _solution { get; private set; }
 
-            public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, int mjPhase,
+            public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage,
+                int mjPhase,
                 bool optimizeTime = false,
                 bool unguided = false)
             {
-                Print(
+                DebugPrint(
                     $"[MechJebLib.AscentBuilder] AddStageUsingFinalMass({m0}, {mf}, {isp}, {bt}, {kspStage}, {(optimizeTime ? "true" : "false")}, {(unguided ? "true" : "false")})");
 
                 _phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage, mjPhase, optimizeTime, unguided));
@@ -50,11 +51,12 @@ namespace MechJebLib.PVG
                 return this;
             }
 
-            public AscentBuilder AddStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, int mjPhase,
+            public AscentBuilder AddStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage,
+                int mjPhase,
                 bool optimizeTime = false,
                 bool unguided = false)
             {
-                Print(
+                DebugPrint(
                     $"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {thrust}, {isp}, {bt}, {kspStage}, {(optimizeTime ? "true" : "false")}, {(unguided ? "true" : "false")})");
 
                 _phases.Add(Phase.NewStageUsingThrust(m0, thrust, isp, bt, kspStage, mjPhase, optimizeTime, unguided));
@@ -66,7 +68,7 @@ namespace MechJebLib.PVG
 
             public AscentBuilder AddFixedCoast(double m0, double ct, int kspStage, int mjPhase)
             {
-                Print($"[MechJebLib.AscentBuilder] AddFixedCoast({m0}, {ct}, {kspStage})");
+                DebugPrint($"[MechJebLib.AscentBuilder] AddFixedCoast({m0}, {ct}, {kspStage})");
 
                 _phases.Add(Phase.NewFixedCoast(m0, ct, kspStage, mjPhase));
 
@@ -75,7 +77,7 @@ namespace MechJebLib.PVG
 
             public AscentBuilder AddOptimizedCoast(double m0, double mint, double maxt, int kspStage, int mjPhase)
             {
-                Print($"[MechJebLib.AscentBuilder] AddOptimizedCoast({m0}, {mint}, {maxt}, {kspStage})");
+                DebugPrint($"[MechJebLib.AscentBuilder] AddOptimizedCoast({m0}, {mint}, {maxt}, {kspStage})");
 
                 _phases.Add(Phase.NewOptimizedCoast(m0, mint, maxt, kspStage, mjPhase));
                 _optimizedCoastPhase = _phases.Count - 1;
@@ -91,12 +93,12 @@ namespace MechJebLib.PVG
                 Check.PositiveFinite(mu);
                 Check.PositiveFinite(rbody);
 
-                Print($"[MechJebLib.AscentBuilder] Initial({r0}, {v0}, {u0}, {t0}, {mu}, {rbody})");
-                _r0    = r0;
-                _v0    = v0;
-                _u0    = u0.normalized;
-                _t0    = t0;
-                _mu    = mu;
+                DebugPrint($"[MechJebLib.AscentBuilder] Initial({r0}, {v0}, {u0}, {t0}, {mu}, {rbody})");
+                _r0 = r0;
+                _v0 = v0;
+                _u0 = u0.normalized;
+                _t0 = t0;
+                _mu = mu;
                 _rbody = rbody;
                 return this;
             }
@@ -109,26 +111,27 @@ namespace MechJebLib.PVG
             }
 
             // This magical interface needs to be busted up
-            public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, double fpa, bool attachAltFlag,
+            public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan,
+                double fpa, bool attachAltFlag,
                 bool lanflag)
             {
-                Print(
+                DebugPrint(
                     $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")})");
-                _peR           = peR;
-                _apR           = apR;
-                _attR          = attR;
-                _incT          = inclination;
-                _lanT          = lan;
-                _fpaT          = fpa;
+                _peR = peR;
+                _apR = apR;
+                _attR = attR;
+                _incT = inclination;
+                _lanT = lan;
+                _fpaT = fpa;
                 _attachAltFlag = attachAltFlag;
-                _lanflag       = lanflag;
+                _lanflag = lanflag;
 
                 return this;
             }
 
             public AscentBuilder OldSolution(Solution solution)
             {
-                Print("[MechJebLib.AscentBuilder] OldSolution(<solution>)");
+                DebugPrint("[MechJebLib.AscentBuilder] OldSolution(<solution>)");
 
                 _solution = solution;
 
@@ -137,7 +140,7 @@ namespace MechJebLib.PVG
 
             public AscentBuilder FixedBurnTime(bool fixedBurnTime)
             {
-                Print($"[MechJebLib.AscentBuilder] FixedBurnTime({(fixedBurnTime ? "true" : "false")})");
+                DebugPrint($"[MechJebLib.AscentBuilder] FixedBurnTime({(fixedBurnTime ? "true" : "false")})");
                 _fixedBurnTime = fixedBurnTime;
 
                 return this;
