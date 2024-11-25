@@ -51,11 +51,13 @@ namespace MuMech
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
-                _ascentSettings.LastStage.Val = Clamp(_ascentSettings.LastStage.Val, 0, Core.StageStats.VacStats.Count - 1);
+                _ascentSettings.LastStage.Val = Clamp(_ascentSettings.LastStage.Val, 0, vacStats[vacStats.Count - 1].KSPStage);
 
-                for (int mjPhase = _ascentSettings.LastStage; mjPhase < Core.StageStats.VacStats.Count; mjPhase++)
+                foreach (FuelStats stats in Core.StageStats.VacStats)
                 {
-                    FuelStats stats = Core.StageStats.VacStats[mjPhase];
+                    if (stats.KSPStage < _ascentSettings.LastStage)
+                        continue;
+
                     if (stats.DeltaV < _ascentSettings.MinDeltaV.Val)
                         continue;
 
@@ -64,9 +66,9 @@ namespace MuMech
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label($"{stats.KSPStage,3} {stats.DeltaV:##,###0} m/s");
-                    if (_ascentSettings.UnguidedStages.Contains(mjPhase))
+                    if (_ascentSettings.UnguidedStages.Contains(stats.KSPStage))
                         GUILayout.Label(" (unguided)");
-                    if (_ascentSettings.OptimizeStage == mjPhase)
+                    if (_ascentSettings.OptimizeStage == stats.KSPStage)
                         GUILayout.Label(" (optimize)");
                     GUILayout.EndHorizontal();
                 }
