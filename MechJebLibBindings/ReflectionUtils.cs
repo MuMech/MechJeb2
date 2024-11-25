@@ -114,5 +114,34 @@ namespace MechJebLibBindings
 
             return type.GetMethod(methodName, flags, null, args, null);
         }
+
+        public static Type? GetClassByReflection(string assemblyString, string className)
+        {
+            string assemblyName = "";
+
+            foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
+            {
+                if (loaded.assembly.GetName().Name == assemblyString)
+                {
+                    assemblyName = loaded.assembly.FullName;
+                }
+            }
+
+            if (assemblyName == "")
+            {
+                Debug.Log("[MechJeb] ReflectionUtils: could not find assembly " + assemblyString);
+                return null;
+            }
+
+            var type = Type.GetType(className + ", " + assemblyName);
+
+            if (type == null)
+            {
+                Debug.Log("[MechJeb] ReflectionUtils: could not find type  " + className + ", " + assemblyName);
+                return null;
+            }
+
+            return type;
+        }
     }
 }
