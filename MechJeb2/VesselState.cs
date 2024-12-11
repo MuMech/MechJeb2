@@ -16,6 +16,9 @@ namespace MuMech
 
         public static bool isLoadedRealFuels;
 
+        // RealFuels.ModuleEngineRF class
+        public static Type RFModuleEnginesRFType;
+
         // RealFuels.ModuleEngineRF ullageSet field to call via reflection
         public static FieldInfo RFullageSetField;
 
@@ -365,6 +368,13 @@ namespace MuMech
             if (isLoadedRealFuels)
             {
                 Debug.Log("MechJeb: RealFuels Assembly is loaded");
+                RFModuleEnginesRFType = ReflectionUtils.GetClassByReflection("RealFuels", "RealFuels.ModuleEnginesRF");
+                if (RFModuleEnginesRFType == null)
+                {
+                    Debug.LogWarning("MechJeb BUG: RealFuels loaded, but RealFuels ModuleEnginesRF was not found, disabling RF");
+                    isLoadedRealFuels = false;
+                }
+
                 RFullageSetField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullageSet");
                 if (RFullageSetField == null)
                 {
@@ -1425,6 +1435,11 @@ namespace MuMech
                 // we report stable ullage for an unstable engine which is throttled up, so we let RF kill it
                 // instead of having MJ throttle it down.
                 if (e.getFlameoutState || !e.EngineIgnited || !e.isEnabled || e.requestedThrottle > 0.0F)
+                {
+                    return;
+                }
+
+                if (!RFModuleEnginesRFType.IsInstanceOfType(e))
                 {
                     return;
                 }

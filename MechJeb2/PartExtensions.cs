@@ -49,6 +49,8 @@ namespace MuMech
 
             try
             {
+                if (!VesselState.RFModuleEnginesRFType.IsInstanceOfType(eng))
+                    return false;
                 if (VesselState.RFignitedField.GetValue(eng) is bool ignited && ignited)
                     return false;
                 if (VesselState.RFignitionsField.GetValue(eng) is int ignitions && ignitions == 0)
