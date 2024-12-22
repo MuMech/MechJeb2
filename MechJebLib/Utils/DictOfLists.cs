@@ -26,7 +26,7 @@ namespace MechJebLib.Utils
         public void Clear()
         {
             // careful:  not every value in this dict is always valid and we don't clear them out here.
-            // not implemeting IDictionary and the ability to iterate over Keys is deliberate.
+            // not implementing IDictionary and the ability to iterate over Keys is deliberate.
             foreach (List<TValue> list in _dict.Values)
                 list.Clear();
         }

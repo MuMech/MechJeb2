@@ -5,6 +5,7 @@
 
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation.PartModules;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation
 {
@@ -168,6 +169,10 @@ namespace MechJebLib.FuelFlowSimulation
 
         private static void TrackPartDecoupledInStage(SimVessel v, SimPart part, int stage)
         {
+            // in the VAB the CurrentStage often is 1 too low, this hack fixes that.
+            if (stage + 1 > v.CurrentStage)
+                v.SetCurrentStage(stage + 1);
+
             for (int i = stage + 1; i <= v.CurrentStage; i++)
                 v.PartsRemainingInStage[i].Add(part);
         }
