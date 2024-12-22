@@ -116,7 +116,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             internal void BuildParts()
             {
-                _vessel.CurrentStage = StageManager.CurrentStage;
+                _vessel.SetCurrentStage(StageManager.CurrentStage);
 
                 foreach (Part kspPart in _kspVessel.Parts)
                 {

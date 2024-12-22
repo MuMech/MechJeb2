@@ -98,6 +98,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             if (NoPropellants)
                 return false;
 
+            SimVessel vessel = Part.Vessel;
+
             foreach (int resourceId in ResourceConsumptions.Keys)
                 switch (PropellantFlowModes[resourceId])
                 {
@@ -109,7 +111,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                     case SimFlowMode.ALL_VESSEL_BALANCE:
                     case SimFlowMode.STAGE_PRIORITY_FLOW:
                     case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                        if (!PartsHaveResource(Part.Vessel.Parts, resourceId))
+                        if (!PartsHaveResource(vessel.PartsRemainingInStage[vessel.CurrentStage], resourceId))
                             return false;
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:
@@ -191,6 +193,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool WouldDropAccessibleFuelTank(int stageNum)
         {
+            SimVessel vessel = Part.Vessel;
+
             foreach (int resourceId in ResourceConsumptions.Keys)
                 switch (PropellantFlowModes[resourceId])
                 {
@@ -202,7 +206,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                     case SimFlowMode.ALL_VESSEL_BALANCE:
                     case SimFlowMode.STAGE_PRIORITY_FLOW:
                     case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                        if (DrawingFuelFromPartsDroppedInStage(Part.Vessel.Parts, resourceId, stageNum))
+                        if (DrawingFuelFromPartsDroppedInStage(vessel.PartsRemainingInStage[vessel.CurrentStage], resourceId, stageNum))
                             return true;
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:

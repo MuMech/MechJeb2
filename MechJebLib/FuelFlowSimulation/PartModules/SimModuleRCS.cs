@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
@@ -59,6 +60,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool CanDrawResources()
         {
+            SimVessel vessel = Part.Vessel;
+
             foreach (int resourceId in ResourceConsumptions.Keys)
                 switch (PropellantFlowModes[resourceId])
                 {
@@ -70,7 +73,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                     case SimFlowMode.ALL_VESSEL_BALANCE:
                     case SimFlowMode.STAGE_PRIORITY_FLOW:
                     case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
-                        if (!PartsHaveResource(Part.Vessel.Parts, resourceId))
+                        if (!PartsHaveResource(vessel.PartsRemainingInStage[vessel.CurrentStage], resourceId))
                             return false;
                         break;
                     case SimFlowMode.STAGE_STACK_FLOW:
