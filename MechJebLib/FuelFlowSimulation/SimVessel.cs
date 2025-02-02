@@ -52,9 +52,12 @@ namespace MechJebLib.FuelFlowSimulation
             _savedStage = stage;
         }
 
-        public void ResetCurrentStage()
+        public void ResetCurrentStage(int stage)
         {
-            CurrentStage = _savedStage;
+            if (stage < _savedStage)
+                SetCurrentStage(stage);
+            else
+                CurrentStage = _savedStage;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
