@@ -60,7 +60,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void UpdateParts()
             {
-                _vessel.ResetCurrentStage();
+                _vessel.ResetCurrentStage(StageManager.CurrentStage);
 
                 // FIXME: could track only parts that matter to the sim (engines+tanks) and only loop over them here
                 foreach (SimPart part in _vessel.Parts)
