@@ -21,7 +21,7 @@ namespace MechJebLib.TwoBody
             }
 
             double S = 0;
-            int k = 0;
+            int    k = 0;
             while (true)
             {
                 double S_old = S;
@@ -90,7 +90,7 @@ namespace MechJebLib.TwoBody
                 double fder = KeplerEquationPrimeNearParabolic(D0, M, ecc);
 
                 double newton_step = fval / fder;
-                double D = D0 - newton_step;
+                double D           = D0 - newton_step;
 
                 if (Math.Abs(D - D0) < tol)
                 {

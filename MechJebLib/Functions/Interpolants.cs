@@ -13,9 +13,9 @@ namespace MechJebLib.Functions
         public static void CubicHermiteInterpolant(double x1, IList<double> y1, IList<double> yp1, double x2, IList<double> y2,
             IList<double> yp2, double x, int n, IList<double> y)
         {
-            double t = (x - x1) / (x2 - x1);
-            double t2 = t * t;
-            double t3 = t2 * t;
+            double t   = (x - x1) / (x2 - x1);
+            double t2  = t * t;
+            double t3  = t2 * t;
             double h00 = 2 * t3 - 3 * t2 + 1;
             double h10 = t3 - 2 * t2 + t;
             double h01 = -2 * t3 + 3 * t2;
@@ -27,9 +27,9 @@ namespace MechJebLib.Functions
         public static double CubicHermiteInterpolant(double x1, double y1, double yp1, double x2, double y2,
             double yp2, double x)
         {
-            double t = (x - x1) / (x2 - x1);
-            double t2 = t * t;
-            double t3 = t2 * t;
+            double t   = (x - x1) / (x2 - x1);
+            double t2  = t * t;
+            double t3  = t2 * t;
             double h00 = 2 * t3 - 3 * t2 + 1;
             double h10 = t3 - 2 * t2 + t;
             double h01 = -2 * t3 + 3 * t2;
@@ -41,9 +41,9 @@ namespace MechJebLib.Functions
         public static V3 CubicHermiteInterpolant(double x1, V3 y1, V3 yp1, double x2, V3 y2,
             V3 yp2, double x)
         {
-            double t = (x - x1) / (x2 - x1);
-            double t2 = t * t;
-            double t3 = t2 * t;
+            double t   = (x - x1) / (x2 - x1);
+            double t2  = t * t;
+            double t3  = t2 * t;
             double h00 = 2 * t3 - 3 * t2 + 1;
             double h10 = t3 - 2 * t2 + t;
             double h01 = -2 * t3 + 3 * t2;

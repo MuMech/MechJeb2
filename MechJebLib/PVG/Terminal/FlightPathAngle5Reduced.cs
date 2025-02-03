@@ -42,15 +42,15 @@ namespace MechJebLib.PVG.Terminal
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {
-            var hf = V3.Cross(yf.R, yf.V);
-            V3 hmiss = hf - _hT;
+            var hf    = V3.Cross(yf.R, yf.V);
+            V3  hmiss = hf - _hT;
 
             double con1 = (yf.R.sqrMagnitude - _rT * _rT) * 0.5;
             double con2 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
             double con3 = hmiss[0];
             double con4 = hmiss[1];
             double con5 = hmiss[2];
-            double tv1 = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), hf); // free argP
+            double tv1  = V3.Dot(V3.Cross(yf.PR, yf.R) + V3.Cross(yf.PV, yf.V), hf); // free argP
             return (con1, con2, con3, con4, con5, tv1);
         }
     }

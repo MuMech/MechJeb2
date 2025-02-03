@@ -29,7 +29,7 @@ namespace MechJebLib.Lambert
                 return (_v1[0], _v2[0]);
 
             double mindv = double.PositiveInfinity;
-            int index = 0;
+            int    index = 0;
 
             for (int i = 0; i < _nsol; i++)
             {
@@ -69,19 +69,19 @@ namespace MechJebLib.Lambert
             Check.PositiveFinite(mu);
 
             // calculate lambda and normalized tof
-            double c = (r2 - r1).magnitude;
-            double r1M = r1.magnitude;
-            double r2M = r2.magnitude;
-            double s = (c + r1M + r2M) / 2.0;
+            double c       = (r2 - r1).magnitude;
+            double r1M     = r1.magnitude;
+            double r2M     = r2.magnitude;
+            double s       = (c + r1M + r2M) / 2.0;
             double lambda2 = 1.0 - c / s;
-            double lambda = Sqrt(lambda2);
+            double lambda  = Sqrt(lambda2);
             double lambda3 = lambda * lambda2;
-            double t = Sqrt(2.0 * mu / s / s / s) * tof;
+            double t       = Sqrt(2.0 * mu / s / s / s) * tof;
 
             // unit vectors
             V3 ir1 = r1.normalized;
             V3 ir2 = r2.normalized;
-            V3 ih = V3.Cross(ir1, ir2).normalized;
+            V3 ih  = V3.Cross(ir1, ir2).normalized;
             V3 it1 = V3.Cross(ih, ir1).normalized;
             V3 it2 = V3.Cross(ih, ir2).normalized;
 
@@ -93,16 +93,16 @@ namespace MechJebLib.Lambert
             }
 
             // compute nmax;
-            int nmax = (int)(t / PI);
-            double t00 = Acos(lambda) + lambda * Sqrt(1.0 - lambda2);
-            double t0 = t00 + nmax * PI;
-            double t1 = 2.0 / 3.0 * (1.0 - lambda3);
+            int    nmax = (int)(t / PI);
+            double t00  = Acos(lambda) + lambda * Sqrt(1.0 - lambda2);
+            double t0   = t00 + nmax * PI;
+            double t1   = 2.0 / 3.0 * (1.0 - lambda3);
             if (nmax > 0)
             {
                 if (t < t0)
                 {
                     // We use Halley iterations to find xM and TM
-                    int it = 0;
+                    int    it   = 0;
                     double tMin = t0;
                     double xOld = 0.0, xNew = 0.0;
                     while (true)
@@ -162,14 +162,14 @@ namespace MechJebLib.Lambert
 
             // build the velocities for all revolutions
             double gamma = Sqrt(mu * s / 2.0);
-            double rho = (r1M - r2M) / c;
+            double rho   = (r1M - r2M) / c;
             double sigma = Sqrt(1 - rho * rho);
             for (int i = 0; i < _nsol; ++i)
             {
-                double y = Sqrt(1.0 - lambda2 + lambda2 * _x[i] * _x[i]);
+                double y   = Sqrt(1.0 - lambda2 + lambda2 * _x[i] * _x[i]);
                 double vr1 = gamma * (lambda * y - _x[i] - rho * (lambda * y + _x[i])) / r1M;
                 double vr2 = -gamma * (lambda * y - _x[i] + rho * (lambda * y + _x[i])) / r2M;
-                double vt = gamma * sigma * (y + lambda * _x[i]);
+                double vt  = gamma * sigma * (y + lambda * _x[i]);
                 double vt1 = vt / r1M;
                 double vt2 = vt / r2M;
                 for (int j = 0; j < 3; ++j)
@@ -182,15 +182,15 @@ namespace MechJebLib.Lambert
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int Householder(double lambda, double t, ref double x0, int n, double eps, int maxIter)
         {
-            int it = 0;
+            int    it  = 0;
             double err = 1.0;
             while (err > eps && it < maxIter)
             {
                 double tof = TimeOfFlight(lambda, x0, n);
                 (double dt, double ddt, double dddt) = DTdx(lambda, x0, tof);
                 double delta = tof - t;
-                double dt2 = dt * dt;
-                double xnew = x0 - delta * (dt2 - delta * ddt / 2.0) / (dt * (dt2 - delta * ddt) + dddt * delta * delta / 6.0);
+                double dt2   = dt * dt;
+                double xnew  = x0 - delta * (dt2 - delta * ddt / 2.0) / (dt * (dt2 - delta * ddt) + dddt * delta * delta / 6.0);
                 err = Abs(x0 - xnew);
                 x0  = xnew;
                 it++;
@@ -202,14 +202,14 @@ namespace MechJebLib.Lambert
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ( double DT, double DDT, double DDDT) DTdx(double lambda, double x, double t)
         {
-            double l2 = lambda * lambda;
-            double l3 = l2 * lambda;
+            double l2   = lambda * lambda;
+            double l3   = l2 * lambda;
             double umx2 = 1.0 - x * x;
-            double y = Sqrt(1.0 - l2 * umx2);
-            double y2 = y * y;
-            double y3 = y2 * y;
-            double dt = 1.0 / umx2 * (3.0 * t * x - 2.0 + 2.0 * l3 * x / y);
-            double ddt = 1.0 / umx2 * (3.0 * t + 5.0 * x * dt + 2.0 * (1.0 - l2) * l3 / y3);
+            double y    = Sqrt(1.0 - l2 * umx2);
+            double y2   = y * y;
+            double y3   = y2 * y;
+            double dt   = 1.0 / umx2 * (3.0 * t * x - 2.0 + 2.0 * l3 * x / y);
+            double ddt  = 1.0 / umx2 * (3.0 * t + 5.0 * x * dt + 2.0 * (1.0 - l2) * l3 / y3);
             double dddt = 1.0 / umx2 * (7.0 * x * ddt + 8.0 * dt - 6.0 * (1.0 - l2) * l2 * l3 * x / y3 / y2);
             return (dt, ddt, dddt);
         }
@@ -217,23 +217,23 @@ namespace MechJebLib.Lambert
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double TimeOfFlight(double lambda, double x, int n)
         {
-            const double BATTIN = 0.01;
+            const double BATTIN   = 0.01;
             const double LAGRANGE = 0.2;
-            double dist = Abs(x - 1);
+            double       dist     = Abs(x - 1);
             if (dist < LAGRANGE && dist > BATTIN)
                 // use lagrange expression
                 return TimeOfFlightLagrange(lambda, x, n);
 
-            double k = lambda * lambda;
-            double e = x * x - 1.0;
+            double k   = lambda * lambda;
+            double e   = x * x - 1.0;
             double rho = Abs(e);
-            double z = Sqrt(1 + k * e);
+            double z   = Sqrt(1 + k * e);
             if (dist < BATTIN)
             {
                 // use battin expression
                 double eta = z - lambda * x;
-                double s1 = 0.5 * (1.0 - lambda - x * eta);
-                double q = HypergeometricF(s1, 1e-11);
+                double s1  = 0.5 * (1.0 - lambda - x * eta);
+                double q   = HypergeometricF(s1, 1e-11);
                 q = 4.0 / 3.0 * q;
                 return (eta * eta * eta * q + 4.0 * lambda * eta) / 2.0 + n * PI / Pow(rho, 1.5);
             }
@@ -262,15 +262,15 @@ namespace MechJebLib.Lambert
             double a = 1.0 / (1.0 - x * x);
             if (a > 0) // ellipse
             {
-                double alfa = 2.0 * Acos(x);
-                double beta = 2.0 * Asin(Sqrt(lambda * lambda / a));
+                double alfa            = 2.0 * Acos(x);
+                double beta            = 2.0 * Asin(Sqrt(lambda * lambda / a));
                 if (lambda < 0.0) beta = -beta;
                 return a * Sqrt(a) * (alfa - Sin(alfa) - (beta - Sin(beta)) + 2.0 * PI * n) / 2.0;
             }
             else
             {
-                double alfa = 2.0 * Acosh(x);
-                double beta = 2.0 * Asinh(Sqrt(-lambda * lambda / a));
+                double alfa            = 2.0 * Acosh(x);
+                double beta            = 2.0 * Asinh(Sqrt(-lambda * lambda / a));
                 if (lambda < 0.0) beta = -beta;
                 return -a * Sqrt(-a) * (beta - Sinh(beta) - (alfa - Sinh(alfa))) / 2.0;
             }
@@ -279,10 +279,10 @@ namespace MechJebLib.Lambert
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double HypergeometricF(double z, double tol)
         {
-            double sj = 1.0;
-            double cj = 1.0;
+            double sj  = 1.0;
+            double cj  = 1.0;
             double err = 1.0;
-            int j = 0;
+            int    j   = 0;
             while (err > tol)
             {
                 double cj1 = cj * (3.0 + j) * (1.0 + j) / (2.5 + j) * z / (j + 1);

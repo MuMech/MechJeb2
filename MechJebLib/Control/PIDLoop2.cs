@@ -33,11 +33,11 @@ namespace MechJebLib.Control
         public double DTerm { get; private set; }
 
         // standard form parameters
-        public double K { get; set; } = 1.0;
+        public double K  { get; set; } = 1.0;
         public double Ti { get; set; }
         public double Td { get; set; }
-        public double N { get; set; } = 50;
-        public double H { get; set; } = 0.02;
+        public double N  { get; set; } = 50;
+        public double H  { get; set; } = 0.02;
 
         // parallel form parameters
         public double Kp { set => K = value; } // TODO: rescale Ti and Td to keep Ki and Kd constant
@@ -50,16 +50,16 @@ namespace MechJebLib.Control
         public double C { get; set; } = 1;
 
         // optional extensions
-        public double SmoothIn { get; set; } = 1.0;
-        public double SmoothOut { get; set; } = 1.0;
+        public double SmoothIn             { get; set; } = 1.0;
+        public double SmoothOut            { get; set; } = 1.0;
         public double ProportionalDeadband { get; set; }
-        public double IntegralDeadband { get; set; } // probably the most useful deadband and necessary
-        public double DerivativeDeadband { get; set; }
-        public double OutputDeadband { get; set; }
-        public double MinOutput { get; set; } = double.MinValue;
-        public double MaxOutput { get; set; } = double.MaxValue;
-        public bool FORE { get; set; } = false; // not recommended if integrator required to zero the setpoint
-        public double FORETerm { get; set; } = -1.0;
+        public double IntegralDeadband     { get; set; } // probably the most useful deadband and necessary
+        public double DerivativeDeadband   { get; set; }
+        public double OutputDeadband       { get; set; }
+        public double MinOutput            { get; set; } = double.MinValue;
+        public double MaxOutput            { get; set; } = double.MaxValue;
+        public bool   FORE                 { get; set; } = false; // not recommended if integrator required to zero the setpoint
+        public double FORETerm             { get; set; } = -1.0;
 
         public double Update(double r, double y)
         {
@@ -104,7 +104,7 @@ namespace MechJebLib.Control
             // low-pass filter the output
             _u1 = IsFinite(_u1) ? _u1 + SmoothOut * (u - _u1) : u;
 
-            _y1 = y;
+            _y1  = y;
             _ei1 = ei;
             _ed1 = ed;
 
@@ -121,7 +121,7 @@ namespace MechJebLib.Control
         public void Reset()
         {
             ITerm = DTerm = _ei1 = _ed1 = 0;
-            _y1 = _u1 = double.NaN;
+            _y1   = _u1   = double.NaN;
         }
     }
 }

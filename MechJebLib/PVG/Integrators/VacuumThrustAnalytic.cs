@@ -22,7 +22,7 @@ namespace MechJebLib.PVG.Integrators
             double rm = y0.R.magnitude;
 
             double thrust = phase.thrust;
-            double mdot = phase.mdot;
+            double mdot   = phase.mdot;
 
             if (phase.Infinite)
             {
@@ -31,9 +31,9 @@ namespace MechJebLib.PVG.Integrators
             }
 
             // precompute some values
-            double omega = 1.0 / Math.Sqrt(rm * rm * rm);
-            double dt = tf - t0;
-            double delta = dt / 4;
+            double omega   = 1.0 / Math.Sqrt(rm * rm * rm);
+            double dt      = tf - t0;
+            double delta   = dt / 4;
             double comega1 = Math.Cos(omega * delta);
             double somega1 = Math.Sin(omega * delta);
             double comega2 = Math.Cos(omega * 2 * delta);
@@ -65,7 +65,7 @@ namespace MechJebLib.PVG.Integrators
             V3 pr4 = somega4 * y0.PV * omega + comega4 * y0.PR;
 
             bool unguided = phase.Unguided;
-            V3 u0 = phase.u0.normalized;
+            V3   u0       = phase.u0.normalized;
 
             // equations 15 + 16 (for the quadrature points)
             V3 ic0 = (unguided ? u0 : y0.PV.normalized) * at0;
@@ -116,7 +116,7 @@ namespace MechJebLib.PVG.Integrators
             for (int i = 1; i < 21; i++)
             {
                 double dt = (tf - t0) / SEGMENTS * i;
-                double t = t0 + dt;
+                double t  = t0 + dt;
                 Integrate(y0in, yfout, phase, t0, t);
 
                 interpolant.Add(t, yfout);

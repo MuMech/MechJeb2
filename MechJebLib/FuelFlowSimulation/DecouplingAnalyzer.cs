@@ -5,7 +5,6 @@
 
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation.PartModules;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation
 {

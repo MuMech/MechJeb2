@@ -179,7 +179,7 @@ namespace MechJebLib.Primitives
             double cross_x = from.y * to.z - from.z * to.y;
             double cross_y = from.z * to.x - from.x * to.z;
             double cross_z = from.x * to.y - from.y * to.x;
-            double sign = Math.Sign(axis.x * cross_x + axis.y * cross_y + axis.z * cross_z);
+            double sign    = Math.Sign(axis.x * cross_x + axis.y * cross_y + axis.z * cross_z);
             return unsignedAngle * sign;
         }
 
@@ -198,7 +198,7 @@ namespace MechJebLib.Primitives
             double sqrmag = vector.sqrMagnitude;
             if (sqrmag > maxLength * maxLength)
             {
-                double mag = Math.Sqrt(sqrmag);
+                double mag          = Math.Sqrt(sqrmag);
                 double normalized_x = vector.x / mag;
                 double normalized_y = vector.y / mag;
                 double normalized_z = vector.z / mag;

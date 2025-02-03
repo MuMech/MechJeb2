@@ -380,9 +380,9 @@ namespace MechJebLib.Primitives
         public static M3 Rotate(Q3 q)
         {
             // Precalculate coordinate products
-            double x = q.x * 2.0;
-            double y = q.y * 2.0;
-            double z = q.z * 2.0;
+            double x  = q.x * 2.0;
+            double y  = q.y * 2.0;
+            double z  = q.z * 2.0;
             double xx = q.x * x;
             double yy = q.y * y;
             double zz = q.z * z;

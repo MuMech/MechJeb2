@@ -37,8 +37,8 @@ namespace MechJebLib.Maneuvers
         {
             var args = (Args)obj;
 
-            double dt = x[0];
-            double tt = x[1];
+            double dt     = x[0];
+            double tt     = x[1];
             double offset = x[2];
 
             if (tt == 0)
@@ -73,8 +73,8 @@ namespace MechJebLib.Maneuvers
                 throw new ArgumentException("bad v2 in ChangeOrbitalElement");
 
             const double DIFFSTEP = 1e-6;
-            const double EPSX = 1e-9;
-            const int MAXITS = 1000;
+            const double EPSX     = 1e-9;
+            const int    MAXITS   = 1000;
 
             const int NVARIABLES = 3;
 
@@ -85,8 +85,8 @@ namespace MechJebLib.Maneuvers
             if (coplanar)
             {
                 // this rotation changes the target orbit to be coplanar
-                V3 hhat1 = V3.Cross(r1, v1).normalized;
-                V3 hhat2 = V3.Cross(r2, v2).normalized;
+                V3  hhat1      = V3.Cross(r1, v1).normalized;
+                V3  hhat2      = V3.Cross(r2, v2).normalized;
                 var toCoplanar = Q3.FromToRotation(hhat2, hhat1);
 
                 r2 = toCoplanar * r2;
@@ -162,7 +162,7 @@ namespace MechJebLib.Maneuvers
             double lagTime = double.NaN, bool coplanar = true, bool rendezvous = true, bool capture = true,
             bool fixedtime = false, bool optguard = false)
         {
-            V3 dv1, dv2;
+            V3     dv1, dv2;
             double dt1, dt2;
 
             double dtmin = double.NegativeInfinity;
@@ -177,8 +177,8 @@ namespace MechJebLib.Maneuvers
             if (rendezvous)
             {
                 double offsetGuess = 0;
-                double offsetMin = 0;
-                double offsetMax = 0;
+                double offsetMin   = 0;
+                double offsetMax   = 0;
                 if (Statics.IsFinite(lagTime))
                 {
                     offsetMin   = -lagTime;

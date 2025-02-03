@@ -24,7 +24,7 @@ namespace MechJebLib.PVG.Integrators
             {
                 Check.True(Phase.Normalized);
 
-                var y = OutputLayout.CreateFrom(yin);
+                var y  = OutputLayout.CreateFrom(yin);
                 var dy = new OutputLayout();
 
                 double at = Phase.thrust / y.M;
@@ -32,7 +32,7 @@ namespace MechJebLib.PVG.Integrators
                     at *= 2;
 
                 double r2 = y.R.sqrMagnitude;
-                double r = Math.Sqrt(r2);
+                double r  = Math.Sqrt(r2);
                 double r3 = r2 * r;
                 double r5 = r3 * r2;
 

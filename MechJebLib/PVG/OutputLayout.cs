@@ -33,7 +33,7 @@ namespace MechJebLib.PVG
             {
                 double rm = R.magnitude;
                 return V3.Dot(PR, V) -
-                       V3.Dot(PV, R) / (rm * rm * rm); // FIXME: this changes for linear gravity model??!?!?
+                    V3.Dot(PV, R) / (rm * rm * rm); // FIXME: this changes for linear gravity model??!?!?
             }
         }
 

@@ -43,11 +43,11 @@ namespace MechJebLib.Rootfinding
             if (fa > 0)
                 (a, b) = (b, a);
 
-            double c = 0.5 * (a + b);
+            double c     = 0.5 * (a + b);
             double dxold = Abs(b - a);
-            double dx = dxold;
-            double fc = f(c, o);
-            double dfc = df(c, o);
+            double dx    = dxold;
+            double fc    = f(c, o);
+            double dfc   = df(c, o);
             for (int i = 0; i < maxiter; i++)
             {
                 if (((c - b) * dfc - fc) * ((c - a) * dfc - fc) > 0.0 // jumping out of range

@@ -77,8 +77,8 @@ namespace MechJebLib.Functions
                 attR = apR;
 
             (double smaT, double eccT) = SmaEccFromApsides(peR, apR);
-            double h = HmagFromKeplerian(mu, smaT, eccT);
-            double vT = VmagFromVisViva(mu, smaT, attR);
+            double h      = HmagFromKeplerian(mu, smaT, eccT);
+            double vT     = VmagFromVisViva(mu, smaT, attR);
             double gammaT = FlightPathAngleFromAngularVelocity(h, attR, vT);
 
             return (vT, gammaT);
@@ -150,7 +150,7 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (double sma, double ecc) SmaEccFromStateVectors(double mu, V3 r, V3 v)
         {
-            var h = V3.Cross(r, v);
+            var    h   = V3.Cross(r, v);
             double sma = SmaFromStateVectors(mu, r, v);
             return (sma, Sqrt(Max(1 - h.sqrMagnitude / (sma * mu), 0)));
         }
@@ -158,9 +158,9 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Dual sma, Dual ecc) SmaEccFromStateVectors(Dual mu, DualV3 r, DualV3 v)
         {
-            var h = DualV3.Cross(r, v);
+            var  h   = DualV3.Cross(r, v);
             Dual sma = SmaFromStateVectors(mu, r, v);
-            var ecc = Dual.Sqrt(Dual.Max(1 - h.sqrMagnitude / (sma * mu), 0));
+            var  ecc = Dual.Sqrt(Dual.Max(1 - h.sqrMagnitude / (sma * mu), 0));
             return (sma, ecc);
         }
 
@@ -270,7 +270,7 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 VelocityForHeading(V3 r, V3 v, double newHeading)
         {
-            V3 venu = ECIToENU(r, v);
+            V3     venu = ECIToENU(r, v);
             double hmag = new V3(venu.x, venu.y).magnitude;
             venu[0] = hmag * Sin(newHeading);
             venu[1] = hmag * Cos(newHeading);
@@ -355,9 +355,9 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 VelocityForInclination(V3 r, V3 v, double newInc)
         {
-            V3 v0 = ECIToENU(r, v);
+            V3     v0       = ECIToENU(r, v);
             double horizMag = new V3(v0.x, v0.y).magnitude;
-            V3 vf = ENUHeadingForInclination(newInc, r) * horizMag;
+            V3     vf       = ENUHeadingForInclination(newInc, r) * horizMag;
             vf.z = v0.z;
             vf   = ENUToECI(r, vf);
             return vf;
@@ -373,9 +373,9 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 VelocityForFPA(V3 r, V3 v, double newFPA)
         {
-            V3 v0 = ECIToENU(r, v);
+            V3     v0   = ECIToENU(r, v);
             double vmag = v0.magnitude;
-            V3 vf = new V3(v0.x, v0.y).normalized * Cos(newFPA) * vmag;
+            V3     vf   = new V3(v0.x, v0.y).normalized * Cos(newFPA) * vmag;
             vf.z = Sin(newFPA) * vmag;
             vf   = ENUToECI(r, vf);
             return vf;
@@ -506,8 +506,8 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeToNextRadius(double mu, V3 r, V3 v, double radius)
         {
-            double nu1 = TrueAnomalyFromRadius(mu, r, v, radius);
-            double nu2 = -nu1;
+            double nu1   = TrueAnomalyFromRadius(mu, r, v, radius);
+            double nu2   = -nu1;
             double time1 = TimeToNextTrueAnomaly(mu, r, v, nu1);
             double time2 = TimeToNextTrueAnomaly(mu, r, v, nu2);
             if (time1 >= 0 && time2 >= 0)
@@ -520,9 +520,9 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double SynodicPeriod(double mu, V3 r1, V3 v1, V3 r2, V3 v2)
         {
-            double t1 = PeriodFromStateVectors(mu, r1, v1);
-            double t2 = PeriodFromStateVectors(mu, r2, v2);
-            int sign = Sign(V3.Dot(V3.Cross(r1, v1), V3.Cross(r2, v2)));
+            double t1   = PeriodFromStateVectors(mu, r1, v1);
+            double t2   = PeriodFromStateVectors(mu, r2, v2);
+            int    sign = Sign(V3.Dot(V3.Cross(r1, v1), V3.Cross(r2, v2)));
             return Abs(1.0 / (1.0 / t1 - sign / t2));
         }
 
@@ -591,16 +591,16 @@ namespace MechJebLib.Functions
         public static (double sma, double ecc, double inc, double lan, double argp, double nu, double l) KeplerianFromStateVectors(double mu,
             V3 r, V3 v)
         {
-            double rmag = r.magnitude;
-            double vmag = v.magnitude;
-            V3 rhat = r.normalized;
-            var hv = V3.Cross(r, v);
-            V3 hhat = hv.normalized;
-            V3 vtmp = v / mu;
-            V3 eccvec = V3.Cross(vtmp, hv) - rhat;
+            double rmag   = r.magnitude;
+            double vmag   = v.magnitude;
+            V3     rhat   = r.normalized;
+            var    hv     = V3.Cross(r, v);
+            V3     hhat   = hv.normalized;
+            V3     vtmp   = v / mu;
+            V3     eccvec = V3.Cross(vtmp, hv) - rhat;
 
             double sma = 1.0 / (2.0 / rmag - vmag * vmag / mu);
-            double l = hv.sqrMagnitude / mu;
+            double l   = hv.sqrMagnitude / mu;
 
             double d = 1.0 + hhat[2];
             double p = d == 0 ? 0 : hhat[0] / d;
@@ -620,17 +620,17 @@ namespace MechJebLib.Functions
                 const1 * 2.0 * q
             );
 
-            double h = V3.Dot(eccvec, ghat);
-            double xk = V3.Dot(eccvec, fhat);
-            double x1 = V3.Dot(r, fhat);
-            double y1 = V3.Dot(r, ghat);
+            double h        = V3.Dot(eccvec, ghat);
+            double xk       = V3.Dot(eccvec, fhat);
+            double x1       = V3.Dot(r, fhat);
+            double y1       = V3.Dot(r, ghat);
             double xlambdot = Atan2(y1, x1);
 
-            double ecc = Sqrt(h * h + xk * xk);
-            double inc = 2.0 * Atan(Sqrt(p * p + q * q));
-            double lan = Clamp2Pi(inc > EPS ? Atan2(p, q) : 0.0);
+            double ecc  = Sqrt(h * h + xk * xk);
+            double inc  = 2.0 * Atan(Sqrt(p * p + q * q));
+            double lan  = Clamp2Pi(inc > EPS ? Atan2(p, q) : 0.0);
             double argp = Clamp2Pi(ecc > EPS ? Atan2(h, xk) - lan : 0.0);
-            double nu = Clamp2Pi(xlambdot - lan - argp);
+            double nu   = Clamp2Pi(xlambdot - lan - argp);
 
             return (sma, ecc, inc, lan, argp, nu, l);
         }
@@ -683,9 +683,9 @@ namespace MechJebLib.Functions
                     break;
 
                 // update eccentric anomaly
-                double delta = -f / fp;
+                double delta     = -f / fp;
                 double deltastar = -f / (fp + 0.5 * delta * fpp);
-                double deltak = -f / (fp + 0.5 * deltastar * fpp + deltastar * deltastar * fppp / 6);
+                double deltak    = -f / (fp + 0.5 * deltastar * fpp + deltastar * deltastar * fppp / 6);
                 eanom += deltak;
             }
 
@@ -715,17 +715,17 @@ namespace MechJebLib.Functions
 
         public static (double dv1, double dv2, double tt, double alpha) HohmannTransferParameters(double mu, V3 r1, V3 r2)
         {
-            const double C = 0.35355339059327373;
-            double r1M = r1.magnitude;
-            double r2M = r2.magnitude;
-            double rsum = r1M + r2M;
-            double c1 = Sqrt(2.0 * r2M / rsum);
-            double c2 = Sqrt(2.0 * r1M / rsum);
-            double dv1 = Sqrt(mu / r1M) * (c1 - 1);
-            double dv2 = Sqrt(mu / r2M) * (1 - c2);
-            double tt = PI * Sqrt(Powi(rsum, 3) / (8 * mu));
-            double c3 = r1M / r2M + 1;
-            double alpha = PI * (1 - C * Sqrt(Powi(c3, 3)));
+            const double C     = 0.35355339059327373;
+            double       r1M   = r1.magnitude;
+            double       r2M   = r2.magnitude;
+            double       rsum  = r1M + r2M;
+            double       c1    = Sqrt(2.0 * r2M / rsum);
+            double       c2    = Sqrt(2.0 * r1M / rsum);
+            double       dv1   = Sqrt(mu / r1M) * (c1 - 1);
+            double       dv2   = Sqrt(mu / r2M) * (1 - c2);
+            double       tt    = PI * Sqrt(Powi(rsum, 3) / (8 * mu));
+            double       c3    = r1M / r2M + 1;
+            double       alpha = PI * (1 - C * Sqrt(Powi(c3, 3)));
             return (dv1, dv2, tt, alpha);
         }
     }

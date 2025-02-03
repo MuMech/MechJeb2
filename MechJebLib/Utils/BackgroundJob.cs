@@ -65,7 +65,7 @@ namespace MechJebLib.Utils
         public void StartJob(object? o)
         {
             ResultReady = false;
-            _task = Task.Factory.StartNew(_executeDelegate, o, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+            _task       = Task.Factory.StartNew(_executeDelegate, o, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
             _task.ContinueWith(_onTaskCompletedDelegate, TaskContinuationOptions.OnlyOnRanToCompletion);
             _task.ContinueWith(_onTaskFaultedDelegate, TaskContinuationOptions.OnlyOnFaulted);
             _task.ContinueWith(_onTaskCancelledDelegate, TaskContinuationOptions.OnlyOnCanceled);

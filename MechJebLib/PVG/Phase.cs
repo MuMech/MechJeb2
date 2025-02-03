@@ -122,7 +122,7 @@ namespace MechJebLib.PVG
             Check.PositiveFinite(isp);
             Check.PositiveFinite(bt);
 
-            double mdot = (m0 - mf) / bt;
+            double mdot   = (m0 - mf) / bt;
             double thrust = mdot * (isp * G0);
 
             Check.PositiveFinite(mdot);
@@ -142,7 +142,7 @@ namespace MechJebLib.PVG
             Check.PositiveFinite(bt);
 
             double mdot = thrust / (isp * G0);
-            double mf = m0 - mdot * bt;
+            double mf   = m0 - mdot * bt;
 
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(mf);
