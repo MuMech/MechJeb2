@@ -16,25 +16,25 @@ namespace MechJebLib.PVG
         {
             public readonly List<Phase> _phases = new List<Phase>();
 
-            public V3 _r0 { get; private set; }
-            public V3 _v0 { get; private set; }
-            public V3 _u0 { get; private set; }
-            public double _t0 { get; private set; }
-            public double _mu { get; private set; }
-            public double _rbody { get; private set; }
-            public double _apR { get; private set; }
-            public double _peR { get; private set; }
-            public double _attR { get; private set; }
-            public double _incT { get; private set; }
-            public double _lanT { get; private set; }
-            public double _fpaT { get; private set; }
-            public double _hT { get; private set; }
-            public bool _attachAltFlag { get; private set; }
-            public bool _lanflag { get; private set; }
-            public bool _fixedBurnTime { get; private set; }
-            public int _optimizedPhase { get; private set; }
-            public int _optimizedCoastPhase { get; private set; } = -1;
-            public Solution? _solution { get; private set; }
+            public V3        _r0                  { get; private set; }
+            public V3        _v0                  { get; private set; }
+            public V3        _u0                  { get; private set; }
+            public double    _t0                  { get; private set; }
+            public double    _mu                  { get; private set; }
+            public double    _rbody               { get; private set; }
+            public double    _apR                 { get; private set; }
+            public double    _peR                 { get; private set; }
+            public double    _attR                { get; private set; }
+            public double    _incT                { get; private set; }
+            public double    _lanT                { get; private set; }
+            public double    _fpaT                { get; private set; }
+            public double    _hT                  { get; private set; }
+            public bool      _attachAltFlag       { get; private set; }
+            public bool      _lanflag             { get; private set; }
+            public bool      _fixedBurnTime       { get; private set; }
+            public int       _optimizedPhase      { get; private set; }
+            public int       _optimizedCoastPhase { get; private set; } = -1;
+            public Solution? _solution            { get; private set; }
 
             public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage,
                 int mjPhase,
@@ -94,11 +94,11 @@ namespace MechJebLib.PVG
                 Check.PositiveFinite(rbody);
 
                 DebugPrint($"[MechJebLib.AscentBuilder] Initial({r0}, {v0}, {u0}, {t0}, {mu}, {rbody})");
-                _r0 = r0;
-                _v0 = v0;
-                _u0 = u0.normalized;
-                _t0 = t0;
-                _mu = mu;
+                _r0    = r0;
+                _v0    = v0;
+                _u0    = u0.normalized;
+                _t0    = t0;
+                _mu    = mu;
                 _rbody = rbody;
                 return this;
             }
@@ -117,14 +117,14 @@ namespace MechJebLib.PVG
             {
                 DebugPrint(
                     $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")})");
-                _peR = peR;
-                _apR = apR;
-                _attR = attR;
-                _incT = inclination;
-                _lanT = lan;
-                _fpaT = fpa;
+                _peR           = peR;
+                _apR           = apR;
+                _attR          = attR;
+                _incT          = inclination;
+                _lanT          = lan;
+                _fpaT          = fpa;
                 _attachAltFlag = attachAltFlag;
-                _lanflag = lanflag;
+                _lanflag       = lanflag;
 
                 return this;
             }

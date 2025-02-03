@@ -89,9 +89,9 @@ namespace MechJebLib.Primitives
         // Rotates the point /point/ with /rotation/.
         public static V3 operator *(Q3 q, V3 v)
         {
-            double x = q.x * 2.0;
-            double y = q.y * 2.0;
-            double z = q.z * 2.0;
+            double x  = q.x * 2.0;
+            double y  = q.y * 2.0;
+            double z  = q.z * 2.0;
             double xx = q.x * x;
             double yy = q.y * y;
             double zz = q.z * z;
@@ -233,7 +233,7 @@ namespace MechJebLib.Primitives
             double m22 = -upwards.z;
 
             double trace = m00 + m11 + m22;
-            var q = new Q3();
+            var    q     = new Q3();
             if (trace > 0f)
             {
                 double num = Sqrt(trace + 1);
@@ -278,7 +278,7 @@ namespace MechJebLib.Primitives
 
         public static Q3 FromToRotation(V3 from, V3 to)
         {
-            var c = V3.Cross(from, to);
+            var    c = V3.Cross(from, to);
             double w = Sqrt(from.sqrMagnitude * to.sqrMagnitude) + V3.Dot(from, to);
             return Normalize(new Q3(c.x, c.y, c.z, w));
         }
@@ -286,7 +286,7 @@ namespace MechJebLib.Primitives
         public static Q3 AngleAxis(double angle, V3 axis)
         {
             var q = new Q3();
-            V3 a = axis.normalized;
+            V3  a = axis.normalized;
             q.x = a.x * Sin(angle / 2.0);
             q.y = a.y * Sin(angle / 2.0);
             q.z = a.z * Sin(angle / 2.0);

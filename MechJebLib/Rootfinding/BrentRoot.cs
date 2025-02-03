@@ -69,8 +69,8 @@ namespace MechJebLib.Rootfinding
         /// <returns>value for which the function evaluates to zero</returns>
         public static double Solve(Func<double, object?, double> f, double x, object? o, int maxiter = 100, double rtol = EPS, int sign = 0)
         {
-            double a = x;
-            double b = x;
+            double a  = x;
+            double b  = x;
             double fa = f(x, o);
             double fb = fa;
 
@@ -129,9 +129,9 @@ namespace MechJebLib.Rootfinding
 
             // this ensures we always run the first if block first and initialize c,d,e
             double fc = fb;
-            double c = double.NaN;
-            double d = double.NaN;
-            double e = double.NaN;
+            double c  = double.NaN;
+            double d  = double.NaN;
+            double e  = double.NaN;
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             while (fb != 0 && a != b)
@@ -154,7 +154,7 @@ namespace MechJebLib.Rootfinding
                     fc = fa;
                 }
 
-                double m = 0.5 * (c - b);
+                double m     = 0.5 * (c - b);
                 double toler = 2.0 * rtol * Max(Abs(b), 1.0);
                 if (Abs(m) <= toler || fb == 0.0)
                 {

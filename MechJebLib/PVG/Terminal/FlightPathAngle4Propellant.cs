@@ -40,7 +40,7 @@ namespace MechJebLib.PVG.Terminal
 
         public (double a, double b, double c, double d, double e, double f) TerminalConstraints(OutputLayout yf)
         {
-            var n = new V3(0, 0, 1);
+            var n  = new V3(0, 0, 1);
             var rn = V3.Cross(yf.R, n);
             var vn = V3.Cross(yf.V, n);
             var hf = V3.Cross(yf.R, yf.V);

@@ -47,9 +47,9 @@ namespace MechJebLib.Maneuvers
 
             // radial/transverse as used in RSW, see Vallado
             double vtransverse = l / rm;
-            double vradial = Sqrt(Abs(2 * ke - vtransverse * vtransverse));
+            double vradial     = Sqrt(Abs(2 * ke - vtransverse * vtransverse));
 
-            V3 radialhat = r.normalized;
+            V3 radialhat     = r.normalized;
             V3 transversehat = V3.Cross(V3.Cross(radialhat, v), radialhat).normalized;
 
             V3 one = vtransverse * transversehat + vradial * radialhat - v;
@@ -93,7 +93,7 @@ namespace MechJebLib.Maneuvers
             Check.Finite(v);
 
             double dt = Astro.TimeToNextApoapsis(mu, r, v);
-            V3 dv = DeltaVToCircularizeAfterTime(mu, r, v, dt);
+            V3     dv = DeltaVToCircularizeAfterTime(mu, r, v, dt);
 
             Check.Finite(dv);
             Check.Finite(dt);
@@ -111,8 +111,8 @@ namespace MechJebLib.Maneuvers
 
             // as long as we're not launching to hyperbolic orbits, this vgo will always point
             // in 'front' of us.
-            V3 v1 = Astro.EscapeVelocityForInclination(mu, r, newInc);
-            V3 v2 = Astro.EscapeVelocityForInclination(mu, r, -newInc);
+            V3 v1  = Astro.EscapeVelocityForInclination(mu, r, newInc);
+            V3 v2  = Astro.EscapeVelocityForInclination(mu, r, -newInc);
             V3 dv1 = v1 - v;
             V3 dv2 = v2 - v;
 
@@ -121,8 +121,8 @@ namespace MechJebLib.Maneuvers
             // if the surface horizontal velocity is very small and the dv magnitudes are nearly equal, then
             // assume we are doing vertical rise from launch and the sign of newInc determines if we take the
             // northward or southward going track.
-            V3 rhat = r.normalized;
-            V3 vsurf = v - V3.Cross(rotFreq * V3.northpole, r);
+            V3 rhat   = r.normalized;
+            V3 vsurf  = v - V3.Cross(rotFreq * V3.northpole, r);
             V3 vhoriz = vsurf - V3.Dot(vsurf, rhat) * rhat;
             if (vhoriz.magnitude / v1.magnitude < 0.05 && Abs(dv1.magnitude - dv2.magnitude) / dv1.magnitude < 0.05)
                 dv = dv1;

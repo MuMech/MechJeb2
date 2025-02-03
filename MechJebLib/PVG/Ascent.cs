@@ -17,10 +17,10 @@ namespace MechJebLib.PVG
     public partial class Ascent
     {
         private readonly AscentBuilder _input;
-        private double _eccT;
-        private double _gammaT;
-        private Optimizer? _optimizer;
-        private double _smaT;
+        private          double        _eccT;
+        private          double        _gammaT;
+        private          Optimizer?    _optimizer;
+        private          double        _smaT;
 
         private double _vT;
 
@@ -29,34 +29,34 @@ namespace MechJebLib.PVG
             _input = builder;
         }
 
-        private List<Phase> _phases => _input._phases;
-        private V3 _r0 => _input._r0;
-        private V3 _v0 => _input._v0;
-        private V3 _u0 => _input._u0;
-        private double _t0 => _input._t0;
-        private double _mu => _input._mu;
-        private double _rbody => _input._rbody;
-        private double _peR => _input._peR;
-        private double _apR => _input._apR;
-        private double _attR => _input._attR;
-        private double _incT => _input._incT;
-        private double _lanT => _input._lanT;
-        private double _fpaT => _input._fpaT;
-        private double _hT => _input._hT;
-        private bool _attachAltFlag => _input._attachAltFlag;
-        private bool _lanflag => _input._lanflag;
-        private bool _fixedBurnTime => _input._fixedBurnTime;
-        private Solution? _solution => _input._solution;
-        private int _optimizedPhase => _input._optimizedPhase;
-        private int _optimizedCoastPhase => _input._optimizedCoastPhase;
+        private List<Phase> _phases              => _input._phases;
+        private V3          _r0                  => _input._r0;
+        private V3          _v0                  => _input._v0;
+        private V3          _u0                  => _input._u0;
+        private double      _t0                  => _input._t0;
+        private double      _mu                  => _input._mu;
+        private double      _rbody               => _input._rbody;
+        private double      _peR                 => _input._peR;
+        private double      _apR                 => _input._apR;
+        private double      _attR                => _input._attR;
+        private double      _incT                => _input._incT;
+        private double      _lanT                => _input._lanT;
+        private double      _fpaT                => _input._fpaT;
+        private double      _hT                  => _input._hT;
+        private bool        _attachAltFlag       => _input._attachAltFlag;
+        private bool        _lanflag             => _input._lanflag;
+        private bool        _fixedBurnTime       => _input._fixedBurnTime;
+        private Solution?   _solution            => _input._solution;
+        private int         _optimizedPhase      => _input._optimizedPhase;
+        private int         _optimizedCoastPhase => _input._optimizedCoastPhase;
 
         public void Run()
         {
             (_smaT, _eccT) = Astro.SmaEccFromApsides(_peR, _apR);
 
             using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
-                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
-                .TerminalConditions(_hT);
+                                                                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
+                                                                .TerminalConditions(_hT);
 
             if (_solution == null)
             {
@@ -75,8 +75,8 @@ namespace MechJebLib.PVG
             (_smaT, _eccT) = Astro.SmaEccFromApsides(_peR, _apR);
 
             using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
-                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
-                .TerminalConditions(_hT);
+                                                                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
+                                                                .TerminalConditions(_hT);
 
             ForceNumericalIntegration();
 
@@ -253,15 +253,15 @@ namespace MechJebLib.PVG
             if (_optimizedCoastPhase > -1)
             {
                 bootphases[_optimizedCoastPhase].OptimizeTime = false;
-                bootphases[_optimizedCoastPhase].bt = 0;
+                bootphases[_optimizedCoastPhase].bt           = 0;
             }
 
             // switch the optimized phase to the top stage of the rocket
             bootphases[_optimizedPhase].OptimizeTime = false;
 
             // set the top stage to infinite + optimized + unguided
-            bootphases[bootphases.Count - 1].Infinite = true;
-            bootphases[bootphases.Count - 1].Unguided = false;
+            bootphases[bootphases.Count - 1].Infinite     = true;
+            bootphases[bootphases.Count - 1].Unguided     = false;
             bootphases[bootphases.Count - 1].OptimizeTime = true;
 
             DebugPrint("*** PHASE 1: DOING INITIAL INFINITE UPPER STAGE ***");
@@ -287,7 +287,7 @@ namespace MechJebLib.PVG
                     total += _phases[i].bt;
 
                 _phases[_optimizedCoastPhase].OptimizeTime = true;
-                _phases[_optimizedCoastPhase].bt = total;
+                _phases[_optimizedCoastPhase].bt           = total;
             }
 
             DebugPrint("*** PHASE 2: ADDING COAST AND FINITE UPPER STAGE ***");

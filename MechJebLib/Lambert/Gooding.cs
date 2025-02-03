@@ -80,7 +80,7 @@ namespace MechJebLib.Lambert
 
             double VR11, VT11, VR12, VT12;
             double VR21, VT21, VR22, VT22;
-            int n;
+            int    n;
 
             (n, VR11, VT11, VR12, VT12, VR21, VT21, VR22, VT22) = VLAMB(mu, r1.magnitude, r2.magnitude, theta, tof);
 
@@ -134,19 +134,19 @@ namespace MechJebLib.Lambert
             Check.Finite(TH);
             Check.Finite(TDELT);
 
-            double VR11 = 0.0, VT11 = 0.0, VR12 = 0.0, VT12 = 0.0;
-            double VR21 = 0.0, VT21 = 0.0, VR22 = 0.0, VT22 = 0.0;
-            int M = Convert.ToInt32(Floor(TH / (2.0 * PI)));
-            double THR2 = TH / 2.0 - M * PI;
-            double DR = R1 - R2;
-            double R1R2 = R1 * R2;
+            double VR11   = 0.0, VT11 = 0.0, VR12 = 0.0, VT12 = 0.0;
+            double VR21   = 0.0, VT21 = 0.0, VR22 = 0.0, VT22 = 0.0;
+            int    M      = Convert.ToInt32(Floor(TH / (2.0 * PI)));
+            double THR2   = TH / 2.0 - M * PI;
+            double DR     = R1 - R2;
+            double R1R2   = R1 * R2;
             double R1R2TH = 4.0 * R1R2 * Pow(Sin(THR2), 2);
-            double CSQ = Pow(DR, 2) + R1R2TH;
-            double C = Sqrt(CSQ);
-            double S = (R1 + R2 + C) / 2.0;
-            double GMS = Sqrt(GM * S / 2.0);
+            double CSQ    = Pow(DR, 2) + R1R2TH;
+            double C      = Sqrt(CSQ);
+            double S      = (R1 + R2 + C) / 2.0;
+            double GMS    = Sqrt(GM * S / 2.0);
             double QSQFM1 = C / S;
-            double Q = Sqrt(R1R2) * Cos(THR2) / S;
+            double Q      = Sqrt(R1R2) * Cos(THR2) / S;
             double RHO;
             double SIG;
             if (C != 0.0)
@@ -207,24 +207,24 @@ namespace MechJebLib.Lambert
             Check.Finite(QSQFM1);
             Check.Finite(TIN);
 
-            const double TOL = 3e-7;
-            const double C0 = 1.7;
-            const double C1 = 0.5;
-            const double C2 = 0.03;
-            const double C3 = 0.15;
-            const double C41 = 1.0;
-            const double C42 = 0.24;
-            double THR2 = Atan2(QSQFM1, 2.0 * Q) / PI;
-            double T, T0, DT, D2T, D3T;
-            double D2T2 = 0.0;
-            double TMIN = 0.0;
-            double TDIFF;
-            double TDIFFM = 0.0;
-            double XM = 0.0;
-            double W;
-            double X = 0.0;
-            double XPL = 0.0;
-            int N;
+            const double TOL  = 3e-7;
+            const double C0   = 1.7;
+            const double C1   = 0.5;
+            const double C2   = 0.03;
+            const double C3   = 0.15;
+            const double C41  = 1.0;
+            const double C42  = 0.24;
+            double       THR2 = Atan2(QSQFM1, 2.0 * Q) / PI;
+            double       T, T0, DT, D2T, D3T;
+            double       D2T2 = 0.0;
+            double       TMIN = 0.0;
+            double       TDIFF;
+            double       TDIFFM = 0.0;
+            double       XM     = 0.0;
+            double       W;
+            double       X   = 0.0;
+            double       XPL = 0.0;
+            int          N;
             if (M == 0)
             {
                 /* "SINGLE-REV STARTER FROM T (AT X = 0) & BILINEAR (USUALLY)" -- Gooding */
@@ -273,7 +273,7 @@ namespace MechJebLib.Lambert
                 return (N, X, XPL);
                 /* "(BREAK OFF & EXIT IF TMIN NOT LOCATED - SHOULD NEVER HAPPEN)" */
                 /* "NOW PROCEED FROM T(MIN) TO FULL STARTER" -- Gooding */
-                Two:
+            Two:
                 TDIFFM = TIN - TMIN;
                 if (TDIFFM < 0.0)
                 {
@@ -307,7 +307,7 @@ namespace MechJebLib.Lambert
             }
 
             /* "(NOW HAVE A STARTER, SO PROCEED BY HALLEY)" -- Gooding */
-            Five:
+        Five:
             for (int I = 1; I <= 3; I++)
             {
                 (T, DT, D2T, _) = TLAMB(M, Q, QSQFM1, X, 2);
@@ -323,7 +323,7 @@ namespace MechJebLib.Lambert
 
             N   = 2;
             XPL = X;
-            Three:
+        Three:
             /* "(SECOND MULTI-REV STARTER)" */
             (T0, _, _, _) = TLAMB(M, Q, QSQFM1, 0.0, 0);
 
@@ -362,17 +362,17 @@ namespace MechJebLib.Lambert
             Check.Finite(M);
             Check.Finite(N);
 
-            const double SW = 0.4;
-            bool LM1 = N == -1;
-            bool L1 = N >= 1;
-            bool L2 = N >= 2;
-            bool L3 = N == 3;
-            double QSQ = Q * Q;
-            double XSQ = X * X;
-            double U = (1.0 - X) * (1.0 + X);
-            double T = 0.0;
+            const double SW  = 0.4;
+            bool         LM1 = N == -1;
+            bool         L1  = N >= 1;
+            bool         L2  = N >= 2;
+            bool         L3  = N == 3;
+            double       QSQ = Q * Q;
+            double       XSQ = X * X;
+            double       U   = (1.0 - X) * (1.0 + X);
+            double       T   = 0.0;
 
-            double DT = 0.0;
+            double DT  = 0.0;
             double D2T = 0.0;
             double D3T = 0.0;
 
@@ -387,12 +387,12 @@ namespace MechJebLib.Lambert
             if (LM1 || M > 0.0 || X < 0.0 || Abs(U) > SW)
             {
                 /* "DIRECT COMPUTATION (NOT SERIES)" -- Gooding */
-                double Y = Sqrt(Abs(U));
-                double Z = Sqrt(QSQFM1 + QSQ * XSQ);
+                double Y  = Sqrt(Abs(U));
+                double Z  = Sqrt(QSQFM1 + QSQ * XSQ);
                 double QX = Q * X;
 
-                double A = 0.0;
-                double B = 0.0;
+                double A  = 0.0;
+                double B  = 0.0;
                 double AA = 0.0;
                 double BB = 0.0;
 
@@ -445,8 +445,8 @@ namespace MechJebLib.Lambert
                         }
                         else
                         {
-                            double FG1 = F / (G + 1.0);
-                            double TERM = 2.0 * FG1;
+                            double FG1   = F / (G + 1.0);
+                            double TERM  = 2.0 * FG1;
                             double FG1SQ = FG1 * FG1;
                             T = TERM;
                             double TWOI1 = 1.0;
@@ -464,7 +464,7 @@ namespace MechJebLib.Lambert
                     T = 2.0 * (T / Y + B) / U;
                     if (L1 && Z != 0.0)
                     {
-                        double QZ = Q / Z;
+                        double QZ  = Q / Z;
                         double QZ2 = QZ * QZ;
                         QZ *= QZ2;
                         DT =  (3.0 * X * T - 4.0 * (A + QX * QSQFM1) / Z) / U;
@@ -500,9 +500,9 @@ namespace MechJebLib.Lambert
                     U2I = 1.0;
                 if (L3)
                     U3I = 1.0;
-                double TERM = 4.0;
-                double TQ = Q * QSQFM1;
-                int I = 0;
+                double TERM  = 4.0;
+                double TQ    = Q * QSQFM1;
+                int    I     = 0;
                 double TQSUM = 0.0;
                 if (Q < 0.5)
                     TQSUM = 1.0 - Q * QSQ;
@@ -526,7 +526,7 @@ namespace MechJebLib.Lambert
                     TQ    *= QSQ;
                     TQSUM += TQ;
                     TOLD  =  T;
-                    double TTERM = TERM / (2.0 * P + 3.0);
+                    double TTERM  = TERM / (2.0 * P + 3.0);
                     double TQTERM = TTERM * TQSUM;
                     T      -= U0I * ((1.5 * P + 0.25) * TQTERM / (P * P - 0.25) - TTMOLD * TQ);
                     TTMOLD =  TTERM;

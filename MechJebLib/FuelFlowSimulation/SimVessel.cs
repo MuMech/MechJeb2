@@ -10,7 +10,6 @@ using System.Text;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation
 {
@@ -27,21 +26,21 @@ namespace MechJebLib.FuelFlowSimulation
         public readonly List<SimModuleEngines>             ActiveEngines           = new List<SimModuleEngines>(10);
         public readonly List<SimModuleRCS>                 ActiveRcs               = new List<SimModuleRCS>(10);
 
-        public bool   HasLaunchClamp;
-        public int    CurrentStage;
-        private int   _savedStage;
-        public double MainThrottle = 1.0;
-        public double Mass;
-        public V3     ThrustCurrent;
-        public double RcsThrust;
-        public double ThrustMagnitude;
-        public double ThrustNoCosLoss;
-        public double SpoolupCurrent;
-        public double ATMPressure;
-        public double ATMDensity;
-        public double MachNumber;
-        public double T;
-        public V3     R, V, U;
+        public  bool   HasLaunchClamp;
+        public  int    CurrentStage;
+        private int    _savedStage;
+        public  double MainThrottle = 1.0;
+        public  double Mass;
+        public  V3     ThrustCurrent;
+        public  double RcsThrust;
+        public  double ThrustMagnitude;
+        public  double ThrustNoCosLoss;
+        public  double SpoolupCurrent;
+        public  double ATMPressure;
+        public  double ATMDensity;
+        public  double MachNumber;
+        public  double T;
+        public  V3     R, V, U;
 
         // CurrentStage gets scribbled over by the FuelFlowSimulation, SetCurrentStage() is intended to be used in
         // the VesselBuilder and DecouplingAnalyzer to figure out the right value, ResetCurrentStage() is called by
@@ -49,7 +48,7 @@ namespace MechJebLib.FuelFlowSimulation
         public void SetCurrentStage(int stage)
         {
             CurrentStage = stage;
-            _savedStage = stage;
+            _savedStage  = stage;
         }
 
         public void ResetCurrentStage(int stage)

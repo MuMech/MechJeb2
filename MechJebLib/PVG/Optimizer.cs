@@ -16,39 +16,39 @@ namespace MechJebLib.PVG
     {
         public enum OptimStatus { CREATED, BOOTSTRAPPED, SUCCESS, FAILED }
 
-        private readonly List<Vn> _initial = new List<Vn>();
+        private readonly List<Vn>    _initial = new List<Vn>();
         private readonly List<Phase> _phases;
 
-        private readonly Problem _problem;
-        private readonly alglib.minnlcreport _rep = new alglib.minnlcreport();
-        private readonly List<Vn> _residual = new List<Vn>();
+        private readonly Problem                  _problem;
+        private readonly alglib.minnlcreport      _rep      = new alglib.minnlcreport();
+        private readonly List<Vn>                 _residual = new List<Vn>();
         private readonly alglib.ndimensional_fvec _residualHandle;
-        private readonly List<Vn> _terminal = new List<Vn>();
-        private alglib.minnlcstate _state = new alglib.minnlcstate();
+        private readonly List<Vn>                 _terminal = new List<Vn>();
+        private          alglib.minnlcstate       _state    = new alglib.minnlcstate();
 
         private bool _terminating;
 
         private CancellationToken _timeoutToken;
-        public int Iterations;
-        public OptimStatus Status;
-        public double STPMAX = 1e-4;
-        public int TerminationType;
-        public double Znorm;
-        public double ZnormTerminationLevel = 1e-9;
+        public  int               Iterations;
+        public  OptimStatus       Status;
+        public  double            STPMAX = 1e-4;
+        public  int               TerminationType;
+        public  double            Znorm;
+        public  double            ZnormTerminationLevel = 1e-9;
 
         private Optimizer(Problem problem, IEnumerable<Phase> phases)
         {
-            _phases = new List<Phase>(phases);
-            _problem = problem;
+            _phases         = new List<Phase>(phases);
+            _problem        = problem;
             _residualHandle = ResidualFunction;
-            Status = OptimStatus.CREATED;
+            Status          = OptimStatus.CREATED;
         }
 
-        public int MAXITS { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
-        public double EPSX { get; set; } = EPS; // rely more on manual termination at znorm=1e-9
-        public double DIFFSTEP { get; set; } = 1e-9;
-        public int OptimizerTimeout { get; set; } = 5000; // milliseconds
-        private int lastPhase => _phases.Count - 1;
+        public  int    MAXITS           { get; set; } = 200000; // rely more on the optimizertimeout instead of iterations
+        public  double EPSX             { get; set; } = EPS;    // rely more on manual termination at znorm=1e-9
+        public  double DIFFSTEP         { get; set; } = 1e-9;
+        public  int    OptimizerTimeout { get; set; } = 5000; // milliseconds
+        private int    lastPhase        => _phases.Count - 1;
 
         public void Dispose()
         {
@@ -75,7 +75,7 @@ namespace MechJebLib.PVG
         {
             var yfp = OutputLayout.CreateFrom(_terminal[p]);
             var y0p = InputLayout.CreateFrom(_initial[p]);
-            var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
+            var yf  = OutputLayout.CreateFrom(_terminal[lastPhase]);
 
             if (_phases[p].OptimizeTime)
             {
@@ -92,13 +92,13 @@ namespace MechJebLib.PVG
         {
             var y0 = InputLayout.CreateFrom(_initial[0]);
             var yf = OutputLayout.CreateFrom(_terminal[lastPhase]);
-            var z = ResidualLayout.CreateFrom(_residual[0]);
+            var z  = ResidualLayout.CreateFrom(_residual[0]);
 
-            z.R = y0.R - _problem.R0;
-            z.V = y0.V - _problem.V0;
-            z.M = y0.M - _problem.M0;
+            z.R        = y0.R - _problem.R0;
+            z.V        = y0.V - _problem.V0;
+            z.M        = y0.M - _problem.M0;
             z.Terminal = _problem.Terminal.TerminalConstraints(yf);
-            z.Bt = CalcBTConstraint(0);
+            z.Bt       = CalcBTConstraint(0);
             //z.Pm_transversality = yf_scratch[phases.Count - 1].Pm - 1;
             z.CopyTo(_residual[0]);
         }
@@ -109,10 +109,10 @@ namespace MechJebLib.PVG
             {
                 var y0 = InputLayout.CreateFrom(_initial[p]);
                 var yf = OutputLayout.CreateFrom(_terminal[p - 1]);
-                var z = ContinuityLayout.CreateFrom(_residual[p]);
+                var z  = ContinuityLayout.CreateFrom(_residual[p]);
 
-                z.R = yf.R - y0.R;
-                z.V = yf.V - y0.V;
+                z.R  = yf.R - y0.R;
+                z.V  = yf.V - y0.V;
                 z.Pv = yf.PV - y0.PV;
                 z.Pr = yf.PR - y0.PR;
 
@@ -196,10 +196,10 @@ namespace MechJebLib.PVG
             ExpandArrays();
 
             double[] yGuess = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
-            double[] yNew = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
-            double[] z = new double[_phases.Count * ResidualLayout.RESIDUAL_LAYOUT_LEN];
-            double[] bndu = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
-            double[] bndl = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
+            double[] yNew   = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
+            double[] z      = new double[_phases.Count * ResidualLayout.RESIDUAL_LAYOUT_LEN];
+            double[] bndu   = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
+            double[] bndl   = new double[_phases.Count * InputLayout.INPUT_LAYOUT_LEN];
 
             for (int i = 0; i < bndu.Length; i++)
             {
@@ -254,7 +254,7 @@ namespace MechJebLib.PVG
             */
 
             TerminationType = _rep.terminationtype;
-            Iterations = _rep.iterationscount;
+            Iterations      = _rep.iterationscount;
 
             DebugPrint("terminationtype: " + TerminationType);
             DebugPrint("iterations: " + Iterations);
@@ -316,7 +316,7 @@ namespace MechJebLib.PVG
 
             var y0 = new InputLayout();
 
-            double t0 = 0;
+            double t0     = 0;
             double lastDv = 0;
 
             for (int p = 0; p <= lastPhase; p++)
@@ -364,7 +364,7 @@ namespace MechJebLib.PVG
 
             using var integArray = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
 
-            double t0 = 0;
+            double t0     = 0;
             double lastDv = 0;
 
             for (int p = 0; p <= lastPhase; p++)
@@ -375,8 +375,8 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R = _problem.R0;
-                    y0.V = _problem.V0;
+                    y0.R  = _problem.R0;
+                    y0.V  = _problem.V0;
                     y0.PV = pv0;
                     y0.PR = pr0;
                     y0.Bt = phase.bt;
@@ -451,7 +451,7 @@ namespace MechJebLib.PVG
 
             //double tbar = solution.Tbar(_problem.t0);
 
-            double t0 = 0;
+            double t0     = 0;
             double lastDv = 0;
 
             for (int p = 0; p <= lastPhase; p++)
@@ -462,8 +462,8 @@ namespace MechJebLib.PVG
 
                 if (p == 0)
                 {
-                    y0.R = _problem.R0;
-                    y0.V = _problem.V0;
+                    y0.R  = _problem.R0;
+                    y0.V  = _problem.V0;
                     y0.Bt = phase.bt;
                     y0.PV = solution.Pv(_problem.T0);
                     y0.PR = solution.Pr(_problem.T0);

@@ -156,9 +156,9 @@ namespace MechJebLib.FunctionImpls
             double deltaNu = SafeAcos(V3.Dot(r1Hat, vInfHat));
 
             // eccentricity of the hyperbolic ejection orbit
-            double sindnu = Math.Sin(deltaNu);
+            double sindnu  = Math.Sin(deltaNu);
             double sin2dnu = sindnu * sindnu;
-            double cosdnu = Math.Cos(deltaNu);
+            double cosdnu  = Math.Cos(deltaNu);
             double ef = Math.Max(
                 Math.Sqrt(sin2dnu + 2 * k * k + 2 * k * (1 - cosdnu) + sindnu * Math.Sqrt(sin2dnu + 4 * k * (1 - cosdnu))) / (Math.Sqrt(2) * k),
                 1 + EPS);
@@ -189,8 +189,8 @@ namespace MechJebLib.FunctionImpls
             V3 vNeg = Math.Sqrt(mu / p0) * (-Math.Sin(nu10) * rp0Hat + (ecc0 + Math.Cos(nu10)) * vp0Hat);
 
             // compute nu of the reference position on the parking orbit
-            V3 r0Hat = r0 / r0.magnitude;
-            double nu0 = Math.Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat))) * Math.Acos(V3.Dot(rp0Hat, r0Hat));
+            V3     r0Hat = r0 / r0.magnitude;
+            double nu0   = Math.Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat))) * Math.Acos(V3.Dot(rp0Hat, r0Hat));
 
             // mean angular motion of the parking orbit (rad/time)
             double n = 1 / Math.Sqrt(a0 * a0 * a0 / mu);

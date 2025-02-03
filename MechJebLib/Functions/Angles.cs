@@ -45,7 +45,7 @@ namespace MechJebLib.Functions
             Check.NonNegativeFinite(ecc);
 
             double tol = 1.48e-08;
-            double E = E0;
+            double E   = E0;
 
             for (int i = 0; i < 50; i++)
             {
@@ -90,7 +90,7 @@ namespace MechJebLib.Functions
             Check.NonNegativeFinite(ecc);
 
             double tol = 1.48e-08;
-            double F = F0;
+            double F   = F0;
 
             for (int i = 0; i < 50; i++)
             {

@@ -92,7 +92,7 @@ namespace MechJebLib.Primitives
 
             while (lo <= hi)
             {
-                int i = lo + ((hi - lo) >> 1);
+                int i     = lo + ((hi - lo) >> 1);
                 int order = value.CompareTo(_list.Keys[i]);
 
                 if (order == 0)
@@ -237,7 +237,7 @@ namespace MechJebLib.Primitives
 
             hi = ~hi;
 
-            HFrame<T> testKeyframe = _list.Values[hi - 1];
+            HFrame<T> testKeyframe  = _list.Values[hi - 1];
             HFrame<T> testKeyframe2 = _list.Values[hi];
 
             return Interpolant(testKeyframe.Time, testKeyframe.Value, testKeyframe.OutTangent,

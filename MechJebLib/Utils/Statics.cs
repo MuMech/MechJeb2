@@ -179,7 +179,7 @@ namespace MechJebLib.Utils
                 {
                     y *= x;
                     x *= x;
-                    n = (n - 1) / 2;
+                    n =  (n - 1) / 2;
                 }
             }
 
@@ -439,7 +439,7 @@ namespace MechJebLib.Utils
 
         public static double[] GetRow(double[,] array, int row)
         {
-            int cols = array.GetUpperBound(1) + 1;
+            int      cols   = array.GetUpperBound(1) + 1;
             double[] result = new double[cols];
 
             int size = sizeof(double);
@@ -476,8 +476,8 @@ namespace MechJebLib.Utils
 
             int exponent = (int)Floor(Log10(Abs(d) + offset));
 
-            int index = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
-            if (index > 10) index = 10; // there's only 10 SI prefixes
+            int index             = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
+            if (index > 10) index = 10;                                           // there's only 10 SI prefixes
 
             int siExponent = Sign(exponent) * index * 3; // the SI prefix exponent
 
@@ -485,9 +485,9 @@ namespace MechJebLib.Utils
 
             d /= Pow(10, siExponent); // scale d by the SI prefix exponent
 
-            int wholeDigits = d != 0 ? exponent - siExponent + 1 : 1;
+            int wholeDigits      = d != 0 ? exponent - siExponent + 1 : 1;
             int maxDecimalDigits = siExponent - maxPrecision;
-            int decimalDigits = sigFigs - wholeDigits;
+            int decimalDigits    = sigFigs - wholeDigits;
             decimalDigits = decimalDigits > maxDecimalDigits ? maxDecimalDigits : decimalDigits;
             decimalDigits = decimalDigits < 0 ? 0 : decimalDigits;
 
@@ -531,7 +531,7 @@ namespace MechJebLib.Utils
 
         public static void Set(this IList<double> a, int index, V3 v)
         {
-            a[index] = v.x;
+            a[index]     = v.x;
             a[index + 1] = v.y;
             a[index + 2] = v.z;
         }
@@ -540,7 +540,7 @@ namespace MechJebLib.Utils
 
         public static void Set(this double[] a, int index, V3 v)
         {
-            a[index] = v.x;
+            a[index]     = v.x;
             a[index + 1] = v.y;
             a[index + 2] = v.z;
         }

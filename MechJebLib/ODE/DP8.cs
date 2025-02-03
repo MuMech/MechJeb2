@@ -205,17 +205,17 @@ namespace MechJebLib.ODE
 
             for (int i = 0; i < N; i++)
                 Ynew[i] = Y[i] + h * (A1001 * K[1][i] + A1004 * K[4][i] + A1005 * K[5][i] + A1006 * K[6][i] + A1007 * K[7][i] + A1008 * K[8][i] +
-                                      A1009 * K[9][i]);
+                    A1009 * K[9][i]);
             f(Ynew, T + C10 * h, K[10]);
 
             for (int i = 0; i < N; i++)
                 Ynew[i] = Y[i] + h * (A1101 * K[1][i] + A1104 * K[4][i] + A1105 * K[5][i] + A1106 * K[6][i] + A1107 * K[7][i] + A1108 * K[8][i] +
-                                      A1109 * K[9][i] + A1110 * K[10][i]);
+                    A1109 * K[9][i] + A1110 * K[10][i]);
             f(Ynew, T + C11 * h, K[11]);
 
             for (int i = 0; i < N; i++)
                 Ynew[i] = Y[i] + h * (A1201 * K[1][i] + A1204 * K[4][i] + A1205 * K[5][i] + A1206 * K[6][i] + A1207 * K[7][i] + A1208 * K[8][i] +
-                                      A1209 * K[9][i] + A1210 * K[10][i] + A1211 * K[11][i]);
+                    A1209 * K[9][i] + A1210 * K[10][i] + A1211 * K[11][i]);
             f(Ynew, T + h, K[12]);
 
             K[12].CopyTo(Dynew);
@@ -271,7 +271,7 @@ namespace MechJebLib.ODE
             {
                 err3[i] = K[4][i] - K[1][i] * E301 - K[3][i] * E303 - K[9][i] * E309;
                 err5[i] = K[1][i] * E501 + K[6][i] * E506 + K[7][i] * E507 + K[8][i] * E508 + K[9][i] * E509 + K[10][i] * E510 + K[2][i] * E511 +
-                           K[3][i] * E512;
+                    K[3][i] * E512;
             }
 
             double error5 = 0.0, error3 = 0.0;

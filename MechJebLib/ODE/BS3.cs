@@ -20,8 +20,8 @@ namespace MechJebLib.ODE
      */
     public class BS3 : AbstractRungeKutta
     {
-        protected override int Order => 3;
-        protected override int Stages => 3;
+        protected override int Order               => 3;
+        protected override int Stages              => 3;
         protected override int ErrorEstimatorOrder => 2;
 
         protected override void RKStep(IVPFunc f)

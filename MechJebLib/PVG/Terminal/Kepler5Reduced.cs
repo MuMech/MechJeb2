@@ -63,9 +63,9 @@ namespace MechJebLib.PVG.Terminal
             double rf3 = rfm * rfm * rfm;
 
             var hf = V3.Cross(yf.R, yf.V);
-            V3 ef = V3.Cross(yf.V, hf) - yf.R.normalized;
+            V3  ef = V3.Cross(yf.V, hf) - yf.R.normalized;
 
-            V3 hmiss = hf - _hT;
+            V3     hmiss  = hf - _hT;
             double emiss1 = _e1 - V3.Dot(ef, _ehat1);
             double emiss2 = _e2 - V3.Dot(ef, _ehat2);
 

@@ -33,7 +33,7 @@ namespace MechJebLib.PVG.Terminal
         {
             var hf = V3.Cross(yf.R, yf.V);
 
-            var n = new V3(0, 0, 1);
+            var n  = new V3(0, 0, 1);
             var rn = V3.Cross(yf.R, n);
             var vn = V3.Cross(yf.V, n);
 
@@ -42,7 +42,7 @@ namespace MechJebLib.PVG.Terminal
             double con3 = V3.Dot(yf.R.normalized, yf.V.normalized) - Math.Sin(_gammaT);
 
             double tv1 = V3.Dot(yf.V, yf.PR) * yf.R.sqrMagnitude - V3.Dot(yf.R, yf.PV) * yf.V.sqrMagnitude +
-                         V3.Dot(yf.R, yf.V) * (yf.V.sqrMagnitude - V3.Dot(yf.R, yf.PR));
+                V3.Dot(yf.R, yf.V) * (yf.V.sqrMagnitude - V3.Dot(yf.R, yf.PR));
             double tv2 = V3.Dot(yf.V, yf.PV) - yf.V.sqrMagnitude;
             double tv3 = V3.Dot(hf, yf.PR) * V3.Dot(hf, rn) + V3.Dot(hf, yf.PV) * V3.Dot(hf, vn);
 

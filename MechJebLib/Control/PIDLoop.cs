@@ -16,21 +16,21 @@ namespace MechJebLib.Control
 
         // internal state for last measured and last output for low pass filters
         private double _y1 = double.NaN;
-        public double Kp { get; set; } = 1.0;
-        public double Ki { get; set; }
-        public double Kd { get; set; }
-        public double H { get; set; } = 0.02;
-        public double N { get; set; } = 50; // N = (4/Ts) * (1 - e^(-Ts/(2*Tf))) (trapezoidal discretization)
-        public double B { get; set; } = 1;
-        public double C { get; set; } = 1;
-        public double SmoothIn { get; set; } = 1.0;
-        public double SmoothOut { get; set; } = 1.0;
-        public double ProportionalDeadband { get; set; }
-        public double IntegralDeadband { get; set; }
-        public double DerivativeDeadband { get; set; }
-        public double OutputDeadband { get; set; }
-        public double MinOutput { get; set; } = double.MinValue;
-        public double MaxOutput { get; set; } = double.MaxValue;
+        public  double Kp                   { get; set; } = 1.0;
+        public  double Ki                   { get; set; }
+        public  double Kd                   { get; set; }
+        public  double H                    { get; set; } = 0.02;
+        public  double N                    { get; set; } = 50; // N = (4/Ts) * (1 - e^(-Ts/(2*Tf))) (trapezoidal discretization)
+        public  double B                    { get; set; } = 1;
+        public  double C                    { get; set; } = 1;
+        public  double SmoothIn             { get; set; } = 1.0;
+        public  double SmoothOut            { get; set; } = 1.0;
+        public  double ProportionalDeadband { get; set; }
+        public  double IntegralDeadband     { get; set; }
+        public  double DerivativeDeadband   { get; set; }
+        public  double OutputDeadband       { get; set; }
+        public  double MinOutput            { get; set; } = double.MinValue;
+        public  double MaxOutput            { get; set; } = double.MaxValue;
 
         /// <summary>
         /// </summary>
@@ -51,10 +51,10 @@ namespace MechJebLib.Control
             double a1 = -8 / a0;
             double a2 = (-2 * N * H + 4) / a0;
             double b0 = (4 * Kp * ep + 4 * Kd * ed * N + 2 * Ki * ei * H + 2 * Kp * ep * N * H + Ki * ei * N * H * H) /
-                        a0;
+                a0;
             double b1 = (2 * Ki * ei * N * H * H - 8 * Kp * ep - 8 * Kd * ed * N) / a0;
             double b2 = (4 * Kp * ep + 4 * Kd * ed * N - 2 * Ki * ei * H - 2 * Kp * ep * N * H + Ki * ei * N * H * H) /
-                        a0;
+                a0;
 
             // if we have NaN values saved into internal state that needs to be cleared here or it won't reset
             if (!IsFinite(_d1))

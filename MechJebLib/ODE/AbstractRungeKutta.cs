@@ -17,15 +17,15 @@ namespace MechJebLib.ODE
     {
         private const double MAX_FACTOR = 10;
         private const double MIN_FACTOR = 0.2;
-        private const double SAFETY = 0.9;
+        private const double SAFETY     = 0.9;
 
         protected readonly List<Vn> K = new List<Vn>();
 
-        private double _beta = 0.2;
+        private double _beta          = 0.2;
         private double _lastErrorNorm = 1e-4;
 
-        protected abstract int Order { get; }
-        protected abstract int Stages { get; }
+        protected abstract int Order               { get; }
+        protected abstract int Stages              { get; }
         protected abstract int ErrorEstimatorOrder { get; }
 
         public double Beta
@@ -97,8 +97,8 @@ namespace MechJebLib.ODE
             if (MaxStep == MinStep)
                 return MinStep;
 
-            using Vn y = Vn.Rent(N).CopyFrom(y0);
-            using Vn f0 = Vn.Rent(N).CopyFrom(dy);
+            using Vn y     = Vn.Rent(N).CopyFrom(y0);
+            using Vn f0    = Vn.Rent(N).CopyFrom(dy);
             using Vn scale = y.Abs().MutTimes(Rtol).MutAdd(Atol);
 
             double d0 = y.magnitude / scale.magnitude;

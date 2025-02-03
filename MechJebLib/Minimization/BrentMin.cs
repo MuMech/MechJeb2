@@ -28,17 +28,17 @@ namespace MechJebLib.Minimization
         public static (double x, double fx) Solve(Func<double, object?, double> f, double xmin, double xmax, object? o = null, double rtol = 1e-9,
             int maxiter = 50)
         {
-            double c = 0.5 * (3.0 - Sqrt(5.0)); //  C is the square of the inverse of the golden ratio.
-            double d = 0;
-            double e = 0.0;
+            double c   = 0.5 * (3.0 - Sqrt(5.0)); //  C is the square of the inverse of the golden ratio.
+            double d   = 0;
+            double e   = 0.0;
             double eps = Sqrt(EPS);
-            double sa = xmin;
-            double sb = xmax;
+            double sa  = xmin;
+            double sb  = xmax;
 
             double x = sa + c * (xmax - xmin);
 
-            double w = x;
-            double v = w;
+            double w  = x;
+            double v  = w;
             double fx = f(x, o);
             double fw = fx;
             double fv = fw;
@@ -47,8 +47,8 @@ namespace MechJebLib.Minimization
 
             while (true)
             {
-                double m = 0.5 * (sa + sb);
-                double t = eps * Abs(x) + rtol;
+                double m  = 0.5 * (sa + sb);
+                double t  = eps * Abs(x) + rtol;
                 double t2 = 2.0 * t;
                 //
                 //  Check the stopping criterion.

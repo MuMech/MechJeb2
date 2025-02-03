@@ -31,8 +31,8 @@ namespace MechJebLib.Primitives
 
         public static Scale Create(double mu, double r0, double m0 = 1.0)
         {
-            double massScale = m0;
-            double lengthScale = r0;
+            double massScale     = m0;
+            double lengthScale   = r0;
             double velocityScale = Sqrt(mu / lengthScale);
             return new Scale(lengthScale, velocityScale, massScale);
         }

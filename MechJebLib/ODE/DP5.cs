@@ -157,8 +157,8 @@ namespace MechJebLib.ODE
         // https://doi.org/10.1016/0898-1221(86)90025-8
         protected override void Interpolate(double x, Vn yout)
         {
-            double h = Habs * Direction;
-            double s = (x - T) / h;
+            double h  = Habs * Direction;
+            double s  = (x - T) / h;
             double s2 = s * s;
             double s3 = s * s2;
             double s4 = s2 * s2;
