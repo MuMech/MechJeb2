@@ -143,8 +143,8 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void EqualityTest1()
         {
-            var one = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var one  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var two  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             var nan1 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
             var nan2 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
 
@@ -158,8 +158,8 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void InequalityTest1()
         {
-            var one = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var one  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var two  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             var nan1 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
             var nan2 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
 
@@ -173,8 +173,8 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void EqualityTest2()
         {
-            var one = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var one  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var two  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             var nan1 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
             var nan2 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
 
@@ -254,8 +254,8 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void RotateTest()
         {
-            var one = Q3.AngleAxis(Deg2Rad(30), new V3(1, 0, 0));
-            var two = Q3.AngleAxis(Deg2Rad(45), new V3(0, 1, 0));
+            var one   = Q3.AngleAxis(Deg2Rad(30), new V3(1, 0, 0));
+            var two   = Q3.AngleAxis(Deg2Rad(45), new V3(0, 1, 0));
             var three = Q3.AngleAxis(Deg2Rad(60), new V3(0, 0, 1));
             var five = new M3(1, 0, 0,
                 0, Cos(Deg2Rad(30)), -Sin(Deg2Rad(30)),

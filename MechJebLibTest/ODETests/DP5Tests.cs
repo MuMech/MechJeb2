@@ -9,10 +9,8 @@ using MechJebLib.Functions;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using MechJebLibTest.PVGTests.AscentTests;
 using Xunit;
 using Xunit.Abstractions;
-using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.ODETests
@@ -55,8 +53,8 @@ namespace MechJebLibTest.ODETests
 
             for (int n = 0; n < NTRIALS; n++)
             {
-                double k = 2 * random.NextDouble() + 1;
-                double m = 2 * random.NextDouble() + 1;
+                double k  = 2 * random.NextDouble() + 1;
+                double m  = 2 * random.NextDouble() + 1;
                 double x0 = 4 * random.NextDouble() - 2;
                 double v0 = 4 * random.NextDouble() - 2;
 
@@ -67,16 +65,16 @@ namespace MechJebLibTest.ODETests
                 int count2 = random.Next(5, 40);
 
                 var solver = new DP5 { Interpnum = count1, Rtol = 1e-9, Atol = 0, Maxiter = 2000 };
-                var ode = new SimpleOscillator(k, m);
-                var f = new Action<IList<double>, double, IList<double>>(ode.dydt);
+                var ode    = new SimpleOscillator(k, m);
+                var f      = new Action<IList<double>, double, IList<double>>(ode.dydt);
 
                 using var y0 = Vn.Rent(2);
                 y0[0] = x0;
                 y0[1] = v0;
-                using var yf = Vn.Rent(2);
-                double omega = Sqrt(k / m);
+                using var yf    = Vn.Rent(2);
+                double    omega = Sqrt(k / m);
 
-                double dt = (tf - t0) / count1;
+                double dt  = (tf - t0) / count1;
                 double dt2 = (tf - t0) / count2;
 
                 double[] expected = new double[count1 + 1];
@@ -108,7 +106,7 @@ namespace MechJebLibTest.ODETests
 
                     for (int i = 0; i <= count1; i++)
                     {
-                        double t = t0 + dt * i;
+                        double   t = t0 + dt * i;
                         using Vn y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected[i], 4e-6);
@@ -116,7 +114,7 @@ namespace MechJebLibTest.ODETests
 
                     for (int i = 0; i <= count2; i++)
                     {
-                        double t = t0 + dt2 * i;
+                        double   t = t0 + dt2 * i;
                         using Vn y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected2[i], 2e-2);
@@ -131,7 +129,7 @@ namespace MechJebLibTest.ODETests
 
                     for (int i = 0; i <= count1; i++)
                     {
-                        double t = t0 + dt * i;
+                        double   t = t0 + dt * i;
                         using Vn y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected[i], 4e-6);
@@ -139,7 +137,7 @@ namespace MechJebLibTest.ODETests
 
                     for (int i = 0; i <= count2; i++)
                     {
-                        double t = t0 + dt2 * i;
+                        double   t = t0 + dt2 * i;
                         using Vn y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected2[i], 2e-2);
@@ -160,7 +158,7 @@ namespace MechJebLibTest.ODETests
                 var v = new V3(yin[3], yin[4], yin[5]);
 
                 double rm2 = r.sqrMagnitude;
-                double rm = Sqrt(rm2);
+                double rm  = Sqrt(rm2);
                 double rm3 = rm2 * rm;
 
                 V3 dr = v;
@@ -181,7 +179,7 @@ namespace MechJebLibTest.ODETests
         [Fact]
         public void AltitudeEventTest()
         {
-            var ode = new VacuumKernel();
+            var ode    = new VacuumKernel();
             var solver = new DP5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 2000 };
 
             var r0 = new V3(1, 0, 0);
@@ -216,7 +214,7 @@ namespace MechJebLibTest.ODETests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var ode = new Asymptotic();
+            var ode    = new Asymptotic();
             var solver = new DP5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 0 };
 
             double[] y0 = new double[2];

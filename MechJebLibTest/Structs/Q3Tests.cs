@@ -51,8 +51,8 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void AngleAxisTests2()
         {
-            var one = Q3.AngleAxis(Deg2Rad(30), new V3(1, 0, 0));
-            var two = new V3(1, 1, 1);
+            var one   = Q3.AngleAxis(Deg2Rad(30), new V3(1, 0, 0));
+            var two   = new V3(1, 1, 1);
             var three = new V3(1, 0.36602540379, 1.36602540377);
 
             (one * two).ShouldEqual(three, 1e-11);

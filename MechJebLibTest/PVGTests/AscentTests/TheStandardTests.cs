@@ -25,15 +25,15 @@ namespace MechJebLibTest.PVGTests.AscentTests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
-            var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
-            var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
-            double t0 = 661803.431918959;
-            double mu = 3.986004418e+14;
+            var    r0    = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
+            var    v0    = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
+            var    u0    = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
+            double t0    = 661803.431918959;
+            double mu    = 3.986004418e+14;
             double rbody = 6.371e+6;
 
-            double PeR = 6.371e+6 + 185e+3;
-            double ApR = 6.371e+6 + 10e+6;
+            double PeR  = 6.371e+6 + 185e+3;
+            double ApR  = 6.371e+6 + 10e+6;
             double incT = Deg2Rad(28.608);
 
             Ascent ascent = Ascent.Builder()
@@ -69,8 +69,8 @@ namespace MechJebLibTest.PVGTests.AscentTests
                 .Build();
 
             ascent2.Run();
-            Optimizer pvg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimzer");
-            Solution solution2 = pvg2.GetSolution();
+            Optimizer pvg2      = ascent2.GetOptimizer() ?? throw new Exception("null optimzer");
+            Solution  solution2 = pvg2.GetSolution();
 
             pvg2.Znorm.ShouldBeZero(1e-9);
             solution2.Vgo(t0).ShouldEqual(9672.0452475169841, 1e-7);
@@ -90,8 +90,8 @@ namespace MechJebLibTest.PVGTests.AscentTests
                 .Build();
 
             ascent3.Run();
-            Optimizer pvg3 = ascent3.GetOptimizer() ?? throw new Exception("null optimzer");
-            Solution solution3 = pvg3.GetSolution();
+            Optimizer pvg3      = ascent3.GetOptimizer() ?? throw new Exception("null optimzer");
+            Solution  solution3 = pvg3.GetSolution();
 
             pvg3.Znorm.ShouldBeZero(1e-9);
             solution3.Vgo(t0).ShouldEqual(9672.0452337699862, 1e-7);
@@ -132,20 +132,20 @@ namespace MechJebLibTest.PVGTests.AscentTests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
-            var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
-            var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
-            double t0 = 661803.431918959;
-            double mu = 3.986004418e+14;
+            var    r0    = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
+            var    v0    = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
+            var    u0    = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
+            double t0    = 661803.431918959;
+            double mu    = 3.986004418e+14;
             double rbody = 6.371e+6;
 
-            double PeR = 6.371e+6 + 185e+3;
-            double ApR = 6.371e+6 + 10e+6;
+            double PeR  = 6.371e+6 + 185e+3;
+            double ApR  = 6.371e+6 + 10e+6;
             double incT = Deg2Rad(28.608);
 
             const double OPTIMUMVGO = 9670.9023790445626;
             const double SHORTERVGO = 9670.9046199679851;
-            const double LONGERVGO = 9670.9046061314057;
+            const double LONGERVGO  = 9670.9046061314057;
 
             Ascent ascent = Ascent.Builder()
                 .Initial(r0, v0, u0, t0, mu, rbody)
@@ -202,8 +202,8 @@ namespace MechJebLibTest.PVGTests.AscentTests
                 .Build();
 
             ascent2.Run();
-            Optimizer pvg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimzer");
-            Solution solution2 = pvg2.GetSolution();
+            Optimizer pvg2      = ascent2.GetOptimizer() ?? throw new Exception("null optimzer");
+            Solution  solution2 = pvg2.GetSolution();
 
             solution2.Vgo(t0).ShouldEqual(SHORTERVGO, 1e-7);
 
@@ -222,8 +222,8 @@ namespace MechJebLibTest.PVGTests.AscentTests
                 .Build();
 
             ascent3.Run();
-            Optimizer pvg3 = ascent3.GetOptimizer() ?? throw new Exception("null optimzer");
-            Solution solution3 = pvg3.GetSolution();
+            Optimizer pvg3      = ascent3.GetOptimizer() ?? throw new Exception("null optimzer");
+            Solution  solution3 = pvg3.GetSolution();
 
             solution3.Vgo(t0).ShouldEqual(LONGERVGO, 1e-7);
 
@@ -239,20 +239,20 @@ namespace MechJebLibTest.PVGTests.AscentTests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
-            var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
-            var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
-            double t0 = 661803.431918959;
-            double mu = 3.986004418e+14;
+            var    r0    = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
+            var    v0    = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
+            var    u0    = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
+            double t0    = 661803.431918959;
+            double mu    = 3.986004418e+14;
             double rbody = 6.371e+6;
 
-            double PeR = 6.371e+6 + 185e+3;
-            double ApR = 6.371e+6 + 10e+6;
+            double PeR  = 6.371e+6 + 185e+3;
+            double ApR  = 6.371e+6 + 10e+6;
             double incT = Deg2Rad(28.608);
 
             const double OPTIMUMVGO = 9673.8952123189683;
             const double SHORTERVGO = 9673.9039952312651;
-            const double LONGERVGO = 9673.8923774194827;
+            const double LONGERVGO  = 9673.8923774194827;
 
             Ascent ascent = Ascent.Builder()
                 .Initial(r0, v0, u0, t0, mu, rbody)
@@ -310,8 +310,8 @@ namespace MechJebLibTest.PVGTests.AscentTests
                 .Build();
 
             ascent2.Run();
-            Optimizer pvg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimzer");
-            Solution solution2 = pvg2.GetSolution();
+            Optimizer pvg2      = ascent2.GetOptimizer() ?? throw new Exception("null optimzer");
+            Solution  solution2 = pvg2.GetSolution();
 
             solution2.Vgo(t0).ShouldEqual(SHORTERVGO, 1e-7);
 
@@ -330,8 +330,8 @@ namespace MechJebLibTest.PVGTests.AscentTests
                 .Build();
 
             ascent3.Run();
-            Optimizer pvg3 = ascent3.GetOptimizer() ?? throw new Exception("null optimzer");
-            Solution solution3 = pvg3.GetSolution();
+            Optimizer pvg3      = ascent3.GetOptimizer() ?? throw new Exception("null optimzer");
+            Solution  solution3 = pvg3.GetSolution();
 
             solution3.Vgo(t0).ShouldEqual(LONGERVGO, 1e-7);
 

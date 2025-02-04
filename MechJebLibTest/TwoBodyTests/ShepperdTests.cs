@@ -34,8 +34,8 @@ namespace MechJebLibTest.TwoBodyTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 40 * random.NextDouble() - 20;
 
                 // XXX: this probably needs a test to reject random orbits that are near-parabolic.  See the
@@ -47,7 +47,7 @@ namespace MechJebLibTest.TwoBodyTests
                 if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
                 {
                     _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rp + " vf2:" +
-                                                vp + "\n");
+                        vp + "\n");
                 }
 
                 if ((rp - r0).magnitude / r0.magnitude > 1e-8 || (vp - v0).magnitude / v0.magnitude > 1e-8)
@@ -69,8 +69,8 @@ namespace MechJebLibTest.TwoBodyTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 40 * random.NextDouble() - 20;
 
                 // XXX: this probably needs a test to reject random orbits that are near-parabolic.  See the
@@ -82,7 +82,7 @@ namespace MechJebLibTest.TwoBodyTests
                 if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
                 {
                     _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rp + " vf2:" +
-                                                vp + "\n");
+                        vp + "\n");
                 }
 
                 if ((rp - r0).magnitude / r0.magnitude > 1e-8 || (vp - v0).magnitude / v0.magnitude > 1e-8)
@@ -107,7 +107,7 @@ namespace MechJebLibTest.TwoBodyTests
                 var v = new V3(yin[3], yin[4], yin[5]);
 
                 double rm2 = r.sqrMagnitude;
-                double rm = Sqrt(rm2);
+                double rm  = Sqrt(rm2);
                 double rm3 = rm2 * rm;
 
                 V3 dr = v;
@@ -131,8 +131,8 @@ namespace MechJebLibTest.TwoBodyTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 10 * random.NextDouble() - 5;
 
                 (double _, double ecc, double _, double _, double _, double _, double l) =
@@ -174,8 +174,8 @@ namespace MechJebLibTest.TwoBodyTests
                 if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
                 {
                     _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
-                                                rf2 + " vf2:" +
-                                                vf2 + "\n");
+                        rf2 + " vf2:" +
+                        vf2 + "\n");
                 }
 
                 rf.ShouldEqual(rf2, 1e-5);
@@ -199,8 +199,8 @@ namespace MechJebLibTest.TwoBodyTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 10 * random.NextDouble() - 5;
 
                 (double _, double ecc, double _, double _, double _, double _, double l) =
@@ -242,8 +242,8 @@ namespace MechJebLibTest.TwoBodyTests
                 if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
                 {
                     _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
-                                                rf2 + " vf2:" +
-                                                vf2 + "\n");
+                        rf2 + " vf2:" +
+                        vf2 + "\n");
                 }
 
                 rf.ShouldEqual(rf2, 1e-5);
@@ -257,7 +257,14 @@ namespace MechJebLibTest.TwoBodyTests
         [Fact]
         private void RandomComparedToDP8()
         {
-            var solver = new DP8 { Atol = 1e-6, Rtol = 1e-4, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000000 };
+            var solver = new DP8
+            {
+                Atol           = 1e-6,
+                Rtol           = 1e-4,
+                Hmin           = EPS,
+                ThrowOnMaxIter = true,
+                Maxiter        = 2000000
+            };
 
             const int NTRIALS = 500;
 
@@ -267,8 +274,8 @@ namespace MechJebLibTest.TwoBodyTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 10 * random.NextDouble() - 5;
 
                 (double sma, double ecc, double inc, double lan, double argp, double nu, double l) =
@@ -312,8 +319,8 @@ namespace MechJebLibTest.TwoBodyTests
                 if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
                 {
                     _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
-                                                rf2 + " vf2:" +
-                                                vf2 + "\n");
+                        rf2 + " vf2:" +
+                        vf2 + "\n");
                 }
 
                 rf.ShouldEqual(rf2, 1e-5);

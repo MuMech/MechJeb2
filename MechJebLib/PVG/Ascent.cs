@@ -55,8 +55,8 @@ namespace MechJebLib.PVG
             (_smaT, _eccT) = Astro.SmaEccFromApsides(_peR, _apR);
 
             using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
-                                                                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
-                                                                .TerminalConditions(_hT);
+                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
+                .TerminalConditions(_hT);
 
             if (_solution == null)
             {
@@ -75,8 +75,8 @@ namespace MechJebLib.PVG
             (_smaT, _eccT) = Astro.SmaEccFromApsides(_peR, _apR);
 
             using Optimizer.OptimizerBuilder builder = Optimizer.Builder()
-                                                                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
-                                                                .TerminalConditions(_hT);
+                .Initial(_r0, _v0, _u0, _t0, _mu, _rbody)
+                .TerminalConditions(_hT);
 
             ForceNumericalIntegration();
 

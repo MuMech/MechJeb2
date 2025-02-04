@@ -29,8 +29,8 @@ namespace MechJebLibTest.LambertTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt;
                 double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
 
@@ -59,8 +59,8 @@ namespace MechJebLibTest.LambertTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt;
                 double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
 
@@ -129,11 +129,11 @@ namespace MechJebLibTest.LambertTests
 
                         (_, VR11, VT11, VR12, VT12, _, _, _, _) =
                             Gooding.VLAMB(1.0, rlist[n1], rlist[n2], flist[n2] - flist[n1], tlist[n2] - tlist[n1]);
-                        double vi = Sqrt(VR11 * VR11 + VT11 * VT11);
-                        double vf = Sqrt(VR12 * VR12 + VT12 * VT12);
+                        double vi    = Sqrt(VR11 * VR11 + VT11 * VT11);
+                        double vf    = Sqrt(VR12 * VR12 + VT12 * VT12);
                         double diff1 = vlist[n1] - vi;
                         double diff2 = vlist[n2] - vf;
-                        double diff = Sqrt(diff1 * diff1 + diff2 * diff2);
+                        double diff  = Sqrt(diff1 * diff1 + diff2 * diff2);
                         if (diff > diffmax)
                         {
                             diffmax = diff;

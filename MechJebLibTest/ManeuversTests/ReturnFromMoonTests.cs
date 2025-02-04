@@ -29,14 +29,14 @@ namespace MechJebLibTest.ManeuversTests
             var solver = new ReturnFromMoon();
 
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            const double CENTRAL_MU = 398600435436096;
-            const double MOON_MU = 4902800066163.8;
-            var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
-            var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
-            const double MOON_SOI = 66167158.6569544;
-            const double MOON_SURFACE = 3474 * 1000; // 3,474 km
-            const double PER = 6.3781e6 + 60000;     // PeA = 60 km
-            var random = new Random();
+            const double CENTRAL_MU   = 398600435436096;
+            const double MOON_MU      = 4902800066163.8;
+            var          moonR0       = new V3(325420116.073166, -166367503.579338, -138858150.96145);
+            var          moonV0       = new V3(577.012296778094, 761.848508254181, 297.464594270612);
+            const double MOON_SOI     = 66167158.6569544;
+            const double MOON_SURFACE = 3474 * 1000;      // 3,474 km
+            const double PER          = 6.3781e6 + 60000; // PeA = 60 km
+            var          random       = new Random();
 
             // this test does randomly fail
             for (int i = 0; i < 1; i++)
@@ -46,12 +46,12 @@ namespace MechJebLibTest.ManeuversTests
                 double apr = (MOON_SOI * 0.6 - MOON_SURFACE) * random.NextDouble() + MOON_SURFACE;
                 if (per > apr)
                     (per, apr) = (apr, per);
-                double l = 1 / (0.5 * (1 / apr + 1 / per));
-                double ecc = (apr - per) / (apr + per);
-                double inc = PI * random.NextDouble();
-                double lan = TAU * random.NextDouble();
+                double l    = 1 / (0.5 * (1 / apr + 1 / per));
+                double ecc  = (apr - per) / (apr + per);
+                double inc  = PI * random.NextDouble();
+                double lan  = TAU * random.NextDouble();
                 double argp = TAU * random.NextDouble();
-                double nu = TAU * random.NextDouble();
+                double nu   = TAU * random.NextDouble();
 
                 (V3 r0, V3 v0) = Astro.StateVectorsFromKeplerian(MOON_MU, l, ecc, inc, lan, argp, nu);
 
@@ -84,10 +84,10 @@ namespace MechJebLibTest.ManeuversTests
 
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             const double CENTRAL_MU = 398600435436096;
-            const double MOON_MU = 4902800066163.8;
-            var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
-            var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
-            const double MOON_SOI = 66167158.6569544;
+            const double MOON_MU    = 4902800066163.8;
+            var          moonR0     = new V3(325420116.073166, -166367503.579338, -138858150.96145);
+            var          moonV0     = new V3(577.012296778094, 761.848508254181, 297.464594270612);
+            const double MOON_SOI   = 66167158.6569544;
 
             // this is a pretty reasonable circular equatorial lunar orbit
             var r0 = new V3(4198676.73768844, 5187520.71497923, -3.29371833446352);
@@ -133,10 +133,10 @@ namespace MechJebLibTest.ManeuversTests
 
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             const double CENTRAL_MU = 398600435436096;
-            const double MOON_MU = 4902800066163.8;
-            var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
-            var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
-            const double MOON_SOI = 66167158.6569544;
+            const double MOON_MU    = 4902800066163.8;
+            var          moonR0     = new V3(325420116.073166, -166367503.579338, -138858150.96145);
+            var          moonV0     = new V3(577.012296778094, 761.848508254181, 297.464594270612);
+            const double MOON_SOI   = 66167158.6569544;
 
             var r0 = new V3(rx, ry, rz);
             var v0 = new V3(vx, vy, vz);

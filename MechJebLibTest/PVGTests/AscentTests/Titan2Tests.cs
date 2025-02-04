@@ -29,14 +29,14 @@ namespace MechJebLibTest.PVGTests.AscentTests
         public void FlightPathAngle4AllRocket()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
-            var v0 = new V3(0, 407.862893197274, 0);
-            double t0 = 0;
-            double PeR = 6.371e+6 + 185e+3;
-            double ApR = 6.371e+6 + 4306022;
+            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
+            var    v0    = new V3(0, 407.862893197274, 0);
+            double t0    = 0;
+            double PeR   = 6.371e+6 + 185e+3;
+            double ApR   = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT = Deg2Rad(28.608);
-            double mu = 3.986004418e+14;
+            double incT  = Deg2Rad(28.608);
+            double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                 .AddStageUsingThrust(153180, 2194400, 296, 156, 4, 4)
@@ -79,14 +79,14 @@ namespace MechJebLibTest.PVGTests.AscentTests
         public void Kepler3()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
-            var v0 = new V3(0, 407.862893197274, 0);
-            double t0 = 0;
-            double PeR = 6.371e+6 + 185e+3;
-            double ApR = 6.371e+6 + 4306022;
+            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
+            var    v0    = new V3(0, 407.862893197274, 0);
+            double t0    = 0;
+            double PeR   = 6.371e+6 + 185e+3;
+            double ApR   = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT = Deg2Rad(28.608);
-            double mu = 3.986004418e+14;
+            double incT  = Deg2Rad(28.608);
+            double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                 .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4, 4)
@@ -129,14 +129,14 @@ namespace MechJebLibTest.PVGTests.AscentTests
         public void Kepler3ExtremeElliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
-            var v0 = new V3(0, 407.862893197274, 0);
-            double t0 = 0;
-            double PeR = 6.371e+6 + 1.130e+6;
-            double ApR = 6.371e+6 + 1.132e+6;
+            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
+            var    v0    = new V3(0, 407.862893197274, 0);
+            double t0    = 0;
+            double PeR   = 6.371e+6 + 1.130e+6;
+            double ApR   = 6.371e+6 + 1.132e+6;
             double rbody = 6.371e+6;
-            double incT = Deg2Rad(28.608);
-            double mu = 3.986004418e+14;
+            double incT  = Deg2Rad(28.608);
+            double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                 .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4, 4)
@@ -186,14 +186,14 @@ namespace MechJebLibTest.PVGTests.AscentTests
         public void CircularTest()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
-            var v0 = new V3(0, 407.862893197274, 0);
-            double t0 = 0;
-            double PeR = 6.371e+6 + 185e+3;
-            double ApR = 6.371e+6 + 185e+3;
+            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
+            var    v0    = new V3(0, 407.862893197274, 0);
+            double t0    = 0;
+            double PeR   = 6.371e+6 + 185e+3;
+            double ApR   = 6.371e+6 + 185e+3;
             double rbody = 6.371e+6;
-            double incT = Deg2Rad(28.608);
-            double mu = 3.986004418e+14;
+            double incT  = Deg2Rad(28.608);
+            double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                 .AddStageUsingThrust(157355.487476332, 2340000, 301.817977905273, 148.102380138703, 4, 4)

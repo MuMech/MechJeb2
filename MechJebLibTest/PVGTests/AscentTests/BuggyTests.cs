@@ -24,11 +24,11 @@ namespace MechJebLibTest.PVGTests.AscentTests
         public void SubOrbitalThor()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var r0 = new V3(1470817.12150277, -5396417.72296515, 3050610.07863681);
-            var v0 = new V3(393.513790634158, 107.250777770179, 0.00161788515083675);
-            var u0 = new V3(0.23076841882078, -0.846631607518583, 0.47954249382019);
-            double t0 = 666733.571923551;
-            double mu = 398600435436096;
+            var    r0    = new V3(1470817.12150277, -5396417.72296515, 3050610.07863681);
+            var    v0    = new V3(393.513790634158, 107.250777770179, 0.00161788515083675);
+            var    u0    = new V3(0.23076841882078, -0.846631607518583, 0.47954249382019);
+            double t0    = 666733.571923551;
+            double mu    = 398600435436096;
             double rbody = 6371000;
 
             //double PeR = 6.371e+6 + 185e+3;
@@ -80,11 +80,11 @@ namespace MechJebLibTest.PVGTests.AscentTests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var r0 = new V3(5591854.96465599, 126079.439022067, 3050616.55737457);
-            var v0 = new V3(-9.1936944030452, 407.764494724287, 0.000353003400966649);
-            var u0 = new V3(0.877712545724556, 0.0197197822130759, 0.478781640529633);
-            double t0 = 81786.024077168;
-            double mu = 398600435436096;
+            var    r0    = new V3(5591854.96465599, 126079.439022067, 3050616.55737457);
+            var    v0    = new V3(-9.1936944030452, 407.764494724287, 0.000353003400966649);
+            var    u0    = new V3(0.877712545724556, 0.0197197822130759, 0.478781640529633);
+            double t0    = 81786.024077168;
+            double mu    = 398600435436096;
             double rbody = 6371000;
 
             double decmass = 2403; // can be decreased to add more payload
@@ -112,11 +112,11 @@ namespace MechJebLibTest.PVGTests.AscentTests
         private void BiggerEarlyRocketMaybe()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var r0 = new V3(-4230937.57027061, -3658393.88789034, 3050613.04457008);
-            var v0 = new V3(266.772640873606, -308.526291373473, 0.00117499917444357);
-            var u0 = new V3(-0.664193346276844, -0.574214958863673, 0.478669494390488);
-            double t0 = 134391.70903729;
-            double mu = 398600435436096;
+            var    r0    = new V3(-4230937.57027061, -3658393.88789034, 3050613.04457008);
+            var    v0    = new V3(266.772640873606, -308.526291373473, 0.00117499917444357);
+            var    u0    = new V3(-0.664193346276844, -0.574214958863673, 0.478669494390488);
+            double t0    = 134391.70903729;
+            double mu    = 398600435436096;
             double rbody = 6371000;
 
             Ascent ascent = Ascent.Builder()
