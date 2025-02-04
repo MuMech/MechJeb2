@@ -62,11 +62,11 @@ namespace MechJebLibTest.MathsTests
         [Fact]
         public void KeplerianFromStateVectorsTest1()
         {
-            double smaEx = 3.843084377707066e+08;
-            double eccEx = 5.328149353682574e-02;
-            double incEx = 4.950221141769940e-01;
-            double argpEx = 3.486541150390846e+00;
-            double lanEx = 4.008351366616158e-02;
+            double smaEx   = 3.843084377707066e+08;
+            double eccEx   = 5.328149353682574e-02;
+            double incEx   = 4.950221141769940e-01;
+            double argpEx  = 3.486541150390846e+00;
+            double lanEx   = 4.008351366616158e-02;
             double tanomEx = 7.853981633974483e-01;
             var r = new V3(
                 -1.455451021873417e+08,
@@ -254,15 +254,15 @@ namespace MechJebLibTest.MathsTests
         [Fact]
         public void TimeToNextRadiusTest()
         {
-            const double mu = 3.986004418e+14;
+            const double mu     = 3.986004418e+14;
             const double rearth = 6.371e+6;
-            const double r185 = rearth + 185e+3;
-            const double r1000 = rearth + 1000e+3;
+            const double r185   = rearth + 185e+3;
+            const double r1000  = rearth + 1000e+3;
 
             (double sma, double _) = Astro.SmaEccFromApsides(r185, r1000);
             double v185 = Astro.VmagFromVisViva(mu, sma, r185);
-            var r0 = new V3(r185, 0, 0);
-            var v0 = new V3(0, v185, 0);
+            var    r0   = new V3(r185, 0, 0);
+            var    v0   = new V3(0, v185, 0);
 
             double period = Astro.PeriodFromStateVectors(mu, r0, v0);
 
@@ -277,15 +277,15 @@ namespace MechJebLibTest.MathsTests
         [Fact]
         public void ApoapsisFromStateVectorsTest()
         {
-            const double mu = 3.986004418e+14;
+            const double mu     = 3.986004418e+14;
             const double rearth = 6.371e+6;
-            const double r185 = rearth + 185e+3;
-            const double r1000 = rearth + 1000e+3;
+            const double r185   = rearth + 185e+3;
+            const double r1000  = rearth + 1000e+3;
 
             (double sma, double _) = Astro.SmaEccFromApsides(r185, r1000);
             double v185 = Astro.VmagFromVisViva(mu, sma, r185);
-            var r0 = new V3(r185, 0, 0);
-            var v0 = new V3(0, v185, 0);
+            var    r0   = new V3(r185, 0, 0);
+            var    v0   = new V3(0, v185, 0);
 
             Assert.Equal(1.0, Astro.ApoapsisFromStateVectors(mu, r0, v0) / r1000, 14);
             Assert.Equal(1.0, Astro.PeriapsisFromStateVectors(mu, r0, v0) / r185, 14);
@@ -295,8 +295,8 @@ namespace MechJebLibTest.MathsTests
         public void ApsidesFromKeplerianTest()
         {
             const double rearth = 6.371e+6;
-            const double r185 = rearth + 185e+3;
-            const double r1000 = rearth + 1000e+3;
+            const double r185   = rearth + 185e+3;
+            const double r1000  = rearth + 1000e+3;
 
             (double sma, double ecc) = Astro.SmaEccFromApsides(r185, r1000);
             Assert.Equal(r185, Astro.PeriapsisFromKeplerian(sma, ecc));

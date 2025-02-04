@@ -17,8 +17,8 @@ namespace MechJebLibTest.ManeuversTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r    = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v    = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double newR = random.NextDouble() * r.magnitude;
 
                 double rscale = random.NextDouble() * 1.5e8 + 1;
@@ -58,7 +58,7 @@ namespace MechJebLibTest.ManeuversTests
 
                 // now test changing the Ecc
                 double newEcc = random.NextDouble() * 5 + 2.5;
-                V3 dv6 = ChangeOrbitalElement.ChangeECC(mu, r, v, newEcc);
+                V3     dv6    = ChangeOrbitalElement.ChangeECC(mu, r, v, newEcc);
                 (_, double ecc) = Astro.SmaEccFromStateVectors(mu, r, v + dv6);
                 ecc.ShouldEqual(newEcc, 1e-9);
             }

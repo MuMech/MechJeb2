@@ -72,8 +72,8 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void MagnitudeSmallTest()
         {
-            double small = 1e-190;
-            var smallV = new V3(small, small, small);
+            double small  = 1e-190;
+            var    smallV = new V3(small, small, small);
 
             Assert.Equal(Sqrt(3) * small, smallV.magnitude);
         }
@@ -81,8 +81,8 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void NormalizeLargeTest()
         {
-            double large = 1e+190;
-            var largeV = new V3(large, large, large);
+            double large  = 1e+190;
+            var    largeV = new V3(large, large, large);
 
             Assert.Equal(1.0 / Sqrt(3), largeV.normalized[0]);
             Assert.Equal(1.0 / Sqrt(3), largeV.normalized[1]);
@@ -92,8 +92,8 @@ namespace MechJebLibTest.Structs
         [Fact]
         private void NormalizeSmallTest()
         {
-            double small = 1e-190;
-            var smallV = new V3(small, small, small);
+            double small  = 1e-190;
+            var    smallV = new V3(small, small, small);
 
             Assert.Equal(1.0 / Sqrt(3), smallV.normalized[0]);
             Assert.Equal(1.0 / Sqrt(3), smallV.normalized[1]);

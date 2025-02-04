@@ -33,8 +33,8 @@ namespace MechJebLibTest.TwoBodyTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 40 * random.NextDouble() - 20;
 
                 (V3 rf, V3 vf) = Farnocchia.Solve(1.0, dt, r0, v0);
@@ -62,7 +62,7 @@ namespace MechJebLibTest.TwoBodyTests
                 var v = new V3(yin[3], yin[4], yin[5]);
 
                 double rm2 = r.sqrMagnitude;
-                double rm = Sqrt(rm2);
+                double rm  = Sqrt(rm2);
                 double rm3 = rm2 * rm;
 
                 V3 dr = v;
@@ -89,8 +89,8 @@ namespace MechJebLibTest.TwoBodyTests
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
                 double dt = 10 * random.NextDouble() - 5;
 
                 (V3 rf, V3 vf) = Farnocchia.Solve(1.0, dt, r0, v0);
@@ -121,7 +121,7 @@ namespace MechJebLibTest.TwoBodyTests
                 if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
                 {
                     _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rf2 + " vf2:" +
-                                                vf2 + "\n");
+                        vf2 + "\n");
                 }
 
                 rf.ShouldEqual(rf2, 1e-5);

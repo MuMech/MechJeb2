@@ -25,22 +25,22 @@ namespace MechJebLibTest.PVGTests.Integrators
             var random = new Random();
 
             var integrated = new VacuumThrustIntegrator();
-            var analytic = new VacuumCoastAnalytic();
+            var analytic   = new VacuumCoastAnalytic();
 
             for (int i = 0; i < NTRIALS; i++)
             {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var pr0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var pv0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double dt = 40 * random.NextDouble() - 20;
+                var    r0  = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    v0  = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    pr0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var    pv0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                double dt  = 40 * random.NextDouble() - 20;
 
-                using var yin = Vn.Rent(InputLayout.INPUT_LAYOUT_LEN);
-                using var yout = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
+                using var yin   = Vn.Rent(InputLayout.INPUT_LAYOUT_LEN);
+                using var yout  = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
                 using var yout2 = Vn.Rent(OutputLayout.OUTPUT_LAYOUT_LEN);
 
-                var y0 = new InputLayout();
-                var yf = OutputLayout.CreateFrom(yout);
+                var y0  = new InputLayout();
+                var yf  = OutputLayout.CreateFrom(yout);
                 var yf2 = OutputLayout.CreateFrom(yout2);
 
                 y0.R  = r0;
@@ -71,11 +71,11 @@ namespace MechJebLibTest.PVGTests.Integrators
                     !NearlyEqual(yf.PR, yf2.PR, 1e-8))
                 {
                     _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + yf.R + " vf:" + yf.V + "\nrf2:" + yf2.R +
-                                                " vf2:" +
-                                                yf2.V + "\n");
+                        " vf2:" +
+                        yf2.V + "\n");
                     _testOutputHelper.WriteLine("pr0 :" + pr0 + " pv0:" + pv0 + " dt:" + dt + "\npv:" + yf.PV + " pr:" + yf.PR + "\npv2:" + yf2.PV +
-                                                " pr2:" +
-                                                yf2.PR + "\n");
+                        " pr2:" +
+                        yf2.PR + "\n");
                 }
             }
         }

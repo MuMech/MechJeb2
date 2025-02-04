@@ -18,13 +18,13 @@ namespace MechJebLibTest.ControlTests
         [Fact]
         public void LinearFirstOrderRCCircuitPController()
         {
-            const double R = 1.0;
-            const double C = 1.0;
-            const double INV_TAU = 1.0 / (R * C);
-            const double V0 = 0.0;
+            const double R        = 1.0;
+            const double C        = 1.0;
+            const double INV_TAU  = 1.0 / (R * C);
+            const double V0       = 0.0;
             const double V_TARGET = 1.0;
 
-            var pid = new PIDLoop { Kp = 1.0, H = 0.02 };
+            var pid    = new PIDLoop { Kp  = 1.0, H = 0.02 };
             var solver = new BS3 { Maxiter = 2000 };
 
             double[] y0 = { V0 };

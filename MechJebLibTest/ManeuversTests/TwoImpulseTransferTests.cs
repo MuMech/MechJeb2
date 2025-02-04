@@ -44,7 +44,7 @@ namespace MechJebLibTest.ManeuversTests
                 V3 v2 = V3.Cross(h1, r2).normalized * Astro.CircularVelocity(mu, r2.magnitude);
 
                 // this algorithm has issues with very large (normalized) synodic periods
-                var scale = Scale.Create(mu, Sqrt(r1.magnitude * r2.magnitude));
+                var    scale         = Scale.Create(mu, Sqrt(r1.magnitude * r2.magnitude));
                 double synodicPeriod = Astro.SynodicPeriod(mu, r1, v1, r2, v2) / scale.TimeScale;
                 if (synodicPeriod > 1000)
                     continue;
@@ -70,8 +70,8 @@ namespace MechJebLibTest.ManeuversTests
         private void GeoTestFixed()
         {
             double mu = 3.986004418e+14;
-            var r1 = new V3(5673188.62234991, 1106269.57811856, 3093900.30098098);
-            var v1 = new V3(-1154.38931594925, 7685.58250511721, -631.330049272638);
+            var    r1 = new V3(5673188.62234991, 1106269.57811856, 3093900.30098098);
+            var    v1 = new V3(-1154.38931594925, 7685.58250511721, -631.330049272638);
 
             double nu = 3.24639265358979;
             (V3 r2, V3 v2) = Astro.StateVectorsFromKeplerian(mu, 42164000, 0, 0, 0, 0, nu);
@@ -93,8 +93,8 @@ namespace MechJebLibTest.ManeuversTests
         private void GeoTestFree()
         {
             double mu = 3.986004418e+14;
-            var r1 = new V3(5673188.62234991, 1106269.57811856, 3093900.30098098);
-            var v1 = new V3(-1154.38931594925, 7685.58250511721, -631.330049272638);
+            var    r1 = new V3(5673188.62234991, 1106269.57811856, 3093900.30098098);
+            var    v1 = new V3(-1154.38931594925, 7685.58250511721, -631.330049272638);
 
             (V3 r2, V3 v2) = Astro.StateVectorsFromKeplerian(mu, 42164000, 0, 0, 0, 0, 0);
 
