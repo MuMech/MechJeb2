@@ -356,55 +356,61 @@ namespace MuMech
             return false;
         }
 
+        // bypasses staging delays and immediately stages bypassing autostagePreDelay
+        public void ImmediateStage()
+        {
+            if (InverseStageFiresDecoupler(Vessel.currentStage - 1))
+            {
+                //if we decouple things, delay the next stage a bit to avoid exploding the debris
+                _lastStageTime = VesselState.time;
+            }
+
+            if (!Vessel.isActiveVessel)
+            {
+                _currentActiveVessel = FlightGlobals.ActiveVessel;
+                Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {Vessel.name} to stage");
+
+                _remoteStagingStatus = RemoteStagingState.WAITING_FOCUS;
+                FlightGlobals.ForceSetActiveVessel(Vessel);
+            }
+            else
+            {
+                Debug.Log($"Mechjeb Autostage: Executing next stage on {FlightGlobals.ActiveVessel.name}");
+
+                switch (_remoteStagingStatus)
+                {
+                    case RemoteStagingState.DISABLED:
+                        StageManager.ActivateNextStage();
+                        break;
+                    case RemoteStagingState.FOCUS_FINISHED:
+                        StageManager.ActivateNextStage();
+                        FlightGlobals.ForceSetActiveVessel(_currentActiveVessel);
+                        Debug.Log($"Mechjeb Autostage: Has switching back to {FlightGlobals.ActiveVessel.name} ");
+                        _remoteStagingStatus = RemoteStagingState.DISABLED;
+                        break;
+                }
+            }
+
+            _countingDown = false;
+
+            if (AutostagingOnce)
+                Users.Clear();
+
+        }
+
         public void Stage()
         {
             //When we find that we're allowed to stage, start a countdown (with a
             //length given by autostagePreDelay) and only stage once that countdown finishes,
-            if (_countingDown)
-            {
-                if (VesselState.time - _stageCountdownStart > AutostagePreDelay)
-                {
-                    if (InverseStageFiresDecoupler(Vessel.currentStage - 1))
-                    {
-                        //if we decouple things, delay the next stage a bit to avoid exploding the debris
-                        _lastStageTime = VesselState.time;
-                    }
-
-                    if (!Vessel.isActiveVessel)
-                    {
-                        _currentActiveVessel = FlightGlobals.ActiveVessel;
-                        Debug.Log($"Mechjeb Autostage: Switching from {FlightGlobals.ActiveVessel.name} to vessel {Vessel.name} to stage");
-
-                        _remoteStagingStatus = RemoteStagingState.WAITING_FOCUS;
-                        FlightGlobals.ForceSetActiveVessel(Vessel);
-                    }
-                    else
-                    {
-                        Debug.Log($"Mechjeb Autostage: Executing next stage on {FlightGlobals.ActiveVessel.name}");
-
-                        if (_remoteStagingStatus == RemoteStagingState.DISABLED)
-                        {
-                            StageManager.ActivateNextStage();
-                        }
-                        else if (_remoteStagingStatus == RemoteStagingState.FOCUS_FINISHED)
-                        {
-                            StageManager.ActivateNextStage();
-                            FlightGlobals.ForceSetActiveVessel(_currentActiveVessel);
-                            Debug.Log($"Mechjeb Autostage: Has switching back to {FlightGlobals.ActiveVessel.name} ");
-                            _remoteStagingStatus = RemoteStagingState.DISABLED;
-                        }
-                    }
-
-                    _countingDown = false;
-
-                    if (AutostagingOnce)
-                        Users.Clear();
-                }
-            }
-            else
+            if (!_countingDown)
             {
                 _countingDown        = true;
                 _stageCountdownStart = VesselState.time;
+            }
+
+            if (VesselState.time - _stageCountdownStart >= AutostagePreDelay)
+            {
+                ImmediateStage();
             }
         }
 
