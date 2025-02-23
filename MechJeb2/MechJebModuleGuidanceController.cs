@@ -409,6 +409,7 @@ namespace MuMech
             // if we have more un-optimized upper stages to burn, stage and use the TERMINAL_STAGING state
             if (Solution.TerminalStage() != Vessel.currentStage)
             {
+                ThrustOff();
                 Core.Staging.ImmediateStage();
                 Status = PVGStatus.TERMINAL_STAGING;
                 return;
