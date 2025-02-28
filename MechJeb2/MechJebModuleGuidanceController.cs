@@ -295,13 +295,8 @@ namespace MuMech
             {
                 if (!IsCoasting())
                 {
-                    StartCoast = VesselState.time;
-                    // force RCS on at the state transition
-                    if (!Vessel.ActionGroups[KSPActionGroup.RCS])
-                        Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+                    DoCoast();
                 }
-
-                Status = PVGStatus.COASTING;
 
                 if (Solution.StageTimeLeft(VesselState.time) < UllageLeadTime)
                     RCSOn();
@@ -402,7 +397,7 @@ namespace MuMech
             if (Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.time))
             {
                 ThrustOff();
-                Status = PVGStatus.COASTING;
+                DoCoast();
                 return;
             }
 
@@ -426,6 +421,16 @@ namespace MuMech
             Status   = PVGStatus.FINISHED;
             Solution = null;
             Enabled  = false;
+        }
+
+        private void DoCoast()
+        {
+            StartCoast = VesselState.time;
+            // force RCS on at the state transition
+            if (!Vessel.ActionGroups[KSPActionGroup.RCS])
+                Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+
+            Status = PVGStatus.COASTING;
         }
 
         public void SetSolution(Solution solution)

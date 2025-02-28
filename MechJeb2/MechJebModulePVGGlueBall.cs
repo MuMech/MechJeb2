@@ -189,17 +189,19 @@ namespace MuMech
                 ascentBuilder.OldSolution(Core.Guidance.Solution);
 
             bool optimizedStageFound = false;
+            bool hasCoast = false;
 
             for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
             {
                 FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
                 int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
 
-                if (!Core.Guidance.HasGoodSolutionWithNoFutureCoast())
+                if (!hasCoast && !Core.Guidance.HasGoodSolutionWithNoFutureCoast())
                 {
                     if ((kspStage == _ascentSettings.CoastStage && _ascentSettings.CoastBeforeFlag) ||
                         (kspStage == _ascentSettings.CoastStage - 1 && !_ascentSettings.CoastBeforeFlag))
                     {
+                        hasCoast = true;
                         double ct = _ascentSettings.FixedCoastLength;
                         double maxt = _ascentSettings.MaxCoast;
                         double mint = _ascentSettings.MinCoast;
