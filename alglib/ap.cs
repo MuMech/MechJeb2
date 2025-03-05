@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 4.03.0 (source code generated 2024-09-26)
+ALGLIB 4.04.0 (source code generated 2024-12-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -8243,6 +8243,35 @@ public partial class alglib
 }
 public partial class alglib
 {
+    /*
+     * Parts of alglib class that are shared between all ALGLIB editions (free managed, commercial managed, commercial native)
+     */
+    /************************************************************************
+    returns maximum number of worker threads allowed (either cores count or AE_NWORKERS if defined), >=1
+    ************************************************************************/
+    public static int get_max_nworkers()
+    {
+        int cc = smp.cores_count;
+        return cc>0 ? cc : 1;
+    }
+
+    /************************************************************************
+    This function returns index of a current worker thread  that  calls  user
+    callback during parallel numerical differentiation or batch evaluation:
+    
+    * a value between 0  and  alglib.get_max_nworkers()-1  is  returned  when
+      callback parallelism is enabled and when this function is called from a
+      user callback
+      
+    * 0 is returned when callback parallelism is NOT enabled, or when  called
+      from outside of a callback.
+    ************************************************************************/
+    [System.ThreadStatic] internal static int _cbck_worker_idx = 0;
+    public static int get_callback_worker_idx()
+    {
+        return _cbck_worker_idx;
+    }
+     
     /*
      * Parts of alglib.smp class that are shared between all ALGLIB editions (free managed, commercial managed, commercial native)
      */

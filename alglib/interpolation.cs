@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.03.0 (source code generated 2024-09-26)
+ALGLIB 4.04.0 (source code generated 2024-12-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -6174,10 +6174,15 @@ public partial class alglib
         N       -   number of points, N>1
         M       -   dimension of space
         K       -   number of parameters being fitted
-        DiffStep-   numerical differentiation step;
-                    should not be very small or large;
-                    large = loss of accuracy
-                    small = growth of round-off errors
+        DiffStep-   numerical differentiation step, >0; Obviously,  step  size
+                    should not be too large in order to get a  good  numerical
+                    derivative. However, it also  should  not  be   too  small
+                    because numerical errors are greatly amplified by numerical
+                    differentiation.
+                    By default, symmetric 3-point formula which provides  good
+                    accuracy is used. It can be changed to a  faster  but less
+                    precise 2-point one with minlmsetnumdiff() function.
+
 
     OUTPUT PARAMETERS:
         State   -   structure which stores algorithm state
@@ -6269,10 +6274,14 @@ public partial class alglib
         N       -   number of points, N>1
         M       -   dimension of space
         K       -   number of parameters being fitted
-        DiffStep-   numerical differentiation step;
-                    should not be very small or large;
-                    large = loss of accuracy
-                    small = growth of round-off errors
+        DiffStep-   numerical differentiation step, >0; Obviously,  step  size
+                    should not be too large in order to get a  good  numerical
+                    derivative. However, it also  should  not  be   too  small
+                    because numerical errors are greatly amplified by numerical
+                    differentiation.
+                    By default, symmetric 3-point formula which provides  good
+                    accuracy is used. It can be changed to a  faster  but less
+                    precise 2-point one with minlmsetnumdiff() function.
 
     OUTPUT PARAMETERS:
         State   -   structure which stores algorithm state
@@ -6563,6 +6572,45 @@ public partial class alglib
     {
     
         lsfit.lsfitsetnonmonotonicsteps(state.innerobj, cnt, _params);
+    }
+    
+    /*************************************************************************
+    This function sets specific finite  difference  formula  to  be  used  for
+    numerical differentiation.
+
+    It works only for optimizers configured to use numerical  differentiation;
+    in other cases it has no effect.
+
+    INPUT PARAMETERS:
+        State       -   optimizer
+        FormulaType -   formula type:
+                        * 3 for a 3-point formula, which is also  known  as  a
+                          symmetric difference quotient (the formula  actually
+                          uses only two function values per variable:  at  x+h
+                          and x-h). A good choice for medium-accuracy  setups,
+                          a default option.
+                        * 2 for a forward (or backward, depending  on variable
+                          bounds)  finite   difference  (f(x+h)-f(x))/h.  This
+                          formula has the lowest accuracy. However, it  is  4x
+                          faster than the 5-point formula and 2x  faster  than
+                          the 3-point one because, in addition to the  central
+                          value f(x), it needs only  one  additional  function
+                          evaluation per variable.
+
+
+      -- ALGLIB --
+         Copyright 03.12.2024 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lsfitsetnumdiff(lsfitstate state, int formulatype)
+    {
+    
+        lsfit.lsfitsetnumdiff(state.innerobj, formulatype, null);
+    }
+    
+    public static void lsfitsetnumdiff(lsfitstate state, int formulatype, alglib.xparams _params)
+    {
+    
+        lsfit.lsfitsetnumdiff(state.innerobj, formulatype, _params);
     }
     
     /*************************************************************************
@@ -24330,6 +24378,7 @@ public partial class alglib
         public class lsfitstate : apobject
         {
             public int protocolversion;
+            public int formulatype;
             public int optalgo;
             public int m;
             public int k;
@@ -24448,6 +24497,7 @@ public partial class alglib
             {
                 lsfitstate _result = new lsfitstate();
                 _result.protocolversion = protocolversion;
+                _result.formulatype = formulatype;
                 _result.optalgo = optalgo;
                 _result.m = m;
                 _result.k = k;
@@ -27821,10 +27871,15 @@ public partial class alglib
             N       -   number of points, N>1
             M       -   dimension of space
             K       -   number of parameters being fitted
-            DiffStep-   numerical differentiation step;
-                        should not be very small or large;
-                        large = loss of accuracy
-                        small = growth of round-off errors
+            DiffStep-   numerical differentiation step, >0; Obviously,  step  size
+                        should not be too large in order to get a  good  numerical
+                        derivative. However, it also  should  not  be   too  small
+                        because numerical errors are greatly amplified by numerical
+                        differentiation.
+                        By default, symmetric 3-point formula which provides  good
+                        accuracy is used. It can be changed to a  faster  but less
+                        precise 2-point one with minlmsetnumdiff() function.
+                        
 
         OUTPUT PARAMETERS:
             State   -   structure which stores algorithm state
@@ -27875,6 +27930,7 @@ public partial class alglib
             alglib.ap.assert(math.isfinite(diffstep), "LSFitCreateWF: DiffStep is not finite!");
             alglib.ap.assert((double)(diffstep)>(double)(0), "LSFitCreateWF: DiffStep<=0!");
             state.protocolversion = 1;
+            state.formulatype = 0;
             state.teststep = 0;
             state.diffstep = diffstep;
             state.npoints = n;
@@ -27961,10 +28017,14 @@ public partial class alglib
             N       -   number of points, N>1
             M       -   dimension of space
             K       -   number of parameters being fitted
-            DiffStep-   numerical differentiation step;
-                        should not be very small or large;
-                        large = loss of accuracy
-                        small = growth of round-off errors
+            DiffStep-   numerical differentiation step, >0; Obviously,  step  size
+                        should not be too large in order to get a  good  numerical
+                        derivative. However, it also  should  not  be   too  small
+                        because numerical errors are greatly amplified by numerical
+                        differentiation.
+                        By default, symmetric 3-point formula which provides  good
+                        accuracy is used. It can be changed to a  faster  but less
+                        precise 2-point one with minlmsetnumdiff() function.
 
         OUTPUT PARAMETERS:
             State   -   structure which stores algorithm state
@@ -28015,6 +28075,7 @@ public partial class alglib
             alglib.ap.assert(math.isfinite(diffstep), "LSFitCreateF: DiffStep is not finite!");
             alglib.ap.assert((double)(diffstep)>(double)(0), "LSFitCreateF: DiffStep<=0!");
             state.protocolversion = 1;
+            state.formulatype = 0;
             state.teststep = 0;
             state.diffstep = diffstep;
             state.npoints = n;
@@ -28145,6 +28206,7 @@ public partial class alglib
             alglib.ap.assert(alglib.ap.cols(x)>=m, "LSFitCreateWFG: cols(X)<M!");
             alglib.ap.assert(apserv.apservisfinitematrix(x, n, m, _params), "LSFitCreateWFG: X contains infinite or NaN values!");
             state.protocolversion = 1;
+            state.formulatype = 0;
             state.teststep = 0;
             state.diffstep = 0;
             state.npoints = n;
@@ -28276,6 +28338,7 @@ public partial class alglib
             alglib.ap.assert(alglib.ap.cols(x)>=m, "LSFitCreateFG: cols(X)<M!");
             alglib.ap.assert(apserv.apservisfinitematrix(x, n, m, _params), "LSFitCreateFG: X contains infinite or NaN values!");
             state.protocolversion = 1;
+            state.formulatype = 0;
             state.teststep = 0;
             state.diffstep = 0;
             state.npoints = n;
@@ -28370,6 +28433,42 @@ public partial class alglib
         {
             alglib.ap.assert(cnt>=0, "LSFitSetNonmonotonicSteps: incorrect AccType!");
             state.nonmonotoniccnt = cnt;
+        }
+
+
+        /*************************************************************************
+        This function sets specific finite  difference  formula  to  be  used  for
+        numerical differentiation.
+
+        It works only for optimizers configured to use numerical  differentiation;
+        in other cases it has no effect.
+
+        INPUT PARAMETERS:
+            State       -   optimizer
+            FormulaType -   formula type:
+                            * 3 for a 3-point formula, which is also  known  as  a
+                              symmetric difference quotient (the formula  actually
+                              uses only two function values per variable:  at  x+h
+                              and x-h). A good choice for medium-accuracy  setups,
+                              a default option.
+                            * 2 for a forward (or backward, depending  on variable
+                              bounds)  finite   difference  (f(x+h)-f(x))/h.  This
+                              formula has the lowest accuracy. However, it  is  4x
+                              faster than the 5-point formula and 2x  faster  than
+                              the 3-point one because, in addition to the  central
+                              value f(x), it needs only  one  additional  function
+                              evaluation per variable.
+            
+
+          -- ALGLIB --
+             Copyright 03.12.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lsfitsetnumdiff(lsfitstate state,
+            int formulatype,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(formulatype==2 || formulatype==3, "LSFitSetNumDiff: unexpected formula type");
+            state.formulatype = formulatype;
         }
 
 
@@ -28923,6 +29022,10 @@ public partial class alglib
             minlm.minlmsetbc(state.optstate, state.bndl, state.bndu, _params);
             minlm.minlmsetlc(state.optstate, state.cleic, state.tmpct, state.nec+state.nic, _params);
             minlm.minlmsetnonmonotonicsteps(state.optstate, state.nonmonotoniccnt, _params);
+            if( state.formulatype!=0 )
+            {
+                minlm.minlmsetnumdiff(state.optstate, state.formulatype, _params);
+            }
             state.requesttype = 0;
             
             //
