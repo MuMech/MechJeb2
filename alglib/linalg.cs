@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.03.0 (source code generated 2024-09-26)
+ALGLIB 4.04.0 (source code generated 2024-12-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -106,7 +106,7 @@ public partial class alglib
     Input parameters:
         M   -   number of rows
         N   -   number of columns
-        A   -   source matrix, MxN submatrix is copied and transposed
+        A   -   source matrix, MxN submatrix is copied
         IA  -   submatrix offset (row index)
         JA  -   submatrix offset (column index)
         B   -   destination matrix, must be large enough to store result
@@ -153,7 +153,7 @@ public partial class alglib
     Input parameters:
         M   -   number of rows
         N   -   number of columns
-        A   -   source matrix, MxN submatrix is copied and transposed
+        A   -   source matrix, MxN submatrix is copied
         IA  -   submatrix offset (row index)
         JA  -   submatrix offset (column index)
         B   -   destination matrix, must be large enough to store result
@@ -183,7 +183,7 @@ public partial class alglib
         M   -   number of rows
         N   -   number of columns
         Alpha-  coefficient
-        A   -   source matrix, MxN submatrix is copied and transposed
+        A   -   source matrix, MxN submatrix is copied
         IA  -   submatrix offset (row index)
         JA  -   submatrix offset (column index)
         Beta-   coefficient
@@ -11405,7 +11405,7 @@ public partial class alglib
         Input parameters:
             M   -   number of rows
             N   -   number of columns
-            A   -   source matrix, MxN submatrix is copied and transposed
+            A   -   source matrix, MxN submatrix is copied
             IA  -   submatrix offset (row index)
             JA  -   submatrix offset (column index)
             B   -   destination matrix, must be large enough to store result
@@ -11479,7 +11479,7 @@ public partial class alglib
         Input parameters:
             M   -   number of rows
             N   -   number of columns
-            A   -   source matrix, MxN submatrix is copied and transposed
+            A   -   source matrix, MxN submatrix is copied
             IA  -   submatrix offset (row index)
             JA  -   submatrix offset (column index)
             B   -   destination matrix, must be large enough to store result
@@ -11526,7 +11526,7 @@ public partial class alglib
             M   -   number of rows
             N   -   number of columns
             Alpha-  coefficient
-            A   -   source matrix, MxN submatrix is copied and transposed
+            A   -   source matrix, MxN submatrix is copied
             IA  -   submatrix offset (row index)
             JA  -   submatrix offset (column index)
             Beta-   coefficient
@@ -27946,15 +27946,6 @@ public partial class alglib
             }
             alglib.ap.assert(s.ridx[m]<=alglib.ap.len(s.idx), "SparseCreateCRSInplace: integrity check failed");
             alglib.ap.assert(s.ridx[m]<=alglib.ap.len(s.vals), "SparseCreateCRSInplace: integrity check failed");
-            for(i=0; i<=m-1; i++)
-            {
-                j0 = s.ridx[i];
-                j1 = s.ridx[i+1]-1;
-                for(j=j0; j<=j1; j++)
-                {
-                    alglib.ap.assert(s.idx[j]>=0 && s.idx[j]<n, "SparseCreateCRSInplace: integrity check failed");
-                }
-            }
             
             //
             // Initialize
@@ -27976,6 +27967,10 @@ public partial class alglib
                         tsort.tagsortmiddleir(ref s.idx, ref s.vals, j0, j1-j0, _params);
                         break;
                     }
+                }
+                if( j1>j0 )
+                {
+                    alglib.ap.assert(s.idx[j0]>=0 && s.idx[j1-1]<n, "SparseCreateCRSInplace: integrity check 655132 failed");
                 }
             }
             sparseinitduidx(s, _params);
@@ -41356,7 +41351,7 @@ public partial class alglib
         {
             int i = 0;
 
-            sa.k = n;
+            sa.k = k;
             sa.n = n;
             ablasf.isetallocv(n, -1, ref sa.flagarray, _params);
             ablasf.isetallocv(n, kprealloc, ref sa.vallocated, _params);
@@ -43848,7 +43843,7 @@ public partial class alglib
                 // Non-topological permutation; first we perform generic symmetric
                 // permutation, then transpose result
                 //
-                sparse.sparsesymmpermtbltransposebuf(a, false, analysis.effectiveperm, analysis.tmpat, _params);
+                permtransposeunsorted(a, analysis.effectiveperm, analysis.tmpat, _params);
                 loadmatrix(analysis, analysis.tmpat, _params);
             }
         }
@@ -45651,6 +45646,12 @@ public partial class alglib
 
         /*************************************************************************
         This function loads matrix into the supernodal storage.
+
+        The matrix AT is an upper triangle of the transposed matrix A; it must be
+        in CRS format, but it can violate some parts of the format (for the
+        performance reasons):
+        * elements stored within its rows can be unsorted
+        * NInitialized, DIdx[] and UIdx[] are ignored
                             
           -- ALGLIB PROJECT --
              Copyright 05.10.2020 by Bochkanov Sergey.
@@ -48197,6 +48198,99 @@ public partial class alglib
             //
             n1bpool.recycle(ref eligible);
             n1ipool.recycle(ref tmp0);
+        }
+
+
+        /*************************************************************************
+        More efficient SparseSymmPermTblTransposeBuf() that does not sort its output
+        *************************************************************************/
+        private static void permtransposeunsorted(sparse.sparsematrix a,
+            int[] p,
+            sparse.sparsematrix b,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+            int jj = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int k0 = 0;
+            int k1 = 0;
+            int kk = 0;
+            int n = 0;
+            int dst = 0;
+
+            n = a.n;
+            
+            //
+            // Prepare output
+            //
+            b.matrixtype = 1;
+            b.n = n;
+            b.m = n;
+            apserv.ivectorsetlengthatleast(ref b.didx, n, _params);
+            apserv.ivectorsetlengthatleast(ref b.uidx, n, _params);
+            
+            //
+            // Determine row sizes (temporary stored in DIdx) and ranges
+            //
+            ablasf.isetv(n, 0, b.didx, _params);
+            for(i=0; i<=n-1; i++)
+            {
+                j0 = a.ridx[i];
+                j1 = a.uidx[i]-1;
+                k0 = p[i];
+                for(jj=j0; jj<=j1; jj++)
+                {
+                    k1 = p[a.idx[jj]];
+                    if( k1<k0 )
+                    {
+                        b.didx[k1] = b.didx[k1]+1;
+                    }
+                    else
+                    {
+                        b.didx[k0] = b.didx[k0]+1;
+                    }
+                }
+            }
+            apserv.ivectorsetlengthatleast(ref b.ridx, n+1, _params);
+            b.ridx[0] = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                b.ridx[i+1] = b.ridx[i]+b.didx[i];
+            }
+            b.ninitialized = b.ridx[n];
+            apserv.ivectorsetlengthatleast(ref b.idx, b.ninitialized, _params);
+            apserv.rvectorsetlengthatleast(ref b.vals, b.ninitialized, _params);
+            
+            //
+            // Process the matrix
+            //
+            for(i=0; i<=n-1; i++)
+            {
+                b.uidx[i] = b.ridx[i];
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                j0 = a.ridx[i];
+                j1 = a.uidx[i]-1;
+                for(jj=j0; jj<=j1; jj++)
+                {
+                    j = a.idx[jj];
+                    k0 = p[i];
+                    k1 = p[j];
+                    if( k1<k0 )
+                    {
+                        kk = k0;
+                        k0 = k1;
+                        k1 = kk;
+                    }
+                    dst = b.uidx[k0];
+                    b.idx[dst] = k1;
+                    b.vals[dst] = a.vals[jj];
+                    b.uidx[k0] = dst+1;
+                }
+            }
         }
 
 
@@ -56946,6 +57040,7 @@ public partial class alglib
             state.hqb[itidx+0] = cs*v+sn*vv;
             state.hqb[itidx+1] = -(sn*v)+cs*vv;
             resnrm = Math.Abs(state.hqb[itidx+1]);
+            state.reprelres = resnrm/bnrm;
             
             //
             // Previous attempt to extend R was successful (no small diagonal elements).

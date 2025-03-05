@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.03.0 (source code generated 2024-09-26)
+ALGLIB 4.04.0 (source code generated 2024-12-21)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -3722,8 +3722,39 @@ public partial class alglib
 
 
         /*************************************************************************
+        Linear search in an integer array for a specific element, returns True or
+        False. Can deal with unsorted arrays.
+
+        The range [I0,I1) is searched.
+
+          -- ALGLIB --
+             Copyright 11.06.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool ilinearsearchispresent(int[] a,
+            int i0,
+            int i1,
+            int v,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+            int i = 0;
+
+            result = false;
+            for(i=i0; i<=i1-1; i++)
+            {
+                if( a[i]==v )
+                {
+                    result = true;
+                    return result;
+                }
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
         Binary search in an integer array for a specific element, returns True or
-        False.
+        False. Needs array to be sorted by ascending.
 
         The range [I0,I1) is searched.
 
@@ -4650,9 +4681,20 @@ public partial class alglib
         public static void stimerstop(stimer t,
             alglib.xparams _params)
         {
+            int tc = 0;
+
             alglib.ap.assert(t.isrunning, "STimerStop: attempt to stop already stopped timer");
             t.isrunning = false;
-            t.ttotal = t.ttotal+unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-t.tcurrent;
+            tc = unchecked((int)(System.DateTime.UtcNow.Ticks/10000));
+            if( tc>=t.tcurrent )
+            {
+                tc = tc-t.tcurrent;
+            }
+            else
+            {
+                tc = t.tcurrent-tc;
+            }
+            t.ttotal = t.ttotal+tc;
         }
 
 
@@ -4691,13 +4733,24 @@ public partial class alglib
             bool cond,
             alglib.xparams _params)
         {
+            int tc = 0;
+
             if( !cond )
             {
                 return;
             }
             alglib.ap.assert(t.isrunning, "STimerStop: attempt to stop already stopped timer");
             t.isrunning = false;
-            t.ttotal = t.ttotal+unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-t.tcurrent;
+            tc = unchecked((int)(System.DateTime.UtcNow.Ticks/10000));
+            if( tc>=t.tcurrent )
+            {
+                tc = tc-t.tcurrent;
+            }
+            else
+            {
+                tc = t.tcurrent-tc;
+            }
+            t.ttotal = t.ttotal+tc;
         }
 
 
@@ -4722,11 +4775,21 @@ public partial class alglib
             alglib.xparams _params)
         {
             double result = 0;
+            int tc = 0;
 
             result = t.ttotal;
             if( t.isrunning )
             {
-                result = result+(unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-t.tcurrent);
+                tc = unchecked((int)(System.DateTime.UtcNow.Ticks/10000));
+                if( tc>=t.tcurrent )
+                {
+                    tc = tc-t.tcurrent;
+                }
+                else
+                {
+                    tc = t.tcurrent-tc;
+                }
+                result = result+tc;
             }
             return result;
         }
@@ -6033,6 +6096,39 @@ public partial class alglib
         }
 
 
+        /*************************************************************************
+        Sets matrix A[] to V
+
+        INPUT PARAMETERS:
+            M, N    -   rows/cols count
+            V       -   value to set
+            A       -   array[M,N]
+
+        OUTPUT PARAMETERS:
+            A       -   leading M rows, N cols are replaced by V
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void isetm(int m,
+            int n,
+            int v,
+            int[,] a,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int j = 0;
+
+            for(i=0; i<=m-1; i++)
+            {
+                for(j=0; j<=n-1; j++)
+                {
+                    a[i,j] = v;
+                }
+            }
+        }
+
+
         #if ALGLIB_NO_FAST_KERNELS
         /*************************************************************************
         Sets matrix A[] to V
@@ -6093,6 +6189,36 @@ public partial class alglib
                 x = new double[n];
             }
             rsetv(n, v, x, _params);
+        }
+
+
+        /*************************************************************************
+        Sets vector A[] to V, reallocating A[] if too small.
+
+        INPUT PARAMETERS:
+            M       -   rows count
+            N       -   cols count
+            V       -   value to set
+            A       -   possibly preallocated matrix
+
+        OUTPUT PARAMETERS:
+            A       -   leading M rows, N cols are replaced by V; the matrix is
+                        reallocated if its rows/cols count is less than M/N.
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void isetallocm(int m,
+            int n,
+            int v,
+            ref int[,] a,
+            alglib.xparams _params)
+        {
+            if( alglib.ap.rows(a)<m || alglib.ap.cols(a)<n )
+            {
+                a = new int[m, n];
+            }
+            isetm(m, n, v, a, _params);
         }
 
 
@@ -6821,6 +6947,23 @@ public partial class alglib
             alglib.xparams _params)
         {
             rgrowv(newn, ref x, _params);
+            x[newn-1] = v;
+        }
+
+
+        /*************************************************************************
+        Grows X by calling iGrowV() and sets the element X[NewN-1] to the specified
+        value
+
+          -- ALGLIB --
+             Copyright 07.09.2024 by Bochkanov Sergey
+        *************************************************************************/
+        public static void igrowappendv(int newn,
+            ref int[] x,
+            int v,
+            alglib.xparams _params)
+        {
+            igrowv(newn, ref x, _params);
             x[newn-1] = v;
         }
 
@@ -11736,12 +11879,22 @@ public partial class alglib
             int ak = 0;
             int ak1 = 0;
             double bt = 0;
+            bool isascending = new bool();
 
             
             //
             // Special cases
             //
             if( n<=1 )
+            {
+                return;
+            }
+            isascending = true;
+            for(i=1; i<=n-1; i++)
+            {
+                isascending = isascending && a[offset+i]>=a[offset+i-1];
+            }
+            if( isascending )
             {
                 return;
             }
@@ -14492,6 +14645,60 @@ public partial class alglib
         };
 
 
+        /*************************************************************************
+        This structure is used to store K sets of N possible integers, in [0,N) each.
+        The structure needs at least O(N) temporary memory.
+
+        Storage modes:
+        * 0         default unsorted mode
+        *************************************************************************/
+        public class kniset : apobject
+        {
+            public int storagemode;
+            public int k;
+            public int n;
+            public int[] flagarray;
+            public int[] vbegin;
+            public int[] vallocated;
+            public int[] vcnt;
+            public int[] data;
+            public int dataused;
+            public int iterrow;
+            public int iteridx;
+            public kniset()
+            {
+                init();
+            }
+            public override void init()
+            {
+                flagarray = new int[0];
+                vbegin = new int[0];
+                vallocated = new int[0];
+                vcnt = new int[0];
+                data = new int[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                kniset _result = new kniset();
+                _result.storagemode = storagemode;
+                _result.k = k;
+                _result.n = n;
+                _result.flagarray = (int[])flagarray.Clone();
+                _result.vbegin = (int[])vbegin.Clone();
+                _result.vallocated = (int[])vallocated.Clone();
+                _result.vcnt = (int[])vcnt.Clone();
+                _result.data = (int[])data.Clone();
+                _result.dataused = dataused;
+                _result.iterrow = iterrow;
+                _result.iteridx = iteridx;
+                return _result;
+            }
+        };
+
+
+
+
+        public const int knisheadersize = 2;
 
 
         /*************************************************************************
@@ -14807,6 +15014,336 @@ public partial class alglib
             i = sa.items[k];
             sa.iteridx = k+1;
             result = true;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Compresses internal storage, reclaiming previously dropped blocks. To be
+        used internally by kn-set modification functions.
+
+        INPUT PARAMETERS
+            SA          -   kn-set to compress
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static void kniscompressstorage(kniset sa,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int blocklen = 0;
+            int setidx = 0;
+            int srcoffs = 0;
+            int dstoffs = 0;
+
+            alglib.ap.assert(sa.storagemode==0, "knisCompressStorage: unexpected storage mode");
+            srcoffs = 0;
+            dstoffs = 0;
+            while( srcoffs<sa.dataused )
+            {
+                blocklen = sa.data[srcoffs+0];
+                setidx = sa.data[srcoffs+1];
+                alglib.ap.assert(blocklen>=knisheadersize, "knisCompressStorage: integrity check 6385 failed");
+                if( setidx<0 )
+                {
+                    srcoffs = srcoffs+blocklen;
+                    continue;
+                }
+                if( srcoffs!=dstoffs )
+                {
+                    for(i=0; i<=blocklen-1; i++)
+                    {
+                        sa.data[dstoffs+i] = sa.data[srcoffs+i];
+                    }
+                    sa.vbegin[setidx] = dstoffs+knisheadersize;
+                }
+                dstoffs = dstoffs+blocklen;
+                srcoffs = srcoffs+blocklen;
+            }
+            alglib.ap.assert(srcoffs==sa.dataused, "knisCompressStorage: integrity check 9464 failed");
+            sa.dataused = dstoffs;
+        }
+
+
+        /*************************************************************************
+        Reallocates internal storage for set #SetIdx, increasing its  capacity  to
+        NewAllocated exactly. This function may invalidate internal  pointers  for
+        ALL   sets  in  the  kn-set  structure  because  it  may  perform  storage
+        compression in order to reclaim previously freed space.
+
+        INPUT PARAMETERS
+            SA          -   kn-set structure
+            SetIdx      -   set to reallocate
+            NewAllocated -  new size for the set, must be at least equal to already
+                            allocated
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static void knisreallocate(kniset sa,
+            int setidx,
+            int newallocated,
+            alglib.xparams _params)
+        {
+            int oldbegin = 0;
+            int oldcnt = 0;
+            int newbegin = 0;
+            int j = 0;
+
+            alglib.ap.assert(sa.storagemode==0, "knisReallocate: unexpected storage mode");
+            if( alglib.ap.len(sa.data)<sa.dataused+knisheadersize+newallocated )
+            {
+                kniscompressstorage(sa, _params);
+                if( alglib.ap.len(sa.data)<sa.dataused+knisheadersize+newallocated )
+                {
+                    apserv.ivectorgrowto(ref sa.data, sa.dataused+knisheadersize+newallocated, _params);
+                }
+            }
+            oldbegin = sa.vbegin[setidx];
+            oldcnt = sa.vcnt[setidx];
+            newbegin = sa.dataused+knisheadersize;
+            sa.vbegin[setidx] = newbegin;
+            sa.vallocated[setidx] = newallocated;
+            sa.data[oldbegin-1] = -1;
+            sa.data[newbegin-2] = knisheadersize+newallocated;
+            sa.data[newbegin-1] = setidx;
+            sa.dataused = sa.dataused+sa.data[newbegin-2];
+            for(j=0; j<=oldcnt-1; j++)
+            {
+                sa.data[newbegin+j] = sa.data[oldbegin+j];
+            }
+        }
+
+
+        /*************************************************************************
+        Initialize kn-set using default unsorted storage mode. Elements within a
+        subset are unsorted, with possible duplicates.
+
+        INPUT PARAMETERS
+            K           -   sets count, K>0
+            N           -   set size, N>=0
+            kPrealloc   -   preallocate place per set (can be zero), >=0
+            
+        OUTPUT PARAMETERS
+            SA          -   K sets of N elements, initially empty
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static void knisinitunsorted(int k,
+            int n,
+            int kprealloc,
+            kniset sa,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.assert(k>0, "knisInitUnsorted: K<=0");
+            alglib.ap.assert(n>=0, "knisInitUnsorted: N<0");
+            alglib.ap.assert(kprealloc>=0, "knisInitUnsorted: kPrealloc<0");
+            sa.storagemode = 0;
+            sa.k = k;
+            sa.n = n;
+            ablasf.isetallocv(n, -1, ref sa.flagarray, _params);
+            ablasf.isetallocv(k, kprealloc, ref sa.vallocated, _params);
+            apserv.ivectorsetlengthatleast(ref sa.vbegin, k, _params);
+            sa.vbegin[0] = knisheadersize;
+            for(i=1; i<=k-1; i++)
+            {
+                sa.vbegin[i] = sa.vbegin[i-1]+sa.vallocated[i-1]+knisheadersize;
+            }
+            sa.dataused = sa.vbegin[k-1]+sa.vallocated[k-1];
+            apserv.ivectorsetlengthatleast(ref sa.data, sa.dataused, _params);
+            for(i=0; i<=k-1; i++)
+            {
+                sa.data[sa.vbegin[i]-2] = knisheadersize+sa.vallocated[i];
+                sa.data[sa.vbegin[i]-1] = i;
+            }
+            ablasf.isetallocv(k, 0, ref sa.vcnt, _params);
+        }
+
+
+        /*************************************************************************
+        Allows direct access to internal storage  of  kn-set  structure  - returns
+        range of elements SA.Data[idxBegin...idxEnd-1] used to store K-th set
+
+        INPUT PARAMETERS
+            SA          -   kn-set
+            K           -   set index
+            
+        OUTPUT PARAMETERS
+            idxBegin,
+            idxEnd      -   half-range [idxBegin,idxEnd) of SA.Data that stores
+                            K-th set
+
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static void knisdirectaccess(kniset sa,
+            int k,
+            ref int idxbegin,
+            ref int idxend,
+            alglib.xparams _params)
+        {
+            idxbegin = 0;
+            idxend = 0;
+
+            alglib.ap.assert(sa.storagemode==0, "knisDirectAccess: unexpected storage mode");
+            idxbegin = sa.vbegin[k];
+            idxend = idxbegin+sa.vcnt[k];
+        }
+
+
+        /*************************************************************************
+        Pops last element from the K-th set.
+
+        INPUT PARAMETERS
+            SA          -   kn-set; K-th set must include at least one element,
+                            otherwise an exception is generated
+            K           -   set index
+            
+        RESULT:
+            last element in K-th set
+
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static int knispoplast(kniset sa,
+            int k,
+            alglib.xparams _params)
+        {
+            int result = 0;
+            int c = 0;
+
+            alglib.ap.assert(sa.storagemode==0, "knisPopLast: unexpected storage mode");
+            c = sa.vcnt[k];
+            alglib.ap.assert(c>0, "knisDirectAccess: K-th set is empty");
+            result = sa.data[sa.vbegin[k]+c-1];
+            sa.vcnt[k] = c-1;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Add K-th element to I-th set. If an element already exists in the target,
+        a duplicate entry is added.
+
+        INPUT PARAMETERS
+            SA          -   kn-set
+            I           -   set index
+            K           -   element to add
+            
+        OUTPUT PARAMETERS
+            SA          -   modified SA
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static void knisaddnewelement(kniset sa,
+            int i,
+            int k,
+            alglib.xparams _params)
+        {
+            int cnt = 0;
+
+            alglib.ap.assert(sa.storagemode==0, "knisAddNewElement: unexpected storage mode");
+            cnt = sa.vcnt[i];
+            if( cnt==sa.vallocated[i] )
+            {
+                knisreallocate(sa, i, 2*sa.vallocated[i]+1, _params);
+            }
+            sa.data[sa.vbegin[i]+cnt] = k;
+            sa.vcnt[i] = cnt+1;
+        }
+
+
+        /*************************************************************************
+        Clear k-th kn-set in collection.
+
+        Freed memory is NOT reclaimed for future garbage collection.
+
+        INPUT PARAMETERS
+            SA          -   kn-set structure
+            K           -   set index
+            
+        OUTPUT PARAMETERS
+            SA          -   K-th set was cleared
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static void knisclearkthnoreclaim(kniset sa,
+            int k,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(sa.storagemode==0, "knisClearKthNoReclaim: unexpected storage mode");
+            sa.vcnt[k] = 0;
+        }
+
+
+        /*************************************************************************
+        Clear k-th kn-set in collection.
+
+        Freed memory is reclaimed for future garbage collection. This function  is
+        NOT recommended if you intend to add elements to this set in some  future,
+        because every addition will result in  reallocation  of  previously  freed
+        memory. Use knsClearKthNoReclaim().
+
+        INPUT PARAMETERS
+            SA          -   kn-set structure
+            K           -   set index
+            
+        OUTPUT PARAMETERS
+            SA          -   K-th set was cleared
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static void knisclearkthreclaim(kniset sa,
+            int k,
+            alglib.xparams _params)
+        {
+            int idxbegin = 0;
+            int allocated = 0;
+
+            alglib.ap.assert(sa.storagemode==0, "knisClearKthReclaim: unexpected storage mode");
+            idxbegin = sa.vbegin[k];
+            allocated = sa.vallocated[k];
+            sa.vcnt[k] = 0;
+            if( allocated>=knisheadersize )
+            {
+                sa.data[idxbegin-2] = 2;
+                sa.data[idxbegin+0] = allocated;
+                sa.data[idxbegin+1] = -1;
+                sa.vallocated[k] = 0;
+            }
+        }
+
+
+        /*************************************************************************
+        Counts elements of K-th set of S0 (duplicates are counted as distinct elements).
+
+        INPUT PARAMETERS
+            S0          -   kn-set structure
+            K           -   set index in the structure S0
+            
+        RESULT
+            K-th set element count
+
+          -- ALGLIB PROJECT --
+             Copyright 05.10.2020 by Bochkanov Sergey.
+        *************************************************************************/
+        public static int kniscountkth(kniset s0,
+            int k,
+            alglib.xparams _params)
+        {
+            int result = 0;
+
+            alglib.ap.assert(s0.storagemode==0, "knisCountKth: unexpected storage mode");
+            result = s0.vcnt[k];
             return result;
         }
 
