@@ -432,10 +432,23 @@ namespace MuMech
         private double LastNonZeroDVStageBurnTime()
         {
             _stats.RequestUpdate();
-            for (int mjPhase = _vacStats.Count - 1; mjPhase >= 0; mjPhase--)
+            int kspStage = -1;
+            int mjPhase;
+            double dt = 0f;
+
+            // Find the last MJ phase and corresponding KSP stage with non-zero burn time
+            for (mjPhase = _vacStats.Count - 1; mjPhase >= 0; mjPhase--)
                 if (_vacStats[mjPhase].DeltaTime > 0)
-                    return _vacStats[mjPhase].DeltaTime;
-            return 0;
+                {
+                    kspStage = _vacStats[mjPhase].KSPStage;
+                    break;
+                }
+
+            // Sum the burn time of all MJ phases with the same KSP stage number
+            for (; mjPhase >= 0 && _vacStats[mjPhase].KSPStage == kspStage; mjPhase--)
+                dt += _vacStats[mjPhase].DeltaTime;
+
+            return dt;
         }
 
         // allModuleEngines => IsEngine() && !IsSepratron()
