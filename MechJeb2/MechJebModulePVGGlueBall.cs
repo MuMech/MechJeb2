@@ -206,7 +206,7 @@ namespace MuMech
                         double maxt = _ascentSettings.MaxCoast;
                         double mint = _ascentSettings.MinCoast;
 
-                        if (kspStage == Vessel.currentStage && Core.Guidance.IsCoasting())
+                        if (Core.Guidance.IsCoasting())
                         {
                             ct   = Math.Max(ct - (VesselState.time - Core.Guidance.StartCoast), 0);
                             maxt = Math.Max(maxt - (VesselState.time - Core.Guidance.StartCoast), 0);
