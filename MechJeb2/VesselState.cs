@@ -1170,6 +1170,11 @@ namespace MuMech
             {
                 CoT           = CoT / CoTScalar;
                 thrustForward = (CoM - CoT).normalized;
+                // In certain circumstances, like hotstaging, the CoM of the Vessel can be behind the CoT before
+                // decoupling and while dragging the previous stage.  In that case thrustForward can wind up pointing
+                // backwards, which is not what we want.  If that happens, we just set it to the forward vector.
+                if (Vector3d.Dot(thrustForward, forward) < 0)
+                    thrustForward = forward;
             }
 
             DoT = DoT.normalized;
