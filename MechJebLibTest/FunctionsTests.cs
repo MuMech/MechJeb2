@@ -722,5 +722,42 @@ namespace MechJebLibTest.MathsTests
                 }
             }
         }
+
+        [Fact]
+        private void SuicideBurnTest1()
+        {
+            const double MOON_MU = 4.9028000661637961e+12;
+            const double MOON_R  = 1737100;
+            const double HEIGHT0 = 100000;
+
+            var r0 = new V3(MOON_R + HEIGHT0, 0, 0);
+            var v0 = new V3(0, 1, 0);
+
+            (double dt, V3 r1) = Astro.SuicideBurnCalc(MOON_MU, r0, v0, 2.7, MOON_R);
+
+            _testOutputHelper.WriteLine(Astro.TimeToNextRadius(MOON_MU, r0, v0, MOON_R).ToString());
+
+            (V3 rign, V3 vign) = Shepperd.Solve(MOON_MU, dt, r0, v0);
+
+            _testOutputHelper.WriteLine(dt.ToString());
+        }
+
+        [Fact]
+        private void SuicideBurnTest2()
+        {
+            const double MOON_MU = 65138397520.7807;
+            const double MOON_R  = 202918.830344174;
+
+            var r0 = new V3(532336.812681672, 88791.7051867347, 285.976627940241);
+            var v0 = new V3(-231.619726313466, 31.3365659104502, 0.154601004450833);
+
+            (double dt, V3 r1) = Astro.SuicideBurnCalc(MOON_MU, r0, v0, 15.387942663499, MOON_R);
+
+            _testOutputHelper.WriteLine(Astro.TimeToNextRadius(MOON_MU, r0, v0, MOON_R).ToString());
+
+            (V3 rign, V3 vign) = Shepperd.Solve(MOON_MU, dt, r0, v0);
+
+            _testOutputHelper.WriteLine(dt.ToString());
+        }
     }
 }

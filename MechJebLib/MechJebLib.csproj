@@ -65,6 +65,7 @@
         <Compile Include="FuelFlowSimulation\SimVessel.cs"/>
         <Compile Include="FunctionImpls\RealDeltaVToChangeApoapsisPrograde.cs"/>
         <Compile Include="FunctionImpls\RealSingleImpulseHyperbolicBurn.cs"/>
+        <Compile Include="FunctionImpls\RealSuicideBurnCalc.cs"/>
         <Compile Include="Functions\Angles.cs"/>
         <Compile Include="Functions\Astro.cs"/>
         <Compile Include="Functions\Interpolants.cs"/>

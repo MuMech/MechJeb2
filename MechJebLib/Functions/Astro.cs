@@ -728,5 +728,8 @@ namespace MechJebLib.Functions
             double       alpha = PI * (1 - C * Sqrt(Powi(c3, 3)));
             return (dv1, dv2, tt, alpha);
         }
+
+        public static (double dt, V3 rland) SuicideBurnCalc(double mu, V3 r0, V3 v0, double beta, double radius) =>
+            RealSuicideBurnCalc.Run(mu, r0, v0, beta, radius);
     }
 }

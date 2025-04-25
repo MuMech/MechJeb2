@@ -29,8 +29,8 @@ namespace MuMech
         {
             if (!Vessel.patchedConicsUnlocked() || !Vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
-            ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes.First();
-            double burnTime = node.GetBurnVector(node.patch).magnitude / VesselState.limitedMaxThrustAccel;
+            ManeuverNode node     = Vessel.patchedConicSolver.maneuverNodes.First();
+            double       burnTime = node.GetBurnVector(node.patch).magnitude / VesselState.limitedMaxThrustAccel;
             return GuiUtils.TimeToDHMS(burnTime);
         }
 
@@ -123,7 +123,7 @@ namespace MuMech
                 for (int iter = 0; iter < 10; iter++)
                 {
                     Vector3d impactPosition = Orbit.WorldPositionAtUT(impactTime);
-                    double terrainRadius = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
+                    double   terrainRadius  = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
                     impactTime = Orbit.NextTimeOfRadius(VesselState.time, terrainRadius);
                 }
             }
@@ -144,7 +144,7 @@ namespace MuMech
         {
             try
             {
-                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(Orbit, VesselState, Vessel), 1);
+                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(Orbit, VesselState), 1);
             }
             catch
             {
@@ -191,9 +191,9 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_RCSTranslationEfficiency", InfoItem.Category.Misc)] //RCS translation efficiency
         public string RCSTranslationEfficiency()
         {
-            double totalThrust = RCSThrustNow();
-            double effectiveThrust = 0;
-            FlightCtrlState s = FlightInputHandler.state;
+            double          totalThrust     = RCSThrustNow();
+            double          effectiveThrust = 0;
+            FlightCtrlState s               = FlightInputHandler.state;
 
             // FlightCtrlState and a vessel have different coordinate systems.
             // See MechJebModuleRCSController for a comment explaining this.
@@ -224,11 +224,11 @@ namespace MuMech
 
                     for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
-                        float force = pm.thrustForces[i];
-                        Transform t = pm.thrusterTransforms[i];
+                        float     force = pm.thrustForces[i];
+                        Transform t     = pm.thrusterTransforms[i];
 
-                        Vector3 thrusterDir = Quaternion.Inverse(Vessel.GetTransform().rotation) * -t.up;
-                        double thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
+                        Vector3 thrusterDir        = Quaternion.Inverse(Vessel.GetTransform().rotation) * -t.up;
+                        double  thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
 
                         effectiveThrust += thrusterEfficiency * pm.thrusterPower * force;
                     }
@@ -243,9 +243,9 @@ namespace MuMech
         public double RCSDeltaVVacuum()
         {
             // Use the average specific impulse of all RCS parts.
-            double totalIsp = 0;
-            int numThrusters = 0;
-            double gForRCS = 9.81;
+            double totalIsp     = 0;
+            int    numThrusters = 0;
+            double gForRCS      = 9.81;
 
             double monopropMass = Vessel.TotalResourceMass("MonoPropellant");
 
@@ -332,9 +332,9 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 IEnumerable<ModuleEngines> engines = from part in EditorLogic.fetch.ship.parts
-                    where part.inverseStage == StageManager.LastStage
-                    from engine in part.Modules.OfType<ModuleEngines>()
-                    select engine;
+                                                     where part.inverseStage == StageManager.LastStage
+                                                     from engine in part.Modules.OfType<ModuleEngines>()
+                                                     select engine;
                 return 1000 * engines.Sum(e => e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust));
             }
 
@@ -347,9 +347,9 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
             {
                 IEnumerable<ModuleEngines> engines = from part in EditorLogic.fetch.ship.parts
-                    where part.inverseStage == StageManager.LastStage
-                    from engine in part.Modules.OfType<ModuleEngines>()
-                    select engine;
+                                                     where part.inverseStage == StageManager.LastStage
+                                                     from engine in part.Modules.OfType<ModuleEngines>()
+                                                     select engine;
                 return 1000 * engines.Sum(e =>
                     e.throttleLocked ? e.minThrust + e.thrustPercentage / 100f * (e.maxThrust - e.minThrust) : e.minThrust);
             }
@@ -405,7 +405,7 @@ namespace MuMech
         public string MaxPartCount()
         {
             float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorDriver.editorFacility.ToFacility());
-            int maxPartCount = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel, EditorDriver.editorFacility == EditorFacility.VAB);
+            int   maxPartCount        = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel, EditorDriver.editorFacility == EditorFacility.VAB);
             if (maxPartCount < int.MaxValue)
                 return maxPartCount.ToString();
             return Localizer.Format("#MechJeb_InfoItems_UnlimitedText"); //"Unlimited"
@@ -464,9 +464,9 @@ namespace MuMech
 
             if (VesselState.altitudeTrue < 1000.0)
             {
-                double a = (Vessel.mainBody.transform.position - Vessel.transform.position).magnitude;
-                double b = (Vessel.mainBody.transform.position - Core.Target.Transform.position).magnitude;
-                double c = Vector3d.Distance(Vessel.transform.position, Core.Target.Position);
+                double a   = (Vessel.mainBody.transform.position - Vessel.transform.position).magnitude;
+                double b   = (Vessel.mainBody.transform.position - Core.Target.Transform.position).magnitude;
+                double c   = Vector3d.Distance(Vessel.transform.position, Core.Target.Position);
                 double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
                 return GuiUtils.TimeToDHMS(ang * Vessel.mainBody.Radius / VesselState.speedSurfaceHorizontal);
             }
@@ -550,9 +550,9 @@ namespace MuMech
 
             if (o == null) return "N/A";
 
-            double smaCapture = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
+            double smaCapture     = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
             double velAtPeriapsis = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / o.semiMajorAxis));
-            double velCapture = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
+            double velCapture     = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
 
             return (velAtPeriapsis - velCapture).ToSI() + "m/s";
         }
@@ -753,68 +753,48 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_CircularOrbitSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Circular orbit speed
         public double CircularOrbitSpeed() => Orbit.CircularOrbitSpeed();
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showStagedMass = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showStagedMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showBurnedMass = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showBurnedMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showInitialMass = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showInitialMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showFinalMass = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showFinalMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showThrust = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showThrust = false;
 
         // don't persist this so it defaults to off on scene-change
         public bool showRcs = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showVacInitialTWR = true;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showVacInitialTWR = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showAtmoInitialTWR = false; // NK
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showAtmoInitialTWR = false; // NK
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showAtmoMaxTWR = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showAtmoMaxTWR = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showVacMaxTWR = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showVacMaxTWR = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showVacDeltaV = true;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showVacDeltaV = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showTime = true;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showTime = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showAtmoDeltaV = true;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showAtmoDeltaV = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showISP = true;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showISP = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool liveSLT = true;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool liveSLT = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public float altSLTScale = 0;
+        [Persistent(pass = (int)Pass.GLOBAL)] public float altSLTScale = 0;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public float machScale = 0;
+        [Persistent(pass = (int)Pass.GLOBAL)] public float machScale = 0;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int TWRBody = 1;
+        [Persistent(pass = (int)Pass.GLOBAL)] public int TWRBody = 1;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int StageDisplayState = 0;
+        [Persistent(pass = (int)Pass.GLOBAL)] public int StageDisplayState = 0;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool showEmpty = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool showEmpty = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool timeSeconds = false;
+        [Persistent(pass = (int)Pass.GLOBAL)] public bool timeSeconds = false;
 
         private MechJebStageStatsHelper stageStatsHelper;
 
@@ -872,9 +852,9 @@ namespace MuMech
 
             if (stats.VacStats.Count == 0 || stats.AtmoStats.Count == 0) return 0;
 
-            float vacTimeLeft = (float)stats.VacStats[stats.VacStats.Count - 1].DeltaTime;
+            float vacTimeLeft  = (float)stats.VacStats[stats.VacStats.Count - 1].DeltaTime;
             float atmoTimeLeft = (float)stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaTime;
-            float timeLeft = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
+            float timeLeft     = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
 
             return timeLeft;
         }
@@ -935,10 +915,10 @@ namespace MuMech
                 return;
             }
 
-            Vector3d relVel = Core.Target.RelativeVelocity;
-            double relVelX = Vector3d.Dot(relVel, Vessel.GetTransform().right);
-            double relVelY = Vector3d.Dot(relVel, Vessel.GetTransform().forward);
-            double relVelZ = Vector3d.Dot(relVel, Vessel.GetTransform().up);
+            Vector3d relVel  = Core.Target.RelativeVelocity;
+            double   relVelX = Vector3d.Dot(relVel, Vessel.GetTransform().right);
+            double   relVelY = Vector3d.Dot(relVel, Vessel.GetTransform().forward);
+            double   relVelZ = Vector3d.Dot(relVel, Vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocity")); //"Target-relative velocity:"
             GUILayout.Label("X: " + MuUtils.PadPositive(relVelX, "F2") + " m/s  [L/J]");
@@ -958,7 +938,7 @@ namespace MuMech
 
             var target = (Vessel)Core.Target.Target;
             Vector3d relw = Quaternion.Inverse(Vessel.ReferenceTransform.rotation) * (target.angularVelocity - Vessel.angularVelocity) *
-                            Mathf.Rad2Deg;
+                Mathf.Rad2Deg;
 
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label3")); //"Target-relative angular velocity:"
@@ -977,10 +957,10 @@ namespace MuMech
                 return;
             }
 
-            Vector3d sep = Core.Target.RelativePosition;
-            double sepX = Vector3d.Dot(sep, Vessel.GetTransform().right);
-            double sepY = Vector3d.Dot(sep, Vessel.GetTransform().forward);
-            double sepZ = Vector3d.Dot(sep, Vessel.GetTransform().up);
+            Vector3d sep  = Core.Target.RelativePosition;
+            double   sepX = Vector3d.Dot(sep, Vessel.GetTransform().right);
+            double   sepY = Vector3d.Dot(sep, Vessel.GetTransform().forward);
+            double   sepZ = Vector3d.Dot(sep, Vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label5")); //"Separation from target:"
             GUILayout.Label("X: " + MuUtils.PadPositive(sepX, "F2") + " m  [L/J]");
@@ -992,7 +972,7 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_AllPlanetPhaseAngles", InfoItem.Category.Orbit)] //All planet phase angles
         public void AllPlanetPhaseAngles()
         {
-            Orbit o = Orbit;
+            Orbit o                                            = Orbit;
             while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
             GUILayout.BeginVertical();
@@ -1033,7 +1013,7 @@ namespace MuMech
 
             if (Orbit.referenceBody != Planetarium.fetch.Sun)
             {
-                Orbit o = Orbit;
+                Orbit o                                                          = Orbit;
                 while (o.referenceBody.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
                 for (int i = 0; i < o.referenceBody.orbitingBodies.Count; i++)
@@ -1079,11 +1059,11 @@ namespace MuMech
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.PRELAUNCH:
                     return MainBody.displayName.LocalizeRemoveGender() +
-                           (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation5") : biome); //"'s surface"
+                        (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation5") : biome); //"'s surface"
                 //ExperimentSituations.SrfSplashed
                 case Vessel.Situations.SPLASHED:
                     return MainBody.displayName.LocalizeRemoveGender() +
-                           (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation6") : biome); //"'s oceans"
+                        (biome == "" ? Localizer.Format("#MechJeb_InfoItems_VesselSituation6") : biome); //"'s oceans"
                 case Vessel.Situations.FLYING:
                     if (Vessel.altitude < MainBody.scienceValues.flyingAltitudeThreshold)
                         //ExperimentSituations.FlyingLow
@@ -1110,7 +1090,7 @@ namespace MuMech
             {
                 var te = new TextEditor();
                 string result = "latitude =  " + VesselState.latitude.ToString("F6") + "\nlongitude = " + VesselState.longitude.ToString("F6") +
-                                "\naltitude = " + Vessel.altitude.ToString("F2") + "\n";
+                    "\naltitude = " + Vessel.altitude.ToString("F2") + "\n";
                 te.text = result;
                 te.SelectAll();
                 te.Copy();
