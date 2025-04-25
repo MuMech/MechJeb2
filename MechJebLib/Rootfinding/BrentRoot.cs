@@ -25,7 +25,7 @@ namespace MechJebLib.Rootfinding
         /// <param name="o">state object to pass to function</param>
         /// <param name="maxiter">maximum iterations</param>
         /// <param name="rtol">tolerance</param>
-        /// <param name="sign">try to return x such that f(x0) has the same sign as this (0 is best match)</param>
+        /// <param name="sign">try to return x such that f(x0) has the same sign as this (0 means the best match)</param>
         /// <returns>value for which the function evaluates to zero</returns>
         /// <exception cref="ArgumentException">guess does not brack the root</exception>
         public static double Solve(Func<double, object?, double> f, double a, double b, object? o, int maxiter = 100, double rtol = EPS,
@@ -65,7 +65,7 @@ namespace MechJebLib.Rootfinding
         /// <param name="o">state object to pass to function</param>
         /// <param name="maxiter">maximum iterations</param>
         /// <param name="rtol">tolerance</param>
-        /// <param name="sign">try to return x such that f(x0) has the same sign as this (0 is best match)</param>
+        /// <param name="sign">try to return x such that f(x0) has the same sign as this (0 means the best match)</param>
         /// <returns>value for which the function evaluates to zero</returns>
         public static double Solve(Func<double, object?, double> f, double x, object? o, int maxiter = 100, double rtol = EPS, int sign = 0)
         {
@@ -83,7 +83,7 @@ namespace MechJebLib.Rootfinding
             // initial guess to expand search for the zero
             double dx = Abs(x / 50);
 
-            // if x is zero use a larger expansion
+            // if x is zero, then use a larger expansion
             if (dx <= 2.24e-15)
                 dx = 1 / 50d;
 
@@ -198,7 +198,7 @@ namespace MechJebLib.Rootfinding
                     else
                         p = -p;
 
-                    // Acceptibility check
+                    // Acceptability check
                     if (2.0 * p < 3.0 * m * q - Abs(toler * q) && p < Abs(0.5 * e * q))
                     {
                         e = d;
