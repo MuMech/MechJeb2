@@ -5,6 +5,7 @@ using MechJebLib.Primitives;
 using MechJebLib.Rootfinding;
 using MechJebLib.TwoBody;
 using static System.Math;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FunctionImpls
 {
@@ -74,14 +75,15 @@ namespace MechJebLib.FunctionImpls
             double gamma0 = Astro.FlightPathAngle(r1, v1);
             double c      = C(v1.magnitude, gamma0, beta);
 
-            // Fz(-pi/2, beta) is zero
-            double val = r1.magnitude + c * c * Fz(gamma0, beta) / args.G - args.Radius;
+            // take the average of the initial and final gravity, which should still be conservative
+            double avgG = (args.Mu / Powi(r1.magnitude, 2) + args.G) / 2;
 
-            return val;
+            // Fz(-pi/2, beta) is zero
+            return r1.magnitude + c * c * Fz(gamma0, beta) / avgG - args.Radius;
         }
 
         // FIXME: should allow passing a guess for dt based on the previous calculation
-        public static (double dt, V3 rland) Run(double mu, V3 r0, V3 v0, double beta, double radius)
+        public static (double dt, V3 rland) Run(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess)
         {
             Args args = _threadArgs.Value;
 
@@ -98,6 +100,9 @@ namespace MechJebLib.FunctionImpls
             double a = Astro.TimeToNextApoapsis(mu, r0, v0);
             if (a > b)
                 a -= Astro.PeriodFromStateVectors(mu, r0, v0);
+
+            if (dtGuess > a || dtGuess < b)
+                dtGuess = (a + b) / 2; // use the average if guess is out of bounds
 
             double dt;
 
