@@ -581,6 +581,7 @@ namespace MuMech
             double mu          = vesselState.mainBody.gravParameter;
             double thrustAccel = vesselState.limitedMaxThrustAccel;
             double radius      = vesselState.LastSuicideBurnRadius;
+            double lastDt      = vesselState.LastSuicideBurnDt;
             double twr         = thrustAccel / (vesselState.mainBody.GeeASL * PhysicsGlobals.GravitationalAcceleration);
 
             // we need to have some kind of sanity check here to reset the value to something reasonable
@@ -590,10 +591,11 @@ namespace MuMech
             V3 r0 = vesselState.orbitalPosition.WorldToV3Rotated();
             V3 v0 = vesselState.orbitalVelocity.WorldToV3Rotated();
 
-            (double dt, V3 rland) = Astro.SuicideBurnCalc(mu, r0, v0, twr, radius);
+            (double dt, V3 rland) = Astro.SuicideBurnCalc(mu, r0, v0, twr, radius, lastDt);
 
             Vector3d estimatedLandingSite = rland.V3ToWorldRotated();
             vesselState.LastSuicideBurnRadius = vesselState.mainBody.Radius + vesselState.mainBody.TerrainAltitude(estimatedLandingSite);
+            vesselState.LastSuicideBurnDt = dt;
 
             return dt;
         }

@@ -364,6 +364,7 @@ namespace MuMech
 
         // this is written to by OrbitalManeuverCalculator.SuicideBurnCountdown() because it needs to keep track of state between calls
         public double LastSuicideBurnRadius;
+        public double LastSuicideBurnDt;
 
         public void InitReflection()
         {
