@@ -83,7 +83,7 @@ namespace MechJebLib.FunctionImpls
         }
 
         // FIXME: should allow passing a guess for dt based on the previous calculation
-        public static (double dt, V3 rland) Run(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess)
+        public static (double dt, V3 rland) Run(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess=double.NaN)
         {
             Args args = _threadArgs.Value;
 
