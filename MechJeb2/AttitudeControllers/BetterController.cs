@@ -9,16 +9,16 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 8;
+        private const int SETTINGS_VERSION = 9;
 
         private const double EPS = 2.2204e-16;
 
-        private const double POS_KP_DEFAULT = 1.98;
+        private const double POS_KP_DEFAULT = 2.0;
         private const double POS_DEADBAND_DEFAULT = 0.002;
-        private const double VEL_KP_DEFAULT = 18.9;
-        private const double VEL_TI_DEFAULT = 8.85;
-        private const double VEL_TD_DEFAULT = 0.847;
-        private const double VEL_N_DEFAULT = 84.1994541201249;
+        private const double VEL_KP_DEFAULT = 10;
+        private const double VEL_TI_DEFAULT = 2.24;
+        private const double VEL_TD_DEFAULT = 0;
+        private const double VEL_N_DEFAULT = 1.0;
         private const double VEL_B_DEFAULT = 1.0;
         private const double VEL_C_DEFAULT = 1.0;
         private const double VEL_DEADBAND_DEFAULT = 0.0001;
