@@ -402,7 +402,7 @@ namespace MuMech
             }
 
             // if we have more un-optimized upper stages to burn, stage and use the TERMINAL_STAGING state
-            if (Solution.TerminalStage() != Vessel.currentStage)
+            if (Solution.TerminalStage() != Vessel.currentStage && _ascentSettings.OptimizeStage == Vessel.currentStage)
             {
                 ThrustOff();
                 Core.Staging.ImmediateStage();
