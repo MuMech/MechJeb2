@@ -9,7 +9,7 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 7;
+        private const int SETTINGS_VERSION = 9;
 
         private const double EPS = 2.2204e-16;
 
