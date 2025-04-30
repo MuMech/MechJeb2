@@ -1,4 +1,5 @@
-﻿using MechJebLib.Functions;
+﻿using MechJebLib.FunctionImpls;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
@@ -102,19 +103,23 @@ namespace MechJebLib.Maneuvers
         }
 
         // simple proportional yaw guidance for non-hyperbolic target orbits
-        public static V3 VelocityForLaunchInclination(double mu, V3 r, V3 v, double newInc, double rotFreq)
+        public static V3 DeltaVForLaunchInclination(double mu, V3 r, V3 v, double newInc, double rotFreq, double desiredApoapsis)
         {
             Check.PositiveFinite(mu);
             Check.NonZeroFinite(r);
             Check.Finite(v);
             Check.Finite(newInc);
 
-            // as long as we're not launching to hyperbolic orbits, this vgo will always point
-            // in 'front' of us.
-            V3 v1  = Astro.EscapeVelocityForInclination(mu, r, newInc);
-            V3 v2  = Astro.EscapeVelocityForInclination(mu, r, -newInc);
-            V3 dv1 = v1 - v;
-            V3 dv2 = v2 - v;
+            // This is all overly-complicated to deal with button mashers.  If we didn't care, we'd just use dv1.
+
+            // calculate the velocity needed to change both the apoapsis and the inclination,
+            // (this handles engaging the ascent guidance randomly during flight and picks the least expensive
+            // north/south option)
+            V3 dvapo = DeltaVToChangeApoapsisPrograde(mu, r, v, desiredApoapsis);
+            V3 dvinc1 = DeltaVToChangeInclination(r, v+dvapo, newInc);
+            V3 dvinc2 = DeltaVToChangeInclination(r, v+dvapo, -newInc);
+            V3 dv1 = dvapo + dvinc1;
+            V3 dv2 = dvapo + dvinc2;
 
             V3 dv = dv1.magnitude < dv2.magnitude ? dv1 : dv2;
 
@@ -124,7 +129,7 @@ namespace MechJebLib.Maneuvers
             V3 rhat   = r.normalized;
             V3 vsurf  = v - V3.Cross(rotFreq * V3.northpole, r);
             V3 vhoriz = vsurf - V3.Dot(vsurf, rhat) * rhat;
-            if (vhoriz.magnitude / v1.magnitude < 0.05 && Abs(dv1.magnitude - dv2.magnitude) / dv1.magnitude < 0.05)
+            if (vhoriz.magnitude / dvinc1.magnitude < 0.05 && Abs(dv1.magnitude - dv2.magnitude) / dv1.magnitude < 0.05)
                 dv = dv1;
 
             Check.Finite(dv);
@@ -132,8 +137,10 @@ namespace MechJebLib.Maneuvers
             return dv;
         }
 
-        public static double HeadingForLaunchInclination(double mu, V3 r, V3 v, double newInc, double rotFreq) =>
-            Astro.HeadingForVelocity(r, VelocityForLaunchInclination(mu, r, v, newInc, rotFreq));
+        public static double HeadingForLaunchInclination(double mu, V3 r, V3 v, double newInc, double rotFreq, double desiredApoapsis)
+        {
+            return Astro.HeadingForVelocity(r, DeltaVForLaunchInclination(mu, r, v, newInc, rotFreq, desiredApoapsis));
+        }
 
         public static V3 DeltaVToChangeInclination(V3 r, V3 v, double newInc)
         {
@@ -159,6 +166,25 @@ namespace MechJebLib.Maneuvers
             Check.Finite(dv);
 
             return dv;
+        }
+
+        /// <summary>
+        ///     Returns the vector delta V required to be applied in the prograde (or retrograde) direction
+        ///     to change the orbit Apoapsis to the desired value.
+        /// </summary>
+        /// <param name="mu">Gravitational parameter</param>
+        /// <param name="r">Current radius</param>
+        /// <param name="v">Current velocity</param>
+        /// <param name="newApR">Desired apoapsis</param>
+        /// <returns>Delta-V</returns>
+        public static V3 DeltaVToChangeApoapsisPrograde(double mu, V3 r, V3 v, double newApR)
+        {
+            Check.Finite(v);
+            Check.PositiveFinite(mu);
+            Check.NonZeroFinite(r);
+            Check.PositiveFinite(newApR);
+
+            return RealDeltaVToChangeApoapsisPrograde.Run(mu, r, v, newApR);
         }
     }
 }
