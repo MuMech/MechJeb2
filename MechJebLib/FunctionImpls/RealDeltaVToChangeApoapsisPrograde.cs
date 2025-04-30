@@ -29,27 +29,25 @@ namespace MechJebLib.FunctionImpls
             }
         }
 
-        private static readonly ThreadLocal<Args> _threadArgs =
-            new ThreadLocal<Args>(() => new Args());
-
+        private static readonly ThreadLocal<Args> _threadArgs = new ThreadLocal<Args>(() => new Args());
         private static readonly Func<double, object?, double> _f = F;
 
         private static double F(double x, object? o)
         {
             var args = (Args)o!;
-            return Astro.ApoapsisFromStateVectors(args.Mu, args.R, args.V.normalized * x) - args.NewApR;
+            return Astro.ApoapsisFromStateVectors(args.Mu, args.R, x * args.V.normalized) - args.NewApR;
         }
 
         public static V3 Run(double mu, V3 r, V3 v, double newApR)
         {
-            if (r.magnitude >= newApR)
+            if (r.magnitude >= newApR && newApR >= 0)
                 return V3.zero;
 
             Args args = _threadArgs.Value;
 
             args.Set(mu, r, v, newApR);
 
-            double vfm = BrentRoot.Solve(_f, 0, Astro.EscapeVelocity(mu, r.magnitude) - 1, args);
+            double vfm = BrentRoot.Solve(_f, 0, Astro.EscapeVelocity(mu, r.magnitude)-1, args);
 
             return vfm * v.normalized - v;
         }

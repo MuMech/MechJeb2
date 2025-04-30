@@ -329,7 +329,7 @@ namespace MuMech
         // this provides ground track heading based on desired inclination and is what most consumers should call
         protected void AttitudeTo(double desiredPitch)
         {
-            double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination);
+            double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val);
             AttitudeTo(desiredPitch, desiredHeading);
         }
 

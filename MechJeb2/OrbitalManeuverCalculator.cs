@@ -101,12 +101,13 @@ namespace MuMech
         //Returned heading is in degrees and in the range 0 to 360.
         //If the given latitude is too large, so that an orbit with a given inclination never attains the
         //given latitude, then this function returns either 90 (if -90 < inclination < 90) or 270.
-        public static double HeadingForLaunchInclination(Orbit o, double inclinationDegrees)
+        public static double HeadingForLaunchInclination(Orbit o, double inclinationDegrees, double desiredApoapsis)
         {
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(Planetarium.GetUniversalTime());
             double rotFreq = TAU / o.referenceBody.rotationPeriod;
 
-            return Rad2Deg(Simple.HeadingForLaunchInclination(o.referenceBody.gravParameter, r, v, Deg2Rad(inclinationDegrees), rotFreq));
+            return Rad2Deg(Simple.HeadingForLaunchInclination(o.referenceBody.gravParameter, r, v, Deg2Rad(inclinationDegrees), rotFreq, o.referenceBody.Radius
+            + desiredApoapsis));
         }
 
         //Computes the delta-V of the burn required to change an orbit's inclination to a given value
