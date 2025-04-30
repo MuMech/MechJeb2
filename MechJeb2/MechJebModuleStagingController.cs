@@ -334,7 +334,11 @@ namespace MuMech
             // only release launch clamps if we're at nearly full thrust and no failed engines
             if ((VesselState.thrustCurrent / VesselState.thrustAvailable < ClampAutoStageThrustPct || AnyFailedEngines(_allModuleEngines)) &&
                 InverseStageReleasesClamps(Vessel.currentStage - 1))
+            {
+                // continually reset the PIDs while we have launch clamps to avoid integral windup
+                Core.Attitude.Controller.Reset();
                 return;
+            }
 
             Stage();
         }
