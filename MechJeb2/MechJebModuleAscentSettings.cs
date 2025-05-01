@@ -79,7 +79,7 @@ namespace MuMech
         public bool CorrectiveSteering = false;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble CorrectiveSteeringGain = 0.6; //control gain
+        public readonly EditableDouble CorrectiveSteeringGain = new EditableDouble(3.0);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool ForceRoll = true;
