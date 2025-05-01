@@ -84,12 +84,11 @@ namespace MuMech
             if (!IsVerticalAscent(VesselState.altitudeTrue, VesselState.speedSurface)) _mode = AscentMode.GRAVITY_TURN;
             if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode                       = AscentMode.COAST_TO_APOAPSIS;
 
-            //during the vertical ascent we just thrust straight up at max throttle
-            AttitudeTo(90);
+            VerticalAttitude();
 
             bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed;
 
-            Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && VesselState.altitudeBottom > AscentSettings.RollAltitude);
+            Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && AscentSettings.ForceRoll && VesselState.altitudeBottom > AscentSettings.RollAltitude);
 
             Core.Thrust.TargetThrottle = 1.0F;
 
@@ -113,12 +112,10 @@ namespace MuMech
                 return;
             }
 
-
             Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
             if (Core.Thrust.TargetThrottle < 1.0F)
             {
-                // follow surface velocity to reduce flipping
-                AttitudeTo(SrfvelPitch());
+                AttitudeTo(VesselState.orbitalVelocity);
                 Status = Localizer.Format("#MechJeb_Ascent_status21"); //"Fine tuning apoapsis"
                 return;
             }
@@ -157,29 +154,16 @@ namespace MuMech
                 return;
             }
 
-            //if our apoapsis has fallen too far, resume the gravity turn
-            if (Orbit.ApA < AscentSettings.DesiredOrbitAltitude - 1000.0)
-            {
-                _mode = AscentMode.GRAVITY_TURN;
-                Core.Warp.MinimumWarp();
-                return;
-            }
-
             Core.Thrust.TargetThrottle = 0;
 
             // follow surface velocity to reduce flipping
-            AttitudeTo(SrfvelPitch());
+            AttitudeTo(VesselState.orbitalVelocity);
 
             if (Orbit.ApA < AscentSettings.DesiredOrbitAltitude)
-            {
                 Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
-            }
 
             if (Core.Node.Autowarp)
-            {
-                //warp at x2 physical warp:
-                Core.Warp.WarpPhysicsAtRate(2);
-            }
+                Core.Warp.WarpPhysicsAtRate(2); // 2x physics warp
 
             Status = Localizer.Format("#MechJeb_Ascent_status23"); //"Coasting to edge of atmosphere"
         }
