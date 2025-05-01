@@ -127,15 +127,14 @@ namespace MuMech
 
             if (AscentSettings.CorrectiveSteering)
             {
-                // FIXME: this is all still broken
-                double actualFlightPathAngle = Math.Atan2(VesselState.speedVertical, VesselState.speedSurfaceHorizontal) * UtilMath.Rad2Deg;
+                double actualFlightPathAngle = Math.Atan2(VesselState.speedVertical, VesselState.speedSurfaceHorizontal);
 
-                /* form an isosceles triangle with unit vectors pointing in the desired and actual flight path angle directions and find the length of the base */
-                double velocityError = 2 * Math.Sin((_desiredPitch - actualFlightPathAngle) / 2);
+                double fpaError = _desiredPitch - actualFlightPathAngle;
 
                 double difficulty = VesselState.surfaceVelocity.magnitude * 0.02 / VesselState.ThrustAccel(Core.Thrust.TargetThrottle);
                 difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
-                double steerOffset = AscentSettings.CorrectiveSteeringGain * difficulty * velocityError;
+
+                double steerOffset = AscentSettings.CorrectiveSteeringGain * difficulty * fpaError;
 
                 double steerAngle = MuUtils.Clamp(Math.Asin(steerOffset), -Math.PI / 6, Math.PI / 6);
 
