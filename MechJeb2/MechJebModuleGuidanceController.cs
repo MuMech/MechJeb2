@@ -101,7 +101,7 @@ namespace MuMech
 
             // RO/RF: if we are spooling up engines, then flush the PID integrators to prevent windup
             if (Status == PVGStatus.BURNING || Status == PVGStatus.TERMINAL)
-                if (VesselState.thrustCurrent < VesselState.thrustMinimum)
+                if (VesselState.thrustCurrent < VesselState.thrustMinimum*0.98)
                     Core.Attitude.Controller.Reset();
 
             HandleTerminal();
