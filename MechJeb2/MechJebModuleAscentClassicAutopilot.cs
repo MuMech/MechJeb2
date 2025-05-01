@@ -96,6 +96,9 @@ namespace MuMech
             else Status                                      = Localizer.Format("#MechJeb_Ascent_status18"); //"Vertical ascent"
         }
 
+        private double _desiredHeading;
+        private double _desiredPitch;
+
         private void DriveGravityTurn()
         {
             //stop the gravity turn when our apoapsis reaches the desired altitude
@@ -115,19 +118,20 @@ namespace MuMech
             Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
             if (Core.Thrust.TargetThrottle < 1.0F)
             {
-                AttitudeTo(VesselState.orbitalVelocity);
+                AttitudeTo(_desiredPitch * UtilMath.Rad2Deg, _desiredHeading);
                 Status = Localizer.Format("#MechJeb_Ascent_status21"); //"Fine tuning apoapsis"
                 return;
             }
 
-            double desiredFlightPathAngle = FlightPathAngle(VesselState.altitudeASL, VesselState.speedSurface) * UtilMath.Deg2Rad;
+            _desiredPitch = FlightPathAngle(VesselState.altitudeASL, VesselState.speedSurface) * UtilMath.Deg2Rad;
 
             if (AscentSettings.CorrectiveSteering)
             {
+                // FIXME: this is all still broken
                 double actualFlightPathAngle = Math.Atan2(VesselState.speedVertical, VesselState.speedSurfaceHorizontal) * UtilMath.Rad2Deg;
 
                 /* form an isosceles triangle with unit vectors pointing in the desired and actual flight path angle directions and find the length of the base */
-                double velocityError = 2 * Math.Sin((desiredFlightPathAngle - actualFlightPathAngle) / 2);
+                double velocityError = 2 * Math.Sin((_desiredPitch - actualFlightPathAngle) / 2);
 
                 double difficulty = VesselState.surfaceVelocity.magnitude * 0.02 / VesselState.ThrustAccel(Core.Thrust.TargetThrottle);
                 difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
@@ -135,10 +139,11 @@ namespace MuMech
 
                 double steerAngle = MuUtils.Clamp(Math.Asin(steerOffset), -Math.PI / 6, Math.PI / 6);
 
-                desiredFlightPathAngle = MuUtils.Clamp(desiredFlightPathAngle + steerAngle, -Math.PI / 2, Math.PI / 2);
+                _desiredPitch = MuUtils.Clamp(_desiredPitch + steerAngle, -Math.PI / 2, Math.PI / 2);
             }
 
-            AttitudeTo(desiredFlightPathAngle * UtilMath.Rad2Deg);
+            _desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val);
+            AttitudeTo(_desiredPitch * UtilMath.Rad2Deg, _desiredHeading);
 
             Status = Localizer.Format("#MechJeb_Ascent_status22"); //"Gravity turn"
         }

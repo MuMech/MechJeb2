@@ -326,13 +326,6 @@ namespace MuMech
 
         protected double SrfvelHeading() => VesselState.HeadingFromDirection(VesselState.surfaceVelocity.ProjectOnPlane(VesselState.up));
 
-        // this provides ground track heading based on desired inclination and is what most consumers should call
-        protected void AttitudeTo(double desiredPitch)
-        {
-            double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val);
-            AttitudeTo(desiredPitch, desiredHeading);
-        }
-
         protected void AttitudeTo(double desiredPitch, double desiredHeading)
         {
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * VesselState.east +
