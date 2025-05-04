@@ -208,7 +208,7 @@ namespace MuMech
             bool shouldEndTerminal = false;
 
             // this handles ending TERMINAL guidance (but not TERMINAL_RCS) due to thrust fault in the last stage
-            if (Status == PVGStatus.TERMINAL && VesselState.thrustCurrent == 0 && _ascentSettings.LastStage.Val == Vessel.currentStage)
+            if (Status == PVGStatus.TERMINAL && VesselState.thrustCurrent == 0 && Vessel.currentStage < _ascentSettings.LastStage.Val)
             {
                 Debug.Log("[MechJebModuleGuidanceController] no thrust in last stage.");
                 shouldEndTerminal = true;
