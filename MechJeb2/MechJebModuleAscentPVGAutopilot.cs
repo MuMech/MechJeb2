@@ -117,7 +117,7 @@ namespace MuMech
         private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
-            AttitudeTo(90, Core.Guidance.Heading);
+            VerticalAttitude(Core.Guidance.Heading);
 
             bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed && VesselState.altitudeBottom > 5;
 
