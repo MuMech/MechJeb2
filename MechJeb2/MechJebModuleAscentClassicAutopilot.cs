@@ -84,7 +84,7 @@ namespace MuMech
             if (!IsVerticalAscent(VesselState.altitudeTrue, VesselState.speedSurface)) _mode = AscentMode.GRAVITY_TURN;
             if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode                       = AscentMode.COAST_TO_APOAPSIS;
 
-            VerticalAttitude();
+            VerticalAttitude(OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val));
 
             bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed;
 

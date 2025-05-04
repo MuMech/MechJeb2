@@ -361,10 +361,9 @@ namespace MuMech
         }
 
         // this handles vertical rise and bypasses AoA limiters and other inapplicable settings
-        protected void VerticalAttitude()
+        protected void VerticalAttitude(double desiredHeading)
         {
-            double desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val);
-            Core.Attitude.attitudeTo(desiredHeading, 90, AscentSettings.VerticalRoll , this, fixCOT: true);
+            Core.Attitude.attitudeTo(desiredHeading, 90, AscentSettings.VerticalRoll, this, fixCOT: true);
         }
 
         private Vector3d ApplyQAlphaAoALimiter(Vector3d desiredThrustVector)
