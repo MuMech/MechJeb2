@@ -357,13 +357,24 @@ namespace MuMech
             else
                 Core.Attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
 
-            Core.Attitude.SetAxisControl(true, true, VesselState.altitudeBottom > AscentSettings.RollAltitude);
+            Core.Attitude.SetAxisControl(true, true, AscentSettings.ForceRoll);
         }
 
         // this handles vertical rise and bypasses AoA limiters and other inapplicable settings
-        protected void VerticalAttitude(double desiredHeading)
+        protected void VerticalHeadingTo(double desiredHeading)
         {
             Core.Attitude.attitudeTo(desiredHeading, 90, AscentSettings.VerticalRoll, this, fixCOT: true);
+            bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed;
+
+            Core.Attitude.SetActuationControl(liftedOff, liftedOff, liftedOff);
+            Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && AscentSettings.ForceRoll && VesselState.altitudeBottom > AscentSettings.RollAltitude);
+        }
+
+        // this is for initial pitch-over and bypasses AoA limiters
+        protected void PitchProgramAttitudeTo(double desiredPitch, double desiredHeading)
+        {
+            Core.Attitude.attitudeTo(desiredHeading, desiredPitch, AscentSettings.TurnRoll, this, fixCOT: true);
+            Core.Attitude.SetAxisControl(true, true, AscentSettings.ForceRoll);
         }
 
         private Vector3d ApplyQAlphaAoALimiter(Vector3d desiredThrustVector)

@@ -6,6 +6,7 @@
 
 extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
+using MechJebLib.Primitives;
 using MechJebLib.PVG;
 using MechJebLibBindings;
 using UnityEngine;
@@ -34,6 +35,7 @@ namespace MuMech
 
         public double Pitch;
         public double Heading;
+        public Vector3d Inertial = Vector3d.zero;
         public double Tgo;
         public double VGO;
         public double StartCoast;
@@ -333,9 +335,10 @@ namespace MuMech
 
             if (Status != PVGStatus.TERMINAL_RCS)
             {
-                (double pitch, double heading) = Solution.PitchAndHeading(VesselState.time);
+                (double pitch, double heading, V3 inertial) = Solution.PitchAndHeading(VesselState.time);
                 Pitch                          = Rad2Deg(pitch);
                 Heading                        = Rad2Deg(heading);
+                Inertial                       = inertial.V3ToWorldRotated();
                 Tgo                            = Solution.Tgo(VesselState.time);
                 VGO                            = Solution.Vgo(VesselState.time);
             }

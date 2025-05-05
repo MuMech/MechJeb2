@@ -351,8 +351,11 @@ namespace MuMech.AttitudeControllers
 
                 _targetTorque[i] = _actuation[i] * _controlTorque[i];
 
-                if (Ac.ActuationControl[i] == 0)
+                if (Ac.ActuationControl[i] == 0 || _controlTorque[i] == 0 || Ac.AxisControl[i] == 0)
+                {
+                    _actuation[i] = 0;
                     Reset(i);
+                }
             }
         }
 
@@ -366,6 +369,7 @@ namespace MuMech.AttitudeControllers
         public override void Reset(int i)
         {
             _velPID[i].Reset();
+            _posPID[i].Reset();
             _error0[i]  = double.NaN;
         }
 
