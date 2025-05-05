@@ -14,10 +14,9 @@ namespace MechJebLib.Control
     // 3. standard and parallel form parameters
     // 4. optional input and output deadbands
     // 5. optional low pass filtering of input and output
-    // 6. optional Clegg integrator
+    // 6. optional Clegg/First Order Reset Elements(FORE) integrator
     // 7. optional output saturation and tracking anti-windup
     //
-    // TODO: First Order Reset Elements
     public class PIDLoop2 : IPIDLoop
     {
         // internal state for last error
@@ -58,7 +57,7 @@ namespace MechJebLib.Control
         public double OutputDeadband       { get; set; }
         public double MinOutput            { get; set; } = double.MinValue;
         public double MaxOutput            { get; set; } = double.MaxValue;
-        public bool   FORE                 { get; set; } = false; // not recommended if integrator required to zero the setpoint
+        public bool   FORE                 { get; set; } // not recommended if integrator required to zero the setpoint
         public double FORETerm             { get; set; } = -1.0;
 
         public double Update(double r, double y)
