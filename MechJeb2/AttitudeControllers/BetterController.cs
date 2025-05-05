@@ -259,6 +259,11 @@ namespace MuMech.AttitudeControllers
             // low-pass filter the control torque
             _controlTorque = _controlTorque == Vector3d.zero ? Ac.torque : _controlTorque + SmoothTorque * (Ac.torque - _controlTorque);
 
+            // if torque is really zero, set it zero
+            for(int i = 0; i < 3; i++)
+                if (Ac.torque[i] == 0)
+                    _controlTorque[i] = 0;
+
             // needed to stop wiggling at higher phys warp
             double warpFactor = Ac.VesselState.deltaT / 0.02;
 
@@ -439,17 +444,17 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos PTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_posPID[0].PTerm, _posPID[1].PTerm, _posPID[2].PTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].PTerm, _posPID[1].PTerm, _posPID[2].PTerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos ITerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_posPID[0].ITerm, _posPID[1].ITerm, _posPID[2].ITerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].ITerm, _posPID[1].ITerm, _posPID[2].ITerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos DTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_posPID[0].DTerm, _posPID[1].DTerm, _posPID[2].DTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].DTerm, _posPID[1].DTerm, _posPID[2].DTerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -504,17 +509,17 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel PTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_velPID[0].PTerm, _velPID[1].PTerm, _velPID[2].PTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].PTerm, _velPID[1].PTerm, _velPID[2].PTerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel ITerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_velPID[0].ITerm, _velPID[1].ITerm, _velPID[2].ITerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].ITerm, _velPID[1].ITerm, _velPID[2].ITerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel DTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_velPID[0].DTerm, _velPID[1].DTerm, _velPID[2].DTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].DTerm, _velPID[1].DTerm, _velPID[2].DTerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
