@@ -13,27 +13,37 @@ namespace MuMech.AttitudeControllers
 
         private const double EPS = 2.2204e-16;
 
-        private const double POS_KP_DEFAULT = 2.0;
-        private const double POS_DEADBAND_DEFAULT = 0.002;
-        private const double VEL_KP_DEFAULT = 10;
-        private const double VEL_TI_DEFAULT = 2.24;
-        private const double VEL_TD_DEFAULT = 0;
-        private const double VEL_N_DEFAULT = 1.0;
-        private const double VEL_B_DEFAULT = 1.0;
-        private const double VEL_C_DEFAULT = 1.0;
-        private const double VEL_DEADBAND_DEFAULT = 0.0001;
-        private const double VEL_SMOOTH_IN_DEFAULT = 1.0;
+        private const double POS_KP_DEFAULT        = 2.0;
+        private const double POS_TI_DEFAULT        = 0.0;
+        private const double POS_TD_DEFAULT        = 0.0;
+        private const double POS_N_DEFAULT         = 0.0;
+        private const double POS_B_DEFAULT         = 0.0;
+        private const double POS_C_DEFAULT         = 0.0;
+        private const double POS_DEADBAND_DEFAULT  = 0.002;
+        private const double POS_FORE_TERM_DEFAULT = -1.0;
+        private const bool   POS_FORE_DEFAULT      = false;
+        private const double POS_SMOOTH_IN_DEFAULT      = 1.0;
+        private const double POS_SMOOTH_OUT_DEFAULT     = 1.0;
+
+        private const double VEL_KP_DEFAULT         = 10;
+        private const double VEL_TI_DEFAULT         = 2.24;
+        private const double VEL_TD_DEFAULT         = 0;
+        private const double VEL_N_DEFAULT          = 1.0;
+        private const double VEL_B_DEFAULT          = 1.0;
+        private const double VEL_C_DEFAULT          = 1.0;
+        private const double VEL_DEADBAND_DEFAULT   = 0.0001;
+        private const double VEL_FORE_TERM_DEFAULT  = -1.0;
+        private const bool   VEL_FORE_DEFAULT       = false;
+        private const double VEL_SMOOTH_IN_DEFAULT  = 1.0;
         private const double VEL_SMOOTH_OUT_DEFAULT = 1.0;
-        private const double POS_SMOOTH_IN_DEFAULT = 1.0;
-        private const double MAX_STOPPING_TIME_DEFAULT = 2;
-        private const double MIN_FLIP_TIME_DEFAULT = 120;
+
+        private const double MAX_STOPPING_TIME_DEFAULT  = 2;
+        private const double MIN_FLIP_TIME_DEFAULT      = 120;
         private const double ROLL_CONTROL_RANGE_DEFAULT = 5;
-        private const double VEL_FORE_TERM_DEFAULT = -1.0;
-        private const bool VEL_FORE_DEFAULT = false;
+        private const double SMOOTH_TORQUE_DEFAULT       = 0.10;
 
-        private static readonly Vector3d _naN = new Vector3d(double.NaN, double.NaN, double.NaN);
-
-        private readonly PIDLoop2[] _pid = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
+        private readonly PIDLoop2[] _velPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
+        private readonly PIDLoop2[] _posPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble MaxStoppingTime = new EditableDouble(MAX_STOPPING_TIME_DEFAULT);
@@ -44,12 +54,35 @@ namespace MuMech.AttitudeControllers
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble PosDeadband = new EditableDouble(POS_DEADBAND_DEFAULT);
 
-        /* FIXME: when you do that look at ModuleGimbal gimbalResponseSpeed and model the time delay and use the XLR11 since it has slow gimbal */
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble PosKp = new EditableDouble(POS_KP_DEFAULT);
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble PosTi = new EditableDouble(POS_TI_DEFAULT);
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble PosTd = new EditableDouble(POS_TD_DEFAULT);
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble PosN = new EditableDouble(POS_N_DEFAULT);
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble PosB = new EditableDouble(POS_B_DEFAULT);
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble PosC = new EditableDouble(POS_C_DEFAULT);
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool PosFORE = POS_FORE_DEFAULT;
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public EditableDouble PosFORETerm = POS_FORE_TERM_DEFAULT;
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble PosSmoothIn = new EditableDouble(POS_SMOOTH_IN_DEFAULT);
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble PosSmoothOut = new EditableDouble(POS_SMOOTH_OUT_DEFAULT);
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble RollControlRange = new EditableDouble(ROLL_CONTROL_RANGE_DEFAULT);
@@ -85,7 +118,6 @@ namespace MuMech.AttitudeControllers
 
         /* error in pitch, roll, yaw */
         private Vector3d _error0 = Vector3d.zero;
-        private Vector3d _error1 = _naN;
 
         /* error */
         private double _errorTotal;
@@ -94,10 +126,12 @@ namespace MuMech.AttitudeControllers
         private Vector3d _maxAlpha = Vector3d.zero;
 
         /* max angular rotation */
-        private Vector3d _maxOmega = Vector3d.zero;
-        private Vector3d _omega0 = _naN;
         private Vector3d _targetOmega = Vector3d.zero;
         private Vector3d _targetTorque = Vector3d.zero;
+        private Vector3d _controlTorque = Vector3d.zero;
+
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble SmoothTorque = new EditableDouble(SMOOTH_TORQUE_DEFAULT);
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool UseControlRange = true;
@@ -125,24 +159,42 @@ namespace MuMech.AttitudeControllers
 
         private void Defaults()
         {
-            PosKp.Val = POS_KP_DEFAULT;
-            PosDeadband.Val = POS_DEADBAND_DEFAULT;
-            VelKp.Val = VEL_KP_DEFAULT;
-            VelTi.Val = VEL_TI_DEFAULT;
-            VelTd.Val = VEL_TD_DEFAULT;
-            VelN.Val = VEL_N_DEFAULT;
-            VelB.Val = VEL_B_DEFAULT;
-            VelC.Val = VEL_C_DEFAULT;
-            VelDeadband.Val = VEL_DEADBAND_DEFAULT;
-            VelSmoothIn.Val = VEL_SMOOTH_IN_DEFAULT;
-            VelSmoothOut.Val = VEL_SMOOTH_OUT_DEFAULT;
-            VelFORE = VEL_FORE_DEFAULT;
-            VelFORETerm.Val = VEL_FORE_TERM_DEFAULT;
-            PosSmoothIn.Val = POS_SMOOTH_IN_DEFAULT;
-            MaxStoppingTime.Val = MAX_STOPPING_TIME_DEFAULT;
-            MinFlipTime.Val = MIN_FLIP_TIME_DEFAULT;
+            // Position PID defaults
+            PosKp.Val        = POS_KP_DEFAULT;
+            PosTi.Val        = POS_TI_DEFAULT;
+            PosTd.Val        = POS_TD_DEFAULT;
+            PosN.Val         = POS_N_DEFAULT;
+            PosB.Val         = POS_B_DEFAULT;
+            PosC.Val         = POS_C_DEFAULT;
+            PosDeadband.Val  = POS_DEADBAND_DEFAULT;
+            PosSmoothOut.Val = POS_SMOOTH_OUT_DEFAULT;
+            PosSmoothIn.Val  = POS_SMOOTH_IN_DEFAULT;
+            PosFORE          = POS_FORE_DEFAULT;
+            PosFORETerm.Val  = POS_FORE_TERM_DEFAULT;
+
+            // Velocity PID defaults
+            VelKp.Val            = VEL_KP_DEFAULT;
+            VelTi.Val            = VEL_TI_DEFAULT;
+            VelTd.Val            = VEL_TD_DEFAULT;
+            VelN.Val             = VEL_N_DEFAULT;
+            VelB.Val             = VEL_B_DEFAULT;
+            VelC.Val             = VEL_C_DEFAULT;
+            VelDeadband.Val      = VEL_DEADBAND_DEFAULT;
+            VelSmoothIn.Val      = VEL_SMOOTH_IN_DEFAULT;
+            VelSmoothOut.Val     = VEL_SMOOTH_OUT_DEFAULT;
+            VelFORE              = VEL_FORE_DEFAULT;
+            VelFORETerm.Val      = VEL_FORE_TERM_DEFAULT;
+
+            // Miscellaneous defaults
+            MaxStoppingTime.Val  = MAX_STOPPING_TIME_DEFAULT;
+            MinFlipTime.Val      = MIN_FLIP_TIME_DEFAULT;
             RollControlRange.Val = ROLL_CONTROL_RANGE_DEFAULT;
-            Version = SETTINGS_VERSION;
+            UseControlRange      = true;
+            UseFlipTime          = true;
+            UseStoppingTime      = true;
+            SmoothTorque.Val     = SMOOTH_TORQUE_DEFAULT;
+
+            Version              = SETTINGS_VERSION;
         }
 
         public override void OnModuleEnabled()
@@ -170,7 +222,7 @@ namespace MuMech.AttitudeControllers
             Transform vesselTransform = _vessel.ReferenceTransform;
 
             // 1. The Euler(-90) here is because the unity transform puts "up" as the pointy end, which is wrong.  The rotation means that
-            // "forward" becomes the pointy end, and "up" and "right" correctly define e.g. AoA/pitch and AoS/yaw.  This is just KSP being KSP.
+            // "forward" becomes the pointy end, and "up" and "right" correctly define e.g., AoA/pitch and AoS/yaw.  This is just KSP being KSP.
             // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame (we do everything in the ship frame
             // first, and then negate the error to get the error in the target reference frame at the end).
             Quaternion deltaRotation =
@@ -186,7 +238,7 @@ namespace MuMech.AttitudeControllers
             // law of cosines for the "distance" of the miss in radians
             _errorTotal = Math.Acos(MuUtils.Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
 
-            // we assemble phi in the pitch, roll, -yaw basis that KSP uses
+            // we assemble phi in the pitch, roll, negative yaw basis that KSP uses
             var phi = new Vector3d(
                 MuUtils.ClampRadiansPi(pitch), // pitch distance around the geodesic
                 MuUtils.ClampRadiansPi(roll),
@@ -202,14 +254,10 @@ namespace MuMech.AttitudeControllers
 
         private void UpdatePredictionPI()
         {
-            _omega0 = _vessel.angularVelocityD;
-
             UpdateError();
 
-            // low-pass filter on the error input
-            _error0 = _error1.IsFinite() ? _error1 + PosSmoothIn * (_error0 - _error1) : _error0;
-
-            Vector3d controlTorque = Ac.torque;
+            // low-pass filter the control torque
+            _controlTorque = _controlTorque == Vector3d.zero ? Ac.torque : _controlTorque + SmoothTorque * (Ac.torque - _controlTorque);
 
             // needed to stop wiggling at higher phys warp
             double warpFactor = Ac.VesselState.deltaT / 0.02;
@@ -220,12 +268,7 @@ namespace MuMech.AttitudeControllers
             {
                 double error = _error0[i];
 
-                if (Math.Abs(error) < PosDeadband)
-                    error = 0;
-                else
-                    error -= Math.Sign(error) * PosDeadband;
-
-                _maxAlpha[i] = controlTorque[i] / _vessel.MOI[i];
+                _maxAlpha[i] = _controlTorque[i] / _vessel.MOI[i];
 
                 if (_maxAlpha[i] == 0)
                     _maxAlpha[i] = 1;
@@ -239,56 +282,73 @@ namespace MuMech.AttitudeControllers
                     double posKp = PosKp / warpFactor;
                     double effLD = _maxAlpha[i] / (2 * posKp * posKp);
 
+                    double maxOmega = double.PositiveInfinity;
+
+                    if (UseStoppingTime)
+                    {
+                        maxOmega = _maxAlpha[i] * MaxStoppingTime;
+                        if (UseFlipTime) maxOmega = Math.Max(maxOmega, Math.PI / MinFlipTime.Val);
+                    }
+
                     if (Math.Abs(error) <= 2 * effLD)
                     {
-                        // linear ramp down of acceleration
-                        _targetOmega[i] = -posKp * error;
+                        _posPID[i].Kp               = posKp;
+                        _posPID[i].Ti               = PosTi.Val;
+                        _posPID[i].Td               = PosTd.Val;
+                        _posPID[i].N                = PosN.Val;
+                        _posPID[i].B                = PosB.Val;
+                        _posPID[i].C                = PosC.Val;
+                        _posPID[i].H                = Ac.VesselState.deltaT;
+                        _posPID[i].SmoothIn         = MuUtils.Clamp01(PosSmoothIn);
+                        _posPID[i].SmoothOut        = MuUtils.Clamp01(PosSmoothOut);
+                        _posPID[i].MinOutput        = -maxOmega;
+                        _posPID[i].MaxOutput        = maxOmega;
+                        _posPID[i].IntegralDeadband = PosDeadband.Val;
+                        _posPID[i].FORE             = PosFORE;
+                        _posPID[i].FORETerm         = PosFORETerm.Val;
+
+                        _targetOmega[i] = _posPID[i].Update(0, _error0[i]);
                     }
                     else
                     {
+                        _posPID[i].Reset();
                         // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
                         _targetOmega[i] = -Math.Sqrt(2 * _maxAlpha[i] * (Math.Abs(error) - effLD)) * Math.Sign(error);
                     }
 
-                    if (UseStoppingTime)
-                    {
-                        _maxOmega[i] = _maxAlpha[i] * MaxStoppingTime;
-                        if (UseFlipTime) _maxOmega[i] = Math.Max(_maxOmega[i], Math.PI / MinFlipTime);
-                        _targetOmega[i] = MuUtils.Clamp(_targetOmega[i], -_maxOmega[i], _maxOmega[i]);
-                    }
-
                     if (UseControlRange && _errorTotal * Mathf.Rad2Deg > RollControlRange)
+                    {
                         _targetOmega[1] = 0;
+                        _posPID[1].Reset();
+                    }
                 }
 
-                _pid[i].Kp = VelKp / (_maxAlpha[i] * warpFactor);
-                _pid[i].Ti = VelTi * warpFactor;
-                _pid[i].Td = VelTd * warpFactor;
-                _pid[i].N = VelN;
-                _pid[i].B = VelB;
-                _pid[i].C = VelC;
-                _pid[i].H = Ac.VesselState.deltaT;
-                _pid[i].SmoothIn = MuUtils.Clamp01(VelSmoothIn);
-                _pid[i].SmoothOut = MuUtils.Clamp01(VelSmoothOut);
-                _pid[i].MinOutput = -1;
-                _pid[i].MaxOutput = 1;
-                _pid[i].IntegralDeadband = VelDeadband;
-                _pid[i].FORE = VelFORE;
-                _pid[i].FORETerm = VelFORETerm;
+                _velPID[i].Kp = VelKp / (_maxAlpha[i] * warpFactor);
+                _velPID[i].Ti = VelTi * warpFactor;
+                _velPID[i].Td = VelTd * warpFactor;
+                _velPID[i].N = VelN;
+                _velPID[i].B = VelB;
+                _velPID[i].C = VelC;
+                _velPID[i].H = Ac.VesselState.deltaT;
+                _velPID[i].SmoothIn = MuUtils.Clamp01(VelSmoothIn);
+                _velPID[i].SmoothOut = MuUtils.Clamp01(VelSmoothOut);
+                _velPID[i].MinOutput = -1;
+                _velPID[i].MaxOutput = 1;
+                _velPID[i].IntegralDeadband = VelDeadband;
+                _velPID[i].FORE = VelFORE;
+                _velPID[i].FORETerm = VelFORETerm;
 
                 // need the negative from the pid due to KSP's orientation of actuation
-                _actuation[i] = -_pid[i].Update(_targetOmega[i], _omega0[i]);
+                _actuation[i] = -_velPID[i].Update(_targetOmega[i], _vessel.angularVelocityD[i]);
 
                 if (Math.Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
                     _actuation[i] = 0;
 
-                _targetTorque[i] = _actuation[i] * Ac.torque[i];
+                _targetTorque[i] = _actuation[i] * _controlTorque[i];
 
                 if (Ac.ActuationControl[i] == 0)
                     Reset(i);
             }
-
-            _error1 = _error0;
         }
 
         public override void Reset()
@@ -300,8 +360,8 @@ namespace MuMech.AttitudeControllers
 
         public override void Reset(int i)
         {
-            _pid[i].Reset();
-            _omega0[i] = _error0[i] = _error1[i] = double.NaN;
+            _velPID[i].Reset();
+            _error0[i]  = double.NaN;
         }
 
         public override void GUI()
@@ -328,18 +388,68 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
-            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
             GUILayout.Label("Pos Kp", GUILayout.ExpandWidth(false));
             PosKp.Text = GUILayout.TextField(PosKp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos Ti", GUILayout.ExpandWidth(false));
+            PosTi.Text = GUILayout.TextField(PosTi.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos Td", GUILayout.ExpandWidth(false));
+            PosTd.Text = GUILayout.TextField(PosTd.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos N", GUILayout.ExpandWidth(false));
+            PosN.Text = GUILayout.TextField(PosN.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos B", GUILayout.ExpandWidth(false));
+            PosB.Text = GUILayout.TextField(PosB.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos C", GUILayout.ExpandWidth(false));
+            PosC.Text = GUILayout.TextField(PosC.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Pos Deadband", GUILayout.ExpandWidth(false));
             PosDeadband.Text = GUILayout.TextField(PosDeadband.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            PosFORE          = GUILayout.Toggle(PosFORE, Localizer.Format("Pos FORE"), GUILayout.ExpandWidth(false));
+            PosFORETerm.Text = GUILayout.TextField(PosFORETerm.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
+            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos SmoothOut", GUILayout.ExpandWidth(false));
+            PosSmoothOut.Text = GUILayout.TextField(PosSmoothOut.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos PTerm", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_posPID[0].PTerm, _posPID[1].PTerm, _posPID[2].PTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos ITerm", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_posPID[0].ITerm, _posPID[1].ITerm, _posPID[2].ITerm)), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Pos DTerm", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_posPID[0].DTerm, _posPID[1].DTerm, _posPID[2].DTerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -377,7 +487,6 @@ namespace MuMech.AttitudeControllers
             VelDeadband.Text = GUILayout.TextField(VelDeadband.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
-
             GUILayout.BeginHorizontal();
             VelFORE = GUILayout.Toggle(VelFORE, Localizer.Format("Vel FORE"), GUILayout.ExpandWidth(false));
             VelFORETerm.Text = GUILayout.TextField(VelFORETerm.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
@@ -390,26 +499,27 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel SmoothOut", GUILayout.ExpandWidth(false));
-            VelSmoothOut.Text =
-                GUILayout.TextField(VelSmoothOut.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            VelSmoothOut.Text = GUILayout.TextField(VelSmoothOut.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel PTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_pid[0].PTerm, _pid[1].PTerm, _pid[2].PTerm)),
-                GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_velPID[0].PTerm, _velPID[1].PTerm, _velPID[2].PTerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel ITerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_pid[0].ITerm, _pid[1].ITerm, _pid[2].ITerm)),
-                GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_velPID[0].ITerm, _velPID[1].ITerm, _velPID[2].ITerm)), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Vel DTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_pid[0].DTerm, _pid[1].DTerm, _pid[2].DTerm)),
-                GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(new Vector3d(_velPID[0].DTerm, _velPID[1].DTerm, _velPID[2].DTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Smooth Torque", GUILayout.ExpandWidth(false));
+            SmoothTorque.Text = GUILayout.TextField(SmoothTorque.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -429,12 +539,7 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Omega", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_omega0), GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("MaxOmega", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_maxOmega), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(_vessel.angularVelocityD), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -452,7 +557,7 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label5"),
                 GUILayout.ExpandWidth(true)); //"ControlTorque"
-            GUILayout.Label(MuUtils.PrettyPrint(Ac.torque), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(_controlTorque), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
