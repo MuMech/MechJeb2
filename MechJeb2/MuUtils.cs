@@ -17,9 +17,19 @@ namespace MuMech
             return s[0] == '-' ? s : " " + s;
         }
 
+        public static string PadPositiveSci(double x, string format = "F3")
+        {
+            string s = x > 1000000 ? x.ToString("G3") : x.ToString(format);
+            return s[0] == '-' ? s : " " + s;
+        }
+
         public static string PrettyPrint(Vector3d vector, string format = "F3") => "[" + PadPositive(vector.x, format) + ", " +
                                                                                    PadPositive(vector.y, format) + ", " +
                                                                                    PadPositive(vector.z, format) + " ]";
+
+        public static string PrettyPrintSci(Vector3d vector, string format = "F3") => "[" + PadPositiveSci(vector.x, format) + ", " +
+            PadPositiveSci(vector.y, format) + ", " +
+            PadPositiveSci(vector.z, format) + " ]";
 
         public static string PrettyPrint(Quaternion quaternion, string format = "F3") =>
             "[" + PadPositive(quaternion.x, format) + ", " + PadPositive(quaternion.y, format) + ", " + PadPositive(quaternion.z, format) +
