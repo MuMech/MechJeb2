@@ -237,7 +237,7 @@ namespace MechJebLib.PVG
             return (_tmax[phase] - tbar) * _timeScale;
         }
 
-        public (double pitch, double heading) PitchAndHeading(double t)
+        public (double pitch, double heading, V3 inertial) PitchAndHeading(double t)
         {
             double tbar = (t - T0) / _timeScale;
             V3     u;
@@ -262,7 +262,7 @@ namespace MechJebLib.PVG
             }
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(x.R, u);
-            return (pitch, heading);
+            return (pitch, heading, u);
         }
 
         public (V3 r, V3 v) TerminalStateVectors() => StateVectors(Tmax);

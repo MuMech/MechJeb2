@@ -1,7 +1,6 @@
 extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
-using UnityEngine;
 
 /*
  * Optimized launches for RSS/RO
@@ -117,29 +116,25 @@ namespace MuMech
         private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
-            VerticalAttitude(Core.Guidance.Heading);
+            VerticalHeadingTo(Core.Guidance.Heading);
 
-            bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed && VesselState.altitudeBottom > 5;
-
-            Core.Attitude.SetActuationControl(liftedOff, liftedOff, liftedOff);
-            Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && VesselState.altitudeBottom > AscentSettings.RollAltitude);
+            bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed;
 
             if (!liftedOff)
             {
                 Status = Localizer.Format("#MechJeb_Ascent_status12"); //"Awaiting liftoff"
+                return;
             }
-            else
-            {
-                if (VesselState.surfaceVelocity.magnitude > AscentSettings.PitchStartVelocity)
-                {
-                    _mode           = AscentMode.PITCHPROGRAM;
-                    _pitchStartTime = MET;
-                    return;
-                }
 
-                double dv = AscentSettings.PitchStartVelocity - VesselState.surfaceVelocity.magnitude;
-                Status = Localizer.Format("#MechJeb_Ascent_status13", $"{dv:F2}"); //Vertical ascent  <<1>>m/s to go
+            if (VesselState.surfaceVelocity.magnitude > AscentSettings.PitchStartVelocity)
+            {
+                _mode           = AscentMode.PITCHPROGRAM;
+                _pitchStartTime = MET;
+                return;
             }
+
+            double dv = AscentSettings.PitchStartVelocity - VesselState.surfaceVelocity.magnitude;
+            Status = Localizer.Format("#MechJeb_Ascent_status13", $"{dv:F2}"); //Vertical ascent  <<1>>m/s to go
         }
 
         private void DrivePitchProgram()
@@ -166,7 +161,7 @@ namespace MuMech
                 return;
             }
 
-            AttitudeTo(pitch, Core.Guidance.Heading);
+            PitchProgramAttitudeTo(pitch, Core.Guidance.Heading);
         }
 
         private bool CheckForGuidanceTransition(double pitch)
@@ -224,8 +219,10 @@ namespace MuMech
             }
             else
             {
-                Status = Localizer.Format("#MechJeb_Ascent_status17"); //"Stable Guidance"
-                AttitudeTo(Core.Guidance.Pitch, Core.Guidance.Heading);
+                double ang = Vector3d.Angle(Core.Guidance.Inertial, VesselState.forward);
+                // FIXME: should be able to set status color to yellow for ang > 2 and red for ang > 5 or so
+                Status = $"Stable Guidance: {ang:F}° deviation";
+                AttitudeTo(Core.Guidance.Inertial);
             }
         }
     }
