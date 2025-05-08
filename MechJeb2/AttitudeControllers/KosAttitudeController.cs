@@ -7,12 +7,10 @@ namespace MuMech.AttitudeControllers
 {
     internal class KosAttitudeController : BaseAttitudeController
     {
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble MaxStoppingTime = new EditableDouble(2);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult RollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
         //public double RollControlRange {
         //    get { return this.rollControlRange; }
@@ -60,11 +58,11 @@ namespace MuMech.AttitudeControllers
 
         /* temporary state vectors */
         private QuaternionD _vesselRotation;
-        private Vector3d   _vesselForward;
-        private Vector3d   _vesselTop;
-        private Vector3d   _vesselStarboard;
-        private Vector3d   _targetForward;
-        private Vector3d   _targetTop;
+        private Vector3d    _vesselForward;
+        private Vector3d    _vesselTop;
+        private Vector3d    _vesselStarboard;
+        private Vector3d    _targetForward;
+        private Vector3d    _targetTop;
 
         /* private Vector3d targetStarboard; */
 

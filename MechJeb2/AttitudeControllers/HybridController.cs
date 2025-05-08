@@ -8,16 +8,13 @@ namespace MuMech.AttitudeControllers
 {
     internal class HybridController : BaseAttitudeController
     {
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble MaxStoppingTime = new EditableDouble(2);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult RollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public bool UseControlRange = true;
 
         private readonly TorquePI _pitchPI = new TorquePI();
@@ -28,8 +25,7 @@ namespace MuMech.AttitudeControllers
         private readonly KosPIDLoop _yawRatePI   = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
         private readonly KosPIDLoop _rollRatePI  = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public bool UseInertia = true;
 
         private Vector3d _actuation    = Vector3d.zero;
@@ -73,10 +69,10 @@ namespace MuMech.AttitudeControllers
             QuaternionD deltaRotation = QuaternionD.Inverse((QuaternionD)vesselTransform.transform.rotation * QuaternionD.Euler(-90, 0, 0)) * Ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
-            Vector3d ea = deltaRotation.eulerAngles;
-            double pitch = ea[0] * UtilMath.Deg2Rad;
-            double yaw = ea[1] * UtilMath.Deg2Rad;
-            double roll = ea[2] * UtilMath.Deg2Rad;
+            Vector3d ea    = deltaRotation.eulerAngles;
+            double   pitch = ea[0] * UtilMath.Deg2Rad;
+            double   yaw   = ea[1] * UtilMath.Deg2Rad;
+            double   roll  = ea[2] * UtilMath.Deg2Rad;
 
             // law of cosines for the "distance" of the miss in radians
             _phiTotal = Math.Acos(MuUtils.Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
