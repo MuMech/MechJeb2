@@ -336,7 +336,8 @@ namespace MuMech
             {
                 if (attitudeReference != AttitudeReference.INERTIAL && attitudeReference != AttitudeReference.INERTIAL_COT) attitudeKILLROT = false;
 
-                Controller.Reset();
+                if (!(Controller is BetterController))
+                    Controller.Reset();
 
                 attitudeChanged = false;
             }
