@@ -77,9 +77,11 @@ namespace MechJebLib.Control
                 else
                     ITerm += FORETerm * ITerm;
 
+            // Trapezoidal/Tustin/Bilinear integrator term
             double k = K == 0 ? 1 : K;
             ITerm += 0.5 * k * H * (ei + _ei1) / Ti;
 
+            // Trapezoidal/Tustin/Bilinear derivative term
             double den = 2 + N * H;
             DTerm = (2 - N * H) / den * DTerm + 2 * N * Td / (K * den) * (ed - _ed1);
 

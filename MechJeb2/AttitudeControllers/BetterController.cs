@@ -1,9 +1,10 @@
 ﻿extern alias JetBrainsAnnotations;
-using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using MechJebLib.Control;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MuMech.AttitudeControllers
 {
@@ -11,19 +12,17 @@ namespace MuMech.AttitudeControllers
     {
         private const int SETTINGS_VERSION = 9;
 
-        private const double EPS = 2.2204e-16;
-
-        private const double POS_KP_DEFAULT        = 2.0;
-        private const double POS_TI_DEFAULT        = 0.0;
-        private const double POS_TD_DEFAULT        = 0.0;
-        private const double POS_N_DEFAULT         = 0.0;
-        private const double POS_B_DEFAULT         = 0.0;
-        private const double POS_C_DEFAULT         = 0.0;
-        private const double POS_DEADBAND_DEFAULT  = 0.002;
-        private const double POS_FORE_TERM_DEFAULT = -1.0;
-        private const bool   POS_FORE_DEFAULT      = false;
-        private const double POS_SMOOTH_IN_DEFAULT      = 1.0;
-        private const double POS_SMOOTH_OUT_DEFAULT     = 1.0;
+        private const double POS_KP_DEFAULT         = 2.0;
+        private const double POS_TI_DEFAULT         = 0.0;
+        private const double POS_TD_DEFAULT         = 0.0;
+        private const double POS_N_DEFAULT          = 0.0;
+        private const double POS_B_DEFAULT          = 0.0;
+        private const double POS_C_DEFAULT          = 0.0;
+        private const double POS_DEADBAND_DEFAULT   = 0.002;
+        private const double POS_FORE_TERM_DEFAULT  = -1.0;
+        private const bool   POS_FORE_DEFAULT       = false;
+        private const double POS_SMOOTH_IN_DEFAULT  = 1.0;
+        private const double POS_SMOOTH_OUT_DEFAULT = 1.0;
 
         private const double VEL_KP_DEFAULT         = 10;
         private const double VEL_TI_DEFAULT         = 2.24;
@@ -40,7 +39,7 @@ namespace MuMech.AttitudeControllers
         private const double MAX_STOPPING_TIME_DEFAULT  = 2;
         private const double MIN_FLIP_TIME_DEFAULT      = 120;
         private const double ROLL_CONTROL_RANGE_DEFAULT = 5;
-        private const double SMOOTH_TORQUE_DEFAULT       = 0.10;
+        private const double SMOOTH_TORQUE_DEFAULT      = 0.10;
 
         private readonly PIDLoop2[] _velPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
         private readonly PIDLoop2[] _posPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
@@ -126,8 +125,8 @@ namespace MuMech.AttitudeControllers
         private Vector3d _maxAlpha = Vector3d.zero;
 
         /* max angular rotation */
-        private Vector3d _targetOmega = Vector3d.zero;
-        private Vector3d _targetTorque = Vector3d.zero;
+        private Vector3d _targetOmega   = Vector3d.zero;
+        private Vector3d _targetTorque  = Vector3d.zero;
         private Vector3d _controlTorque = Vector3d.zero;
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -173,17 +172,17 @@ namespace MuMech.AttitudeControllers
             PosFORETerm.Val  = POS_FORE_TERM_DEFAULT;
 
             // Velocity PID defaults
-            VelKp.Val            = VEL_KP_DEFAULT;
-            VelTi.Val            = VEL_TI_DEFAULT;
-            VelTd.Val            = VEL_TD_DEFAULT;
-            VelN.Val             = VEL_N_DEFAULT;
-            VelB.Val             = VEL_B_DEFAULT;
-            VelC.Val             = VEL_C_DEFAULT;
-            VelDeadband.Val      = VEL_DEADBAND_DEFAULT;
-            VelSmoothIn.Val      = VEL_SMOOTH_IN_DEFAULT;
-            VelSmoothOut.Val     = VEL_SMOOTH_OUT_DEFAULT;
-            VelFORE              = VEL_FORE_DEFAULT;
-            VelFORETerm.Val      = VEL_FORE_TERM_DEFAULT;
+            VelKp.Val        = VEL_KP_DEFAULT;
+            VelTi.Val        = VEL_TI_DEFAULT;
+            VelTd.Val        = VEL_TD_DEFAULT;
+            VelN.Val         = VEL_N_DEFAULT;
+            VelB.Val         = VEL_B_DEFAULT;
+            VelC.Val         = VEL_C_DEFAULT;
+            VelDeadband.Val  = VEL_DEADBAND_DEFAULT;
+            VelSmoothIn.Val  = VEL_SMOOTH_IN_DEFAULT;
+            VelSmoothOut.Val = VEL_SMOOTH_OUT_DEFAULT;
+            VelFORE          = VEL_FORE_DEFAULT;
+            VelFORETerm.Val  = VEL_FORE_TERM_DEFAULT;
 
             // Miscellaneous defaults
             MaxStoppingTime.Val  = MAX_STOPPING_TIME_DEFAULT;
@@ -194,7 +193,7 @@ namespace MuMech.AttitudeControllers
             UseStoppingTime      = true;
             SmoothTorque.Val     = SMOOTH_TORQUE_DEFAULT;
 
-            Version              = SETTINGS_VERSION;
+            Version = SETTINGS_VERSION;
         }
 
         public override void OnModuleEnabled()
@@ -211,7 +210,7 @@ namespace MuMech.AttitudeControllers
             deltaEuler = -_error0 * Mathf.Rad2Deg;
 
             for (int i = 0; i < 3; i++)
-                if (Math.Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
+                if (Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
                     _actuation[i] = 0;
 
             act = _actuation;
@@ -230,13 +229,13 @@ namespace MuMech.AttitudeControllers
                 Ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
-            Vector3d ea = deltaRotation.eulerAngles;
-            double pitch = ea[0] * UtilMath.Deg2Rad;
-            double yaw = ea[1] * UtilMath.Deg2Rad;
-            double roll = ea[2] * UtilMath.Deg2Rad;
+            Vector3d ea    = deltaRotation.eulerAngles;
+            double   pitch = ea[0] * UtilMath.Deg2Rad;
+            double   yaw   = ea[1] * UtilMath.Deg2Rad;
+            double   roll  = ea[2] * UtilMath.Deg2Rad;
 
             // law of cosines for the "distance" of the miss in radians
-            _errorTotal = Math.Acos(MuUtils.Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
+            _errorTotal = SafeAcos(Cos(pitch) * Cos(yaw));
 
             // we assemble phi in the pitch, roll, negative yaw basis that KSP uses
             var phi = new Vector3d(
@@ -260,7 +259,7 @@ namespace MuMech.AttitudeControllers
             _controlTorque = _controlTorque == Vector3d.zero ? Ac.torque : _controlTorque + SmoothTorque * (Ac.torque - _controlTorque);
 
             // if torque is really zero, set it zero
-            for(int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++)
                 if (Ac.torque[i] == 0)
                     _controlTorque[i] = 0;
 
@@ -292,10 +291,10 @@ namespace MuMech.AttitudeControllers
                     if (UseStoppingTime)
                     {
                         maxOmega = _maxAlpha[i] * MaxStoppingTime;
-                        if (UseFlipTime) maxOmega = Math.Max(maxOmega, Math.PI / MinFlipTime.Val);
+                        if (UseFlipTime) maxOmega = Max(maxOmega, PI / MinFlipTime.Val);
                     }
 
-                    if (Math.Abs(error) <= 2 * effLD)
+                    if (Abs(error) <= 2 * effLD)
                     {
                         _posPID[i].Kp               = posKp;
                         _posPID[i].Ti               = PosTi.Val;
@@ -318,7 +317,7 @@ namespace MuMech.AttitudeControllers
                     {
                         _posPID[i].Reset();
                         // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
-                        _targetOmega[i] = -Math.Sqrt(2 * _maxAlpha[i] * (Math.Abs(error) - effLD)) * Math.Sign(error);
+                        _targetOmega[i] = -Sqrt(2 * _maxAlpha[i] * (Abs(error) - effLD)) * Sign(error);
                     }
 
                     if (UseControlRange && _errorTotal * Mathf.Rad2Deg > RollControlRange)
@@ -328,25 +327,25 @@ namespace MuMech.AttitudeControllers
                     }
                 }
 
-                _velPID[i].Kp = VelKp / (_maxAlpha[i] * warpFactor);
-                _velPID[i].Ti = VelTi * warpFactor;
-                _velPID[i].Td = VelTd * warpFactor;
-                _velPID[i].N = VelN;
-                _velPID[i].B = VelB;
-                _velPID[i].C = VelC;
-                _velPID[i].H = Ac.VesselState.deltaT;
-                _velPID[i].SmoothIn = MuUtils.Clamp01(VelSmoothIn);
-                _velPID[i].SmoothOut = MuUtils.Clamp01(VelSmoothOut);
-                _velPID[i].MinOutput = -1;
-                _velPID[i].MaxOutput = 1;
+                _velPID[i].Kp               = VelKp / (_maxAlpha[i] * warpFactor);
+                _velPID[i].Ti               = VelTi * warpFactor;
+                _velPID[i].Td               = VelTd * warpFactor;
+                _velPID[i].N                = VelN;
+                _velPID[i].B                = VelB;
+                _velPID[i].C                = VelC;
+                _velPID[i].H                = Ac.VesselState.deltaT;
+                _velPID[i].SmoothIn         = MuUtils.Clamp01(VelSmoothIn);
+                _velPID[i].SmoothOut        = MuUtils.Clamp01(VelSmoothOut);
+                _velPID[i].MinOutput        = -1;
+                _velPID[i].MaxOutput        = 1;
                 _velPID[i].IntegralDeadband = VelDeadband;
-                _velPID[i].FORE = VelFORE;
-                _velPID[i].FORETerm = VelFORETerm;
+                _velPID[i].FORE             = VelFORE;
+                _velPID[i].FORETerm         = VelFORETerm;
 
                 // need the negative from the pid due to KSP's orientation of actuation
                 _actuation[i] = -_velPID[i].Update(_targetOmega[i], _vessel.angularVelocityD[i]);
 
-                if (Math.Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
+                if (Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
                     _actuation[i] = 0;
 
                 _targetTorque[i] = _actuation[i] * _controlTorque[i];
@@ -370,7 +369,7 @@ namespace MuMech.AttitudeControllers
         {
             _velPID[i].Reset();
             _posPID[i].Reset();
-            _error0[i]  = double.NaN;
+            _error0[i] = double.NaN;
         }
 
         public override void GUI()
@@ -382,7 +381,7 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            UseFlipTime = GUILayout.Toggle(UseFlipTime, "Minimum Flip Time", GUILayout.ExpandWidth(false));
+            UseFlipTime      = GUILayout.Toggle(UseFlipTime, "Minimum Flip Time", GUILayout.ExpandWidth(false));
             MinFlipTime.Text = GUILayout.TextField(MinFlipTime.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
@@ -497,7 +496,7 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            VelFORE = GUILayout.Toggle(VelFORE, Localizer.Format("Vel FORE"), GUILayout.ExpandWidth(false));
+            VelFORE          = GUILayout.Toggle(VelFORE, Localizer.Format("Vel FORE"), GUILayout.ExpandWidth(false));
             VelFORETerm.Text = GUILayout.TextField(VelFORETerm.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
