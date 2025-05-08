@@ -70,7 +70,7 @@ namespace MuMech.AttitudeControllers
             // 1. The Euler(-90) here is because the unity transform puts "up" as the pointy end, which is wrong.  The rotation means that
             // "forward" becomes the pointy end, and "up" and "right" correctly define e.g. AoA/pitch and AoS/yaw.  This is just KSP being KSP.
             // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame.
-            Quaternion deltaRotation = Quaternion.Inverse(vesselTransform.transform.rotation * Quaternion.Euler(-90, 0, 0)) * Ac.RequestedAttitude;
+            QuaternionD deltaRotation = QuaternionD.Inverse((QuaternionD)vesselTransform.transform.rotation * QuaternionD.Euler(-90, 0, 0)) * Ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
             Vector3d ea = deltaRotation.eulerAngles;
