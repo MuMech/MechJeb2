@@ -164,7 +164,7 @@ namespace MuMech.AttitudeControllers
 
             // Find out the real shorter way to turn where we wan to.
             // Thanks to HoneyFox
-            Vector3d tgtLocalUp = vesselTransform.transform.rotation.Inverse() * Ac.RequestedAttitude * Vector3d.forward;
+            Vector3d tgtLocalUp = (QuaternionD)vesselTransform.transform.rotation.Inverse() * Ac.RequestedAttitude * Vector3d.forward;
             Vector3d curLocalUp = Vector3d.up;
 
             double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
@@ -174,7 +174,7 @@ namespace MuMech.AttitudeControllers
             // And the lowest roll
             // Thanks to Crzyrndm
             var normVec = Vector3.Cross(Ac.RequestedAttitude * Vector3.forward, vesselTransform.up);
-            Quaternion targetDeRotated = Quaternion.AngleAxis((float)turnAngle, normVec) * Ac.RequestedAttitude;
+            QuaternionD targetDeRotated = QuaternionD.AngleAxis((float)turnAngle, normVec) * Ac.RequestedAttitude;
             float rollError = Vector3.Angle(vesselTransform.right, targetDeRotated * Vector3.right) *
                               Math.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
 
