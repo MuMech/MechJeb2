@@ -16,47 +16,37 @@ namespace MuMech.AttitudeControllers
         private Vector3d _pidAction; //info
         private Vector3d _error;     //info
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public bool TfAutoTune = true;
 
         private Vector3d _tfV = new Vector3d(0.3, 0.3, 0.3);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public Vector3 TfVec = new Vector3(0.3f, 0.3f, 0.3f); // use the serialize since Vector3d does not
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public double TfMin = 0.1;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public double TfMax = 0.5;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LowPassFilter = true;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public double KpFactor = 3;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public double KiFactor = 6;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public double KdFactor = 0.5;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public double Deadband = 0.0001;
 
         //Lower value of "kWlimit" reduces maximum angular velocity
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble KWlimit = 0.15;
 
         private readonly Vector3d _defaultTfV = new Vector3d(0.3, 0.3, 0.3);
@@ -167,16 +157,16 @@ namespace MuMech.AttitudeControllers
             Vector3d tgtLocalUp = (QuaternionD)vesselTransform.transform.rotation.Inverse() * Ac.RequestedAttitude * Vector3d.forward;
             Vector3d curLocalUp = Vector3d.up;
 
-            double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
-            var rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
+            double turnAngle    = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
+            var    rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
             rotDirection = rotDirection.normalized * turnAngle;
 
             // And the lowest roll
             // Thanks to Crzyrndm
-            var normVec = Vector3.Cross(Ac.RequestedAttitude * Vector3.forward, vesselTransform.up);
+            var         normVec         = Vector3.Cross(Ac.RequestedAttitude * Vector3.forward, vesselTransform.up);
             QuaternionD targetDeRotated = QuaternionD.AngleAxis((float)turnAngle, normVec) * Ac.RequestedAttitude;
             float rollError = Vector3.Angle(vesselTransform.right, targetDeRotated * Vector3.right) *
-                              Math.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
+                Math.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
 
             // From here everything should use MOI order for Vectors (pitch, roll, yaw)
 

@@ -20,47 +20,33 @@ namespace MuMech.AttitudeControllers
             }
         }
 
-        [UsedImplicitly]
-        public double Kd { get; set; }
+        [UsedImplicitly] public double Kd { get; set; }
 
-        [UsedImplicitly]
-        public double Input { get; set; }
+        [UsedImplicitly] public double Input { get; set; }
 
-        [UsedImplicitly]
-        public double Setpoint { get; set; }
+        [UsedImplicitly] public double Setpoint { get; set; }
 
-        [UsedImplicitly]
-        public double Error { get; set; }
+        [UsedImplicitly] public double Error { get; set; }
 
-        [UsedImplicitly]
-        public double Output { get; set; }
+        [UsedImplicitly] public double Output { get; set; }
 
-        [UsedImplicitly]
-        public double MinOutput { get; set; }
+        [UsedImplicitly] public double MinOutput { get; set; }
 
-        [UsedImplicitly]
-        public double MaxOutput { get; set; }
+        [UsedImplicitly] public double MaxOutput { get; set; }
 
-        [UsedImplicitly]
-        public double ErrorSum { get; set; }
+        [UsedImplicitly] public double ErrorSum { get; set; }
 
-        [UsedImplicitly]
-        public double PTerm { get; set; }
+        [UsedImplicitly] public double PTerm { get; set; }
 
-        [UsedImplicitly]
-        public double ITerm { get; set; }
+        [UsedImplicitly] public double ITerm { get; set; }
 
-        [UsedImplicitly]
-        public double DTerm { get; set; }
+        [UsedImplicitly] public double DTerm { get; set; }
 
-        [UsedImplicitly]
-        public bool ExtraUnwind { get; set; }
+        [UsedImplicitly] public bool ExtraUnwind { get; set; }
 
-        [UsedImplicitly]
-        public double ChangeRate { get; set; }
+        [UsedImplicitly] public double ChangeRate { get; set; }
 
-        [UsedImplicitly]
-        public bool UnWinding { get; set; }
+        [UsedImplicitly] public bool UnWinding { get; set; }
 
         public KosPIDLoop(double maxoutput = double.MaxValue, double minoutput = double.MinValue, bool extraUnwind = false)
             : this(1.0, 0, 0, maxoutput, minoutput, extraUnwind)
@@ -104,7 +90,7 @@ namespace MuMech.AttitudeControllers
             double pTerm = error * Kp;
             double iTerm = 0;
             double dTerm = 0;
-            double dt = TimeWarp.fixedDeltaTime;
+            double dt    = TimeWarp.fixedDeltaTime;
             if (_loopKi != 0)
             {
                 if (ExtraUnwind)

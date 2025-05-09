@@ -34,8 +34,7 @@ namespace MuMech
         public           bool RCS_auto           = false;
         private readonly bool attitudeRCScontrol = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        [ValueInfoItem("#MechJeb_SteeringError", InfoItem.Category.Vessel, format = "F1", units = "º")]
+        [Persistent(pass = (int)Pass.GLOBAL)] [ValueInfoItem("#MechJeb_SteeringError", InfoItem.Category.Vessel, format = "F1", units = "º")]
         //Steering error
         public readonly MovingAverage steeringError = new MovingAverage();
 
@@ -52,8 +51,7 @@ namespace MuMech
         public           BaseAttitudeController       Controller { get; private set; }
         private readonly List<BaseAttitudeController> _controllers = new List<BaseAttitudeController>();
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int activeController = 3;
+        [Persistent(pass = (int)Pass.GLOBAL)] public int activeController = 3;
 
         public void SetActiveController(int i)
         {
@@ -158,11 +156,11 @@ namespace MuMech
 
         public QuaternionD attitudeGetReferenceRotation(AttitudeReference reference)
         {
-            Vector3 fwd, up;
+            Vector3     fwd, up;
             QuaternionD rotRef = QuaternionD.identity;
 
             if (Core.Target.Target == null && (reference == AttitudeReference.TARGET || reference == AttitudeReference.TARGET_ORIENTATION ||
-                                               reference == AttitudeReference.RELATIVE_VELOCITY))
+                    reference == AttitudeReference.RELATIVE_VELOCITY))
             {
                 attitudeDeactivate();
                 return rotRef;
@@ -216,7 +214,7 @@ namespace MuMech
                     break;
                 case AttitudeReference.TARGET_ORIENTATION:
                     Transform targetTransform = Core.Target.Transform;
-                    Vector3 targetUp = targetTransform.up;
+                    Vector3   targetUp        = targetTransform.up;
                     rotRef = Core.Target.CanAlign
                         ? QuaternionD.LookRotation(targetTransform.forward, targetUp)
                         : QuaternionD.LookRotation(targetUp, targetTransform.right);
@@ -281,7 +279,7 @@ namespace MuMech
             bool AxisCtrlRoll = true, bool fixCOT = false)
         {
             QuaternionD attitude = QuaternionD.AngleAxis((float)heading, Vector3.up) * QuaternionD.AngleAxis(-(float)pitch, Vector3.right) *
-                                  QuaternionD.AngleAxis(-(float)roll, Vector3.forward);
+                QuaternionD.AngleAxis(-(float)roll, Vector3.forward);
             AttitudeReference reference = fixCOT ? AttitudeReference.SURFACE_NORTH_COT : AttitudeReference.SURFACE_NORTH;
             attitudeTo(attitude, reference, controller, AxisCtrlPitch,
                 AxisCtrlYaw, AxisCtrlRoll);
@@ -393,8 +391,8 @@ namespace MuMech
         private void SetFlightCtrlState(Vector3d act, Vector3d deltaEuler, FlightCtrlState s, float drive_limit)
         {
             bool userCommandingPitch = !Mathfx.Approx(s.pitch, s.pitchTrim, 0.1F);
-            bool userCommandingYaw = !Mathfx.Approx(s.yaw, s.yawTrim, 0.1F);
-            bool userCommandingRoll = !Mathfx.Approx(s.roll, s.rollTrim, 0.1F);
+            bool userCommandingYaw   = !Mathfx.Approx(s.yaw, s.yawTrim, 0.1F);
+            bool userCommandingRoll  = !Mathfx.Approx(s.roll, s.rollTrim, 0.1F);
 
             // Disable the new SAS so it won't interfere. But enable it while in timewarp for compatibility with PersistentRotation
             if (TimeWarp.WarpMode != TimeWarp.Modes.HIGH || TimeWarp.CurrentRateIndex == 0)
