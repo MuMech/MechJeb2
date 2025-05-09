@@ -184,7 +184,7 @@ namespace MuMech
             switch (reference)
             {
                 case AttitudeReference.INERTIAL_COT:
-                    rotRef = QuaternionD.FromToRotation(thrustForward, VesselState.forward);
+                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.forward);
                     break;
                 case AttitudeReference.ORBIT:
                     rotRef = QuaternionD.LookRotation(VesselState.orbitalVelocity.normalized, VesselState.up);
@@ -197,7 +197,7 @@ namespace MuMech
                     break;
                 case AttitudeReference.SURFACE_NORTH_COT:
                     rotRef = VesselState.rotationSurface;
-                    rotRef = QuaternionD.FromToRotation(thrustForward, VesselState.forward) * rotRef;
+                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.forward) * rotRef;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
                     rotRef = QuaternionD.LookRotation(VesselState.surfaceVelocity.normalized, VesselState.up);
@@ -232,7 +232,7 @@ namespace MuMech
                     up  = Vector3d.Cross(fwd, VesselState.normalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = QuaternionD.LookRotation(fwd, up);
-                    rotRef = QuaternionD.FromToRotation(thrustForward, VesselState.forward) * rotRef;
+                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.forward) * rotRef;
                     break;
                 case AttitudeReference.SUN:
                     Orbit baseOrbit = Vessel.mainBody == Planetarium.fetch.Sun ? Vessel.orbit : Orbit.TopParentOrbit();
@@ -354,7 +354,7 @@ namespace MuMech
             {
                 // TODO : This most likely require some love to use all the new SAS magic
 
-                RequestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * QuaternionD.Euler(90, 0, 0);
+                RequestedAttitude = attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * MathExtensions.Euler(90, 0, 0);
                 if (!Part.vessel.ActionGroups[KSPActionGroup.SAS])
                 {
                     Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);

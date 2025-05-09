@@ -225,11 +225,11 @@ namespace MuMech.AttitudeControllers
             // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame (we do everything in the ship frame
             // first, and then negate the error to get the error in the target reference frame at the end).
             QuaternionD deltaRotation =
-                QuaternionD.Inverse((QuaternionD)vesselTransform.transform.rotation * QuaternionD.Euler(-90, 0, 0)) *
+                QuaternionD.Inverse((QuaternionD)vesselTransform.transform.rotation * MathExtensions.Euler(-90, 0, 0)) *
                 Ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
-            Vector3d ea    = deltaRotation.eulerAngles;
+            Vector3d ea    = MathExtensions.EulerAngles(deltaRotation);
             double   pitch = ea[0] * UtilMath.Deg2Rad;
             double   yaw   = ea[1] * UtilMath.Deg2Rad;
             double   roll  = ea[2] * UtilMath.Deg2Rad;

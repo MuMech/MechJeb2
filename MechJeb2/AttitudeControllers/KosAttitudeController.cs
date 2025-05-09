@@ -71,7 +71,7 @@ namespace MuMech.AttitudeControllers
         private void UpdateStateVectors()
         {
             /* FIXME: may get called more than once per tick */
-            _vesselRotation  = (QuaternionD)Ac.Vessel.ReferenceTransform.rotation * QuaternionD.Euler(-90, 0, 0);
+            _vesselRotation  = (QuaternionD)Ac.Vessel.ReferenceTransform.rotation * MathExtensions.Euler(-90, 0, 0);
             _vesselForward   = _vesselRotation * Vector3d.forward;
             _vesselTop       = _vesselRotation * Vector3d.up;
             _vesselStarboard = _vesselRotation * Vector3d.right;
