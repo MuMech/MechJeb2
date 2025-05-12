@@ -102,8 +102,10 @@ namespace MuMech
             }
 
             // RO/RF: if we are spooling up engines, then flush the PID integrators to prevent windup
+            // Due to thrust variability this has to be a fairly low percentage (98% of minimum happens all the time)
+            // XXX: how does this behave under thrust fault?
             if (Status == PVGStatus.BURNING || Status == PVGStatus.TERMINAL)
-                if (VesselState.thrustCurrent < VesselState.thrustMinimum*0.98)
+                if (VesselState.thrustCurrent < VesselState.thrustMinimum*0.80)
                     Core.Attitude.Controller.Reset();
 
             HandleTerminal();
