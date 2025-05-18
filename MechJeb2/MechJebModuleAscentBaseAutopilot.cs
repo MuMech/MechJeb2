@@ -397,7 +397,7 @@ namespace MuMech
             AscentSettings.LimitingAoA = Vessel.altitude < MainBody.atmosphereDepth && Vector3d.Angle(VesselState.surfaceVelocity, desiredThrustVector) > CurrentMaxAoA;
 
             if (AscentSettings.LimitingAoA)
-                desiredThrustVector = Vector3d.RotateTowards(VesselState.surfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * Mathf.Deg2Rad), 1).normalized;
+                desiredThrustVector = Vector3.RotateTowards(VesselState.surfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * Mathf.Deg2Rad), 1).normalized;
 
             return desiredThrustVector;
         }
