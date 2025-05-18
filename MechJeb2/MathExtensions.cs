@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias JetBrainsAnnotations;
+using System;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
 using Random = System.Random;
 using static MechJebLib.Utils.Statics;
@@ -222,6 +224,83 @@ namespace MuMech
             };
 
             return q;
+        }
+
+        public static Vector3d RotateTowards(Vector3d current, Vector3d target, double maxRadiansDelta, double maxMagnitudeDelta)
+        {
+            if (current.sqrMagnitude < EPS)
+                return target.normalized * Math.Min(maxMagnitudeDelta, target.magnitude);
+
+            if (target.sqrMagnitude < EPS)
+                return current.normalized * Math.Max(0, current.magnitude - maxMagnitudeDelta);
+
+            double currentMagnitude = current.magnitude;
+            double targetMagnitude  = target.magnitude;
+
+            double angle      = Deg2Rad(Vector3d.Angle(current, target));
+            double deltaAngle = Math.Min(maxRadiansDelta, angle);
+
+            double t = 0;
+            if (angle > Mathf.Epsilon)
+                t = deltaAngle / angle;
+
+            Vector3d newDirection = Slerp(current.normalized, target.normalized, t);
+
+            double newMagnitude = currentMagnitude;
+
+            if (Math.Abs(targetMagnitude - currentMagnitude) <= EPS)
+                return newDirection * newMagnitude;
+
+            double magnitudeDelta = Math.Min(maxMagnitudeDelta, Math.Abs(targetMagnitude - currentMagnitude));
+
+            newMagnitude = targetMagnitude > currentMagnitude ? Math.Min(currentMagnitude + magnitudeDelta, targetMagnitude) : Math.Max(currentMagnitude - magnitudeDelta, targetMagnitude);
+
+            return newDirection * newMagnitude;
+        }
+
+        [UsedImplicitly]
+        public static Vector3d Slerp(Vector3d a, Vector3d b, double t)
+        {
+            t = Clamp01(t);
+
+            double dot = Vector3d.Dot(a.normalized, b.normalized);
+
+            // If the vectors are very close, just lerp and normalize
+            if (dot > 0.9999999999)
+                return Vector3d.Lerp(a, b, t).normalized * Lerp(a.magnitude, b.magnitude, t);
+
+            // If the vectors are nearly opposite and t is 0.5, the result is undefined
+            // We pick an arbitrary perpendicular vector in this case
+            if (dot < -0.9999999999)
+            {
+                Vector3d perpendicular;
+
+                // Find a perpendicular vector to a
+                if (Math.Abs(a.x) < Math.Abs(a.y) && Math.Abs(a.x) < Math.Abs(a.z))
+                    perpendicular = Vector3d.Cross(a, new Vector3d(1, 0, 0));
+                else if (Math.Abs(a.y) < Math.Abs(a.z))
+                    perpendicular = Vector3d.Cross(a, new Vector3d(0, 1, 0));
+                else
+                    perpendicular = Vector3d.Cross(a, new Vector3d(0, 0, 1));
+
+                perpendicular.Normalize();
+
+                // Rotate 180 degrees around perpendicular vector
+                double sinHalfTheta = Math.Sin(Mathf.PI * t);
+                double cosHalfTheta = Math.Cos(Mathf.PI * t);
+
+                Vector3d result = a * cosHalfTheta + perpendicular * sinHalfTheta;
+                return result.normalized * Lerp(a.magnitude, b.magnitude, t);
+            }
+
+            // Normal case: perform the spherical interpolation
+            dot = Clamp(dot, -1.0f, 1.0f);
+            double theta = Math.Acos(dot) * t;
+            Vector3d relativeVec = (b - a * dot).normalized;
+            Vector3d newDirection = a * Math.Cos(theta) + relativeVec * Math.Sin(theta);
+            double newMagnitude = Lerp(a.magnitude, b.magnitude, t);
+
+            return newDirection.normalized * newMagnitude;
         }
     }
 }
