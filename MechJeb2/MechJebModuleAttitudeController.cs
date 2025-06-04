@@ -120,7 +120,7 @@ namespace MuMech
             _controllers.Add(new KosAttitudeController(this));
             _controllers.Add(new HybridController(this));
             _controllers.Add(new BetterController(this));
-
+            _controllers.Add(new LQRController(this));
 
             Controller = new BetterController(this);
         }
@@ -334,7 +334,7 @@ namespace MuMech
             {
                 if (attitudeReference != AttitudeReference.INERTIAL && attitudeReference != AttitudeReference.INERTIAL_COT) attitudeKILLROT = false;
 
-                if (!(Controller is BetterController))
+                if (!(Controller is BetterController) && !(Controller is LQRController))
                     Controller.Reset();
 
                 attitudeChanged = false;
