@@ -42,8 +42,10 @@
     <ItemGroup>
         <Compile Include="AttitudeControllers\BaseAttitudeController.cs"/>
         <Compile Include="AttitudeControllers\BetterController.cs"/>
+        <Compile Include="AttitudeControllers\DirectionTracker.cs"/>
         <Compile Include="AttitudeControllers\HybridController.cs"/>
         <Compile Include="AttitudeControllers\KosAttitudeController.cs"/>
+        <Compile Include="AttitudeControllers\LQRController.cs"/>
         <Compile Include="AttitudeControllers\MJAttitudeController.cs"/>
         <Compile Include="AttitudeControllers\KosPIDLoop.cs"/>
         <Compile Include="AttitudeControllers\TorquePI.cs"/>

@@ -10,14 +10,14 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 9;
+        private const int SETTINGS_VERSION = 10;
 
         private const double POS_KP_DEFAULT         = 2.0;
         private const double POS_TI_DEFAULT         = 0.0;
         private const double POS_TD_DEFAULT         = 0.0;
-        private const double POS_N_DEFAULT          = 0.0;
-        private const double POS_B_DEFAULT          = 0.0;
-        private const double POS_C_DEFAULT          = 0.0;
+        private const double POS_N_DEFAULT          = 1.0;
+        private const double POS_B_DEFAULT          = 1.0;
+        private const double POS_C_DEFAULT          = 1.0;
         private const double POS_DEADBAND_DEFAULT   = 0.002;
         private const double POS_FORE_TERM_DEFAULT  = -1.0;
         private const bool   POS_FORE_DEFAULT       = false;
@@ -41,8 +41,9 @@ namespace MuMech.AttitudeControllers
         private const double ROLL_CONTROL_RANGE_DEFAULT = 5;
         private const double SMOOTH_TORQUE_DEFAULT      = 0.10;
 
-        private readonly PIDLoop2[] _velPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
-        private readonly PIDLoop2[] _posPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
+        private readonly PIDLoop2[]       _velPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
+        private readonly PIDLoop2[]       _posPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
+        private readonly DirectionTracker _directionTracker = new DirectionTracker();
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble MaxStoppingTime = new EditableDouble(MAX_STOPPING_TIME_DEFAULT);
@@ -116,10 +117,12 @@ namespace MuMech.AttitudeControllers
         private Vector3d _actuation = Vector3d.zero;
 
         /* error in pitch, roll, yaw */
-        private Vector3d _error0 = Vector3d.zero;
+        private Vector3d _error   = Vector3d.zero;
+        private Vector3d _current = Vector3d.zero;
+        private Vector3d _desired = Vector3d.zero;
 
         /* error */
-        private double _errorTotal;
+        private double _distance;
 
         /* max angular acceleration */
         private Vector3d _maxAlpha = Vector3d.zero;
@@ -207,7 +210,7 @@ namespace MuMech.AttitudeControllers
         {
             UpdatePredictionPI();
 
-            deltaEuler = -_error0 * Mathf.Rad2Deg;
+            deltaEuler = _error * Mathf.Rad2Deg;
 
             for (int i = 0; i < 3; i++)
                 if (Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
@@ -216,44 +219,13 @@ namespace MuMech.AttitudeControllers
             act = _actuation;
         }
 
-        private void UpdateError()
-        {
-            Transform vesselTransform = _vessel.ReferenceTransform;
-
-            // 1. The Euler(-90) here is because the unity transform puts "up" as the pointy end, which is wrong.  The rotation means that
-            // "forward" becomes the pointy end, and "up" and "right" correctly define e.g., AoA/pitch and AoS/yaw.  This is just KSP being KSP.
-            // 2. We then use the inverse ship rotation to transform the requested attitude into the ship frame (we do everything in the ship frame
-            // first, and then negate the error to get the error in the target reference frame at the end).
-            QuaternionD deltaRotation =
-                QuaternionD.Inverse((QuaternionD)vesselTransform.transform.rotation * MathExtensions.Euler(-90, 0, 0)) *
-                Ac.RequestedAttitude;
-
-            // get us some euler angles for the target transform
-            Vector3d ea    = MathExtensions.EulerAngles(deltaRotation);
-            double   pitch = ea[0] * UtilMath.Deg2Rad;
-            double   yaw   = ea[1] * UtilMath.Deg2Rad;
-            double   roll  = ea[2] * UtilMath.Deg2Rad;
-
-            // law of cosines for the "distance" of the miss in radians
-            _errorTotal = SafeAcos(Cos(pitch) * Cos(yaw));
-
-            // we assemble phi in the pitch, roll, negative yaw basis that KSP uses
-            var phi = new Vector3d(
-                MuUtils.ClampRadiansPi(pitch), // pitch distance around the geodesic
-                MuUtils.ClampRadiansPi(roll),
-                MuUtils.ClampRadiansPi(-yaw) // yaw distance around the geodesic
-            );
-
-            // apply the axis control from the parent controller
-            phi.Scale(Ac.AxisControl);
-
-            // the error in the ship's position is the negative of the reference position in the ship frame
-            _error0 = -phi;
-        }
-
         private void UpdatePredictionPI()
         {
-            UpdateError();
+            Transform   vesselTransform = _vessel.ReferenceTransform;
+            QuaternionD currentAttitude = (QuaternionD)vesselTransform.transform.rotation * MathExtensions.Euler(-90, 0, 0);
+
+            _current                      = _directionTracker.Update(currentAttitude);
+            (_desired, _error, _distance) = _directionTracker.Desired(Ac.RequestedAttitude);
 
             // low-pass filter the control torque
             _controlTorque = _controlTorque == Vector3d.zero ? Ac.torque : _controlTorque + SmoothTorque * (Ac.torque - _controlTorque);
@@ -270,8 +242,6 @@ namespace MuMech.AttitudeControllers
             // have the first two PIDs in the cascade.
             for (int i = 0; i < 3; i++)
             {
-                double error = _error0[i];
-
                 _maxAlpha[i] = _controlTorque[i] / _vessel.MOI[i];
 
                 if (_maxAlpha[i] == 0)
@@ -294,8 +264,9 @@ namespace MuMech.AttitudeControllers
                         if (UseFlipTime) maxOmega = Max(maxOmega, PI / MinFlipTime.Val);
                     }
 
-                    if (Abs(error) <= 2 * effLD)
+                    if (Abs(_error[i]) <= 2 * effLD)
                     {
+                        Debug.Log($"{i}: PID");
                         _posPID[i].Kp               = posKp;
                         _posPID[i].Ti               = PosTi.Val;
                         _posPID[i].Td               = PosTd.Val;
@@ -311,16 +282,17 @@ namespace MuMech.AttitudeControllers
                         _posPID[i].FORE             = PosFORE;
                         _posPID[i].FORETerm         = PosFORETerm.Val;
 
-                        _targetOmega[i] = _posPID[i].Update(0, _error0[i]);
+                        _targetOmega[i] = _posPID[i].Update(_desired[i], _current[i]);
                     }
                     else
                     {
+                        Debug.Log($"{i}: distance");
                         _posPID[i].Reset();
                         // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
-                        _targetOmega[i] = -Sqrt(2 * _maxAlpha[i] * (Abs(error) - effLD)) * Sign(error);
+                        _targetOmega[i] = Sqrt(2 * _maxAlpha[i] * (Abs(_error[i]) - effLD)) * Sign(_error[i]);
                     }
 
-                    if (UseControlRange && _errorTotal * Mathf.Rad2Deg > RollControlRange)
+                    if (UseControlRange && _distance * Mathf.Rad2Deg > RollControlRange)
                     {
                         _targetOmega[1] = 0;
                         _posPID[1].Reset();
@@ -363,13 +335,14 @@ namespace MuMech.AttitudeControllers
             Reset(0);
             Reset(1);
             Reset(2);
+            _directionTracker.Reset();
         }
 
         public override void Reset(int i)
         {
             _velPID[i].Reset();
             _posPID[i].Reset();
-            _error0[i] = double.NaN;
+            _directionTracker.Reset(i);
         }
 
         public override void GUI()
@@ -536,8 +509,18 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            GUILayout.Label("Current", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(_current), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Desired", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(_desired), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Error", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_error0), GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(_error), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

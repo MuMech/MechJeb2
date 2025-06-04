@@ -47,6 +47,9 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Control\IPIDLoop.cs"/>
+        <Compile Include="Control\LQRLoop1.cs"/>
+        <Compile Include="Control\MultiVariableGrid.cs"/>
+        <Compile Include="Control\MultiVariableInterpolator.cs"/>
         <Compile Include="Control\PIDLoop.cs"/>
         <Compile Include="Control\PIDLoop2.cs"/>
         <Compile Include="FuelFlowSimulation\DecouplingAnalyzer.cs"/>

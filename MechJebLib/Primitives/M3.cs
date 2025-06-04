@@ -14,21 +14,21 @@ namespace MechJebLib.Primitives
     /// </summary>
     public struct M3 : IEquatable<M3>, IFormattable
     {
-        // m00 m10 m20
-        // m01 m11 m21
-        // m02 m12 m22
+        // m00 m01 m02
+        // m10 m11 m12
+        // m20 m21 m22
 
-        // row 0:
+        // column 0:
         public double m00;
         public double m10;
         public double m20;
 
-        // row 1:
+        // column 1:
         public double m01;
         public double m11;
         public double m21;
 
-        // row 2:
+        // column 2:
         public double m02;
         public double m12;
         public double m22;
