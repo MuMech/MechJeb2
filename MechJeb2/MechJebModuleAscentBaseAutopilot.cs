@@ -370,13 +370,6 @@ namespace MuMech
             Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && AscentSettings.ForceRoll && VesselState.altitudeBottom > AscentSettings.RollAltitude);
         }
 
-        // this is for initial pitch-over and bypasses AoA limiters
-        protected void PitchProgramAttitudeTo(double desiredPitch, double desiredHeading)
-        {
-            Core.Attitude.attitudeTo(desiredHeading, desiredPitch, AscentSettings.TurnRoll, this, fixCOT: true);
-            Core.Attitude.SetAxisControl(true, true, AscentSettings.ForceRoll);
-        }
-
         private Vector3d ApplyQAlphaAoALimiter(Vector3d desiredThrustVector)
         {
             double lim = MuUtils.Clamp(AscentSettings.LimitQa, 0, 10000);
