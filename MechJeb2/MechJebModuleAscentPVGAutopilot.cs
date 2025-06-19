@@ -161,7 +161,7 @@ namespace MuMech
                 return;
             }
 
-            PitchProgramAttitudeTo(pitch, Core.Guidance.Heading);
+            AttitudeTo(pitch, Core.Guidance.Heading);
         }
 
         private bool CheckForGuidanceTransition(double pitch)
