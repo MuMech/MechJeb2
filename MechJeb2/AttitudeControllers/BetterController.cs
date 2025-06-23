@@ -266,7 +266,6 @@ namespace MuMech.AttitudeControllers
 
                     if (Abs(_error[i]) <= 2 * effLD)
                     {
-                        Debug.Log($"{i}: PID");
                         _posPID[i].Kp               = posKp;
                         _posPID[i].Ti               = PosTi.Val;
                         _posPID[i].Td               = PosTd.Val;
@@ -286,7 +285,6 @@ namespace MuMech.AttitudeControllers
                     }
                     else
                     {
-                        Debug.Log($"{i}: distance");
                         _posPID[i].Reset();
                         // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
                         _targetOmega[i] = Sqrt(2 * _maxAlpha[i] * (Abs(_error[i]) - effLD)) * Sign(_error[i]);
