@@ -646,7 +646,7 @@ namespace MuMech
         private bool HasFairingUncached(int inverseStage)
         {
             _partsInStage.Clear();
-            Vessel.parts.Slinq().Where((p, s) => p.inverseStage == s, inverseStage).AddTo(_partsInStage);
+            Vessel.parts.Slinq().Where((p, s) => p.hasStagingIcon && p.inverseStage == s, inverseStage).AddTo(_partsInStage);
 
             // proc parts are reasonably easy, but all the parts in the stage must be payload fairings for them to
             // be treated as payload fairings here.  a payload fairing and a stack decoupler will bypass the fairing
