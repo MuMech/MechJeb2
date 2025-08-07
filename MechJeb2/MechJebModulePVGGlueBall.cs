@@ -135,10 +135,14 @@ namespace MuMech
             {
                 bool hasGuided = false;
 
-                for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
+                for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
                 {
                     double dv = Core.StageStats.VacStats[mjPhase].DeltaV;
                     int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
+
+                    // Stop if we've reached the LastStage
+                    if (kspStage < _ascentSettings.LastStage)
+                        break;
 
                     // skip the current stage if we are doing a coast after it
                     if (IsCurrentCoastAfterStage(kspStage))
@@ -191,10 +195,12 @@ namespace MuMech
             bool optimizedStageFound = false;
             bool hasCoast = false;
 
-            for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= _ascentSettings.LastStage; mjPhase--)
+            for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
                 FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
                 int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
+                if (kspStage < _ascentSettings.LastStage)
+                    break;
 
                 if (!hasCoast && !Core.Guidance.HasGoodSolutionWithNoFutureCoast())
                 {
