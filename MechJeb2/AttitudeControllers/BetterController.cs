@@ -370,53 +370,57 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos Kp", GUILayout.ExpandWidth(false));
-            PosKp.Text = GUILayout.TextField(PosKp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Kp", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelKp.Text = GUILayout.TextField(VelKp.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosKp.Text = GUILayout.TextField(PosKp.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos Ti", GUILayout.ExpandWidth(false));
-            PosTi.Text = GUILayout.TextField(PosTi.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Ti", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelTi.Text = GUILayout.TextField(VelTi.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosTi.Text = GUILayout.TextField(PosTi.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos Td", GUILayout.ExpandWidth(false));
-            PosTd.Text = GUILayout.TextField(PosTd.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Td", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelTd.Text = GUILayout.TextField(VelTd.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosTd.Text = GUILayout.TextField(PosTd.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos N", GUILayout.ExpandWidth(false));
-            PosN.Text = GUILayout.TextField(PosN.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("N", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelN.Text = GUILayout.TextField(VelN.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosN.Text = GUILayout.TextField(PosN.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos B", GUILayout.ExpandWidth(false));
-            PosB.Text = GUILayout.TextField(PosB.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("B", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelB.Text = GUILayout.TextField(VelB.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosB.Text = GUILayout.TextField(PosB.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos C", GUILayout.ExpandWidth(false));
-            PosC.Text = GUILayout.TextField(PosC.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("C", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelC.Text = GUILayout.TextField(VelC.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosC.Text = GUILayout.TextField(PosC.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos Deadband", GUILayout.ExpandWidth(false));
-            PosDeadband.Text = GUILayout.TextField(PosDeadband.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Deadband", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelDeadband.Text = GUILayout.TextField(VelDeadband.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosDeadband.Text = GUILayout.TextField(PosDeadband.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            PosFORE          = GUILayout.Toggle(PosFORE, Localizer.Format("Pos FORE"), GUILayout.ExpandWidth(false));
-            PosFORETerm.Text = GUILayout.TextField(PosFORETerm.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            GUILayout.Label("SmoothIn", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelSmoothIn.Text = GUILayout.TextField(VelSmoothIn.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos SmoothIn", GUILayout.ExpandWidth(false));
-            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos SmoothOut", GUILayout.ExpandWidth(false));
-            PosSmoothOut.Text = GUILayout.TextField(PosSmoothOut.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("SmoothOut", GUILayout.ExpandWidth(true), GUILayout.Width(100));
+            VelSmoothOut.Text = GUILayout.TextField(VelSmoothOut.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            PosSmoothOut.Text = GUILayout.TextField(PosSmoothOut.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -432,56 +436,6 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label("Pos DTerm", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].DTerm, _posPID[1].DTerm, _posPID[2].DTerm)), GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel Kp", GUILayout.ExpandWidth(false));
-            VelKp.Text = GUILayout.TextField(VelKp.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel Ti", GUILayout.ExpandWidth(false));
-            VelTi.Text = GUILayout.TextField(VelTi.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel Td", GUILayout.ExpandWidth(false));
-            VelTd.Text = GUILayout.TextField(VelTd.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel N", GUILayout.ExpandWidth(false));
-            VelN.Text = GUILayout.TextField(VelN.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel B", GUILayout.ExpandWidth(false));
-            VelB.Text = GUILayout.TextField(VelB.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel C", GUILayout.ExpandWidth(false));
-            VelC.Text = GUILayout.TextField(VelC.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel Deadband", GUILayout.ExpandWidth(false));
-            VelDeadband.Text = GUILayout.TextField(VelDeadband.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            VelFORE          = GUILayout.Toggle(VelFORE, Localizer.Format("Vel FORE"), GUILayout.ExpandWidth(false));
-            VelFORETerm.Text = GUILayout.TextField(VelFORETerm.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel SmoothIn", GUILayout.ExpandWidth(false));
-            VelSmoothIn.Text = GUILayout.TextField(VelSmoothIn.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel SmoothOut", GUILayout.ExpandWidth(false));
-            VelSmoothOut.Text = GUILayout.TextField(VelSmoothOut.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
