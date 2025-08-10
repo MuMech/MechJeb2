@@ -10,10 +10,10 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 10;
+        private const int SETTINGS_VERSION = 11;
 
-        private const double POS_KP_DEFAULT         = 2.0;
-        private const double POS_TI_DEFAULT         = 0.0;
+        private const double POS_KP_DEFAULT         = 1.01;
+        private const double POS_TI_DEFAULT         = 57.1;
         private const double POS_TD_DEFAULT         = 0.0;
         private const double POS_N_DEFAULT          = 1.0;
         private const double POS_B_DEFAULT          = 1.0;
@@ -24,8 +24,8 @@ namespace MuMech.AttitudeControllers
         private const double POS_SMOOTH_IN_DEFAULT  = 1.0;
         private const double POS_SMOOTH_OUT_DEFAULT = 1.0;
 
-        private const double VEL_KP_DEFAULT         = 10;
-        private const double VEL_TI_DEFAULT         = 2.24;
+        private const double VEL_KP_DEFAULT         = 4.0;
+        private const double VEL_TI_DEFAULT         = 14.3;
         private const double VEL_TD_DEFAULT         = 0;
         private const double VEL_N_DEFAULT          = 1.0;
         private const double VEL_B_DEFAULT          = 1.0;
@@ -129,6 +129,7 @@ namespace MuMech.AttitudeControllers
 
         /* max angular rotation */
         private Vector3d _targetOmega   = Vector3d.zero;
+        private Vector3d _targetAlpha   = Vector3d.zero;
         private Vector3d _targetTorque  = Vector3d.zero;
         private Vector3d _controlTorque = Vector3d.zero;
 
@@ -267,8 +268,8 @@ namespace MuMech.AttitudeControllers
                     if (Abs(_error[i]) <= 2 * effLD)
                     {
                         _posPID[i].Kp               = posKp;
-                        _posPID[i].Ti               = PosTi.Val;
-                        _posPID[i].Td               = PosTd.Val;
+                        _posPID[i].Ti               = PosTi;
+                        _posPID[i].Td               = PosTd;
                         _posPID[i].N                = PosN.Val;
                         _posPID[i].B                = PosB.Val;
                         _posPID[i].C                = PosC.Val;
@@ -277,9 +278,9 @@ namespace MuMech.AttitudeControllers
                         _posPID[i].SmoothOut        = MuUtils.Clamp01(PosSmoothOut);
                         _posPID[i].MinOutput        = -maxOmega;
                         _posPID[i].MaxOutput        = maxOmega;
-                        _posPID[i].IntegralDeadband = PosDeadband.Val;
+                        _posPID[i].IntegralDeadband = PosDeadband * maxOmega;
                         _posPID[i].FORE             = PosFORE;
-                        _posPID[i].FORETerm         = PosFORETerm.Val;
+                        _posPID[i].FORETerm         = PosFORETerm;
 
                         _targetOmega[i] = _posPID[i].Update(_desired[i], _current[i]);
                     }
@@ -297,34 +298,36 @@ namespace MuMech.AttitudeControllers
                     }
                 }
 
-                _velPID[i].Kp               = VelKp / (_maxAlpha[i] * warpFactor);
-                _velPID[i].Ti               = VelTi * warpFactor;
-                _velPID[i].Td               = VelTd * warpFactor;
+                _velPID[i].Kp               = VelKp;
+                _velPID[i].Ti               = VelTi;
+                _velPID[i].Td               = VelTd;
                 _velPID[i].N                = VelN;
                 _velPID[i].B                = VelB;
                 _velPID[i].C                = VelC;
                 _velPID[i].H                = Ac.VesselState.deltaT;
                 _velPID[i].SmoothIn         = MuUtils.Clamp01(VelSmoothIn);
                 _velPID[i].SmoothOut        = MuUtils.Clamp01(VelSmoothOut);
-                _velPID[i].MinOutput        = -1;
-                _velPID[i].MaxOutput        = 1;
-                _velPID[i].IntegralDeadband = VelDeadband;
+                _velPID[i].MinOutput        = -_maxAlpha[i];
+                _velPID[i].MaxOutput        = _maxAlpha[i];
+                _velPID[i].IntegralDeadband = VelDeadband * _maxAlpha[i];
                 _velPID[i].FORE             = VelFORE;
                 _velPID[i].FORETerm         = VelFORETerm;
 
+                _targetAlpha[i] = _velPID[i].Update(_targetOmega[i], _vessel.angularVelocityD[i]);
+
+                _targetTorque[i] = _vessel.MOI[i] * _targetAlpha[i];
+
                 // need the negative from the pid due to KSP's orientation of actuation
-                _actuation[i] = -_velPID[i].Update(_targetOmega[i], _vessel.angularVelocityD[i]);
-
-                if (Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
-                    _actuation[i] = 0;
-
-                _targetTorque[i] = _actuation[i] * _controlTorque[i];
+                _actuation[i] = -_targetTorque[i] / _controlTorque[i];
 
                 if (Ac.ActuationControl[i] == 0 || _controlTorque[i] == 0 || Ac.AxisControl[i] == 0)
                 {
                     _actuation[i] = 0;
                     Reset(i);
                 }
+
+                if (Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
+                    _actuation[i] = 0;
             }
         }
 
@@ -547,6 +550,11 @@ namespace MuMech.AttitudeControllers
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label5"),
                 GUILayout.ExpandWidth(true)); //"ControlTorque"
             GUILayout.Label(MuUtils.PrettyPrint(_controlTorque), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("TargetAlpha", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(_targetAlpha), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
