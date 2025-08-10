@@ -314,7 +314,15 @@ namespace MuMech
         // Total torque
         public Vector3d torqueAvailable;
 
-        public Vector3d torqueReactionSpeed;
+        public Vector3d torqueReactionSpeed; // FIXME: probably buggy + needs to be removed (but used in MJAttitudeController)
+
+        public Vector3d torqueWeightedExponentialResponseDelay; // Exposed for debugging.
+        public Vector3d torqueWeightedLinearResponseDelay; // Exposed for debugging.
+
+        // model as a first order IIR low pass filter with alpha = torqueResponseSpeed * timestep
+        // 50 is no filter at 0.02 sec
+        // typical values are 16-50 with 8 or 4 possible.
+        public Vector3d torqueResponseSpeed;
 
         // Torque from different components
         public readonly Vector6 torqueReactionWheel = new Vector6(); // torque available from Reaction wheels
@@ -952,7 +960,9 @@ namespace MuMech
 
             torqueAvailable = Vector3d.zero;
 
-            var torqueReactionSpeed6 = new Vector6();
+            var torqueWeightedExponentialResponseDelay6 = new Vector6();
+            var torqueWeightedLinearResponseDelay6 = new Vector6();
+            var torqueReactionSpeed6                   = new Vector6(); // FIXME: probably buggy + remove.
 
             torqueReactionWheel.Reset();
             torqueControlSurface.Reset();
@@ -1071,6 +1081,19 @@ namespace MuMech
                         torqueControlSurface.Add(ctrlTorquePos);
                         torqueControlSurface.Add(ctrlTorqueNeg);
 
+                        float effectiveActuatorDelay = (float)MuUtils.Clamp(50 - cs.actuatorSpeed, 0, 50);
+
+                        if (cs.useExponentialSpeed)
+                        {
+                            torqueWeightedExponentialResponseDelay6.Positive = effectiveActuatorDelay * ctrlTorquePos.Abs();
+                            torqueWeightedExponentialResponseDelay6.Negative = effectiveActuatorDelay * ctrlTorqueNeg.Abs();
+                        }
+                        else
+                        {
+                            torqueWeightedLinearResponseDelay6.Positive = effectiveActuatorDelay * ctrlTorquePos.Abs();
+                            torqueWeightedLinearResponseDelay6.Negative = effectiveActuatorDelay * ctrlTorqueNeg.Abs();
+                        }
+
                         torqueReactionSpeed6.Add(Mathf.Abs(cs.ctrlSurfaceRange) / cs.actuatorSpeed *
                             Vector3d.Max(ctrlTorquePos.Abs(), ctrlTorqueNeg.Abs()));
                     }
@@ -1097,8 +1120,15 @@ namespace MuMech
                         torqueGimbal.Add(pos);
                         torqueGimbal.Add(-neg);
 
+                        float effectiveGimbalDelay = (float)MuUtils.Clamp(50 - g.gimbalResponseSpeed, 0, 50);
+
                         if (g.useGimbalResponseSpeed)
+                        {
+                            torqueWeightedExponentialResponseDelay6.Positive += effectiveGimbalDelay * pos.Abs();
+                            torqueWeightedExponentialResponseDelay6.Negative += effectiveGimbalDelay * neg.Abs();
+
                             torqueReactionSpeed6.Add(Mathf.Abs(g.gimbalRange) / g.gimbalResponseSpeed * Vector3d.Max(pos.Abs(), neg.Abs()));
+                        }
                     }
                     else if (pm is ModuleRCS)
                     {
@@ -1166,10 +1196,19 @@ namespace MuMech
             {
                 torqueReactionSpeed = Vector3d.Max(torqueReactionSpeed6.Positive, torqueReactionSpeed6.Negative);
                 torqueReactionSpeed.Scale(torqueAvailable.InvertNoNaN());
+
+                torqueWeightedExponentialResponseDelay = Vector3d.Max(torqueWeightedExponentialResponseDelay6.Positive, torqueWeightedExponentialResponseDelay6.Negative);
+                torqueWeightedLinearResponseDelay = Vector3d.Max(torqueWeightedLinearResponseDelay6.Positive, torqueWeightedLinearResponseDelay6.Negative);
+                // XXX: this is a little bogus but we should be underestimating the response time of the linear filter, but
+                // we should be preserving the right gain margin and noise sensitivity.
+                Vector3d torqueResponseDelay = (torqueWeightedExponentialResponseDelay + torqueWeightedLinearResponseDelay);
+                torqueResponseDelay.Scale(torqueAvailable.InvertNoNaN());
+                torqueResponseSpeed = new Vector3(50,50,50) - torqueResponseDelay;
             }
             else
             {
                 torqueReactionSpeed = Vector3d.zero;
+                torqueResponseSpeed = new Vector3(50, 50, 50);
             }
 
             thrustVectorMaxThrottle = einfo.thrustMax;
