@@ -566,6 +566,11 @@ namespace MuMech.AttitudeControllers
             GUILayout.Label("MOI", GUILayout.ExpandWidth(true));
             GUILayout.Label(MuUtils.PrettyPrint(_vessel.MOI), GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Response Speed", GUILayout.ExpandWidth(true));
+            GUILayout.Label(MuUtils.PrettyPrint(Ac.VesselState.torqueResponseSpeed), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
         }
     }
 }
