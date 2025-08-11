@@ -57,7 +57,7 @@ namespace MechJebLibTest.ControlTests
         [Fact]
         public void ProportionalTest2()
         {
-            var pid = new PIDLoop2 { Kp = 2.0, H = 0.02 };
+            var pid = new PIDLoop2 { Kp = 2.0, Ts = 0.02 };
 
             Assert.Equal(2.0, pid.Update(0, -1), 8);
             Assert.Equal(-2.0, pid.Update(0, 1), 8);
@@ -90,7 +90,7 @@ namespace MechJebLibTest.ControlTests
         [Fact]
         public void DerivativeTest2()
         {
-            var pid = new PIDLoop2 { Kp = 2.0, Kd = 1.0, N = 100, H = 0.02 };
+            var pid = new PIDLoop2 { Kp = 2.0, Kd = 1.0, N = 100, Ts = 0.02 };
 
             Assert.Equal(0.0, pid.Update(0, 0), 8);
             Assert.Equal(0.0, pid.Update(0, 0), 8);
@@ -102,7 +102,7 @@ namespace MechJebLibTest.ControlTests
         [Fact]
         public void DerivativeTestBothCoefficients2()
         {
-            var pid = new PIDLoop2 { Kp = 2.0, Kd = 1.0, N = 50, H = 0.02 };
+            var pid = new PIDLoop2 { Kp = 2.0, Kd = 1.0, N = 50, Ts = 0.02 };
 
             Assert.Equal(0.0, pid.Update(0, 0), 8);
             Assert.Equal(0.0, pid.Update(0, 0), 8);
@@ -125,7 +125,7 @@ namespace MechJebLibTest.ControlTests
         [Fact]
         public void IntegralTest2()
         {
-            var pid = new PIDLoop2 { Kp = 2.0, Ki = 1.0, H = 0.02 };
+            var pid = new PIDLoop2 { Kp = 2.0, Ki = 1.0, Ts = 0.02 };
 
             Assert.Equal(2.01, pid.Update(1, 0), 8);
             Assert.Equal(2.03, pid.Update(1, 0), 8);
