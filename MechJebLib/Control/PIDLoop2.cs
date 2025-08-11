@@ -14,7 +14,7 @@ namespace MechJebLib.Control
     // 3. standard and parallel form parameters
     // 4. optional input and output deadbands
     // 5. optional low pass filtering of input and output
-    // 6. optional Clegg/First Order Reset Elements(FORE) integrator
+    // 6. optional Clegg integrator
     // 7. optional output saturation and tracking anti-windup
     //
     public class PIDLoop2 : IPIDLoop
@@ -36,13 +36,13 @@ namespace MechJebLib.Control
         public double Ti { get; set; }
         public double Td { get; set; }
         public double N  { get; set; } = 50;
-        public double H  { get; set; } = 0.02;
+        public double Ts { get; set; } = 0.02;
 
         // parallel form parameters
         public double Kp { set => K = value; } // TODO: rescale Ti and Td to keep Ki and Kd constant
         public double Ki { set => Ti = K / value; }
         public double Kd { set => Td = K * value; }
-        public double Tf { set => N = 4 / value * (1 - Exp(-value / (2 * H))); }
+        public double Tf { set => N = 4 / value * (1 - Exp(-value / (2 * Ts))); }
 
         // 2DOF PIDF parameters
         public double B { get; set; } = 1;
@@ -57,8 +57,7 @@ namespace MechJebLib.Control
         public double OutputDeadband       { get; set; }
         public double MinOutput            { get; set; } = double.MinValue;
         public double MaxOutput            { get; set; } = double.MaxValue;
-        public bool   FORE                 { get; set; } // not recommended if integrator required to zero the setpoint
-        public double FORETerm             { get; set; } = -1.0;
+        public bool   Clegg                { get; set; } // not recommended if integrator required to zero the setpoint
 
         public double Update(double r, double y)
         {
@@ -71,19 +70,16 @@ namespace MechJebLib.Control
 
             PTerm = K * ep;
 
-            if (FORE)
-                if (ei * ITerm < 0)
-                    ITerm = 0;
-                else
-                    ITerm += FORETerm * ITerm;
+            if (Clegg && ei * ITerm < 0)
+                ITerm = 0;
 
             // Trapezoidal/Tustin/Bilinear integrator term
             double k = K == 0 ? 1 : K;
-            ITerm += 0.5 * k * H * (ei + _ei1) / Ti;
+            ITerm += 0.5 * k * Ts * (ei + _ei1) / Ti;
 
             // Trapezoidal/Tustin/Bilinear derivative term
-            double den = 2 + N * H;
-            DTerm = (2 - N * H) / den * DTerm + 2 * N * Td / (K * den) * (ed - _ed1);
+            double den = 2 + N * Ts;
+            DTerm = (2 - N * Ts) / den * DTerm + 2 * N * Td / (K * den) * (ed - _ed1);
 
             // fix any NaNs saved into internal state (also fixes Ti == 0 case)
             if (!IsFinite(ITerm))
@@ -95,11 +91,10 @@ namespace MechJebLib.Control
             double u = Clamp(z, MinOutput, MaxOutput);
 
             // anti-windup
-            // TODO: optional clamping
             if (Ti != 0)
             {
                 double tr = Td == 0 ? Ti : Sqrt(Ti * Td);
-                ITerm += H / tr * (u - z);
+                ITerm += Ts / tr * (u - z);
             }
 
             // low-pass filter the output

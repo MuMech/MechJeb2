@@ -10,7 +10,7 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 11;
+        private const int SETTINGS_VERSION = 12;
 
         private const double POS_KP_DEFAULT         = 1.01;
         private const double POS_TI_DEFAULT         = 57.1;
@@ -18,9 +18,8 @@ namespace MuMech.AttitudeControllers
         private const double POS_N_DEFAULT          = 1.0;
         private const double POS_B_DEFAULT          = 1.0;
         private const double POS_C_DEFAULT          = 1.0;
-        private const double POS_DEADBAND_DEFAULT   = 0.002;
-        private const double POS_FORE_TERM_DEFAULT  = -1.0;
-        private const bool   POS_FORE_DEFAULT       = false;
+        private const double POS_DEADBAND_DEFAULT   = 0.0;
+        private const bool   POS_CLEGG_DEFAULT      = true;
         private const double POS_SMOOTH_IN_DEFAULT  = 1.0;
         private const double POS_SMOOTH_OUT_DEFAULT = 1.0;
 
@@ -30,9 +29,8 @@ namespace MuMech.AttitudeControllers
         private const double VEL_N_DEFAULT          = 1.0;
         private const double VEL_B_DEFAULT          = 1.0;
         private const double VEL_C_DEFAULT          = 1.0;
-        private const double VEL_DEADBAND_DEFAULT   = 0.0001;
-        private const double VEL_FORE_TERM_DEFAULT  = -1.0;
-        private const bool   VEL_FORE_DEFAULT       = false;
+        private const double VEL_DEADBAND_DEFAULT   = 0.0;
+        private const bool   VEL_CLEGG_DEFAULT      = false;
         private const double VEL_SMOOTH_IN_DEFAULT  = 1.0;
         private const double VEL_SMOOTH_OUT_DEFAULT = 1.0;
 
@@ -73,10 +71,7 @@ namespace MuMech.AttitudeControllers
         public readonly EditableDouble PosC = new EditableDouble(POS_C_DEFAULT);
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool PosFORE = POS_FORE_DEFAULT;
-
-        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble PosFORETerm = POS_FORE_TERM_DEFAULT;
+        public bool PosClegg = POS_CLEGG_DEFAULT;
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble PosSmoothIn = new EditableDouble(POS_SMOOTH_IN_DEFAULT);
@@ -146,10 +141,7 @@ namespace MuMech.AttitudeControllers
         public bool UseStoppingTime = true;
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool VelFORE = VEL_FORE_DEFAULT;
-
-        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public EditableDouble VelFORETerm = VEL_FORE_TERM_DEFAULT;
+        public bool VelClegg = VEL_CLEGG_DEFAULT;
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public int Version = -1;
@@ -172,8 +164,7 @@ namespace MuMech.AttitudeControllers
             PosDeadband.Val  = POS_DEADBAND_DEFAULT;
             PosSmoothOut.Val = POS_SMOOTH_OUT_DEFAULT;
             PosSmoothIn.Val  = POS_SMOOTH_IN_DEFAULT;
-            PosFORE          = POS_FORE_DEFAULT;
-            PosFORETerm.Val  = POS_FORE_TERM_DEFAULT;
+            PosClegg         = POS_CLEGG_DEFAULT;
 
             // Velocity PID defaults
             VelKp.Val        = VEL_KP_DEFAULT;
@@ -185,8 +176,7 @@ namespace MuMech.AttitudeControllers
             VelDeadband.Val  = VEL_DEADBAND_DEFAULT;
             VelSmoothIn.Val  = VEL_SMOOTH_IN_DEFAULT;
             VelSmoothOut.Val = VEL_SMOOTH_OUT_DEFAULT;
-            VelFORE          = VEL_FORE_DEFAULT;
-            VelFORETerm.Val  = VEL_FORE_TERM_DEFAULT;
+            VelClegg         = VEL_CLEGG_DEFAULT;
 
             // Miscellaneous defaults
             MaxStoppingTime.Val  = MAX_STOPPING_TIME_DEFAULT;
@@ -273,14 +263,13 @@ namespace MuMech.AttitudeControllers
                         _posPID[i].N                = PosN.Val;
                         _posPID[i].B                = PosB.Val;
                         _posPID[i].C                = PosC.Val;
-                        _posPID[i].H                = Ac.VesselState.deltaT;
+                        _posPID[i].Ts               = Ac.VesselState.deltaT;
                         _posPID[i].SmoothIn         = MuUtils.Clamp01(PosSmoothIn);
                         _posPID[i].SmoothOut        = MuUtils.Clamp01(PosSmoothOut);
                         _posPID[i].MinOutput        = -maxOmega;
                         _posPID[i].MaxOutput        = maxOmega;
                         _posPID[i].IntegralDeadband = PosDeadband * maxOmega;
-                        _posPID[i].FORE             = PosFORE;
-                        _posPID[i].FORETerm         = PosFORETerm;
+                        _posPID[i].Clegg            = PosClegg;
 
                         _targetOmega[i] = _posPID[i].Update(_desired[i], _current[i]);
                     }
@@ -304,14 +293,13 @@ namespace MuMech.AttitudeControllers
                 _velPID[i].N                = VelN;
                 _velPID[i].B                = VelB;
                 _velPID[i].C                = VelC;
-                _velPID[i].H                = Ac.VesselState.deltaT;
+                _velPID[i].Ts               = Ac.VesselState.deltaT;
                 _velPID[i].SmoothIn         = MuUtils.Clamp01(VelSmoothIn);
                 _velPID[i].SmoothOut        = MuUtils.Clamp01(VelSmoothOut);
                 _velPID[i].MinOutput        = -_maxAlpha[i];
                 _velPID[i].MaxOutput        = _maxAlpha[i];
                 _velPID[i].IntegralDeadband = VelDeadband * _maxAlpha[i];
-                _velPID[i].FORE             = VelFORE;
-                _velPID[i].FORETerm         = VelFORETerm;
+                _velPID[i].Clegg            = VelClegg;
 
                 _targetAlpha[i] = _velPID[i].Update(_targetOmega[i], _vessel.angularVelocityD[i]);
 
@@ -369,58 +357,74 @@ namespace MuMech.AttitudeControllers
                 GUILayout.TextField(RollControlRange.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
             GUILayout.EndHorizontal();
 
+            const int COL1_WIDTH = 100;
+            const int COL2_WIDTH = 50;
+            const int COL3_WIDTH = 50;
+
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Kp", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelKp.Text = GUILayout.TextField(VelKp.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosKp.Text = GUILayout.TextField(PosKp.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            GUILayout.Label("Velocity", GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            GUILayout.Label("Position", GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Ti", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelTi.Text = GUILayout.TextField(VelTi.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosTi.Text = GUILayout.TextField(PosTi.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("Kp", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelKp.Text = GUILayout.TextField(VelKp.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosKp.Text = GUILayout.TextField(PosKp.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Td", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelTd.Text = GUILayout.TextField(VelTd.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosTd.Text = GUILayout.TextField(PosTd.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("Ti", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelTi.Text = GUILayout.TextField(VelTi.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosTi.Text = GUILayout.TextField(PosTi.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("N", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelN.Text = GUILayout.TextField(VelN.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosN.Text = GUILayout.TextField(PosN.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("Td", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelTd.Text = GUILayout.TextField(VelTd.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosTd.Text = GUILayout.TextField(PosTd.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("B", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelB.Text = GUILayout.TextField(VelB.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosB.Text = GUILayout.TextField(PosB.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("N", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelN.Text = GUILayout.TextField(VelN.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosN.Text = GUILayout.TextField(PosN.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("C", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelC.Text = GUILayout.TextField(VelC.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosC.Text = GUILayout.TextField(PosC.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("B", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelB.Text = GUILayout.TextField(VelB.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosB.Text = GUILayout.TextField(PosB.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Deadband", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelDeadband.Text = GUILayout.TextField(VelDeadband.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosDeadband.Text = GUILayout.TextField(PosDeadband.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("C", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelC.Text = GUILayout.TextField(VelC.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosC.Text = GUILayout.TextField(PosC.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("SmoothIn", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelSmoothIn.Text = GUILayout.TextField(VelSmoothIn.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("Deadband", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelDeadband.Text = GUILayout.TextField(VelDeadband.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosDeadband.Text = GUILayout.TextField(PosDeadband.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("SmoothOut", GUILayout.ExpandWidth(true), GUILayout.Width(100));
-            VelSmoothOut.Text = GUILayout.TextField(VelSmoothOut.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
-            PosSmoothOut.Text = GUILayout.TextField(PosSmoothOut.Text, GUILayout.ExpandWidth(false), GUILayout.Width(50));
+            GUILayout.Label("SmoothIn", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelSmoothIn.Text = GUILayout.TextField(VelSmoothIn.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("SmoothOut", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelSmoothOut.Text = GUILayout.TextField(VelSmoothOut.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosSmoothOut.Text = GUILayout.TextField(PosSmoothOut.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
+            VelClegg = GUILayout.Toggle(VelClegg, Localizer.Format("Clegg"), GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
+            PosClegg = GUILayout.Toggle(PosClegg, Localizer.Format("Clegg"), GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
