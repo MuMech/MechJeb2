@@ -66,7 +66,7 @@ namespace MuMech
                     "#MechJeb_LandingGuidance_Status12"); //"Moving to low deorbit burn point"
 
                 //Warp toward deorbit burn if it hasn't been triggerd yet:
-                if (!_deorbitBurnTriggered && Core.Node.Autowarp && rangeToTarget > 2 * triggerDistance)
+                if (!_deorbitBurnTriggered && Core.Node.Autowarp && rangeToTarget > 2 * triggerDistance && Core.vessel.angularVelocity.magnitude < 0.001)
                     Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
                 if (rangeToTarget < triggerDistance && !MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
 

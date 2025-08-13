@@ -118,6 +118,9 @@ namespace MuMech
                     }
                 }
 
+                if (Core.Thrust.TargetThrottle < 0.01F)
+                    Core.Thrust.TargetThrottle = 0.01F;
+
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status9",
                     VesselState.altitudeBottom.ToString("F0")); //"Final descent: " +  + "m above terrain"
 

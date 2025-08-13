@@ -81,7 +81,8 @@ namespace MuMech
 
                     if (_planeChangeDVLeft < 0.1F)
                     {
-                        return new LowDeorbitBurn(Core);
+                        Core.Thrust.TargetThrottle = 0;
+                        return new LowDeorbitBurn(Core); //DecelerationBurn(Core); would by cool to immediately proceed to DecelerationBurn instead, can't figure out how to convince trajectory predicted to do so with Pe>0, must be done in ReentrySimulation.cs somewhere.
                     }
                 }
                 else
