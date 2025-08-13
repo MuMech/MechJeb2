@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using KSP.Localization;
 using UnityEngine;
 
@@ -16,7 +16,8 @@ namespace MuMech
 
             public override AutopilotStep OnFixedUpdate()
             {
-                double minalt = Math.Min(VesselState.altitudeBottom, Math.Min(VesselState.altitudeASL, VesselState.altitudeTrue));
+                return this;
+                /*double minalt = Math.Min(VesselState.altitudeBottom, Math.Min(VesselState.altitudeASL, VesselState.altitudeTrue));
 
                 if (!Core.Node.Autowarp || _aggressivePolicy == null) return this;
 
@@ -29,7 +30,7 @@ namespace MuMech
                 else
                     Core.Warp.MinimumWarp(true);
 
-                return this;
+                return this;*/
             }
 
             public override AutopilotStep Drive(FlightCtrlState s)
