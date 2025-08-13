@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using KSP.Localization;
 using UnityEngine;
 
@@ -27,6 +27,10 @@ namespace MuMech
                 if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 5)
                 {
                     Core.Thrust.TargetThrottle = Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle);
+                }
+                else if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 10)
+                {
+                    Core.Thrust.TargetThrottle = 0.01F;
                 }
                 else
                 {

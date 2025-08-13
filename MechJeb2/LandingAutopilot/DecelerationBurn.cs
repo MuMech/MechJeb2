@@ -9,6 +9,7 @@ namespace MuMech
     {
         public class DecelerationBurn : AutopilotStep
         {
+            private bool _decelerationBurnTriggered;
             public DecelerationBurn(MechJebCore core) : base(core)
             {
             }
@@ -26,7 +27,7 @@ namespace MuMech
 
                 double decelerationStartTime =
                     Core.Landing.Prediction.Trajectory.Any() ? Core.Landing.Prediction.Trajectory.First().UT : VesselState.time;
-                if (decelerationStartTime - VesselState.time > 5)
+                if (decelerationStartTime - VesselState.time > 5 && !_decelerationBurnTriggered)
                 {
                     Core.Thrust.TargetThrottle = 0;
 
@@ -35,16 +36,20 @@ namespace MuMech
                     //warp to deceleration start
                     Vector3d decelerationStartAttitude = -Orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
                     decelerationStartAttitude += MainBody.getRFrmVel(Orbit.WorldPositionAtUT(decelerationStartTime));
-                    decelerationStartAttitude =  decelerationStartAttitude.normalized;
+                    decelerationStartAttitude = decelerationStartAttitude.normalized;
                     Core.Attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
-                    bool warpReady = Core.Attitude.attitudeAngleFromTarget() < 5;
+                    bool warpReady = Core.Attitude.attitudeAngleFromTarget() < 5 && Core.vessel.angularVelocity.magnitude < 0.001;
 
                     if (warpReady && Core.Node.Autowarp)
                         Core.Warp.WarpToUT(decelerationStartTime - 5);
+                    
                     else if (!MuUtils.PhysicsRunning())
                         Core.Warp.MinimumWarp();
                     return this;
                 }
+
+                if(!_decelerationBurnTriggered)
+                    _decelerationBurnTriggered = true;
 
                 Vector3d desiredThrustVector = -VesselState.surfaceVelocity.normalized;
 

@@ -1,4 +1,4 @@
-using KSP.Localization;
+﻿using KSP.Localization;
 using UnityEngine;
 
 // FIXME: use a maneuver node
@@ -35,13 +35,17 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 2)
+                if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 2 )
                 {
                     Core.Thrust.TargetThrottle = Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.maxThrustAccel)));
                 }
+                else if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 10)
+                {
+                    Core.Thrust.TargetThrottle = 0.01F;
+                }
                 else
                 {
-                    Core.Thrust.TargetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0F;
                 }
 
                 return this;

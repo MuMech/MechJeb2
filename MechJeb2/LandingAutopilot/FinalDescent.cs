@@ -53,7 +53,7 @@ namespace MuMech
                     Core.Thrust.TransKillH  = true;
                     Core.Thrust.TransSpdAct = 0;
                 }
-                else if (minalt > 200)
+                else if (minalt > 300)
                 {
                     if (VesselState.surfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.surfaceVelocity, VesselState.up) < 80)
                     {
