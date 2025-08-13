@@ -90,7 +90,7 @@ namespace MuMech
                 }
                 else
                 {
-                    // last 200 meters:
+                    // last 300 meters:
                     Core.Thrust.TransSpdAct = -Mathf.Lerp(0,
                         (float)Math.Sqrt((VesselState.limitedMaxThrustAccel - VesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
 
@@ -111,8 +111,10 @@ namespace MuMech
                         //Follow min thrust limiter
                         if (Core.Thrust.TransSpdAct < VesselState.speedVertical && !_finalThrottleUpTriggered)
                         {
+                            // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
+                            Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                             Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
-                            Core.Thrust.TransSpdAct = 100*Core.Landing.MinAllowedThrottle();
+                            Core.Thrust.TransSpdAct = 100 * Core.Landing.MinAllowedThrottle();
                         }
                         else
                         {
