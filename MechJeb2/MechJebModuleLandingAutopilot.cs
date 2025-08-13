@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
 using ModuleWheels;
@@ -426,8 +426,8 @@ namespace MuMech
         {
             //if the atmosphere is thin, the deceleration burn should end
             //500 meters above the landing site to allow for a controlled final descent
-            //MechJebCore.print("DecelerationEndAltitude Vacum " + (500 + LandingAltitude).ToString("F2"));
-            if (!UseAtmosphereToBrake()) return 500 + _landingAltitude;
+            //MechJebCore.print("DecelerationEndAltitude Vacum " + (200 + LandingAltitude).ToString("F2"));
+            if (!UseAtmosphereToBrake()) return 200 + _landingAltitude;
 
             // if the atmosphere is thick, deceleration (meaning freefall through the atmosphere)
             // should end a safe height above the landing site in order to allow braking from terminal velocity

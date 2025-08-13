@@ -56,7 +56,7 @@ namespace MuMech
                 if (Vector3d.Dot(VesselState.surfaceVelocity, VesselState.up) > 0
                     || Vector3d.Dot(VesselState.forward, desiredThrustVector) < 0.75)
                 {
-                    Core.Thrust.TargetThrottle = 0;
+                    Core.Thrust.TargetThrottle = 0.01F;
                     Status                     = Localizer.Format("#MechJeb_LandingGuidance_Status5"); //"Braking"
                 }
                 else
@@ -73,7 +73,7 @@ namespace MuMech
                     double speedError = desiredSpeed - controlledSpeed;
                     double desiredAccel = speedError / SPEED_CORRECTION_TIME_CONSTANT + (desiredSpeedAfterDt - desiredSpeed) / VesselState.deltaT;
                     if (maxAccel - minAccel > 0)
-                        Core.Thrust.TargetThrottle  = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0F, 1.0F);
+                        Core.Thrust.TargetThrottle  = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.01F, 1.0F);
                     else Core.Thrust.TargetThrottle = 0.01F;
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status6",
                         desiredSpeed >= double.MaxValue ? "∞" : Math.Abs(desiredSpeed).ToString("F1")); //"Braking: target speed = " +  + " m/s"
