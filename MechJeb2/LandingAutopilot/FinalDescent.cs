@@ -106,6 +106,13 @@ namespace MuMech
                         // kill horizontal velocity
                         Core.Thrust.Tmode      = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
                         Core.Thrust.TransKillH = true;
+
+                        //Prevent full engine shutdown
+                        if (Core.Thrust.TransSpdAct < VesselState.speedVertical)
+                        {
+                            Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
+                            Core.Thrust.TransSpdAct = 1f;
+                        }
                     }
                     else
                     {
@@ -117,9 +124,6 @@ namespace MuMech
                         Core.Thrust.TransSpdAct *= -1;
                     }
                 }
-
-                if (Core.Thrust.TargetThrottle < 0.01F)
-                    Core.Thrust.TargetThrottle = 0.01F;
 
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status9",
                     VesselState.altitudeBottom.ToString("F0")); //"Final descent: " +  + "m above terrain"
