@@ -524,6 +524,18 @@ namespace MuMech
 
         public double MaxAllowedSpeed() => DescentSpeedPolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
 
+        public float MinAllowedThrottle()
+        {
+            if (Core.Thrust.LimiterMinThrottle)
+            {
+                return (float)Core.Thrust.MinThrottle;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         public double MaxAllowedSpeedAfterDt(double dt) =>
             DescentSpeedPolicy.MaxAllowedSpeed(VesselState.CoM + VesselState.orbitalVelocity * dt - MainBody.position,
                 VesselState.surfaceVelocity + dt * VesselState.gravityForce);

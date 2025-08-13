@@ -9,6 +9,7 @@ namespace MuMech
         public class FinalDescent : AutopilotStep
         {
             private IDescentSpeedPolicy _aggressivePolicy;
+            private bool _finalThrottleUpTriggered;
 
             public FinalDescent(MechJebCore core) : base(core)
             {
@@ -57,17 +58,17 @@ namespace MuMech
                 {
                     if (VesselState.surfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.surfaceVelocity, VesselState.up) < 80)
                     {
-                        // if we have positive vertical velocity, point up and don't thrust:
+                        // if we have positive vertical velocity, point up and follow min thrust limiter:
                         Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
                         Core.Thrust.Tmode       = MechJebModuleThrustController.TMode.DIRECT;
-                        Core.Thrust.TransSpdAct = 0;
+                        Core.Thrust.TransSpdAct = 100 * Core.Landing.MinAllowedThrottle();
                     }
                     else if (VesselState.surfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.forward, -VesselState.surfaceVelocity) > 45)
                     {
-                        // if we're not facing approximately retrograde, turn to point retrograde and don't thrust:
+                        // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
                         Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                         Core.Thrust.Tmode       = MechJebModuleThrustController.TMode.DIRECT;
-                        Core.Thrust.TransSpdAct = 0;
+                        Core.Thrust.TransSpdAct = 100 * Core.Landing.MinAllowedThrottle();
                     }
                     else
                     {
@@ -107,11 +108,15 @@ namespace MuMech
                         Core.Thrust.Tmode      = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
                         Core.Thrust.TransKillH = true;
 
-                        //Prevent full engine shutdown
-                        if (Core.Thrust.TransSpdAct < VesselState.speedVertical)
+                        //Follow min thrust limiter
+                        if (Core.Thrust.TransSpdAct < VesselState.speedVertical && !_finalThrottleUpTriggered)
                         {
                             Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
-                            Core.Thrust.TransSpdAct = 1f;
+                            Core.Thrust.TransSpdAct = 100*Core.Landing.MinAllowedThrottle();
+                        }
+                        else
+                        {
+                            _finalThrottleUpTriggered = true;
                         }
                     }
                     else

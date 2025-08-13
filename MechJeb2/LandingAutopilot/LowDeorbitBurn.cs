@@ -28,9 +28,9 @@ namespace MuMech
                 {
                     Core.Thrust.TargetThrottle = Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle);
                 }
-                else if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 10)
+                else if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Landing.MinAllowedThrottle() > 0)
                 {
-                    Core.Thrust.TargetThrottle = 0.01F;
+                    Core.Thrust.TargetThrottle = Core.Landing.MinAllowedThrottle();
                 }
                 else
                 {
