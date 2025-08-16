@@ -18,6 +18,15 @@ namespace MechJebLibTest
     /// </summary>
     public static class AssertionExtensions
     {
+        public static void ShouldEqual(this int actual, int expected)
+        {
+            if (actual != expected)
+                throw new EqualException(
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                );
+        }
+
         // A proper relative tolerance comparison comparsion between float values.
         public static void ShouldEqual(this double actual, double expected, double epsilon = EPS)
         {

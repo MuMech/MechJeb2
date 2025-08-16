@@ -63,6 +63,7 @@
         <Compile Include="ManeuversTests\Simple.cs"/>
         <Compile Include="ODETests\BS3Tests.c.cs"/>
         <Compile Include="ODETests\DP5Tests.cs"/>
+        <Compile Include="Primitives\V3Tests\ComponentAnalysisTests.cs" />
         <Compile Include="Primitives\V3Tests\ConstructorAccessorTests.cs"/>
         <Compile Include="Primitives\V3Tests\MagnitudeNormalizationTests.cs"/>
         <Compile Include="Primitives\V3Tests\ConstantDirectionalVectorTests.cs"/>
