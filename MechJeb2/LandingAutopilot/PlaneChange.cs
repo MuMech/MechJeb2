@@ -37,15 +37,15 @@ namespace MuMech
             {
                 if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 2 )
                 {
-                    Core.Thrust.TargetThrottle = Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.maxThrustAccel)));
+                    Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.maxThrustAccel))));
                 }
-                else if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Landing.MinAllowedThrottle() > 0)
+                else if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
                 {
-                    Core.Thrust.TargetThrottle = Core.Landing.MinAllowedThrottle();
+                    Core.Thrust.RequestActiveThrottle(0.0f);
                 }
                 else
                 {
-                    Core.Thrust.TargetThrottle = 0F;
+                    Core.Thrust.ThrustOff();
                 }
 
                 return this;
@@ -81,7 +81,7 @@ namespace MuMech
 
                     if (_planeChangeDVLeft < 0.1F)
                     {
-                        Core.Thrust.TargetThrottle = 0;
+                        Core.Thrust.ThrustOff();
                         return new LowDeorbitBurn(Core); //DecelerationBurn(Core); would by cool to immediately proceed to DecelerationBurn instead, can't figure out how to convince trajectory predicted to do so with Pe>0, must be done in ReentrySimulation.cs somewhere.
                     }
                 }

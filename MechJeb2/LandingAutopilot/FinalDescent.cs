@@ -61,14 +61,14 @@ namespace MuMech
                         // if we have positive vertical velocity, point up and follow min thrust limiter:
                         Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
                         Core.Thrust.Tmode       = MechJebModuleThrustController.TMode.DIRECT;
-                        Core.Thrust.TransSpdAct = 100 * Core.Landing.MinAllowedThrottle();
+                        Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
                     }
                     else if (VesselState.surfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.forward, -VesselState.surfaceVelocity) > 45)
                     {
                         // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
                         Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                         Core.Thrust.Tmode       = MechJebModuleThrustController.TMode.DIRECT;
-                        Core.Thrust.TransSpdAct = 100 * Core.Landing.MinAllowedThrottle();
+                        Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
                     }
                     else
                     {
@@ -114,7 +114,7 @@ namespace MuMech
                             // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
                             Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                             Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
-                            Core.Thrust.TransSpdAct = 100 * Core.Landing.MinAllowedThrottle();
+                            Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
                         }
                         else
                         {

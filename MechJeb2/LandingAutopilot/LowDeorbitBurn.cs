@@ -26,15 +26,15 @@ namespace MuMech
             {
                 if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 5)
                 {
-                    Core.Thrust.TargetThrottle = Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle);
+                    Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle));
                 }
-                else if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Landing.MinAllowedThrottle() > 0)
+                else if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
                 {
-                    Core.Thrust.TargetThrottle = Core.Landing.MinAllowedThrottle();
+                    Core.Thrust.RequestActiveThrottle(0.0f);
                 }
                 else
                 {
-                    Core.Thrust.TargetThrottle = 0;
+                    Core.Thrust.ThrustOff();
                 }
 
                 return this;
@@ -106,7 +106,7 @@ namespace MuMech
                         {
                             if (_lowDeorbitEndConditionSet && !_lowDeorbitEndOnLandingSiteNearer)
                             {
-                                Core.Thrust.TargetThrottle = 0;
+                                Core.Thrust.ThrustOff();
                                 return new DecelerationBurn(Core);
                             }
 
@@ -125,7 +125,7 @@ namespace MuMech
                         {
                             if (_lowDeorbitEndConditionSet && _lowDeorbitEndOnLandingSiteNearer)
                             {
-                                Core.Thrust.TargetThrottle = 0;
+                                Core.Thrust.ThrustOff();
                                 return new DecelerationBurn(Core);
                             }
 

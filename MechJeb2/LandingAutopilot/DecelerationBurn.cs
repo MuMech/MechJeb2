@@ -29,7 +29,7 @@ namespace MuMech
                     Core.Landing.Prediction.Trajectory.Any() ? Core.Landing.Prediction.Trajectory.First().UT : VesselState.time;
                 if (decelerationStartTime - VesselState.time > 5 && !_decelerationBurnTriggered)
                 {
-                    Core.Thrust.TargetThrottle = 0;
+                    Core.Thrust.ThrustOff();
 
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status4"); //"Warping to start of braking burn."
 
@@ -61,7 +61,7 @@ namespace MuMech
                 if (Vector3d.Dot(VesselState.surfaceVelocity, VesselState.up) > 0
                     || Vector3d.Dot(VesselState.forward, desiredThrustVector) < 0.75)
                 {
-                    Core.Thrust.TargetThrottle = Core.Landing.MinAllowedThrottle();
+                    Core.Thrust.RequestActiveThrottle(0.0f);
                     Status                     = Localizer.Format("#MechJeb_LandingGuidance_Status5"); //"Braking"
                 }
                 else
@@ -78,8 +78,8 @@ namespace MuMech
                     double speedError = desiredSpeed - controlledSpeed;
                     double desiredAccel = speedError / SPEED_CORRECTION_TIME_CONSTANT + (desiredSpeedAfterDt - desiredSpeed) / VesselState.deltaT;
                     if (maxAccel - minAccel > 0)
-                        Core.Thrust.TargetThrottle  = Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), Core.Landing.MinAllowedThrottle(), 1.0F);
-                    else Core.Thrust.TargetThrottle = Core.Landing.MinAllowedThrottle();
+                        Core.Thrust.RequestActiveThrottle(Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0f, 1.0f));
+                    else Core.Thrust.RequestActiveThrottle(0);
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status6",
                         desiredSpeed >= double.MaxValue ? "∞" : Math.Abs(desiredSpeed).ToString("F1")); //"Braking: target speed = " +  + " m/s"
                 }
