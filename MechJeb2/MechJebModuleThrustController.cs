@@ -288,6 +288,17 @@ namespace MuMech
             SetFlightGlobals(0);
         }
 
+        public void RequestActiveThrottle(float target, bool enforceMinimum = true, bool allowZero = false)
+        {
+            if (enforceMinimum && LimiterMinThrottle)
+                if (allowZero && target == 0)
+                    TargetThrottle = 0;
+                else
+                    TargetThrottle = Mathf.Max(target, (float)MinThrottle);
+            else
+                TargetThrottle = target;
+        }
+
         private void SetFlightGlobals(double throttle)
         {
             if (FlightGlobals.ActiveVessel != null && Vessel == FlightGlobals.ActiveVessel)
