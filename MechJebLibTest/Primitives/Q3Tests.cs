@@ -3,7 +3,7 @@ using Xunit;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.Structs
+namespace MechJebLibTest.Primitives
 {
     public class Q3Tests
     {
