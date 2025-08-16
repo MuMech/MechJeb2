@@ -1081,15 +1081,19 @@ namespace MuMech
                         torqueControlSurface.Add(ctrlTorquePos);
                         torqueControlSurface.Add(ctrlTorqueNeg);
 
-                        float effectiveActuatorDelay = (float)MuUtils.Clamp(50 - cs.actuatorSpeed, 0, 50);
-
                         if (cs.useExponentialSpeed)
                         {
+                            float effectiveActuatorDelay = (float)MuUtils.Clamp(50 - cs.actuatorSpeed / cs.ctrlSurfaceRange, 0, 50);
+
                             torqueWeightedExponentialResponseDelay6.Positive = effectiveActuatorDelay * ctrlTorquePos.Abs();
                             torqueWeightedExponentialResponseDelay6.Negative = effectiveActuatorDelay * ctrlTorqueNeg.Abs();
                         }
                         else
                         {
+                            // 10 is a fudge factor for the difference in response time between a linear ramp and an exponential curve.
+                            // XXX: this should probably be tweakable
+                            float effectiveActuatorDelay = (float)MuUtils.Clamp(50 - 10 * cs.actuatorSpeed / cs.ctrlSurfaceRange, 0, 50);
+
                             torqueWeightedLinearResponseDelay6.Positive = effectiveActuatorDelay * ctrlTorquePos.Abs();
                             torqueWeightedLinearResponseDelay6.Negative = effectiveActuatorDelay * ctrlTorqueNeg.Abs();
                         }
