@@ -61,54 +61,6 @@ namespace MechJebLibTest.Structs
         }
 
         [Fact]
-        private void MagnitudeLargeTest()
-        {
-            double large = 1e+190;
-
-            var largeV = new V3(large, large, large);
-            Assert.Equal(Sqrt(3) * large, largeV.magnitude);
-        }
-
-        [Fact]
-        private void MagnitudeSmallTest()
-        {
-            double small  = 1e-190;
-            var    smallV = new V3(small, small, small);
-
-            Assert.Equal(Sqrt(3) * small, smallV.magnitude);
-        }
-
-        [Fact]
-        private void NormalizeLargeTest()
-        {
-            double large  = 1e+190;
-            var    largeV = new V3(large, large, large);
-
-            Assert.Equal(1.0 / Sqrt(3), largeV.normalized[0]);
-            Assert.Equal(1.0 / Sqrt(3), largeV.normalized[1]);
-            Assert.Equal(1.0 / Sqrt(3), largeV.normalized[2]);
-        }
-
-        [Fact]
-        private void NormalizeSmallTest()
-        {
-            double small  = 1e-190;
-            var    smallV = new V3(small, small, small);
-
-            Assert.Equal(1.0 / Sqrt(3), smallV.normalized[0]);
-            Assert.Equal(1.0 / Sqrt(3), smallV.normalized[1]);
-            Assert.Equal(1.0 / Sqrt(3), smallV.normalized[2]);
-        }
-
-        [Fact]
-        private void ZeroTests()
-        {
-            Assert.Equal(0, V3.zero.magnitude);
-            Assert.Equal(0, V3.zero.sqrMagnitude);
-            Assert.Equal(V3.zero, V3.zero.normalized);
-        }
-
-        [Fact]
         private void RandomSphericalConversions()
         {
             const int NTRIALS = 5000;

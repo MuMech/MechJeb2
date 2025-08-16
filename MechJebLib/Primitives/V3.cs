@@ -192,20 +192,11 @@ namespace MechJebLib.Primitives
             return Math.Sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
         }
 
-        // FIXME: precision
         public static V3 ClampMagnitude(V3 vector, double maxLength)
         {
-            double sqrmag = vector.sqrMagnitude;
-            if (sqrmag > maxLength * maxLength)
-            {
-                double mag          = Math.Sqrt(sqrmag);
-                double normalized_x = vector.x / mag;
-                double normalized_y = vector.y / mag;
-                double normalized_z = vector.z / mag;
-                return new V3(normalized_x * maxLength,
-                    normalized_y * maxLength,
-                    normalized_z * maxLength);
-            }
+            double mag = vector.magnitude;
+            if (mag > maxLength)
+                return vector.normalized * maxLength;
 
             return vector;
         }
@@ -301,7 +292,7 @@ namespace MechJebLib.Primitives
 
         public static V3 back { get; } = new V3(-1.0, 0.0, 0.0);
 
-        // This defines the north pole that is valid for body cenetered inertial coordinate systems
+        // This defines the north pole that is valid for body centered inertial coordinate systems
         public static V3 northpole { get; } = new V3(0, 0, 1);
 
         // X,Y,Z axis
