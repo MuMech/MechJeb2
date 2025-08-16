@@ -208,7 +208,7 @@ namespace MechJebLib.Primitives
         {
             get
             {
-                int largest_idx = Math.Abs(x) > Math.Abs(y) ? 0 : 1;
+                int largest_idx = Math.Abs(y) > Math.Abs(x) ? 1 : 0;
                 return Math.Abs(z) > Math.Abs(this[largest_idx]) ? 2 : largest_idx;
             }
         }
@@ -217,7 +217,7 @@ namespace MechJebLib.Primitives
         {
             get
             {
-                int lowest_idx = Math.Abs(x) < Math.Abs(y) ? 0 : 1;
+                int lowest_idx = Math.Abs(y) < Math.Abs(x) ? 1 : 0;
                 return Math.Abs(z) < Math.Abs(this[lowest_idx]) ? 2 : lowest_idx;
             }
         }

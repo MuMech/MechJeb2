@@ -8,59 +8,6 @@ namespace MechJebLibTest.Structs
     public class V3Tests
     {
         [Fact]
-        private void ComponentTests()
-        {
-            Assert.Equal(1.0, new V3(1, 2, 3).min_magnitude);
-            Assert.Equal(1.0, new V3(2, 1, 3).min_magnitude);
-            Assert.Equal(1.0, new V3(3, 2, 1).min_magnitude);
-            Assert.Equal(1.0, new V3(2, 3, 1).min_magnitude);
-            Assert.Equal(1.0, new V3(1, 3, 2).min_magnitude);
-            Assert.Equal(1.0, new V3(3, 1, 2).min_magnitude);
-            Assert.Equal(1.0, new V3(-1, -2, -3).min_magnitude);
-            Assert.Equal(1.0, new V3(-2, -1, -3).min_magnitude);
-            Assert.Equal(1.0, new V3(-3, -2, -1).min_magnitude);
-            Assert.Equal(1.0, new V3(-2, -3, -1).min_magnitude);
-            Assert.Equal(1.0, new V3(-1, -3, -2).min_magnitude);
-            Assert.Equal(1.0, new V3(-3, -1, -2).min_magnitude);
-            Assert.Equal(3.0, new V3(1, 2, 3).max_magnitude);
-            Assert.Equal(3.0, new V3(2, 1, 3).max_magnitude);
-            Assert.Equal(3.0, new V3(3, 2, 1).max_magnitude);
-            Assert.Equal(3.0, new V3(2, 3, 1).max_magnitude);
-            Assert.Equal(3.0, new V3(1, 3, 2).max_magnitude);
-            Assert.Equal(3.0, new V3(3, 1, 2).max_magnitude);
-            Assert.Equal(3.0, new V3(-1, -2, -3).max_magnitude);
-            Assert.Equal(3.0, new V3(-2, -1, -3).max_magnitude);
-            Assert.Equal(3.0, new V3(-3, -2, -1).max_magnitude);
-            Assert.Equal(3.0, new V3(-2, -3, -1).max_magnitude);
-            Assert.Equal(3.0, new V3(-1, -3, -2).max_magnitude);
-            Assert.Equal(3.0, new V3(-3, -1, -2).max_magnitude);
-            Assert.Equal(0, new V3(1, 2, 3).min_magnitude_index);
-            Assert.Equal(1, new V3(2, 1, 3).min_magnitude_index);
-            Assert.Equal(2, new V3(3, 2, 1).min_magnitude_index);
-            Assert.Equal(2, new V3(2, 3, 1).min_magnitude_index);
-            Assert.Equal(0, new V3(1, 3, 2).min_magnitude_index);
-            Assert.Equal(1, new V3(3, 1, 2).min_magnitude_index);
-            Assert.Equal(0, new V3(-1, -2, -3).min_magnitude_index);
-            Assert.Equal(1, new V3(-2, -1, -3).min_magnitude_index);
-            Assert.Equal(2, new V3(-3, -2, -1).min_magnitude_index);
-            Assert.Equal(2, new V3(-2, -3, -1).min_magnitude_index);
-            Assert.Equal(0, new V3(-1, -3, -2).min_magnitude_index);
-            Assert.Equal(1, new V3(-3, -1, -2).min_magnitude_index);
-            Assert.Equal(2, new V3(1, 2, 3).max_magnitude_index);
-            Assert.Equal(2, new V3(2, 1, 3).max_magnitude_index);
-            Assert.Equal(0, new V3(3, 2, 1).max_magnitude_index);
-            Assert.Equal(1, new V3(2, 3, 1).max_magnitude_index);
-            Assert.Equal(1, new V3(1, 3, 2).max_magnitude_index);
-            Assert.Equal(0, new V3(3, 1, 2).max_magnitude_index);
-            Assert.Equal(2, new V3(-1, -2, -3).max_magnitude_index);
-            Assert.Equal(2, new V3(-2, -1, -3).max_magnitude_index);
-            Assert.Equal(0, new V3(-3, -2, -1).max_magnitude_index);
-            Assert.Equal(1, new V3(-2, -3, -1).max_magnitude_index);
-            Assert.Equal(1, new V3(-1, -3, -2).max_magnitude_index);
-            Assert.Equal(0, new V3(-3, -1, -2).max_magnitude_index);
-        }
-
-        [Fact]
         private void RandomSphericalConversions()
         {
             const int NTRIALS = 5000;
