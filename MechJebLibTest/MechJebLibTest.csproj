@@ -63,10 +63,13 @@
         <Compile Include="ManeuversTests\Simple.cs"/>
         <Compile Include="ODETests\BS3Tests.c.cs"/>
         <Compile Include="ODETests\DP5Tests.cs"/>
-        <Compile Include="Primitives\V3Tests\ComponentAnalysisTests.cs" />
+        <Compile Include="Primitives\V3Tests\ComponentAnalysisTests.cs"/>
+        <Compile Include="Primitives\V3Tests\ComponentOperationsTests.cs"/>
         <Compile Include="Primitives\V3Tests\ConstructorAccessorTests.cs"/>
         <Compile Include="Primitives\V3Tests\MagnitudeNormalizationTests.cs"/>
         <Compile Include="Primitives\V3Tests\ConstantDirectionalVectorTests.cs"/>
+        <Compile Include="Primitives\V3Tests\OperatorTests.cs"/>
+        <Compile Include="Primitives\V3Tests\VectorMathOperationTests.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
         <Compile Include="PVGTests\AscentTests\BuggyTests.cs"/>
         <Compile Include="PVGTests\AscentTests\TheStandardTests.cs"/>
