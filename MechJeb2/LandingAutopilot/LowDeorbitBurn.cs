@@ -129,7 +129,7 @@ namespace MuMech
                                 return new DecelerationBurn(Core);
                             }
 
-                            _lowDeorbitBurnMaxThrottle = 0;
+                            _lowDeorbitBurnMaxThrottle = 0.0f;
                             Status = Localizer.Format(
                                 "#MechJeb_LandingGuidance_Status13"); //"Deorbit burn complete: waiting for the right moment to start braking"
                         }
