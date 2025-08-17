@@ -66,6 +66,7 @@
         <Compile Include="Primitives\V3Tests\ComponentAnalysisTests.cs"/>
         <Compile Include="Primitives\V3Tests\ComponentOperationsTests.cs"/>
         <Compile Include="Primitives\V3Tests\ConstructorAccessorTests.cs"/>
+        <Compile Include="Primitives\V3Tests\CoordinateConversionTests.cs"/>
         <Compile Include="Primitives\V3Tests\MagnitudeNormalizationTests.cs"/>
         <Compile Include="Primitives\V3Tests\ConstantDirectionalVectorTests.cs"/>
         <Compile Include="Primitives\V3Tests\OperatorTests.cs"/>
