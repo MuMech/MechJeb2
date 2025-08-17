@@ -162,25 +162,36 @@ namespace MechJebLib.Primitives
                 vector.z - planeNormal.z * dot / sqrMag);
         }
 
-        // FIXME: precision of Math.Acos for small angles
         public static double Angle(V3 from, V3 to)
         {
-            // sqrt(a) * sqrt(b) = sqrt(a * b) -- valid for real numbers
-            double denominator = Math.Sqrt(from.sqrMagnitude * to.sqrMagnitude);
-            return denominator < EPS ? 0.0 : SafeAcos(Dot(from, to) / denominator);
+            double c = Math.Max(from.max_magnitude, to.max_magnitude);
+            if (c <= 0) return 0;
+
+            V3 from_scaled = from / c;
+            V3 to_scaled   = to / c;
+
+            double denominator = from_scaled._internal_magnitude * to_scaled._internal_magnitude;
+            if (denominator <= 0) return 0;
+
+            V3 cross_scaled = Cross(from_scaled, to_scaled);
+
+            double sinAngle = cross_scaled._internal_magnitude / denominator;
+            double cosAngle = Dot(from_scaled, to_scaled) / denominator;
+
+            return Atan2(sinAngle, cosAngle);
         }
 
-        // FIXME: probably left handed
-        // FIXME: precision
         public static double SignedAngle(V3 from, V3 to, V3 axis)
         {
-            double unsignedAngle = Angle(from, to);
+            from.Normalize();
+            to.Normalize();
+            axis.Normalize();
 
-            double cross_x = from.y * to.z - from.z * to.y;
-            double cross_y = from.z * to.x - from.x * to.z;
-            double cross_z = from.x * to.y - from.y * to.x;
-            double sign    = Math.Sign(axis.x * cross_x + axis.y * cross_y + axis.z * cross_z);
-            return unsignedAngle * sign;
+            V3     cross = Cross(from, to);
+            double sign  = Dot(cross, axis);
+            double angle = Angle(from, to);
+
+            return sign >= 0 ? angle : -angle;
         }
 
         // FIXME: precision
@@ -343,6 +354,8 @@ namespace MechJebLib.Primitives
 
         public static V3 operator /(double d, V3 a) => new V3(d / a.x, d / a.y, d / a.z);
 
+        // FIXME: Should this equality operator be using a tolerance? We're doing scientific computing, not video games here.
+        // We also have other helpers for comparing vectors with a tolerance that are more explicit.
         public static bool operator ==(V3 lhs, V3 rhs)
         {
             double diff_X = lhs.x - rhs.x;

@@ -77,6 +77,12 @@ namespace MechJebLibTest
                 );
         }
 
+        public static void ShouldNotBeZero(this double actual)
+        {
+            if (actual == 0)
+                throw new XunitException($"Expected non-zero value, but was {actual}");
+        }
+
         // Comparison to zero within a tolerance
         public static void ShouldBeZero(this V3 actual, double epsilon = EPS)
         {
@@ -106,6 +112,66 @@ namespace MechJebLibTest
 
             if (actual <= 0)
                 throw new XunitException($"{actual} must be positive");
+        }
+
+        public static void ShouldBePositiveInfinity(this double actual)
+        {
+            if (!double.IsPositiveInfinity(actual))
+                throw new XunitException($"Expected positive infinity, but was {actual}");
+        }
+
+        public static void ShouldBeNegativeInfinity(this double actual)
+        {
+            if (!double.IsNegativeInfinity(actual))
+                throw new XunitException($"Expected negative infinity, but was {actual}");
+        }
+
+        public static void ShouldBeFinite(this double actual)
+        {
+            if (!IsFinite(actual))
+                throw new XunitException($"{actual} must be finite");
+        }
+
+        public static void ShouldBeNaN(this double actual)
+        {
+            if (!double.IsNaN(actual))
+                throw new XunitException($"Expected NaN, but was {actual}");
+        }
+
+        public static void ShouldBeGreaterThan(this double actual, double expected)
+        {
+            if (actual <= expected)
+                throw new XunitException($"Expected {actual} to be greater than {expected}");
+        }
+
+        public static void ShouldBeLessThan(this double actual, double expected)
+        {
+            if (actual >= expected)
+                throw new XunitException($"Expected {actual} to be less than {expected}");
+        }
+
+        public static void ShouldBeGreaterThanOrEqualTo(this double actual, double expected)
+        {
+            if (actual < expected)
+                throw new XunitException($"Expected {actual} to be greater than or equal to {expected}");
+        }
+
+        public static void ShouldBeLessThanOrEqualTo(this double actual, double expected)
+        {
+            if (actual > expected)
+                throw new XunitException($"Expected {actual} to be less than or equal to {expected}");
+        }
+
+        public static void ShouldBeTrue(this bool actual)
+        {
+            if (!actual)
+                throw new XunitException("Expected true, but was false");
+        }
+
+        public static void ShouldBeFalse(this bool actual)
+        {
+            if (actual)
+                throw new XunitException("Expected false, but was true");
         }
     }
 }
