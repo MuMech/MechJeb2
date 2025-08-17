@@ -330,7 +330,14 @@ namespace MechJebLib.Primitives
             get
             {
                 double r = magnitude;
-                return new V3(r, SafeAcos(z / r), Clamp2Pi(Atan2(y, x)));
+                if (r == 0)
+                    return zero;
+
+                double rho   = new V3(x, y, 0).magnitude;
+                double theta = Atan2(rho, z);
+                double phi   = Clamp2Pi(Atan2(y, x));
+
+                return new V3(r, theta, phi);
             }
         }
 
