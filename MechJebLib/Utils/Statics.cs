@@ -103,7 +103,7 @@ namespace MechJebLib.Utils
         /// <param name="x">Cosine value</param>
         /// <returns>Radians</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double SafeAcos(double x) => Acos(Clamp(x, -1.0, 1.0));
+        public static double SafeAcos(double x) => !IsFinite(x) ? double.NaN : Acos(Clamp(x, -1.0, 1.0));
 
         /// <summary>
         ///     Safe inverse sine that clamps its input.
@@ -111,10 +111,10 @@ namespace MechJebLib.Utils
         /// <param name="x">Sine value</param>
         /// <returns>Radians</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double SafeAsin(double x) => Asin(Clamp(x, -1.0, 1.0));
+        public static double SafeAsin(double x) => !IsFinite(x) ? double.NaN : Asin(Clamp(x, -1.0, 1.0));
 
         /// <summary>
-        ///     Inverse hyperbolic tangent funtion.
+        ///     Inverse hyperbolic tangent function.
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
