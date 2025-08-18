@@ -88,6 +88,7 @@
         <Compile Include="TestInitialization.cs"/>
         <Compile Include="TwoBodyTests\FarnocchiaTests.cs"/>
         <Compile Include="TwoBodyTests\ShepperdTests.cs"/>
+        <Compile Include="Utils\StaticsTests\TrigonometryTests.cs" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
