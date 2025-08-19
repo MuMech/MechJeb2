@@ -22,13 +22,20 @@ namespace MechJebLib.Primitives
     /// </summary>
     public struct V3 : IEquatable<V3>, IFormattable
     {
-        private const double KEPS = EPS2; // for equality checking
-
+        // MISSING APIS
+        // FIXME: Lerp()
+        // FIXME: LerpUnclamped()
+        // FIXME: Slerp()
+        // FIXME: SlerpUnclamped()
+        // FIXME: MoveTowards()
+        // FIXME: RotateTowards()
+        // FIXME: Reflect()
+        // FIXME: SmoothDamp()
+        // FIXME: OrthoNormalize(normal, tangent, binormal)
         public double x;
         public double y;
         public double z;
 
-        // we want [0,0,1] to be "up" while conventional aircraft RPY uses positive z-down, so we rotate 180 degrees
         public double roll
         {
             get => x;
@@ -361,15 +368,11 @@ namespace MechJebLib.Primitives
 
         public static V3 operator /(double d, V3 a) => new V3(d / a.x, d / a.y, d / a.z);
 
-        // FIXME: Should this equality operator be using a tolerance? We're doing scientific computing, not video games here.
-        // We also have other helpers for comparing vectors with a tolerance that are more explicit.
         public static bool operator ==(V3 lhs, V3 rhs)
         {
-            double diff_X = lhs.x - rhs.x;
-            double diff_Y = lhs.y - rhs.y;
-            double diff_Z = lhs.z - rhs.z;
-            double sqrmag = diff_X * diff_X + diff_Y * diff_Y + diff_Z * diff_Z;
-            return sqrmag < KEPS * KEPS;
+            // ReSharper disable CompareOfFloatsByEqualityOperator
+            return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+            // ReSharper restore CompareOfFloatsByEqualityOperator
         }
 
         public static bool operator !=(V3 lhs, V3 rhs) => !(lhs == rhs);
