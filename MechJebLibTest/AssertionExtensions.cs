@@ -27,7 +27,7 @@ namespace MechJebLibTest
                 );
         }
 
-        // A proper relative tolerance comparison comparsion between float values.
+        // A proper relative tolerance comparison comparison between float values.
         public static void ShouldEqual(this double actual, double expected, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
@@ -61,6 +61,47 @@ namespace MechJebLibTest
                 throw new EqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                );
+        }
+
+        public static void ShouldEqual(this string actual, string expected)
+        {
+            if (actual != expected)
+                throw new EqualException(
+                    string.Format(CultureInfo.CurrentCulture, "{0}", expected),
+                    string.Format(CultureInfo.CurrentCulture, "{0}", actual)
+                );
+        }
+
+        public static void ShouldContain(this string actual, string expected)
+        {
+            if (actual == null || !actual.Contains(expected))
+                throw new XunitException(
+                    string.Format(CultureInfo.CurrentCulture, "Expected string to contain '{0}', but was '{1}'", expected, actual)
+                );
+        }
+
+        public static void ShouldNotContain(this string actual, string expected)
+        {
+            if (actual != null && actual.Contains(expected))
+                throw new XunitException(
+                    string.Format(CultureInfo.CurrentCulture, "Expected string not to contain '{0}', but was '{1}'", expected, actual)
+                );
+        }
+
+        public static void ShouldStartWith(this string actual, string expected)
+        {
+            if (actual == null || !actual.StartsWith(expected))
+                throw new XunitException(
+                    string.Format(CultureInfo.CurrentCulture, "Expected string to start with '{0}', but was '{1}'", expected, actual)
+                );
+        }
+
+        public static void ShouldEndWith(this string actual, string expected)
+        {
+            if (actual == null || !actual.EndsWith(expected))
+                throw new XunitException(
+                    string.Format(CultureInfo.CurrentCulture, "Expected string to end with '{0}', but was '{1}'", expected, actual)
                 );
         }
 
