@@ -91,34 +91,25 @@ namespace MuMech
                 else
                 {
                     // last 300 meters:
-                    Core.Thrust.TransSpdAct = -Mathf.Lerp(0,
-                        (float)Math.Sqrt((VesselState.limitedMaxThrustAccel - VesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
-
-                    // take into account desired landing speed:
-                    Core.Thrust.TransSpdAct = (float)Math.Min(-Core.Landing.TouchdownSpeed, Core.Thrust.TransSpdAct);
-
-//                    core.thrust.tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-//                    core.thrust.trans_kill_h = true;
-
-//                    if (Math.Abs(Vector3d.Angle(-vessel.surfaceVelocity, vesselState.up)) < 10)
+                    float desiredSpeed = -Mathf.Lerp(0, (float)Math.Sqrt((VesselState.limitedMaxThrustAccel - VesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
                     if (VesselState.speedSurfaceHorizontal < 5)
                     {
-                        // if we're falling more or less straight down, control vertical speed and
-                        // kill horizontal velocity
-                        Core.Thrust.Tmode      = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-                        Core.Thrust.TransKillH = true;
-
-                        //Follow min thrust limiter
-                        if (Core.Thrust.TransSpdAct < VesselState.speedVertical && !_finalThrottleUpTriggered)
+                        if (desiredSpeed < VesselState.speedVertical && !_finalThrottleUpTriggered)
                         {
                             // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
+                            Core.Thrust.Tmode = MechJebModuleThrustController.TMode.OFF;
                             Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
-                            Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
-                            Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
+                            Core.Thrust.RequestActiveThrottle(0.0f);
                         }
                         else
                         {
                             _finalThrottleUpTriggered = true;
+                            // if we're falling more or less straight down, control vertical speed and
+                            // kill horizontal velocity
+                            Core.Thrust.Tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
+                            // take into account desired landing speed:
+                            Core.Thrust.TransSpdAct = (float)Math.Min(-Core.Landing.TouchdownSpeed, desiredSpeed);
+                            Core.Thrust.TransKillH = true;
                         }
                     }
                     else
