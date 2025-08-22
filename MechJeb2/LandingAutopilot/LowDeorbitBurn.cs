@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using KSP.Localization;
 using UnityEngine;
 
@@ -26,11 +26,15 @@ namespace MuMech
             {
                 if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 5)
                 {
-                    Core.Thrust.TargetThrottle = Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle);
+                    Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle), allowZero: true);
+                }
+                else if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
+                {
+                    Core.Thrust.RequestActiveThrottle(0.0f);
                 }
                 else
                 {
-                    Core.Thrust.TargetThrottle = 0;
+                    Core.Thrust.ThrustOff();
                 }
 
                 return this;
@@ -62,7 +66,7 @@ namespace MuMech
                     "#MechJeb_LandingGuidance_Status12"); //"Moving to low deorbit burn point"
 
                 //Warp toward deorbit burn if it hasn't been triggerd yet:
-                if (!_deorbitBurnTriggered && Core.Node.Autowarp && rangeToTarget > 2 * triggerDistance)
+                if (!_deorbitBurnTriggered && Core.Node.Autowarp && rangeToTarget > 2 * triggerDistance && Core.vessel.angularVelocity.magnitude < 0.001)
                     Core.Warp.WarpRegularAtRate((float)(Orbit.period / 6));
                 if (rangeToTarget < triggerDistance && !MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
 
@@ -102,7 +106,7 @@ namespace MuMech
                         {
                             if (_lowDeorbitEndConditionSet && !_lowDeorbitEndOnLandingSiteNearer)
                             {
-                                Core.Thrust.TargetThrottle = 0;
+                                Core.Thrust.ThrustOff();
                                 return new DecelerationBurn(Core);
                             }
 
@@ -121,11 +125,11 @@ namespace MuMech
                         {
                             if (_lowDeorbitEndConditionSet && _lowDeorbitEndOnLandingSiteNearer)
                             {
-                                Core.Thrust.TargetThrottle = 0;
+                                Core.Thrust.ThrustOff();
                                 return new DecelerationBurn(Core);
                             }
 
-                            _lowDeorbitBurnMaxThrottle = 0;
+                            _lowDeorbitBurnMaxThrottle = 0.0f;
                             Status = Localizer.Format(
                                 "#MechJeb_LandingGuidance_Status13"); //"Deorbit burn complete: waiting for the right moment to start braking"
                         }
