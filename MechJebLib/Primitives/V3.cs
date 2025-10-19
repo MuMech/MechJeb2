@@ -169,6 +169,27 @@ namespace MechJebLib.Primitives
                 vector.z - planeNormal.z * dot / sqrMag);
         }
 
+        public static V3 Lerp(V3 a, V3 b, double t) => a + t * (b - a);
+
+        public static V3 Slerp(V3 a, V3 b, double t)
+        {
+            double magA = a.magnitude;
+            double magB = b.magnitude;
+
+            if (magA == 0 || magB == 0)
+                return Lerp(a, b, t);
+
+            var qa     = Q3.FromToRotation(forward, a.normalized);
+            var qb     = Q3.FromToRotation(forward, b.normalized);
+            var qSlerp = Q3.Slerp(qa, qb, t);
+
+            V3 direction = qSlerp * forward;
+
+            double magnitude = magA + t * (magB - magA);
+
+            return direction * magnitude;
+        }
+
         public static double Angle(V3 from, V3 to)
         {
             double c = Math.Max(from.max_magnitude, to.max_magnitude);
@@ -410,6 +431,15 @@ namespace MechJebLib.Primitives
             other[i, j]     = this[0];
             other[i + 1, j] = this[1];
             other[i + 2, j] = this[2];
+        }
+
+        public static V3 CopyFromIndices(IList<double> array, (int, int, int) indices) => new V3(array[indices.Item1], array[indices.Item2], array[indices.Item3]);
+
+        public void CopyToIndices(IList<double> array, (int, int, int) indices)
+        {
+            array[indices.Item1] = this[0];
+            array[indices.Item2] = this[1];
+            array[indices.Item3] = this[2];
         }
     }
 }

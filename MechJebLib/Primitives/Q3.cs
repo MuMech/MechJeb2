@@ -276,6 +276,44 @@ namespace MechJebLib.Primitives
             return q;
         }
 
+        public static Q3 Lerp(Q3 a, Q3 b, double t)
+        {
+            return new Q3(
+                a.x + t * (b.x - a.x),
+                a.y + t * (b.y - a.y),
+                a.z + t * (b.z - a.z),
+                a.w + t * (b.w - a.w)
+            ).normalized;
+        }
+
+        public static Q3 Slerp(Q3 a, Q3 b, double t)
+        {
+            double dot = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+
+            Q3 end = b;
+            if (dot < 0)
+            {
+                dot = -dot;
+                end = new Q3(-b.x, -b.y, -b.z, -b.w);
+            }
+
+            if (dot > 0.99999999)
+                return Lerp(a, end, t);
+
+            double theta    = Acos(dot);
+            double sinTheta = Sin(theta);
+
+            double wa = Sin((1 - t) * theta) / sinTheta;
+            double wb = Sin(t * theta) / sinTheta;
+
+            return new Q3(
+                wa * a.x + wb * end.x,
+                wa * a.y + wb * end.y,
+                wa * a.z + wb * end.z,
+                wa * a.w + wb * end.w
+            );
+        }
+
         public static Q3 FromToRotation(V3 from, V3 to)
         {
             var    c = V3.Cross(from, to);

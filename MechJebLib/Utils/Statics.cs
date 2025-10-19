@@ -437,6 +437,31 @@ namespace MechJebLib.Utils
             return sb.ToString();
         }
 
+        public static bool DoubleArraySparsityValidation(IList<double> user, IList<double> numerical, double tol)
+        {
+            int last = user.Count - 1;
+
+            for (int i = 0; i <= last; i++)
+            {
+                // skip nearly zero with the same sign
+                // FIXME: probably need to relax the tolerances progressively with smaller numbers
+                if (Abs(user[i]) < 1e-6 && Abs(numerical[i]) < 1e-6 && (user[i] * numerical[i] >= 0))
+                    continue;
+                if (!NearlyEqual(user[i], numerical[i], tol))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static bool DoubleMatrixSparsityValidation(double[,] user, double[,] numerical, double tol)
+        {
+            for (int i = 0; i <= user.GetUpperBound(0); i++)
+                if (!DoubleArraySparsityValidation(GetRow(user, i), GetRow(numerical, i), tol))
+                    return false;
+            return true;
+        }
+
         public static double[] GetRow(double[,] array, int row)
         {
             int      cols   = array.GetUpperBound(1) + 1;
