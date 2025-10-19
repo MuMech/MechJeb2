@@ -14,8 +14,8 @@ namespace MechJebLib.Primitives
         // UnityCompat does no extrapolation outside of MinTime/MaxTime
         public bool UnityCompat;
 
-        protected double MinTime = double.MaxValue;
-        protected double MaxTime = double.MinValue;
+        public double MinTime = double.MaxValue;
+        public double MaxTime = double.MinValue;
 
         protected int LastLo = -1;
 
@@ -35,8 +35,7 @@ namespace MechJebLib.Primitives
             _list[time] = new HFrame<T>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
             MinTime     = Min(MinTime, time);
             MaxTime     = Max(MaxTime, time);
-            RecomputeTangents(_list.IndexOfKey(time));
-            LastLo = -1;
+            LastLo      = -1;
         }
 
         public void Add(double time, T value, T tangent)

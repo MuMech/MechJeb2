@@ -4,6 +4,7 @@
  * and GPLv2 (GPLv2-LICENSE) license or any later version.
  */
 
+using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 using static System.Math;

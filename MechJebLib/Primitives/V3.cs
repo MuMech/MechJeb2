@@ -23,10 +23,6 @@ namespace MechJebLib.Primitives
     public struct V3 : IEquatable<V3>, IFormattable
     {
         // MISSING APIS
-        // FIXME: Lerp()
-        // FIXME: LerpUnclamped()
-        // FIXME: Slerp()
-        // FIXME: SlerpUnclamped()
         // FIXME: MoveTowards()
         // FIXME: RotateTowards()
         // FIXME: Reflect()
@@ -145,6 +141,8 @@ namespace MechJebLib.Primitives
 
         public static double Dot(V3 v1, V3 v2) => v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 
+        public static M3 Outer(V3 v1, V3 v2) => new M3(v1 * v2.x, v1 * v2.y, v1 * v2.z);
+
         // FIXME: precision
         public static V3 Project(V3 vector, V3 onNormal)
         {
@@ -167,6 +165,27 @@ namespace MechJebLib.Primitives
             return new V3(vector.x - planeNormal.x * dot / sqrMag,
                 vector.y - planeNormal.y * dot / sqrMag,
                 vector.z - planeNormal.z * dot / sqrMag);
+        }
+
+        public static V3 Lerp(V3 a, V3 b, double t) => a + t * (b - a);
+
+        public static V3 Slerp(V3 a, V3 b, double t)
+        {
+            double magA = a.magnitude;
+            double magB = b.magnitude;
+
+            if (magA == 0 || magB == 0)
+                return Lerp(a, b, t);
+
+            var qa     = Q3.FromToRotation(forward, a.normalized);
+            var qb     = Q3.FromToRotation(forward, b.normalized);
+            var qSlerp = Q3.Slerp(qa, qb, t);
+
+            V3 direction = qSlerp * forward;
+
+            double magnitude = magA + t * (magB - magA);
+
+            return direction * magnitude;
         }
 
         public static double Angle(V3 from, V3 to)
@@ -410,6 +429,15 @@ namespace MechJebLib.Primitives
             other[i, j]     = this[0];
             other[i + 1, j] = this[1];
             other[i + 2, j] = this[2];
+        }
+
+        public static V3 CopyFromIndices(IList<double> array, (int, int, int) indices) => new V3(array[indices.Item1], array[indices.Item2], array[indices.Item3]);
+
+        public void CopyToIndices(IList<double> array, (int, int, int) indices)
+        {
+            array[indices.Item1] = this[0];
+            array[indices.Item2] = this[1];
+            array[indices.Item3] = this[2];
         }
     }
 }

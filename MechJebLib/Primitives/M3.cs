@@ -277,6 +277,25 @@ namespace MechJebLib.Primitives
             return res;
         }
 
+        public static M3 operator -(M3 lhs, M3 rhs)
+        {
+            M3 res;
+
+            res.m00 = lhs.m00 - rhs.m00;
+            res.m01 = lhs.m01 - rhs.m01;
+            res.m02 = lhs.m02 - rhs.m02;
+
+            res.m10 = lhs.m10 - rhs.m10;
+            res.m11 = lhs.m11 - rhs.m11;
+            res.m12 = lhs.m12 - rhs.m12;
+
+            res.m20 = lhs.m20 - rhs.m20;
+            res.m21 = lhs.m21 - rhs.m21;
+            res.m22 = lhs.m22 - rhs.m22;
+
+            return res;
+        }
+
         /// <summary>
         ///     The additive inverse of the matrix.
         /// </summary>

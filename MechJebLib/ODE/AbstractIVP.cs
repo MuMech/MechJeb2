@@ -23,7 +23,7 @@ namespace MechJebLib.ODE
     {
         private readonly List<Event> _activeEvents = new List<Event>();
 
-        private   Func<double, IList<double>, AbstractIVP, double> _eventFunc = null!;
+        private   Func<IList<double>, double, AbstractIVP, double> _eventFunc = null!;
         private   double                                           _habsNext;
         protected int                                              Direction;
         protected double[]                                         Dy    = new double[1];
@@ -74,7 +74,7 @@ namespace MechJebLib.ODE
         public int Interpnum { get; set; } = 20;
 
         /// <summary>
-        ///     Throw exception when MaxIter is hit (PVG optimizer works better with this set to false).
+        ///     Throw exception when MaxIter is hit (old PVG optimizer worked better with this set to false).
         /// </summary>
         public bool ThrowOnMaxIter { get; set; } = true;
 
@@ -124,7 +124,7 @@ namespace MechJebLib.ODE
         {
             using var yinterp = Vn.Rent(N);
             Interpolate(x, yinterp);
-            return _eventFunc(x, yinterp, this);
+            return _eventFunc(yinterp, x, this);
         }
 
         private void _Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf,
@@ -150,7 +150,7 @@ namespace MechJebLib.ODE
             if (events != null)
             {
                 for (int i = 0; i < events.Count; i++)
-                    events[i].LastValue = events[i].F(T, Y, this);
+                    events[i].LastValue = events[i].F(Y, T, this);
             }
 
             bool terminate = false;
@@ -173,10 +173,11 @@ namespace MechJebLib.ODE
                 // handle events, this assumes only one trigger per event per step
                 if (events != null)
                 {
+                    _activeEvents.Clear();
+
                     for (int i = 0; i < events.Count; i++)
                     {
-                        events[i].NewValue = events[i].F(Tnew, Ynew, this);
-                        _activeEvents.Clear();
+                        events[i].NewValue = events[i].F(Ynew, Tnew, this);
                         if (IsActiveEvent(events[i]))
                             _activeEvents.Add(events[i]);
                     }
