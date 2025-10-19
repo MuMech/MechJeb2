@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.04.0 (source code generated 2024-12-21)
+ALGLIB 4.06.0 (source code generated 2025-10-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -1587,156 +1587,6 @@ public partial class alglib
 
     
     /*************************************************************************
-    Mann-Whitney U-test
-
-    This test checks hypotheses about whether X  and  Y  are  samples  of  two
-    continuous distributions of the same shape  and  same  median  or  whether
-    their medians are different.
-
-    The following tests are performed:
-        * two-tailed test (null hypothesis - the medians are equal)
-        * left-tailed test (null hypothesis - the median of the  first  sample
-          is greater than or equal to the median of the second sample)
-        * right-tailed test (null hypothesis - the median of the first  sample
-          is less than or equal to the median of the second sample).
-
-    Requirements:
-        * the samples are independent
-        * X and Y are continuous distributions (or discrete distributions well-
-          approximating continuous distributions)
-        * distributions of X and Y have the  same  shape.  The  only  possible
-          difference is their position (i.e. the value of the median)
-        * the number of elements in each sample is not less than 5
-        * the scale of measurement should be ordinal, interval or ratio  (i.e.
-          the test could not be applied to nominal variables).
-
-    The test is non-parametric and doesn't require distributions to be normal.
-
-    Input parameters:
-        X   -   sample 1. Array whose index goes from 0 to N-1.
-        N   -   size of the sample. N>=5
-        Y   -   sample 2. Array whose index goes from 0 to M-1.
-        M   -   size of the sample. M>=5
-
-    Output parameters:
-        BothTails   -   p-value for two-tailed test.
-                        If BothTails is less than the given significance level
-                        the null hypothesis is rejected.
-        LeftTail    -   p-value for left-tailed test.
-                        If LeftTail is less than the given significance level,
-                        the null hypothesis is rejected.
-        RightTail   -   p-value for right-tailed test.
-                        If RightTail is less than the given significance level
-                        the null hypothesis is rejected.
-
-    To calculate p-values, special approximation is used. This method lets  us
-    calculate p-values with satisfactory  accuracy  in  interval  [0.0001, 1].
-    There is no approximation outside the [0.0001, 1] interval. Therefore,  if
-    the significance level outlies this interval, the test returns 0.0001.
-
-    Relative precision of approximation of p-value:
-
-    N          M          Max.err.   Rms.err.
-    5..10      N..10      1.4e-02    6.0e-04
-    5..10      N..100     2.2e-02    5.3e-06
-    10..15     N..15      1.0e-02    3.2e-04
-    10..15     N..100     1.0e-02    2.2e-05
-    15..100    N..100     6.1e-03    2.7e-06
-
-    For N,M>100 accuracy checks weren't put into  practice,  but  taking  into
-    account characteristics of asymptotic approximation used, precision should
-    not be sharply different from the values for interval [5, 100].
-
-    NOTE: P-value approximation was  optimized  for  0.0001<=p<=0.2500.  Thus,
-          P's outside of this interval are enforced to these bounds. Say,  you
-          may quite often get P equal to exactly 0.25 or 0.0001.
-
-      -- ALGLIB --
-         Copyright 09.04.2007 by Bochkanov Sergey
-    *************************************************************************/
-    public static void mannwhitneyutest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        mannwhitneyu.mannwhitneyutest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, null);
-    }
-    
-    public static void mannwhitneyutest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        mannwhitneyu.mannwhitneyutest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, _params);
-    }
-
-}
-public partial class alglib
-{
-
-    
-    /*************************************************************************
-    Sign test
-
-    This test checks three hypotheses about the median of  the  given  sample.
-    The following tests are performed:
-        * two-tailed test (null hypothesis - the median is equal to the  given
-          value)
-        * left-tailed test (null hypothesis - the median is  greater  than  or
-          equal to the given value)
-        * right-tailed test (null hypothesis - the  median  is  less  than  or
-          equal to the given value)
-
-    Requirements:
-        * the scale of measurement should be ordinal, interval or ratio  (i.e.
-          the test could not be applied to nominal variables).
-
-    The test is non-parametric and doesn't require distribution X to be normal
-
-    Input parameters:
-        X       -   sample. Array whose index goes from 0 to N-1.
-        N       -   size of the sample.
-        Median  -   assumed median value.
-
-    Output parameters:
-        BothTails   -   p-value for two-tailed test.
-                        If BothTails is less than the given significance level
-                        the null hypothesis is rejected.
-        LeftTail    -   p-value for left-tailed test.
-                        If LeftTail is less than the given significance level,
-                        the null hypothesis is rejected.
-        RightTail   -   p-value for right-tailed test.
-                        If RightTail is less than the given significance level
-                        the null hypothesis is rejected.
-
-    While   calculating   p-values   high-precision   binomial    distribution
-    approximation is used, so significance levels have about 15 exact digits.
-
-      -- ALGLIB --
-         Copyright 08.09.2006 by Bochkanov Sergey
-    *************************************************************************/
-    public static void onesamplesigntest(double[] x, int n, double median, out double bothtails, out double lefttail, out double righttail)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        stest.onesamplesigntest(x, n, median, ref bothtails, ref lefttail, ref righttail, null);
-    }
-    
-    public static void onesamplesigntest(double[] x, int n, double median, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        stest.onesamplesigntest(x, n, median, ref bothtails, ref lefttail, ref righttail, _params);
-    }
-
-}
-public partial class alglib
-{
-
-    
-    /*************************************************************************
     One-sample t-test
 
     This test checks three hypotheses about the mean of the given sample.  The
@@ -1908,6 +1758,820 @@ public partial class alglib
         lefttail = 0;
         righttail = 0;
         studentttests.unequalvariancettest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, _params);
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Sign test
+
+    This test checks three hypotheses about the median of  the  given  sample.
+    The following tests are performed:
+        * two-tailed test (null hypothesis - the median is equal to the  given
+          value)
+        * left-tailed test (null hypothesis - the median is  greater  than  or
+          equal to the given value)
+        * right-tailed test (null hypothesis - the  median  is  less  than  or
+          equal to the given value)
+
+    Requirements:
+        * the scale of measurement should be ordinal, interval or ratio  (i.e.
+          the test could not be applied to nominal variables).
+
+    The test is non-parametric and doesn't require distribution X to be normal
+
+    Input parameters:
+        X       -   sample. Array whose index goes from 0 to N-1.
+        N       -   size of the sample.
+        Median  -   assumed median value.
+
+    Output parameters:
+        BothTails   -   p-value for two-tailed test.
+                        If BothTails is less than the given significance level
+                        the null hypothesis is rejected.
+        LeftTail    -   p-value for left-tailed test.
+                        If LeftTail is less than the given significance level,
+                        the null hypothesis is rejected.
+        RightTail   -   p-value for right-tailed test.
+                        If RightTail is less than the given significance level
+                        the null hypothesis is rejected.
+
+    While   calculating   p-values   high-precision   binomial    distribution
+    approximation is used, so significance levels have about 15 exact digits.
+
+      -- ALGLIB --
+         Copyright 08.09.2006 by Bochkanov Sergey
+    *************************************************************************/
+    public static void onesamplesigntest(double[] x, int n, double median, out double bothtails, out double lefttail, out double righttail)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        stest.onesamplesigntest(x, n, median, ref bothtails, ref lefttail, ref righttail, null);
+    }
+    
+    public static void onesamplesigntest(double[] x, int n, double median, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        stest.onesamplesigntest(x, n, median, ref bothtails, ref lefttail, ref righttail, _params);
+    }
+
+}
+public partial class alglib
+{
+
+
+    /*************************************************************************
+    This object stores MCMC sampler.
+
+    You should use functions provided by the MCMC subpackage to work with this
+    object.
+    *************************************************************************/
+    public class mcmcstate : alglibobject
+    {
+        //
+        // Public declarations
+        //
+    
+        public mcmcstate()
+        {
+            _innerobj = new mcmc.mcmcstate();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new mcmcstate((mcmc.mcmcstate)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private mcmc.mcmcstate _innerobj;
+        public mcmc.mcmcstate innerobj { get { return _innerobj; } }
+        public mcmcstate(mcmc.mcmcstate obj)
+        {
+            _innerobj = obj;
+        }
+    }
+
+
+    /*************************************************************************
+    These fields store MCMC report:
+    * nfev                      number of function evaluations
+    * acceptrate                acceptance rate of a MCMC algo
+    * autocorrtimes             array[N], per-variable autocorrelation times
+    *************************************************************************/
+    public class mcmcreport : alglibobject
+    {
+        //
+        // Public declarations
+        //
+        public int nfev { get { return _innerobj.nfev; } set { _innerobj.nfev = value; } }
+        public double acceptrate { get { return _innerobj.acceptrate; } set { _innerobj.acceptrate = value; } }
+        public double[] autocorrtimes { get { return _innerobj.autocorrtimes; } set { _innerobj.autocorrtimes = value; } }
+    
+        public mcmcreport()
+        {
+            _innerobj = new mcmc.mcmcreport();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new mcmcreport((mcmc.mcmcreport)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private mcmc.mcmcreport _innerobj;
+        public mcmc.mcmcreport innerobj { get { return _innerobj; } }
+        public mcmcreport(mcmc.mcmcreport obj)
+        {
+            _innerobj = obj;
+        }
+    }
+    
+    /*************************************************************************
+    This function initializes MCMC sampler using single initial point to  seed
+    the population.
+
+    The population is generated around the initial point with random  Gaussian
+    noise being added, having per-variable magnitude equal to XStdDev  or  (if
+    MCMCSetScale() was called) equal to XStdDev*S[I].
+
+
+    INPUT PARAMETERS:
+        N       -   problem dimension, N>0:
+                    * if given, only leading N elements of X are used
+                    * if not given, automatically determined from size of X
+        X       -   starting point used to seed a MCMC algo, array[N]:
+                    * it is better to have X not too far away from the maximum
+                      of log-likelihood
+                    * any point will do, if no maximum location is unknown
+        XStdDev -   standard deviation of a population generated around X:
+                    * strictly greater than zero
+                    * nearly zero values are likely  to  cause  population  to
+                      stagnate, whilst too large values are  likely  to  cause
+                      population to spend excessive time converging
+
+    OUTPUT PARAMETERS:
+        State   -   structure stores MCMC sampler state
+
+      -- ALGLIB --
+         Copyright 20.01.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmccreate1(int n, double[] x, double xstddev, out mcmcstate state)
+    {
+        state = new mcmcstate();
+        mcmc.mcmccreate1(n, x, xstddev, state.innerobj, null);
+    }
+    
+    public static void mcmccreate1(int n, double[] x, double xstddev, out mcmcstate state, alglib.xparams _params)
+    {
+        state = new mcmcstate();
+        mcmc.mcmccreate1(n, x, xstddev, state.innerobj, _params);
+    }
+            
+    public static void mcmccreate1(double[] x, double xstddev, out mcmcstate state)
+    {
+        int n;
+    
+        state = new mcmcstate();
+        n = ap.len(x);
+        mcmc.mcmccreate1(n, x, xstddev, state.innerobj, null);
+    
+        return;
+    }
+            
+    public static void mcmccreate1(double[] x, double xstddev, out mcmcstate state, alglib.xparams _params)
+    {
+        int n;
+    
+        state = new mcmcstate();
+        n = ap.len(x);
+        mcmc.mcmccreate1(n, x, xstddev, state.innerobj, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    This function initializes MCMC sampler using a population of user-specified
+    points.
+
+    A specific sampling algorithm that needs an  initial  population will  use
+    user-provided points. If an algorithm needs more initial points  than  was
+    specified, additional points will be randomly generated  using  population
+    as a distribution reference.
+
+    INPUT PARAMETERS:
+        N       -   problem dimension, N>0:
+                    * if given, only leading N elements of P are used
+                    * if not given, automatically determined from size of P
+        P       -   initial points, array[PopSize,N]
+        PopSize -   population size, PopSize>0:
+                    * if given, only leading PopSize elements of P are used
+                    * if not given, automatically determined from size of P
+
+    OUTPUT PARAMETERS:
+        State   -   structure stores MCMC sampler state
+
+      -- ALGLIB --
+         Copyright 20.05.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmccreatefrompopulation(int n, double[,] p, int popsize, out mcmcstate state)
+    {
+        state = new mcmcstate();
+        mcmc.mcmccreatefrompopulation(n, p, popsize, state.innerobj, null);
+    }
+    
+    public static void mcmccreatefrompopulation(int n, double[,] p, int popsize, out mcmcstate state, alglib.xparams _params)
+    {
+        state = new mcmcstate();
+        mcmc.mcmccreatefrompopulation(n, p, popsize, state.innerobj, _params);
+    }
+            
+    public static void mcmccreatefrompopulation(double[,] p, out mcmcstate state)
+    {
+        int n;
+        int popsize;
+    
+        state = new mcmcstate();
+        n = ap.cols(p);
+        popsize = ap.rows(p);
+        mcmc.mcmccreatefrompopulation(n, p, popsize, state.innerobj, null);
+    
+        return;
+    }
+            
+    public static void mcmccreatefrompopulation(double[,] p, out mcmcstate state, alglib.xparams _params)
+    {
+        int n;
+        int popsize;
+    
+        state = new mcmcstate();
+        n = ap.cols(p);
+        popsize = ap.rows(p);
+        mcmc.mcmccreatefrompopulation(n, p, popsize, state.innerobj, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    This function sets per-variable scaling coefficients for MCMC sampler.
+
+    Present version of the MCMC sampler uses per-variable scales during initial
+    popilation generation: an initial point X0 is perturbed with random noise,
+    whose per-variable magnitude is XStdDev*S[I].
+
+    Future versions of the sampler may use scales for other purposes too,  but
+    are likely to do so in a backward-compatible manner.
+
+    INPUT PARAMETERS:
+        State   -   structure stores algorithm state
+        S       -   array[N], non-zero scaling coefficients
+                    S[i] may be negative, sign doesn't matter.
+
+      -- ALGLIB --
+         Copyright 15.05.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetscale(mcmcstate state, double[] s)
+    {
+    
+        mcmc.mcmcsetscale(state.innerobj, s, null);
+    }
+    
+    public static void mcmcsetscale(mcmcstate state, double[] s, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetscale(state.innerobj, s, _params);
+    }
+    
+    /*************************************************************************
+    This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+    the specified ensemble size and number of iterations being reported.
+
+    NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+          to EpochsCnt iterations being  reported.
+
+          By  default, it performs exactly the same number of iterations as it
+          reports. However, it will perform more iterations than it reports if
+          using a  burn-in  phase  (discards  initial  samples  that  are  too
+          influenced by the initial state) and by specifying a thinning factor
+          greater than 1 (helps to combat autocorrelations).
+
+    INPUT PARAMETERS:
+        State   -   structure that stores MCMC sampler state
+        PopSize -   ensemble size, PopSize>=2, recommended: >=2*N
+        EpochsCnt-  iterations count to be reported, >=1
+
+      -- ALGLIB --
+         Copyright 20.01.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetalgogoodmanweare(mcmcstate state, int popsize, int epochscnt)
+    {
+    
+        mcmc.mcmcsetalgogoodmanweare(state.innerobj, popsize, epochscnt, null);
+    }
+    
+    public static void mcmcsetalgogoodmanweare(mcmcstate state, int popsize, int epochscnt, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetalgogoodmanweare(state.innerobj, popsize, epochscnt, _params);
+    }
+    
+    /*************************************************************************
+    This function sets number of additional initial iterations (in addition to
+    EpochsCnt) that will be performed  and  discarded  (not  stored  into  the
+    report sample), so called 'burn-in length'.
+
+    In total, BurnInLen+EpochsCnt iterations will be performed,  with  initial
+    BurnInLen ones being used solely to help MCMC spread walkers according  to
+    the density of the function being sampled.
+
+    INPUT PARAMETERS:
+        State       -   structure that stores MCMC sampler state
+        BurnInLen   -   burn-in length, >=0
+
+      -- ALGLIB --
+         Copyright 20.01.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetburninlength(mcmcstate state, int burninlen)
+    {
+    
+        mcmc.mcmcsetburninlength(state.innerobj, burninlen, null);
+    }
+    
+    public static void mcmcsetburninlength(mcmcstate state, int burninlen, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetburninlength(state.innerobj, burninlen, _params);
+    }
+    
+    /*************************************************************************
+    This function sets thinning factor: ThinBy*EpochsCnt  iterations  will  be
+    performed  (after  the  optional  burn-in  phase),  with  every  ThinBy-th
+    iteration being saved and the rest being discarded.
+
+    This option helps to avoid storing highly correlated samples.
+
+    INPUT PARAMETERS:
+        State       -   structure that stores MCMC sampler state
+        ThinBy      -   thinning factor, >=1
+
+      -- ALGLIB --
+         Copyright 20.01.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetthinningfactor(mcmcstate state, int thinby)
+    {
+    
+        mcmc.mcmcsetthinningfactor(state.innerobj, thinby, null);
+    }
+    
+    public static void mcmcsetthinningfactor(mcmcstate state, int thinby, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetthinningfactor(state.innerobj, thinby, _params);
+    }
+    
+    /*************************************************************************
+    This function sets the seed  which  is used to initialize internal RNG. By
+    default, a deterministic seed is used - same for each run of the  sampler.
+    It means that the same sampling decisions are taken every time.
+
+    If you specify a non-deterministic seed value, then the sampler may return
+    slightly different results after each run.
+
+    INPUT PARAMETERS:
+        S       -   sampler state
+        Seed    -   seed:
+                    * positive values = use deterministic seed for each run of
+                      algorithms which depend on random initialization
+                    * zero or negative values = use non-deterministic seed
+
+      -- ALGLIB --
+         Copyright 08.06.2017 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetseed(mcmcstate s, int seed)
+    {
+    
+        mcmc.mcmcsetseed(s.innerobj, seed, null);
+    }
+    
+    public static void mcmcsetseed(mcmcstate s, int seed, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetseed(s.innerobj, seed, _params);
+    }
+    
+    /*************************************************************************
+    This function provides reverse communication interface
+    Reverse communication interface is not documented or recommended to use.
+    See below for functions which provide better documented API
+    *************************************************************************/
+    public static bool mcmciteration(mcmcstate state)
+    {
+    
+        return mcmc.mcmciteration(state.innerobj, null);
+    }
+    
+    public static bool mcmciteration(mcmcstate state, alglib.xparams _params)
+    {
+    
+        return mcmc.mcmciteration(state.innerobj, _params);
+    }
+    /*************************************************************************
+    These functions accept following parameters:
+        func    -   callback which calculates function (or merit function)
+                    value func at given point x
+        rep     -   optional callback which is called after each iteration
+                    can be null
+        obj     -   optional object which is passed to func/grad/hess/jac/rep
+                    can be null
+
+
+      -- ALGLIB --
+         Copyright 20.01.2025 by Bochkanov Sergey
+
+    *************************************************************************/
+    public static void mcmcrun(mcmcstate state, ndimensional_func func, ndimensional_rep rep, object obj)
+    {
+        mcmcrun(state, func, rep, obj, null);
+    }
+    public static void mcmcrun(mcmcstate state, ndimensional_func func, ndimensional_rep rep, object obj, alglib.xparams _params)
+    {
+        if( func==null )
+            throw new alglibexception("ALGLIB: error in 'mcmcrun()' (func is null)");
+        alglib.ap.rcommv2_callbacks callbacks = new alglib.ap.rcommv2_callbacks();
+        callbacks.func = func;
+    
+        alglib.mcmc.mcmcsetprotocolv2(state.innerobj, _params);
+        while( alglib.mcmciteration(state, _params) )
+        {
+            alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
+                state.innerobj.requesttype,
+                state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
+                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, state.innerobj.replysj, obj, "mcmc");
+            alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
+                state.innerobj.tmpx1,
+                state.innerobj.tmpc1,
+                state.innerobj.tmpf1,
+                state.innerobj.tmpg1,
+                state.innerobj.tmpj1,
+                state.innerobj.tmps1);
+            if( state.innerobj.requesttype==3 )
+            { 
+                int njobs = request.size*request.vars+request.size;
+                for(int job_idx=0; job_idx<njobs; job_idx++)
+                    alglib.ap.process_v2request_3phase0(request, job_idx, callbacks, buffers);
+                alglib.ap.process_v2request_3phase1(request);
+                request.request = 0;
+                continue;
+            }
+            if( state.innerobj.requesttype==5 )
+            { 
+                int njobs = request.size*request.vars+request.size;
+                for(int job_idx=0; job_idx<njobs; job_idx++)
+                    alglib.ap.process_v2request_5phase0(request, job_idx, callbacks, buffers);
+                alglib.ap.process_v2request_5phase1(request);
+                request.request = 0;
+                continue;
+            }if( state.innerobj.requesttype==4 )
+            { 
+                for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
+                    alglib.ap.process_v2request_4(request, qidx, callbacks, buffers);
+                state.innerobj.requesttype = 0;
+                continue;
+            }
+            if( state.innerobj.requesttype==-1 )
+            {
+                if( rep!=null )
+                    rep(state.innerobj.reportx, state.innerobj.reportf, obj);
+                continue;
+            }
+            throw new alglibexception("ALGLIB: error in 'mcmcrun' (some derivatives were not provided?)");
+        }
+    }
+
+
+    
+    /*************************************************************************
+    Extract MCMC sampler results from the sampler. This function has significant
+    overhead coming from two sources:
+    * overhead of copying PopSize*EpochsCnt*N-sized array from internal memory
+    * overhead of computing per-variable integrated autocorrelating time
+
+    INPUT PARAMETERS:
+        State           -   MCMC sampler, either after return  from  mcmcrun()
+                            or  still  running (in  the  latter   case,   this
+                            function can be safely called only from the  rep()
+                            callback).
+
+    OUTPUT PARAMETERS:
+        Sample          -   array[SampleSize*PopSize,N+1], current sample:
+                            * first N columns store variable values, the  last
+                              one stores log-likelihood value as  computed  by
+                              the callback
+                            * first  PopSize  rows  store  population snapshot
+                              after the iteration #0, subsequent PopSize  rows
+                              correspond to iteration #1 and so on.
+                            * each snapshot (a set  of  PopSize  rows)  stores
+                              positions of PopSize walkers, each walker having
+                              the same position in each of SampleSize snapshots.
+                              Thus, walker #I at the iteration  #J  is  stored
+                              at the row PopSize*J+I.
+
+        SampleSize      -   current sample size:
+                            * for a sampler that stopped it is equal to PopSize
+                            * for a sampler that is  still  running,  we  have
+                              0<=SampleSize<PopSize. Zero sample  is  reported
+                              upon the first call to rep().
+
+        Rep             -   other information being reported, including:
+                            * acceptance rate
+                            * per-variable integrated autocorrelation time
+
+    IMPORTANT: unlike other [something]results() functions from ALGLIB library
+               this function can be called on a sampler that is still running.
+
+               Thus,  it  can  be  used  to peek into a sampler from the rep()
+               callback, e.g. to check convergence. When called prior to  MCMC
+               completion, it will return in  Sample/SampleSize/Rep  the  most
+               recent snapshot of MCMC sampling.
+
+               Note that due to significant overhead (iteration with number #K
+               involves copying O(K) data and doing between O(K) and O(K*logK)
+               job) calling  this function after each iteration will lead to a
+               catastrophic slowdown of the sampler:  its  running  time  will
+               become quadratic with respect  to  iterations  count!
+
+               Consider doing it after  each  100-th  iteration  or  something
+               like that.
+
+    IMPORTANT: THIS FUNCTION IS NOT THREAD-SAFE! Thus, the  only  place  where
+               it can be called  is  rep()  callback,  and  it  must  complete
+               prior to returning from the callback into the sampler.
+
+    NOTE: burn-in iterations are not reported. Similarly, for a primary  phase
+          only each ThinFactor-th iteration is reported.
+
+      -- ALGLIB --
+         Copyright 18.01.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcresults(mcmcstate state, out double[,] sample, out int samplesize, out mcmcreport rep)
+    {
+        sample = new double[0,0];
+        samplesize = 0;
+        rep = new mcmcreport();
+        mcmc.mcmcresults(state.innerobj, ref sample, ref samplesize, rep.innerobj, null);
+    }
+    
+    public static void mcmcresults(mcmcstate state, out double[,] sample, out int samplesize, out mcmcreport rep, alglib.xparams _params)
+    {
+        sample = new double[0,0];
+        samplesize = 0;
+        rep = new mcmcreport();
+        mcmc.mcmcresults(state.innerobj, ref sample, ref samplesize, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    Buffered implementation of MCMCResults() which uses  pre-allocated  buffer
+    to store X[]. If buffer size is  too  small,  it  resizes  buffer.  It  is
+    intended to be used in the inner cycles of performance critical algorithms
+    where array reallocation penalty is too large to be ignored.
+
+      -- ALGLIB --
+         Copyright 18.01.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcresultsbuf(mcmcstate state, out double[,] sample, out int samplesize, mcmcreport rep)
+    {
+        sample = new double[0,0];
+        samplesize = 0;
+        mcmc.mcmcresultsbuf(state.innerobj, ref sample, ref samplesize, rep.innerobj, null);
+    }
+    
+    public static void mcmcresultsbuf(mcmcstate state, out double[,] sample, out int samplesize, mcmcreport rep, alglib.xparams _params)
+    {
+        sample = new double[0,0];
+        samplesize = 0;
+        mcmc.mcmcresultsbuf(state.innerobj, ref sample, ref samplesize, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This  subroutine  submits  request  for  termination  of  a  running  MCMC
+    sampler. It should be called from user-supplied callback when user decides
+    that it is time to "smoothly" terminate optimization process. As a result,
+    sampler stops at the point which was "current accepted"  when  termination
+    request was submitted.
+
+    Alternatively,  this  function  can  be  called  from  some  other  thread
+    (different from one where the sampler is running).
+
+    INPUT PARAMETERS:
+        State   -   sampler structure
+
+    NOTE: after  request  for  termination  sampler   may    perform   several
+          additional calls to user-supplied callbacks. It does  NOT  guarantee
+          to stop immediately - it just guarantees that these additional calls
+          will be discarded later.
+
+    NOTE: calling this function on sampler  which is NOT running will have  no
+          effect.
+
+    NOTE: multiple calls to this function are possible. First call is counted,
+          subsequent calls are silently ignored.
+
+      -- ALGLIB --
+         Copyright 25.02.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcrequesttermination(mcmcstate state)
+    {
+    
+        mcmc.mcmcrequesttermination(state.innerobj, null);
+    }
+    
+    public static void mcmcrequesttermination(mcmcstate state, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcrequesttermination(state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function turns on/off reporting.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores sampler state
+        NeedXRep-   whether iteration reports are needed or not
+
+    If NeedXRep is True, the algorithm will call rep() callback function if it
+    was provided to mcmcrun().
+
+    NOTE: due to ALGLIB conventions regarding report  callbacks,  the  sampler
+          passes two parameters to the rep() callback - an 1D  floating  point
+          array, and a scalar floating-point value.
+
+          In nonlinear optimizers these parameters are used  to report current
+          point/objective, but it makes little sense in the context  of  MCMC.
+          Because  of  that,  MCMC  sampler  sets  the first parameter to be a
+          zero-initialized  single-element  array,  and  the  second  (scalar)
+          parameter is set to zero.
+
+      -- ALGLIB --
+         Copyright 25.02.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetxrep(mcmcstate state, bool needxrep)
+    {
+    
+        mcmc.mcmcsetxrep(state.innerobj, needxrep, null);
+    }
+    
+    public static void mcmcsetxrep(mcmcstate state, bool needxrep, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetxrep(state.innerobj, needxrep, _params);
+    }
+    
+    /*************************************************************************
+    This function tells the sampler to restart the next sampling session using
+    the most recent population as an initial state.
+
+    The new sampling session is still considered an independent one.  It  uses
+    sampling distribution of the previous session to provide a smooth restart,
+    but its results do not  include  samples  collected  during  the  previous
+    session.
+
+    It  is  possible  to  specify  different  sampling  algorithm  or   change
+    parameters of the algorithm. If population size has changed, then we  have
+    two options:
+    * the new population size is less than the previous one; the population is
+      truncated (only leading NewPopSize elements are retained)
+    * the  new population size is greater than the previous one; in this case,
+      leading OldPopSize elements are retained from the  previous  population,
+      and the rest (NewPopSize-OldPopSize) is randomly initialized  using  the
+      previous population as a reference distribution.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores sampler state
+
+    RESULT:
+        * False, if no  previous  population  was  stored  in the sampler (the
+          restart was requested prior to running anything, so we have  nothing
+          to restart from). In this case,  the  sampler  will  silently  reuse
+          previous initial population generation strategy.
+        * True, if a request was successfully accepted.
+
+    NOTE: this function also tells the sampler not to  re-seed  internal  RNG,
+          so the new session  will  produce  the  same  sequence  of  sampling
+          decisions.
+
+      -- ALGLIB --
+         Copyright 15.05.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static bool mcmcrestart(mcmcstate state)
+    {
+    
+        return mcmc.mcmcrestart(state.innerobj, null);
+    }
+    
+    public static bool mcmcrestart(mcmcstate state, alglib.xparams _params)
+    {
+    
+        return mcmc.mcmcrestart(state.innerobj, _params);
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Mann-Whitney U-test
+
+    This test checks hypotheses about whether X  and  Y  are  samples  of  two
+    continuous distributions of the same shape  and  same  median  or  whether
+    their medians are different.
+
+    The following tests are performed:
+        * two-tailed test (null hypothesis - the medians are equal)
+        * left-tailed test (null hypothesis - the median of the  first  sample
+          is greater than or equal to the median of the second sample)
+        * right-tailed test (null hypothesis - the median of the first  sample
+          is less than or equal to the median of the second sample).
+
+    Requirements:
+        * the samples are independent
+        * X and Y are continuous distributions (or discrete distributions well-
+          approximating continuous distributions)
+        * distributions of X and Y have the  same  shape.  The  only  possible
+          difference is their position (i.e. the value of the median)
+        * the number of elements in each sample is not less than 5
+        * the scale of measurement should be ordinal, interval or ratio  (i.e.
+          the test could not be applied to nominal variables).
+
+    The test is non-parametric and doesn't require distributions to be normal.
+
+    Input parameters:
+        X   -   sample 1. Array whose index goes from 0 to N-1.
+        N   -   size of the sample. N>=5
+        Y   -   sample 2. Array whose index goes from 0 to M-1.
+        M   -   size of the sample. M>=5
+
+    Output parameters:
+        BothTails   -   p-value for two-tailed test.
+                        If BothTails is less than the given significance level
+                        the null hypothesis is rejected.
+        LeftTail    -   p-value for left-tailed test.
+                        If LeftTail is less than the given significance level,
+                        the null hypothesis is rejected.
+        RightTail   -   p-value for right-tailed test.
+                        If RightTail is less than the given significance level
+                        the null hypothesis is rejected.
+
+    To calculate p-values, special approximation is used. This method lets  us
+    calculate p-values with satisfactory  accuracy  in  interval  [0.0001, 1].
+    There is no approximation outside the [0.0001, 1] interval. Therefore,  if
+    the significance level outlies this interval, the test returns 0.0001.
+
+    Relative precision of approximation of p-value:
+
+    N          M          Max.err.   Rms.err.
+    5..10      N..10      1.4e-02    6.0e-04
+    5..10      N..100     2.2e-02    5.3e-06
+    10..15     N..15      1.0e-02    3.2e-04
+    10..15     N..100     1.0e-02    2.2e-05
+    15..100    N..100     6.1e-03    2.7e-06
+
+    For N,M>100 accuracy checks weren't put into  practice,  but  taking  into
+    account characteristics of asymptotic approximation used, precision should
+    not be sharply different from the values for interval [5, 100].
+
+    NOTE: P-value approximation was  optimized  for  0.0001<=p<=0.2500.  Thus,
+          P's outside of this interval are enforced to these bounds. Say,  you
+          may quite often get P equal to exactly 0.25 or 0.0001.
+
+      -- ALGLIB --
+         Copyright 09.04.2007 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mannwhitneyutest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        mannwhitneyu.mannwhitneyutest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, null);
+    }
+    
+    public static void mannwhitneyutest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        mannwhitneyu.mannwhitneyutest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, _params);
     }
 
 }
@@ -13519,6 +14183,2152 @@ public partial class alglib
 
 
     }
+    public class studentttests
+    {
+        /*************************************************************************
+        One-sample t-test
+
+        This test checks three hypotheses about the mean of the given sample.  The
+        following tests are performed:
+            * two-tailed test (null hypothesis - the mean is equal  to  the  given
+              value)
+            * left-tailed test (null hypothesis - the  mean  is  greater  than  or
+              equal to the given value)
+            * right-tailed test (null hypothesis - the mean is less than or  equal
+              to the given value).
+
+        The test is based on the assumption that  a  given  sample  has  a  normal
+        distribution and  an  unknown  dispersion.  If  the  distribution  sharply
+        differs from normal, the test will work incorrectly.
+
+        INPUT PARAMETERS:
+            X       -   sample. Array whose index goes from 0 to N-1.
+            N       -   size of sample, N>=0
+            Mean    -   assumed value of the mean.
+
+        OUTPUT PARAMETERS:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+        NOTE: this function correctly handles degenerate cases:
+              * when N=0, all p-values are set to 1.0
+              * when variance of X[] is exactly zero, p-values are set
+                to 1.0 or 0.0, depending on difference between sample mean and
+                value of mean being tested.
+
+
+          -- ALGLIB --
+             Copyright 08.09.2006 by Bochkanov Sergey
+        *************************************************************************/
+        public static void studentttest1(double[] x,
+            int n,
+            double mean,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            double xmean = 0;
+            double x0 = 0;
+            double v = 0;
+            bool samex = new bool();
+            double xvariance = 0;
+            double xstddev = 0;
+            double v1 = 0;
+            double v2 = 0;
+            double stat = 0;
+            double s = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            if( n<=0 )
+            {
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            
+            //
+            // Mean
+            //
+            xmean = 0;
+            x0 = x[0];
+            samex = true;
+            for(i=0; i<=n-1; i++)
+            {
+                v = x[i];
+                xmean = xmean+v;
+                samex = samex && (double)(v)==(double)(x0);
+            }
+            if( samex )
+            {
+                xmean = x0;
+            }
+            else
+            {
+                xmean = xmean/n;
+            }
+            
+            //
+            // Variance (using corrected two-pass algorithm)
+            //
+            xvariance = 0;
+            xstddev = 0;
+            if( n!=1 && !samex )
+            {
+                v1 = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    v1 = v1+math.sqr(x[i]-xmean);
+                }
+                v2 = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    v2 = v2+(x[i]-xmean);
+                }
+                v2 = math.sqr(v2)/n;
+                xvariance = (v1-v2)/(n-1);
+                if( (double)(xvariance)<(double)(0) )
+                {
+                    xvariance = 0;
+                }
+                xstddev = Math.Sqrt(xvariance);
+            }
+            if( (double)(xstddev)==(double)(0) )
+            {
+                if( (double)(xmean)==(double)(mean) )
+                {
+                    bothtails = 1.0;
+                }
+                else
+                {
+                    bothtails = 0.0;
+                }
+                if( (double)(xmean)>=(double)(mean) )
+                {
+                    lefttail = 1.0;
+                }
+                else
+                {
+                    lefttail = 0.0;
+                }
+                if( (double)(xmean)<=(double)(mean) )
+                {
+                    righttail = 1.0;
+                }
+                else
+                {
+                    righttail = 0.0;
+                }
+                return;
+            }
+            
+            //
+            // Statistic
+            //
+            stat = (xmean-mean)/(xstddev/Math.Sqrt(n));
+            s = studenttdistr.studenttdistribution(n-1, stat, _params);
+            bothtails = 2*Math.Min(s, 1-s);
+            lefttail = s;
+            righttail = 1-s;
+        }
+
+
+        /*************************************************************************
+        Two-sample pooled test
+
+        This test checks three hypotheses about the mean of the given samples. The
+        following tests are performed:
+            * two-tailed test (null hypothesis - the means are equal)
+            * left-tailed test (null hypothesis - the mean of the first sample  is
+              greater than or equal to the mean of the second sample)
+            * right-tailed test (null hypothesis - the mean of the first sample is
+              less than or equal to the mean of the second sample).
+
+        Test is based on the following assumptions:
+            * given samples have normal distributions
+            * dispersions are equal
+            * samples are independent.
+
+        Input parameters:
+            X       -   sample 1. Array whose index goes from 0 to N-1.
+            N       -   size of sample.
+            Y       -   sample 2. Array whose index goes from 0 to M-1.
+            M       -   size of sample.
+
+        Output parameters:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+        NOTE: this function correctly handles degenerate cases:
+              * when N=0 or M=0, all p-values are set to 1.0
+              * when both samples has exactly zero variance, p-values are set
+                to 1.0 or 0.0, depending on difference between means.
+
+          -- ALGLIB --
+             Copyright 18.09.2006 by Bochkanov Sergey
+        *************************************************************************/
+        public static void studentttest2(double[] x,
+            int n,
+            double[] y,
+            int m,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            bool samex = new bool();
+            bool samey = new bool();
+            double x0 = 0;
+            double y0 = 0;
+            double xmean = 0;
+            double ymean = 0;
+            double v = 0;
+            double stat = 0;
+            double s = 0;
+            double p = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            if( n<=0 || m<=0 )
+            {
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            
+            //
+            // Mean
+            //
+            xmean = 0;
+            x0 = x[0];
+            samex = true;
+            for(i=0; i<=n-1; i++)
+            {
+                v = x[i];
+                xmean = xmean+v;
+                samex = samex && (double)(v)==(double)(x0);
+            }
+            if( samex )
+            {
+                xmean = x0;
+            }
+            else
+            {
+                xmean = xmean/n;
+            }
+            ymean = 0;
+            y0 = y[0];
+            samey = true;
+            for(i=0; i<=m-1; i++)
+            {
+                v = y[i];
+                ymean = ymean+v;
+                samey = samey && (double)(v)==(double)(y0);
+            }
+            if( samey )
+            {
+                ymean = y0;
+            }
+            else
+            {
+                ymean = ymean/m;
+            }
+            
+            //
+            // S
+            //
+            s = 0;
+            if( n+m>2 )
+            {
+                for(i=0; i<=n-1; i++)
+                {
+                    s = s+math.sqr(x[i]-xmean);
+                }
+                for(i=0; i<=m-1; i++)
+                {
+                    s = s+math.sqr(y[i]-ymean);
+                }
+                s = Math.Sqrt(s*((double)1/(double)n+(double)1/(double)m)/(n+m-2));
+            }
+            if( (double)(s)==(double)(0) )
+            {
+                if( (double)(xmean)==(double)(ymean) )
+                {
+                    bothtails = 1.0;
+                }
+                else
+                {
+                    bothtails = 0.0;
+                }
+                if( (double)(xmean)>=(double)(ymean) )
+                {
+                    lefttail = 1.0;
+                }
+                else
+                {
+                    lefttail = 0.0;
+                }
+                if( (double)(xmean)<=(double)(ymean) )
+                {
+                    righttail = 1.0;
+                }
+                else
+                {
+                    righttail = 0.0;
+                }
+                return;
+            }
+            
+            //
+            // Statistic
+            //
+            stat = (xmean-ymean)/s;
+            p = studenttdistr.studenttdistribution(n+m-2, stat, _params);
+            bothtails = 2*Math.Min(p, 1-p);
+            lefttail = p;
+            righttail = 1-p;
+        }
+
+
+        /*************************************************************************
+        Two-sample unpooled test
+
+        This test checks three hypotheses about the mean of the given samples. The
+        following tests are performed:
+            * two-tailed test (null hypothesis - the means are equal)
+            * left-tailed test (null hypothesis - the mean of the first sample  is
+              greater than or equal to the mean of the second sample)
+            * right-tailed test (null hypothesis - the mean of the first sample is
+              less than or equal to the mean of the second sample).
+
+        Test is based on the following assumptions:
+            * given samples have normal distributions
+            * samples are independent.
+        Equality of variances is NOT required.
+
+        Input parameters:
+            X - sample 1. Array whose index goes from 0 to N-1.
+            N - size of the sample.
+            Y - sample 2. Array whose index goes from 0 to M-1.
+            M - size of the sample.
+
+        Output parameters:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+        NOTE: this function correctly handles degenerate cases:
+              * when N=0 or M=0, all p-values are set to 1.0
+              * when both samples has zero variance, p-values are set
+                to 1.0 or 0.0, depending on difference between means.
+              * when only one sample has zero variance, test reduces to 1-sample
+                version.
+
+          -- ALGLIB --
+             Copyright 18.09.2006 by Bochkanov Sergey
+        *************************************************************************/
+        public static void unequalvariancettest(double[] x,
+            int n,
+            double[] y,
+            int m,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            bool samex = new bool();
+            bool samey = new bool();
+            double x0 = 0;
+            double y0 = 0;
+            double xmean = 0;
+            double ymean = 0;
+            double xvar = 0;
+            double yvar = 0;
+            double v = 0;
+            double df = 0;
+            double p = 0;
+            double stat = 0;
+            double c = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            if( n<=0 || m<=0 )
+            {
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            
+            //
+            // Mean
+            //
+            xmean = 0;
+            x0 = x[0];
+            samex = true;
+            for(i=0; i<=n-1; i++)
+            {
+                v = x[i];
+                xmean = xmean+v;
+                samex = samex && (double)(v)==(double)(x0);
+            }
+            if( samex )
+            {
+                xmean = x0;
+            }
+            else
+            {
+                xmean = xmean/n;
+            }
+            ymean = 0;
+            y0 = y[0];
+            samey = true;
+            for(i=0; i<=m-1; i++)
+            {
+                v = y[i];
+                ymean = ymean+v;
+                samey = samey && (double)(v)==(double)(y0);
+            }
+            if( samey )
+            {
+                ymean = y0;
+            }
+            else
+            {
+                ymean = ymean/m;
+            }
+            
+            //
+            // Variance (using corrected two-pass algorithm)
+            //
+            xvar = 0;
+            if( n>=2 && !samex )
+            {
+                for(i=0; i<=n-1; i++)
+                {
+                    xvar = xvar+math.sqr(x[i]-xmean);
+                }
+                xvar = xvar/(n-1);
+            }
+            yvar = 0;
+            if( m>=2 && !samey )
+            {
+                for(i=0; i<=m-1; i++)
+                {
+                    yvar = yvar+math.sqr(y[i]-ymean);
+                }
+                yvar = yvar/(m-1);
+            }
+            
+            //
+            // Handle different special cases
+            // (one or both variances are zero).
+            //
+            if( (double)(xvar)==(double)(0) && (double)(yvar)==(double)(0) )
+            {
+                if( (double)(xmean)==(double)(ymean) )
+                {
+                    bothtails = 1.0;
+                }
+                else
+                {
+                    bothtails = 0.0;
+                }
+                if( (double)(xmean)>=(double)(ymean) )
+                {
+                    lefttail = 1.0;
+                }
+                else
+                {
+                    lefttail = 0.0;
+                }
+                if( (double)(xmean)<=(double)(ymean) )
+                {
+                    righttail = 1.0;
+                }
+                else
+                {
+                    righttail = 0.0;
+                }
+                return;
+            }
+            if( (double)(xvar)==(double)(0) )
+            {
+                
+                //
+                // X is constant, unpooled 2-sample test reduces to 1-sample test.
+                //
+                // NOTE: right-tail and left-tail must be passed to 1-sample
+                //       t-test in reverse order because we reverse order of
+                //       of samples.
+                //
+                studentttest1(y, m, xmean, ref bothtails, ref righttail, ref lefttail, _params);
+                return;
+            }
+            if( (double)(yvar)==(double)(0) )
+            {
+                
+                //
+                // Y is constant, unpooled 2-sample test reduces to 1-sample test.
+                //
+                studentttest1(x, n, ymean, ref bothtails, ref lefttail, ref righttail, _params);
+                return;
+            }
+            
+            //
+            // Statistic
+            //
+            stat = (xmean-ymean)/Math.Sqrt(xvar/n+yvar/m);
+            c = xvar/n/(xvar/n+yvar/m);
+            df = apserv.rmul2(n-1, m-1, _params)/((m-1)*math.sqr(c)+(n-1)*math.sqr(1-c));
+            if( (double)(stat)>(double)(0) )
+            {
+                p = 1-0.5*ibetaf.incompletebeta(df/2, 0.5, df/(df+math.sqr(stat)), _params);
+            }
+            else
+            {
+                p = 0.5*ibetaf.incompletebeta(df/2, 0.5, df/(df+math.sqr(stat)), _params);
+            }
+            bothtails = 2*Math.Min(p, 1-p);
+            lefttail = p;
+            righttail = 1-p;
+        }
+
+
+    }
+    public class stest
+    {
+        /*************************************************************************
+        Sign test
+
+        This test checks three hypotheses about the median of  the  given  sample.
+        The following tests are performed:
+            * two-tailed test (null hypothesis - the median is equal to the  given
+              value)
+            * left-tailed test (null hypothesis - the median is  greater  than  or
+              equal to the given value)
+            * right-tailed test (null hypothesis - the  median  is  less  than  or
+              equal to the given value)
+
+        Requirements:
+            * the scale of measurement should be ordinal, interval or ratio  (i.e.
+              the test could not be applied to nominal variables).
+
+        The test is non-parametric and doesn't require distribution X to be normal
+
+        Input parameters:
+            X       -   sample. Array whose index goes from 0 to N-1.
+            N       -   size of the sample.
+            Median  -   assumed median value.
+
+        Output parameters:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+        While   calculating   p-values   high-precision   binomial    distribution
+        approximation is used, so significance levels have about 15 exact digits.
+
+          -- ALGLIB --
+             Copyright 08.09.2006 by Bochkanov Sergey
+        *************************************************************************/
+        public static void onesamplesigntest(double[] x,
+            int n,
+            double median,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            int gtcnt = 0;
+            int necnt = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            if( n<=1 )
+            {
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            
+            //
+            // Calculate:
+            // GTCnt - count of x[i]>Median
+            // NECnt - count of x[i]<>Median
+            //
+            gtcnt = 0;
+            necnt = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                if( (double)(x[i])>(double)(median) )
+                {
+                    gtcnt = gtcnt+1;
+                }
+                if( (double)(x[i])!=(double)(median) )
+                {
+                    necnt = necnt+1;
+                }
+            }
+            if( necnt==0 )
+            {
+                
+                //
+                // all x[i] are equal to Median.
+                // So we can conclude that Median is a true median :)
+                //
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            bothtails = Math.Min(2*binomialdistr.binomialdistribution(Math.Min(gtcnt, necnt-gtcnt), necnt, 0.5, _params), 1.0);
+            lefttail = binomialdistr.binomialdistribution(gtcnt, necnt, 0.5, _params);
+            righttail = binomialdistr.binomialcdistribution(gtcnt-1, necnt, 0.5, _params);
+        }
+
+
+    }
+    public class mcmc
+    {
+        /*************************************************************************
+        This object stores MCMC sampler.
+
+        You should use functions provided by the MCMC subpackage to work with this
+        object.
+        *************************************************************************/
+        public class mcmcstate : apobject
+        {
+            public int n;
+            public int cntx0;
+            public double[,] x0m;
+            public int x0type;
+            public double x0stddev;
+            public int algokind;
+            public bool useparallelmoves;
+            public int epochscnt;
+            public int popsize;
+            public int burninlen;
+            public int thinby;
+            public int rngseed;
+            public double[] s;
+            public bool initialstart;
+            public bool xrep;
+            public double[,] population;
+            public hqrnd.hqrndstate globalrs;
+            public bool reseedglobalrs;
+            public int[] propidx;
+            public double[] propz;
+            public double[,] propxf;
+            public int[] grpidx;
+            public int grp0size;
+            public bool haslastpopulation;
+            public double[,] lastpopulation;
+            public int[] lastgrpidx;
+            public int lastpopulationsize;
+            public bool userterminationneeded;
+            public int protocolversion;
+            public bool issuesparserequests;
+            public int requesttype;
+            public double[] reportx;
+            public double reportf;
+            public int querysize;
+            public int queryfuncs;
+            public int queryvars;
+            public int querydim;
+            public int queryformulasize;
+            public double[] querydata;
+            public double[] replyfi;
+            public double[] replydj;
+            public sparse.sparsematrix replysj;
+            public double[] tmpx1;
+            public double[] tmpc1;
+            public double[] tmpf1;
+            public double[] tmpg1;
+            public double[,] tmpj1;
+            public sparse.sparsematrix tmps1;
+            public int repnfev;
+            public int repacceptcnt;
+            public int repepochscnt;
+            public int reppopsize;
+            public double[,] repsample;
+            public int repsamplesize;
+            public bool dotrace;
+            public bool dodetailedtrace;
+            public bool dotimers;
+            public apserv.stimer timertotal;
+            public apserv.stimer timercallback;
+            public apserv.stimer timerreport;
+            public double[] tmp0;
+            public double[] tmp1;
+            public double[] tmp2;
+            public rcommstate rstate;
+            public mcmcstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+                x0m = new double[0,0];
+                s = new double[0];
+                population = new double[0,0];
+                globalrs = new hqrnd.hqrndstate();
+                propidx = new int[0];
+                propz = new double[0];
+                propxf = new double[0,0];
+                grpidx = new int[0];
+                lastpopulation = new double[0,0];
+                lastgrpidx = new int[0];
+                reportx = new double[0];
+                querydata = new double[0];
+                replyfi = new double[0];
+                replydj = new double[0];
+                replysj = new sparse.sparsematrix();
+                tmpx1 = new double[0];
+                tmpc1 = new double[0];
+                tmpf1 = new double[0];
+                tmpg1 = new double[0];
+                tmpj1 = new double[0,0];
+                tmps1 = new sparse.sparsematrix();
+                repsample = new double[0,0];
+                timertotal = new apserv.stimer();
+                timercallback = new apserv.stimer();
+                timerreport = new apserv.stimer();
+                tmp0 = new double[0];
+                tmp1 = new double[0];
+                tmp2 = new double[0];
+                rstate = new rcommstate();
+            }
+            public override alglib.apobject make_copy()
+            {
+                mcmcstate _result = new mcmcstate();
+                _result.n = n;
+                _result.cntx0 = cntx0;
+                _result.x0m = (double[,])x0m.Clone();
+                _result.x0type = x0type;
+                _result.x0stddev = x0stddev;
+                _result.algokind = algokind;
+                _result.useparallelmoves = useparallelmoves;
+                _result.epochscnt = epochscnt;
+                _result.popsize = popsize;
+                _result.burninlen = burninlen;
+                _result.thinby = thinby;
+                _result.rngseed = rngseed;
+                _result.s = (double[])s.Clone();
+                _result.initialstart = initialstart;
+                _result.xrep = xrep;
+                _result.population = (double[,])population.Clone();
+                _result.globalrs = globalrs!=null ? (hqrnd.hqrndstate)globalrs.make_copy() : null;
+                _result.reseedglobalrs = reseedglobalrs;
+                _result.propidx = (int[])propidx.Clone();
+                _result.propz = (double[])propz.Clone();
+                _result.propxf = (double[,])propxf.Clone();
+                _result.grpidx = (int[])grpidx.Clone();
+                _result.grp0size = grp0size;
+                _result.haslastpopulation = haslastpopulation;
+                _result.lastpopulation = (double[,])lastpopulation.Clone();
+                _result.lastgrpidx = (int[])lastgrpidx.Clone();
+                _result.lastpopulationsize = lastpopulationsize;
+                _result.userterminationneeded = userterminationneeded;
+                _result.protocolversion = protocolversion;
+                _result.issuesparserequests = issuesparserequests;
+                _result.requesttype = requesttype;
+                _result.reportx = (double[])reportx.Clone();
+                _result.reportf = reportf;
+                _result.querysize = querysize;
+                _result.queryfuncs = queryfuncs;
+                _result.queryvars = queryvars;
+                _result.querydim = querydim;
+                _result.queryformulasize = queryformulasize;
+                _result.querydata = (double[])querydata.Clone();
+                _result.replyfi = (double[])replyfi.Clone();
+                _result.replydj = (double[])replydj.Clone();
+                _result.replysj = replysj!=null ? (sparse.sparsematrix)replysj.make_copy() : null;
+                _result.tmpx1 = (double[])tmpx1.Clone();
+                _result.tmpc1 = (double[])tmpc1.Clone();
+                _result.tmpf1 = (double[])tmpf1.Clone();
+                _result.tmpg1 = (double[])tmpg1.Clone();
+                _result.tmpj1 = (double[,])tmpj1.Clone();
+                _result.tmps1 = tmps1!=null ? (sparse.sparsematrix)tmps1.make_copy() : null;
+                _result.repnfev = repnfev;
+                _result.repacceptcnt = repacceptcnt;
+                _result.repepochscnt = repepochscnt;
+                _result.reppopsize = reppopsize;
+                _result.repsample = (double[,])repsample.Clone();
+                _result.repsamplesize = repsamplesize;
+                _result.dotrace = dotrace;
+                _result.dodetailedtrace = dodetailedtrace;
+                _result.dotimers = dotimers;
+                _result.timertotal = timertotal!=null ? (apserv.stimer)timertotal.make_copy() : null;
+                _result.timercallback = timercallback!=null ? (apserv.stimer)timercallback.make_copy() : null;
+                _result.timerreport = timerreport!=null ? (apserv.stimer)timerreport.make_copy() : null;
+                _result.tmp0 = (double[])tmp0.Clone();
+                _result.tmp1 = (double[])tmp1.Clone();
+                _result.tmp2 = (double[])tmp2.Clone();
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        These fields store MCMC report:
+        * nfev                      number of function evaluations
+        * acceptrate                acceptance rate of a MCMC algo
+        * autocorrtimes             array[N], per-variable autocorrelation times
+
+        *************************************************************************/
+        public class mcmcreport : apobject
+        {
+            public int nfev;
+            public double acceptrate;
+            public double[] autocorrtimes;
+            public mcmcreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+                autocorrtimes = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                mcmcreport _result = new mcmcreport();
+                _result.nfev = nfev;
+                _result.acceptrate = acceptrate;
+                _result.autocorrtimes = (double[])autocorrtimes.Clone();
+                return _result;
+            }
+        };
+
+
+
+
+        public const double goodmanwearea = 2.0;
+        public const double cautocorr = 5.0;
+
+
+        /*************************************************************************
+        This function initializes MCMC sampler using single initial point to  seed
+        the population.
+
+        The population is generated around the initial point with random  Gaussian
+        noise being added, having per-variable magnitude equal to XStdDev  or  (if
+        MCMCSetScale() was called) equal to XStdDev*S[I].
+
+
+        INPUT PARAMETERS:
+            N       -   problem dimension, N>0:
+                        * if given, only leading N elements of X are used
+                        * if not given, automatically determined from size of X
+            X       -   starting point used to seed a MCMC algo, array[N]:
+                        * it is better to have X not too far away from the maximum
+                          of log-likelihood
+                        * any point will do, if no maximum location is unknown
+            XStdDev -   standard deviation of a population generated around X:
+                        * strictly greater than zero
+                        * nearly zero values are likely  to  cause  population  to
+                          stagnate, whilst too large values are  likely  to  cause
+                          population to spend excessive time converging
+
+        OUTPUT PARAMETERS:
+            State   -   structure stores MCMC sampler state
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmccreate1(int n,
+            double[] x,
+            double xstddev,
+            mcmcstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(n>=1, "MCMCCreate1: N<1");
+            alglib.ap.assert(alglib.ap.len(x)>=n, "MCMCCreate1: Length(X)<N");
+            alglib.ap.assert(apserv.isfinitevector(x, n, _params), "MCMCCreate1: X contains infinite or NaN values");
+            alglib.ap.assert(math.isfinite(xstddev) && (double)(xstddev)>(double)(0), "MCMCCreate1: XStdDev<=0 or is not finite");
+            initinternal(state, n, _params);
+            state.cntx0 = 1;
+            ablasf.rallocm(1, n, ref state.x0m, _params);
+            ablasf.rcopyvr(n, x, state.x0m, 0, _params);
+            state.x0stddev = xstddev;
+            state.x0type = 0;
+        }
+
+
+        /*************************************************************************
+        This function initializes MCMC sampler using a population of user-specified
+        points.
+
+        A specific sampling algorithm that needs an  initial  population will  use
+        user-provided points. If an algorithm needs more initial points  than  was
+        specified, additional points will be randomly generated  using  population
+        as a distribution reference.
+
+        INPUT PARAMETERS:
+            N       -   problem dimension, N>0:
+                        * if given, only leading N elements of P are used
+                        * if not given, automatically determined from size of P
+            P       -   initial points, array[PopSize,N]
+            PopSize -   population size, PopSize>0:
+                        * if given, only leading PopSize elements of P are used
+                        * if not given, automatically determined from size of P
+
+        OUTPUT PARAMETERS:
+            State   -   structure stores MCMC sampler state
+
+          -- ALGLIB --
+             Copyright 20.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmccreatefrompopulation(int n,
+            double[,] p,
+            int popsize,
+            mcmcstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(n>=1, "MCMCCreateFromPopulation: N<1");
+            alglib.ap.assert(popsize>=1, "MCMCCreateFromPopulation: PopSize<1");
+            alglib.ap.assert(alglib.ap.cols(p)>=n, "MCMCCreateFromPopulation: Cols(P)<N");
+            alglib.ap.assert(alglib.ap.rows(p)>=popsize, "MCMCCreateFromPopulation: Rows(P)<PopSize");
+            alglib.ap.assert(apserv.apservisfinitematrix(p, popsize, n, _params), "MCMCCreateFromPopulation: P contains infinite or NaN values");
+            initinternal(state, n, _params);
+            state.cntx0 = popsize;
+            ablasf.rcopyallocm(popsize, n, p, ref state.x0m, _params);
+            state.x0type = 1;
+        }
+
+
+        /*************************************************************************
+        This function sets per-variable scaling coefficients for MCMC sampler.
+
+        Present version of the MCMC sampler uses per-variable scales during initial
+        popilation generation: an initial point X0 is perturbed with random noise,
+        whose per-variable magnitude is XStdDev*S[I].
+
+        Future versions of the sampler may use scales for other purposes too,  but
+        are likely to do so in a backward-compatible manner.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            S       -   array[N], non-zero scaling coefficients
+                        S[i] may be negative, sign doesn't matter.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetscale(mcmcstate state,
+            double[] s,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.assert(alglib.ap.len(s)>=state.n, "MCMCSetScale: Length(S)<N");
+            for(i=0; i<=state.n-1; i++)
+            {
+                alglib.ap.assert(math.isfinite(s[i]), "MCMCSetScale: S contains infinite or NAN elements");
+                alglib.ap.assert((double)(s[i])!=(double)(0), "MCMCSetScale: S contains zero elements");
+                state.s[i] = Math.Abs(s[i]);
+            }
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            PopSize -   ensemble size, PopSize>=2, recommended: >=2*N
+            EpochsCnt-  iterations count to be reported, >=1
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgogoodmanweare(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=2, "MCMCSetAlgoGoodmanWeare: PopSize<2");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoGoodmanWeare: EpochsCnt<1");
+            state.popsize = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+        }
+
+
+        /*************************************************************************
+        This function sets number of additional initial iterations (in addition to
+        EpochsCnt) that will be performed  and  discarded  (not  stored  into  the
+        report sample), so called 'burn-in length'.
+
+        In total, BurnInLen+EpochsCnt iterations will be performed,  with  initial
+        BurnInLen ones being used solely to help MCMC spread walkers according  to
+        the density of the function being sampled.
+
+        INPUT PARAMETERS:
+            State       -   structure that stores MCMC sampler state
+            BurnInLen   -   burn-in length, >=0
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetburninlength(mcmcstate state,
+            int burninlen,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(burninlen>=0, "MCMCSetBurnInLength: BurnInLen<0");
+            state.burninlen = burninlen;
+        }
+
+
+        /*************************************************************************
+        This function sets thinning factor: ThinBy*EpochsCnt  iterations  will  be
+        performed  (after  the  optional  burn-in  phase),  with  every  ThinBy-th
+        iteration being saved and the rest being discarded.
+
+        This option helps to avoid storing highly correlated samples.
+
+        INPUT PARAMETERS:
+            State       -   structure that stores MCMC sampler state
+            ThinBy      -   thinning factor, >=1
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetthinningfactor(mcmcstate state,
+            int thinby,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(thinby>=1, "MCMCSetThinningFactor: ThinBy<1");
+            state.thinby = thinby;
+        }
+
+
+        /*************************************************************************
+        This function sets the seed  which  is used to initialize internal RNG. By
+        default, a deterministic seed is used - same for each run of the  sampler.
+        It means that the same sampling decisions are taken every time.
+
+        If you specify a non-deterministic seed value, then the sampler may return
+        slightly different results after each run.
+
+        INPUT PARAMETERS:
+            S       -   sampler state
+            Seed    -   seed:
+                        * positive values = use deterministic seed for each run of
+                          algorithms which depend on random initialization
+                        * zero or negative values = use non-deterministic seed
+
+          -- ALGLIB --
+             Copyright 08.06.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetseed(mcmcstate s,
+            int seed,
+            alglib.xparams _params)
+        {
+            s.rngseed = Math.Max(seed, 0);
+        }
+
+
+        /*************************************************************************
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool mcmciteration(mcmcstate state,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+            int n = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int itidx = 0;
+            int itmax = 0;
+            int groupscnt = 0;
+            int groupsize = 0;
+            int i0 = 0;
+            int i1 = 0;
+            int j0 = 0;
+            int j1 = 0;
+            int src = 0;
+            int dst = 0;
+            int acceptcnt = 0;
+            double v = 0;
+
+            
+            //
+            // Reverse communication preparations
+            // I know it looks ugly, but it works the same way
+            // anywhere from C++ to Python.
+            //
+            // This code initializes locals by:
+            // * random values determined during code
+            //   generation - on first subroutine call
+            // * values from previous call - on subsequent calls
+            //
+            if( state.rstate.stage>=0 )
+            {
+                n = state.rstate.ia[0];
+                i = state.rstate.ia[1];
+                j = state.rstate.ia[2];
+                k = state.rstate.ia[3];
+                itidx = state.rstate.ia[4];
+                itmax = state.rstate.ia[5];
+                groupscnt = state.rstate.ia[6];
+                groupsize = state.rstate.ia[7];
+                i0 = state.rstate.ia[8];
+                i1 = state.rstate.ia[9];
+                j0 = state.rstate.ia[10];
+                j1 = state.rstate.ia[11];
+                src = state.rstate.ia[12];
+                dst = state.rstate.ia[13];
+                acceptcnt = state.rstate.ia[14];
+                v = state.rstate.ra[0];
+            }
+            else
+            {
+                n = 359;
+                i = -58;
+                j = -919;
+                k = -909;
+                itidx = 81;
+                itmax = 255;
+                groupscnt = 74;
+                groupsize = -788;
+                i0 = 809;
+                i1 = 205;
+                j0 = -838;
+                j1 = 939;
+                src = -526;
+                dst = 763;
+                acceptcnt = -541;
+                v = -698.0;
+            }
+            if( state.rstate.stage==0 )
+            {
+                goto lbl_0;
+            }
+            if( state.rstate.stage==1 )
+            {
+                goto lbl_1;
+            }
+            if( state.rstate.stage==2 )
+            {
+                goto lbl_2;
+            }
+            if( state.rstate.stage==3 )
+            {
+                goto lbl_3;
+            }
+            
+            //
+            // Routine body
+            //
+            
+            //
+            // Init
+            //
+            state.dotrace = ap.istraceenabled("MCMC", _params);
+            state.dodetailedtrace = state.dotrace && ap.istraceenabled("MCMC.DETAILED", _params);
+            state.dotimers = state.dotrace;
+            if( state.dotrace )
+            {
+                alglib.ap.trace("\n\n");
+                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
+                alglib.ap.trace("//  MCMC SAMPLER STARTED                                                                          //\n");
+                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
+                alglib.ap.trace(System.String.Format("N             = {0,6:d} (variables)\n", state.n));
+                alglib.ap.trace(System.String.Format("PopSize       = {0,6:d} (walkers)\n", state.popsize));
+                if( state.burninlen>0 )
+                {
+                    alglib.ap.trace(System.String.Format("BurnIn        = {0,6:d} (burn-in phase, not reported)\n", state.burninlen));
+                }
+                alglib.ap.trace(System.String.Format("EpochsCnt     = {0,6:d} (sampling rounds count)\n", state.epochscnt));
+            }
+            apserv.stimerinit(state.timertotal, _params);
+            apserv.stimerinit(state.timercallback, _params);
+            apserv.stimerinit(state.timerreport, _params);
+            apserv.stimerstartcond(state.timertotal, state.dotimers, _params);
+            state.userterminationneeded = false;
+            state.repnfev = 0;
+            state.repacceptcnt = 0;
+            state.repepochscnt = 0;
+            state.reppopsize = state.popsize;
+            state.repsamplesize = 0;
+            n = state.n;
+            if( state.reseedglobalrs )
+            {
+                if( state.rngseed==0 )
+                {
+                    hqrnd.hqrndrandomize(state.globalrs, _params);
+                }
+                else
+                {
+                    hqrnd.hqrndseed(state.rngseed, 856446, state.globalrs, _params);
+                }
+            }
+            if( alglib.ap.cols(state.repsample)>n+1 )
+            {
+                state.repsample = new double[0, 0];
+            }
+            if( state.useparallelmoves )
+            {
+                ablasf.iallocv(state.popsize, ref state.propidx, _params);
+                ablasf.rallocv(state.popsize, ref state.propz, _params);
+                ablasf.rallocm(state.popsize, n+1, ref state.propxf, _params);
+                ablasf.iallocv(state.popsize, ref state.grpidx, _params);
+            }
+            else
+            {
+                ablasf.iallocv(1, ref state.propidx, _params);
+                ablasf.rallocv(1, ref state.propz, _params);
+                ablasf.rallocm(1, n+1, ref state.propxf, _params);
+            }
+            
+            //
+            // Allocate buffers, as mandated by the V2 protocol
+            //
+            alglib.ap.assert(state.protocolversion==2, "MCMC: integrity check 206333 failed");
+            alglib.ap.assert(state.algokind==0, "MCMC: integrity check 207333 failed");
+            ablasf.rallocv(n, ref state.querydata, _params);
+            ablasf.rallocv(1, ref state.replyfi, _params);
+            ablasf.rallocv(1, ref state.tmpf1, _params);
+            ablasf.rallocv(n, ref state.tmpx1, _params);
+            ablasf.rallocv(n, ref state.tmpg1, _params);
+            state.reportx = new double[1];
+            state.reportx[0] = 0;
+            state.reportf = 0;
+            
+            //
+            // Initial population and subdivision into groups
+            //
+            alglib.ap.assert((state.x0type==0 || state.x0type==1) || state.x0type==2, "MCMC: integrity check 221342 failed");
+            if( state.useparallelmoves )
+            {
+                for(i=0; i<=state.popsize-1; i++)
+                {
+                    state.grpidx[i] = i;
+                }
+                alglib.ap.assert(state.popsize>=2, "MCMC: integrity check 294008 failed");
+                state.grp0size = state.popsize/2;
+            }
+            if( state.x0type==0 )
+            {
+                alglib.ap.assert(state.cntx0>=1, "MCMC: integrity check 426148 failed");
+                ablasf.rallocm(state.popsize, n+1, ref state.population, _params);
+                for(i=0; i<=state.popsize-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        state.population[i,j] = state.x0m[0,j]+state.x0stddev*state.s[j]*hqrnd.hqrndnormal(state.globalrs, _params);
+                    }
+                }
+            }
+            if( state.x0type==1 )
+            {
+                alglib.ap.assert(state.cntx0>=1, "MCMC: integrity check 487508 failed");
+                k = Math.Min(state.cntx0, state.popsize);
+                ablasf.rallocm(state.popsize, n+1, ref state.population, _params);
+                for(i=0; i<=k-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        state.population[i,j] = state.x0m[i,j];
+                    }
+                }
+                if( k<state.popsize )
+                {
+                    
+                    //
+                    // Not enough points to seed the algorithm. Compute a bounding box for the user-provided
+                    // set of points, with center at tmp0[] and per-variable scaled radii in tmp2[]
+                    //
+                    ablasf.rallocv(n, ref state.tmp0, _params);
+                    ablasf.rallocv(n, ref state.tmp1, _params);
+                    ablasf.rcopyrv(n, state.x0m, 0, state.tmp0, _params);
+                    ablasf.rcopyrv(n, state.x0m, 0, state.tmp1, _params);
+                    for(i=1; i<=state.cntx0-1; i++)
+                    {
+                        ablasf.rmergeminrv(n, state.x0m, i, state.tmp0, _params);
+                        ablasf.rmergemaxrv(n, state.x0m, i, state.tmp1, _params);
+                    }
+                    ablasf.rcopyallocv(n, state.tmp1, ref state.tmp2, _params);
+                    ablasf.raddv(n, -1.0, state.tmp0, state.tmp2, _params);
+                    ablasf.rmulv(n, 0.5, state.tmp2, _params);
+                    ablasf.rmergedivv(n, state.s, state.tmp2, _params);
+                    ablasf.raddv(n, 1.0, state.tmp1, state.tmp0, _params);
+                    ablasf.rmulv(n, 0.5, state.tmp0, _params);
+                    
+                    //
+                    // Make sure that the box has no zero radius and that his aspect ratio is well-normalized
+                    //
+                    v = ablasf.rmaxabsv(n, state.tmp2, _params);
+                    for(j=0; j<=n-1; j++)
+                    {
+                        state.tmp2[j] = apserv.coalesce(Math.Max(state.tmp2[j], 1.0E-6*v), 1, _params);
+                    }
+                    
+                    //
+                    // Seed the rest of the population
+                    //
+                    for(i=k; i<=state.popsize-1; i++)
+                    {
+                        for(j=0; j<=n-1; j++)
+                        {
+                            state.population[i,j] = hqrnd.hqrndnormal(state.globalrs, _params)*(0.33*state.tmp2[j]*state.s[j])+state.tmp0[j];
+                        }
+                    }
+                }
+            }
+            if( state.x0type==2 )
+            {
+                alglib.ap.assert(state.haslastpopulation, "MCMC: integrity check 434149 failed");
+                
+                //
+                // Reuse last population
+                //
+                k = Math.Min(state.lastpopulationsize, state.popsize);
+                ablasf.rallocm(state.popsize, n+1, ref state.population, _params);
+                for(i=0; i<=k-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        state.population[i,j] = state.lastpopulation[i,j];
+                    }
+                }
+                for(i=k; i<=state.popsize-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        state.population[i,j] = state.lastpopulation[hqrnd.hqrnduniformi(state.globalrs, state.lastpopulationsize, _params),j];
+                    }
+                }
+                
+                //
+                // If parallel moves are used AND new population size matches its old size, reuse previous subdivision
+                // into groups (it is important for smooth restarts)
+                //
+                if( state.useparallelmoves && state.lastpopulationsize==state.popsize )
+                {
+                    ablasf.icopyv(state.popsize, state.lastgrpidx, state.grpidx, _params);
+                }
+            }
+            i = 0;
+        lbl_4:
+            if( i>state.popsize-1 )
+            {
+                goto lbl_6;
+            }
+            state.repnfev = state.repnfev+1;
+            state.requesttype = 4;
+            state.queryfuncs = 1;
+            state.queryvars = n;
+            state.querydim = 0;
+            state.querysize = 1;
+            for(j=0; j<=n-1; j++)
+            {
+                state.querydata[j] = state.population[i,j];
+            }
+            apserv.stimerstartcond(state.timercallback, state.dotimers, _params);
+            state.rstate.stage = 0;
+            goto lbl_rcomm;
+        lbl_0:
+            apserv.stimerstopcond(state.timercallback, state.dotimers, _params);
+            state.population[i,n] = state.replyfi[0];
+            i = i+1;
+            goto lbl_4;
+        lbl_6:
+            if( !state.xrep )
+            {
+                goto lbl_7;
+            }
+            state.requesttype = -1;
+            apserv.stimerstartcond(state.timerreport, state.dotimers, _params);
+            state.rstate.stage = 1;
+            goto lbl_rcomm;
+        lbl_1:
+            apserv.stimerstopcond(state.timerreport, state.dotimers, _params);
+        lbl_7:
+            savepopulation(state, _params);
+            
+            //
+            // Subsequent moves
+            //
+            alglib.ap.assert(state.algokind==0, "MCMC: integrity check 238038 failed");
+            alglib.ap.assert(state.popsize>=2, "MCMC: integrity check 238039 failed");
+            itmax = apserv.icase2(state.initialstart, state.burninlen, 0, _params)+state.epochscnt*state.thinby;
+            ablasf.rallocm(state.epochscnt*state.popsize, n+1, ref state.repsample, _params);
+            itidx = 0;
+        lbl_9:
+            if( itidx>itmax-1 )
+            {
+                goto lbl_11;
+            }
+            
+            //
+            // Perform moves
+            //
+            acceptcnt = 0;
+            groupscnt = apserv.icase2(state.useparallelmoves, 2, state.popsize, _params);
+            i = 0;
+        lbl_12:
+            if( i>groupscnt-1 )
+            {
+                goto lbl_14;
+            }
+            
+            //
+            // Generate proposals
+            //
+            if( state.useparallelmoves )
+            {
+                if( i==0 )
+                {
+                    i0 = 0;
+                    i1 = state.grp0size;
+                    j0 = state.grp0size;
+                    j1 = state.popsize;
+                }
+                else
+                {
+                    j0 = 0;
+                    j1 = state.grp0size;
+                    i0 = state.grp0size;
+                    i1 = state.popsize;
+                }
+                groupsize = i1-i0;
+                for(j=0; j<=groupsize-1; j++)
+                {
+                    dst = state.grpidx[i0+j];
+                    src = state.grpidx[j0+hqrnd.hqrnduniformi(state.globalrs, j1-j0, _params)];
+                    state.propidx[j] = dst;
+                    v = math.sqr((goodmanwearea-1)*hqrnd.hqrnduniformr(state.globalrs, _params)+1)/goodmanwearea;
+                    state.propz[j] = v;
+                    for(k=0; k<=n-1; k++)
+                    {
+                        state.propxf[j,k] = state.population[src,k]+v*(state.population[dst,k]-state.population[src,k]);
+                    }
+                }
+            }
+            else
+            {
+                groupsize = 1;
+                j = hqrnd.hqrnduniformi(state.globalrs, state.popsize-1, _params);
+                if( j>=i )
+                {
+                    j = j+1;
+                }
+                state.propidx[0] = i;
+                v = math.sqr((goodmanwearea-1)*hqrnd.hqrnduniformr(state.globalrs, _params)+1)/goodmanwearea;
+                state.propz[0] = v;
+                for(k=0; k<=n-1; k++)
+                {
+                    state.propxf[0,k] = state.population[j,k]+v*(state.population[i,k]-state.population[j,k]);
+                }
+            }
+            
+            //
+            // Issue RCOMM-V2 request
+            //
+            j = 0;
+        lbl_15:
+            if( j>groupsize-1 )
+            {
+                goto lbl_17;
+            }
+            ablasf.rcopyrv(n, state.propxf, j, state.querydata, _params);
+            state.repnfev = state.repnfev+1;
+            state.requesttype = 4;
+            state.queryfuncs = 1;
+            state.queryvars = n;
+            state.querydim = 0;
+            state.querysize = 1;
+            apserv.stimerstartcond(state.timercallback, state.dotimers, _params);
+            state.rstate.stage = 2;
+            goto lbl_rcomm;
+        lbl_2:
+            apserv.stimerstopcond(state.timercallback, state.dotimers, _params);
+            state.propxf[j,n] = state.replyfi[0];
+            j = j+1;
+            goto lbl_15;
+        lbl_17:
+            
+            //
+            // Acceptance test
+            //
+            for(j=0; j<=groupsize-1; j++)
+            {
+                if( (double)(hqrnd.hqrnduniformr(state.globalrs, _params))<(double)(Math.Min(1.0, Math.Exp((n-1)*Math.Log(state.propz[j])+state.propxf[j,n]-state.population[state.propidx[j],n]))) )
+                {
+                    ablasf.rcopyrr(n+1, state.propxf, j, state.population, state.propidx[j], _params);
+                    acceptcnt = acceptcnt+1;
+                }
+            }
+            i = i+1;
+            goto lbl_12;
+        lbl_14:
+            
+            //
+            // If parallel moves are used, update splits into groups
+            //
+            if( state.useparallelmoves )
+            {
+                for(i=0; i<=state.popsize-1; i++)
+                {
+                    j = i+hqrnd.hqrnduniformi(state.globalrs, state.popsize-i, _params);
+                    k = state.grpidx[i];
+                    state.grpidx[i] = state.grpidx[j];
+                    state.grpidx[j] = k;
+                }
+            }
+            
+            //
+            // Save report, check for termination request. The check is done twice:
+            // prior to reporting progress and after returning from the callback.
+            //
+            // This way we can:
+            // * stop immediately after progress is reported, if request was submitted
+            //   in the callback
+            // * stop before iteration is accepted, if request was submitted prior to
+            //   invoking the callback
+            //
+            if( state.dotrace )
+            {
+                dologging(state, itidx, acceptcnt, _params);
+            }
+            if( state.userterminationneeded )
+            {
+                goto lbl_11;
+            }
+            k = itidx;
+            if( state.initialstart )
+            {
+                k = k-state.burninlen;
+            }
+            if( !(k>=0 && k%state.thinby==0) )
+            {
+                goto lbl_18;
+            }
+            alglib.ap.assert(alglib.ap.rows(state.repsample)>=state.repsamplesize+state.popsize && alglib.ap.cols(state.repsample)>=n+1, "MCMC: integrity check 497055 failed");
+            for(i=0; i<=state.popsize-1; i++)
+            {
+                ablasf.rcopyrr(n+1, state.population, i, state.repsample, state.repsamplesize, _params);
+                state.repsamplesize = state.repsamplesize+1;
+            }
+            state.repacceptcnt = state.repacceptcnt+acceptcnt;
+            state.repepochscnt = state.repepochscnt+1;
+            if( !state.xrep )
+            {
+                goto lbl_20;
+            }
+            state.requesttype = -1;
+            apserv.stimerstartcond(state.timerreport, state.dotimers, _params);
+            state.rstate.stage = 3;
+            goto lbl_rcomm;
+        lbl_3:
+            apserv.stimerstopcond(state.timerreport, state.dotimers, _params);
+        lbl_20:
+        lbl_18:
+            if( state.userterminationneeded )
+            {
+                goto lbl_11;
+            }
+            itidx = itidx+1;
+            goto lbl_9;
+        lbl_11:
+            
+            //
+            // Finalize
+            //
+            state.reseedglobalrs = true;
+            savepopulation(state, _params);
+            apserv.stimerstopcond(state.timertotal, state.dotimers, _params);
+            if( state.dotrace )
+            {
+                alglib.ap.trace("\n=== STOPPED ========================================================================================\n");
+                alglib.ap.trace(System.String.Format("total time:     {0,10:F1} ms, including\n", apserv.stimergetms(state.timertotal, _params)));
+                alglib.ap.trace(System.String.Format("* sampler       {0,10:F1} ms\n", apserv.stimergetms(state.timertotal, _params)-apserv.stimergetms(state.timercallback, _params)-apserv.stimergetms(state.timerreport, _params)));
+                alglib.ap.trace(System.String.Format("* callbacks     {0,10:F1} ms (computing log-likelihood)\n", apserv.stimergetms(state.timercallback, _params)));
+                alglib.ap.trace(System.String.Format("* reports       {0,10:F1} ms (reporting progress)\n", apserv.stimergetms(state.timerreport, _params)));
+            }
+            result = false;
+            return result;
+            
+            //
+            // Saving state
+            //
+        lbl_rcomm:
+            result = true;
+            state.rstate.ia[0] = n;
+            state.rstate.ia[1] = i;
+            state.rstate.ia[2] = j;
+            state.rstate.ia[3] = k;
+            state.rstate.ia[4] = itidx;
+            state.rstate.ia[5] = itmax;
+            state.rstate.ia[6] = groupscnt;
+            state.rstate.ia[7] = groupsize;
+            state.rstate.ia[8] = i0;
+            state.rstate.ia[9] = i1;
+            state.rstate.ia[10] = j0;
+            state.rstate.ia[11] = j1;
+            state.rstate.ia[12] = src;
+            state.rstate.ia[13] = dst;
+            state.rstate.ia[14] = acceptcnt;
+            state.rstate.ra[0] = v;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Extract MCMC sampler results from the sampler. This function has significant
+        overhead coming from two sources:
+        * overhead of copying PopSize*EpochsCnt*N-sized array from internal memory
+        * overhead of computing per-variable integrated autocorrelating time
+                   
+        INPUT PARAMETERS:
+            State           -   MCMC sampler, either after return  from  mcmcrun()
+                                or  still  running (in  the  latter   case,   this
+                                function can be safely called only from the  rep()
+                                callback).
+                                
+        OUTPUT PARAMETERS:
+            Sample          -   array[SampleSize*PopSize,N+1], current sample:
+                                * first N columns store variable values, the  last
+                                  one stores log-likelihood value as  computed  by
+                                  the callback
+                                * first  PopSize  rows  store  population snapshot
+                                  after the iteration #0, subsequent PopSize  rows
+                                  correspond to iteration #1 and so on.
+                                * each snapshot (a set  of  PopSize  rows)  stores
+                                  positions of PopSize walkers, each walker having
+                                  the same position in each of SampleSize snapshots.
+                                  Thus, walker #I at the iteration  #J  is  stored
+                                  at the row PopSize*J+I.
+                                
+            SampleSize      -   current sample size:
+                                * for a sampler that stopped it is equal to PopSize
+                                * for a sampler that is  still  running,  we  have
+                                  0<=SampleSize<PopSize. Zero sample  is  reported
+                                  upon the first call to rep().
+                                  
+            Rep             -   other information being reported, including:
+                                * acceptance rate
+                                * per-variable integrated autocorrelation time
+
+        IMPORTANT: unlike other [something]results() functions from ALGLIB library
+                   this function can be called on a sampler that is still running.
+                   
+                   Thus,  it  can  be  used  to peek into a sampler from the rep()
+                   callback, e.g. to check convergence. When called prior to  MCMC
+                   completion, it will return in  Sample/SampleSize/Rep  the  most
+                   recent snapshot of MCMC sampling.
+                   
+                   Note that due to significant overhead (iteration with number #K
+                   involves copying O(K) data and doing between O(K) and O(K*logK)
+                   job) calling  this function after each iteration will lead to a
+                   catastrophic slowdown of the sampler:  its  running  time  will
+                   become quadratic with respect  to  iterations  count!
+                   
+                   Consider doing it after  each  100-th  iteration  or  something
+                   like that.
+                   
+        IMPORTANT: THIS FUNCTION IS NOT THREAD-SAFE! Thus, the  only  place  where
+                   it can be called  is  rep()  callback,  and  it  must  complete
+                   prior to returning from the callback into the sampler.
+
+        NOTE: burn-in iterations are not reported. Similarly, for a primary  phase
+              only each ThinFactor-th iteration is reported.
+           
+          -- ALGLIB --
+             Copyright 18.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcresults(mcmcstate state,
+            ref double[,] sample,
+            ref int samplesize,
+            mcmcreport rep,
+            alglib.xparams _params)
+        {
+            sample = new double[0,0];
+            samplesize = 0;
+
+            mcmcresultsbuf(state, ref sample, ref samplesize, rep, _params);
+        }
+
+
+        /*************************************************************************
+        Buffered implementation of MCMCResults() which uses  pre-allocated  buffer
+        to store X[]. If buffer size is  too  small,  it  resizes  buffer.  It  is
+        intended to be used in the inner cycles of performance critical algorithms
+        where array reallocation penalty is too large to be ignored.
+
+          -- ALGLIB --
+             Copyright 18.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcresultsbuf(mcmcstate state,
+            ref double[,] sample,
+            ref int samplesize,
+            mcmcreport rep,
+            alglib.xparams _params)
+        {
+            sample = new double[0,0];
+            samplesize = 0;
+
+            
+            //
+            // Parameters that are always valid + default state for RepSampleSize=0
+            //
+            rep.nfev = state.repnfev;
+            rep.acceptrate = state.repacceptcnt/apserv.coalesce(state.repepochscnt*state.reppopsize, 1, _params);
+            ablasf.rsetallocv(state.n, 0.0, ref rep.autocorrtimes, _params);
+            samplesize = state.repsamplesize;
+            
+            //
+            // RepSampleSize>0
+            //
+            if( state.repsamplesize>0 )
+            {
+                ablasf.rcopyallocm(state.repsamplesize, state.n+1, state.repsample, ref sample, _params);
+                computeautocorrtimes(state, ref rep.autocorrtimes, _params);
+            }
+        }
+
+
+        /*************************************************************************
+        This  subroutine  submits  request  for  termination  of  a  running  MCMC
+        sampler. It should be called from user-supplied callback when user decides
+        that it is time to "smoothly" terminate optimization process. As a result,
+        sampler stops at the point which was "current accepted"  when  termination
+        request was submitted.
+
+        Alternatively,  this  function  can  be  called  from  some  other  thread
+        (different from one where the sampler is running).
+
+        INPUT PARAMETERS:
+            State   -   sampler structure
+
+        NOTE: after  request  for  termination  sampler   may    perform   several
+              additional calls to user-supplied callbacks. It does  NOT  guarantee
+              to stop immediately - it just guarantees that these additional calls
+              will be discarded later.
+
+        NOTE: calling this function on sampler  which is NOT running will have  no
+              effect.
+              
+        NOTE: multiple calls to this function are possible. First call is counted,
+              subsequent calls are silently ignored.
+
+          -- ALGLIB --
+             Copyright 25.02.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcrequesttermination(mcmcstate state,
+            alglib.xparams _params)
+        {
+            state.userterminationneeded = true;
+        }
+
+
+        /*************************************************************************
+        This function turns on/off reporting.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores sampler state
+            NeedXRep-   whether iteration reports are needed or not
+
+        If NeedXRep is True, the algorithm will call rep() callback function if it
+        was provided to mcmcrun().
+
+        NOTE: due to ALGLIB conventions regarding report  callbacks,  the  sampler
+              passes two parameters to the rep() callback - an 1D  floating  point
+              array, and a scalar floating-point value.
+              
+              In nonlinear optimizers these parameters are used  to report current
+              point/objective, but it makes little sense in the context  of  MCMC.
+              Because  of  that,  MCMC  sampler  sets  the first parameter to be a
+              zero-initialized  single-element  array,  and  the  second  (scalar)
+              parameter is set to zero.
+
+          -- ALGLIB --
+             Copyright 25.02.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetxrep(mcmcstate state,
+            bool needxrep,
+            alglib.xparams _params)
+        {
+            state.xrep = needxrep;
+        }
+
+
+        /*************************************************************************
+        This function tells the sampler to restart the next sampling session using
+        the most recent population as an initial state.
+
+        The new sampling session is still considered an independent one.  It  uses
+        sampling distribution of the previous session to provide a smooth restart,
+        but its results do not  include  samples  collected  during  the  previous
+        session.
+
+        It  is  possible  to  specify  different  sampling  algorithm  or   change
+        parameters of the algorithm. If population size has changed, then we  have
+        two options:
+        * the new population size is less than the previous one; the population is
+          truncated (only leading NewPopSize elements are retained)
+        * the  new population size is greater than the previous one; in this case,
+          leading OldPopSize elements are retained from the  previous  population,
+          and the rest (NewPopSize-OldPopSize) is randomly initialized  using  the
+          previous population as a reference distribution.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores sampler state
+            
+        RESULT:
+            * False, if no  previous  population  was  stored  in the sampler (the
+              restart was requested prior to running anything, so we have  nothing
+              to restart from). In this case,  the  sampler  will  silently  reuse
+              previous initial population generation strategy.
+            * True, if a request was successfully accepted.
+            
+        NOTE: this function also tells the sampler not to  re-seed  internal  RNG,
+              so the new session  will  produce  the  same  sequence  of  sampling
+              decisions.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool mcmcrestart(mcmcstate state,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+
+            result = state.haslastpopulation;
+            if( !result )
+            {
+                return result;
+            }
+            state.x0type = 2;
+            state.reseedglobalrs = false;
+            state.rstate.ia = new int[14+1];
+            state.rstate.ra = new double[0+1];
+            state.rstate.stage = -1;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Set V2 reverse communication protocol with dense requests
+        *************************************************************************/
+        public static void mcmcsetprotocolv2(mcmcstate state,
+            alglib.xparams _params)
+        {
+            state.protocolversion = 2;
+            state.issuesparserequests = false;
+            state.rstate.ia = new int[14+1];
+            state.rstate.ra = new double[0+1];
+            state.rstate.stage = -1;
+        }
+
+
+        /*************************************************************************
+        Set V2 reverse communication protocol with sparse requests
+        *************************************************************************/
+        public static void mcmcsetprotocolv2s(mcmcstate state,
+            alglib.xparams _params)
+        {
+            state.protocolversion = 2;
+            state.issuesparserequests = true;
+            state.rstate.ia = new int[14+1];
+            state.rstate.ra = new double[0+1];
+            state.rstate.stage = -1;
+        }
+
+
+        /*************************************************************************
+        Internal initialization to the default state
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void initinternal(mcmcstate state,
+            int n,
+            alglib.xparams _params)
+        {
+            state.n = n;
+            state.cntx0 = 0;
+            state.x0type = -1;
+            state.algokind = 0;
+            state.popsize = 10*n;
+            state.epochscnt = 100;
+            state.burninlen = 0;
+            state.thinby = 1;
+            state.initialstart = true;
+            state.protocolversion = 2;
+            state.haslastpopulation = false;
+            state.rngseed = 6435533;
+            state.xrep = false;
+            ablasf.rsetallocv(n, 1.0, ref state.s, _params);
+            hqrnd.hqrndseed(state.rngseed, 856446, state.globalrs, _params);
+            state.reseedglobalrs = true;
+            state.useparallelmoves = false;
+            state.rstate.ia = new int[14+1];
+            state.rstate.ra = new double[0+1];
+            state.rstate.stage = -1;
+        }
+
+
+        /*************************************************************************
+        Logging
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void dologging(mcmcstate state,
+            int iteridx,
+            int acceptcnt,
+            alglib.xparams _params)
+        {
+            double[] popmean = new double[0];
+            double[] popstddev = new double[0];
+            int i = 0;
+            int j = 0;
+            int n = 0;
+            int popsize = 0;
+            double llmean = 0;
+            double llstddev = 0;
+
+            alglib.ap.assert(state.dotrace, "MCMC: DoLogging() is called with tracing disable; this function shall not be called when logging is turned off");
+            n = state.n;
+            popsize = state.popsize;
+            if( state.dodetailedtrace )
+            {
+                alglib.ap.trace(System.String.Format("=== ITERATION {0,5:d} ================================================================================\n", iteridx));
+                ablasf.rsetallocv(n, 0.0, ref popmean, _params);
+                ablasf.rsetallocv(n, 0.0, ref popstddev, _params);
+                for(i=0; i<=popsize-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        popmean[j] = popmean[j]+state.population[i,j];
+                    }
+                }
+                for(j=0; j<=n-1; j++)
+                {
+                    popmean[j] = popmean[j]/popsize;
+                }
+                for(i=0; i<=popsize-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        popstddev[j] = popstddev[j]+(state.population[i,j]-popmean[j])*(state.population[i,j]-popmean[j]);
+                    }
+                }
+                for(j=0; j<=n-1; j++)
+                {
+                    popstddev[j] = Math.Sqrt(popstddev[j]/popsize);
+                }
+                alglib.ap.trace("pop.mean   = ");
+                apserv.tracevectore3(popmean, 0, n, _params);
+                alglib.ap.trace("\n");
+                alglib.ap.trace("pop.stddev = ");
+                apserv.tracevectore3(popstddev, 0, n, _params);
+                alglib.ap.trace("\n");
+                llmean = 0;
+                for(i=0; i<=popsize-1; i++)
+                {
+                    llmean = llmean+state.population[i,n];
+                }
+                llmean = llmean/popsize;
+                llstddev = 0;
+                for(i=0; i<=popsize-1; i++)
+                {
+                    llstddev = llstddev+math.sqr(state.population[i,n]-llmean);
+                }
+                llstddev = Math.Sqrt(llstddev/popsize);
+                alglib.ap.trace(System.String.Format("loglik.mean   = {0,0:F3}\n", llmean));
+                alglib.ap.trace(System.String.Format("loglik.stddev = {0,0:F3}\n", llstddev));
+                alglib.ap.trace(System.String.Format("accept.rate   = {0,0:F3}\n", (double)acceptcnt/(double)popsize));
+            }
+            else
+            {
+            }
+        }
+
+
+        /*************************************************************************
+        Save current population
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void savepopulation(mcmcstate state,
+            alglib.xparams _params)
+        {
+            state.haslastpopulation = true;
+            state.lastpopulationsize = state.popsize;
+            ablasf.rcopyallocm(state.popsize, state.n+1, state.population, ref state.lastpopulation, _params);
+            if( state.useparallelmoves )
+            {
+                ablasf.icopyallocv(state.popsize, state.grpidx, ref state.lastgrpidx, _params);
+            }
+        }
+
+
+        /*************************************************************************
+        Compute per-variable integrated autocorrelation times
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void computeautocorrtimes(mcmcstate state,
+            ref double[] autocorrtimes,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int m = 0;
+            int epochscnt = 0;
+            int popsize = 0;
+            int idxv = 0;
+            int idxw = 0;
+            double[] a = new double[0];
+            double[] a2 = new double[0];
+
+            n = state.n;
+            epochscnt = state.repepochscnt;
+            popsize = state.reppopsize;
+            alglib.ap.assert(epochscnt*popsize==state.repsamplesize, "MCMC: integrity check 657126 failed");
+            ablasf.rsetallocv(n, 0.0, ref autocorrtimes, _params);
+            
+            //
+            //
+            //
+            for(idxv=0; idxv<=n-1; idxv++)
+            {
+                
+                //
+                // Compute averaged autocorrelation function
+                //
+                ablasf.rsetallocv(epochscnt, 0.0, ref a, _params);
+                for(idxw=0; idxw<=popsize-1; idxw++)
+                {
+                    autocorrij(state, idxw, idxv, ref a2, _params);
+                    ablasf.raddv(epochscnt, (double)1/(double)popsize, a2, a, _params);
+                }
+                ablasf.rmulv(epochscnt, 1/a[0], a, _params);
+                
+                //
+                // Compute integrated autocorrelation time using finite window M, such that time(M)*C<=M for C~5.
+                // Having finite window size helps to reduce influence of random noise.
+                //
+                autocorrtimes[idxv] = a[0];
+                for(m=1; m<=epochscnt-1; m++)
+                {
+                    autocorrtimes[idxv] = autocorrtimes[idxv]+2*a[m];
+                    if( (double)(autocorrtimes[idxv]*cautocorr)<=(double)(m) )
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+
+        private static void autocorrij(mcmcstate state,
+            int idxw,
+            int idxv,
+            ref double[] a,
+            alglib.xparams _params)
+        {
+            int epochscnt = 0;
+            int ex2 = 0;
+            int popsize = 0;
+            double[] x = new double[0];
+            double meanx = 0;
+            int i = 0;
+            complex[] f = new complex[0];
+
+            epochscnt = state.repepochscnt;
+            popsize = state.reppopsize;
+            alglib.ap.assert(epochscnt*popsize==state.repsamplesize, "MCMC: integrity check 678132 failed");
+            ex2 = 1;
+            while( ex2<epochscnt )
+            {
+                ex2 = ex2*2;
+            }
+            ablasf.rsetallocv(ex2, 0.0, ref x, _params);
+            meanx = 0;
+            for(i=0; i<=epochscnt-1; i++)
+            {
+                x[i] = state.repsample[state.reppopsize*i+idxw,idxv];
+                meanx = meanx+x[i];
+            }
+            meanx = meanx/epochscnt;
+            for(i=0; i<=epochscnt-1; i++)
+            {
+                x[i] = x[i]-meanx;
+            }
+            fft.fftr1dbuf(x, ex2, ref f, _params);
+            for(i=0; i<=ex2-1; i++)
+            {
+                f[i] = f[i]*math.conj(f[i]);
+            }
+            fft.fftr1dinvbuf(f, ex2, ref x, _params);
+            ablasf.rallocv(epochscnt, ref a, _params);
+            ablasf.rcopymulv(epochscnt, (double)1/(double)epochscnt, x, a, _params);
+        }
+
+
+    }
     public class mannwhitneyu
     {
         /*************************************************************************
@@ -17998,654 +20808,6 @@ public partial class alglib
                 result = f3;
             }
             return result;
-        }
-
-
-    }
-    public class stest
-    {
-        /*************************************************************************
-        Sign test
-
-        This test checks three hypotheses about the median of  the  given  sample.
-        The following tests are performed:
-            * two-tailed test (null hypothesis - the median is equal to the  given
-              value)
-            * left-tailed test (null hypothesis - the median is  greater  than  or
-              equal to the given value)
-            * right-tailed test (null hypothesis - the  median  is  less  than  or
-              equal to the given value)
-
-        Requirements:
-            * the scale of measurement should be ordinal, interval or ratio  (i.e.
-              the test could not be applied to nominal variables).
-
-        The test is non-parametric and doesn't require distribution X to be normal
-
-        Input parameters:
-            X       -   sample. Array whose index goes from 0 to N-1.
-            N       -   size of the sample.
-            Median  -   assumed median value.
-
-        Output parameters:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-        While   calculating   p-values   high-precision   binomial    distribution
-        approximation is used, so significance levels have about 15 exact digits.
-
-          -- ALGLIB --
-             Copyright 08.09.2006 by Bochkanov Sergey
-        *************************************************************************/
-        public static void onesamplesigntest(double[] x,
-            int n,
-            double median,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            int gtcnt = 0;
-            int necnt = 0;
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            if( n<=1 )
-            {
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            
-            //
-            // Calculate:
-            // GTCnt - count of x[i]>Median
-            // NECnt - count of x[i]<>Median
-            //
-            gtcnt = 0;
-            necnt = 0;
-            for(i=0; i<=n-1; i++)
-            {
-                if( (double)(x[i])>(double)(median) )
-                {
-                    gtcnt = gtcnt+1;
-                }
-                if( (double)(x[i])!=(double)(median) )
-                {
-                    necnt = necnt+1;
-                }
-            }
-            if( necnt==0 )
-            {
-                
-                //
-                // all x[i] are equal to Median.
-                // So we can conclude that Median is a true median :)
-                //
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            bothtails = Math.Min(2*binomialdistr.binomialdistribution(Math.Min(gtcnt, necnt-gtcnt), necnt, 0.5, _params), 1.0);
-            lefttail = binomialdistr.binomialdistribution(gtcnt, necnt, 0.5, _params);
-            righttail = binomialdistr.binomialcdistribution(gtcnt-1, necnt, 0.5, _params);
-        }
-
-
-    }
-    public class studentttests
-    {
-        /*************************************************************************
-        One-sample t-test
-
-        This test checks three hypotheses about the mean of the given sample.  The
-        following tests are performed:
-            * two-tailed test (null hypothesis - the mean is equal  to  the  given
-              value)
-            * left-tailed test (null hypothesis - the  mean  is  greater  than  or
-              equal to the given value)
-            * right-tailed test (null hypothesis - the mean is less than or  equal
-              to the given value).
-
-        The test is based on the assumption that  a  given  sample  has  a  normal
-        distribution and  an  unknown  dispersion.  If  the  distribution  sharply
-        differs from normal, the test will work incorrectly.
-
-        INPUT PARAMETERS:
-            X       -   sample. Array whose index goes from 0 to N-1.
-            N       -   size of sample, N>=0
-            Mean    -   assumed value of the mean.
-
-        OUTPUT PARAMETERS:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-        NOTE: this function correctly handles degenerate cases:
-              * when N=0, all p-values are set to 1.0
-              * when variance of X[] is exactly zero, p-values are set
-                to 1.0 or 0.0, depending on difference between sample mean and
-                value of mean being tested.
-
-
-          -- ALGLIB --
-             Copyright 08.09.2006 by Bochkanov Sergey
-        *************************************************************************/
-        public static void studentttest1(double[] x,
-            int n,
-            double mean,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            double xmean = 0;
-            double x0 = 0;
-            double v = 0;
-            bool samex = new bool();
-            double xvariance = 0;
-            double xstddev = 0;
-            double v1 = 0;
-            double v2 = 0;
-            double stat = 0;
-            double s = 0;
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            if( n<=0 )
-            {
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            
-            //
-            // Mean
-            //
-            xmean = 0;
-            x0 = x[0];
-            samex = true;
-            for(i=0; i<=n-1; i++)
-            {
-                v = x[i];
-                xmean = xmean+v;
-                samex = samex && (double)(v)==(double)(x0);
-            }
-            if( samex )
-            {
-                xmean = x0;
-            }
-            else
-            {
-                xmean = xmean/n;
-            }
-            
-            //
-            // Variance (using corrected two-pass algorithm)
-            //
-            xvariance = 0;
-            xstddev = 0;
-            if( n!=1 && !samex )
-            {
-                v1 = 0;
-                for(i=0; i<=n-1; i++)
-                {
-                    v1 = v1+math.sqr(x[i]-xmean);
-                }
-                v2 = 0;
-                for(i=0; i<=n-1; i++)
-                {
-                    v2 = v2+(x[i]-xmean);
-                }
-                v2 = math.sqr(v2)/n;
-                xvariance = (v1-v2)/(n-1);
-                if( (double)(xvariance)<(double)(0) )
-                {
-                    xvariance = 0;
-                }
-                xstddev = Math.Sqrt(xvariance);
-            }
-            if( (double)(xstddev)==(double)(0) )
-            {
-                if( (double)(xmean)==(double)(mean) )
-                {
-                    bothtails = 1.0;
-                }
-                else
-                {
-                    bothtails = 0.0;
-                }
-                if( (double)(xmean)>=(double)(mean) )
-                {
-                    lefttail = 1.0;
-                }
-                else
-                {
-                    lefttail = 0.0;
-                }
-                if( (double)(xmean)<=(double)(mean) )
-                {
-                    righttail = 1.0;
-                }
-                else
-                {
-                    righttail = 0.0;
-                }
-                return;
-            }
-            
-            //
-            // Statistic
-            //
-            stat = (xmean-mean)/(xstddev/Math.Sqrt(n));
-            s = studenttdistr.studenttdistribution(n-1, stat, _params);
-            bothtails = 2*Math.Min(s, 1-s);
-            lefttail = s;
-            righttail = 1-s;
-        }
-
-
-        /*************************************************************************
-        Two-sample pooled test
-
-        This test checks three hypotheses about the mean of the given samples. The
-        following tests are performed:
-            * two-tailed test (null hypothesis - the means are equal)
-            * left-tailed test (null hypothesis - the mean of the first sample  is
-              greater than or equal to the mean of the second sample)
-            * right-tailed test (null hypothesis - the mean of the first sample is
-              less than or equal to the mean of the second sample).
-
-        Test is based on the following assumptions:
-            * given samples have normal distributions
-            * dispersions are equal
-            * samples are independent.
-
-        Input parameters:
-            X       -   sample 1. Array whose index goes from 0 to N-1.
-            N       -   size of sample.
-            Y       -   sample 2. Array whose index goes from 0 to M-1.
-            M       -   size of sample.
-
-        Output parameters:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-        NOTE: this function correctly handles degenerate cases:
-              * when N=0 or M=0, all p-values are set to 1.0
-              * when both samples has exactly zero variance, p-values are set
-                to 1.0 or 0.0, depending on difference between means.
-
-          -- ALGLIB --
-             Copyright 18.09.2006 by Bochkanov Sergey
-        *************************************************************************/
-        public static void studentttest2(double[] x,
-            int n,
-            double[] y,
-            int m,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            bool samex = new bool();
-            bool samey = new bool();
-            double x0 = 0;
-            double y0 = 0;
-            double xmean = 0;
-            double ymean = 0;
-            double v = 0;
-            double stat = 0;
-            double s = 0;
-            double p = 0;
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            if( n<=0 || m<=0 )
-            {
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            
-            //
-            // Mean
-            //
-            xmean = 0;
-            x0 = x[0];
-            samex = true;
-            for(i=0; i<=n-1; i++)
-            {
-                v = x[i];
-                xmean = xmean+v;
-                samex = samex && (double)(v)==(double)(x0);
-            }
-            if( samex )
-            {
-                xmean = x0;
-            }
-            else
-            {
-                xmean = xmean/n;
-            }
-            ymean = 0;
-            y0 = y[0];
-            samey = true;
-            for(i=0; i<=m-1; i++)
-            {
-                v = y[i];
-                ymean = ymean+v;
-                samey = samey && (double)(v)==(double)(y0);
-            }
-            if( samey )
-            {
-                ymean = y0;
-            }
-            else
-            {
-                ymean = ymean/m;
-            }
-            
-            //
-            // S
-            //
-            s = 0;
-            if( n+m>2 )
-            {
-                for(i=0; i<=n-1; i++)
-                {
-                    s = s+math.sqr(x[i]-xmean);
-                }
-                for(i=0; i<=m-1; i++)
-                {
-                    s = s+math.sqr(y[i]-ymean);
-                }
-                s = Math.Sqrt(s*((double)1/(double)n+(double)1/(double)m)/(n+m-2));
-            }
-            if( (double)(s)==(double)(0) )
-            {
-                if( (double)(xmean)==(double)(ymean) )
-                {
-                    bothtails = 1.0;
-                }
-                else
-                {
-                    bothtails = 0.0;
-                }
-                if( (double)(xmean)>=(double)(ymean) )
-                {
-                    lefttail = 1.0;
-                }
-                else
-                {
-                    lefttail = 0.0;
-                }
-                if( (double)(xmean)<=(double)(ymean) )
-                {
-                    righttail = 1.0;
-                }
-                else
-                {
-                    righttail = 0.0;
-                }
-                return;
-            }
-            
-            //
-            // Statistic
-            //
-            stat = (xmean-ymean)/s;
-            p = studenttdistr.studenttdistribution(n+m-2, stat, _params);
-            bothtails = 2*Math.Min(p, 1-p);
-            lefttail = p;
-            righttail = 1-p;
-        }
-
-
-        /*************************************************************************
-        Two-sample unpooled test
-
-        This test checks three hypotheses about the mean of the given samples. The
-        following tests are performed:
-            * two-tailed test (null hypothesis - the means are equal)
-            * left-tailed test (null hypothesis - the mean of the first sample  is
-              greater than or equal to the mean of the second sample)
-            * right-tailed test (null hypothesis - the mean of the first sample is
-              less than or equal to the mean of the second sample).
-
-        Test is based on the following assumptions:
-            * given samples have normal distributions
-            * samples are independent.
-        Equality of variances is NOT required.
-
-        Input parameters:
-            X - sample 1. Array whose index goes from 0 to N-1.
-            N - size of the sample.
-            Y - sample 2. Array whose index goes from 0 to M-1.
-            M - size of the sample.
-
-        Output parameters:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-        NOTE: this function correctly handles degenerate cases:
-              * when N=0 or M=0, all p-values are set to 1.0
-              * when both samples has zero variance, p-values are set
-                to 1.0 or 0.0, depending on difference between means.
-              * when only one sample has zero variance, test reduces to 1-sample
-                version.
-
-          -- ALGLIB --
-             Copyright 18.09.2006 by Bochkanov Sergey
-        *************************************************************************/
-        public static void unequalvariancettest(double[] x,
-            int n,
-            double[] y,
-            int m,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            bool samex = new bool();
-            bool samey = new bool();
-            double x0 = 0;
-            double y0 = 0;
-            double xmean = 0;
-            double ymean = 0;
-            double xvar = 0;
-            double yvar = 0;
-            double v = 0;
-            double df = 0;
-            double p = 0;
-            double stat = 0;
-            double c = 0;
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            if( n<=0 || m<=0 )
-            {
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            
-            //
-            // Mean
-            //
-            xmean = 0;
-            x0 = x[0];
-            samex = true;
-            for(i=0; i<=n-1; i++)
-            {
-                v = x[i];
-                xmean = xmean+v;
-                samex = samex && (double)(v)==(double)(x0);
-            }
-            if( samex )
-            {
-                xmean = x0;
-            }
-            else
-            {
-                xmean = xmean/n;
-            }
-            ymean = 0;
-            y0 = y[0];
-            samey = true;
-            for(i=0; i<=m-1; i++)
-            {
-                v = y[i];
-                ymean = ymean+v;
-                samey = samey && (double)(v)==(double)(y0);
-            }
-            if( samey )
-            {
-                ymean = y0;
-            }
-            else
-            {
-                ymean = ymean/m;
-            }
-            
-            //
-            // Variance (using corrected two-pass algorithm)
-            //
-            xvar = 0;
-            if( n>=2 && !samex )
-            {
-                for(i=0; i<=n-1; i++)
-                {
-                    xvar = xvar+math.sqr(x[i]-xmean);
-                }
-                xvar = xvar/(n-1);
-            }
-            yvar = 0;
-            if( m>=2 && !samey )
-            {
-                for(i=0; i<=m-1; i++)
-                {
-                    yvar = yvar+math.sqr(y[i]-ymean);
-                }
-                yvar = yvar/(m-1);
-            }
-            
-            //
-            // Handle different special cases
-            // (one or both variances are zero).
-            //
-            if( (double)(xvar)==(double)(0) && (double)(yvar)==(double)(0) )
-            {
-                if( (double)(xmean)==(double)(ymean) )
-                {
-                    bothtails = 1.0;
-                }
-                else
-                {
-                    bothtails = 0.0;
-                }
-                if( (double)(xmean)>=(double)(ymean) )
-                {
-                    lefttail = 1.0;
-                }
-                else
-                {
-                    lefttail = 0.0;
-                }
-                if( (double)(xmean)<=(double)(ymean) )
-                {
-                    righttail = 1.0;
-                }
-                else
-                {
-                    righttail = 0.0;
-                }
-                return;
-            }
-            if( (double)(xvar)==(double)(0) )
-            {
-                
-                //
-                // X is constant, unpooled 2-sample test reduces to 1-sample test.
-                //
-                // NOTE: right-tail and left-tail must be passed to 1-sample
-                //       t-test in reverse order because we reverse order of
-                //       of samples.
-                //
-                studentttest1(y, m, xmean, ref bothtails, ref righttail, ref lefttail, _params);
-                return;
-            }
-            if( (double)(yvar)==(double)(0) )
-            {
-                
-                //
-                // Y is constant, unpooled 2-sample test reduces to 1-sample test.
-                //
-                studentttest1(x, n, ymean, ref bothtails, ref lefttail, ref righttail, _params);
-                return;
-            }
-            
-            //
-            // Statistic
-            //
-            stat = (xmean-ymean)/Math.Sqrt(xvar/n+yvar/m);
-            c = xvar/n/(xvar/n+yvar/m);
-            df = apserv.rmul2(n-1, m-1, _params)/((m-1)*math.sqr(c)+(n-1)*math.sqr(1-c));
-            if( (double)(stat)>(double)(0) )
-            {
-                p = 1-0.5*ibetaf.incompletebeta(df/2, 0.5, df/(df+math.sqr(stat)), _params);
-            }
-            else
-            {
-                p = 0.5*ibetaf.incompletebeta(df/2, 0.5, df/(df+math.sqr(stat)), _params);
-            }
-            bothtails = 2*Math.Min(p, 1-p);
-            lefttail = p;
-            righttail = 1-p;
         }
 
 

@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.04.0 (source code generated 2024-12-21)
+ALGLIB 4.06.0 (source code generated 2025-10-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -512,6 +512,29 @@ public partial class alglib
              Copyright 18.05.2015 by Bochkanov Sergey
         *************************************************************************/
         public static int coalescei(int a,
+            int b,
+            alglib.xparams _params)
+        {
+            int result = 0;
+
+            result = a;
+            if( a==0 )
+            {
+                result = b;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        The function performs zero-coalescing on integer value.
+
+        NOTE: no check is performed for B<>0
+
+          -- ALGLIB --
+             Copyright 18.05.2015 by Bochkanov Sergey
+        *************************************************************************/
+        public static int icoalesce(int a,
             int b,
             alglib.xparams _params)
         {
@@ -2354,6 +2377,26 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function is used to swap two elements of the vector
+        *************************************************************************/
+        public static void swapelementsb(bool[] a,
+            int i0,
+            int i1,
+            alglib.xparams _params)
+        {
+            bool v = new bool();
+
+            if( i0==i1 )
+            {
+                return;
+            }
+            v = a[i0];
+            a[i0] = a[i1];
+            a[i1] = v;
+        }
+
+
+        /*************************************************************************
         This function is used to return maximum of three real values
         *************************************************************************/
         public static double maxreal3(double v0,
@@ -2627,7 +2670,7 @@ public partial class alglib
         {
             double result = 0;
 
-            if( (double)(x)>=(double)(0) )
+            if( x>=0 )
             {
                 result = 1;
             }
@@ -2876,11 +2919,11 @@ public partial class alglib
             double result = 0;
 
             result = r0;
-            if( (double)(r1)>(double)(result) )
+            if( r1>result )
             {
                 result = r1;
             }
-            if( (double)(r2)>(double)(result) )
+            if( r2>result )
             {
                 result = r2;
             }
@@ -2900,7 +2943,7 @@ public partial class alglib
             r0 = Math.Abs(r0);
             r1 = Math.Abs(r1);
             result = r0;
-            if( (double)(r1)>(double)(result) )
+            if( r1>result )
             {
                 result = r1;
             }
@@ -2922,11 +2965,11 @@ public partial class alglib
             r1 = Math.Abs(r1);
             r2 = Math.Abs(r2);
             result = r0;
-            if( (double)(r1)>(double)(result) )
+            if( r1>result )
             {
                 result = r1;
             }
-            if( (double)(r2)>(double)(result) )
+            if( r2>result )
             {
                 result = r2;
             }
@@ -4019,6 +4062,65 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function returns minimum time required to accumulate statistics about
+        problem solution costs. Algorithms  utilizing  adaptive  parallelism  will
+        wait until information from sufficiently many tasks is accumulated  before
+        deciding on adaptive parallelism status.
+
+        The time is returned in milliseconds
+
+          -- ALGLIB --
+             Copyright 10.01.2018 by Bochkanov Sergey
+        *************************************************************************/
+        public static double adaptiveparallelismtimerequired(alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = 25.0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns minimum amount of subproblems required to accumulate
+        statistics about problem solution costs. Algorithms  utilizing  adaptive
+        parallelism will wait until information from sufficiently many tasks is
+        accumulated  before deciding on adaptive parallelism status.
+
+        The time is returned in milliseconds
+
+          -- ALGLIB --
+             Copyright 10.01.2018 by Bochkanov Sergey
+        *************************************************************************/
+        public static double adaptiveparallelismcountrequired(alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = 2.0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function returns minimum time of a subproblem that justifies activation
+        of a previously inactive parallelism (root problem insertion and worker
+        queue activation).
+
+        The time is returned in milliseconds
+
+          -- ALGLIB --
+             Copyright 10.01.2018 by Bochkanov Sergey
+        *************************************************************************/
+        public static double workerstartthresholdms(alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = 2.0;
+            return result;
+        }
+
+
+        /*************************************************************************
         This function returns minimum cost of task which is feasible for
         spawn (given that multithreading is active).
 
@@ -4733,7 +4835,7 @@ public partial class alglib
             bool cond,
             alglib.xparams _params)
         {
-            int tc = 0;
+            double tc = 0;
 
             if( !cond )
             {
@@ -4741,26 +4843,43 @@ public partial class alglib
             }
             alglib.ap.assert(t.isrunning, "STimerStop: attempt to stop already stopped timer");
             t.isrunning = false;
-            tc = unchecked((int)(System.DateTime.UtcNow.Ticks/10000));
-            if( tc>=t.tcurrent )
+            tc = unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-t.tcurrent;
+            if( (double)(tc)<(double)(0) )
             {
-                tc = tc-t.tcurrent;
+                tc = tc+4294967296.0;
             }
-            else
-            {
-                tc = t.tcurrent-tc;
-            }
-            t.ttotal = t.ttotal+tc;
+            t.ttotal = t.ttotal+(int)Math.Round(tc);
         }
 
 
         /*************************************************************************
-        Retrieve time in milliseconds for the stopped timer, accuracy unknown
+        Retrieve time in milliseconds for the stopped timer, accuracy unknown.
         *************************************************************************/
         public static double stimergetms(stimer t,
             alglib.xparams _params)
         {
             double result = 0;
+
+            alglib.ap.assert(!t.isrunning, "STimerGetMS: attempt to get time from the running timer");
+            result = t.ttotal;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Retrieve time in milliseconds for the stopped timer, accuracy unknown.
+
+        The result is returned as integer. For small running times (below 1ms or
+        below accuracy, which may be as large as 20-50ms) it is not rounded to
+        nearest integer (which is likely to be zero for submillicecond times).
+
+        Instead, a zero or non-zero value is returned. For repeated runs these
+        values average to the 'true' average of a sequence.
+        *************************************************************************/
+        public static int stimergetmsint(stimer t,
+            alglib.xparams _params)
+        {
+            int result = 0;
 
             alglib.ap.assert(!t.isrunning, "STimerGetMS: attempt to get time from the running timer");
             result = t.ttotal;
@@ -4775,22 +4894,33 @@ public partial class alglib
             alglib.xparams _params)
         {
             double result = 0;
-            int tc = 0;
+            double tc = 0;
 
             result = t.ttotal;
             if( t.isrunning )
             {
-                tc = unchecked((int)(System.DateTime.UtcNow.Ticks/10000));
-                if( tc>=t.tcurrent )
+                tc = unchecked((int)(System.DateTime.UtcNow.Ticks/10000))-t.tcurrent;
+                if( (double)(tc)<(double)(0) )
                 {
-                    tc = tc-t.tcurrent;
-                }
-                else
-                {
-                    tc = t.tcurrent-tc;
+                    tc = tc+4294967296.0;
                 }
                 result = result+tc;
             }
+            return result;
+        }
+
+
+        /*************************************************************************
+        Retrieve time in milliseconds for the running or stopped timer, accuracy unknown
+        *************************************************************************/
+        public static double stimergetmsrunningandrestart(stimer t,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = stimergetmsrunning(t, _params);
+            stimerinit(t, _params);
+            stimerstart(t, _params);
             return result;
         }
 
@@ -4933,6 +5063,39 @@ public partial class alglib
             return result;
         }
         #endif
+
+
+        /*************************************************************************
+        Computes scaled inf-norm of X: max(|x[i]/s[i]|)
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+            S       -   array[N], scales, S[i]<>0
+
+        RESULT:
+            (X,X)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rsclnrminf(int n,
+            double[] x,
+            double[] s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            double v = 0;
+
+            result = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = x[i]/s[i];
+                result = Math.Max(result, Math.Abs(v));
+            }
+            return result;
+        }
 
 
         #if ALGLIB_NO_FAST_KERNELS
@@ -17544,7 +17707,7 @@ public partial class alglib
                 _result.fmax = fmax;
                 _result.nfev = nfev;
                 _result.info = info;
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -19259,7 +19422,7 @@ public partial class alglib
                 _result.buffer = (double[])buffer.Clone();
                 _result.precr = (double[])precr.Clone();
                 _result.preci = (double[])preci.Clone();
-                _result.bluesteinpool = (alglib.smp.shared_pool)bluesteinpool.make_copy();
+                _result.bluesteinpool = bluesteinpool!=null ? (alglib.smp.shared_pool)bluesteinpool.make_copy() : null;
                 return _result;
             }
         };

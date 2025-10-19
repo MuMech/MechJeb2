@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.04.0 (source code generated 2024-12-21)
+ALGLIB 4.06.0 (source code generated 2025-10-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -2665,7 +2665,7 @@ public partial class alglib
                 _result.wk = (double[])wk.Clone();
                 _result.wr = (double[])wr.Clone();
                 _result.n = n;
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -2722,8 +2722,8 @@ public partial class alglib
                 _result.needf = needf;
                 _result.f = f;
                 _result.wrappermode = wrappermode;
-                _result.internalstate = (autogkinternalstate)internalstate.make_copy();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.internalstate = internalstate!=null ? (autogkinternalstate)internalstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 _result.v = v;
                 _result.terminationtype = terminationtype;
                 _result.nfev = nfev;

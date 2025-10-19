@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.04.0 (source code generated 2024-12-21)
+ALGLIB 4.06.0 (source code generated 2025-10-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -4502,7 +4502,7 @@ public partial class alglib
                 _result.boxmax = (double[])boxmax.Clone();
                 _result.nodes = (int[])nodes.Clone();
                 _result.splits = (double[])splits.Clone();
-                _result.innerbuf = (kdtreerequestbuffer)innerbuf.make_copy();
+                _result.innerbuf = innerbuf!=null ? (kdtreerequestbuffer)innerbuf.make_copy() : null;
                 _result.debugcounter = debugcounter;
                 return _result;
             }

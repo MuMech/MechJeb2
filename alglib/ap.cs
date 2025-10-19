@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 4.04.0 (source code generated 2024-12-21)
+ALGLIB 4.06.0 (source code generated 2025-10-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -1102,6 +1102,66 @@ public partial class alglib
                 ptr = (T)arr[idx];
             }
 
+            /************************************************************************
+            This function retrieves element from the array and assigns it to PTR,
+            then it clears the original element in the array.
+
+            arr                 array.
+            idx                 element index
+            ptr                 assign target
+
+            On output:
+            * pointer with index idx is assigned to PTR
+            * out-of-bounds access will result in exception being generated
+            ************************************************************************/
+            public void extract_transfer<T>(int idx, ref T ptr) where T : alglib.apobject
+            {
+                if( idx<0 || idx>=cnt )
+                    ap.assert(false, "ObjArray: out of bounds read access was performed");
+                ptr = (T)arr[idx];
+                arr[idx] = null;
+            }
+
+            /************************************************************************
+            This function retrieves the last element from the array and assigns it to PTR,
+            decreases array size by 1.
+
+            arr                 array.
+            ptr                 assign target
+
+            On output:
+            * pointer with index LEN-1 is assigned to PTR
+            * using on empty array will result in exception being generated
+            ************************************************************************/
+            public void pop_transfer<T>(ref T ptr) where T : alglib.apobject
+            {
+                if( cnt==0 )
+                    ap.assert(false, "ObjArray: pop_transfer() on empty array");
+                ptr = (T)arr[cnt-1];
+                arr[cnt-1] = null;
+                cnt = cnt-1;
+            }
+
+            /************************************************************************
+            This function swaps elements I and J.
+
+            arr                 array.
+            i                   element index
+            j                   element index
+
+            On output:
+            * out-of-bounds access will result in exception being generated
+            ************************************************************************/
+            public void swap(int i, int j)
+            {
+                if( i<0 || i>=cnt )
+                    ap.assert(false, "ObjArray: out of bounds read access was performed");
+                if( j<0 || j>=cnt )
+                    ap.assert(false, "ObjArray: out of bounds read access was performed");
+                apobject t = arr[i];
+                arr[i] = arr[j];
+                arr[j] = t;
+            }
 
             /************************************************************************
             This function atomically appends object  to arr, increasing array  length
@@ -2808,6 +2868,27 @@ public partial class alglib
             dst.seed_object = seed_object.make_copy();
             dst.recycled_objects = null;
             dst.enumeration_counter = null;
+        }
+
+
+        /************************************************************************
+        This function sets internal seed object if the pool is unitialized or is
+        initialized by a seed object of a type different from that of seed_object.
+        Otherwise, the pool is left intact.
+        
+        Upon initialization all objects owned by the pool (current seed object,
+        recycled objects) are automatically freed.
+
+        dst                 destination pool (initialized by constructor function)
+        seed_object         new seed object
+
+        NOTE: this function is NOT thread-safe. It does not acquire pool lock, so
+              you should NOT call it when lock can be used by another thread.
+        ************************************************************************/
+        public static void ae_shared_pool_set_seed_if_different(shared_pool dst, alglib.apobject seed_object)
+        {
+            if( dst.seed_object==null || dst.seed_object.GetType()!=seed_object.GetType() )
+                ae_shared_pool_set_seed(dst, seed_object);
         }
 
 

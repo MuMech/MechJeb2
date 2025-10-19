@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.04.0 (source code generated 2024-12-21)
+ALGLIB 4.06.0 (source code generated 2025-10-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -6885,7 +6885,7 @@ public partial class alglib
         return lsfit.lsfititeration(state.innerobj, _params);
     }
     /*************************************************************************
-    This family of functions is used to launcn iterations of nonlinear fitter
+    This family of functions is used to start iterations of nonlinear fitter
 
     These functions accept following parameters:
         func    -   callback which calculates function (or merit function)
@@ -14387,7 +14387,7 @@ public partial class alglib
                 _result.tsw = (double[])tsw.Clone();
                 _result.tsxy = (double[,])tsxy.Clone();
                 _result.tsdist = (double[])tsdist.Clone();
-                _result.requestbuffer = (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy();
+                _result.requestbuffer = requestbuffer!=null ? (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy() : null;
                 return _result;
             }
         };
@@ -14425,7 +14425,7 @@ public partial class alglib
                 _result.w = (double[])w.Clone();
                 _result.wy = (double[])wy.Clone();
                 _result.tags = (int[])tags.Clone();
-                _result.requestbuffer = (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy();
+                _result.requestbuffer = requestbuffer!=null ? (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy() : null;
                 return _result;
             }
         };
@@ -14478,10 +14478,10 @@ public partial class alglib
                 _result.lambdadecay = lambdadecay;
                 _result.shepardp = shepardp;
                 _result.debugprofile = debugprofile;
-                _result.tree = (nearestneighbor.kdtree)tree.make_copy();
+                _result.tree = tree!=null ? (nearestneighbor.kdtree)tree.make_copy() : null;
                 _result.npoints = npoints;
                 _result.shepardxy = (double[])shepardxy.Clone();
-                _result.buffer = (idwcalcbuffer)buffer.make_copy();
+                _result.buffer = buffer!=null ? (idwcalcbuffer)buffer.make_copy() : null;
                 return _result;
             }
         };
@@ -14554,7 +14554,7 @@ public partial class alglib
                 _result.tmplayers = (double[,])tmplayers.Clone();
                 _result.tmptags = (int[])tmptags.Clone();
                 _result.tmpdist = (double[])tmpdist.Clone();
-                _result.tmptree = (nearestneighbor.kdtree)tmptree.make_copy();
+                _result.tmptree = tmptree!=null ? (nearestneighbor.kdtree)tmptree.make_copy() : null;
                 _result.tmpmean = (double[])tmpmean.Clone();
                 return _result;
             }
@@ -18917,9 +18917,9 @@ public partial class alglib
                 spline1dbbasis _result = new spline1dbbasis();
                 _result.m = m;
                 _result.bfrad = bfrad;
-                _result.s0 = (spline1dinterpolant)s0.make_copy();
-                _result.s1 = (spline1dinterpolant)s1.make_copy();
-                _result.s2 = (spline1dinterpolant)s2.make_copy();
+                _result.s0 = s0!=null ? (spline1dinterpolant)s0.make_copy() : null;
+                _result.s1 = s1!=null ? (spline1dinterpolant)s1.make_copy() : null;
+                _result.s2 = s2!=null ? (spline1dinterpolant)s2.make_copy() : null;
                 _result.tmpx = (double[])tmpx.Clone();
                 _result.tmpy = (double[])tmpy.Clone();
                 return _result;
@@ -24542,13 +24542,13 @@ public partial class alglib
                 _result.querydata = (double[])querydata.Clone();
                 _result.replyfi = (double[])replyfi.Clone();
                 _result.replydj = (double[])replydj.Clone();
-                _result.replysj = (sparse.sparsematrix)replysj.make_copy();
+                _result.replysj = replysj!=null ? (sparse.sparsematrix)replysj.make_copy() : null;
                 _result.tmpx1 = (double[])tmpx1.Clone();
                 _result.tmpc1 = (double[])tmpc1.Clone();
                 _result.tmpf1 = (double[])tmpf1.Clone();
                 _result.tmpg1 = (double[])tmpg1.Clone();
                 _result.tmpj1 = (double[,])tmpj1.Clone();
-                _result.tmps1 = (sparse.sparsematrix)tmps1.make_copy();
+                _result.tmps1 = tmps1!=null ? (sparse.sparsematrix)tmps1.make_copy() : null;
                 _result.wcur = (double[])wcur.Clone();
                 _result.tmpwk = (double[])tmpwk.Clone();
                 _result.tmpct = (int[])tmpct.Clone();
@@ -24565,12 +24565,12 @@ public partial class alglib
                 _result.repavgrelerror = repavgrelerror;
                 _result.repmaxerror = repmaxerror;
                 _result.repwrmserror = repwrmserror;
-                _result.rep = (lsfitreport)rep.make_copy();
-                _result.optstate = (minlm.minlmstate)optstate.make_copy();
-                _result.optrep = (minlm.minlmreport)optrep.make_copy();
+                _result.rep = rep!=null ? (lsfitreport)rep.make_copy() : null;
+                _result.optstate = optstate!=null ? (minlm.minlmstate)optstate.make_copy() : null;
+                _result.optrep = optrep!=null ? (minlm.minlmreport)optrep.make_copy() : null;
                 _result.prevnpt = prevnpt;
                 _result.prevalgo = prevalgo;
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -30212,6 +30212,9 @@ public partial class alglib
             alglib.xparams _params)
         {
             state.protocolversion = 1;
+            state.rstate.ia = new int[6+1];
+            state.rstate.ra = new double[10+1];
+            state.rstate.stage = -1;
         }
 
 
@@ -30222,6 +30225,9 @@ public partial class alglib
             alglib.xparams _params)
         {
             state.protocolversion = 2;
+            state.rstate.ia = new int[6+1];
+            state.rstate.ra = new double[10+1];
+            state.rstate.stage = -1;
         }
 
 
@@ -33256,8 +33262,8 @@ public partial class alglib
                 _result.n = n;
                 _result.periodic = periodic;
                 _result.p = (double[])p.Clone();
-                _result.x = (spline1d.spline1dinterpolant)x.make_copy();
-                _result.y = (spline1d.spline1dinterpolant)y.make_copy();
+                _result.x = x!=null ? (spline1d.spline1dinterpolant)x.make_copy() : null;
+                _result.y = y!=null ? (spline1d.spline1dinterpolant)y.make_copy() : null;
                 return _result;
             }
         };
@@ -33294,9 +33300,9 @@ public partial class alglib
                 _result.n = n;
                 _result.periodic = periodic;
                 _result.p = (double[])p.Clone();
-                _result.x = (spline1d.spline1dinterpolant)x.make_copy();
-                _result.y = (spline1d.spline1dinterpolant)y.make_copy();
-                _result.z = (spline1d.spline1dinterpolant)z.make_copy();
+                _result.x = x!=null ? (spline1d.spline1dinterpolant)x.make_copy() : null;
+                _result.y = y!=null ? (spline1d.spline1dinterpolant)y.make_copy() : null;
+                _result.z = z!=null ? (spline1d.spline1dinterpolant)z.make_copy() : null;
                 return _result;
             }
         };
@@ -34799,7 +34805,7 @@ public partial class alglib
                 _result.calcbufxcx = (double[])calcbufxcx.Clone();
                 _result.calcbufx = (double[,])calcbufx.Clone();
                 _result.calcbuftags = (int[])calcbuftags.Clone();
-                _result.requestbuffer = (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy();
+                _result.requestbuffer = requestbuffer!=null ? (nearestneighbor.kdtreerequestbuffer)requestbuffer.make_copy() : null;
                 return _result;
             }
         };
@@ -34846,7 +34852,7 @@ public partial class alglib
                 _result.nx = nx;
                 _result.nc = nc;
                 _result.nl = nl;
-                _result.tree = (nearestneighbor.kdtree)tree.make_copy();
+                _result.tree = tree!=null ? (nearestneighbor.kdtree)tree.make_copy() : null;
                 _result.xc = (double[,])xc.Clone();
                 _result.wr = (double[,])wr.Clone();
                 _result.rmax = rmax;
@@ -34910,7 +34916,7 @@ public partial class alglib
                 _result.expbuf0 = (double[])expbuf0.Clone();
                 _result.expbuf1 = (double[])expbuf1.Clone();
                 _result.expbuf2 = (double[])expbuf2.Clone();
-                _result.requestbuf = (nearestneighbor.kdtreerequestbuffer)requestbuf.make_copy();
+                _result.requestbuf = requestbuf!=null ? (nearestneighbor.kdtreerequestbuffer)requestbuf.make_copy() : null;
                 _result.calcbufx = (double[,])calcbufx.Clone();
                 _result.calcbuftags = (int[])calcbuftags.Clone();
                 return _result;
@@ -38836,8 +38842,8 @@ public partial class alglib
                 _result.ptidx = (int[])ptidx.Clone();
                 _result.xt = (double[,])xt.Clone();
                 _result.wt = (double[,])wt.Clone();
-                _result.bhexpansion = (rbfv3farfields.biharmonicpanel)bhexpansion.make_copy();
-                _result.tgtbuf = (rbf3evaluatorbuffer)tgtbuf.make_copy();
+                _result.bhexpansion = bhexpansion!=null ? (rbfv3farfields.biharmonicpanel)bhexpansion.make_copy() : null;
+                _result.tgtbuf = tgtbuf!=null ? (rbf3evaluatorbuffer)tgtbuf.make_copy() : null;
                 return _result;
             }
         };
@@ -38893,9 +38899,9 @@ public partial class alglib
                 _result.origptidx = (int[])origptidx.Clone();
                 _result.wstoredorig = (double[,])wstoredorig.Clone();
                 _result.isloaded = isloaded;
-                _result.panels = (ap.objarray)panels.make_copy();
-                _result.bheval = (rbfv3farfields.biharmonicevaluator)bheval.make_copy();
-                _result.bufferpool = (alglib.smp.shared_pool)bufferpool.make_copy();
+                _result.panels = panels!=null ? (ap.objarray)panels.make_copy() : null;
+                _result.bheval = bheval!=null ? (rbfv3farfields.biharmonicevaluator)bheval.make_copy() : null;
+                _result.bufferpool = bufferpool!=null ? (alglib.smp.shared_pool)bufferpool.make_copy() : null;
                 _result.tmpx3w = (double[,])tmpx3w.Clone();
                 _result.usedebugcounters = usedebugcounters;
                 _result.dbgpanel2panelcnt = dbgpanel2panelcnt;
@@ -38949,7 +38955,7 @@ public partial class alglib
                 _result.entireset = (int[])entireset.Clone();
                 _result.x = (double[,])x.Clone();
                 _result.xtchunked = (double[,])xtchunked.Clone();
-                _result.bufferpool = (alglib.smp.shared_pool)bufferpool.make_copy();
+                _result.bufferpool = bufferpool!=null ? (alglib.smp.shared_pool)bufferpool.make_copy() : null;
                 _result.chunk1 = (double[])chunk1.Clone();
                 return _result;
             }
@@ -38989,7 +38995,7 @@ public partial class alglib
             {
                 rbfv3calcbuffer _result = new rbfv3calcbuffer();
                 _result.x = (double[])x.Clone();
-                _result.evalbuf = (rbf3evaluatorbuffer)evalbuf.make_copy();
+                _result.evalbuf = evalbuf!=null ? (rbf3evaluatorbuffer)evalbuf.make_copy() : null;
                 _result.x123 = (double[])x123.Clone();
                 _result.y123 = (double[])y123.Clone();
                 _result.x2d = (double[,])x2d.Clone();
@@ -39102,12 +39108,12 @@ public partial class alglib
                 _result.batchsize = batchsize;
                 _result.lambdav = lambdav;
                 _result.aterm = aterm;
-                _result.kdt = (nearestneighbor.kdtree)kdt.make_copy();
-                _result.kdt1 = (nearestneighbor.kdtree)kdt1.make_copy();
-                _result.kdt2 = (nearestneighbor.kdtree)kdt2.make_copy();
-                _result.bufferpool = (alglib.smp.shared_pool)bufferpool.make_copy();
-                _result.chunksproducer = (alglib.smp.shared_pool)chunksproducer.make_copy();
-                _result.chunkspool = (alglib.smp.shared_pool)chunkspool.make_copy();
+                _result.kdt = kdt!=null ? (nearestneighbor.kdtree)kdt.make_copy() : null;
+                _result.kdt1 = kdt1!=null ? (nearestneighbor.kdtree)kdt1.make_copy() : null;
+                _result.kdt2 = kdt2!=null ? (nearestneighbor.kdtree)kdt2.make_copy() : null;
+                _result.bufferpool = bufferpool!=null ? (alglib.smp.shared_pool)bufferpool.make_copy() : null;
+                _result.chunksproducer = chunksproducer!=null ? (alglib.smp.shared_pool)chunksproducer.make_copy() : null;
+                _result.chunkspool = chunkspool!=null ? (alglib.smp.shared_pool)chunkspool.make_copy() : null;
                 _result.wrkidx = (int[])wrkidx.Clone();
                 return _result;
             }
@@ -39192,9 +39198,9 @@ public partial class alglib
             {
                 acbfbuffer _result = new acbfbuffer();
                 _result.bflags = (bool[])bflags.Clone();
-                _result.kdtbuf = (nearestneighbor.kdtreerequestbuffer)kdtbuf.make_copy();
-                _result.kdt1buf = (nearestneighbor.kdtreerequestbuffer)kdt1buf.make_copy();
-                _result.kdt2buf = (nearestneighbor.kdtreerequestbuffer)kdt2buf.make_copy();
+                _result.kdtbuf = kdtbuf!=null ? (nearestneighbor.kdtreerequestbuffer)kdtbuf.make_copy() : null;
+                _result.kdt1buf = kdt1buf!=null ? (nearestneighbor.kdtreerequestbuffer)kdt1buf.make_copy() : null;
+                _result.kdt2buf = kdt2buf!=null ? (nearestneighbor.kdtreerequestbuffer)kdt2buf.make_copy() : null;
                 _result.tmpboxmin = (double[])tmpboxmin.Clone();
                 _result.tmpboxmax = (double[])tmpboxmax.Clone();
                 _result.currentnodes = (int[])currentnodes.Clone();
@@ -39294,7 +39300,7 @@ public partial class alglib
                 rbf3ddmbuffer _result = new rbf3ddmbuffer();
                 _result.bflags = (bool[])bflags.Clone();
                 _result.idx2preccol = (int[])idx2preccol.Clone();
-                _result.kdtbuf = (nearestneighbor.kdtreerequestbuffer)kdtbuf.make_copy();
+                _result.kdtbuf = kdtbuf!=null ? (nearestneighbor.kdtreerequestbuffer)kdtbuf.make_copy() : null;
                 _result.tmpboxmin = (double[])tmpboxmin.Clone();
                 _result.tmpboxmax = (double[])tmpboxmax.Clone();
                 return _result;
@@ -39454,11 +39460,11 @@ public partial class alglib
             {
                 rbf3ddmsolver _result = new rbf3ddmsolver();
                 _result.lambdav = lambdav;
-                _result.kdt = (nearestneighbor.kdtree)kdt.make_copy();
-                _result.bufferpool = (alglib.smp.shared_pool)bufferpool.make_copy();
+                _result.kdt = kdt!=null ? (nearestneighbor.kdtree)kdt.make_copy() : null;
+                _result.bufferpool = bufferpool!=null ? (alglib.smp.shared_pool)bufferpool.make_copy() : null;
                 _result.subproblemscnt = subproblemscnt;
-                _result.subproblemspool = (alglib.smp.shared_pool)subproblemspool.make_copy();
-                _result.subproblemsbuffer = (alglib.smp.shared_pool)subproblemsbuffer.make_copy();
+                _result.subproblemspool = subproblemspool!=null ? (alglib.smp.shared_pool)subproblemspool.make_copy() : null;
+                _result.subproblemsbuffer = subproblemsbuffer!=null ? (alglib.smp.shared_pool)subproblemsbuffer.make_copy() : null;
                 _result.ncorrector = ncorrector;
                 _result.corrq = (double[,])corrq.Clone();
                 _result.corrr = (double[,])corrr.Clone();
@@ -39523,10 +39529,10 @@ public partial class alglib
                 _result.cw = (double[])cw.Clone();
                 _result.pointindexes = (int[])pointindexes.Clone();
                 _result.nc = nc;
-                _result.evaluator = (rbf3evaluator)evaluator.make_copy();
-                _result.fasteval = (rbf3fastevaluator)fasteval.make_copy();
+                _result.evaluator = evaluator!=null ? (rbf3evaluator)evaluator.make_copy() : null;
+                _result.fasteval = fasteval!=null ? (rbf3fastevaluator)fasteval.make_copy() : null;
                 _result.wchunked = (double[,])wchunked.Clone();
-                _result.calcbuf = (rbfv3calcbuffer)calcbuf.make_copy();
+                _result.calcbuf = calcbuf!=null ? (rbfv3calcbuffer)calcbuf.make_copy() : null;
                 _result.dbgregqrusedforddm = dbgregqrusedforddm;
                 _result.dbgworstfirstdecay = dbgworstfirstdecay;
                 return _result;
@@ -46051,8 +46057,8 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 spline2dblockllsbuf _result = new spline2dblockllsbuf();
-                _result.solver = (linlsqr.linlsqrstate)solver.make_copy();
-                _result.solverrep = (linlsqr.linlsqrreport)solverrep.make_copy();
+                _result.solver = solver!=null ? (linlsqr.linlsqrstate)solver.make_copy() : null;
+                _result.solverrep = solverrep!=null ? (linlsqr.linlsqrreport)solverrep.make_copy() : null;
                 _result.blockata = (double[,])blockata.Clone();
                 _result.trsmbuf2 = (double[,])trsmbuf2.Clone();
                 _result.cholbuf2 = (double[,])cholbuf2.Clone();
@@ -46091,12 +46097,12 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 spline2dfastddmbuf _result = new spline2dfastddmbuf();
-                _result.xdesignmatrix = (spline2dxdesignmatrix)xdesignmatrix.make_copy();
+                _result.xdesignmatrix = xdesignmatrix!=null ? (spline2dxdesignmatrix)xdesignmatrix.make_copy() : null;
                 _result.tmp0 = (double[])tmp0.Clone();
                 _result.tmpz = (double[])tmpz.Clone();
-                _result.dummyrep = (spline2dfitreport)dummyrep.make_copy();
-                _result.localmodel = (spline2dinterpolant)localmodel.make_copy();
-                _result.blockllsbuf = (spline2dblockllsbuf)blockllsbuf.make_copy();
+                _result.dummyrep = dummyrep!=null ? (spline2dfitreport)dummyrep.make_copy() : null;
+                _result.localmodel = localmodel!=null ? (spline2dinterpolant)localmodel.make_copy() : null;
+                _result.blockllsbuf = blockllsbuf!=null ? (spline2dblockllsbuf)blockllsbuf.make_copy() : null;
                 return _result;
             }
         };
@@ -54699,7 +54705,7 @@ public partial class alglib
                 _result.maxits = maxits;
                 _result.supportr = supportr;
                 _result.basisfunction = basisfunction;
-                _result.calcbuf = (rbfv2calcbuffer)calcbuf.make_copy();
+                _result.calcbuf = calcbuf!=null ? (rbfv2calcbuffer)calcbuf.make_copy() : null;
                 return _result;
             }
         };
@@ -54734,7 +54740,7 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 rbfv2gridcalcbuffer _result = new rbfv2gridcalcbuffer();
-                _result.calcbuf = (rbfv2calcbuffer)calcbuf.make_copy();
+                _result.calcbuf = calcbuf!=null ? (rbfv2calcbuffer)calcbuf.make_copy() : null;
                 _result.cx = (double[])cx.Clone();
                 _result.rx = (double[])rx.Clone();
                 _result.ry = (double[])ry.Clone();
@@ -60568,9 +60574,9 @@ public partial class alglib
             {
                 rbfcalcbuffer _result = new rbfcalcbuffer();
                 _result.modelversion = modelversion;
-                _result.bufv1 = (rbfv1.rbfv1calcbuffer)bufv1.make_copy();
-                _result.bufv2 = (rbfv2.rbfv2calcbuffer)bufv2.make_copy();
-                _result.bufv3 = (rbfv3.rbfv3calcbuffer)bufv3.make_copy();
+                _result.bufv1 = bufv1!=null ? (rbfv1.rbfv1calcbuffer)bufv1.make_copy() : null;
+                _result.bufv2 = bufv2!=null ? (rbfv2.rbfv2calcbuffer)bufv2.make_copy() : null;
+                _result.bufv3 = bufv3!=null ? (rbfv3.rbfv3calcbuffer)bufv3.make_copy() : null;
                 _result.x = (double[])x.Clone();
                 _result.y = (double[])y.Clone();
                 _result.dy = (double[])dy.Clone();
@@ -60636,10 +60642,10 @@ public partial class alglib
                 _result.nx = nx;
                 _result.ny = ny;
                 _result.modelversion = modelversion;
-                _result.model1 = (rbfv1.rbfv1model)model1.make_copy();
-                _result.model2 = (rbfv2.rbfv2model)model2.make_copy();
-                _result.model3 = (rbfv3.rbfv3model)model3.make_copy();
-                _result.calcbuf = (rbfcalcbuffer)calcbuf.make_copy();
+                _result.model1 = model1!=null ? (rbfv1.rbfv1model)model1.make_copy() : null;
+                _result.model2 = model2!=null ? (rbfv2.rbfv2model)model2.make_copy() : null;
+                _result.model3 = model3!=null ? (rbfv3.rbfv3model)model3.make_copy() : null;
+                _result.calcbuf = calcbuf!=null ? (rbfcalcbuffer)calcbuf.make_copy() : null;
                 _result.lambdav = lambdav;
                 _result.radvalue = radvalue;
                 _result.radzvalue = radzvalue;

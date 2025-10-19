@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.04.0 (source code generated 2024-12-21)
+ALGLIB 4.06.0 (source code generated 2025-10-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -13754,14 +13754,14 @@ public partial class alglib
                 _result.xyrow = (double[])xyrow.Clone();
                 _result.nwbuf = (double[])nwbuf.Clone();
                 _result.integerbuf = (int[])integerbuf.Clone();
-                _result.err = (modelerrors)err.make_copy();
+                _result.err = err!=null ? (modelerrors)err.make_copy() : null;
                 _result.rndbuf = (double[])rndbuf.Clone();
-                _result.buf = (alglib.smp.shared_pool)buf.make_copy();
-                _result.gradbuf = (alglib.smp.shared_pool)gradbuf.make_copy();
+                _result.buf = buf!=null ? (alglib.smp.shared_pool)buf.make_copy() : null;
+                _result.gradbuf = gradbuf!=null ? (alglib.smp.shared_pool)gradbuf.make_copy() : null;
                 _result.dummydxy = (double[,])dummydxy.Clone();
-                _result.dummysxy = (sparse.sparsematrix)dummysxy.make_copy();
+                _result.dummysxy = dummysxy!=null ? (sparse.sparsematrix)dummysxy.make_copy() : null;
                 _result.dummyidx = (int[])dummyidx.Clone();
-                _result.dummypool = (alglib.smp.shared_pool)dummypool.make_copy();
+                _result.dummypool = dummypool!=null ? (alglib.smp.shared_pool)dummypool.make_copy() : null;
                 return _result;
             }
         };
@@ -21862,7 +21862,7 @@ public partial class alglib
                 _result.weights = (double[])weights.Clone();
                 _result.columnmeans = (double[])columnmeans.Clone();
                 _result.columnsigmas = (double[])columnsigmas.Clone();
-                _result.network = (mlpbase.multilayerperceptron)network.make_copy();
+                _result.network = network!=null ? (mlpbase.multilayerperceptron)network.make_copy() : null;
                 _result.y = (double[])y.Clone();
                 return _result;
             }
@@ -22873,8 +22873,8 @@ public partial class alglib
                 _result.xycprev = (int[])xycprev.Clone();
                 _result.d2 = (double[])d2.Clone();
                 _result.csizes = (int[])csizes.Clone();
-                _result.initbuf = (apserv.apbuffers)initbuf.make_copy();
-                _result.updatepool = (alglib.smp.shared_pool)updatepool.make_copy();
+                _result.initbuf = initbuf!=null ? (apserv.apbuffers)initbuf.make_copy() : null;
+                _result.updatepool = updatepool!=null ? (alglib.smp.shared_pool)updatepool.make_copy() : null;
                 return _result;
             }
         };
@@ -22932,8 +22932,8 @@ public partial class alglib
                 _result.kmeansdbgnoits = kmeansdbgnoits;
                 _result.seed = seed;
                 _result.tmpd = (double[,])tmpd.Clone();
-                _result.distbuf = (apserv.apbuffers)distbuf.make_copy();
-                _result.kmeanstmp = (kmeansbuffers)kmeanstmp.make_copy();
+                _result.distbuf = distbuf!=null ? (apserv.apbuffers)distbuf.make_copy() : null;
+                _result.kmeanstmp = kmeanstmp!=null ? (kmeansbuffers)kmeanstmp.make_copy() : null;
                 return _result;
             }
         };
@@ -26164,10 +26164,10 @@ public partial class alglib
                 _result.dsctotals = (int[])dsctotals.Clone();
                 _result.rdfprogress = rdfprogress;
                 _result.rdftotal = rdftotal;
-                _result.workpool = (alglib.smp.shared_pool)workpool.make_copy();
-                _result.votepool = (alglib.smp.shared_pool)votepool.make_copy();
-                _result.treepool = (alglib.smp.shared_pool)treepool.make_copy();
-                _result.treefactory = (alglib.smp.shared_pool)treefactory.make_copy();
+                _result.workpool = workpool!=null ? (alglib.smp.shared_pool)workpool.make_copy() : null;
+                _result.votepool = votepool!=null ? (alglib.smp.shared_pool)votepool.make_copy() : null;
+                _result.treepool = treepool!=null ? (alglib.smp.shared_pool)treepool.make_copy() : null;
+                _result.treefactory = treefactory!=null ? (alglib.smp.shared_pool)treefactory.make_copy() : null;
                 _result.neediobmatrix = neediobmatrix;
                 _result.iobmatrix = (bool[,])iobmatrix.Clone();
                 _result.varimpshuffle2 = (int[])varimpshuffle2.Clone();
@@ -26431,7 +26431,7 @@ public partial class alglib
                 _result.ntrees = ntrees;
                 _result.bufsize = bufsize;
                 _result.trees = (double[])trees.Clone();
-                _result.buffer = (decisionforestbuffer)buffer.make_copy();
+                _result.buffer = buffer!=null ? (decisionforestbuffer)buffer.make_copy() : null;
                 _result.trees8 = (byte[])trees8.Clone();
                 return _result;
             }
@@ -33361,9 +33361,9 @@ public partial class alglib
                 _result.sv = (double[])sv.Clone();
                 _result.forecasta = (double[])forecasta.Clone();
                 _result.nbasis = nbasis;
-                _result.solver = (evd.eigsubspacestate)solver.make_copy();
+                _result.solver = solver!=null ? (evd.eigsubspacestate)solver.make_copy() : null;
                 _result.xxt = (double[,])xxt.Clone();
-                _result.rs = (hqrnd.hqrndstate)rs.make_copy();
+                _result.rs = rs!=null ? (hqrnd.hqrndstate)rs.make_copy() : null;
                 _result.rngseed = rngseed;
                 _result.rtqueue = (int[])rtqueue.Clone();
                 _result.rtqueuecnt = rtqueuecnt;
@@ -33371,7 +33371,7 @@ public partial class alglib
                 _result.dbgcntevd = dbgcntevd;
                 _result.tmp0 = (double[])tmp0.Clone();
                 _result.tmp1 = (double[])tmp1.Clone();
-                _result.solverrep = (evd.eigsubspacereport)solverrep.make_copy();
+                _result.solverrep = solverrep!=null ? (evd.eigsubspacereport)solverrep.make_copy() : null;
                 _result.alongtrend = (double[])alongtrend.Clone();
                 _result.alongnoise = (double[])alongnoise.Clone();
                 _result.aseqtrajectory = (double[,])aseqtrajectory.Clone();
@@ -36909,12 +36909,12 @@ public partial class alglib
                 _result.pw = (double[])pw.Clone();
                 _result.priorp = (double[,])priorp.Clone();
                 _result.regterm = regterm;
-                _result.bs = (minbleic.minbleicstate)bs.make_copy();
+                _result.bs = bs!=null ? (minbleic.minbleicstate)bs.make_copy() : null;
                 _result.repinneriterationscount = repinneriterationscount;
                 _result.repouteriterationscount = repouteriterationscount;
                 _result.repnfev = repnfev;
                 _result.repterminationtype = repterminationtype;
-                _result.br = (minbleic.minbleicreport)br.make_copy();
+                _result.br = br!=null ? (minbleic.minbleicreport)br.make_copy() : null;
                 _result.tmpp = (double[])tmpp.Clone();
                 _result.effectivew = (double[])effectivew.Clone();
                 _result.effectivebndl = (double[])effectivebndl.Clone();
@@ -39914,7 +39914,7 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 knnbuffer _result = new knnbuffer();
-                _result.treebuf = (nearestneighbor.kdtreerequestbuffer)treebuf.make_copy();
+                _result.treebuf = treebuf!=null ? (nearestneighbor.kdtreerequestbuffer)treebuf.make_copy() : null;
                 _result.x = (double[])x.Clone();
                 _result.y = (double[])y.Clone();
                 _result.tags = (int[])tags.Clone();
@@ -39997,8 +39997,8 @@ public partial class alglib
                 _result.eps = eps;
                 _result.iscls = iscls;
                 _result.isdummy = isdummy;
-                _result.tree = (nearestneighbor.kdtree)tree.make_copy();
-                _result.buffer = (knnbuffer)buffer.make_copy();
+                _result.tree = tree!=null ? (nearestneighbor.kdtree)tree.make_copy() : null;
+                _result.buffer = buffer!=null ? (knnbuffer)buffer.make_copy() : null;
                 return _result;
             }
         };
@@ -41336,17 +41336,17 @@ public partial class alglib
                 _result.bestparameters = (double[])bestparameters.Clone();
                 _result.bestrmserror = bestrmserror;
                 _result.randomizenetwork = randomizenetwork;
-                _result.network = (mlpbase.multilayerperceptron)network.make_copy();
-                _result.optimizer = (minlbfgs.minlbfgsstate)optimizer.make_copy();
-                _result.optimizerrep = (minlbfgs.minlbfgsreport)optimizerrep.make_copy();
+                _result.network = network!=null ? (mlpbase.multilayerperceptron)network.make_copy() : null;
+                _result.optimizer = optimizer!=null ? (minlbfgs.minlbfgsstate)optimizer.make_copy() : null;
+                _result.optimizerrep = optimizerrep!=null ? (minlbfgs.minlbfgsreport)optimizerrep.make_copy() : null;
                 _result.wbuf0 = (double[])wbuf0.Clone();
                 _result.wbuf1 = (double[])wbuf1.Clone();
                 _result.allminibatches = (int[])allminibatches.Clone();
                 _result.currentminibatch = (int[])currentminibatch.Clone();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 _result.algoused = algoused;
                 _result.minibatchsize = minibatchsize;
-                _result.generator = (hqrnd.hqrndstate)generator.make_copy();
+                _result.generator = generator!=null ? (hqrnd.hqrndstate)generator.make_copy() : null;
                 return _result;
             }
         };
@@ -41386,9 +41386,9 @@ public partial class alglib
                 mlpetrnsession _result = new mlpetrnsession();
                 _result.trnsubset = (int[])trnsubset.Clone();
                 _result.valsubset = (int[])valsubset.Clone();
-                _result.mlpsessions = (alglib.smp.shared_pool)mlpsessions.make_copy();
-                _result.mlprep = (mlpreport)mlprep.make_copy();
-                _result.network = (mlpbase.multilayerperceptron)network.make_copy();
+                _result.mlpsessions = mlpsessions!=null ? (alglib.smp.shared_pool)mlpsessions.make_copy() : null;
+                _result.mlprep = mlprep!=null ? (mlpreport)mlprep.make_copy() : null;
+                _result.network = network!=null ? (mlpbase.multilayerperceptron)network.make_copy() : null;
                 return _result;
             }
         };
@@ -41446,8 +41446,8 @@ public partial class alglib
                 _result.datatype = datatype;
                 _result.npoints = npoints;
                 _result.densexy = (double[,])densexy.Clone();
-                _result.sparsexy = (sparse.sparsematrix)sparsexy.make_copy();
-                _result.session = (smlptrnsession)session.make_copy();
+                _result.sparsexy = sparsexy!=null ? (sparse.sparsematrix)sparsexy.make_copy() : null;
+                _result.session = session!=null ? (smlptrnsession)session.make_copy() : null;
                 _result.ngradbatch = ngradbatch;
                 _result.subset = (int[])subset.Clone();
                 _result.subsetsize = subsetsize;
@@ -41489,14 +41489,14 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 mlpparallelizationcv _result = new mlpparallelizationcv();
-                _result.network = (mlpbase.multilayerperceptron)network.make_copy();
-                _result.rep = (mlpreport)rep.make_copy();
+                _result.network = network!=null ? (mlpbase.multilayerperceptron)network.make_copy() : null;
+                _result.rep = rep!=null ? (mlpreport)rep.make_copy() : null;
                 _result.subset = (int[])subset.Clone();
                 _result.subsetsize = subsetsize;
                 _result.xyrow = (double[])xyrow.Clone();
                 _result.y = (double[])y.Clone();
                 _result.ngrad = ngrad;
-                _result.trnpool = (alglib.smp.shared_pool)trnpool.make_copy();
+                _result.trnpool = trnpool!=null ? (alglib.smp.shared_pool)trnpool.make_copy() : null;
                 return _result;
             }
         };

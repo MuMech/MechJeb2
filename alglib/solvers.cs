@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.04.0 (source code generated 2024-12-21)
+ALGLIB 4.06.0 (source code generated 2025-10-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -5885,7 +5885,7 @@ public partial class alglib
         return nleq.nleqiteration(state.innerobj, _params);
     }
     /*************************************************************************
-    This family of functions is used to launcn iterations of nonlinear solver
+    This family of functions is used to start iterations of nonlinear solver
 
     These functions accept following parameters:
         func    -   callback which calculates function (or merit function)
@@ -10898,9 +10898,9 @@ public partial class alglib
                 _result.ax = (double[])ax.Clone();
                 _result.reply1 = reply1;
                 _result.wrkb = (double[])wrkb.Clone();
-                _result.convbuf = (sparse.sparsematrix)convbuf.make_copy();
-                _result.gmressolver = (fbls.fblsgmresstate)gmressolver.make_copy();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.convbuf = convbuf!=null ? (sparse.sparsematrix)convbuf.make_copy() : null;
+                _result.gmressolver = gmressolver!=null ? (fbls.fblsgmresstate)gmressolver.make_copy() : null;
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -12237,7 +12237,7 @@ public partial class alglib
                 _result.repterminationtype = repterminationtype;
                 _result.running = running;
                 _result.tmpd = (double[])tmpd.Clone();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -13355,7 +13355,7 @@ public partial class alglib
             public override alglib.apobject make_copy()
             {
                 linlsqrstate _result = new linlsqrstate();
-                _result.nes = (normestimator.normestimatorstate)nes.make_copy();
+                _result.nes = nes!=null ? (normestimator.normestimatorstate)nes.make_copy() : null;
                 _result.rx = (double[])rx.Clone();
                 _result.b = (double[])b.Clone();
                 _result.n = n;
@@ -13407,7 +13407,7 @@ public partial class alglib
                 _result.userterminationneeded = userterminationneeded;
                 _result.tmpd = (double[])tmpd.Clone();
                 _result.tmpx = (double[])tmpx.Clone();
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -15408,7 +15408,7 @@ public partial class alglib
                 _result.needf = needf;
                 _result.needfij = needfij;
                 _result.xupdated = xupdated;
-                _result.rstate = (rcommstate)rstate.make_copy();
+                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 _result.repiterationscount = repiterationscount;
                 _result.repnfunc = repnfunc;
                 _result.repnjac = repnjac;
@@ -16107,6 +16107,10 @@ public partial class alglib
         public static void nleqsetprotocolv1(nleqstate state,
             alglib.xparams _params)
         {
+            state.rstate.ia = new int[2+1];
+            state.rstate.ba = new bool[0+1];
+            state.rstate.ra = new double[5+1];
+            state.rstate.stage = -1;
         }
 
 
