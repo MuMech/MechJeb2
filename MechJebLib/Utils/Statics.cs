@@ -266,26 +266,33 @@ namespace MechJebLib.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Approx(double val, double about, double range) => val > about - range && val < about + range;
 
+
         /// <summary>
-        ///     Compares two double values with a relative tolerance.
+        ///     Compares two double values with relative and absolute tolerance.
         /// </summary>
-        /// <param name="a">first value</param>
-        /// <param name="b">second value</param>
-        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
+        /// <param name="num">first value</param>
+        /// <param name="reference">reference value</param>
+        /// <param name="rtol">relative tolerance (e.g. 1e-15)</param>
+        /// <param name="atol">absolute tolerance (e.g. 1e-15)</param>
+        /// <param name="equalNan">if set, treats two NaN values as equal</param>
         /// <returns>true if the values are nearly the same</returns>
-        public static bool NearlyEqual(double a, double b, double epsilon = EPS)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool NearlyEqual(double num, double reference, double rtol, double atol, bool equalNan=false)
         {
-            if (a.Equals(b))
+            if (num.Equals(reference))
                 return true;
 
-            double diff = Abs(a - b);
+            if (equalNan && double.IsNaN(num) && double.IsNaN(reference))
+                return true;
 
-            if (a == 0 || b == 0)
-                return diff < epsilon;
+            // see numpy.isclose()
+            return Abs(num - reference) <= atol + rtol * Abs(reference) && IsFinite(reference);
+        }
 
-            epsilon = Max(Abs(a), Abs(b)) * epsilon;
-
-            return diff < epsilon;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool NearlyEqual(double num, double reference, double tol = EPS)
+        {
+            return NearlyEqual(num, reference, tol, tol);
         }
 
         /// <summary>
@@ -369,6 +376,7 @@ namespace MechJebLib.Utils
         ///     Debugging helper for printing double arrays to logs
         /// </summary>
         /// <param name="array">Array of doubles</param>
+        /// <param name="boxConstrained"></param>
         /// <returns>String format</returns>
         public static string DoubleArrayString(IList<double> array)
         {
@@ -390,18 +398,20 @@ namespace MechJebLib.Utils
             return sb.ToString();
         }
 
-        public static string DoubleArraySparsity(IList<double> user, IList<double> numerical, double tol)
+        public static string DoubleArraySparsity(int row, IList<double> user, IList<double> numerical, bool[] boxConstrained, double tol)
         {
             var sb = new StringBuilder();
 
-            sb.Append("[");
+            sb.Append($"{row:0000}: [");
             int last = user.Count - 1;
 
             for (int i = 0; i <= last; i++)
             {
-                if (user[i] == 0 && numerical[i] == 0)
+                if (numerical[i] == 0 && boxConstrained[i])
+                    sb.Append("✔️"); // box constrained
+                else if (numerical[i] == 0 && user[i] == 0)
                     sb.Append("⚫"); // zero in both
-                else if (NearlyEqual(user[i], numerical[i], tol))
+                else if (NearlyEqual(user[i], numerical[i], tol, tol))
                     sb.Append("✅"); // agrees
                 else if (user[i] == 0)
                     sb.Append("❗"); // not done yet
@@ -427,14 +437,37 @@ namespace MechJebLib.Utils
             return sb.ToString();
         }
 
-        public static string DoubleMatrixSparsityCheck(double[,] user, double[,] numerical, double tol)
+        public static string DoubleMatrixSparsityCheck(double[,] user, double[,] numerical, bool[] boxConstrained, double tol)
         {
             var sb = new StringBuilder();
 
             for (int i = 0; i <= user.GetUpperBound(0); i++)
-                sb.AppendLine(DoubleArraySparsity(GetRow(user, i), GetRow(numerical, i), tol));
+                sb.AppendLine(DoubleArraySparsity(i, GetRow(user, i), GetRow(numerical, i), boxConstrained, tol));
 
             return sb.ToString();
+        }
+
+        public static bool DoubleArraySparsityValidation(IList<double> user, IList<double> numerical, bool[] boxConstrained, double tol)
+        {
+            int last = user.Count - 1;
+
+            for (int i = 0; i <= last; i++)
+            {
+                if (boxConstrained[i] && numerical[i] == 0)
+                    continue;
+                if (!NearlyEqual(user[i], numerical[i], tol, tol))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static bool DoubleMatrixSparsityValidation(double[,] user, double[,] numerical, bool[] boxConstrained, double tol)
+        {
+            for (int i = 0; i <= user.GetUpperBound(0); i++)
+                if (!DoubleArraySparsityValidation(GetRow(user, i), GetRow(numerical, i), boxConstrained, tol))
+                    return false;
+            return true;
         }
 
         public static double[] GetRow(double[,] array, int row)

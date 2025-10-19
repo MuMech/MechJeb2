@@ -301,6 +301,7 @@ namespace MechJebLib.Maneuvers
             double[] x    = GenerateInitialGuess(periodOffset);
             double[] bndl = new double[NVARIABLES];
             double[] bndu = new double[NVARIABLES];
+            bool[]   boxConstrained =  new bool[NVARIABLES];
 
             for (int i = 0; i < NVARIABLES; i++)
             {
@@ -360,7 +361,7 @@ namespace MechJebLib.Maneuvers
 
                 if (ogrep.badgradsuspected)
                     throw new Exception(
-                        $"badgradsuspected: {ogrep.badgradfidx},{ogrep.badgradvidx}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, 1e-2)}");
+                        $"badgradsuspected: {ogrep.badgradfidx},{ogrep.badgradvidx}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2)}");
 
                 if (ogrep.nonc0suspected || ogrep.nonc1suspected)
                     throw new Exception("alglib optguard caught an error, i should report better on errors now");

@@ -273,8 +273,8 @@ namespace MuMech
                 return;
             }
 
-            // this is for PVG preventing staging doing coasts, possibly it should be more specific of an API
-            // (e.g. bool PVGIsCoasting) since it is getting tightly coupled.
+            // this is for PSG preventing staging doing coasts, possibly it should be more specific of an API
+            // (e.g. bool PSGIsCoasting) since it is getting tightly coupled.
             if (Vessel.currentStage <= ActiveAutoStageModuleLimit())
             {
                 // force staging once if fairing conditions are met in the next stage
