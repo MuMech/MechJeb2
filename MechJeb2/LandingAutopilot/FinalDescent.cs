@@ -115,12 +115,11 @@ namespace MuMech
                     else
                     {
                         // if we're falling at a significant angle from vertical, our vertical speed might be
-                        // quite small but we might still need to decelerate. Control the total speed instead
+                        // quite small but we might still need to decelerate. Reduce the horizontal speed
                         // by thrusting directly retrograde
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.OFF;
                         Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
-                        float desiredThrust = desiredSpeed < VesselState.speedSurface ? 1.0f : 0.0f;
-                        Core.Thrust.RequestActiveThrottle(desiredThrust);
+                        Core.Thrust.RequestActiveThrottle(1.0f);
                     }
                 }
 
