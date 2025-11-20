@@ -431,6 +431,7 @@ namespace MuMech
 
         private double LastNonZeroDVStageBurnTime()
         {
+            _stats.RequestUpdate();
             for (int mjPhase = _vacStats.Count - 1; mjPhase >= 0; mjPhase--)
                 if (_vacStats[mjPhase].DeltaTime > 0)
                     return _vacStats[mjPhase].DeltaTime;
