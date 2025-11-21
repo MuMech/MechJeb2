@@ -47,7 +47,7 @@ namespace MuMech
 
             List<FuelStats> vacStats = Core.StageStats.VacStats;
 
-            if (vacStats.Count > 0 && _ascentSettings.LastStage < vacStats[vacStats.Count - 1].KSPStage)
+            if (vacStats.Count > 0 && _ascentSettings.LastStage <= vacStats[vacStats.Count - 1].KSPStage)
             {
                 GUILayout.BeginVertical(GUI.skin.box);
 
