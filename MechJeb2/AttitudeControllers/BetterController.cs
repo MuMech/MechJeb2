@@ -277,7 +277,8 @@ namespace MuMech.AttitudeControllers
                     {
                         _posPID[i].Reset();
                         // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
-                        _targetOmega[i] = Sqrt(2 * _maxAlpha[i] * (Abs(_error[i]) - effLD)) * Sign(_error[i]);
+                        double v = Sqrt(2 * _maxAlpha[i] * (Abs(_error[i]) - effLD)) * Sign(_error[i]);
+                        _targetOmega[i] = Clamp(v, -maxOmega, maxOmega);
                     }
 
                     if (UseControlRange && _distance * Mathf.Rad2Deg > RollControlRange)
