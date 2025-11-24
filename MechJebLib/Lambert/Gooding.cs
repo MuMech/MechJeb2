@@ -17,17 +17,18 @@ namespace MechJebLib.Lambert
 {
     public static class Gooding
     {
-        /*
-         * mu = gravitational parameter of central body
-         * r1 = position at t0
-         * v1 = velocity at t0
-         * r2 = position at t1
-         * tof  = time of flight (t1 - t0) (+ posigrade "shortway", - retrograde "longway")
-         * nrev = number of full revolutions (+ left-branch, - right-branch for nrev != 0)
-         * Vi = initial velocity vector of transfer orbit
-         * Vf = final velocity vector of transfer orbit
-         */
-
+        /// <summary>
+        /// Gooding's method of solving Lambert's problem.
+        /// </summary>
+        /// <param name="mu">Gravitational parameter of central body</param>
+        /// <param name="r1">Position at t0</param>
+        /// <param name="v1">Velocity at t0</param>
+        /// <param name="r2">Position at t1</param>
+        /// <param name="tof">Time of flight (t1 - t0) (+ posigrade, - retrograde)</param>
+        /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
+        /// <param name="bypass"></param>
+        /// <returns>Initial and Final velocity vector of transfer orbit</returns>
+        /// <exception cref="Exception"></exception>
         public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 v1, V3 r2, double tof, int nrev, bool bypass = false)
         {
             /* most of this function lifted from https://www.mathworks.com/matlabcentral/fileexchange/39530-lambert-s-problem/content/glambert.m */

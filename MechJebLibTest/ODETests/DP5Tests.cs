@@ -169,7 +169,7 @@ namespace MechJebLibTest.ODETests
             }
         }
 
-        private static double Func(double t, IList<double> y, AbstractIVP i)
+        private static double Func(IList<double> y, double t, AbstractIVP i)
         {
             var r = new V3(y[0], y[1], y[2]);
 

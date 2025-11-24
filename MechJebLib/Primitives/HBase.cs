@@ -14,8 +14,8 @@ namespace MechJebLib.Primitives
         // UnityCompat does no extrapolation outside of MinTime/MaxTime
         public bool UnityCompat;
 
-        protected double MinTime = double.MaxValue;
-        protected double MaxTime = double.MinValue;
+        public double MinTime = double.MaxValue;
+        public double MaxTime = double.MinValue;
 
         protected int LastLo = -1;
 
