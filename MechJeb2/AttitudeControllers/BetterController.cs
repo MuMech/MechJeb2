@@ -10,7 +10,7 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 13;
+        private const int SETTINGS_VERSION = 14;
 
         private const double POS_KP_DEFAULT         = 1.01;
         private const double POS_TI_DEFAULT         = 57.1;
@@ -38,7 +38,7 @@ namespace MuMech.AttitudeControllers
         private const double MIN_FLIP_TIME_DEFAULT      = 120;
         private const double ROLL_CONTROL_RANGE_DEFAULT = 5;
         private const double SMOOTH_TORQUE_DEFAULT      = 0.10;
-        private const double SOFTEN_DEFAULT             = 0.9;
+        private const double SOFTEN_DEFAULT             = 0.7;
 
         private readonly PIDLoop2[]       _velPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
         private readonly PIDLoop2[]       _posPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
