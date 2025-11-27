@@ -10,7 +10,7 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 12;
+        private const int SETTINGS_VERSION = 13;
 
         private const double POS_KP_DEFAULT         = 1.01;
         private const double POS_TI_DEFAULT         = 57.1;
@@ -38,6 +38,7 @@ namespace MuMech.AttitudeControllers
         private const double MIN_FLIP_TIME_DEFAULT      = 120;
         private const double ROLL_CONTROL_RANGE_DEFAULT = 5;
         private const double SMOOTH_TORQUE_DEFAULT      = 0.10;
+        private const double SOFTEN_DEFAULT             = 0.9;
 
         private readonly PIDLoop2[]       _velPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
         private readonly PIDLoop2[]       _posPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
@@ -108,6 +109,10 @@ namespace MuMech.AttitudeControllers
 
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble VelTi = new EditableDouble(VEL_TI_DEFAULT);
+
+        // Soften should run between (0,1] to reduce overshoot on large angle maneuvers
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble Soften = new EditableDouble(SOFTEN_DEFAULT);
 
         private Vector3d _actuation = Vector3d.zero;
 
@@ -186,6 +191,7 @@ namespace MuMech.AttitudeControllers
             UseFlipTime          = true;
             UseStoppingTime      = true;
             SmoothTorque.Val     = SMOOTH_TORQUE_DEFAULT;
+            Soften.Val           = SOFTEN_DEFAULT;
 
             Version = SETTINGS_VERSION;
         }
@@ -244,8 +250,9 @@ namespace MuMech.AttitudeControllers
                 }
                 else
                 {
-                    double posKp = PosKp / warpFactor;
-                    double effLD = _maxAlpha[i] / (2 * posKp * posKp);
+                    double soften = Clamp01(Soften);
+                    double posKp  = PosKp / warpFactor;
+                    double effLD  = soften * soften * _maxAlpha[i] / (2 * posKp * posKp);
 
                     double maxOmega = double.PositiveInfinity;
 
@@ -277,7 +284,7 @@ namespace MuMech.AttitudeControllers
                     {
                         _posPID[i].Reset();
                         // v = - sqrt(2 * F * x / m) is target stopping velocity based on distance
-                        _targetOmega[i] = Sqrt(2 * _maxAlpha[i] * (Abs(_error[i]) - effLD)) * Sign(_error[i]);
+                        _targetOmega[i] = soften * Sqrt(2 * _maxAlpha[i] * (Abs(_error[i]) - effLD)) * Sign(_error[i]);
                         _targetOmega[i] = Clamp(_targetOmega[i], -maxOmega, maxOmega);
                     }
 
@@ -461,6 +468,11 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label("Smooth Torque", GUILayout.ExpandWidth(false));
             SmoothTorque.Text = GUILayout.TextField(SmoothTorque.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Soften", GUILayout.ExpandWidth(false));
+            Soften.Text = GUILayout.TextField(Soften.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
