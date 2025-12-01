@@ -46,6 +46,7 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Control\Biquad.cs"/>
         <Compile Include="Control\IPIDLoop.cs"/>
         <Compile Include="Control\LQRLoop1.cs"/>
         <Compile Include="Control\MultiVariableGrid.cs"/>
