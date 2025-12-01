@@ -19,8 +19,8 @@ namespace MechJebLib.Control
         public  double Kp                   { get; set; } = 1.0;
         public  double Ki                   { get; set; }
         public  double Kd                   { get; set; }
-        public  double H                    { get; set; } = 0.02;
-        public  double N                    { get; set; } = 50; // N = (4/Ts) * (1 - e^(-Ts/(2*Tf))) (trapezoidal discretization)
+        public  double Ts                   { get; set; } = 0.02;
+        public  double N                    { get; set; } = 50;
         public  double B                    { get; set; } = 1;
         public  double C                    { get; set; } = 1;
         public  double SmoothIn             { get; set; } = 1.0;
@@ -47,16 +47,16 @@ namespace MechJebLib.Control
             double ed = ApplyDeadband(C * r - y, DerivativeDeadband);
 
             // trapezoidal PID with derivative filtering as a digital biquad filter
-            double a0 = 2 * N * H + 4;
+            double a0 = 2 * N * Ts + 4;
             double a1 = -8 / a0;
-            double a2 = (-2 * N * H + 4) / a0;
-            double b0 = (4 * Kp * ep + 4 * Kd * ed * N + 2 * Ki * ei * H + 2 * Kp * ep * N * H + Ki * ei * N * H * H) /
+            double a2 = (-2 * N * Ts + 4) / a0;
+            double b0 = (4 * Kp * ep + 4 * Kd * ed * N + 2 * Ki * ei * Ts + 2 * Kp * ep * N * Ts + Ki * ei * N * Ts * Ts) /
                 a0;
-            double b1 = (2 * Ki * ei * N * H * H - 8 * Kp * ep - 8 * Kd * ed * N) / a0;
-            double b2 = (4 * Kp * ep + 4 * Kd * ed * N - 2 * Ki * ei * H - 2 * Kp * ep * N * H + Ki * ei * N * H * H) /
+            double b1 = (2 * Ki * ei * N * Ts * Ts - 8 * Kp * ep - 8 * Kd * ed * N) / a0;
+            double b2 = (4 * Kp * ep + 4 * Kd * ed * N - 2 * Ki * ei * Ts - 2 * Kp * ep * N * Ts + Ki * ei * N * Ts * Ts) /
                 a0;
 
-            // if we have NaN values saved into internal state that needs to be cleared here or it won't reset
+            // if we have NaN values saved into internal state, that needs to be cleared here or it won't reset
             if (!IsFinite(_d1))
                 _d1 = 0;
             if (!IsFinite(_d2))

@@ -39,10 +39,10 @@ namespace MechJebLib.Control
         public double Ts { get; set; } = 0.02;
 
         // parallel form parameters
-        public double Kp { set => K = value; } // TODO: rescale Ti and Td to keep Ki and Kd constant
-        public double Ki { set => Ti = K / value; }
-        public double Kd { set => Td = K * value; }
-        public double Tf { set => N = 4 / value * (1 - Exp(-value / (2 * Ts))); }
+        public double Kp { set => K = value;      get => K; } // TODO: rescale Ti and Td to keep Ki and Kd constant
+        public double Ki { set => Ti = K / value; get => K / Ti; }
+        public double Kd { set => Td = value / K; get => Td * K; }
+        public double Tf { set => N = Td / value; get => Td / N; }
 
         // 2DOF PIDF parameters
         public double B { get; set; } = 1;
@@ -78,8 +78,8 @@ namespace MechJebLib.Control
             ITerm += 0.5 * k * Ts * (ei + _ei1) / Ti;
 
             // Trapezoidal/Tustin/Bilinear derivative term
-            double den = 2 + N * Ts;
-            DTerm = (2 - N * Ts) / den * DTerm + 2 * N * Td / (K * den) * (ed - _ed1);
+            double den = 2 * Td + N * Ts;
+            DTerm = (2 * Td - N * Ts) / den * DTerm + 2 * N * K * Td / den * (ed - _ed1);
 
             // fix any NaNs saved into internal state (also fixes Ti == 0 case)
             if (!IsFinite(ITerm))
