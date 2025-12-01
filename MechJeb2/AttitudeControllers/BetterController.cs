@@ -10,21 +10,21 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 14;
+        private const int SETTINGS_VERSION = 15;
 
-        private const double POS_KP_DEFAULT         = 1.01;
-        private const double POS_TI_DEFAULT         = 57.1;
+        private const double POS_KP_DEFAULT         = 1.94;
+        private const double POS_TI_DEFAULT         = 28.6;
         private const double POS_TD_DEFAULT         = 0.0;
         private const double POS_N_DEFAULT          = 1.0;
         private const double POS_B_DEFAULT          = 1.0;
         private const double POS_C_DEFAULT          = 1.0;
         private const double POS_DEADBAND_DEFAULT   = 0.0;
-        private const bool   POS_CLEGG_DEFAULT      = true;
+        private const bool   POS_CLEGG_DEFAULT      = false;
         private const double POS_SMOOTH_IN_DEFAULT  = 1.0;
         private const double POS_SMOOTH_OUT_DEFAULT = 1.0;
 
-        private const double VEL_KP_DEFAULT         = 4.0;
-        private const double VEL_TI_DEFAULT         = 14.3;
+        private const double VEL_KP_DEFAULT         = 4.4;
+        private const double VEL_TI_DEFAULT         = 14.4;
         private const double VEL_TD_DEFAULT         = 0;
         private const double VEL_N_DEFAULT          = 1.0;
         private const double VEL_B_DEFAULT          = 1.0;
@@ -38,7 +38,7 @@ namespace MuMech.AttitudeControllers
         private const double MIN_FLIP_TIME_DEFAULT      = 120;
         private const double ROLL_CONTROL_RANGE_DEFAULT = 5;
         private const double SMOOTH_TORQUE_DEFAULT      = 0.10;
-        private const double SOFTEN_DEFAULT             = 0.7;
+        private const double SOFTEN_DEFAULT             = 0.5;
 
         private readonly PIDLoop2[]       _velPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
         private readonly PIDLoop2[]       _posPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
