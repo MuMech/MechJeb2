@@ -6,7 +6,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    public enum AscentType { CLASSIC, PVG }
+    public enum AscentType { CLASSIC, PSG }
 
     public class MechJebModuleAscentSettings : ComputerModule
     {
@@ -50,8 +50,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult TurnStartVelocity = new EditableDoubleMult(50);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public int AscentTypeInteger;
 
         public AscentType AscentType
@@ -102,8 +101,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble RollAltitude = new EditableDouble(50);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool _autostage = true;
 
         public bool Autostage
@@ -135,23 +133,19 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult AOALimitFadeoutPressure = new EditableDoubleMult(2500);
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool LimitingAoA = false;
+        [Persistent(pass = (int)Pass.TYPE)] public bool LimitingAoA = false;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LimitQa = new EditableDouble(LIMIT_QA_DEFAULT);
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
+        [Persistent(pass = (int)Pass.TYPE)] public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LaunchPhaseAngle = LAUNCH_PHASE_ANGLE_DEFAULT;
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
 
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public readonly EditableInt WarpCountDown = 11;
+        [Persistent(pass = (int)Pass.GLOBAL)] public readonly EditableInt WarpCountDown = 11;
 
         /*
          * "Classic" ascent path settings
@@ -188,7 +182,7 @@ namespace MuMech
                 : Math.Min(30000, DesiredOrbitAltitude * 0.85);
 
         /*
-         * PVG Staging values
+         * PSG Staging values
          */
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -200,65 +194,48 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble MinCoast = MIN_COAST_DEFAULT;
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool CoastBeforeFlag = false;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool FixedCoast = FIXED_COAST_DEFAULT;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble FixedCoastLength = FIXED_COAST_LENGTH_DEFAULT;
+        [Persistent(pass = (int)Pass.TYPE)] public bool CoastBeforeFlag = false;
 
         // deliberately not in the UI or in global, edit the ship file with an editor
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableDouble PreStageTime = PRE_STAGE_TIME_DEFAULT;
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableDouble PreStageTime = PRE_STAGE_TIME_DEFAULT;
 
         // deliberately not in the UI or in global, edit the ship file with an editor
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableDouble OptimizerPauseTime = OPTIMIZER_PAUSE_TIME_DEFAULT;
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableDouble OptimizerPauseTime = OPTIMIZER_PAUSE_TIME_DEFAULT;
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt LastStage = -1;
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableInt LastStage = -1;
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt CoastStageInternal = -1;
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableInt CoastStageInternal = -1;
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool CoastStageFlag;
+        [Persistent(pass = (int)Pass.TYPE)] public bool CoastStageFlag;
 
         public int CoastStage => CoastStageFlag ? CoastStageInternal.Val : -1;
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool OptimizeStageFlag = true;
+        [Persistent(pass = (int)Pass.TYPE)] public bool SpinupStageFlag = true;
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt OptimizeStageInternal = -1;
-
-        public int OptimizeStage => OptimizeStageFlag ? OptimizeStageInternal.Val : -1;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool SpinupStageFlag = true;
-
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableInt SpinupStageInternal = -1;
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableInt SpinupStageInternal = -1;
 
         public int SpinupStage => SpinupStageFlag ? SpinupStageInternal.Val : -1;
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableDouble SpinupLeadTime = 50;
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableDouble SpinupLeadTime = 50;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult SpinupAngularVelocity = new EditableDoubleMult(TAU / 6.0, TAU / 60.0);
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableIntList UnguidedStagesInternal = new EditableIntList();
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableIntList UnguidedStagesInternal = new EditableIntList();
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public bool UnguidedStagesFlag;
+        [Persistent(pass = (int)Pass.TYPE)] public bool UnguidedStagesFlag;
 
         private readonly List<int> _emptyList = new List<int>();
 
         public List<int> UnguidedStages => UnguidedStagesFlag ? UnguidedStagesInternal.Val : _emptyList;
+
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableIntList FixedStagesInternal = new EditableIntList();
+
+        [Persistent(pass = (int)Pass.TYPE)] public bool FixedStagesFlag;
+
+        public List<int> FixedStages => FixedStagesFlag ? FixedStagesInternal.Val : _emptyList;
+
+        public bool OptimizeStageFlag;
 
         /*
          * some non-persisted values
@@ -281,7 +258,7 @@ namespace MuMech
             return type switch
             {
                 AscentType.CLASSIC => Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>(),
-                AscentType.PVG     => Core.GetComputerModule<MechJebModuleAscentPVGAutopilot>(),
+                AscentType.PSG     => Core.GetComputerModule<MechJebModuleAscentPSGAutopilot>(),
                 _                  => Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>()
             };
         }
@@ -310,20 +287,17 @@ namespace MuMech
             MinDeltaV.Val              = MIN_DELTAV_DEFAULT;
             MaxCoast.Val               = MAX_COAST_DEFAULT;
             MinCoast.Val               = MIN_COAST_DEFAULT;
-            FixedCoast                 = FIXED_COAST_DEFAULT;
-            FixedCoastLength.Val       = FIXED_COAST_LENGTH_DEFAULT;
             LaunchPhaseAngle.Val       = LAUNCH_PHASE_ANGLE_DEFAULT;
             LaunchLANDifference.Val    = LAUNCH_LAN_DIFFERENCE;
             PreStageTime.Val           = PRE_STAGE_TIME_DEFAULT;
             OptimizerPauseTime.Val     = OPTIMIZER_PAUSE_TIME_DEFAULT;
 
-            OptimizeStageInternal.Val = -1;
-            OptimizeStageFlag         = true;
-            SpinupStageFlag           = false;
-            SpinupStageInternal.Val   = -1;
-            CoastStageFlag            = false;
-            CoastStageInternal.Val    = -1;
-            UnguidedStagesFlag        = false;
+            SpinupStageFlag         = false;
+            SpinupStageInternal.Val = -1;
+            CoastStageFlag          = false;
+            CoastStageInternal.Val  = -1;
+            UnguidedStagesFlag      = false;
+            FixedStagesFlag         = false;
 
             if (DesiredOrbitAltitude.Val < 145000)
                 DesiredOrbitAltitude.Val = 145000;
@@ -366,8 +340,6 @@ namespace MuMech
 
         private const double LAUNCH_LAN_DIFFERENCE            = 0;
         private const double LAUNCH_PHASE_ANGLE_DEFAULT       = 0;
-        private const double FIXED_COAST_LENGTH_DEFAULT       = 0;
-        private const bool   FIXED_COAST_DEFAULT              = true;
         private const double MIN_COAST_DEFAULT                = 0;
         private const double MAX_COAST_DEFAULT                = 450;
         private const double MIN_DELTAV_DEFAULT               = 40;

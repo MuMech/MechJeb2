@@ -75,11 +75,9 @@
         <Compile Include="Primitives\V3Tests\UtilityTests.cs" />
         <Compile Include="Primitives\V3Tests\VectorMathOperationTests.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="PVGTests\AscentTests\BuggyTests.cs"/>
-        <Compile Include="PVGTests\AscentTests\TheStandardTests.cs"/>
-        <Compile Include="PVGTests\AscentTests\Titan2Tests.cs"/>
-        <Compile Include="PVGTests\Integrators\VacuumCoastAnalyticTests.cs"/>
-        <Compile Include="PVGTests\Integrators\VacuumThrustIntegratorTests.cs"/>
+        <Compile Include="PSGTests\AscentTests\BuggyTests.cs" />
+        <Compile Include="PSGTests\AscentTests\TheStandardTests.cs" />
+        <Compile Include="PSGTests\AscentTests\Titan2Tests.cs" />
         <Compile Include="RootfindingTests\BisectionTests.cs"/>
         <Compile Include="RootfindingTests\BrentRootTests.cs"/>
         <Compile Include="RootfindingTests\NewtonTests.cs"/>

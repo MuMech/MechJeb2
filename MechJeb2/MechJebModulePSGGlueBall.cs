@@ -1,0 +1,265 @@
+/*
+ * Copyright Lamont Granquist (lamont@scriptkiddie.org)
+ * Dual licensed under the MIT (MIT-LICENSE) license
+ * and GPLv2 (GPLv2-LICENSE) license or any later version.
+ */
+
+extern alias JetBrainsAnnotations;
+using System;
+using System.Threading.Tasks;
+using MechJebLib.FuelFlowSimulation;
+using MechJebLib.PSG;
+using UnityEngine;
+using static MechJebLib.Utils.Statics;
+
+#nullable enable
+
+namespace MuMech
+{
+    /// <summary>
+    ///     This class isolates a bunch of glue between MJ and the PSG optimizer that I don't
+    ///     yet understand how to write correctly.
+    /// </summary>
+    public class MechJebModulePSGGlueBall : ComputerModule
+    {
+        private double _blockOptimizerUntilTime;
+
+        public int SuccessfulConverges;
+        public int LastLmStatus;
+        public int MaxLmIterations;
+        public int LastLmIterations;
+
+        public  Exception? Exception;
+        public  double     Staleness;
+        public  double     LastZnorm;
+        private double     _lastTime;
+
+        public MechJebModulePSGGlueBall(MechJebCore core) : base(core) { }
+
+        private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
+
+        private Task? _task;
+
+        private Ascent? _ascent;
+
+        protected override void OnModuleEnabled()
+        {
+            Debug.Log("Enabling PSG GlueBall");
+            SuccessfulConverges = LastLmStatus     = MaxLmIterations = 0;
+            LastLmStatus        = LastLmIterations = 0;
+            Staleness           = LastZnorm        = _lastTime = 0;
+            _task               = null;
+            _ascent             = null;
+        }
+
+        protected override void OnModuleDisabled()
+        {
+            Debug.Log("Disabling PSG GlueBall");
+            _task   = null;
+            _ascent = null;
+        }
+
+        public override void OnFixedUpdate() => Core.StageStats.RequestUpdate();
+
+        public override void OnStart(PartModule.StartState state) => GameEvents.onStageActivate.Add(HandleStageEvent);
+
+        public override void OnDestroy() => GameEvents.onStageActivate.Remove(HandleStageEvent);
+
+        private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
+
+        private bool IsUnguided(int s) => _ascentSettings.UnguidedStages.Contains(s);
+
+        private bool IsFixed(int s) => _ascentSettings.FixedStages.Contains(s);
+
+        // FIXME: maybe this could be a callback to the Task?
+        private void HandleDoneTask()
+        {
+            if (!(_task is { IsCompleted: true }) || _ascent == null)
+                return;
+
+            try
+            {
+                // FIXME: the way this pokes around the optimizer has code smell
+                Optimizer? psg = _ascent.GetOptimizer();
+                if (psg == null)
+                    return;
+
+                LastLmStatus     = psg.TerminationType;
+                LastLmIterations = psg.Iterations;
+                LastZnorm        = psg.PrimalFeasibility;
+
+                if (LastLmIterations > MaxLmIterations)
+                    MaxLmIterations = LastLmIterations;
+
+                if (psg.Success() && psg.Solution != null)
+                {
+                    Core.Guidance.SetSolution(psg.Solution);
+                    SuccessfulConverges += 1;
+                    _lastTime           =  VesselState.time;
+                    Staleness           =  0;
+                }
+                else
+                {
+                    Debug.Log("failed guidance, znorm: " + psg.PrimalFeasibility);
+                }
+            }
+            finally
+            {
+                _task = null;
+            }
+        }
+
+        private void GatherException()
+        {
+            if (!(_task is { IsCompleted: true }))
+                return;
+
+            Exception = _task.Exception?.InnerException;
+
+            Debug.Log(Exception);
+        }
+
+        public void SetTarget(double peR, double apR, double attR, double inclination, double lan, double fpa, bool attachAltFlag, bool lanflag)
+        {
+            // initialize the first time we hit SetTarget to avoid initial large staleness values
+            if (_lastTime == 0)
+                _lastTime = VesselState.time;
+
+            Staleness = VesselState.time - _lastTime;
+
+            GatherException();
+
+            HandleDoneTask();
+
+            if (_task is { IsCompleted: false })
+                return;
+
+            if (_ascentSettings.OptimizeStageFlag)
+            {
+                // clamp the AttR between peR and apR but not if we're using AttR for a fixed time rocket
+                if (attR < peR)
+                    attR = peR;
+                if (attR > apR && apR > peR)
+                    attR = apR;
+            }
+
+            if (Vessel.VesselOffGround())
+            {
+                bool hasGuided = false;
+
+                for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
+                {
+                    double dv       = Core.StageStats.VacStats[mjPhase].DeltaV;
+                    int    kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
+
+                    // Stop if we've reached the LastStage
+                    if (kspStage < _ascentSettings.LastStage)
+                        break;
+
+                    // skip the current stage if we are doing a coast after it
+                    if (IsCurrentCoastAfterStage(kspStage))
+                        continue;
+
+                    // skip the zero length stages
+                    if (dv == 0)
+                        continue;
+
+                    if (!IsUnguided(kspStage))
+                        hasGuided = true;
+                }
+
+                // if we have only inertially guided stages we can't run the optimizer
+                if (!hasGuided)
+                    return;
+            }
+
+            // check for readiness (not terminal guidance and not finished)
+            if (!Core.Guidance.IsReady())
+                return;
+
+            if (Core.Guidance.Solution != null)
+            {
+                int solutionIndex = Core.Guidance.Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
+
+                if (solutionIndex >= 0)
+                {
+                    // check for prestaging as the current stage gets low
+                    if (Core.Guidance.Solution?.Tgo(VesselState.time, solutionIndex) < _ascentSettings.PreStageTime)
+                    {
+                        _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
+                        return;
+                    }
+                }
+            }
+
+            if (_blockOptimizerUntilTime > VesselState.time)
+                return;
+
+            Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
+                .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
+                  , MainBody.gravParameter, MainBody.Radius)
+                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), fpa, attachAltFlag, lanflag);
+
+            if (Core.Guidance.Solution != null)
+                ascentBuilder.OldSolution(Core.Guidance.Solution);
+
+            bool hasCoast = false;
+
+            for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
+            {
+                FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
+                int       kspStage  = Core.StageStats.VacStats[mjPhase].KSPStage;
+                if (kspStage < _ascentSettings.LastStage)
+                    break;
+
+                //if (!hasCoast && !Core.Guidance.HasGoodSolutionWithNoFutureCoast())
+                if (!hasCoast)
+                {
+                    if ((kspStage == _ascentSettings.CoastStage && _ascentSettings.CoastBeforeFlag) ||
+                        (kspStage == _ascentSettings.CoastStage - 1 && !_ascentSettings.CoastBeforeFlag))
+                    {
+                        hasCoast = true;
+                        double maxt = _ascentSettings.MaxCoast;
+                        double mint = _ascentSettings.MinCoast;
+
+                        if (Core.Guidance.IsCoasting())
+                        {
+                            maxt = Math.Max(maxt - (VesselState.time - Core.Guidance.StartCoast), 0);
+                            mint = Math.Max(mint - (VesselState.time - Core.Guidance.StartCoast), 0);
+                        }
+
+                        bool unguidedCoast = IsUnguided(kspStage);
+
+                        ascentBuilder.AddCoast(fuelStats.StartMass * 1000, mint, maxt, _ascentSettings.CoastStage, mjPhase, unguidedCoast);
+                    }
+                }
+
+                // skip sep motors.  we already avoid running if the bottom stage has burned below this margin.
+                if (fuelStats.DeltaV < _ascentSettings.MinDeltaV)
+                    continue;
+
+                bool unguided = IsUnguided(kspStage);
+
+                bool isfixed = IsFixed(kspStage);
+
+                ascentBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
+                    kspStage, mjPhase, unguided, !isfixed);
+            }
+
+            _ascent = ascentBuilder.Build();
+
+            _task = new Task(_ascent.Run);
+            _task.Start();
+
+            _blockOptimizerUntilTime = VesselState.time + 1;
+        }
+
+        private bool IsCurrentCoastAfterStage(int kspStage)
+        {
+            if (kspStage == Vessel.currentStage && Core.Guidance.IsCoasting() && !_ascentSettings.CoastBeforeFlag)
+                return true;
+
+            return false;
+        }
+    }
+}

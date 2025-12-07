@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace MechJebLib.ODE
 {
-    using ConditionFunc = Func<double, IList<double>, AbstractIVP, double>;
+    using ConditionFunc = Func<IList<double>, double,  AbstractIVP, double>;
     using AssertFunc = Action<AbstractIVP>;
 
     public class Event : IComparable<Event>

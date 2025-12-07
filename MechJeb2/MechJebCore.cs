@@ -34,7 +34,7 @@ namespace MuMech
         private bool _ready;
 
         public MechJebModuleGuidanceController          Guidance;
-        public MechJebModulePVGGlueBall                 Glueball;
+        public MechJebModulePSGGlueBall                 Glueball;
         public MechJebModuleAttitudeController          Attitude;
         public MechJebModuleStagingController           Staging;
         public MechJebModuleThrustController            Thrust;
@@ -748,7 +748,7 @@ namespace MuMech
             Settings       = GetComputerModule<MechJebModuleSettings>();
             Airplane       = GetComputerModule<MechJebModuleAirplaneAutopilot>();
             Guidance       = GetComputerModule<MechJebModuleGuidanceController>();
-            Glueball       = GetComputerModule<MechJebModulePVGGlueBall>();
+            Glueball       = GetComputerModule<MechJebModulePSGGlueBall>();
             StageStats     = GetComputerModule<MechJebModuleStageStats>();
             AscentSettings = GetComputerModule<MechJebModuleAscentSettings>();
             Spinup         = GetComputerModule<MechJebModuleSpinupController>();

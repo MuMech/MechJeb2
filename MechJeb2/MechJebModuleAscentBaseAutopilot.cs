@@ -102,7 +102,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (AscentSettings.AscentType == AscentType.PVG)
+            if (AscentSettings.AscentType == AscentType.PSG)
                 Core.StageStats.RequestUpdate();
 
             FixupLaunchStart();
@@ -342,7 +342,7 @@ namespace MuMech
         {
             desiredThrustVector = desiredThrustVector.normalized;
 
-            if (AscentSettings.LimitQaEnabled) /* AoA limiter for PVG */
+            if (AscentSettings.LimitQaEnabled) /* AoA limiter for PSG */
                 desiredThrustVector = ApplyQAlphaAoALimiter(desiredThrustVector);
             else if (AscentSettings.LimitAoA) /* old style AoA limiter */
                 desiredThrustVector = ApplyStockAOALimiter(desiredThrustVector);
