@@ -32,6 +32,8 @@ namespace MuMech
         private static List<Type> _moduleRegistry;
 
         private bool _ready;
+        private bool _eventsRegistered;
+        private bool _reinitializingAfterReload;
 
         public MechJebModuleGuidanceController          Guidance;
         public MechJebModulePVGGlueBall                 Glueball;
@@ -403,6 +405,11 @@ namespace MuMech
 
         public void ReloadAllComputerModules()
         {
+            InitializeComputerModules();
+        }
+
+        private void InitializeComputerModules()
+        {
             //Dispose of all the existing computer modules
             foreach (ComputerModule module in _unorderedComputerModules) module.OnDestroy();
             _unorderedComputerModules.Clear();
@@ -435,11 +442,17 @@ namespace MuMech
                 OnLoad(null);
             }
 
-            GameEvents.onShowUI.Add(OnShowGUI);
-            GameEvents.onHideUI.Add(OnHideGUI);
-            GameEvents.onVesselChange.Add(UnlockControl);
-            GameEvents.onVesselWasModified.Add(OnVesselWasModified);
-            GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
+            if (!_eventsRegistered)
+            {
+                GameEvents.onShowUI.Add(OnShowGUI);
+                GameEvents.onHideUI.Add(OnHideGUI);
+                GameEvents.onVesselChange.Add(UnlockControl);
+                GameEvents.onVesselChange.Add(OnVesselReloadEvent);
+                GameEvents.onVesselGoOffRails.Add(OnVesselReloadEvent);
+                GameEvents.onVesselWasModified.Add(OnVesselWasModified);
+                GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
+                _eventsRegistered = true;
+            }
 
             _lastSettingsSaveTime = Time.time;
 
@@ -998,8 +1011,11 @@ namespace MuMech
             GameEvents.onShowUI.Remove(OnShowGUI);
             GameEvents.onHideUI.Remove(OnHideGUI);
             GameEvents.onVesselChange.Remove(UnlockControl);
+            GameEvents.onVesselChange.Remove(OnVesselReloadEvent);
+            GameEvents.onVesselGoOffRails.Remove(OnVesselReloadEvent);
             GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
+            _eventsRegistered = false;
 
             if (_weLockedInputs)
             {
@@ -1025,6 +1041,54 @@ namespace MuMech
             }
 
             _controlledVessel = null;
+        }
+
+        private void OnVesselReloadEvent(Vessel v)
+        {
+            if (!ShouldHandleReloadEvent(v)) return;
+
+            TryReinitialize();
+        }
+
+        private bool ShouldHandleReloadEvent(Vessel v)
+        {
+            if (!HighLogic.LoadedSceneIsFlight) return false;
+            if (vessel == null || v == null) return false;
+            if (!ReferenceEquals(v, vessel)) return false;
+            if (!vessel.isActiveVessel) return false;
+
+            MechJebCore master = vessel.GetMasterMechJeb();
+            return master != null && ReferenceEquals(master, this);
+        }
+
+        private void TryReinitialize()
+        {
+            if (_reinitializingAfterReload) return;
+            if (!HasDestroyedModules()) return;
+
+            _reinitializingAfterReload = true;
+            try
+            {
+#if DEBUG
+                string vesselName = vessel != null ? vessel.vesselName : "<unknown>";
+                Debug.Log($"[MechJeb] Reinitialize on vessel reload: {vesselName}");
+#endif
+                InitializeComputerModules();
+            }
+            finally
+            {
+                _reinitializingAfterReload = false;
+            }
+        }
+
+        private bool HasDestroyedModules()
+        {
+            foreach (ComputerModule module in _unorderedComputerModules)
+            {
+                if (module == null) return true;
+            }
+
+            return false;
         }
 
         private void OnFlyByWire(FlightCtrlState s)
