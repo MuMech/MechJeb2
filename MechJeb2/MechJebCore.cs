@@ -405,11 +405,6 @@ namespace MuMech
 
         public void ReloadAllComputerModules()
         {
-            InitializeComputerModules();
-        }
-
-        private void InitializeComputerModules()
-        {
             //Dispose of all the existing computer modules
             foreach (ComputerModule module in _unorderedComputerModules) module.OnDestroy();
             _unorderedComputerModules.Clear();
@@ -447,7 +442,6 @@ namespace MuMech
                 GameEvents.onShowUI.Add(OnShowGUI);
                 GameEvents.onHideUI.Add(OnHideGUI);
                 GameEvents.onVesselChange.Add(UnlockControl);
-                GameEvents.onVesselChange.Add(OnVesselReloadEvent);
                 GameEvents.onVesselGoOffRails.Add(OnVesselReloadEvent);
                 GameEvents.onVesselWasModified.Add(OnVesselWasModified);
                 GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
@@ -1011,7 +1005,6 @@ namespace MuMech
             GameEvents.onShowUI.Remove(OnShowGUI);
             GameEvents.onHideUI.Remove(OnHideGUI);
             GameEvents.onVesselChange.Remove(UnlockControl);
-            GameEvents.onVesselChange.Remove(OnVesselReloadEvent);
             GameEvents.onVesselGoOffRails.Remove(OnVesselReloadEvent);
             GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
@@ -1073,7 +1066,7 @@ namespace MuMech
                 string vesselName = vessel != null ? vessel.vesselName : "<unknown>";
                 Debug.Log($"[MechJeb] Reinitialize on vessel reload: {vesselName}");
 #endif
-                InitializeComputerModules();
+                ReloadAllComputerModules();
             }
             finally
             {
