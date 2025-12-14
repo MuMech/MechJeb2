@@ -179,7 +179,7 @@ namespace MuMech
             Vessel.mainBody.atmosphere ? Vessel.mainBody.RealMaxAtmosphereAltitude() * AutoTurnPerc : Vessel.terrainAltitude + 25;
 
         public double AutoTurnStartVelocity => Vessel.mainBody.atmosphere
-            ? AutoTurnSpdFactor * AutoTurnSpdFactor * AutoTurnSpdFactor * 0.015625f
+            ? AutoTurnSpdFactor * AutoTurnSpdFactor * AutoTurnSpdFactor * 0.015625f // if this is <= 1, the vessel will not turn for some unknown reason
             : double.PositiveInfinity;
 
         public double AutoTurnEndAltitude =>
