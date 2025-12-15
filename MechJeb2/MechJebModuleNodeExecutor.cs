@@ -241,7 +241,12 @@ namespace MuMech
                 return;
             }
 
-            Core.Warp.MinimumWarp();
+            if (!MuUtils.PhysicsRunning())
+            {
+                Core.Warp.MinimumWarp();
+                return;
+            }
+
             SetAttitude();
         }
 
