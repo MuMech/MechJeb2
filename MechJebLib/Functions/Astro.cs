@@ -69,7 +69,7 @@ namespace MechJebLib.Functions
         public static double FlightPathAngleFromAngularVelocity(double h, double r, double v) => SafeAcos(h / (r * v));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (double vT, double gammaT) ConvertApsidesTargetToFPA(double peR, double apR, double attR, double mu)
+        public static (double vT, double gammaT) FPATargetFromApsides(double peR, double apR, double attR, double mu)
         {
             if (attR < peR)
                 attR = peR;
@@ -77,6 +77,16 @@ namespace MechJebLib.Functions
                 attR = apR;
 
             (double smaT, double eccT) = SmaEccFromApsides(peR, apR);
+            double h      = HmagFromKeplerian(mu, smaT, eccT);
+            double vT     = VmagFromVisViva(mu, smaT, attR);
+            double gammaT = FlightPathAngleFromAngularVelocity(h, attR, vT);
+
+            return (vT, gammaT);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (double vT, double gammaT) FPATargetFromKeplerian(double smaT, double eccT, double attR, double mu)
+        {
             double h      = HmagFromKeplerian(mu, smaT, eccT);
             double vT     = VmagFromVisViva(mu, smaT, attR);
             double gammaT = FlightPathAngleFromAngularVelocity(h, attR, vT);
@@ -729,7 +739,7 @@ namespace MechJebLib.Functions
             return (dv1, dv2, tt, alpha);
         }
 
-        public static (double dt, V3 rland) SuicideBurnCalc(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess=double.NaN) =>
+        public static (double dt, V3 rland) SuicideBurnCalc(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess = double.NaN) =>
             RealSuicideBurnCalc.Run(mu, r0, v0, beta, radius, dtGuess);
     }
 }

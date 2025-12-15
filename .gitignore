@@ -10,6 +10,8 @@ Thumbs.db
 
 Directory.Build.props
 
+.idea/**/.name
+
 .vs/
 
 # Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
@@ -130,6 +132,7 @@ MechJeb2-Unity/Temp
 *sync-conflict*
 
 # JetBrains settings from https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml
@@ -156,6 +159,19 @@ MechJeb2-Unity/Temp
 .idea/**/gradle.xml
 .idea/**/libraries
 
+# Gradle and Maven with auto-import
+# When using Gradle or Maven with auto-import, you should exclude module files,
+# since they will be recreated, and may cause churn.  Uncomment if using
+# auto-import.
+# .idea/artifacts
+# .idea/compiler.xml
+# .idea/jarRepositories.xml
+# .idea/modules.xml
+# .idea/*.iml
+# .idea/modules
+# *.iml
+# *.ipr
+
 # CMake
 cmake-build-*/
 
@@ -179,6 +195,7 @@ atlassian-ide-plugin.xml
 
 # SonarLint plugin
 .idea/sonarlint/
+.idea/sonarlint.xml # see https://community.sonarsource.com/t/is-the-file-idea-idea-idea-sonarlint-xml-intended-to-be-under-source-control/121119
 
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
@@ -186,8 +203,16 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-# Editor-based Rest Client
+# Editor-based HTTP Client
 .idea/httpRequests
+http-client.private.env.json
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
+
+# Apifox Helper cache
+.idea/.cache/.Apifox_Helper
+.idea/ApifoxUploaderProjectSetting.xml
+
+# Github Copilot persisted session migrations, see: https://github.com/microsoft/copilot-intellij-feedback/issues/712#issuecomment-3322062215
+.idea/**/copilot.data.migration.*.xml
