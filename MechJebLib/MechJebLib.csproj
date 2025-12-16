@@ -103,6 +103,7 @@
         <Compile Include="PSG\Ascent.cs"/>
         <Compile Include="PSG\AscentBuilder.cs"/>
         <Compile Include="PSG\AscentGuesser.cs"/>
+        <Compile Include="PSG\AscentProblem.cs"/>
         <Compile Include="PSG\InterpolantLayout.cs"/>
         <Compile Include="PSG\Optimizer.cs"/>
         <Compile Include="PSG\Phase.cs"/>
@@ -127,7 +128,7 @@
         <Compile Include="SuicideBurnSimulation\SuicideBuilder.cs"/>
         <Compile Include="TwoBody\Farnocchia.cs"/>
         <Compile Include="TwoBody\Shepperd.cs"/>
-        <Compile Include="Utils\AutoDiff.cs" />
+        <Compile Include="Utils\AutoDiff.cs"/>
         <Compile Include="Utils\BackgroundJob.cs"/>
         <Compile Include="Utils\Check.cs"/>
         <Compile Include="Utils\DictOfLists.cs"/>

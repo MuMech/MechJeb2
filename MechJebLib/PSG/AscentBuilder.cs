@@ -28,9 +28,11 @@ namespace MechJebLib.PSG
             private double    _attR          { get; set; }
             private double    _incT          { get; set; }
             private double    _lanT          { get; set; }
+            private double    _argpT         { get; set; }
             private double    _fpaT          { get; set; }
             private bool      _attachAltFlag { get; set; }
             private bool      _lanflag       { get; set; }
+            private bool      _argpflag      { get; set; }
             private bool      _fixedBurnTime { get; set; }
             private Solution? _solution      { get; set; }
 
@@ -113,7 +115,9 @@ namespace MechJebLib.PSG
                     }
                     else
                     {
-                        if (_lanflag)
+                        if (_argpflag)
+                            terminal = new Kepler5(smaT, eccT, _incT, _lanT, _argpT);
+                        else if (_lanflag)
                             terminal = new Kepler4(smaT, eccT, _incT, _lanT);
                         else
                             terminal = new Kepler3(smaT, eccT, _incT);
@@ -132,8 +136,8 @@ namespace MechJebLib.PSG
                 return ascent;
             }
 
-            public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan,
-                double fpa, bool attachAltFlag, bool lanflag)
+            public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, double argp,
+                double fpa, bool attachAltFlag, bool lanflag, bool argpflag)
             {
                 DebugPrint(
                     $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")})");
@@ -142,9 +146,11 @@ namespace MechJebLib.PSG
                 _attR          = attR;
                 _incT          = inclination;
                 _lanT          = lan;
+                _argpT         = argp;
                 _fpaT          = fpa;
                 _attachAltFlag = attachAltFlag;
                 _lanflag       = lanflag;
+                _argpflag      = argpflag;
 
                 return this;
             }

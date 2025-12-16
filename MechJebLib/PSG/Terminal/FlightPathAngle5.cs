@@ -7,6 +7,7 @@ using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static MechJebLib.Utils.AutoDiff;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -42,42 +43,33 @@ namespace MechJebLib.PSG.Terminal
 
         public void Constraints(double[] x, (int, int, int) ri, (int, int, int) vi, double[] f, alglib.sparsematrix j, ref int ci)
         {
-            var rf = V3.CopyFromIndices(x, ri);
-            var vf = V3.CopyFromIndices(x, vi);
-            var hf = V3.Cross(rf, vf);
+            V3 hT = _hT;
+            double gammaT = _gammaT;
+            double rT = _rT;
 
-            f[ci++] = (rf.sqrMagnitude - _rT * _rT) * 0.5;
-            f[ci++] = V3.Dot(rf, vf) - Math.Sin(_gammaT);
-            f[ci++] = hf.x - _hT.x;
-            f[ci++] = hf.y - _hT.y;
-            f[ci++] = hf.z - _hT.z;
+            var    rf = V3.CopyFromIndices(x, ri);
+            var    vf = V3.CopyFromIndices(x, vi);
 
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, rf.x);
-            alglib.sparseappendelement(j, ri.Item2, rf.y);
-            alglib.sparseappendelement(j, ri.Item3, rf.z);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, vf.x);
-            alglib.sparseappendelement(j, ri.Item2, vf.y);
-            alglib.sparseappendelement(j, ri.Item3, vf.z);
-            alglib.sparseappendelement(j, vi.Item1, rf.x);
-            alglib.sparseappendelement(j, vi.Item2, rf.y);
-            alglib.sparseappendelement(j, vi.Item3, rf.z);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item2, vf.z);
-            alglib.sparseappendelement(j, ri.Item3, -vf.y);
-            alglib.sparseappendelement(j, vi.Item2, -rf.z);
-            alglib.sparseappendelement(j, vi.Item3, rf.y);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, -vf.z);
-            alglib.sparseappendelement(j, ri.Item3, vf.x);
-            alglib.sparseappendelement(j, vi.Item1, rf.z);
-            alglib.sparseappendelement(j, vi.Item3, -rf.x);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, vf.y);
-            alglib.sparseappendelement(j, ri.Item2, -vf.x);
-            alglib.sparseappendelement(j, vi.Item1, -rf.y);
-            alglib.sparseappendelement(j, vi.Item2, rf.x);
+            ci = ApplyVectorConstraintV3(f, j, ci, AngularMomentumConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = ApplyScalarConstraintV3(f, j, ci, FlightPathAngleConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = ApplyScalarConstraintV3(f, j, ci, RadiusConstraint, new[] { rf }, new[] { ri });
+
+            return;
+
+            DualV3 AngularMomentumConstraint(DualV3[] p)
+            {
+                return DualV3.Cross(p[0], p[1]) - hT;
+            }
+
+            Dual FlightPathAngleConstraint(DualV3[] p)
+            {
+                return DualV3.Dot(p[0], p[1]) - Math.Sin(gammaT);
+            }
+
+            Dual RadiusConstraint(DualV3[] p)
+            {
+                return DualV3.Dot(p[0], p[0]) - rT * rT;
+            }
         }
 
         public ITerminal GetFPA() => this;
