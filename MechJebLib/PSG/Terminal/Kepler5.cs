@@ -8,6 +8,7 @@ using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
+using static System.Math;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -26,7 +27,7 @@ namespace MechJebLib.PSG.Terminal
             NumConstraints = 6;
             _smaT          = smaT;
             _eccT          = eccT;
-            _incT          = Math.Abs(ClampPi(incT));
+            _incT          = Abs(ClampPi(incT));
             _lanT          = lanT;
             _argpT         = argpT;
 

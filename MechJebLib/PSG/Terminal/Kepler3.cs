@@ -8,6 +8,7 @@ using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
+using static System.Math;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -24,7 +25,7 @@ namespace MechJebLib.PSG.Terminal
             NumConstraints = 3;
             _smaT          = smaT;
             _eccT          = eccT;
-            _incT          = Math.Abs(ClampPi(incT));
+            _incT          = Abs(ClampPi(incT));
             _hTm           = Astro.HmagFromKeplerian(1.0, _smaT, _eccT);
             _energyT       = -1.0 / (2.0 * _smaT);
         }
@@ -67,7 +68,7 @@ namespace MechJebLib.PSG.Terminal
 
             Dual InclinationConstraint(DualV3[] p)
             {
-                return DualV3.Cross(p[0], p[1]).normalized.z - Math.Cos(incT);
+                return DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
             }
         }
 

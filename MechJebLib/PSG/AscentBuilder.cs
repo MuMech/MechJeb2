@@ -98,7 +98,7 @@ namespace MechJebLib.PSG
                 if (_fixedBurnTime)
                 {
                     if (_lanflag)
-                        terminal = new FlightPathAngle4Energy(_attR, _incT, _lanT);
+                        terminal = new FlightPathAngle4Energy(_fpaT, _attR, _incT, _lanT);
                     else
                         terminal = new FlightPathAngle3Energy(_fpaT, _attR, _incT);
                 }
