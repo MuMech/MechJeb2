@@ -8,6 +8,7 @@ using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
+using static System.Math;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -28,7 +29,7 @@ namespace MechJebLib.PSG.Terminal
             _rT            = rT;
             _vT            = vT;
             _lanT          = Clamp2Pi(lanT);
-            _incT          = Math.Abs(ClampPi(incT));
+            _incT          = Abs(ClampPi(incT));
 
             _hT = Astro.HvecFromFlightPathAngle(_rT, _vT, _gammaT, _incT, _lanT);
         }
@@ -63,7 +64,7 @@ namespace MechJebLib.PSG.Terminal
 
             Dual FlightPathAngleConstraint(DualV3[] p)
             {
-                return DualV3.Dot(p[0], p[1]) - Math.Sin(gammaT);
+                return DualV3.Dot(p[0], p[1]) - Sin(gammaT);
             }
 
             Dual RadiusConstraint(DualV3[] p)

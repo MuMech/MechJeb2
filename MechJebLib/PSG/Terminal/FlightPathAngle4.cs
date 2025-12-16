@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
+using static MechJebLib.Utils.AutoDiff;
+using static System.Math;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -28,7 +29,7 @@ namespace MechJebLib.PSG.Terminal
             _gammaT        = gammaT;
             _rT            = rT;
             _vT            = vT;
-            _incT          = Math.Abs(ClampPi(incT));
+            _incT          = Abs(ClampPi(incT));
         }
 
         public ITerminal Rescale(Scale scale)  => new FlightPathAngle4(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT);
@@ -39,38 +40,40 @@ namespace MechJebLib.PSG.Terminal
 
         public void Constraints(double[] x, (int, int, int) ri, (int, int, int) vi, double[] f, alglib.sparsematrix j, ref int ci)
         {
-            var    rf   = V3.CopyFromIndices(x, ri);
-            var    vf   = V3.CopyFromIndices(x, vi);
-            var    hf   = V3.Cross(rf, vf);
-            double hfm3 = hf.sqrMagnitude * hf.magnitude;
+            double gammaT = _gammaT;
+            double rT     = _rT;
+            double incT = _incT;
+            double vT     = _vT;
 
-            f[ci++] = (rf.sqrMagnitude - _rT * _rT) * 0.5;
-            f[ci++] = (vf.sqrMagnitude - _vT * _vT) * 0.5;
-            f[ci++] = hf.normalized.z - Math.Cos(_incT);
-            f[ci++] = V3.Dot(rf, vf) - Math.Sin(_gammaT);
+            var    rf     = V3.CopyFromIndices(x, ri);
+            var    vf     = V3.CopyFromIndices(x, vi);
 
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, rf.x);
-            alglib.sparseappendelement(j, ri.Item2, rf.y);
-            alglib.sparseappendelement(j, ri.Item3, rf.z);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, vi.Item1, vf.x);
-            alglib.sparseappendelement(j, vi.Item2, vf.y);
-            alglib.sparseappendelement(j, vi.Item3, vf.z);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, (vf.y * (hf.x * hf.x + hf.y * hf.y) + vf.z * hf.y * hf.z) / hfm3);
-            alglib.sparseappendelement(j, ri.Item2, (-vf.x * (hf.x * hf.x + hf.y * hf.y) - vf.z * hf.x * hf.z) / hfm3);
-            alglib.sparseappendelement(j, ri.Item3, hf.z * (hf.x * vf.y - hf.y * vf.x) / hfm3);
-            alglib.sparseappendelement(j, vi.Item1, (-rf.y * (hf.x * hf.x + hf.y * hf.y) - rf.z * hf.y * hf.z) / hfm3);
-            alglib.sparseappendelement(j, vi.Item2, (rf.x * (hf.x * hf.x + hf.y * hf.y) + rf.z * hf.x * hf.z) / hfm3);
-            alglib.sparseappendelement(j, vi.Item3, hf.z * (hf.y * rf.x - hf.x * rf.y) / hfm3);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, vf.x);
-            alglib.sparseappendelement(j, ri.Item2, vf.y);
-            alglib.sparseappendelement(j, ri.Item3, vf.z);
-            alglib.sparseappendelement(j, vi.Item1, rf.x);
-            alglib.sparseappendelement(j, vi.Item2, rf.y);
-            alglib.sparseappendelement(j, vi.Item3, rf.z);
+            ci = ApplyScalarConstraintV3(f, j, ci, FlightPathAngleConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = ApplyScalarConstraintV3(f, j, ci, RadiusConstraint, new[] { rf }, new[] { ri });
+            ci = ApplyScalarConstraintV3(f, j, ci, VelocityConstraint, new[] { vf }, new[] { vi });
+            ci = ApplyScalarConstraintV3(f, j, ci, InclinationConstraint, new[] { rf, vf }, new[] { ri, vi });
+
+            return;
+
+            Dual FlightPathAngleConstraint(DualV3[] p)
+            {
+                return DualV3.Dot(p[0], p[1]) - Sin(gammaT);
+            }
+
+            Dual RadiusConstraint(DualV3[] p)
+            {
+                return DualV3.Dot(p[0], p[0]) - rT * rT;
+            }
+
+            Dual InclinationConstraint(DualV3[] p)
+            {
+                return DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
+            }
+
+            Dual VelocityConstraint(DualV3[] p)
+            {
+                return DualV3.Dot(p[0], p[0]) - vT * vT;
+            }
         }
 
         public ITerminal GetFPA() => this;
