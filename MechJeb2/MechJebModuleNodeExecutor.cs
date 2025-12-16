@@ -241,7 +241,12 @@ namespace MuMech
                 return;
             }
 
-            Core.Warp.MinimumWarp();
+            if (!MuUtils.PhysicsRunning())
+            {
+                Core.Warp.MinimumWarp();
+                return;
+            }
+
             SetAttitude();
         }
 
@@ -327,7 +332,9 @@ namespace MuMech
 
         private bool Aligned() => AngleFromDirection() < Deg2Rad(1);
 
-        private bool AlignedAndSettled() => Aligned() && Core.vessel.angularVelocity.magnitude < 0.001;
+        private bool AlignedAndSettled() =>
+            Aligned()
+            && Vector3.Scale(Core.vessel.angularVelocity, new Vector3(1f, 0f, 1f)).magnitude < 0.001;
 
         // This returns the angle to the node (in radians), note that you probably don't want to use this outside of
         // stock checks for maneuver termination, and probably never in principia (see SafeCurrentPrincipiaNode()).
