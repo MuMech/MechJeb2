@@ -7,6 +7,7 @@ using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static MechJebLib.Utils.AutoDiff;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -36,43 +37,38 @@ namespace MechJebLib.PSG.Terminal
 
         public void Constraints(double[] x, (int, int, int) ri, (int, int, int) vi, double[] f, alglib.sparsematrix j, ref int ci)
         {
-            var    rf      = V3.CopyFromIndices(x, ri);
-            var    vf      = V3.CopyFromIndices(x, vi);
-            var    hf      = V3.Cross(rf, vf);
-            V3     ef      = V3.Cross(vf, hf) - rf.normalized;
-            double energyf = 0.5 * V3.Dot(vf, vf) - 1.0 / rf.magnitude;
-            double hfm3    = hf.sqrMagnitude * hf.magnitude;
-            double rfm3    = rf.sqrMagnitude * rf.magnitude;
+            double hTm     = _hTm;
+            double incT    = _incT;
+            double energyT = _energyT;
+
+            var rf = V3.CopyFromIndices(x, ri);
+            var vf = V3.CopyFromIndices(x, vi);
 
             // angular momentum / semiparameter
             // energy / sma (problematic because you can't square it + infinite sma for parabolic)
             // periapsis and/or apoapsis
             // eccvec magnitude / eccentricity
-            f[ci++] = V3.Dot(hf, hf) * 0.5 - _hTm * _hTm * 0.5;
-            f[ci++] = energyf - _energyT;
-            f[ci++] = hf.normalized.z - Math.Cos(_incT);
 
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, hf.z * vf.y - hf.y * vf.z);
-            alglib.sparseappendelement(j, ri.Item2, hf.x * vf.z - hf.z * vf.x);
-            alglib.sparseappendelement(j, ri.Item3, hf.y * vf.x - hf.x * vf.y);
-            alglib.sparseappendelement(j, vi.Item1, hf.y * rf.z - hf.z * rf.y);
-            alglib.sparseappendelement(j, vi.Item2, hf.z * rf.x - hf.x * rf.z);
-            alglib.sparseappendelement(j, vi.Item3, hf.x * rf.y - hf.y * rf.x);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, rf.x / rfm3);
-            alglib.sparseappendelement(j, ri.Item2, rf.y / rfm3);
-            alglib.sparseappendelement(j, ri.Item3, rf.z / rfm3);
-            alglib.sparseappendelement(j, vi.Item1, vf.x);
-            alglib.sparseappendelement(j, vi.Item2, vf.y);
-            alglib.sparseappendelement(j, vi.Item3, vf.z);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, (vf.y * (hf.x * hf.x + hf.y * hf.y) + vf.z * hf.y * hf.z) / hfm3);
-            alglib.sparseappendelement(j, ri.Item2, (-vf.x * (hf.x * hf.x + hf.y * hf.y) - vf.z * hf.x * hf.z) / hfm3);
-            alglib.sparseappendelement(j, ri.Item3, hf.z * (hf.x * vf.y - hf.y * vf.x) / hfm3);
-            alglib.sparseappendelement(j, vi.Item1, (-rf.y * (hf.x * hf.x + hf.y * hf.y) - rf.z * hf.y * hf.z) / hfm3);
-            alglib.sparseappendelement(j, vi.Item2, (rf.x * (hf.x * hf.x + hf.y * hf.y) + rf.z * hf.x * hf.z) / hfm3);
-            alglib.sparseappendelement(j, vi.Item3, hf.z * (hf.y * rf.x - hf.x * rf.y) / hfm3);
+            ci = ApplyScalarConstraintV3(f, j, ci, AngularVelocityMagnitudeConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = ApplyScalarConstraintV3(f, j, ci, OrbitalEnergyConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = ApplyScalarConstraintV3(f, j, ci, InclinationConstraint, new[] { rf, vf }, new[] { ri, vi });
+
+            return;
+
+            Dual AngularVelocityMagnitudeConstraint(DualV3[] p)
+            {
+                return 0.5 * DualV3.Cross(p[0], p[1]).sqrMagnitude - 0.5 * hTm * hTm;
+            }
+
+            Dual OrbitalEnergyConstraint(DualV3[] p)
+            {
+                return 0.5 * DualV3.Dot(p[1], p[1]) - 1.0 / p[0].magnitude - energyT;
+            }
+
+            Dual InclinationConstraint(DualV3[] p)
+            {
+                return DualV3.Cross(p[0], p[1]).normalized.z - Math.Cos(incT);
+            }
         }
 
         public ITerminal GetFPA()

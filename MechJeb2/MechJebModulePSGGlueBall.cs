@@ -198,7 +198,7 @@ namespace MuMech
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                 .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
                   , MainBody.gravParameter, MainBody.Radius)
-                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), fpa, attachAltFlag, lanflag);
+                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), 0, fpa, attachAltFlag, lanflag, false);
 
             if (Core.Guidance.Solution != null)
                 ascentBuilder.OldSolution(Core.Guidance.Solution);
@@ -252,7 +252,7 @@ namespace MuMech
                     continue;
 
                 ascentBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
-                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), massContinuity: massContinuity);
+                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), massContinuity);
             }
 
             _ascent = ascentBuilder.Build();

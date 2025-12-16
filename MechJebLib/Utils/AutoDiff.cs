@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 
 namespace MechJebLib.Utils
 {
     public static class AutoDiff
     {
-        public static (double, double[])  Gradient(Func<Dual[], Dual> f, double[] point)
+        public static (double, double[]) Gradient(Func<Dual[], Dual> f, double[] point)
         {
             int      n        = point.Length;
             double[] partials = new double[n]; // GARBAGE
@@ -76,14 +77,16 @@ namespace MechJebLib.Utils
         {
             (double value, double[] partials) = Gradient(g, p);
 
-            int n = p.Length;
+            int n        = p.Length;
+
+            var elements = new SortedDictionary<int, double>();
+            for (int i = 0; i < n; i++)
+                elements[idx[i]] = partials[i];
 
             f[ci++] = value;
             alglib.sparseappendemptyrow(j);
-            for (int i = 0; i < n; i++)
-            {
-                alglib.sparseappendelement(j, idx[i], partials[i]);
-            }
+            foreach (KeyValuePair<int, double> kv in elements)
+                alglib.sparseappendelement(j, kv.Key, kv.Value);
 
             return ci;
         }
@@ -94,14 +97,18 @@ namespace MechJebLib.Utils
 
             int n = p.Length;
 
-            f[ci++] = value;
-            alglib.sparseappendemptyrow(j);
+            var elements = new SortedDictionary<int, double>();
             for (int i = 0; i < n; i++)
             {
-                alglib.sparseappendelement(j, idx[i].Item1, partials[i]);
-                alglib.sparseappendelement(j, idx[i].Item2, partials[i + 1]);
-                alglib.sparseappendelement(j, idx[i].Item3, partials[i + 2]);
+                elements[idx[i].Item1] = partials[3 * i];
+                elements[idx[i].Item2] = partials[3 * i + 1];
+                elements[idx[i].Item3] = partials[3 * i + 2];
             }
+
+            f[ci++] = value;
+            alglib.sparseappendemptyrow(j);
+            foreach (KeyValuePair<int, double> kv in elements)
+                alglib.sparseappendelement(j, kv.Key, kv.Value);
 
             return ci;
         }
@@ -112,32 +119,44 @@ namespace MechJebLib.Utils
 
             int n = p.Length;
 
-            f[ci++] = value.x;
-            alglib.sparseappendemptyrow(j);
+            var elements = new SortedDictionary<int, double>();
             for (int i = 0; i < n; i++)
             {
-                alglib.sparseappendelement(j, idx[i].Item1, partials[i * 3 + 0].x);
-                alglib.sparseappendelement(j, idx[i].Item2, partials[i * 3 + 1].x);
-                alglib.sparseappendelement(j, idx[i].Item3, partials[i * 3 + 2].x);
+                elements[idx[i].Item1] = partials[3 * i].x;
+                elements[idx[i].Item2] = partials[3 * i + 1].x;
+                elements[idx[i].Item3] = partials[3 * i + 2].x;
+            }
+
+            f[ci++] = value.x;
+            alglib.sparseappendemptyrow(j);
+            foreach (KeyValuePair<int, double> kv in elements)
+                alglib.sparseappendelement(j, kv.Key, kv.Value);
+
+            elements.Clear();
+            for (int i = 0; i < n; i++)
+            {
+                elements[idx[i].Item1] = partials[3 * i].y;
+                elements[idx[i].Item2] = partials[3 * i + 1].y;
+                elements[idx[i].Item3] = partials[3 * i + 2].y;
             }
 
             f[ci++] = value.y;
             alglib.sparseappendemptyrow(j);
+            foreach (KeyValuePair<int, double> kv in elements)
+                alglib.sparseappendelement(j, kv.Key, kv.Value);
+
+            elements.Clear();
             for (int i = 0; i < n; i++)
             {
-                alglib.sparseappendelement(j, idx[i].Item1, partials[i * 3 + 0].y);
-                alglib.sparseappendelement(j, idx[i].Item2, partials[i * 3 + 1].y);
-                alglib.sparseappendelement(j, idx[i].Item3, partials[i * 3 + 2].y);
+                elements[idx[i].Item1] = partials[3 * i].z;
+                elements[idx[i].Item2] = partials[3 * i + 1].z;
+                elements[idx[i].Item3] = partials[3 * i + 2].z;
             }
 
             f[ci++] = value.z;
             alglib.sparseappendemptyrow(j);
-            for (int i = 0; i < n; i++)
-            {
-                alglib.sparseappendelement(j, idx[i].Item1, partials[i * 3 + 0].z);
-                alglib.sparseappendelement(j, idx[i].Item2, partials[i * 3 + 1].z);
-                alglib.sparseappendelement(j, idx[i].Item3, partials[i * 3 + 2].z);
-            }
+            foreach (KeyValuePair<int, double> kv in elements)
+                alglib.sparseappendelement(j, kv.Key, kv.Value);
 
             return ci;
         }

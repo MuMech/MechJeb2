@@ -7,6 +7,7 @@ using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
+using static MechJebLib.Utils.AutoDiff;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -41,56 +42,26 @@ namespace MechJebLib.PSG.Terminal
 
         public void Constraints(double[] x, (int, int, int) ri, (int, int, int) vi, double[] f, alglib.sparsematrix j, ref int ci)
         {
-            var    rf    = V3.CopyFromIndices(x, ri);
-            var    vf    = V3.CopyFromIndices(x, vi);
-            var    hf    = V3.Cross(rf, vf);
-            V3     ef    = V3.Cross(vf, hf) - rf.normalized;
-            V3     eMiss = ef - _eT;
-            double rfm3  = rf.sqrMagnitude * rf.magnitude;
+            V3 hT = _hT;
+            V3 eT = _eT;
 
-            f[ci++] = hf.x - _hT.x;
-            f[ci++] = hf.y - _hT.y;
-            f[ci++] = hf.z - _hT.z;
-            f[ci++] = eMiss[0];
-            f[ci++] = eMiss[1];
-            f[ci++] = eMiss[2];
+            var rf = V3.CopyFromIndices(x, ri);
+            var vf = V3.CopyFromIndices(x, vi);
 
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item2, vf.z);
-            alglib.sparseappendelement(j, ri.Item3, -vf.y);
-            alglib.sparseappendelement(j, vi.Item2, -rf.z);
-            alglib.sparseappendelement(j, vi.Item3, rf.y);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, -vf.z);
-            alglib.sparseappendelement(j, ri.Item3, vf.x);
-            alglib.sparseappendelement(j, vi.Item1, rf.z);
-            alglib.sparseappendelement(j, vi.Item3, -rf.x);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, vf.y);
-            alglib.sparseappendelement(j, ri.Item2, -vf.x);
-            alglib.sparseappendelement(j, vi.Item1, -rf.y);
-            alglib.sparseappendelement(j, vi.Item2, rf.x);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, vf.y * vf.y + vf.z * vf.z - (rf.y * rf.y + rf.z * rf.z) / rfm3);
-            alglib.sparseappendelement(j, ri.Item2, -vf.x * vf.y + rf.x * rf.y / rfm3);
-            alglib.sparseappendelement(j, ri.Item3, -vf.x * vf.z + rf.x * rf.z / rfm3);
-            alglib.sparseappendelement(j, vi.Item1, -vf.y * rf.y - vf.z * rf.z);
-            alglib.sparseappendelement(j, vi.Item2, 2 * rf.x * vf.y - rf.y * vf.x);
-            alglib.sparseappendelement(j, vi.Item3, 2 * rf.x * vf.z - rf.z * vf.x);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, -vf.x * vf.y + rf.x * rf.y / rfm3);
-            alglib.sparseappendelement(j, ri.Item2, vf.x * vf.x + vf.z * vf.z - (rf.x * rf.x + rf.z * rf.z) / rfm3);
-            alglib.sparseappendelement(j, ri.Item3, -vf.y * vf.z + rf.y * rf.z / rfm3);
-            alglib.sparseappendelement(j, vi.Item1, 2 * rf.y * vf.x - rf.x * vf.y);
-            alglib.sparseappendelement(j, vi.Item2, -vf.x * rf.x - vf.z * rf.z);
-            alglib.sparseappendelement(j, vi.Item3, 2 * rf.y * vf.z - rf.z * vf.y);
-            alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, ri.Item1, -vf.x * vf.z + rf.x * rf.z / rfm3);
-            alglib.sparseappendelement(j, ri.Item2, -vf.y * vf.z + rf.y * rf.z / rfm3);
-            alglib.sparseappendelement(j, ri.Item3, vf.x * vf.x + vf.y * vf.y - (rf.x * rf.x + rf.y * rf.y) / rfm3);
-            alglib.sparseappendelement(j, vi.Item1, 2 * rf.z * vf.x - rf.x * vf.z);
-            alglib.sparseappendelement(j, vi.Item2, 2 * rf.z * vf.y - rf.y * vf.z);
-            alglib.sparseappendelement(j, vi.Item3, -vf.x * rf.x - vf.y * rf.y);
+            ci = ApplyVectorConstraintV3(f, j, ci, AngularMomentumConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = ApplyVectorConstraintV3(f, j, ci, EccVecConstraint, new[] { rf, vf }, new[] { ri, vi });
+
+            return;
+
+            DualV3 AngularMomentumConstraint(DualV3[] p)
+            {
+                return DualV3.Cross(p[0], p[1]) - hT;
+            }
+
+            DualV3 EccVecConstraint(DualV3[] p)
+            {
+                return DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized - eT;
+            }
         }
 
         public ITerminal GetFPA()
