@@ -357,6 +357,7 @@ namespace MuMech
             else
                 Core.Attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
 
+            Core.Attitude.SetActuationControl(true, true, true);
             Core.Attitude.SetAxisControl(true, true, AscentSettings.ForceRoll);
         }
 
