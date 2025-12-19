@@ -4,10 +4,11 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace MechJebLib.Primitives
 {
-    public class DualV3 : IEquatable<DualV3>, IComparable<DualV3>, IFormattable
+    public struct DualV3 : IEquatable<DualV3>, IComparable<DualV3>, IFormattable
     {
         public readonly V3 M;
         public readonly V3 D;
@@ -23,39 +24,100 @@ namespace MechJebLib.Primitives
         }
 
         public DualV3(Dual x, Dual y, Dual z) : this(x.M, y.M, z.M, x.D, y.D, z.D) { }
+
         public DualV3(double mx, double my, double mz, double dx, double dy, double dz) : this(new V3(mx, my, mz), new V3(dx, dy, dz)) { }
 
-        public Dual   sqrMagnitude => x * x + y * y + z * z;
-        public Dual   magnitude    => Dual.Sqrt(x * x + y * y + z * z);
-        public DualV3 normalized   => this / magnitude;
-        public DualV3 sph2cart     => x * new DualV3(Dual.Cos(z) * Dual.Sin(y), Dual.Sin(z) * Dual.Sin(y), Dual.Cos(y));
+        public Dual sqrMagnitude
+        {
+            get
+            {
+                double m = M.x * M.x + M.y * M.y + M.z * M.z;
+                double d = 2 * (M.x * D.x + M.y * D.y + M.z * D.z);
+                return new Dual(m, d);
+            }
+        }
 
-        public static DualV3 operator +(DualV3 a, DualV3 b) => new DualV3(a.x + b.x, a.y + b.y, a.z + b.z);
+        public Dual magnitude
+        {
+            get
+            {
+                double m2 = M.x * M.x + M.y * M.y + M.z * M.z;
+                double m  = Math.Sqrt(m2);
+                double d  = (M.x * D.x + M.y * D.y + M.z * D.z) / m;
+                return new Dual(m, d);
+            }
+        }
 
-        public static DualV3 operator -(DualV3 a, DualV3 b) => new DualV3(a.x - b.x, a.y - b.y, a.z - b.z);
+        public DualV3 normalized => this / magnitude;
+        public DualV3 sph2cart   => x * new DualV3(Dual.Cos(z) * Dual.Sin(y), Dual.Sin(z) * Dual.Sin(y), Dual.Cos(y));
 
-        public static DualV3 operator *(DualV3 a, DualV3 b) => new DualV3(a.x * b.x, a.y * b.y, a.z * b.z);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualV3 operator +(DualV3 a, DualV3 b) => new DualV3(a.M + b.M, a.D + b.D);
 
-        public static DualV3 operator /(DualV3 a, DualV3 b) => new DualV3(a.x / b.x, a.y / b.y, a.z / b.z);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualV3 operator -(DualV3 a, DualV3 b) => new DualV3(a.M - b.M, a.D - b.D);
 
-        public static DualV3 operator -(DualV3 a) => new DualV3(-a.x, -a.y, -a.z);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualV3 operator *(DualV3 a, DualV3 b) => new DualV3(
+            new V3(a.M.x * b.M.x, a.M.y * b.M.y, a.M.z * b.M.z),
+            new V3(a.M.x * b.D.x + a.D.x * b.M.x, a.M.y * b.D.y + a.D.y * b.M.y, a.M.z * b.D.z + a.D.z * b.M.z)
+        );
 
-        public static DualV3 operator *(DualV3 a, Dual d) => new DualV3(a.x * d, a.y * d, a.z * d);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualV3 operator /(DualV3 a, DualV3 b) => new DualV3(
+            new V3(a.M.x / b.M.x, a.M.y / b.M.y, a.M.z / b.M.z),
+            new V3((a.D.x * b.M.x - a.M.x * b.D.x) / (b.M.x * b.M.x),
+                (a.D.y * b.M.y - a.M.y * b.D.y) / (b.M.y * b.M.y),
+                (a.D.z * b.M.z - a.M.z * b.D.z) / (b.M.z * b.M.z))
+        );
 
-        public static DualV3 operator *(Dual d, DualV3 a) => new DualV3(a.x * d, a.y * d, a.z * d);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualV3 operator -(DualV3 a) => new DualV3(-a.M, -a.D);
 
-        public static DualV3 operator /(DualV3 a, Dual d) => new DualV3(a.x / d, a.y / d, a.z / d);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualV3 operator *(DualV3 a, Dual d) => new DualV3(
+            a.M * d.M,
+            a.M * d.D + a.D * d.M
+        );
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualV3 operator *(Dual d, DualV3 a) => new DualV3(
+            a.M * d.M,
+            a.M * d.D + a.D * d.M
+        );
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualV3 operator /(DualV3 a, Dual d) => new DualV3(
+            a.M / d.M,
+            (a.D * d.M - a.M * d.D) / (d.M * d.M)
+        );
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static explicit operator V3(DualV3 d) => d.M;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator DualV3(V3 d) => new DualV3(d);
 
         public bool   Equals(DualV3 other)                                    => throw new NotImplementedException();
         public int    CompareTo(DualV3 other)                                 => throw new NotImplementedException();
         public string ToString(string format, IFormatProvider formatProvider) => throw new NotImplementedException();
 
-        public static DualV3 Cross(DualV3 v1, DualV3 v2) =>
-            new DualV3(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
+        public static DualV3 Cross(DualV3 v1, DualV3 v2) => new DualV3(
+            new V3(
+                v1.M.y * v2.M.z - v1.M.z * v2.M.y,
+                v1.M.z * v2.M.x - v1.M.x * v2.M.z,
+                v1.M.x * v2.M.y - v1.M.y * v2.M.x
+            ),
+            new V3(
+                v1.D.y * v2.M.z + v1.M.y * v2.D.z - (v1.D.z * v2.M.y + v1.M.z * v2.D.y),
+                v1.D.z * v2.M.x + v1.M.z * v2.D.x - (v1.D.x * v2.M.z + v1.M.x * v2.D.z),
+                v1.D.x * v2.M.y + v1.M.x * v2.D.y - (v1.D.y * v2.M.x + v1.M.y * v2.D.x)
+            )
+        );
 
-        public static Dual Dot(DualV3 v1, DualV3 v2) => v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+        public static Dual Dot(DualV3 v1, DualV3 v2) => new Dual(
+            v1.M.x * v2.M.x + v1.M.y * v2.M.y + v1.M.z * v2.M.z,
+            v1.D.x * v2.M.x + v1.M.x * v2.D.x + v1.D.y * v2.M.y + v1.M.y * v2.D.y + v1.D.z * v2.M.z + v1.M.z * v2.D.z
+        );
     }
 }

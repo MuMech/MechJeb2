@@ -17,7 +17,7 @@ namespace MechJebLib.PSG
             _vars      = new VariableProxy(_optimizer._phases, _optimizer._terminal, _optimizer.N);
         }
 
-        public void ConstraintFunction(double[] x, double[] f, alglib.sparsematrix j, object? o)
+        public void ConstraintFunction(double[] f, alglib.sparsematrix j, double[] x, object? o)
         {
             bool debug = o != null;
 
@@ -25,18 +25,19 @@ namespace MechJebLib.PSG
             _vars.WrapVars(x);
 
             int ci = 0;
-            f[ci++] = ObjectiveFunction(j);
+
+            ci = ObjectiveFunction(f, j, ci);
 
             for (int p = 0; p < _optimizer._phases.Count; p++)
             {
                 if (debug) DebugPrint($"start of dynamic constraints: {ci - 1}");
-                ci = DynamicConstraints(f, j, p, ci, debug);
+                ci = DynamicConstraints(f, j, ci, p, debug);
                 if (debug) DebugPrint($"start of staging constraints: {ci - 1}");
-                ci = StagingConstraints(f, j, p, ci);
+                ci = StagingConstraints(f, j, ci, p);
                 if (debug) DebugPrint($"start of control norm constraints: {ci - 1}");
-                ci = ControlNormConstraints(f, j, p, ci);
+                ci = ControlNormConstraints(f, j, ci, p);
                 if (debug) DebugPrint($"start of continuity constraints: {ci - 1}");
-                ci = ContinuityConstraints(f, j, p, ci, debug);
+                ci = ContinuityConstraints(f, j, ci, p, debug);
             }
 
             if (debug) DebugPrint($"start of terminal constraints: {ci - 1}");
@@ -48,7 +49,7 @@ namespace MechJebLib.PSG
                 throw new Exception("Constraint num mismatch");
         }
 
-        private int ControlNormConstraints(double[] f, alglib.sparsematrix j, int p, int ci)
+        private int ControlNormConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
         {
             PhaseProxy thisPhase = _vars[p];
 
@@ -65,7 +66,7 @@ namespace MechJebLib.PSG
             return ci;
         }
 
-        private int ContinuityConstraints(double[] f, alglib.sparsematrix j, int p, int ci, bool debug)
+        private int ContinuityConstraints(double[] f, alglib.sparsematrix j, int ci, int p, bool debug)
         {
             if (p == 0)
                 return ci;
@@ -110,7 +111,7 @@ namespace MechJebLib.PSG
             return -1;
         }
 
-        private int StagingConstraints(double[] f, alglib.sparsematrix j, int p, int ci)
+        private int StagingConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
         {
             if (_optimizer._phases[p].Coast || !_optimizer._phases[p].AllowShutdown || _optimizer._phases[p].MassContinuity)
             {
@@ -195,8 +196,10 @@ namespace MechJebLib.PSG
             return ci;
         }
 
-        private int DynamicConstraints(double[] f, alglib.sparsematrix j, int p, int ci, bool debug)
+        private int DynamicConstraints(double[] f, alglib.sparsematrix j, int ci, int p, bool debug)
         {
+            _optimizer.Timer.Start();
+
             PhaseProxy thisPhase = _vars[p];
 
             double mdot   = _optimizer._phases[p].Mdot;
@@ -208,342 +211,85 @@ namespace MechJebLib.PSG
             {
                 int idx = 2 * n;
 
-                V3 r0 = thisPhase.R[idx];
-                V3 r1 = thisPhase.R[idx + 1];
-                V3 r2 = thisPhase.R[idx + 2];
-                V3 v0 = thisPhase.V[idx];
-                V3 v1 = thisPhase.V[idx + 1];
-                V3 v2 = thisPhase.V[idx + 2];
-
-                double m0, m1, m2;
+                double m0,    m1,    m2;
+                int    m0idx, m1idx, m2idx;
 
                 if (_optimizer._phases[p].Coast)
                 {
-                    m0 = m1 = m2 = thisPhase.M[0];
+                    m0    = m1    = m2    = thisPhase.M[0];
+                    m0idx = m1idx = m2idx = thisPhase.M.Idx(0);
                 }
                 else
                 {
-                    m0 = thisPhase.M[idx];
-                    m1 = thisPhase.M[idx + 1];
-                    m2 = thisPhase.M[idx + 2];
+                    m0    = thisPhase.M[idx];
+                    m1    = thisPhase.M[idx + 1];
+                    m2    = thisPhase.M[idx + 2];
+                    m0idx = thisPhase.M.Idx(idx);
+                    m1idx = thisPhase.M.Idx(idx + 1);
+                    m2idx = thisPhase.M.Idx(idx + 2);
                 }
 
-                V3 u0, u1, u2;
+                V3              u0,    u1,    u2;
+                (int, int, int) u0idx, u1idx, u2idx;
 
-                if (_optimizer._phases[p].GuidedCoast)
+                if (_optimizer._phases[p].Unguided || _optimizer._phases[p].GuidedCoast)
                 {
-                    u0 = u1 = u2 = V3.zero;
-                }
-                else if (_optimizer._phases[p].Unguided)
-                {
-                    u0 = u1 = u2 = thisPhase.U[0];
+                    u0    = u1    = u2    = thisPhase.U[0];
+                    u0idx = u1idx = u2idx = thisPhase.U.Idx(0);
                 }
                 else
                 {
-                    u0 = thisPhase.U[idx];
-                    u1 = thisPhase.U[idx + 1];
-                    u2 = thisPhase.U[idx + 2];
+                    u0    = thisPhase.U[idx];
+                    u1    = thisPhase.U[idx + 1];
+                    u2    = thisPhase.U[idx + 2];
+                    u0idx = thisPhase.U.Idx(idx);
+                    u1idx = thisPhase.U.Idx(idx + 1);
+                    u2idx = thisPhase.U.Idx(idx + 2);
                 }
-
-                double r0M = r0.magnitude;
-                double r02 = r0M * r0M;
-                double r03 = r02 * r0M;
-                double r05 = r03 * r02;
-                double r1M = r1.magnitude;
-                double r12 = r1M * r1M;
-                double r13 = r12 * r1M;
-                double r15 = r13 * r12;
-                double r2M = r2.magnitude;
-                double r22 = r2M * r2M;
-                double r23 = r22 * r2M;
-                double r25 = r23 * r22;
-
-                double h6 = h / 6.0;
-                double h8 = 0.125 * h;
 
                 // dr/dt = v
 
-                V3 dR1 = r2 - r0 - h6 * (v0 + 4 * v1 + v2);
-                V3 dR2 = r1 - 0.5 * (r0 + r2) - h8 * (v0 - v2);
-
-                if (debug) DebugPrint($"start of position constraints for {n}: {ci - 1}");
-                f[ci++] = dR1.x;
-                f[ci++] = dR2.x;
-                f[ci++] = dR1.y;
-                f[ci++] = dR2.y;
-                f[ci++] = dR1.z;
-                f[ci++] = dR2.z;
-
-                V3 dR1dBt = -1.0 / 6.0 / (_optimizer.N - 1) * (v0 + 4 * v1 + v2);
-                V3 dR2dBt = -0.125 / (_optimizer.N - 1) * (v0 - v2);
-
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx), -1.0);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 2), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx), -h6);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx + 1), -4.0 * h6);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx + 2), -h6);
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dR1dBt.x);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 1), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 2), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx), -h8);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx + 2), h8);
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dR2dBt.x);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx), -1.0);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 2), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx), -h6);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx + 1), -4.0 * h6);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx + 2), -h6);
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dR1dBt.y);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 1), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 2), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx), -h8);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx + 2), h8);
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dR2dBt.y);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx), -1.0);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 2), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx), -h6);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx + 1), -4.0 * h6);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx + 2), -h6);
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dR1dBt.z);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 1), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 2), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx), -h8);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx + 2), h8);
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dR2dBt.z);
-
-                // dv/dt = -r/r3 + T/m*u
-
-                V3 dvdt0 = -r0 / r03 + thrust / m0 * u0;
-                V3 dvdt1 = -r1 / r13 + thrust / m1 * u1;
-                V3 dvdt2 = -r2 / r23 + thrust / m2 * u2;
-
-                V3 dv1 = v2 - v0 - h6 * (dvdt0 + 4 * dvdt1 + dvdt2);
-                V3 dv2 = v1 - 0.5 * (v0 + v2) - h8 * (dvdt0 - dvdt2);
-
-                if (debug) DebugPrint($"start of velocity constraints for {n}: {ci - 1}");
-                f[ci++] = dv1.x;
-                f[ci++] = dv2.x;
-                f[ci++] = dv1.y;
-                f[ci++] = dv2.y;
-                f[ci++] = dv1.z;
-                f[ci++] = dv2.z;
-
-                V3 dv1dbt = -1.0 / 6.0 / (_optimizer.N - 1) * (dvdt0 + 4 * dvdt1 + dvdt2);
-                V3 dv2dbt = -0.125 / (_optimizer.N - 1) * (dvdt0 - dvdt2);
-
-                V3 dv1dm0 = h6 * thrust * u0 / (m0 * m0);
-                V3 dv1dm1 = 4.0 * h6 * thrust * u1 / (m1 * m1);
-                V3 dv1dm2 = h6 * thrust * u2 / (m2 * m2);
-                V3 dv2dm0 = h8 * thrust * u0 / (m0 * m0);
-                V3 dv2dm2 = -h8 * thrust * u2 / (m2 * m2);
-
-                M3 dvdr0 = 3 * V3.Outer(r0, r0) / r05 - M3.identity / r03;
-                M3 dvdr1 = 3 * V3.Outer(r1, r1) / r15 - M3.identity / r13;
-                M3 dvdr2 = 3 * V3.Outer(r2, r2) / r25 - M3.identity / r23;
-
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx), -h6 * dvdr0[0, 0]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 1), -4.0 * h6 * dvdr1[0, 0]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 2), -h6 * dvdr2[0, 0]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx), -h6 * dvdr0[1, 0]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 1), -4.0 * h6 * dvdr1[1, 0]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 2), -h6 * dvdr2[1, 0]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx), -h6 * dvdr0[2, 0]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 1), -4.0 * h6 * dvdr1[2, 0]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 2), -h6 * dvdr2[2, 0]);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx), -1.0);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx + 2), 1.0);
-
-                if (!_optimizer._phases[p].Coast)
+                var point = new HermiteSimpsonSegment
                 {
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx), dv1dm0.x);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 1), dv1dm1.x);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 2), dv1dm2.x);
+                    R0 = thisPhase.R[idx],
+                    R1 = thisPhase.R[idx + 1],
+                    R2 = thisPhase.R[idx + 2],
+                    V0 = thisPhase.V[idx],
+                    V1 = thisPhase.V[idx + 1],
+                    V2 = thisPhase.V[idx + 2],
+                    M0 = m0,
+                    M1 = m1,
+                    M2 = m2,
+                    U0 = u0,
+                    U1 = u1,
+                    U2 = u2,
+                    Bt = thisPhase.Bt()
+                };
+
+                var indexes = new HermiteSimpsonIndexes
+                {
+                    R0Idx = thisPhase.R.Idx(idx),
+                    R1Idx = thisPhase.R.Idx(idx + 1),
+                    R2Idx = thisPhase.R.Idx(idx + 2),
+                    V0Idx = thisPhase.V.Idx(idx),
+                    V1Idx = thisPhase.V.Idx(idx + 1),
+                    V2Idx = thisPhase.V.Idx(idx + 2),
+                    M0Idx = m0idx,
+                    M1Idx = m1idx,
+                    M2Idx = m2idx,
+                    U0Idx = u0idx,
+                    U1Idx = u1idx,
+                    U2Idx = u2idx,
+                    BtIdx = thisPhase.BtIdx()
+                };
+
+                DualV3 VDot(ref HermiteSimpsonDualPoint d)
+                {
+                    Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
+                    return -d.R / r3 + thrust / d.M * d.U;
                 }
 
-                if (!_optimizer._phases[p].GuidedCoast)
-                {
-                    if (_optimizer._phases[p].Unguided)
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Ux.Idx(0), -h6 * thrust / m0 - 4.0 * h6 * thrust / m1 - h6 * thrust / m2);
-                    }
-                    else
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Ux.Idx(idx), -h6 * thrust / m0);
-                        alglib.sparseappendelement(j, thisPhase.Ux.Idx(idx + 1), -4.0 * h6 * thrust / m1);
-                        alglib.sparseappendelement(j, thisPhase.Ux.Idx(idx + 2), -h6 * thrust / m2);
-                    }
-                }
-
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dv1dbt.x);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx), -h8 * dvdr0[0, 0]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 2), h8 * dvdr2[0, 0]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx), -h8 * dvdr0[1, 0]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 2), h8 * dvdr2[1, 0]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx), -h8 * dvdr0[2, 0]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 2), h8 * dvdr2[2, 0]);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx + 1), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Vx.Idx(idx + 2), -0.5);
-
-                if (!_optimizer._phases[p].Coast)
-                {
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx), dv2dm0.x);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 2), dv2dm2.x);
-                }
-
-                if (!_optimizer._phases[p].GuidedCoast)
-                {
-                    if (_optimizer._phases[p].Unguided)
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Ux.Idx(0), -h8 * thrust / m0 + h8 * thrust / m2);
-                    }
-                    else
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Ux.Idx(idx), -h8 * thrust / m0);
-                        alglib.sparseappendelement(j, thisPhase.Ux.Idx(idx + 2), h8 * thrust / m2);
-                    }
-                }
-
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dv2dbt.x);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx), -h6 * dvdr0[0, 1]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 1), -4.0 * h6 * dvdr1[0, 1]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 2), -h6 * dvdr2[0, 1]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx), -h6 * dvdr0[1, 1]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 1), -4.0 * h6 * dvdr1[1, 1]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 2), -h6 * dvdr2[1, 1]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx), -h6 * dvdr0[2, 1]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 1), -4.0 * h6 * dvdr1[2, 1]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 2), -h6 * dvdr2[2, 1]);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx), -1.0);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx + 2), 1.0);
-                if (!_optimizer._phases[p].Coast)
-                {
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx), dv1dm0.y);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 1), dv1dm1.y);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 2), dv1dm2.y);
-                }
-
-                if (!_optimizer._phases[p].GuidedCoast)
-                {
-                    if (_optimizer._phases[p].Unguided)
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Uy.Idx(0), -h6 * thrust / m0 - 4.0 * h6 * thrust / m1 - h6 * thrust / m2);
-                    }
-                    else
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Uy.Idx(idx), -h6 * thrust / m0);
-                        alglib.sparseappendelement(j, thisPhase.Uy.Idx(idx + 1), -4.0 * h6 * thrust / m1);
-                        alglib.sparseappendelement(j, thisPhase.Uy.Idx(idx + 2), -h6 * thrust / m2);
-                    }
-                }
-
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dv1dbt.y);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx), -h8 * dvdr0[0, 1]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 2), h8 * dvdr2[0, 1]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx), -h8 * dvdr0[1, 1]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 2), h8 * dvdr2[1, 1]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx), -h8 * dvdr0[2, 1]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 2), h8 * dvdr2[2, 1]);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx + 1), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Vy.Idx(idx + 2), -0.5);
-                if (!_optimizer._phases[p].Coast)
-                {
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx), dv2dm0.y);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 2), dv2dm2.y);
-                }
-
-                if (!_optimizer._phases[p].GuidedCoast)
-                {
-                    if (_optimizer._phases[p].Unguided)
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Uy.Idx(0), -h8 * thrust / m0 + h8 * thrust / m2);
-                    }
-                    else
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Uy.Idx(idx), -h8 * thrust / m0);
-                        alglib.sparseappendelement(j, thisPhase.Uy.Idx(idx + 2), h8 * thrust / m2);
-                    }
-                }
-
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dv2dbt.y);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx), -h6 * dvdr0[0, 2]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 1), -4.0 * h6 * dvdr1[0, 2]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 2), -h6 * dvdr2[0, 2]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx), -h6 * dvdr0[1, 2]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 1), -4.0 * h6 * dvdr1[1, 2]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 2), -h6 * dvdr2[1, 2]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx), -h6 * dvdr0[2, 2]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 1), -4.0 * h6 * dvdr1[2, 2]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 2), -h6 * dvdr2[2, 2]);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx), -1.0);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx + 2), 1.0);
-                if (!_optimizer._phases[p].Coast)
-                {
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx), dv1dm0.z);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 1), dv1dm1.z);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 2), dv1dm2.z);
-                }
-
-                if (!_optimizer._phases[p].GuidedCoast)
-                {
-                    if (_optimizer._phases[p].Unguided)
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Uz.Idx(0), -h6 * thrust / m0 - 4.0 * h6 * thrust / m1 - h6 * thrust / m2);
-                    }
-                    else
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Uz.Idx(idx), -h6 * thrust / m0);
-                        alglib.sparseappendelement(j, thisPhase.Uz.Idx(idx + 1), -4.0 * h6 * thrust / m1);
-                        alglib.sparseappendelement(j, thisPhase.Uz.Idx(idx + 2), -h6 * thrust / m2);
-                    }
-                }
-
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dv1dbt.z);
-                alglib.sparseappendemptyrow(j);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx), -h8 * dvdr0[0, 2]);
-                alglib.sparseappendelement(j, thisPhase.Rx.Idx(idx + 2), h8 * dvdr2[0, 2]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx), -h8 * dvdr0[1, 2]);
-                alglib.sparseappendelement(j, thisPhase.Ry.Idx(idx + 2), h8 * dvdr2[1, 2]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx), -h8 * dvdr0[2, 2]);
-                alglib.sparseappendelement(j, thisPhase.Rz.Idx(idx + 2), h8 * dvdr2[2, 2]);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx), -0.5);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx + 1), 1.0);
-                alglib.sparseappendelement(j, thisPhase.Vz.Idx(idx + 2), -0.5);
-                if (!_optimizer._phases[p].Coast)
-                {
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx), dv2dm0.z);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 2), dv2dm2.z);
-                }
-
-                if (!_optimizer._phases[p].GuidedCoast)
-                {
-                    if (_optimizer._phases[p].Unguided)
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Uz.Idx(0), -h8 * thrust / m0 + h8 * thrust / m2);
-                    }
-                    else
-                    {
-                        alglib.sparseappendelement(j, thisPhase.Uz.Idx(idx), -h8 * thrust / m0);
-                        alglib.sparseappendelement(j, thisPhase.Uz.Idx(idx + 2), h8 * thrust / m2);
-                    }
-                }
-
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), dv2dbt.z);
+                ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
 
                 // dm/dt = -mdot (as algebraic constraints rather than defect constraints)
 
@@ -568,19 +314,23 @@ namespace MechJebLib.PSG
                 }
             }
 
+            _optimizer.Timer.Stop();
+
             return ci;
         }
 
-        private double ObjectiveFunction(alglib.sparsematrix j)
+        private int ObjectiveFunction(double[] f, alglib.sparsematrix j, int ci)
         {
             PhaseProxy lastPhase = _vars[-1];
-            double     val       = 0;
+
+            double val = 0;
 
             // cost metric
             switch (_optimizer._cost)
             {
                 case Optimizer.Cost.MIN_TIME:
                     alglib.sparseappendemptyrow(j);
+
                     for (int p = 0; p < _optimizer._phases.Count; p++)
                     {
                         if (_optimizer._phases[p].Coast || !_optimizer._phases[p].AllowShutdown)
@@ -593,27 +343,22 @@ namespace MechJebLib.PSG
                         alglib.sparseappendelement(j, thisPhase.BtIdx(), 1.0);
                     }
 
+                    f[ci++] = val;
+
                     break;
                 case Optimizer.Cost.MAX_MASS:
-                    val = -lastPhase.M[-1];
+                    f[ci++] = -lastPhase.M[-1];
                     alglib.sparseappendemptyrow(j);
                     alglib.sparseappendelement(j, lastPhase.M.Idx(-1), -1.0);
 
                     break;
                 case Optimizer.Cost.MAX_ENERGY:
-                    V3     vf   = lastPhase.V[-1];
-                    V3     rf   = lastPhase.R[-1];
-                    double rfm  = rf.magnitude;
-                    double rfm3 = rfm * rfm * rfm;
+                    V3              rf = lastPhase.R[-1];
+                    V3              vf = lastPhase.V[-1];
+                    (int, int, int) ri = lastPhase.R.Idx(-1);
+                    (int, int, int) vi = lastPhase.V.Idx(-1);
 
-                    val = -(0.5 * vf.sqrMagnitude - 1.0 / rfm);
-                    alglib.sparseappendemptyrow(j);
-                    alglib.sparseappendelement(j, lastPhase.Rx.Idx(-1), -1.0 / rfm3 * rf.x);
-                    alglib.sparseappendelement(j, lastPhase.Ry.Idx(-1), -1.0 / rfm3 * rf.y);
-                    alglib.sparseappendelement(j, lastPhase.Rz.Idx(-1), -1.0 / rfm3 * rf.z);
-                    alglib.sparseappendelement(j, lastPhase.Vx.Idx(-1), -vf.x);
-                    alglib.sparseappendelement(j, lastPhase.Vy.Idx(-1), -vf.y);
-                    alglib.sparseappendelement(j, lastPhase.Vz.Idx(-1), -vf.z);
+                    ci = ApplyScalarConstraintV3(f, j, ci, MaxOrbitalEnergyObjective, new[] { rf, vf }, new[] { ri, vi });
 
                     break;
                 case Optimizer.Cost.MIN_THRUST_ACCEL:
@@ -659,12 +404,19 @@ namespace MechJebLib.PSG
                         alglib.sparseappendelement(j, thisPhase.BtIdx(), sum);
                     }
 
+                    f[ci++] = val;
+
                     break;
                 default:
                     throw new Exception("code should not be reachable");
             }
 
-            return val;
+            return ci;
+
+            Dual MaxOrbitalEnergyObjective(DualV3[] p)
+            {
+                return -(0.5 * DualV3.Dot(p[1], p[1]) - 1.0 / p[0].magnitude);
+            }
         }
     }
 }
