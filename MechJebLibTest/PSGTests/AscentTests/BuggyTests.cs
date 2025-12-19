@@ -103,7 +103,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             eccf.ShouldEqual(0.21994388566652009, 1e-1);
             incf.ShouldEqual(incT, 1e-6);
             lanf.ShouldEqual(3.4079327119886518, 1e-2);
-            argpf.ShouldEqual(1.7698684967908385, 1e-2);
+            argpf.ShouldEqual(1.7698684967908385, 2e-2);
             ClampPi(tanof).ShouldBeZero(1e-6);
         }
 

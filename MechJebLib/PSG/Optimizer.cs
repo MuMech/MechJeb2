@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using MechJebLib.Primitives;
 using MechJebLib.PSG.Terminal;
@@ -14,6 +15,8 @@ namespace MechJebLib.PSG
 {
     public class Optimizer : IDisposable
     {
+        public Stopwatch Timer = new Stopwatch();
+
         public enum Cost { MAX_MASS, MAX_ENERGY, MIN_THRUST_ACCEL, MIN_TIME }
 
         public enum OptimStatus { CREATED, SUCCESS, CANCELLED, FAILED }
@@ -54,7 +57,7 @@ namespace MechJebLib.PSG
             _vars             = new VariableProxy(_phases, _terminal, N);
             _problem          = problem;
             _ascentProblem    = new AscentProblem(this);
-            _constraintHandle = _ascentProblem.ConstraintFunction;
+            _constraintHandle = (x, f, j, o) => _ascentProblem.ConstraintFunction(f, j, x, o);
             Status            = OptimStatus.CREATED;
             _xGuess           = Array.Empty<double>();
             nu                = Array.Empty<double>();
@@ -307,7 +310,7 @@ namespace MechJebLib.PSG
             double[] f = new double[_vars.TotalConstraints + 1];
 
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);
-            _ascentProblem.ConstraintFunction(_xGuess, f, j2, null);
+            _ascentProblem.ConstraintFunction(f, j2, _xGuess, null);
 
             CalculatePrimalFeasibility(f, true);
 
@@ -431,7 +434,7 @@ namespace MechJebLib.PSG
 
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j);
 
-            _ascentProblem.ConstraintFunction(x, f, j, null);
+            _ascentProblem.ConstraintFunction(f, j, x, null);
             CalculatePrimalFeasibility(f);
 
             DebugPrint($"Cost: {Objective}");

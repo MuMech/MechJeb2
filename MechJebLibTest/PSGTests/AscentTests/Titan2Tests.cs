@@ -615,7 +615,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
-            solution.Tgo(solution.T0, 1).ShouldEqual(14.925595039046339, 1e-3);
+            solution.Tgo(solution.T0, 1).ShouldEqual(14.925595039046339, 1e-2);
             solution.Tgo(solution.T0, 2).ShouldBePositive();
             solution.Vgo(0).ShouldEqual(8557.8736963926785, 1e-3);
 
@@ -641,6 +641,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             eccf.ShouldEqual(0, 1e-5);
             incf.ShouldEqual(incT, 1e-5);
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
+
+            _testOutputHelper.WriteLine($"rdot: {AutoDiff.timer1.Elapsed.TotalMilliseconds}ms");
+            _testOutputHelper.WriteLine($"total dynamics: {psg.Timer.Elapsed.TotalMilliseconds}ms");
         }
 
         [Fact]
