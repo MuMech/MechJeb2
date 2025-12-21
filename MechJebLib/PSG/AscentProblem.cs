@@ -280,17 +280,16 @@ namespace MechJebLib.PSG
                     BtIdx = thisPhase.BtIdx()
                 };
 
-                double rho0   = _optimizer._problem.Rho0;
-                double cdAref = _optimizer._problem.CdAref;
-                double rBody  = _optimizer._problem.RBody;
-                double h0     = _optimizer._problem.H0;
-                V3 w          = _optimizer._problem.W;
+                double rho0CdAref = _optimizer._problem.Rho0CdAref;
+                double rBody      = _optimizer._problem.RBody;
+                double h0         = _optimizer._problem.H0;
+                V3     w          = _optimizer._problem.W;
 
                 DualV3 VDot(ref HermiteSimpsonDualPoint d)
                 {
                     DualV3 vr   = d.V - DualV3.Cross(w, d.R);
-                    Dual   rho  = rho0 * Dual.Exp(-(d.R.magnitude - rBody) / h0);
-                    DualV3 drag = 0.5 * cdAref * rho * vr.sqrMagnitude * vr.normalized;
+                    var    rho  = Dual.Exp(-(d.R.magnitude - rBody) / h0);
+                    DualV3 drag = 0.5 * rho0CdAref * rho * vr.sqrMagnitude * vr.normalized;
                     Dual   r3   = d.R.sqrMagnitude * d.R.magnitude;
                     return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
                 }
@@ -301,7 +300,7 @@ namespace MechJebLib.PSG
                     return -d.R / r3 + thrust / d.M * d.U;
                 }
 
-                if (h0 > 0 && rho0 > 0 && cdAref > 0)
+                if (h0 > 0 && rho0CdAref > 0)
                     ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
                 else
                     ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDotVacuum, point, indexes, _optimizer.N);

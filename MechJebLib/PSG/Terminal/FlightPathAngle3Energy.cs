@@ -6,7 +6,6 @@
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
-using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
 
 namespace MechJebLib.PSG.Terminal
@@ -35,10 +34,10 @@ namespace MechJebLib.PSG.Terminal
         {
             double gammaT = _gammaT;
             double rT     = _rT;
-            double incT = _incT;
+            double incT   = _incT;
 
-            var    rf     = V3.CopyFromIndices(x, ri);
-            var    vf     = V3.CopyFromIndices(x, vi);
+            var rf = V3.CopyFromIndices(x, ri);
+            var vf = V3.CopyFromIndices(x, vi);
 
             ci = ApplyScalarConstraintV3(f, j, ci, FlightPathAngleConstraint, new[] { rf, vf }, new[] { ri, vi });
             ci = ApplyScalarConstraintV3(f, j, ci, RadiusConstraint, new[] { rf }, new[] { ri });

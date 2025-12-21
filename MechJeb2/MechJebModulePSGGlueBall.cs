@@ -8,9 +8,11 @@ extern alias JetBrainsAnnotations;
 using System;
 using System.Threading.Tasks;
 using MechJebLib.FuelFlowSimulation;
+using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 #nullable enable
 
@@ -200,6 +202,22 @@ namespace MuMech
                   , MainBody.gravParameter, MainBody.Radius)
                 .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), 0, fpa, attachAltFlag, lanflag, false);
 
+            if (MainBody.atmosphere)
+            {
+                // This very crudely fits an exponential between "sea" level and 15% of the way to space to find rho0 and h0
+                double r1 = MainBody.atmosphereDepth * 0.15;
+
+                double rho0 = MainBody.atmDensityASL;
+                double rho1 = MainBody.GetDensity(MainBody.GetPressure(r1), MainBody.GetTemperature(r1));
+
+                double h0   = r1 / Log(rho0 / rho1);
+                double cd   = 0.5;
+                double aRef = 2 * TAU;
+                V3     w    = 2 * PI / MainBody.rotationPeriod * V3.northpole;
+
+                ascentBuilder.AerodynamicConstants(cd, aRef, rho0, h0, w);
+            }
+
             if (Core.Guidance.Solution != null)
                 ascentBuilder.OldSolution(Core.Guidance.Solution);
 
@@ -237,8 +255,8 @@ namespace MuMech
 
                         if (Core.Guidance.IsCoasting())
                         {
-                            maxt = Math.Max(maxt - (VesselState.time - Core.Guidance.StartCoast), 0);
-                            mint = Math.Max(mint - (VesselState.time - Core.Guidance.StartCoast), 0);
+                            maxt = Max(maxt - (VesselState.time - Core.Guidance.StartCoast), 0);
+                            mint = Max(mint - (VesselState.time - Core.Guidance.StartCoast), 0);
                         }
 
                         bool unguidedCoast = IsUnguided(kspStage);
