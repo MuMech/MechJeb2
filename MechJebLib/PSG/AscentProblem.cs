@@ -79,11 +79,10 @@ namespace MechJebLib.PSG
             ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.U[-1], thisPhase.U[0] }, new[] { prevPhase.U.Idx(-1), thisPhase.U.Idx(0) });
 
             // mass continuity for coast-within-phase
-            if (p > 0 && _optimizer._phases[p].MassContinuity)
-            {
-                if (debug) DebugPrint($"mass continuity constraint: {ci - 1}");
-                ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M[-1], thisPhase.M[0] }, new[] { prevPhase.M.Idx(-1), thisPhase.M.Idx(0) });
-            }
+            if (p <= 0 || !_optimizer._phases[p].MassContinuity) return ci;
+
+            if (debug) DebugPrint($"mass continuity constraint: {ci - 1}");
+            ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M[-1], thisPhase.M[0] }, new[] { prevPhase.M.Idx(-1), thisPhase.M.Idx(0) });
 
             return ci;
 
@@ -212,42 +211,40 @@ namespace MechJebLib.PSG
                 int idx = 2 * n;
 
                 double m0,    m1,    m2;
-                int    m0idx, m1idx, m2idx;
+                int    m0Idx, m1Idx, m2Idx;
 
                 if (_optimizer._phases[p].Coast)
                 {
                     m0    = m1    = m2    = thisPhase.M[0];
-                    m0idx = m1idx = m2idx = thisPhase.M.Idx(0);
+                    m0Idx = m1Idx = m2Idx = thisPhase.M.Idx(0);
                 }
                 else
                 {
                     m0    = thisPhase.M[idx];
                     m1    = thisPhase.M[idx + 1];
                     m2    = thisPhase.M[idx + 2];
-                    m0idx = thisPhase.M.Idx(idx);
-                    m1idx = thisPhase.M.Idx(idx + 1);
-                    m2idx = thisPhase.M.Idx(idx + 2);
+                    m0Idx = thisPhase.M.Idx(idx);
+                    m1Idx = thisPhase.M.Idx(idx + 1);
+                    m2Idx = thisPhase.M.Idx(idx + 2);
                 }
 
                 V3              u0,    u1,    u2;
-                (int, int, int) u0idx, u1idx, u2idx;
+                (int, int, int) u0Idx, u1Idx, u2Idx;
 
                 if (_optimizer._phases[p].Unguided || _optimizer._phases[p].GuidedCoast)
                 {
                     u0    = u1    = u2    = thisPhase.U[0];
-                    u0idx = u1idx = u2idx = thisPhase.U.Idx(0);
+                    u0Idx = u1Idx = u2Idx = thisPhase.U.Idx(0);
                 }
                 else
                 {
                     u0    = thisPhase.U[idx];
                     u1    = thisPhase.U[idx + 1];
                     u2    = thisPhase.U[idx + 2];
-                    u0idx = thisPhase.U.Idx(idx);
-                    u1idx = thisPhase.U.Idx(idx + 1);
-                    u2idx = thisPhase.U.Idx(idx + 2);
+                    u0Idx = thisPhase.U.Idx(idx);
+                    u1Idx = thisPhase.U.Idx(idx + 1);
+                    u2Idx = thisPhase.U.Idx(idx + 2);
                 }
-
-                // dr/dt = v
 
                 var point = new HermiteSimpsonSegment
                 {
@@ -274,22 +271,40 @@ namespace MechJebLib.PSG
                     V0Idx = thisPhase.V.Idx(idx),
                     V1Idx = thisPhase.V.Idx(idx + 1),
                     V2Idx = thisPhase.V.Idx(idx + 2),
-                    M0Idx = m0idx,
-                    M1Idx = m1idx,
-                    M2Idx = m2idx,
-                    U0Idx = u0idx,
-                    U1Idx = u1idx,
-                    U2Idx = u2idx,
+                    M0Idx = m0Idx,
+                    M1Idx = m1Idx,
+                    M2Idx = m2Idx,
+                    U0Idx = u0Idx,
+                    U1Idx = u1Idx,
+                    U2Idx = u2Idx,
                     BtIdx = thisPhase.BtIdx()
                 };
 
+                double rho0   = _optimizer._problem.Rho0;
+                double cdAref = _optimizer._problem.CdAref;
+                double rBody  = _optimizer._problem.RBody;
+                double h0     = _optimizer._problem.H0;
+                V3 w          = _optimizer._problem.W;
+
                 DualV3 VDot(ref HermiteSimpsonDualPoint d)
+                {
+                    DualV3 vr   = d.V - DualV3.Cross(w, d.R);
+                    Dual   rho  = rho0 * Dual.Exp(-(d.R.magnitude - rBody) / h0);
+                    DualV3 drag = 0.5 * cdAref * rho * vr.sqrMagnitude * vr.normalized;
+                    Dual   r3   = d.R.sqrMagnitude * d.R.magnitude;
+                    return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
+                }
+
+                DualV3 VDotVacuum(ref HermiteSimpsonDualPoint d)
                 {
                     Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
                     return -d.R / r3 + thrust / d.M * d.U;
                 }
 
-                ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
+                if (h0 > 0 && rho0 > 0 && cdAref > 0)
+                    ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
+                else
+                    ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDotVacuum, point, indexes, _optimizer.N);
 
                 // dm/dt = -mdot (as algebraic constraints rather than defect constraints)
 

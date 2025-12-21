@@ -22,7 +22,11 @@ namespace MechJebLib.PSG
             private V3        _u0            { get; set; }
             private double    _t0            { get; set; }
             private double    _mu            { get; set; }
-            private double    _rbody         { get; set; }
+            private double    _rbody         { get; set; } = 1.0;
+            private double    _rho0          { get; set; } = 0;
+            private double    _h0            { get; set; } = 0;
+            private double    _cdAref        { get; set; } = 0;
+            private V3        _w             { get; set; } = V3.zero;
             private double    _apR           { get; set; }
             private double    _peR           { get; set; }
             private double    _attR          { get; set; }
@@ -55,6 +59,26 @@ namespace MechJebLib.PSG
 
                 _phases.Add(Phase.NewStageUsingThrust(m0, thrust, isp, bt, kspStage, mjPhase, unguided, allowShutdown, massContinuity));
 
+                return this;
+            }
+
+            public AscentBuilder AddStageUsingFinalMassAndThrust(double m0, double mf, double thrust, double bt, int kspStage,
+                int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false)
+            {
+                DebugPrint(
+                    $"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {mf}, {thrust}, {bt}, {kspStage}, {mjPhase}, {(unguided ? "true" : "false")}, {(allowShutdown ? "true" : "false")})");
+
+                _phases.Add(Phase.NewStageUsingFinalMassAndThrust(m0, mf, thrust, bt, kspStage, mjPhase, unguided, allowShutdown, massContinuity));
+
+                return this;
+            }
+
+            public AscentBuilder AerodynamicConstants(double cdAref, double rho0, double h0, V3 w)
+            {
+                _rho0   = rho0;
+                _h0     = h0;
+                _cdAref = cdAref;
+                _w      = w;
                 return this;
             }
 
@@ -124,7 +148,7 @@ namespace MechJebLib.PSG
                     }
                 }
 
-                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody, terminal);
+                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody, _rho0, _h0, _cdAref, _w, terminal);
 
                 var normalizedPhases = new PhaseCollection();
 

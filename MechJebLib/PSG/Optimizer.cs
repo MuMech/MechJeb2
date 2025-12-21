@@ -21,7 +21,7 @@ namespace MechJebLib.PSG
 
         public enum OptimStatus { CREATED, SUCCESS, CANCELLED, FAILED }
 
-        private readonly Problem         _problem;
+        public readonly  Problem         _problem;
         public readonly  PhaseCollection _phases;
         public readonly  ITerminal       _terminal;
         public readonly  Cost            _cost;
@@ -401,6 +401,7 @@ namespace MechJebLib.PSG
             alglib.minnlcsetnlc2(_state, nl, nu);
             //alglib.minnlcsetstpmax(_state, Stpmax);
             alglib.minnlcsetalgosqp(_state);
+            //alglib.minnlcsetalgogipm2(_state);
             alglib.minnlcsetcond3(_state, Epsf, SQPTrustRegionLimit, Maxits);
 
 #if DEBUG
