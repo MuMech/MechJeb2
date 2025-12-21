@@ -237,6 +237,12 @@ namespace MuMech
 
         public bool OptimizeStageFlag;
 
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble Cd = new EditableDouble(0.5);
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble Aref = new EditableDouble(0.0);
+
         /*
          * some non-persisted values
          */
