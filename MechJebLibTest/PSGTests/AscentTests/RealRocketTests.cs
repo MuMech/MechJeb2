@@ -43,7 +43,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double ApR = Astro.ApoapsisFromKeplerian(smaT, eccT);
 
             Ascent ascent = Ascent.Builder()
-                .AerodynamicConstants(cd * aref, rho0, h0, w)
+                .AerodynamicConstants(cd, aref, rho0, h0, w)
                 .AddStageUsingFinalMassAndThrust(301454.000000, 171863.885057, 4854100.000000, 75.200000, 4, 4)
                 .AddStageUsingFinalMassAndThrust(158183.885057, 79623.770115, 2968600.000000, 75.200000, 3, 3)
                 .AddStageUsingFinalMassAndThrust(72783.770115, 32294.000000, 1083100.000000, 110.600000, 2, 2)
