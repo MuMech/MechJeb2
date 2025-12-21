@@ -38,7 +38,7 @@ namespace MechJebLib.PSG
         {
             _scale = problem.Scale;
             _mu    = problem.Mu;
-            _rbody = problem.Rbody * _scale.LengthScale;
+            _rbody = problem.RBody * _scale.LengthScale;
             // t0 is a public API that can be updated while we're landed waiting for takeoff.
             T0 = problem.T0;
         }
