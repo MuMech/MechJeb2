@@ -114,6 +114,10 @@ namespace MuMech
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.BeginHorizontal();
+            GuiUtils.SimpleTextBox("Cd:", _ascentSettings.Cd, "", 40);
+            GuiUtils.SimpleTextBox("Aref:", _ascentSettings.Aref, "m²", 40);
+            GUILayout.EndHorizontal();
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel13, _ascentSettings.PitchStartVelocity, "m/s",
                 40);                                                                                                     //Booster Pitch start:
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel14, _ascentSettings.PitchRate, "°/s", 40); //Booster Pitch rate:

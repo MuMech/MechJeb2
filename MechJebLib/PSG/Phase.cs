@@ -146,6 +146,25 @@ namespace MechJebLib.PSG
             return phase;
         }
 
+        public static Phase NewStageUsingFinalMassThrustAndIsp(double m0, double mf, double thrust, double isp, int kspStage, int mjPhase,
+            bool unguided = false, bool allowShutdown = true, bool massContinuity = false)
+        {
+            Check.PositiveFinite(m0);
+            Check.PositiveFinite(thrust);
+            Check.PositiveFinite(mf);
+            Check.PositiveFinite(isp);
+
+            double mdot = thrust / (isp * G0);
+            double bt   = (m0 - mf) / mdot;
+
+            Check.PositiveFinite(mdot);
+            Check.PositiveFinite(isp);
+
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
+
+            return phase;
+        }
+
         public static Phase NewCoast(double m0, double mint, double maxt, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
         {
             var phase = new Phase(m0, 0, double.PositiveInfinity, m0, mint, kspStage, mjPhase) { mint = mint, maxt = maxt, Unguided = unguided, MassContinuity = massContinuity };

@@ -72,6 +72,17 @@ namespace MechJebLib.PSG
                 return this;
             }
 
+            public AscentBuilder AddStageUsingFinalMassThrustAndIsp(double m0, double mf, double thrust, double isp, int kspStage,
+                int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false)
+            {
+                DebugPrint(
+                    $"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {mf}, {thrust}, {isp}, {kspStage}, {mjPhase}, {(unguided ? "true" : "false")}, {(allowShutdown ? "true" : "false")})");
+
+                _phases.Add(Phase.NewStageUsingFinalMassThrustAndIsp(m0, mf, thrust, isp, kspStage, mjPhase, unguided, allowShutdown, massContinuity));
+
+                return this;
+            }
+
             public AscentBuilder AerodynamicConstants(double cd, double aRef, double rho0, double h0, V3 w)
             {
                 _h0         = h0;

@@ -211,8 +211,8 @@ namespace MuMech
                 double rho1 = MainBody.GetDensity(MainBody.GetPressure(r1), MainBody.GetTemperature(r1));
 
                 double h0   = r1 / Log(rho0 / rho1);
-                double cd   = 0.5;
-                double aRef = 2 * TAU;
+                double cd   = _ascentSettings.Cd;
+                double aRef = _ascentSettings.Aref;
                 V3     w    = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
                 ascentBuilder.AerodynamicConstants(cd, aRef, rho0, h0, w);
