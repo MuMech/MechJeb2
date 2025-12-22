@@ -255,7 +255,32 @@ namespace MechJebLib.Primitives
         public static M3 operator *(double value, M3 rhs) => rhs * value;
 
         /// <summary>
-        ///     Divides all emeents of a matrix by a number.
+        /// Adds two matrices together.
+        /// </summary>
+        /// <param name="lhs">first matrix</param>
+        /// <param name="rhs">second matrix</param>
+        /// <returns></returns>
+        public static M3 operator +(M3 lhs, M3 rhs)
+        {
+            M3 res;
+
+            res.m00 = lhs.m00 + rhs.m00;
+            res.m01 = lhs.m01 + rhs.m01;
+            res.m02 = lhs.m02 + rhs.m02;
+
+            res.m10 = lhs.m10 + rhs.m10;
+            res.m11 = lhs.m11 + rhs.m11;
+            res.m12 = lhs.m12 + rhs.m12;
+
+            res.m20 = lhs.m20 + rhs.m20;
+            res.m21 = lhs.m21 + rhs.m21;
+            res.m22 = lhs.m22 + rhs.m22;
+
+            return res;
+        }
+
+        /// <summary>
+        ///     Divides all elements of a matrix by a number.
         /// </summary>
         /// <param name="lhs">the matrix</param>
         /// <param name="value">the number</param>

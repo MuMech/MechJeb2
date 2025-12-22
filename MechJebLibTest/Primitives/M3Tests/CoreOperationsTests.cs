@@ -252,6 +252,254 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
+        private void SubtractionBasicMatrices()
+        {
+            var a = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+            var b = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            (a - b).ShouldEqual(new M3(8, 6, 4, 2, 0, -2, -4, -6, -8));
+        }
+
+        [Fact]
+        private void SubtractionWithZeroMatrix()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            (m - M3.zero).ShouldEqual(m);
+            (M3.zero - m).ShouldEqual(-m);
+        }
+
+        [Fact]
+        private void SubtractionOfIdenticalMatrices()
+        {
+            var m = new M3(1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5);
+
+            (m - m).ShouldEqual(M3.zero);
+        }
+
+        [Fact]
+        private void SubtractionWithNegativeElements()
+        {
+            var a = new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9);
+            var b = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            (a - b).ShouldEqual(new M3(-2, -4, -6, -8, -10, -12, -14, -16, -18));
+        }
+
+        [Fact]
+        private void SubtractionIsNotCommutative()
+        {
+            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+
+            (a - b).ShouldEqual(-(b - a));
+        }
+
+        [Fact]
+        private void SubtractionWithLargeValues()
+        {
+            var a = new M3(1e150, 2e150, 3e150, 4e150, 5e150, 6e150, 7e150, 8e150, 9e150);
+            var b = new M3(1e150, 1e150, 1e150, 1e150, 1e150, 1e150, 1e150, 1e150, 1e150);
+
+            (a - b).ShouldEqual(new M3(0, 1e150, 2e150, 3e150, 4e150, 5e150, 6e150, 7e150, 8e150));
+        }
+
+        [Fact]
+        private void SubtractionWithSmallValues()
+        {
+            var a = new M3(1e-150, 2e-150, 3e-150, 4e-150, 5e-150, 6e-150, 7e-150, 8e-150, 9e-150);
+            var b = new M3(1e-150, 1e-150, 1e-150, 1e-150, 1e-150, 1e-150, 1e-150, 1e-150, 1e-150);
+
+            (a - b).ShouldEqual(new M3(0, 1e-150, 2e-150, 3e-150, 4e-150, 5e-150, 6e-150, 7e-150, 8e-150));
+        }
+
+        [Fact]
+        private void NegationBasicMatrix()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            (-m).ShouldEqual(new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9));
+        }
+
+        [Fact]
+        private void NegationOfZeroMatrix() => (-M3.zero).ShouldEqual(M3.zero);
+
+        [Fact]
+        private void NegationOfIdentity() => (-M3.identity).ShouldEqual(new M3(-1, 0, 0, 0, -1, 0, 0, 0, -1));
+
+        [Fact]
+        private void DoubleNegation()
+        {
+            var m = new M3(1.5, -2.5, 3.5, -4.5, 5.5, -6.5, 7.5, -8.5, 9.5);
+
+            (- -m).ShouldEqual(m);
+        }
+
+        [Fact]
+        private void NegationWithMixedSigns()
+        {
+            var m = new M3(-1, 2, -3, 4, -5, 6, -7, 8, -9);
+
+            (-m).ShouldEqual(new M3(1, -2, 3, -4, 5, -6, 7, -8, 9));
+        }
+
+        [Fact]
+        private void NegationPreservesDeterminantMagnitude()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
+
+            (-m).determinant.ShouldEqual(-m.determinant);
+        }
+
+        [Fact]
+        private void NegationWithLargeValues()
+        {
+            var m = new M3(1e150, -1e150, 1e150, -1e150, 1e150, -1e150, 1e150, -1e150, 1e150);
+
+            (-m).ShouldEqual(new M3(-1e150, 1e150, -1e150, 1e150, -1e150, 1e150, -1e150, 1e150, -1e150));
+        }
+
+        [Fact]
+        private void SubtractionAndNegationRelationship()
+        {
+            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+
+            (a - b).ShouldEqual(a + -b);
+        }
+
+        [Fact]
+        private void SubtractionAssociativityWithNegation()
+        {
+            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var b = new M3(2, 3, 4, 5, 6, 7, 8, 9, 10);
+            var c = new M3(3, 4, 5, 6, 7, 8, 9, 10, 11);
+
+            (a - b - c).ShouldEqual(a - (b + c));
+        }
+
+                [Fact]
+        private void AdditionBasicMatrices()
+        {
+            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+
+            (a + b).ShouldEqual(new M3(10, 10, 10, 10, 10, 10, 10, 10, 10));
+        }
+
+        [Fact]
+        private void AdditionWithZeroMatrix()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            (m + M3.zero).ShouldEqual(m);
+            (M3.zero + m).ShouldEqual(m);
+        }
+
+        [Fact]
+        private void AdditionWithIdentity()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            (m + M3.identity).ShouldEqual(new M3(2, 2, 3, 4, 6, 6, 7, 8, 10));
+        }
+
+        [Fact]
+        private void AdditionIsCommutative()
+        {
+            var a = new M3(1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5);
+            var b = new M3(-0.5, 4.1, -2.3, 1.7, -3.2, 0.8, 2.1, -1.4, 5.6);
+
+            (a + b).ShouldEqual(b + a);
+        }
+
+        [Fact]
+        private void AdditionIsAssociative()
+        {
+            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+            var c = new M3(2, 4, 6, 8, 10, 12, 14, 16, 18);
+
+            ((a + b) + c).ShouldEqual(a + (b + c));
+        }
+
+        [Fact]
+        private void AdditionWithNegativeElements()
+        {
+            var a = new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9);
+            var b = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            (a + b).ShouldEqual(M3.zero);
+        }
+
+        [Fact]
+        private void AdditionWithMixedSigns()
+        {
+            var a = new M3(-1, 2, -3, 4, -5, 6, -7, 8, -9);
+            var b = new M3(1, -2, 3, -4, 5, -6, 7, -8, 9);
+
+            (a + b).ShouldEqual(M3.zero);
+        }
+
+        [Fact]
+        private void AdditionWithLargeValues()
+        {
+            var a = new M3(1e150, 2e150, 3e150, 4e150, 5e150, 6e150, 7e150, 8e150, 9e150);
+            var b = new M3(1e150, 1e150, 1e150, 1e150, 1e150, 1e150, 1e150, 1e150, 1e150);
+
+            (a + b).ShouldEqual(new M3(2e150, 3e150, 4e150, 5e150, 6e150, 7e150, 8e150, 9e150, 10e150));
+        }
+
+        [Fact]
+        private void AdditionWithSmallValues()
+        {
+            var a = new M3(1e-150, 2e-150, 3e-150, 4e-150, 5e-150, 6e-150, 7e-150, 8e-150, 9e-150);
+            var b = new M3(1e-150, 1e-150, 1e-150, 1e-150, 1e-150, 1e-150, 1e-150, 1e-150, 1e-150);
+
+            (a + b).ShouldEqual(new M3(2e-150, 3e-150, 4e-150, 5e-150, 6e-150, 7e-150, 8e-150, 9e-150, 10e-150));
+        }
+
+        [Fact]
+        private void AdditionAndSubtractionInverse()
+        {
+            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+
+            ((a + b) - b).ShouldEqual(a);
+            ((a + b) - a).ShouldEqual(b);
+        }
+
+        [Fact]
+        private void AdditionWithNegation()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            (m + (-m)).ShouldEqual(M3.zero);
+        }
+
+        [Fact]
+        private void AdditionDistributesOverScalarMultiplication()
+        {
+            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+            const double s = 2.5;
+
+            (s * (a + b)).ShouldEqual(s * a + s * b);
+        }
+
+        [Fact]
+        private void AdditionPreservesSymmetry()
+        {
+            var a = new M3(1, 2, 3, 2, 4, 5, 3, 5, 6);
+            var b = new M3(6, 5, 4, 5, 3, 2, 4, 2, 1);
+            M3 sum = a + b;
+
+            sum[0, 1].ShouldEqual(sum[1, 0]);
+            sum[0, 2].ShouldEqual(sum[2, 0]);
+            sum[1, 2].ShouldEqual(sum[2, 1]);
+        }
+
+        [Fact]
         private void RotateTest()
         {
             var one   = Q3.AngleAxis(Deg2Rad(30), new V3(1, 0, 0));
