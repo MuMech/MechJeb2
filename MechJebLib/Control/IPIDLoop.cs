@@ -2,6 +2,6 @@
 {
     public interface IPIDLoop
     {
-        public double Update(double r, double y);
+        double Update(double r, double y);
     }
 }

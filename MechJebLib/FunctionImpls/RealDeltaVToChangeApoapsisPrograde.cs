@@ -29,8 +29,8 @@ namespace MechJebLib.FunctionImpls
             }
         }
 
-        private static readonly ThreadLocal<Args> _threadArgs = new ThreadLocal<Args>(() => new Args());
-        private static readonly Func<double, object?, double> _f = F;
+        private static readonly ThreadLocal<Args>             _threadArgs = new ThreadLocal<Args>(() => new Args());
+        private static readonly Func<double, object?, double> _f          = F;
 
         private static double F(double x, object? o)
         {
@@ -47,7 +47,7 @@ namespace MechJebLib.FunctionImpls
 
             args.Set(mu, r, v, newApR);
 
-            double vfm = BrentRoot.Solve(_f, 0, Astro.EscapeVelocity(mu, r.magnitude)-1, args);
+            double vfm = BrentRoot.Solve(_f, 0, Astro.EscapeVelocity(mu, r.magnitude) - 1, args);
 
             return vfm * v.normalized - v;
         }

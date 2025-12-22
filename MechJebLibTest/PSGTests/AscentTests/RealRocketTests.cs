@@ -124,10 +124,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Ascent ascent = Ascent.Builder()
                 .AerodynamicConstants(cd, aref, rho0, h0, w)
-                .AddStageUsingFinalMassThrustAndIsp(payload+secondStageWet+firstStageWet, payload+secondStageWet+firstStageDry, firstThrust, firstIsp, 2, 2, allowShutdown:false)
-                .AddStageUsingFinalMassThrustAndIsp(payload+secondStageWet, payload+secondStageDry, secondThrust, secondIsp, 1, 1)
-                .AddCoast(payload+secondStageWet, 0, 1200, 1, 1, massContinuity: true)
-                .AddStageUsingFinalMassThrustAndIsp(payload+secondStageWet, payload+secondStageDry, secondThrust, secondIsp, 1, 1, massContinuity: true)
+                .AddStageUsingFinalMassThrustAndIsp(payload + secondStageWet + firstStageWet, payload + secondStageWet + firstStageDry, firstThrust, firstIsp, 2, 2, allowShutdown: false)
+                .AddStageUsingFinalMassThrustAndIsp(payload + secondStageWet, payload + secondStageDry, secondThrust, secondIsp, 1, 1)
+                .AddCoast(payload + secondStageWet, 0, 1200, 1, 1, massContinuity: true)
+                .AddStageUsingFinalMassThrustAndIsp(payload + secondStageWet, payload + secondStageDry, secondThrust, secondIsp, 1, 1, massContinuity: true)
                 .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                 .SetTarget(PeR, ApR, PeR, incT, lanT, argpT, 0, false, true, true)
                 .Build();
@@ -144,7 +144,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             solution.R(0).ShouldEqual(r0, 1e-9);
             solution.V(0).ShouldEqual(v0, 1e-9);
-            solution.M(0).ShouldEqual(payload+secondStageWet+firstStageWet, 1e-9);
+            solution.M(0).ShouldEqual(payload + secondStageWet + firstStageWet, 1e-9);
 
             //solution.Tgo(solution.T0, 0).ShouldEqual(75.200000, 1e-3);
             //solution.Tgo(solution.T0, 1).ShouldEqual(75.200000, 1e-3);

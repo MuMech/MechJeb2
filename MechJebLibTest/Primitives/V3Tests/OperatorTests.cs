@@ -53,7 +53,7 @@ namespace MechJebLibTest.Primitives.V3Tests
             var b = new V3(4, 5, 6);
             var c = new V3(7, 8, 9);
 
-            ((a + b) + c).ShouldEqual(a + (b + c));
+            (a + b + c).ShouldEqual(a + (b + c));
         }
 
         [Fact]
@@ -155,8 +155,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ComponentWiseDivisionByZeroProducesInfinity()
         {
-            var v = new V3(1, -2, 3);
-            V3 result = v / V3.zero;
+            var v      = new V3(1, -2, 3);
+            V3  result = v / V3.zero;
 
             result.x.ShouldBePositiveInfinity();
             result.y.ShouldBeNegativeInfinity();
@@ -182,17 +182,14 @@ namespace MechJebLibTest.Primitives.V3Tests
         }
 
         [Fact]
-        private void NegationOfZeroVector()
-        {
-            (-V3.zero).ShouldEqual(V3.zero);
-        }
+        private void NegationOfZeroVector() => (-V3.zero).ShouldEqual(V3.zero);
 
         [Fact]
         private void DoubleNegation()
         {
             var v = new V3(1.5, -2.7, 3.2);
 
-            (-(-v)).ShouldEqual(v);
+            (- -v).ShouldEqual(v);
         }
 
         [Fact]
@@ -274,8 +271,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ScalarDivisionByZeroProducesInfinity()
         {
-            var v = new V3(1, -2, 3);
-            V3 result = v / 0;
+            var v      = new V3(1, -2, 3);
+            V3  result = v / 0;
 
             result.x.ShouldBePositiveInfinity();
             result.y.ShouldBeNegativeInfinity();
@@ -301,8 +298,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ScalarDivisionLeftWithZeroComponentProducesInfinity()
         {
-            var v = new V3(2, 0, -4);
-            V3 result = 8 / v;
+            var v      = new V3(2, 0, -4);
+            V3  result = 8 / v;
 
             result.x.ShouldEqual(4);
             result.y.ShouldBePositiveInfinity();
@@ -415,7 +412,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         {
             var v = new V3(1.5, 2.7, -3.2);
 
-            (v + (-v)).ShouldBeZero();
+            (v + -v).ShouldBeZero();
             (v - v).ShouldBeZero();
             (v * V3.zero).ShouldEqual(V3.zero);
             (v * V3.one).ShouldEqual(v);

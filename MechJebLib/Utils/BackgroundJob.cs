@@ -31,7 +31,7 @@ namespace MechJebLib.Utils
             if (_task is null)
                 return false;
 
-            return _task.IsCompleted == false;
+            return !_task.IsCompleted;
         }
 
         protected virtual void OnTaskCompleted(Task<T> task)

@@ -298,10 +298,10 @@ namespace MechJebLib.Maneuvers
             int periodOffset = 0,
             bool optguard = false)
         {
-            double[] x    = GenerateInitialGuess(periodOffset);
-            double[] bndl = new double[NVARIABLES];
-            double[] bndu = new double[NVARIABLES];
-            bool[]   boxConstrained =  new bool[NVARIABLES];
+            double[] x              = GenerateInitialGuess(periodOffset);
+            double[] bndl           = new double[NVARIABLES];
+            double[] bndu           = new double[NVARIABLES];
+            bool[]   boxConstrained = new bool[NVARIABLES];
 
             for (int i = 0; i < NVARIABLES; i++)
             {

@@ -14,7 +14,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void OrthonormalizeIdentityMatrix()
         {
-            var m = M3.identity;
+            M3 m = M3.identity;
             m.Orthonormalize();
 
             m.ShouldEqual(M3.identity);
@@ -23,9 +23,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void OrthonormalizeAlreadyOrthonormal()
         {
-            var q = Q3.AngleAxis(PI / 3, new V3(1, 2, 3).normalized);
-            var m = M3.Rotate(q);
-            var original = m;
+            var q        = Q3.AngleAxis(PI / 3, new V3(1, 2, 3).normalized);
+            var m        = M3.Rotate(q);
+            M3  original = m;
 
             m.Orthonormalize();
 
@@ -36,8 +36,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizeNearlyOrthogonal()
         {
             var m = new M3(1, 0.001, 0,
-                          0, 1, 0,
-                          0, 0, 1);
+                0, 1, 0,
+                0, 0, 1);
 
             m.Orthonormalize();
 
@@ -57,7 +57,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void OrthonormalizeScaledMatrix()
         {
-            var m = M3.identity * 2.5;
+            M3 m = M3.identity * 2.5;
 
             m.Orthonormalize();
 
@@ -68,8 +68,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizeSkewedMatrix()
         {
             var m = new M3(1, 0.5, 0.3,
-                          0.2, 1, 0.4,
-                          0.1, 0.2, 1);
+                0.2, 1, 0.4,
+                0.1, 0.2, 1);
 
             m.Orthonormalize();
 
@@ -90,8 +90,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizePreservesFirstColumnDirection()
         {
             var m = new M3(2, 1, 0,
-                          0, 3, 1,
-                          0, 0, 4);
+                0, 3, 1,
+                0, 0, 4);
 
             V3 originalFirstDir = m.GetColumn(0).normalized;
 
@@ -104,8 +104,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizeHandlesSmallVectors()
         {
             var m = new M3(1e-100, 0, 0,
-                          0, 1e-100, 0,
-                          0, 0, 1e-100);
+                0, 1e-100, 0,
+                0, 0, 1e-100);
 
             m.Orthonormalize();
 
@@ -116,8 +116,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizeHandlesLargeVectors()
         {
             var m = new M3(1e100, 0, 0,
-                          0, 1e100, 0,
-                          0, 0, 1e100);
+                0, 1e100, 0,
+                0, 0, 1e100);
 
             m.Orthonormalize();
 
@@ -128,8 +128,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizedPropertyReturnsNewMatrix()
         {
             var m = new M3(1, 0.5, 0.3,
-                          0.2, 1, 0.4,
-                          0.1, 0.2, 1);
+                0.2, 1, 0.4,
+                0.1, 0.2, 1);
 
             M3 result = m.orthonormalized;
 
@@ -160,7 +160,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void QuaternionFrom90DegreeRotationX()
         {
             var original = Q3.AngleAxis(PI / 2, V3.xaxis);
-            var m = M3.Rotate(original);
+            var m        = M3.Rotate(original);
 
             Q3 q = m.quaternion;
 
@@ -171,7 +171,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void QuaternionFrom90DegreeRotationY()
         {
             var original = Q3.AngleAxis(PI / 2, V3.yaxis);
-            var m = M3.Rotate(original);
+            var m        = M3.Rotate(original);
 
             Q3 q = m.quaternion;
 
@@ -182,7 +182,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void QuaternionFrom90DegreeRotationZ()
         {
             var original = Q3.AngleAxis(PI / 2, V3.zaxis);
-            var m = M3.Rotate(original);
+            var m        = M3.Rotate(original);
 
             Q3 q = m.quaternion;
 
@@ -193,7 +193,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void QuaternionFromArbitraryRotation()
         {
             var original = Q3.AngleAxis(1.234, new V3(1, 2, 3).normalized);
-            var m = M3.Rotate(original);
+            var m        = M3.Rotate(original);
 
             Q3 q = m.quaternion;
 
@@ -204,7 +204,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void QuaternionFrom180DegreeRotation()
         {
             var original = Q3.AngleAxis(PI, V3.xaxis);
-            var m = M3.Rotate(original);
+            var m        = M3.Rotate(original);
 
             Q3 q = m.quaternion;
 
@@ -216,8 +216,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void QuaternionHandlesNegativeTrace()
         {
             var m = new M3(-1, 0, 0,
-                          0, -1, 0,
-                          0, 0, 1);
+                0, -1, 0,
+                0, 0, 1);
 
             Q3 q = m.quaternion;
 
@@ -233,8 +233,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionLargestElementX()
         {
             var m = new M3(0.5, -0.5, 0.707107,
-                          0.5, 0.5, -0.707107,
-                          -0.707107, 0.707107, 0);
+                0.5, 0.5, -0.707107,
+                -0.707107, 0.707107, 0);
 
             Q3 q = m.rotation_quaternion;
 
@@ -246,8 +246,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionLargestElementY()
         {
             var m = new M3(0, 0.707107, -0.707107,
-                          -0.707107, 0.5, 0.5,
-                          0.707107, 0.5, 0.5);
+                -0.707107, 0.5, 0.5,
+                0.707107, 0.5, 0.5);
 
             Q3 q = m.rotation_quaternion;
 
@@ -259,8 +259,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionLargestElementZ()
         {
             var m = new M3(0.5, -0.707107, 0.5,
-                          0.707107, 0, -0.707107,
-                          0.5, 0.707107, 0.5);
+                0.707107, 0, -0.707107,
+                0.5, 0.707107, 0.5);
 
             Q3 q = m.rotation_quaternion;
 
@@ -272,8 +272,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionFromNonOrthonormalMatrix()
         {
             var m = new M3(2, 0, 0,
-                          0, 2, 0,
-                          0, 0, 2);
+                0, 2, 0,
+                0, 0, 2);
 
             Q3 q = m.rotation_quaternion;
 
@@ -292,7 +292,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionFromRotationMatrix()
         {
             var original = Q3.AngleAxis(0.789, new V3(3, -2, 1).normalized);
-            var m = M3.Rotate(original);
+            var m        = M3.Rotate(original);
 
             Q3 q = m.rotation_quaternion;
 
@@ -303,7 +303,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionFromScaledMatrix()
         {
             var original = Q3.AngleAxis(PI / 4, V3.up);
-            var m = M3.Rotate(original) * 3.5;
+            M3  m        = M3.Rotate(original) * 3.5;
 
             Q3 q = m.rotation_quaternion;
 
@@ -315,8 +315,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionFromSkewedMatrix()
         {
             var m = new M3(1, 0.5, 0.3,
-                          0.2, 1, 0.4,
-                          0.1, 0.2, 1);
+                0.2, 1, 0.4,
+                0.1, 0.2, 1);
 
             Q3 q = m.rotation_quaternion;
 
@@ -332,8 +332,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionHandlesNegativeDeterminant()
         {
             var m = new M3(-1, 0, 0,
-                          0, 1, 0,
-                          0, 0, 1);
+                0, 1, 0,
+                0, 0, 1);
 
             Q3 q = m.rotation_quaternion;
 
@@ -345,9 +345,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotationQuaternionRoundTrip()
         {
             var original = Q3.AngleAxis(1.234, new V3(5, -3, 7).normalized);
-            var m = M3.Rotate(original);
-            Q3 q = m.rotation_quaternion;
-            var m2 = M3.Rotate(q);
+            var m        = M3.Rotate(original);
+            Q3  q        = m.rotation_quaternion;
+            var m2       = M3.Rotate(q);
 
             m2.ShouldEqual(m, 1e-14);
         }
@@ -356,8 +356,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizeQuaternionConsistency()
         {
             var m = new M3(1, 0.5, 0.3,
-                          0.2, 1, 0.4,
-                          0.1, 0.2, 1);
+                0.2, 1, 0.4,
+                0.1, 0.2, 1);
 
             Q3 q1 = m.rotation_quaternion;
             Q3 q2 = m.orthonormalized.quaternion;
@@ -369,9 +369,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void QuaternionSmallAnglePrecision()
         {
-            const double TINY = 1e-10;
-            var original = Q3.AngleAxis(TINY, V3.zaxis);
-            var m = M3.Rotate(original);
+            const double TINY     = 1e-10;
+            var          original = Q3.AngleAxis(TINY, V3.zaxis);
+            var          m        = M3.Rotate(original);
 
             Q3 q = m.quaternion;
 
@@ -383,8 +383,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizeNearlyParallelColumns()
         {
             var m = new M3(1, 1 + 1e-10, 0,
-                          0, 1e-10, 0,
-                          0, 0, 1);
+                0, 1e-10, 0,
+                0, 0, 1);
 
             m.Orthonormalize();
 
@@ -400,17 +400,17 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void QuaternionEulerAngleConsistency()
         {
-            double roll = PI / 6;
+            double roll  = PI / 6;
             double pitch = PI / 4;
-            double yaw = PI / 3;
+            double yaw   = PI / 3;
 
-            var qRoll = Q3.AngleAxis(roll, V3.forward);
-            var qPitch = Q3.AngleAxis(pitch, V3.left);
-            var qYaw = Q3.AngleAxis(yaw, V3.up);
-            Q3 qCombined = qYaw * qPitch * qRoll;
+            var qRoll     = Q3.AngleAxis(roll, V3.forward);
+            var qPitch    = Q3.AngleAxis(pitch, V3.left);
+            var qYaw      = Q3.AngleAxis(yaw, V3.up);
+            Q3  qCombined = qYaw * qPitch * qRoll;
 
-            var m = M3.Rotate(qCombined);
-            Q3 qFromMatrix = m.quaternion;
+            var m           = M3.Rotate(qCombined);
+            Q3  qFromMatrix = m.quaternion;
 
             double angle = Q3.Angle(qFromMatrix, qCombined);
             angle.ShouldBeZero(1e-14);
@@ -420,8 +420,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizeRightHandedness()
         {
             var m = new M3(1, 1, 0,
-                          -1, 1, 0,
-                          0, 0, 1);
+                -1, 1, 0,
+                0, 0, 1);
 
             m.Orthonormalize();
 

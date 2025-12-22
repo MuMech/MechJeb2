@@ -165,7 +165,7 @@ namespace MechJebLib.PSG
             if (!phase.GuidedCoast)
                 NumConstraints += phase.Unguided ? 1 : k; // control magnitude constraint
             //if (phase.Unguided)
-                //NumConstraints += 3; // unguided control constraint
+            //NumConstraints += 3; // unguided control constraint
             if (!phase.Coast)
                 NumConstraints += (n - 1) * 2; // dynamical constraints for m
             if (p > 0)

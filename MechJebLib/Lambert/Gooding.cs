@@ -18,7 +18,7 @@ namespace MechJebLib.Lambert
     public static class Gooding
     {
         /// <summary>
-        /// Gooding's method of solving Lambert's problem.
+        ///     Gooding's method of solving Lambert's problem.
         /// </summary>
         /// <param name="mu">Gravitational parameter of central body</param>
         /// <param name="r1">Position at t0</param>
