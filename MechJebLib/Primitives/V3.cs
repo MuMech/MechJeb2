@@ -18,7 +18,7 @@ using static System.Math;
 namespace MechJebLib.Primitives
 {
     /// <summary>
-    ///     Double Precision, Right Handed 3-Vector class using Radians
+    ///     Double Precision, Right-Handed 3-Vector class using Radians
     /// </summary>
     public struct V3 : IEquatable<V3>, IFormattable
     {
@@ -146,25 +146,38 @@ namespace MechJebLib.Primitives
         // FIXME: precision
         public static V3 Project(V3 vector, V3 onNormal)
         {
-            double sqrMag = Dot(onNormal, onNormal);
-            if (sqrMag < EPS) return zero;
+            double invC = 1.0 / Math.Max(vector.max_magnitude, onNormal.max_magnitude);
+            if (double.IsPositiveInfinity(invC)) return zero;
 
-            double dot = Dot(vector, onNormal);
-            return new V3(onNormal.x * dot / sqrMag,
-                onNormal.y * dot / sqrMag,
-                onNormal.z * dot / sqrMag);
+            V3 vectorC = vector * invC;
+            V3 onNormalC = onNormal * invC;
+
+            double invSqrMag = 1.0 / Dot(onNormalC, onNormalC);
+
+            double dot = Dot(vectorC, onNormalC);
+            return onNormal * dot * invSqrMag;
         }
 
-        // FIXME: precision
         public static V3 ProjectOnPlane(V3 vector, V3 planeNormal)
         {
-            double sqrMag = Dot(planeNormal, planeNormal);
-            if (sqrMag < EPS) return vector;
+            if (vector == zero)
+                return zero;
 
-            double dot = Dot(vector, planeNormal);
-            return new V3(vector.x - planeNormal.x * dot / sqrMag,
-                vector.y - planeNormal.y * dot / sqrMag,
-                vector.z - planeNormal.z * dot / sqrMag);
+            if (planeNormal == zero)
+                return vector;
+
+            double invC = 1.0 / Math.Max(vector.max_magnitude, planeNormal.max_magnitude);
+            if (double.IsPositiveInfinity(invC)) return zero;
+
+            V3 vectorC   = vector * invC;
+            V3 planeNormalC = planeNormal * invC;
+
+            double invSqrMag = 1.0 / Dot(planeNormalC, planeNormalC);
+            double dot = Dot(vectorC, planeNormalC);
+
+            return new V3(vector.x - planeNormal.x * dot * invSqrMag,
+                vector.y - planeNormal.y * dot * invSqrMag,
+                vector.z - planeNormal.z * dot * invSqrMag);
         }
 
         public static V3 Lerp(V3 a, V3 b, double t) => a + t * (b - a);
@@ -220,13 +233,9 @@ namespace MechJebLib.Primitives
             return sign >= 0 ? angle : -angle;
         }
 
-        // FIXME: precision
         public static double Distance(V3 a, V3 b)
         {
-            double diff_x = a.x - b.x;
-            double diff_y = a.y - b.y;
-            double diff_z = a.z - b.z;
-            return Math.Sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
+            return new V3(a.x - b.x, a.y - b.y, a.z - b.z).magnitude;
         }
 
         public static V3 ClampMagnitude(V3 vector, double maxLength)
@@ -329,7 +338,7 @@ namespace MechJebLib.Primitives
 
         public static V3 back { get; } = new V3(-1.0, 0.0, 0.0);
 
-        // This defines the north pole that is valid for body centered inertial coordinate systems
+        // This defines the North Pole that is valid for body centered inertial coordinate systems
         public static V3 northpole { get; } = new V3(0, 0, 1);
 
         // X,Y,Z axis
@@ -342,14 +351,12 @@ namespace MechJebLib.Primitives
         /// <summary>
         ///     Convert vector stored as spherical radius, theta, phi to cartesian x,y,z
         /// </summary>
-        /// <param name="v"></param>
         /// <returns></returns>
         public V3 sph2cart => x * new V3(Cos(z) * Sin(y), Sin(z) * Sin(y), Cos(y));
 
         /// <summary>
         ///     Convert vector stored as cartesian x,y,z to spherical radius, theta, phi
         /// </summary>
-        /// <param name="v"></param>
         /// <returns></returns>
         public V3 cart2sph
         {
@@ -387,12 +394,9 @@ namespace MechJebLib.Primitives
 
         public static V3 operator /(double d, V3 a) => new V3(d / a.x, d / a.y, d / a.z);
 
-        public static bool operator ==(V3 lhs, V3 rhs)
-        {
-            // ReSharper disable CompareOfFloatsByEqualityOperator
-            return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
-            // ReSharper restore CompareOfFloatsByEqualityOperator
-        }
+        // ReSharper disable CompareOfFloatsByEqualityOperator
+        public static bool operator ==(V3 lhs, V3 rhs) => lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+        // ReSharper restore CompareOfFloatsByEqualityOperator
 
         public static bool operator !=(V3 lhs, V3 rhs) => !(lhs == rhs);
 

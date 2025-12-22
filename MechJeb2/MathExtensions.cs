@@ -129,10 +129,7 @@ namespace MuMech
                 return new QuaternionD(orthogonal.x, orthogonal.y, orthogonal.z, 0);
             }
 
-            if (dot > 0.9999999999) // Vectors are nearly identical (zero cross-product)
-                return QuaternionD.identity;
-
-            Vector3d cross = Vector3.Cross(fromDirection, toDirection);
+            var cross = Vector3d.Cross(fromDirection, toDirection);
             double   s     = Math.Sqrt((1 + dot) * 2);
             double   invs  = 1 / s;
 
@@ -140,7 +137,7 @@ namespace MuMech
                 cross.x * invs,
                 cross.y * invs,
                 cross.z * invs,
-                s * 0.5f
+                s * 0.5
             );
         }
 

@@ -7,7 +7,7 @@
 using MechJebLib.Primitives;
 using Xunit;
 
-namespace MechJebLibTest.Structs
+namespace MechJebLibTest.Primitives
 {
     public class HTests
     {

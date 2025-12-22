@@ -3,9 +3,9 @@ using Xunit;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
-namespace MechJebLibTest.Structs
+namespace MechJebLibTest.Primitives.M3Tests
 {
-    public class M3Tests
+    public class CoreOperationsTests
     {
         [Fact]
         private void IndividualAccessTest()

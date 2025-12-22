@@ -146,6 +146,14 @@ namespace MechJebLibTest.Primitives.V3Tests
         }
 
         [Fact]
+        private void ProjectWithOverflow()
+        {
+            var vector = new V3(1e200, 0, 0);
+            var onto   = new V3(1e200, 1e200, 0);
+            V3.Project(vector, onto).ShouldEqual(new V3(5e199, 5e199, 0));
+        }
+
+        [Fact]
         private void ProjectOnPlaneWithNormalVector()
         {
             var vector = new V3(3, 4, 5);
@@ -169,6 +177,15 @@ namespace MechJebLibTest.Primitives.V3Tests
         {
             var vector = new V3(1, 2, 3);
             V3.ProjectOnPlane(vector, V3.zero).ShouldEqual(vector);
+        }
+
+        [Fact]
+        private void ProjectOnPlaneWithOverflow()
+        {
+            var vector      = new V3(1e200, 0, 0);
+            var planeNormal = new V3(1e200, 1e200, 0);
+
+            V3.ProjectOnPlane(vector, planeNormal).ShouldEqual(new V3(5e199, -5e199, 0));
         }
 
         [Fact]
@@ -352,6 +369,17 @@ namespace MechJebLibTest.Primitives.V3Tests
             var b = new V3(0, 0, 0);
 
             V3.Distance(a, b).ShouldEqual(1e100);
+        }
+
+        [Fact]
+        private void DistanceOverflowWithLargeDifferences()
+        {
+            var a = new V3(1e200, 1e200, 1e200);
+            var b = new V3(-1e200, -1e200, -1e200);
+
+            double distance = V3.Distance(a, b);
+
+            distance.ShouldEqual(Sqrt(3) * 2e200);
         }
 
         [Fact]
