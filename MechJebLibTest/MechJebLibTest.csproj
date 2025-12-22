@@ -66,6 +66,8 @@
         <Compile Include="Primitives\M3Tests\CoreOperationsTests.cs"/>
         <Compile Include="Primitives\M3Tests\OrthonormalizeQuaternionTests.cs"/>
         <Compile Include="Primitives\M3Tests\RotationTests.cs"/>
+        <Compile Include="Primitives\Q3Tests\InterpolationTests.cs"/>
+        <Compile Include="Primitives\Q3Tests\MagnitudeConjugateTests.cs"/>
         <Compile Include="Primitives\Q3Tests\MatrixConversionTests.cs"/>
         <Compile Include="Primitives\Q3Tests\OperationTests.cs"/>
         <Compile Include="Primitives\V3Tests\ComponentAnalysisTests.cs"/>

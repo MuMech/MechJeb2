@@ -393,5 +393,289 @@ namespace MechJebLibTest.Primitives.Q3Tests
             q.ToString().ShouldEqual("(1.5, 2.5, 3.5, 4.5)");
             q.ToString("F2").ShouldEqual("(1.50, 2.50, 3.50, 4.50)");
         }
+
+        [Fact]
+        private void ScalarMultiplicationRight()
+        {
+            var q      = new Q3(1, 2, 3, 4);
+            Q3  result = q * 2;
+
+            result.x.ShouldEqual(2);
+            result.y.ShouldEqual(4);
+            result.z.ShouldEqual(6);
+            result.w.ShouldEqual(8);
+        }
+
+        [Fact]
+        private void ScalarMultiplicationLeft()
+        {
+            var q      = new Q3(1, 2, 3, 4);
+            Q3  result = 2 * q;
+
+            result.x.ShouldEqual(2);
+            result.y.ShouldEqual(4);
+            result.z.ShouldEqual(6);
+            result.w.ShouldEqual(8);
+        }
+
+        [Fact]
+        private void ScalarMultiplicationIsCommutative()
+        {
+            var q = new Q3(1.5, -2.7, 3.2, 0.8);
+
+            (q * 3.5).ShouldEqual(3.5 * q);
+        }
+
+        [Fact]
+        private void ScalarMultiplicationByZero()
+        {
+            var q = new Q3(1, 2, 3, 4);
+
+            (q * 0).ShouldEqual(new Q3(0, 0, 0, 0));
+            (0 * q).ShouldEqual(new Q3(0, 0, 0, 0));
+        }
+
+        [Fact]
+        private void ScalarMultiplicationByOne()
+        {
+            var q = new Q3(1.5, -2.7, 3.2, 0.8);
+
+            (q * 1).ShouldEqual(q);
+            (1 * q).ShouldEqual(q);
+        }
+
+        [Fact]
+        private void ScalarMultiplicationByNegative()
+        {
+            var q      = new Q3(1, 2, 3, 4);
+            Q3  result = q * -1;
+
+            result.ShouldEqual(new Q3(-1, -2, -3, -4));
+        }
+
+        [Fact]
+        private void ScalarMultiplicationWithIdentity()
+        {
+            Q3 result = Q3.identity * 5;
+
+            result.x.ShouldEqual(0);
+            result.y.ShouldEqual(0);
+            result.z.ShouldEqual(0);
+            result.w.ShouldEqual(5);
+        }
+
+        [Fact]
+        private void ScalarMultiplicationLargeValues()
+        {
+            var q      = new Q3(1e150, 2e150, 3e150, 4e150);
+            Q3  result = q * 2;
+
+            result.x.ShouldEqual(2e150);
+            result.y.ShouldEqual(4e150);
+            result.z.ShouldEqual(6e150);
+            result.w.ShouldEqual(8e150);
+        }
+
+        [Fact]
+        private void ScalarMultiplicationSmallValues()
+        {
+            var q      = new Q3(1e-150, 2e-150, 3e-150, 4e-150);
+            Q3  result = q * 2;
+
+            result.x.ShouldEqual(2e-150);
+            result.y.ShouldEqual(4e-150);
+            result.z.ShouldEqual(6e-150);
+            result.w.ShouldEqual(8e-150);
+        }
+
+        [Fact]
+        private void ScalarDivision()
+        {
+            var q      = new Q3(2, 4, 6, 8);
+            Q3  result = q / 2;
+
+            result.x.ShouldEqual(1);
+            result.y.ShouldEqual(2);
+            result.z.ShouldEqual(3);
+            result.w.ShouldEqual(4);
+        }
+
+        [Fact]
+        private void ScalarDivisionByOne()
+        {
+            var q = new Q3(1.5, -2.7, 3.2, 0.8);
+
+            (q / 1).ShouldEqual(q);
+        }
+
+        [Fact]
+        private void ScalarDivisionByNegative()
+        {
+            var q      = new Q3(2, 4, 6, 8);
+            Q3  result = q / -2;
+
+            result.ShouldEqual(new Q3(-1, -2, -3, -4));
+        }
+
+        [Fact]
+        private void ScalarDivisionByZeroProducesInfinity()
+        {
+            var q      = new Q3(1, -2, 3, -4);
+            Q3  result = q / 0;
+
+            result.x.ShouldBePositiveInfinity();
+            result.y.ShouldBeNegativeInfinity();
+            result.z.ShouldBePositiveInfinity();
+            result.w.ShouldBeNegativeInfinity();
+        }
+
+        [Fact]
+        private void ScalarDivisionZeroByZeroProducesNaN()
+        {
+            var q      = new Q3(0, 0, 0, 0);
+            Q3  result = q / 0;
+
+            result.x.ShouldBeNaN();
+            result.y.ShouldBeNaN();
+            result.z.ShouldBeNaN();
+            result.w.ShouldBeNaN();
+        }
+
+        [Fact]
+        private void ScalarDivisionLargeValues()
+        {
+            var q      = new Q3(2e150, 4e150, 6e150, 8e150);
+            Q3  result = q / 2;
+
+            result.x.ShouldEqual(1e150);
+            result.y.ShouldEqual(2e150);
+            result.z.ShouldEqual(3e150);
+            result.w.ShouldEqual(4e150);
+        }
+
+        [Fact]
+        private void ScalarDivisionSmallValues()
+        {
+            var q      = new Q3(2e-150, 4e-150, 6e-150, 8e-150);
+            Q3  result = q / 2;
+
+            result.x.ShouldEqual(1e-150);
+            result.y.ShouldEqual(2e-150);
+            result.z.ShouldEqual(3e-150);
+            result.w.ShouldEqual(4e-150);
+        }
+
+        [Fact]
+        private void ScalarMultiplyThenDivideRoundTrip()
+        {
+            var q = new Q3(1, 2, 3, 4);
+
+            (q * 5 / 5).ShouldEqual(q);
+        }
+
+        [Fact]
+        private void UnaryNegation()
+        {
+            var q      = new Q3(1, -2, 3, -4);
+            Q3  result = -q;
+
+            result.x.ShouldEqual(-1);
+            result.y.ShouldEqual(2);
+            result.z.ShouldEqual(-3);
+            result.w.ShouldEqual(4);
+        }
+
+        [Fact]
+        private void UnaryNegationOfIdentity()
+        {
+            Q3 result = -Q3.identity;
+
+            result.x.ShouldEqual(0);
+            result.y.ShouldEqual(0);
+            result.z.ShouldEqual(0);
+            result.w.ShouldEqual(-1);
+        }
+
+        [Fact]
+        private void UnaryNegationOfZeroQuaternion()
+        {
+            var q = new Q3(0, 0, 0, 0);
+
+            (-q).ShouldEqual(q);
+        }
+
+        [Fact]
+        private void DoubleNegation()
+        {
+            var q = new Q3(1.5, -2.7, 3.2, 0.8);
+
+            (- -q).ShouldEqual(q);
+        }
+
+        [Fact]
+        private void NegationEquivalentToMultiplyByNegativeOne()
+        {
+            var q = new Q3(1, 2, 3, 4);
+
+            (-q).ShouldEqual(q * -1);
+            (-q).ShouldEqual(-1 * q);
+        }
+
+        [Fact]
+        private void NegatedQuaternionRepresentsSameRotation()
+        {
+            var q = Q3.AngleAxis(PI / 3, new V3(1, 2, 3).normalized);
+            var v = new V3(5, 6, 7);
+
+            (q * v).ShouldEqual(-q * v, 1e-14);
+        }
+
+        [Fact]
+        private void NegationWithSpecialValues()
+        {
+            var q      = new Q3(double.PositiveInfinity, double.NegativeInfinity, double.NaN, 0);
+            Q3  result = -q;
+
+            result.x.ShouldBeNegativeInfinity();
+            result.y.ShouldBePositiveInfinity();
+            result.z.ShouldBeNaN();
+            result.w.ShouldEqual(0);
+        }
+
+        [Fact]
+        private void NegationLargeValues()
+        {
+            var q      = new Q3(1e300, -1e300, 1e-300, -1e-300);
+            Q3  result = -q;
+
+            result.x.ShouldEqual(-1e300);
+            result.y.ShouldEqual(1e300);
+            result.z.ShouldEqual(-1e-300);
+            result.w.ShouldEqual(1e-300);
+        }
+
+        [Fact]
+        private void ScalarOperatorsPrecedence()
+        {
+            var q = new Q3(1, 2, 3, 4);
+
+            (q * 2 / 2).ShouldEqual(q);
+            (2 * q / 2).ShouldEqual(q);
+        }
+
+        [Fact]
+        private void ScalarMultiplicationDistributive()
+        {
+            var          q1 = new Q3(1, 2, 3, 4);
+            var          q2 = new Q3(5, 6, 7, 8);
+            const double s  = 3;
+
+            var sum       = new Q3(q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w);
+            var scaled1   = new Q3(q1.x * s, q1.y * s, q1.z * s, q1.w * s);
+            var scaled2   = new Q3(q2.x * s, q2.y * s, q2.z * s, q2.w * s);
+            var scaledSum = new Q3(scaled1.x + scaled2.x, scaled1.y + scaled2.y, scaled1.z + scaled2.z, scaled1.w + scaled2.w);
+
+            (sum * s).ShouldEqual(scaledSum);
+        }
     }
 }
