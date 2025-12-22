@@ -63,6 +63,11 @@
         <Compile Include="ManeuversTests\Simple.cs"/>
         <Compile Include="ODETests\BS3Tests.c.cs"/>
         <Compile Include="ODETests\DP5Tests.cs"/>
+        <Compile Include="Primitives\M3Tests\CoreOperationsTests.cs" />
+        <Compile Include="Primitives\M3Tests\OrthonormalizeQuaternionTests.cs" />
+        <Compile Include="Primitives\M3Tests\RotationTests.cs" />
+        <Compile Include="Primitives\Q3Tests\MatrixConversionTests.cs" />
+        <Compile Include="Primitives\Q3Tests\OperationTests.cs" />
         <Compile Include="Primitives\V3Tests\ComponentAnalysisTests.cs"/>
         <Compile Include="Primitives\V3Tests\ComponentOperationsTests.cs"/>
         <Compile Include="Primitives\V3Tests\ConstructorAccessorTests.cs"/>
@@ -84,9 +89,6 @@
         <Compile Include="RootfindingTests\NewtonTests.cs"/>
         <Compile Include="StaticTests.cs"/>
         <Compile Include="Primitives\HTests.cs"/>
-        <Compile Include="Primitives\M3Tests.cs"/>
-        <Compile Include="Primitives\Q3Tests.cs"/>
-        <Compile Include="Primitives\V3Tests.cs"/>
         <Compile Include="TestInitialization.cs"/>
         <Compile Include="TwoBodyTests\FarnocchiaTests.cs"/>
         <Compile Include="TwoBodyTests\ShepperdTests.cs"/>

@@ -209,12 +209,12 @@ namespace MechJebLibTest.Primitives.V3Tests
         {
             var v = new V3(double.PositiveInfinity, 1, 2);
 
-            v.max_magnitude.ShouldEqual(double.PositiveInfinity);
+            v.max_magnitude.ShouldBePositiveInfinity();
             v.min_magnitude.ShouldEqual(1.0);
 
             var v2 = new V3(double.NegativeInfinity, 1, 2);
 
-            v2.max_magnitude.ShouldEqual(double.PositiveInfinity);
+            v2.max_magnitude.ShouldBePositiveInfinity();
             v2.min_magnitude.ShouldEqual(1.0);
         }
 

@@ -64,6 +64,29 @@ namespace MechJebLibTest
                 );
         }
 
+        public static void ShouldEqual(this Q3 actual, Q3 expected, double epsilon = EPS)
+        {
+            if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
+                throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
+
+            if (!NearlyEqual(actual, expected, epsilon))
+                throw new EqualException(
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                );
+        }
+
+        public static void ShouldNotEqual(this Q3 actual, Q3 expected, double epsilon = EPS)
+        {
+            if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
+                throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
+
+            if (NearlyEqual(actual, expected, epsilon))
+                throw new XunitException(
+                    string.Format(CultureInfo.CurrentCulture, "Expected not equal to {0:G17}, but was {1:G17}", expected, actual)
+                );
+        }
+
         public static void ShouldEqual(this string actual, string expected)
         {
             if (actual != expected)
@@ -191,13 +214,13 @@ namespace MechJebLibTest
                 throw new XunitException($"Expected {actual} to be less than {expected}");
         }
 
-        public static void ShouldBeGreaterThanOrEqualTo(this double actual, double expected)
+        public static void ShouldBeGreaterThanOrEqual(this double actual, double expected)
         {
             if (actual < expected)
                 throw new XunitException($"Expected {actual} to be greater than or equal to {expected}");
         }
 
-        public static void ShouldBeLessThanOrEqualTo(this double actual, double expected)
+        public static void ShouldBeLessThanOrEqual(this double actual, double expected)
         {
             if (actual > expected)
                 throw new XunitException($"Expected {actual} to be less than or equal to {expected}");

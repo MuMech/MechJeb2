@@ -308,6 +308,10 @@ namespace MechJebLib.Utils
 
             double epsilon2 = Max(a.magnitude, b.magnitude) * epsilon;
 
+            // if we have negative or nan values, then if we weren't Equals above, we're different
+            if (!IsFinite(epsilon2))
+                return false;
+
             for (int i = 0; i < 3; i++)
             {
                 if ((a[i] == 0 || b[i] == 0) && diff[i] > epsilon)
@@ -320,7 +324,7 @@ namespace MechJebLib.Utils
         }
 
         /// <summary>
-        ///     Compares two M3 matricies with a relative tolerance.
+        ///     Compares two M3 matrices with a relative tolerance.
         /// </summary>
         /// <param name="a">first vector</param>
         /// <param name="b">second vector</param>
@@ -341,6 +345,42 @@ namespace MechJebLib.Utils
                 if (Abs(a[i] - b[i]) > epsilon2)
                     return false;
             }
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Compares two Q3 quaternions with a relative tolerance.
+        /// </summary>
+        /// <param name="a">first quaternion</param>
+        /// <param name="b">second quaternion</param>
+        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
+        /// <returns>true if the values are nearly the same</returns>
+        public static bool NearlyEqual(Q3 a, Q3 b, double epsilon = EPS)
+        {
+            if (a.Equals(b))
+                return true;
+
+            double epsilon2 = Max(Max(Max(Abs(a.x), Abs(a.y)), Max(Abs(a.z), Abs(a.w))),
+                Max(Max(Abs(b.x), Abs(b.y)), Max(Abs(b.z), Abs(b.w)))) * epsilon;
+
+            if ((a.x == 0 || b.x == 0) && Abs(a.x - b.x) > epsilon)
+                return false;
+            if ((a.y == 0 || b.y == 0) && Abs(a.y - b.y) > epsilon)
+                return false;
+            if ((a.z == 0 || b.z == 0) && Abs(a.z - b.z) > epsilon)
+                return false;
+            if ((a.w == 0 || b.w == 0) && Abs(a.w - b.w) > epsilon)
+                return false;
+
+            if (Abs(a.x - b.x) > epsilon2)
+                return false;
+            if (Abs(a.y - b.y) > epsilon2)
+                return false;
+            if (Abs(a.z - b.z) > epsilon2)
+                return false;
+            if (Abs(a.w - b.w) > epsilon2)
+                return false;
 
             return true;
         }

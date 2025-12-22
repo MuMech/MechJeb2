@@ -16,8 +16,6 @@ namespace MechJebLib.Primitives
 {
     public struct Q3 : IEquatable<Q3>, IFormattable
     {
-        private const double KEPS = EPS * 2.0; // for equality checking
-
         public double x, y, z, w;
 
         // Access the x, y, z, w components using [0], [1], [2], [3] respectively.
@@ -110,21 +108,37 @@ namespace MechJebLib.Primitives
             return res;
         }
 
-        // Is the dot product of two quaternions within tolerance for them to be considered equal?
-        private static bool IsEqualUsingDot(double dot) =>
-            // Returns false in the presence of NaN values.
-            dot > 1.0 - KEPS;
+        public static Q3 operator *(Q3 q, double s) => new Q3(q.x * s, q.y * s, q.z * s, q.w * s);
 
-        // Are two quaternions equal to each other?
-        public static bool operator ==(Q3 lhs, Q3 rhs) => IsEqualUsingDot(Dot(lhs, rhs));
+        public static Q3 operator *(double s, Q3 q) => new Q3(q.x * s, q.y * s, q.z * s, q.w * s);
 
-        // Are two quaternions different from each other?
-        public static bool operator !=(Q3 lhs, Q3 rhs) =>
-            // Returns true in the presence of NaN values.
-            !(lhs == rhs);
+        // ReSharper disable CompareOfFloatsByEqualityOperator
+        public static bool operator ==(Q3 lhs, Q3 rhs) => lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w;
+        // ReSharper restore CompareOfFloatsByEqualityOperator
 
-        // The dot product between two rotations.
+        public static bool operator !=(Q3 lhs, Q3 rhs) => !(lhs == rhs);
+
+        public static Q3 operator /(Q3 q, double d) => new Q3(q.x / d, q.y / d, q.z / d, q.w / d);
+
+        public static Q3 operator -(Q3 q) => new Q3(-q.x, -q.y, -q.z, -q.w);
+
         public static double Dot(Q3 a, Q3 b) => a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+
+        public double max_magnitude => Max(Max(Max(Abs(w), Abs(x)), Abs(y)), Abs(z));
+        public double min_magnitude => Min(Min(Min(Abs(w), Abs(x)), Abs(y)), Abs(z));
+
+        private double _internal_magnitude => Sqrt(w * w + x * x + y * y + z * z);
+
+        public double magnitude
+        {
+            get
+            {
+                double c = max_magnitude;
+                return c > 0 ? Max(c, c * (this / c)._internal_magnitude) : 0;
+            }
+        }
+
+        public Q3 conjugate => new Q3(-x, -y, -z, w);
 
         /*
         public void SetLookRotation(V3 view)
@@ -145,8 +159,11 @@ namespace MechJebLib.Primitives
         // Returns the angle in radians between two rotations /a/ and /b/.
         public static double Angle(Q3 a, Q3 b)
         {
-            double dot = Dot(a, b);
-            return IsEqualUsingDot(dot) ? 0.0f : Acos(Min(Abs(dot), 1.0)) * 2.0;
+            Q3 q = a * b.conjugate;
+            if (q.w < 0.0)
+                q = -q;
+
+            return 2.0 * Atan2(Sqrt(q.x*q.x + q.y*q.y + q.z*q.z), q.w);
         }
 
         // FIXME: kill degrees with fire, fix euler angles
@@ -174,7 +191,7 @@ namespace MechJebLib.Primitives
             return euler;
         }
 
-        // this produces the mathmetical ZYX intrinsic euler angles, which is aircraft roll, pitch, yaw
+        // this produces the mathematical ZYX intrinsic euler angles, which is aircraft roll, pitch, yaw
         public static V3 ToEulerAngles(Q3 q)
         {
             var angles = new V3();
@@ -214,14 +231,18 @@ namespace MechJebLib.Primitives
 
         public static Q3 LookRotation(V3 forward, V3 upwards = default)
         {
-            if (upwards == default)
+            if (upwards == V3.zero)
                 upwards = V3.up;
+
+            if (forward == V3.zero)
+                return identity;
 
             forward = V3.Normalize(forward);
             var right = V3.Normalize(V3.Cross(forward, upwards));
+            if (right == V3.zero)
+                return FromToRotation(V3.forward, forward);
             upwards = V3.Cross(right, forward);
 
-            // FIXME: slurp these into an M3 and write an M3-rotation-matrix-to-Q3 function
             double m00 = forward.x;
             double m01 = forward.y;
             double m02 = forward.z;
@@ -314,11 +335,39 @@ namespace MechJebLib.Primitives
             );
         }
 
-        public static Q3 FromToRotation(V3 from, V3 to)
+        public static Q3 FromToRotation(V3 fromDirection, V3 toDirection)
         {
-            var    c = V3.Cross(from, to);
-            double w = Sqrt(from.sqrMagnitude * to.sqrMagnitude) + V3.Dot(from, to);
-            return Normalize(new Q3(c.x, c.y, c.z, w));
+            if (fromDirection == V3.zero || toDirection == V3.zero)
+                return identity;
+
+            fromDirection.Normalize();
+            toDirection.Normalize();
+
+            double dot = V3.Dot(fromDirection, toDirection);
+
+            if (dot < -0.9999999999) // Vectors are pointing in opposite directions (zero cross-product)
+            {
+                var orthogonal = V3.Cross(fromDirection, Abs(fromDirection.x) < 1.0 / Sqrt(2.0) ? new V3(1, 0, 0) : new V3(0, 1, 0));
+
+                orthogonal.Normalize();
+
+                return new Q3(orthogonal.x, orthogonal.y, orthogonal.z, 0);
+            }
+
+            /*
+            if (dot > 0.9999999999) // Vectors are nearly identical (zero cross-product)
+                return identity; */
+
+            var    cross = V3.Cross(fromDirection, toDirection);
+            double s     = Sqrt((1.0 + dot) * 2.0);
+            double invs  = 1 / s;
+
+            return new Q3(
+                cross.x * invs,
+                cross.y * invs,
+                cross.z * invs,
+                s * 0.5
+            );
         }
 
         public static Q3 AngleAxis(double angle, V3 axis)
@@ -342,7 +391,7 @@ namespace MechJebLib.Primitives
         // FIXME: precision
         public static Q3 Normalize(Q3 q)
         {
-            double mag = Sqrt(Dot(q, q));
+            double mag = q.magnitude;
 
             return mag < EPS ? identity : new Q3(q.x / mag, q.y / mag, q.z / mag, q.w / mag);
         }

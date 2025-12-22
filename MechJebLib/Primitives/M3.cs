@@ -5,6 +5,7 @@
 
 using System;
 using System.Globalization;
+using static System.Math;
 
 // ReSharper disable InconsistentNaming
 namespace MechJebLib.Primitives
@@ -163,7 +164,7 @@ namespace MechJebLib.Primitives
         /// </summary>
         /// <param name="other">object to compare</param>
         /// <returns>if the values are equal</returns>
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             if (!(other is M3 m))
                 return false;
@@ -506,9 +507,101 @@ namespace MechJebLib.Primitives
         }
 
         /// <summary>
-        ///     Returns the inverase of the matrix.
+        ///     Returns the inverse of the matrix.
         /// </summary>
         public M3 inverse => Inverse(this);
+
+        /// <summary>
+        ///     Gram-Schmidt process to orthonormalize the basis of the matrix.
+        /// </summary>
+        public void Orthonormalize()
+        {
+            V3 x = GetColumn(0);
+            V3 y = GetColumn(1);
+            V3 z = GetColumn(2);
+
+            x.Normalize();
+            y -= x * V3.Dot(x, y);
+            y.Normalize();
+            z -= x * V3.Dot(x, z) + y * V3.Dot(y, z);
+            z.Normalize();
+
+            SetColumn(0, x);
+            SetColumn(1, y);
+            SetColumn(2, z);
+        }
+
+        public M3 orthonormalized
+        {
+            get
+            {
+                M3 m = this;
+                m.Orthonormalize();
+                return m;
+            }
+        }
+
+        /// <summary>
+        ///     Converts a rotation matrix to a quaternion representation.
+        ///     This does not ensure that the matrix basis is orthonormal with det 1.
+        /// </summary>
+        public Q3 quaternion
+        {
+            get
+            {
+                double trace = m00 + m11 + m22;
+
+                if (trace > 0.0)
+                {
+                    double s = Sqrt(trace + 1.0);
+                    double w = s * 0.5;
+                    s = 0.5 / s;
+
+                    double x = (m21 - m12) * s;
+                    double y = (m02 - m20) * s;
+                    double z = (m10 - m01) * s;
+
+                    return new Q3(x, y, z, w);
+                }
+                else
+                {
+                    int i = m00 < m11
+                        ? m11 < m22 ? 2 : 1
+                        : m00 < m22
+                            ? 2
+                            : 0;
+                    int j = (i + 1) % 3;
+                    int k = (i + 2) % 3;
+
+                    double s = Sqrt(this[i, i] - this[j, j] - this[k, k] + 1.0);
+
+                    double[] temp = new double[4];
+                    temp[i] = s * 0.5;
+                    s       = 0.5 / s;
+
+                    temp[3] = (this[k, j] - this[j, k]) * s;
+                    temp[j] = (this[j, i] + this[i, j]) * s;
+                    temp[k] = (this[k, i] + this[i, k]) * s;
+
+                    return new Q3(temp[0], temp[1], temp[2], temp[3]);
+                }
+            }
+        }
+
+        public Q3 rotation_quaternion
+        {
+            get
+            {
+                M3 m = orthonormalized;
+                // ensure that the determinant is 1
+                if (m.determinant < 0)
+                {
+                    m *= -1;
+                }
+
+                return m.quaternion;
+            }
+        }
 
         /// <summary>
         ///     Returns the transpose of the matrix.
