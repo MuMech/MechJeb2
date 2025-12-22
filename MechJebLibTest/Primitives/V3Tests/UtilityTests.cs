@@ -378,5 +378,196 @@ namespace MechJebLibTest.Primitives.V3Tests
             v2.y.ShouldEqual(-1e100);
             v2.z.ShouldEqual(1e-100);
         }
+
+        [Fact]
+        private void CopyFromIndicesSequential()
+        {
+            double[] array = { 1, 2, 3, 4, 5 };
+            var      v     = V3.CopyFromIndices(array, (0, 1, 2));
+
+            v.ShouldEqual(new V3(1, 2, 3));
+        }
+
+        [Fact]
+        private void CopyFromIndicesNonSequential()
+        {
+            double[] array = { 10, 20, 30, 40, 50, 60 };
+            var      v     = V3.CopyFromIndices(array, (1, 3, 5));
+
+            v.ShouldEqual(new V3(20, 40, 60));
+        }
+
+        [Fact]
+        private void CopyFromIndicesReversed()
+        {
+            double[] array = { 1, 2, 3, 4, 5 };
+            var      v     = V3.CopyFromIndices(array, (4, 2, 0));
+
+            v.ShouldEqual(new V3(5, 3, 1));
+        }
+
+        [Fact]
+        private void CopyFromIndicesDuplicateIndices()
+        {
+            double[] array = { 7, 8, 9 };
+            var      v     = V3.CopyFromIndices(array, (1, 1, 1));
+
+            v.ShouldEqual(new V3(8, 8, 8));
+        }
+
+        [Fact]
+        private void CopyFromIndicesWithList()
+        {
+            var list = new List<double> { 100, 200, 300, 400 };
+            var v    = V3.CopyFromIndices(list, (3, 1, 0));
+
+            v.ShouldEqual(new V3(400, 200, 100));
+        }
+
+        [Fact]
+        private void CopyFromIndicesWithSpecialValues()
+        {
+            double[] array = { double.NaN, double.PositiveInfinity, double.NegativeInfinity, 0 };
+            var      v     = V3.CopyFromIndices(array, (0, 1, 2));
+
+            v.x.ShouldBeNaN();
+            v.y.ShouldBePositiveInfinity();
+            v.z.ShouldBeNegativeInfinity();
+        }
+
+        [Fact]
+        private void CopyToIndicesSequential()
+        {
+            var      v     = new V3(10, 20, 30);
+            double[] array = new double[5];
+
+            v.CopyToIndices(array, (0, 1, 2));
+
+            array[0].ShouldEqual(10);
+            array[1].ShouldEqual(20);
+            array[2].ShouldEqual(30);
+            array[3].ShouldEqual(0);
+            array[4].ShouldEqual(0);
+        }
+
+        [Fact]
+        private void CopyToIndicesNonSequential()
+        {
+            var      v     = new V3(5, 6, 7);
+            double[] array = new double[6];
+
+            v.CopyToIndices(array, (1, 3, 5));
+
+            array[0].ShouldEqual(0);
+            array[1].ShouldEqual(5);
+            array[2].ShouldEqual(0);
+            array[3].ShouldEqual(6);
+            array[4].ShouldEqual(0);
+            array[5].ShouldEqual(7);
+        }
+
+        [Fact]
+        private void CopyToIndicesReversed()
+        {
+            var      v     = new V3(1, 2, 3);
+            double[] array = new double[5];
+
+            v.CopyToIndices(array, (4, 2, 0));
+
+            array[0].ShouldEqual(3);
+            array[1].ShouldEqual(0);
+            array[2].ShouldEqual(2);
+            array[3].ShouldEqual(0);
+            array[4].ShouldEqual(1);
+        }
+
+        [Fact]
+        private void CopyToIndicesDuplicateIndicesLastWins()
+        {
+            var      v     = new V3(1, 2, 3);
+            double[] array = new double[3];
+
+            v.CopyToIndices(array, (0, 0, 0));
+
+            array[0].ShouldEqual(3);
+            array[1].ShouldEqual(0);
+            array[2].ShouldEqual(0);
+        }
+
+        [Fact]
+        private void CopyToIndicesWithList()
+        {
+            var v = new V3(100, 200, 300);
+            var list = new List<double>
+            {
+                0,
+                0,
+                0,
+                0,
+                0
+            };
+
+            v.CopyToIndices(list, (4, 2, 0));
+
+            list[0].ShouldEqual(300);
+            list[1].ShouldEqual(0);
+            list[2].ShouldEqual(200);
+            list[3].ShouldEqual(0);
+            list[4].ShouldEqual(100);
+        }
+
+        [Fact]
+        private void CopyToIndicesOverwritesExistingValues()
+        {
+            var      v     = new V3(7, 8, 9);
+            double[] array = { 1, 2, 3, 4, 5 };
+
+            v.CopyToIndices(array, (0, 2, 4));
+
+            array[0].ShouldEqual(7);
+            array[1].ShouldEqual(2);
+            array[2].ShouldEqual(8);
+            array[3].ShouldEqual(4);
+            array[4].ShouldEqual(9);
+        }
+
+        [Fact]
+        private void CopyToIndicesWithSpecialValues()
+        {
+            var      v     = new V3(double.NaN, double.PositiveInfinity, double.NegativeInfinity);
+            double[] array = new double[3];
+
+            v.CopyToIndices(array, (0, 1, 2));
+
+            array[0].ShouldBeNaN();
+            array[1].ShouldBePositiveInfinity();
+            array[2].ShouldBeNegativeInfinity();
+        }
+
+        [Fact]
+        private void CopyFromToIndicesRoundTrip()
+        {
+            var      original = new V3(1.5, 2.5, 3.5);
+            double[] array    = new double[10];
+            var      indices  = (2, 5, 8);
+
+            original.CopyToIndices(array, indices);
+            var restored = V3.CopyFromIndices(array, indices);
+
+            restored.ShouldEqual(original);
+        }
+
+        [Fact]
+        private void CopyFromToIndicesScatteredRoundTrip()
+        {
+            var      original = new V3(-7.7, 8.8, -9.9);
+            double[] array    = new double[6];
+            var      indices  = (5, 0, 3);
+
+            original.CopyToIndices(array, indices);
+            var restored = V3.CopyFromIndices(array, indices);
+
+            restored.ShouldEqual(original);
+        }
     }
 }
