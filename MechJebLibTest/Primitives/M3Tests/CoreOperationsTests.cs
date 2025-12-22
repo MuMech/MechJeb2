@@ -378,7 +378,7 @@ namespace MechJebLibTest.Primitives.M3Tests
             (a - b - c).ShouldEqual(a - (b + c));
         }
 
-                [Fact]
+        [Fact]
         private void AdditionBasicMatrices()
         {
             var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
@@ -420,7 +420,7 @@ namespace MechJebLibTest.Primitives.M3Tests
             var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
             var c = new M3(2, 4, 6, 8, 10, 12, 14, 16, 18);
 
-            ((a + b) + c).ShouldEqual(a + (b + c));
+            (a + b + c).ShouldEqual(a + (b + c));
         }
 
         [Fact]
@@ -465,8 +465,8 @@ namespace MechJebLibTest.Primitives.M3Tests
             var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
 
-            ((a + b) - b).ShouldEqual(a);
-            ((a + b) - a).ShouldEqual(b);
+            (a + b - b).ShouldEqual(a);
+            (a + b - a).ShouldEqual(b);
         }
 
         [Fact]
@@ -474,14 +474,14 @@ namespace MechJebLibTest.Primitives.M3Tests
         {
             var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-            (m + (-m)).ShouldEqual(M3.zero);
+            (m + -m).ShouldEqual(M3.zero);
         }
 
         [Fact]
         private void AdditionDistributesOverScalarMultiplication()
         {
-            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+            var          a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var          b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
             const double s = 2.5;
 
             (s * (a + b)).ShouldEqual(s * a + s * b);
@@ -490,9 +490,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void AdditionPreservesSymmetry()
         {
-            var a = new M3(1, 2, 3, 2, 4, 5, 3, 5, 6);
-            var b = new M3(6, 5, 4, 5, 3, 2, 4, 2, 1);
-            M3 sum = a + b;
+            var a   = new M3(1, 2, 3, 2, 4, 5, 3, 5, 6);
+            var b   = new M3(6, 5, 4, 5, 3, 2, 4, 2, 1);
+            M3  sum = a + b;
 
             sum[0, 1].ShouldEqual(sum[1, 0]);
             sum[0, 2].ShouldEqual(sum[2, 0]);

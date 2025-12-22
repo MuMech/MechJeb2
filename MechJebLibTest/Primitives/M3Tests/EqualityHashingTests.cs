@@ -43,7 +43,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void EqualsWithZeroMatrices()
         {
             var m1 = new M3(0, 0, 0, 0, 0, 0, 0, 0, 0);
-            M3 m2 = M3.zero;
+            M3  m2 = M3.zero;
 
             m1.Equals(m2).ShouldBeTrue();
             m2.Equals(m1).ShouldBeTrue();
@@ -53,7 +53,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void EqualsWithIdentityMatrices()
         {
             var m1 = new M3(1, 0, 0, 0, 1, 0, 0, 0, 1);
-            M3 m2 = M3.identity;
+            M3  m2 = M3.identity;
 
             m1.Equals(m2).ShouldBeTrue();
             m2.Equals(m1).ShouldBeTrue();
@@ -102,7 +102,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EqualsObjectOverloadWithM3()
         {
-            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var    m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             object m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
             m1.Equals(m2).ShouldBeTrue();
@@ -111,7 +111,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EqualsObjectOverloadWithDifferentM3()
         {
-            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var    m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             object m2 = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
 
             m1.Equals(m2).ShouldBeFalse();
@@ -128,7 +128,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EqualsObjectOverloadWithWrongType()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var    m          = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             object notAMatrix = "not a matrix";
 
             m.Equals(notAMatrix).ShouldBeFalse();
@@ -137,7 +137,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EqualsObjectOverloadWithVector()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var    m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             object v = new V3(1, 2, 3);
 
             m.Equals(v).ShouldBeFalse();
@@ -164,7 +164,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void GetHashCodeConsistency()
         {
-            var m = new M3(1.5, 2.7, -3.2, 4.1, 5.9, 6.3, 7.7, 8.8, 9.9);
+            var m     = new M3(1.5, 2.7, -3.2, 4.1, 5.9, 6.3, 7.7, 8.8, 9.9);
             int hash1 = m.GetHashCode();
             int hash2 = m.GetHashCode();
 
@@ -175,7 +175,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void GetHashCodeZeroMatrix()
         {
             var m1 = new M3(0, 0, 0, 0, 0, 0, 0, 0, 0);
-            M3 m2 = M3.zero;
+            M3  m2 = M3.zero;
 
             m1.GetHashCode().ShouldEqual(m2.GetHashCode());
         }
@@ -184,7 +184,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void GetHashCodeIdentityMatrix()
         {
             var m1 = new M3(1, 0, 0, 0, 1, 0, 0, 0, 1);
-            M3 m2 = M3.identity;
+            M3  m2 = M3.identity;
 
             m1.GetHashCode().ShouldEqual(m2.GetHashCode());
         }
@@ -346,9 +346,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void DictionaryUsage()
         {
             var dict = new Dictionary<M3, string>();
-            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var m3 = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+            var m1   = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m2   = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m3   = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
 
             dict[m1] = "first";
             dict[m3] = "second";
@@ -362,9 +362,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void HashSetUsage()
         {
             var set = new HashSet<M3>();
-            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var m3 = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+            var m1  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m2  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m3  = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
 
             set.Add(m1).ShouldBeTrue();
             set.Add(m2).ShouldBeFalse();
@@ -393,10 +393,10 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void GetHashCodeRotationMatrices()
         {
-            var q1 = Q3.AngleAxis(0.5, V3.xaxis);
-            var q2 = Q3.AngleAxis(0.7, V3.yaxis);
-            var m1 = M3.Rotate(q1);
-            var m2 = M3.Rotate(q2);
+            var q1     = Q3.AngleAxis(0.5, V3.xaxis);
+            var q2     = Q3.AngleAxis(0.7, V3.yaxis);
+            var m1     = M3.Rotate(q1);
+            var m2     = M3.Rotate(q2);
             var m1Copy = M3.Rotate(q1);
 
             m1.GetHashCode().ShouldEqual(m1Copy.GetHashCode());
