@@ -115,11 +115,11 @@ namespace MechJebLib.Maneuvers
             // calculate the velocity needed to change both the apoapsis and the inclination,
             // (this handles engaging the ascent guidance randomly during flight and picks the least expensive
             // north/south option)
-            V3 dvapo = DeltaVToChangeApoapsisPrograde(mu, r, v, desiredApoapsis);
-            V3 dvinc1 = DeltaVToChangeInclination(r, v+dvapo, newInc);
-            V3 dvinc2 = DeltaVToChangeInclination(r, v+dvapo, -newInc);
-            V3 dv1 = dvapo + dvinc1;
-            V3 dv2 = dvapo + dvinc2;
+            V3 dvapo  = DeltaVToChangeApoapsisPrograde(mu, r, v, desiredApoapsis);
+            V3 dvinc1 = DeltaVToChangeInclination(r, v + dvapo, newInc);
+            V3 dvinc2 = DeltaVToChangeInclination(r, v + dvapo, -newInc);
+            V3 dv1    = dvapo + dvinc1;
+            V3 dv2    = dvapo + dvinc2;
 
             V3 dv = dv1.magnitude < dv2.magnitude ? dv1 : dv2;
 
@@ -137,10 +137,7 @@ namespace MechJebLib.Maneuvers
             return dv;
         }
 
-        public static double HeadingForLaunchInclination(double mu, V3 r, V3 v, double newInc, double rotFreq, double desiredApoapsis)
-        {
-            return Astro.HeadingForVelocity(r, DeltaVForLaunchInclination(mu, r, v, newInc, rotFreq, desiredApoapsis));
-        }
+        public static double HeadingForLaunchInclination(double mu, V3 r, V3 v, double newInc, double rotFreq, double desiredApoapsis) => Astro.HeadingForVelocity(r, DeltaVForLaunchInclination(mu, r, v, newInc, rotFreq, desiredApoapsis));
 
         public static V3 DeltaVToChangeInclination(V3 r, V3 v, double newInc)
         {

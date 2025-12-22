@@ -13,10 +13,7 @@ namespace MechJebLibTest.Primitives.M3Tests
     public class RotationTests
     {
         [Fact]
-        private void RotateFromIdentityQuaternion()
-        {
-            M3.Rotate(Q3.identity).ShouldEqual(M3.identity);
-        }
+        private void RotateFromIdentityQuaternion() => M3.Rotate(Q3.identity).ShouldEqual(M3.identity);
 
         [Fact]
         private void Rotate90DegreesAroundX()
@@ -54,9 +51,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void Rotate45DegreesAroundArbitraryAxis()
         {
-            V3 axis = new V3(1, 1, 1).normalized;
-            var q = Q3.AngleAxis(PI / 4, axis);
-            var m = M3.Rotate(q);
+            V3  axis = new V3(1, 1, 1).normalized;
+            var q    = Q3.AngleAxis(PI / 4, axis);
+            var m    = M3.Rotate(q);
 
             m.determinant.ShouldEqual(1.0, 1e-14);
             (m.transpose * m).ShouldEqual(M3.identity, 1e-14);
@@ -65,12 +62,12 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void RotateCompositionMatchesQuaternions()
         {
-            var q1 = Q3.AngleAxis(PI / 3, V3.xaxis);
-            var q2 = Q3.AngleAxis(PI / 4, V3.yaxis);
-            Q3 qCombined = q2 * q1;
+            var q1        = Q3.AngleAxis(PI / 3, V3.xaxis);
+            var q2        = Q3.AngleAxis(PI / 4, V3.yaxis);
+            Q3  qCombined = q2 * q1;
 
-            var m1 = M3.Rotate(q1);
-            var m2 = M3.Rotate(q2);
+            var m1        = M3.Rotate(q1);
+            var m2        = M3.Rotate(q2);
             var mCombined = M3.Rotate(qCombined);
 
             (m2 * m1).ShouldEqual(mCombined, 1e-14);
@@ -100,8 +97,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void RotateSmallAngles()
         {
             const double TINY = 1e-10;
-            var q = Q3.AngleAxis(TINY, V3.zaxis);
-            var m = M3.Rotate(q);
+            var          q    = Q3.AngleAxis(TINY, V3.zaxis);
+            var          m    = M3.Rotate(q);
 
             m.m00.ShouldEqual(1.0, 1e-20);
             m.m01.ShouldEqual(-TINY, 1e-20);
@@ -145,14 +142,14 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void RotateFromEulerAngles()
         {
-            double roll = PI / 6;
+            double roll  = PI / 6;
             double pitch = PI / 4;
-            double yaw = PI / 3;
+            double yaw   = PI / 3;
 
-            var qRoll = Q3.AngleAxis(roll, V3.forward);
-            var qPitch = Q3.AngleAxis(pitch, V3.left);
-            var qYaw = Q3.AngleAxis(yaw, V3.up);
-            Q3 qCombined = qYaw * qPitch * qRoll;
+            var qRoll     = Q3.AngleAxis(roll, V3.forward);
+            var qPitch    = Q3.AngleAxis(pitch, V3.left);
+            var qYaw      = Q3.AngleAxis(yaw, V3.up);
+            Q3  qCombined = qYaw * qPitch * qRoll;
 
             var m = M3.Rotate(qCombined);
 
@@ -218,9 +215,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void RotateNearlyParallelAxis()
         {
-            V3 axis = new V3(1, 1e-10, 1e-10).normalized;
-            var q = Q3.AngleAxis(PI / 3, axis);
-            var m = M3.Rotate(q);
+            V3  axis = new V3(1, 1e-10, 1e-10).normalized;
+            var q    = Q3.AngleAxis(PI / 3, axis);
+            var m    = M3.Rotate(q);
 
             m.determinant.ShouldEqual(1.0, 1e-14);
             Assert.True(IsFinite(m.m00));
@@ -247,10 +244,10 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void RotateAxisExtractionConsistency()
         {
-            V3 originalAxis = new V3(3, -4, 5).normalized;
+            V3     originalAxis  = new V3(3, -4, 5).normalized;
             double originalAngle = 1.234;
-            var q = Q3.AngleAxis(originalAngle, originalAxis);
-            var m = M3.Rotate(q);
+            var    q             = Q3.AngleAxis(originalAngle, originalAxis);
+            var    m             = M3.Rotate(q);
 
             // The rotation axis should be invariant under the rotation
             (m * originalAxis).ShouldEqual(originalAxis, 1e-14);
@@ -259,8 +256,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void RotateDoubleRotationConsistency()
         {
-            var q = Q3.AngleAxis(PI / 7, new V3(1, 1, 0).normalized);
-            var m = M3.Rotate(q);
+            var q  = Q3.AngleAxis(PI / 7, new V3(1, 1, 0).normalized);
+            var m  = M3.Rotate(q);
             var m2 = M3.Rotate(q * q);
 
             (m * m).ShouldEqual(m2, 1e-14);

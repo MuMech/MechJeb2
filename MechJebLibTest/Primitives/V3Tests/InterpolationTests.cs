@@ -103,8 +103,8 @@ namespace MechJebLibTest.Primitives.V3Tests
             var a = new V3(1, 2, 3);
             var b = new V3(5, 10, 15);
 
-            var at25 = V3.Lerp(a, b, 0.25);
-            var at75 = V3.Lerp(a, b, 0.75);
+            var at25     = V3.Lerp(a, b, 0.25);
+            var at75     = V3.Lerp(a, b, 0.75);
             var midpoint = V3.Lerp(at25, at75, 0.5);
 
             midpoint.ShouldEqual(V3.Lerp(a, b, 0.5), 1e-14);
@@ -152,8 +152,8 @@ namespace MechJebLibTest.Primitives.V3Tests
             var a = new V3(1, 0, 0);
             var b = new V3(0, 1, 0);
 
-            var result = V3.Slerp(a, b, 0.5);
-            V3 expected = new V3(1, 1, 0).normalized;
+            var result   = V3.Slerp(a, b, 0.5);
+            V3  expected = new V3(1, 1, 0).normalized;
 
             result.ShouldEqual(expected, 1e-14);
         }
@@ -206,7 +206,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void SlerpWithZeroStartFallsBackToLerp()
         {
-            V3 a = V3.zero;
+            V3  a = V3.zero;
             var b = new V3(2, 0, 0);
 
             V3.Slerp(a, b, 0).ShouldEqual(V3.zero);
@@ -218,7 +218,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void SlerpWithZeroEndFallsBackToLerp()
         {
             var a = new V3(2, 0, 0);
-            V3 b = V3.zero;
+            V3  b = V3.zero;
 
             V3.Slerp(a, b, 0).ShouldEqual(a);
             V3.Slerp(a, b, 0.5).ShouldEqual(new V3(1, 0, 0));
@@ -305,7 +305,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void SlerpIn3D()
         {
             var a = new V3(1, 0, 0);
-            V3 b = new V3(0, 1, 1).normalized;
+            V3  b = new V3(0, 1, 1).normalized;
 
             var result = V3.Slerp(a, b, 0.5);
 
@@ -381,7 +381,7 @@ namespace MechJebLibTest.Primitives.V3Tests
             var a = new V3(2, 0, 0);
             var b = new V3(4, 0, 0);
 
-            var lerped = V3.Lerp(a, b, 0.5);
+            var lerped  = V3.Lerp(a, b, 0.5);
             var slerped = V3.Slerp(a, b, 0.5);
 
             lerped.ShouldEqual(slerped, 1e-14);
@@ -391,7 +391,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void SlerpNearlyParallelVectors()
         {
             var a = new V3(1, 0, 0);
-            V3 b = new V3(1, 1e-10, 0).normalized;
+            V3  b = new V3(1, 1e-10, 0).normalized;
 
             var result = V3.Slerp(a, b, 0.5);
 

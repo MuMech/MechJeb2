@@ -40,10 +40,10 @@ namespace MechJebLib.PSG.Terminal
         {
             double gammaT = _gammaT;
             double rT     = _rT;
-            V3 iHT =  _iHT;
+            V3     iHT    = _iHT;
 
-            var    rf     = V3.CopyFromIndices(x, ri);
-            var    vf     = V3.CopyFromIndices(x, vi);
+            var rf = V3.CopyFromIndices(x, ri);
+            var vf = V3.CopyFromIndices(x, vi);
 
             ci = ApplyScalarConstraintV3(f, j, ci, FlightPathAngleConstraint, new[] { rf, vf }, new[] { ri, vi });
             ci = ApplyScalarConstraintV3(f, j, ci, RadiusConstraint, new[] { rf }, new[] { ri });

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
@@ -44,12 +43,12 @@ namespace MechJebLib.PSG.Terminal
 
         public void Constraints(double[] x, (int, int, int) ri, (int, int, int) vi, double[] f, alglib.sparsematrix j, ref int ci)
         {
-            V3 hT = _hT;
+            V3     hT     = _hT;
             double gammaT = _gammaT;
-            double rT = _rT;
+            double rT     = _rT;
 
-            var    rf = V3.CopyFromIndices(x, ri);
-            var    vf = V3.CopyFromIndices(x, vi);
+            var rf = V3.CopyFromIndices(x, ri);
+            var vf = V3.CopyFromIndices(x, vi);
 
             ci = ApplyVectorConstraintV3(f, j, ci, AngularMomentumConstraint, new[] { rf, vf }, new[] { ri, vi });
             ci = ApplyScalarConstraintV3(f, j, ci, FlightPathAngleConstraint, new[] { rf, vf }, new[] { ri, vi });

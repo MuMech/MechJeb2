@@ -10,13 +10,11 @@ using static MechJebLib.Utils.Statics;
 namespace MechJebLib.FunctionImpls
 {
     /// <summary>
-    /// Algorithm from:
-    ///
-    /// Han, S., Jo, B. U., & Ho, K. (2024). Terminal Soft Landing Guidance Law Using Analytic
-    /// Gravity Turn Trajectory. Journal of Guidance, Control, and Dynamics, 47(9), 1808-1821.
-    ///
-    /// - beta is the constant twr of the rocket
-    /// - g is considered constant (flat planet approximation)
+    ///     Algorithm from:
+    ///     Han, S., Jo, B. U., & Ho, K. (2024). Terminal Soft Landing Guidance Law Using Analytic
+    ///     Gravity Turn Trajectory. Journal of Guidance, Control, and Dynamics, 47(9), 1808-1821.
+    ///     - beta is the constant twr of the rocket
+    ///     - g is considered constant (flat planet approximation)
     /// </summary>
     public static class RealSuicideBurnCalc
     {
@@ -83,7 +81,7 @@ namespace MechJebLib.FunctionImpls
         }
 
         // FIXME: should allow passing a guess for dt based on the previous calculation
-        public static (double dt, V3 rland) Run(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess=double.NaN)
+        public static (double dt, V3 rland) Run(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess = double.NaN)
         {
             Args args = _threadArgs.Value;
 
@@ -122,8 +120,8 @@ namespace MechJebLib.FunctionImpls
             double downrange = c * c * Fx(gamma0, beta) / args.G;
 
             // Adjust r1 to account for the downrange distance
-            var rot = Q3.AngleAxis(downrange / radius, V3.Cross(rign, vign).normalized);
-            V3  rland  = rot * rign.normalized * radius;
+            var rot   = Q3.AngleAxis(downrange / radius, V3.Cross(rign, vign).normalized);
+            V3  rland = rot * rign.normalized * radius;
 
             return (dt, rland);
         }

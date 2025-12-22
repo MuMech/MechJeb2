@@ -462,13 +462,13 @@ namespace MechJebLibTest.MathsTests
 
                     double delay = 0;
 
-                        Astro.TimeToPlane(PERIOD, 45, lng, lan, 0).ShouldEqual(delay, ACC);
+                    Astro.TimeToPlane(PERIOD, 45, lng, lan, 0).ShouldEqual(delay, ACC);
 
-                        Astro.TimeToPlane(PERIOD, -45, lng, lan, 0).ShouldEqual(delay, ACC);
+                    Astro.TimeToPlane(PERIOD, -45, lng, lan, 0).ShouldEqual(delay, ACC);
 
-                        Astro.TimeToPlane(-PERIOD, 45, lng, lan, 0).ShouldEqual(delay, ACC);
+                    Astro.TimeToPlane(-PERIOD, 45, lng, lan, 0).ShouldEqual(delay, ACC);
 
-                        Astro.TimeToPlane(-PERIOD, -45, lng, lan, 0).ShouldEqual(delay, ACC);
+                    Astro.TimeToPlane(-PERIOD, -45, lng, lan, 0).ShouldEqual(delay, ACC);
                 }
             }
         }
@@ -486,18 +486,18 @@ namespace MechJebLibTest.MathsTests
                     double delay = 0;
 
 
-                        Astro.TimeToPlane(PERIOD, 45, lng, lan, 180).ShouldEqual(delay, ACC2);
-                        Astro.TimeToPlane(PERIOD, 45, lng, lan, -180).ShouldEqual(delay, ACC2);
+                    Astro.TimeToPlane(PERIOD, 45, lng, lan, 180).ShouldEqual(delay, ACC2);
+                    Astro.TimeToPlane(PERIOD, 45, lng, lan, -180).ShouldEqual(delay, ACC2);
 
 
-                        Astro.TimeToPlane(PERIOD, -45, lng, lan, 180).ShouldEqual(delay, ACC2);
-                        Astro.TimeToPlane(PERIOD, -45, lng, lan, -180).ShouldEqual(delay, ACC2);
+                    Astro.TimeToPlane(PERIOD, -45, lng, lan, 180).ShouldEqual(delay, ACC2);
+                    Astro.TimeToPlane(PERIOD, -45, lng, lan, -180).ShouldEqual(delay, ACC2);
 
-                        Astro.TimeToPlane(-PERIOD, 45, lng, lan, 180).ShouldEqual(delay, ACC2);
-                        Astro.TimeToPlane(-PERIOD, 45, lng, lan, -180).ShouldEqual(delay, ACC2);
+                    Astro.TimeToPlane(-PERIOD, 45, lng, lan, 180).ShouldEqual(delay, ACC2);
+                    Astro.TimeToPlane(-PERIOD, 45, lng, lan, -180).ShouldEqual(delay, ACC2);
 
-                        Astro.TimeToPlane(-PERIOD, -45, lng, lan, 180).ShouldEqual(delay, ACC2);
-                        Astro.TimeToPlane(-PERIOD, -45, lng, lan, -180).ShouldEqual(delay, ACC2);
+                    Astro.TimeToPlane(-PERIOD, -45, lng, lan, 180).ShouldEqual(delay, ACC2);
+                    Astro.TimeToPlane(-PERIOD, -45, lng, lan, -180).ShouldEqual(delay, ACC2);
                 }
             }
         }

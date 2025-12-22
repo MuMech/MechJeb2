@@ -149,7 +149,7 @@ namespace MechJebLib.Primitives
             double invC = 1.0 / Math.Max(vector.max_magnitude, onNormal.max_magnitude);
             if (double.IsPositiveInfinity(invC)) return zero;
 
-            V3 vectorC = vector * invC;
+            V3 vectorC   = vector * invC;
             V3 onNormalC = onNormal * invC;
 
             double invSqrMag = 1.0 / Dot(onNormalC, onNormalC);
@@ -169,11 +169,11 @@ namespace MechJebLib.Primitives
             double invC = 1.0 / Math.Max(vector.max_magnitude, planeNormal.max_magnitude);
             if (double.IsPositiveInfinity(invC)) return zero;
 
-            V3 vectorC   = vector * invC;
+            V3 vectorC      = vector * invC;
             V3 planeNormalC = planeNormal * invC;
 
             double invSqrMag = 1.0 / Dot(planeNormalC, planeNormalC);
-            double dot = Dot(vectorC, planeNormalC);
+            double dot       = Dot(vectorC, planeNormalC);
 
             return new V3(vector.x - planeNormal.x * dot * invSqrMag,
                 vector.y - planeNormal.y * dot * invSqrMag,
@@ -233,10 +233,7 @@ namespace MechJebLib.Primitives
             return sign >= 0 ? angle : -angle;
         }
 
-        public static double Distance(V3 a, V3 b)
-        {
-            return new V3(a.x - b.x, a.y - b.y, a.z - b.z).magnitude;
-        }
+        public static double Distance(V3 a, V3 b) => new V3(a.x - b.x, a.y - b.y, a.z - b.z).magnitude;
 
         public static V3 ClampMagnitude(V3 vector, double maxLength)
         {

@@ -163,7 +163,7 @@ namespace MechJebLib.Primitives
             if (q.w < 0.0)
                 q = -q;
 
-            return 2.0 * Atan2(Sqrt(q.x*q.x + q.y*q.y + q.z*q.z), q.w);
+            return 2.0 * Atan2(Sqrt(q.x * q.x + q.y * q.y + q.z * q.z), q.w);
         }
 
         // FIXME: kill degrees with fire, fix euler angles

@@ -9,10 +9,10 @@ using System.Threading;
 namespace MechJebLib.Utils
 {
     /// <summary>
-    /// Thread-safe logger with per-thread override capability.
-    /// Use <see cref="GlobalRegister"/> to set a thread-safe logger for all threads.
-    /// Use <see cref="Register"/> in unit tests to override the logger for specific threads
-    /// when different threads need different logger callbacks for testing purposes.
+    ///     Thread-safe logger with per-thread override capability.
+    ///     Use <see cref="GlobalRegister" /> to set a thread-safe logger for all threads.
+    ///     Use <see cref="Register" /> in unit tests to override the logger for specific threads
+    ///     when different threads need different logger callbacks for testing purposes.
     /// </summary>
     public class Logger
     {

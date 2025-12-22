@@ -23,28 +23,28 @@ namespace MechJebLibTest.Primitives.Q3Tests
         }
 
 
-            [Fact]
-            private void LookRotationBasicDirections()
-            {
-                var q = Q3.LookRotation(V3.forward);
-                (q * V3.forward).ShouldEqual(V3.forward, 1e-14);
+        [Fact]
+        private void LookRotationBasicDirections()
+        {
+            var q = Q3.LookRotation(V3.forward);
+            (q * V3.forward).ShouldEqual(V3.forward, 1e-14);
 
-                q = Q3.LookRotation(V3.back);
-                (q * V3.forward).ShouldEqual(V3.back, 1e-14);
+            q = Q3.LookRotation(V3.back);
+            (q * V3.forward).ShouldEqual(V3.back, 1e-14);
 
-                q = Q3.LookRotation(V3.right);
-                (q * V3.forward).ShouldEqual(V3.right, 1e-14);
+            q = Q3.LookRotation(V3.right);
+            (q * V3.forward).ShouldEqual(V3.right, 1e-14);
 
-                q = Q3.LookRotation(V3.left);
-                (q * V3.forward).ShouldEqual(V3.left, 1e-14);
-            }
+            q = Q3.LookRotation(V3.left);
+            (q * V3.forward).ShouldEqual(V3.left, 1e-14);
+        }
 
         [Fact]
         private void LookRotationWithCustomUp()
         {
-            V3 forward = V3.right;
-            V3 up = V3.forward;
-            var q = Q3.LookRotation(forward, up);
+            V3  forward = V3.right;
+            V3  up      = V3.forward;
+            var q       = Q3.LookRotation(forward, up);
 
             (q * V3.forward).ShouldEqual(forward.normalized, 1e-14);
 
@@ -56,20 +56,20 @@ namespace MechJebLibTest.Primitives.Q3Tests
         private void LookRotationNormalizesInput()
         {
             var forward = new V3(10, 0, 0);
-            var q = Q3.LookRotation(forward);
+            var q       = Q3.LookRotation(forward);
 
             (q * V3.forward).ShouldEqual(V3.xaxis, 1e-14);
 
             forward = new V3(3, 4, 0);
-            q = Q3.LookRotation(forward);
+            q       = Q3.LookRotation(forward);
             (q * V3.forward).ShouldEqual(forward.normalized, 1e-14);
         }
 
         [Fact]
         private void LookRotationArbitraryDirection()
         {
-            V3 forward = new V3(1, 2, 3).normalized;
-            var q = Q3.LookRotation(forward);
+            V3  forward = new V3(1, 2, 3).normalized;
+            var q       = Q3.LookRotation(forward);
 
             (q * V3.forward).ShouldEqual(forward, 1e-14);
 
@@ -110,8 +110,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void LookRotationSmallAngles()
         {
-            V3 forward = new V3(1, 1e-10, 0).normalized;
-            var q = Q3.LookRotation(forward);
+            V3  forward = new V3(1, 1e-10, 0).normalized;
+            var q       = Q3.LookRotation(forward);
 
             (q * V3.forward).ShouldEqual(forward, 1e-14);
             Assert.True(IsFinite(q.x));
@@ -166,9 +166,9 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void FromToRotationArbitraryVectors()
         {
-            V3 from = new V3(1, 2, 3).normalized;
-            V3 to = new V3(4, -5, 6).normalized;
-            var q = Q3.FromToRotation(from, to);
+            V3  from = new V3(1, 2, 3).normalized;
+            V3  to   = new V3(4, -5, 6).normalized;
+            var q    = Q3.FromToRotation(from, to);
 
             (q * from).ShouldEqual(to, 1e-14);
         }
@@ -177,8 +177,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
         private void FromToRotationNonNormalizedInput()
         {
             var from = new V3(2, 0, 0);
-            var to = new V3(0, 3, 0);
-            var q = Q3.FromToRotation(from, to);
+            var to   = new V3(0, 3, 0);
+            var q    = Q3.FromToRotation(from, to);
 
             (q * from.normalized).ShouldEqual(to.normalized, 1e-14);
         }
@@ -187,8 +187,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
         private void FromToRotationSmallAngle()
         {
             var from = new V3(1, 0, 0);
-            V3 to = new V3(1, 1e-10, 0).normalized;
-            var q = Q3.FromToRotation(from, to);
+            V3  to   = new V3(1, 1e-10, 0).normalized;
+            var q    = Q3.FromToRotation(from, to);
 
             (q * from).ShouldEqual(to);
 
@@ -199,11 +199,11 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void FromToRotationPreservesOrthogonalVectors()
         {
-            V3 from = V3.forward;
-            V3 to = V3.right;
-            var q = Q3.FromToRotation(from, to);
+            V3  from = V3.forward;
+            V3  to   = V3.right;
+            var q    = Q3.FromToRotation(from, to);
 
-            V3 orthogonal = V3.up;
+            V3 orthogonal        = V3.up;
             V3 rotatedOrthogonal = q * orthogonal;
 
             V3.Dot(rotatedOrthogonal, to).ShouldBeZero(1e-14);
@@ -214,11 +214,11 @@ namespace MechJebLibTest.Primitives.Q3Tests
         private void FromToRotationChaining()
         {
             var v1 = new V3(1, 0, 0);
-            V3 v2 = new V3(1, 1, 0).normalized;
+            V3  v2 = new V3(1, 1, 0).normalized;
             var v3 = new V3(0, 1, 0);
 
-            var q1 = Q3.FromToRotation(v1, v2);
-            var q2 = Q3.FromToRotation(v2, v3);
+            var q1      = Q3.FromToRotation(v1, v2);
+            var q2      = Q3.FromToRotation(v2, v3);
             var qDirect = Q3.FromToRotation(v1, v3);
 
             (q2 * q1).ShouldEqual(qDirect, 1e-14);
@@ -271,7 +271,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void InverseBasicQuaternions()
         {
-            var q = Q3.AngleAxis(PI / 3, new V3(1, 2, 3).normalized);
+            var q    = Q3.AngleAxis(PI / 3, new V3(1, 2, 3).normalized);
             var qInv = Q3.Inverse(q);
 
             (q * qInv).ShouldEqual(Q3.identity, 1e-14);
@@ -279,10 +279,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
         }
 
         [Fact]
-        private void InverseIdentity()
-        {
-            Q3.Inverse(Q3.identity).ShouldEqual(Q3.identity, 1e-14);
-        }
+        private void InverseIdentity() => Q3.Inverse(Q3.identity).ShouldEqual(Q3.identity, 1e-14);
 
         [Fact]
         private void InverseUndoesRotation()
@@ -290,7 +287,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var q = Q3.AngleAxis(1.234, new V3(3, -2, 1).normalized);
             var v = new V3(5, 6, 7);
 
-            V3 rotated = q * v;
+            V3 rotated   = q * v;
             V3 unrotated = Q3.Inverse(q) * rotated;
 
             unrotated.ShouldEqual(v, 1e-14);
@@ -313,7 +310,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void NormalizeBasicQuaternions()
         {
-            var q = new Q3(1, 1, 1, 1);
+            var q          = new Q3(1, 1, 1, 1);
             var normalized = Q3.Normalize(q);
 
             normalized.x.ShouldEqual(0.5, 1e-14);
@@ -322,14 +319,14 @@ namespace MechJebLibTest.Primitives.Q3Tests
             normalized.w.ShouldEqual(0.5, 1e-14);
 
             double mag = Sqrt(normalized.x * normalized.x + normalized.y * normalized.y +
-                          normalized.z * normalized.z + normalized.w * normalized.w);
+                normalized.z * normalized.z + normalized.w * normalized.w);
             mag.ShouldEqual(1.0, 1e-14);
         }
 
         [Fact]
         private void NormalizeZeroQuaternion()
         {
-            var q = new Q3(0, 0, 0, 0);
+            var q          = new Q3(0, 0, 0, 0);
             var normalized = Q3.Normalize(q);
 
             normalized.ShouldEqual(Q3.identity, 1e-14);
@@ -338,11 +335,11 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void NormalizeSmallQuaternion()
         {
-            var q = new Q3(1e-200, 1e-200, 1e-200, 1e-200);
+            var q          = new Q3(1e-200, 1e-200, 1e-200, 1e-200);
             var normalized = Q3.Normalize(q);
 
             double mag = Sqrt(normalized.x * normalized.x + normalized.y * normalized.y +
-                          normalized.z * normalized.z + normalized.w * normalized.w);
+                normalized.z * normalized.z + normalized.w * normalized.w);
             mag.ShouldEqual(1.0, 1e-14);
         }
 
@@ -359,11 +356,11 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void NormalizedProperty()
         {
-            var q = new Q3(2, 3, 6, 7);
-            Q3 normalized = q.normalized;
+            var q          = new Q3(2, 3, 6, 7);
+            Q3  normalized = q.normalized;
 
             double mag = Sqrt(normalized.x * normalized.x + normalized.y * normalized.y +
-                          normalized.z * normalized.z + normalized.w * normalized.w);
+                normalized.z * normalized.z + normalized.w * normalized.w);
             mag.ShouldEqual(1.0, 1e-14);
         }
     }

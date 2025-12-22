@@ -68,7 +68,14 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyFromListAtDefaultIndex()
         {
-            var list = new List<double> { 1.5, 2.5, 3.5, 4.5, 5.5 };
+            var list = new List<double>
+            {
+                1.5,
+                2.5,
+                3.5,
+                4.5,
+                5.5
+            };
             var v = new V3(0, 0, 0);
 
             v.CopyFrom(list);
@@ -81,7 +88,16 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyFromListAtSpecificIndex()
         {
-            var list = new List<double> { 1, 2, 3, 4, 5, 6, 7 };
+            var list = new List<double>
+            {
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            };
             var v = new V3(0, 0, 0);
 
             v.CopyFrom(list, 2);
@@ -95,7 +111,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CopyFromArrayAtDefaultIndex()
         {
             double[] array = { 7.7, 8.8, 9.9 };
-            var v = new V3(0, 0, 0);
+            var      v     = new V3(0, 0, 0);
 
             v.CopyFrom(array);
 
@@ -108,7 +124,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CopyFromArrayAtSpecificIndex()
         {
             double[] array = { 1, 2, 3, 4, 5, 6 };
-            var v = new V3(0, 0, 0);
+            var      v     = new V3(0, 0, 0);
 
             v.CopyFrom(array, 3);
 
@@ -121,7 +137,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CopyFromOverwritesExistingValues()
         {
             var list = new List<double> { 10, 20, 30 };
-            var v = new V3(99, 88, 77);
+            var v    = new V3(99, 88, 77);
 
             v.CopyFrom(list);
 
@@ -134,7 +150,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CopyFromWithNegativeValues()
         {
             double[] array = { -1.5, -2.5, -3.5 };
-            var v = new V3(0, 0, 0);
+            var      v     = new V3(0, 0, 0);
 
             v.CopyFrom(array);
 
@@ -147,7 +163,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CopyFromWithSpecialValues()
         {
             var list = new List<double> { double.NaN, double.PositiveInfinity, double.NegativeInfinity };
-            var v = new V3(0, 0, 0);
+            var v    = new V3(0, 0, 0);
 
             v.CopyFrom(list);
 
@@ -160,7 +176,14 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CopyToListAtDefaultIndex()
         {
             var v = new V3(1.5, 2.5, 3.5);
-            var list = new List<double> { 0, 0, 0, 0, 0 };
+            var list = new List<double>
+            {
+                0,
+                0,
+                0,
+                0,
+                0
+            };
 
             v.CopyTo(list);
 
@@ -175,7 +198,16 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CopyToListAtSpecificIndex()
         {
             var v = new V3(7, 8, 9);
-            var list = new List<double> { 1, 2, 3, 4, 5, 6, 7 };
+            var list = new List<double>
+            {
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            };
 
             v.CopyTo(list, 2);
 
@@ -191,7 +223,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyToArrayAtDefaultIndex()
         {
-            var v = new V3(11.1, 22.2, 33.3);
+            var      v     = new V3(11.1, 22.2, 33.3);
             double[] array = { 0, 0, 0, 0 };
 
             v.CopyTo(array);
@@ -205,7 +237,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyToArrayAtSpecificIndex()
         {
-            var v = new V3(100, 200, 300);
+            var      v     = new V3(100, 200, 300);
             double[] array = new double[6];
 
             v.CopyTo(array, 3);
@@ -221,7 +253,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyToWithNegativeValues()
         {
-            var v = new V3(-10, -20, -30);
+            var v    = new V3(-10, -20, -30);
             var list = new List<double> { 0, 0, 0 };
 
             v.CopyTo(list);
@@ -234,7 +266,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyToWithSpecialValues()
         {
-            var v = new V3(double.NaN, double.PositiveInfinity, double.NegativeInfinity);
+            var      v     = new V3(double.NaN, double.PositiveInfinity, double.NegativeInfinity);
             double[] array = new double[3];
 
             v.CopyTo(array);
@@ -247,7 +279,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyTo2DArrayBasic()
         {
-            var v = new V3(5, 6, 7);
+            var       v     = new V3(5, 6, 7);
             double[,] array = new double[4, 4];
 
             v.CopyTo(array, 0, 0);
@@ -262,7 +294,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyTo2DArrayAtOffset()
         {
-            var v = new V3(10, 20, 30);
+            var       v     = new V3(10, 20, 30);
             double[,] array = new double[5, 5];
 
             v.CopyTo(array, 1, 2);
@@ -279,7 +311,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyTo2DArrayWithNegativeValues()
         {
-            var v = new V3(-1.5, -2.5, -3.5);
+            var       v     = new V3(-1.5, -2.5, -3.5);
             double[,] array = new double[3, 3];
 
             v.CopyTo(array, 0, 1);
@@ -292,9 +324,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyTo2DArrayMultipleVectors()
         {
-            var v1 = new V3(1, 2, 3);
-            var v2 = new V3(4, 5, 6);
-            var v3 = new V3(7, 8, 9);
+            var       v1    = new V3(1, 2, 3);
+            var       v2    = new V3(4, 5, 6);
+            var       v3    = new V3(7, 8, 9);
             double[,] array = new double[3, 3];
 
             v1.CopyTo(array, 0, 0);
@@ -316,7 +348,14 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CopyFromToRoundTrip()
         {
             var original = new V3(1.234, 5.678, 9.012);
-            var list = new List<double> { 0, 0, 0, 0, 0 };
+            var list = new List<double>
+            {
+                0,
+                0,
+                0,
+                0,
+                0
+            };
             var restored = new V3(0, 0, 0);
 
             original.CopyTo(list, 1);
@@ -328,9 +367,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CopyFromToWithLargeValues()
         {
-            var v = new V3(1e100, -1e100, 1e-100);
+            var      v     = new V3(1e100, -1e100, 1e-100);
             double[] array = new double[3];
-            var v2 = new V3(0, 0, 0);
+            var      v2    = new V3(0, 0, 0);
 
             v.CopyTo(array);
             v2.CopyFrom(array);
