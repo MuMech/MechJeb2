@@ -440,6 +440,10 @@ namespace MechJebLib.Functions
             if (Abs(Abs(latitude) - PI / 2) < EPS)
                 return 0;
 
+            // handle equatorial orbits where longitude doesn't matter
+            if (Abs(inc) < EPS || Abs(Abs(inc) - PI) < EPS)
+                return 0;
+
             // Napier's rules for spherical trig
             // the clamped Asin produces correct results for abs(inc) < abs(lat)
             double angleEastOfAN = SafeAsin(Tan(latitude) / Tan(Abs(inc)));
