@@ -608,6 +608,201 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
+        private void MaxMagnitudePositiveElements()
+        {
+            new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).max_magnitude.ShouldEqual(9.0);
+            new M3(9, 8, 7, 6, 5, 4, 3, 2, 1).max_magnitude.ShouldEqual(9.0);
+            new M3(5, 5, 5, 5, 5, 5, 5, 5, 5).max_magnitude.ShouldEqual(5.0);
+        }
+
+        [Fact]
+        private void MaxMagnitudeNegativeElements()
+        {
+            new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9).max_magnitude.ShouldEqual(-1.0);
+            new M3(-9, -8, -7, -6, -5, -4, -3, -2, -1).max_magnitude.ShouldEqual(-1.0);
+        }
+
+        [Fact]
+        private void MaxMagnitudeMixedElements()
+        {
+            new M3(-5, 3, 2, 1, 0, -1, -2, -3, 4).max_magnitude.ShouldEqual(4.0);
+            new M3(0, 0, 0, 0, 10, 0, 0, 0, 0).max_magnitude.ShouldEqual(10.0);
+        }
+
+        [Fact]
+        private void MaxMagnitudeZeroMatrix() => M3.zero.max_magnitude.ShouldEqual(0.0);
+
+        [Fact]
+        private void MaxMagnitudeIdentityMatrix() => M3.identity.max_magnitude.ShouldEqual(1.0);
+
+        [Fact]
+        private void MinMagnitudePositiveElements()
+        {
+            new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).min_magnitude.ShouldEqual(1.0);
+            new M3(9, 8, 7, 6, 5, 4, 3, 2, 1).min_magnitude.ShouldEqual(1.0);
+            new M3(5, 5, 5, 5, 5, 5, 5, 5, 5).min_magnitude.ShouldEqual(5.0);
+        }
+
+        [Fact]
+        private void MinMagnitudeNegativeElements()
+        {
+            new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9).min_magnitude.ShouldEqual(-9.0);
+            new M3(-9, -8, -7, -6, -5, -4, -3, -2, -1).min_magnitude.ShouldEqual(-9.0);
+        }
+
+        [Fact]
+        private void MinMagnitudeMixedElements()
+        {
+            new M3(-5, 3, 2, 1, 0, -1, -2, -3, 4).min_magnitude.ShouldEqual(-5.0);
+            new M3(1, 2, 3, 4, -10, 6, 7, 8, 9).min_magnitude.ShouldEqual(-10.0);
+        }
+
+        [Fact]
+        private void MinMagnitudeZeroMatrix() => M3.zero.min_magnitude.ShouldEqual(0.0);
+
+        [Fact]
+        private void MinMagnitudeIdentityMatrix() => M3.identity.min_magnitude.ShouldEqual(0.0);
+
+        [Fact]
+        private void MaxMagnitudeLargeValues() => new M3(1e100, 1e200, 1e150, 0, 0, 0, 0, 0, 0).max_magnitude.ShouldEqual(1e200);
+
+        [Fact]
+        private void MinMagnitudeSmallValues() => new M3(1e-100, 1e-200, 1e-150, 1, 1, 1, 1, 1, 1).min_magnitude.ShouldEqual(1e-200);
+
+        [Fact]
+        private void CopyToBasic()
+        {
+            var       m     = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            double[,] array = new double[5, 5];
+
+            m.CopyTo(array, 0, 0);
+
+            array[0, 0].ShouldEqual(1);
+            array[0, 1].ShouldEqual(2);
+            array[0, 2].ShouldEqual(3);
+            array[1, 0].ShouldEqual(4);
+            array[1, 1].ShouldEqual(5);
+            array[1, 2].ShouldEqual(6);
+            array[2, 0].ShouldEqual(7);
+            array[2, 1].ShouldEqual(8);
+            array[2, 2].ShouldEqual(9);
+        }
+
+        [Fact]
+        private void CopyToWithOffset()
+        {
+            var       m     = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            double[,] array = new double[6, 6];
+
+            m.CopyTo(array, 1, 2);
+
+            array[0, 2].ShouldEqual(0);
+            array[1, 2].ShouldEqual(1);
+            array[1, 3].ShouldEqual(2);
+            array[1, 4].ShouldEqual(3);
+            array[2, 2].ShouldEqual(4);
+            array[2, 3].ShouldEqual(5);
+            array[2, 4].ShouldEqual(6);
+            array[3, 2].ShouldEqual(7);
+            array[3, 3].ShouldEqual(8);
+            array[3, 4].ShouldEqual(9);
+            array[4, 2].ShouldEqual(0);
+        }
+
+        [Fact]
+        private void CopyToIdentityMatrix()
+        {
+            double[,] array = new double[3, 3];
+
+            M3.identity.CopyTo(array, 0, 0);
+
+            array[0, 0].ShouldEqual(1);
+            array[0, 1].ShouldEqual(0);
+            array[0, 2].ShouldEqual(0);
+            array[1, 0].ShouldEqual(0);
+            array[1, 1].ShouldEqual(1);
+            array[1, 2].ShouldEqual(0);
+            array[2, 0].ShouldEqual(0);
+            array[2, 1].ShouldEqual(0);
+            array[2, 2].ShouldEqual(1);
+        }
+
+        [Fact]
+        private void CopyToZeroMatrix()
+        {
+            double[,] array = new double[3, 3];
+            array[1, 1] = 99;
+
+            M3.zero.CopyTo(array, 0, 0);
+
+            for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                array[i, j].ShouldEqual(0);
+        }
+
+        [Fact]
+        private void CopyToPreservesOtherElements()
+        {
+            var       m     = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            double[,] array = new double[5, 5];
+            array[0, 4] = 100;
+            array[4, 0] = 200;
+
+            m.CopyTo(array, 1, 1);
+
+            array[0, 4].ShouldEqual(100);
+            array[4, 0].ShouldEqual(200);
+            array[0, 0].ShouldEqual(0);
+            array[0, 1].ShouldEqual(0);
+        }
+
+        [Fact]
+        private void CopyToMultipleMatrices()
+        {
+            var       m1    = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var       m2    = new M3(10, 20, 30, 40, 50, 60, 70, 80, 90);
+            double[,] array = new double[3, 6];
+
+            m1.CopyTo(array, 0, 0);
+            m2.CopyTo(array, 0, 3);
+
+            array[0, 0].ShouldEqual(1);
+            array[0, 3].ShouldEqual(10);
+            array[1, 1].ShouldEqual(5);
+            array[1, 4].ShouldEqual(50);
+            array[2, 2].ShouldEqual(9);
+            array[2, 5].ShouldEqual(90);
+        }
+
+        [Fact]
+        private void CopyToWithNegativeValues()
+        {
+            var       m     = new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9);
+            double[,] array = new double[3, 3];
+
+            m.CopyTo(array, 0, 0);
+
+            array[0, 0].ShouldEqual(-1);
+            array[1, 1].ShouldEqual(-5);
+            array[2, 2].ShouldEqual(-9);
+        }
+
+        [Fact]
+        private void CopyToWithLargeValues()
+        {
+            var       m     = new M3(1e100, 1e200, 1e-100, 1e-200, 0, 1, -1e100, -1e200, 1e150);
+            double[,] array = new double[3, 3];
+
+            m.CopyTo(array, 0, 0);
+
+            array[0, 0].ShouldEqual(1e100);
+            array[0, 1].ShouldEqual(1e200);
+            array[0, 2].ShouldEqual(1e-100);
+            array[1, 0].ShouldEqual(1e-200);
+            array[2, 2].ShouldEqual(1e150);
+        }
+
+        [Fact]
         private void ToStringTest1()
         {
             var one = new M3(0.882352941176471, -0.117647058823529, 0.196078431372549,
