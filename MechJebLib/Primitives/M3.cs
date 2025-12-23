@@ -647,7 +647,7 @@ namespace MechJebLib.Primitives
         {
             get
             {
-                double max = 0.0;
+                double max = double.NegativeInfinity;
                 for (int i = 0; i < 9; i++)
                     if (this[i] > max)
                         max = this[i];
