@@ -672,6 +672,7 @@ namespace MechJebLib.Utils
                     lastindex = index;
                 }
 
+            // here
             f[ci++] = ans.M.y;
 
             lastindex = -1;

@@ -20,7 +20,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
         }
 
         [Fact]
-        public void Delta3()
+        public void Delta3GTO()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var    r0    = new V3(5605222.973039, 0.000000, 3043387.760956);
@@ -146,10 +146,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-9);
             solution.M(0).ShouldEqual(payload + secondStageWet + firstStageWet, 1e-9);
 
-            //solution.Tgo(solution.T0, 0).ShouldEqual(75.200000, 1e-3);
-            //solution.Tgo(solution.T0, 1).ShouldEqual(75.200000, 1e-3);
-            solution.Tgo(solution.T0, 2).ShouldEqual(110.600000, 1e-3);
-            //solution.Tgo(solution.T0, 3).ShouldBePositive();
+            solution.Tgo(solution.T0, 0).ShouldEqual(75.200000, 1e-3);
+            solution.Tgo(solution.T0, 1).ShouldEqual(75.200000, 1e-3);
+            solution.Tgo(solution.T0, 2).ShouldEqual(409.30220835026103, 1e-3);
+            solution.Tgo(solution.T0, 3).ShouldBePositive();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Tgo(0).ShouldEqual(924.139, 1e-3);

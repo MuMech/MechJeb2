@@ -391,6 +391,7 @@ namespace MuMech
             if (_ascentSettings.AscentType == AscentType.PSG)
             {
                 Core.StageStats.RequestUpdate();
+                Core.StageStats.LiveSLT  = true;
                 _psgSettingsMenu.Enabled = GUILayout.Toggle(_psgSettingsMenu.Enabled, "PSG Settings");
             }
 
