@@ -64,7 +64,12 @@
         <Compile Include="ODETests\BS3Tests.c.cs"/>
         <Compile Include="ODETests\DP5Tests.cs"/>
         <Compile Include="Primitives\M3Tests\CoreOperationsTests.cs"/>
+        <Compile Include="Primitives\M3Tests\DiagonalSkewConstructionTests.cs" />
         <Compile Include="Primitives\M3Tests\EqualityHashingTests.cs"/>
+        <Compile Include="Primitives\M3Tests\EulerAngleTests.cs"/>
+        <Compile Include="Primitives\M3Tests\MatrixAnalysisTests.cs"/>
+        <Compile Include="Primitives\M3Tests\MiscConstructorTests.cs" />
+        <Compile Include="Primitives\M3Tests\NormTests.cs"/>
         <Compile Include="Primitives\M3Tests\OrthonormalizeQuaternionTests.cs"/>
         <Compile Include="Primitives\M3Tests\RotationTests.cs"/>
         <Compile Include="Primitives\Q3Tests\InterpolationTests.cs"/>
