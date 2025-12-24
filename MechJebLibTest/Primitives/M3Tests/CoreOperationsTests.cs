@@ -608,6 +608,19 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
+        private void TransposeAliasTest()
+        {
+            var one = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var two = new M3(1, 4, 7, 2, 5, 8, 3, 6, 9);
+
+            one.T().ShouldEqual(two);
+
+            var three = new M3(0, 1, 0, 0, 0, 1, 1, 0, 0);
+
+            (three.T() * three).ShouldEqual(M3.identity);
+        }
+
+        [Fact]
         private void MaxMagnitudePositiveElements()
         {
             new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).max_magnitude.ShouldEqual(9.0);

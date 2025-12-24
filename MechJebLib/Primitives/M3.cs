@@ -34,24 +34,30 @@ namespace MechJebLib.Primitives
         // Column 0 elements
         /// <summary>Element at row 0, column 0.</summary>
         public double m00;
+
         /// <summary>Element at row 1, column 0.</summary>
         public double m10;
+
         /// <summary>Element at row 2, column 0.</summary>
         public double m20;
 
         // Column 1 elements
         /// <summary>Element at row 0, column 1.</summary>
         public double m01;
+
         /// <summary>Element at row 1, column 1.</summary>
         public double m11;
+
         /// <summary>Element at row 2, column 1.</summary>
         public double m21;
 
         // Column 2 elements
         /// <summary>Element at row 0, column 2.</summary>
         public double m02;
+
         /// <summary>Element at row 1, column 2.</summary>
         public double m12;
+
         /// <summary>Element at row 2, column 2.</summary>
         public double m22;
 
@@ -544,6 +550,12 @@ namespace MechJebLib.Primitives
         ///     Gets the transpose of the matrix (rows and columns swapped).
         /// </summary>
         public M3 transpose => Transpose(this);
+
+        /// <summary>
+        ///     Gets the transpose of the matrix (rows and columns swapped).
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public M3 T() => Transpose(this);
 
         /// <summary>
         ///     Gets the inverse of the matrix.
