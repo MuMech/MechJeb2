@@ -225,8 +225,9 @@ namespace MuMech
 
             for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
-                FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
-                int       kspStage  = Core.StageStats.VacStats[mjPhase].KSPStage;
+                FuelStats fuelStats  = Core.StageStats.VacStats[mjPhase];
+                int       kspStage   = Core.StageStats.VacStats[mjPhase].KSPStage;
+                double    ispCurrent = Core.StageStats.AtmoStats[mjPhase].Isp;
                 if (kspStage < _ascentSettings.LastStage)
                     break;
 
@@ -244,7 +245,7 @@ namespace MuMech
                             if (fuelStats.DeltaV > _ascentSettings.MinDeltaV)
                             {
                                 ascentBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
-                                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage));
+                                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), ispCurrent: ispCurrent);
                                 massContinuity = true;
                             }
                         }
@@ -270,7 +271,7 @@ namespace MuMech
                     continue;
 
                 ascentBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
-                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), massContinuity);
+                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), massContinuity, ispCurrent);
             }
 
             _ascent = ascentBuilder.Build();

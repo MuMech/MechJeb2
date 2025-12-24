@@ -14,12 +14,14 @@ namespace MechJebLib.PSG
     public class Phase
     {
         public          double m0;
-        public readonly double isp;
+        public readonly double ISPVacuum;
+        public readonly double ISPSeaLevel;
         public          double mf;
         public          double bt;
         public          double maxt;
         public          double mint;
-        public          double ve;
+        public          double VexVacuum;
+        public          double VexCurrent;
         public readonly double a0;
         public          double tau;
         private         double _mdot;
@@ -52,19 +54,21 @@ namespace MechJebLib.PSG
             return newphase;
         }
 
-        private Phase(double m0, double thrust, double isp, double mf, double bt, int kspStage, int mjPhase)
+        private Phase(double m0, double thrust, double ispVacuum, double mf, double bt, int kspStage, int mjPhase, double ispCurrent = -1)
         {
             KSPStage              = kspStage;
             MJPhase               = mjPhase;
             this.m0               = m0;
             _thrust               = thrust;
-            this.isp              = isp;
+            ISPVacuum             = ispVacuum;
+            ISPSeaLevel           = ispCurrent > 0 ? ispCurrent : ispVacuum;
             this.mf               = mf;
             this.bt               = bt;
-            ve                    = isp * G0;
+            VexVacuum             = ispVacuum * G0;
+            VexCurrent            = ispCurrent > 0 ? ispCurrent * G0 : VexVacuum;
             a0                    = thrust / m0;
-            tau                   = thrust == 0 ? double.PositiveInfinity : ve / a0;
-            _mdot                 = ve == 0 ? 0 : thrust / ve;
+            tau                   = thrust == 0 ? double.PositiveInfinity : VexVacuum / a0;
+            _mdot                 = VexVacuum == 0 ? 0 : thrust / VexVacuum;
             dv                    = DeltaVForTime(m0, bt);
             AllowInfiniteBurntime = false;
         }
@@ -75,7 +79,8 @@ namespace MechJebLib.PSG
 
             var phase = (Phase)MemberwiseClone();
 
-            phase.ve         = ve / scale.VelocityScale;
+            phase.VexVacuum  = VexVacuum / scale.VelocityScale;
+            phase.VexCurrent = VexCurrent / scale.VelocityScale;
             phase.tau        = tau / scale.TimeScale;
             phase._mdot      = _mdot / scale.MdotScale;
             phase._thrust    = _thrust / scale.ForceScale;
@@ -90,7 +95,7 @@ namespace MechJebLib.PSG
         }
 
         public static Phase NewStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, int mjPhase,
-            bool unguided = false, bool allowShutdown = true, bool massContinuity = false)
+            bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
         {
             Check.PositiveFinite(m0);
             Check.PositiveFinite(mf);
@@ -103,13 +108,13 @@ namespace MechJebLib.PSG
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(thrust);
 
-            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
 
             return phase;
         }
 
         public static Phase NewStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage, int mjPhase,
-            bool unguided = false, bool allowShutdown = true, bool massContinuity = false)
+            bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
         {
             Check.PositiveFinite(m0);
             Check.PositiveFinite(thrust);
@@ -122,32 +127,33 @@ namespace MechJebLib.PSG
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(mf);
 
-            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
 
             return phase;
         }
 
         public static Phase NewStageUsingFinalMassAndThrust(double m0, double mf, double thrust, double bt, int kspStage, int mjPhase,
-            bool unguided = false, bool allowShutdown = true, bool massContinuity = false)
+            bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double thrustSeaLevel = -1)
         {
             Check.PositiveFinite(m0);
             Check.PositiveFinite(thrust);
             Check.PositiveFinite(mf);
             Check.PositiveFinite(bt);
 
-            double mdot = (m0 - mf) / bt;
-            double isp  = thrust / mdot / G0;
+            double mdot       = (m0 - mf) / bt;
+            double isp        = thrust / mdot / G0;
+            double ispCurrent = thrustSeaLevel / mdot / G0;
 
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(isp);
 
-            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
 
             return phase;
         }
 
         public static Phase NewStageUsingFinalMassThrustAndIsp(double m0, double mf, double thrust, double isp, int kspStage, int mjPhase,
-            bool unguided = false, bool allowShutdown = true, bool massContinuity = false)
+            bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
         {
             Check.PositiveFinite(m0);
             Check.PositiveFinite(thrust);
@@ -160,7 +166,7 @@ namespace MechJebLib.PSG
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(isp);
 
-            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
+            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent) { AllowShutdown = allowShutdown, Unguided = unguided, MassContinuity = massContinuity };
 
             return phase;
         }
@@ -174,7 +180,7 @@ namespace MechJebLib.PSG
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append($"stage: {KSPStage} m0: {m0} mf: {mf} thrust: {Thrust} bt: {bt} isp: {isp} mdot: {Mdot}");
+            sb.Append($"stage: {KSPStage} m0: {m0} mf: {mf} thrust: {Thrust} bt: {bt} isp: {ISPVacuum} mdot: {Mdot}");
             if (AllowInfiniteBurntime)
                 sb.Append(" (infinite burn time)");
             if (Infinite)
@@ -187,7 +193,7 @@ namespace MechJebLib.PSG
             return sb.ToString();
         }
 
-        public double DeltaVForTime(double m, double t) => Coast ? 0 : -ve * Log(1 - t * Thrust / (ve * m));
+        public double DeltaVForTime(double m, double t) => Coast ? 0 : -VexVacuum * Log(1 - t * Thrust / (VexVacuum * m));
         public double BurnTimeFromMass(double m)        => Coast ? double.PositiveInfinity : (m - mf) / _mdot;
         public double TauFromMass(double m)             => Coast ? double.PositiveInfinity : m / _mdot;
     }
