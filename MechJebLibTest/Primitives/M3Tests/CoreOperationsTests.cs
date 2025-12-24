@@ -827,5 +827,282 @@ namespace MechJebLibTest.Primitives.M3Tests
                 one.ToString("F2")
             );
         }
+
+        [Fact]
+        private void SetDiagonalFromVector()
+        {
+            M3 m = M3.zero;
+            m.SetDiagonal(new V3(1, 2, 3));
+
+            m.m00.ShouldEqual(1);
+            m.m11.ShouldEqual(2);
+            m.m22.ShouldEqual(3);
+        }
+
+        [Fact]
+        private void SetDiagonalFromVectorPreservesOffDiagonal()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            m.SetDiagonal(new V3(10, 20, 30));
+
+            m.m00.ShouldEqual(10);
+            m.m01.ShouldEqual(2);
+            m.m02.ShouldEqual(3);
+            m.m10.ShouldEqual(4);
+            m.m11.ShouldEqual(20);
+            m.m12.ShouldEqual(6);
+            m.m20.ShouldEqual(7);
+            m.m21.ShouldEqual(8);
+            m.m22.ShouldEqual(30);
+        }
+
+        [Fact]
+        private void SetDiagonalFromScalars()
+        {
+            M3 m = M3.zero;
+            m.SetDiagonal(4, 5, 6);
+
+            m.m00.ShouldEqual(4);
+            m.m11.ShouldEqual(5);
+            m.m22.ShouldEqual(6);
+        }
+
+        [Fact]
+        private void SetDiagonalFromScalarsPreservesOffDiagonal()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            m.SetDiagonal(10, 20, 30);
+
+            m.m00.ShouldEqual(10);
+            m.m01.ShouldEqual(2);
+            m.m02.ShouldEqual(3);
+            m.m10.ShouldEqual(4);
+            m.m11.ShouldEqual(20);
+            m.m12.ShouldEqual(6);
+            m.m20.ShouldEqual(7);
+            m.m21.ShouldEqual(8);
+            m.m22.ShouldEqual(30);
+        }
+
+        [Fact]
+        private void SetDiagonalNegativeValues()
+        {
+            M3 m = M3.identity;
+            m.SetDiagonal(-1, -2, -3);
+
+            m.m00.ShouldEqual(-1);
+            m.m11.ShouldEqual(-2);
+            m.m22.ShouldEqual(-3);
+        }
+
+        [Fact]
+        private void SetDiagonalZeroValues()
+        {
+            M3 m = M3.identity;
+            m.SetDiagonal(V3.zero);
+
+            m.m00.ShouldEqual(0);
+            m.m11.ShouldEqual(0);
+            m.m22.ShouldEqual(0);
+        }
+
+        [Fact]
+        private void SetDiagonalThenGetDiagonal()
+        {
+            M3  m = M3.zero;
+            var v = new V3(7, 8, 9);
+            m.SetDiagonal(v);
+
+            m.diagonal.ShouldEqual(v);
+        }
+
+        [Fact]
+        private void SwapRowsFirstAndSecond()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            m.SwapRows(0, 1);
+
+            m.GetRow(0).ShouldEqual(new V3(4, 5, 6));
+            m.GetRow(1).ShouldEqual(new V3(1, 2, 3));
+            m.GetRow(2).ShouldEqual(new V3(7, 8, 9));
+        }
+
+        [Fact]
+        private void SwapRowsFirstAndThird()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            m.SwapRows(0, 2);
+
+            m.GetRow(0).ShouldEqual(new V3(7, 8, 9));
+            m.GetRow(1).ShouldEqual(new V3(4, 5, 6));
+            m.GetRow(2).ShouldEqual(new V3(1, 2, 3));
+        }
+
+        [Fact]
+        private void SwapRowsSecondAndThird()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            m.SwapRows(1, 2);
+
+            m.GetRow(0).ShouldEqual(new V3(1, 2, 3));
+            m.GetRow(1).ShouldEqual(new V3(7, 8, 9));
+            m.GetRow(2).ShouldEqual(new V3(4, 5, 6));
+        }
+
+        [Fact]
+        private void SwapRowsSameIndex()
+        {
+            var m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            M3  original = m;
+            m.SwapRows(1, 1);
+
+            m.ShouldEqual(original);
+        }
+
+        [Fact]
+        private void SwapRowsTwiceRestoresOriginal()
+        {
+            var m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            M3  original = m;
+            m.SwapRows(0, 2);
+            m.SwapRows(0, 2);
+
+            m.ShouldEqual(original);
+        }
+
+        [Fact]
+        private void SwapRowsReverseOrder()
+        {
+            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            m1.SwapRows(0, 2);
+            m2.SwapRows(2, 0);
+
+            m1.ShouldEqual(m2);
+        }
+
+        [Fact]
+        private void SwapColumnsFirstAndSecond()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            m.SwapColumns(0, 1);
+
+            m.GetColumn(0).ShouldEqual(new V3(2, 5, 8));
+            m.GetColumn(1).ShouldEqual(new V3(1, 4, 7));
+            m.GetColumn(2).ShouldEqual(new V3(3, 6, 9));
+        }
+
+        [Fact]
+        private void SwapColumnsFirstAndThird()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            m.SwapColumns(0, 2);
+
+            m.GetColumn(0).ShouldEqual(new V3(3, 6, 9));
+            m.GetColumn(1).ShouldEqual(new V3(2, 5, 8));
+            m.GetColumn(2).ShouldEqual(new V3(1, 4, 7));
+        }
+
+        [Fact]
+        private void SwapColumnsSecondAndThird()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            m.SwapColumns(1, 2);
+
+            m.GetColumn(0).ShouldEqual(new V3(1, 4, 7));
+            m.GetColumn(1).ShouldEqual(new V3(3, 6, 9));
+            m.GetColumn(2).ShouldEqual(new V3(2, 5, 8));
+        }
+
+        [Fact]
+        private void SwapColumnsSameIndex()
+        {
+            var m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            M3  original = m;
+            m.SwapColumns(1, 1);
+
+            m.ShouldEqual(original);
+        }
+
+        [Fact]
+        private void SwapColumnsTwiceRestoresOriginal()
+        {
+            var m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            M3  original = m;
+            m.SwapColumns(0, 2);
+            m.SwapColumns(0, 2);
+
+            m.ShouldEqual(original);
+        }
+
+        [Fact]
+        private void SwapColumnsReverseOrder()
+        {
+            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            m1.SwapColumns(0, 2);
+            m2.SwapColumns(2, 0);
+
+            m1.ShouldEqual(m2);
+        }
+
+        [Fact]
+        private void SwapRowsIdentityMatrix()
+        {
+            M3 m = M3.identity;
+            m.SwapRows(0, 1);
+
+            m.GetRow(0).ShouldEqual(new V3(0, 1, 0));
+            m.GetRow(1).ShouldEqual(new V3(1, 0, 0));
+            m.GetRow(2).ShouldEqual(new V3(0, 0, 1));
+        }
+
+        [Fact]
+        private void SwapColumnsIdentityMatrix()
+        {
+            M3 m = M3.identity;
+            m.SwapColumns(0, 1);
+
+            m.GetColumn(0).ShouldEqual(new V3(0, 1, 0));
+            m.GetColumn(1).ShouldEqual(new V3(1, 0, 0));
+            m.GetColumn(2).ShouldEqual(new V3(0, 0, 1));
+        }
+
+        [Fact]
+        private void SwapRowsChangesDeterminantSign()
+        {
+            var    m           = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
+            double originalDet = m.determinant;
+            m.SwapRows(0, 1);
+
+            m.determinant.ShouldEqual(-originalDet, 1e-14);
+        }
+
+        [Fact]
+        private void SwapColumnsChangesDeterminantSign()
+        {
+            var    m           = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
+            double originalDet = m.determinant;
+            m.SwapColumns(0, 1);
+
+            m.determinant.ShouldEqual(-originalDet, 1e-14);
+        }
+
+        [Fact]
+        private void SwapRowsAndColumnsCommute()
+        {
+            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            m1.SwapRows(0, 1);
+            m1.SwapColumns(1, 2);
+
+            m2.SwapColumns(1, 2);
+            m2.SwapRows(0, 1);
+
+            m1.ShouldEqual(m2);
+        }
     }
 }
