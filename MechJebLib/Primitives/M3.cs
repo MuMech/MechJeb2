@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using static System.Math;
@@ -26,40 +27,41 @@ namespace MechJebLib.Primitives
     ///         m20 m21 m22
     ///     </code>
     ///     Internal storage is column-major for compatibility with graphics APIs.
+    ///     This is a readonly struct - all operations return new instances.
     /// </remarks>
-    public struct M3 : IEquatable<M3>, IFormattable
+    public readonly struct M3 : IEquatable<M3>, IFormattable
     {
         #region Fields
 
         // Column 0 elements
         /// <summary>Element at row 0, column 0.</summary>
-        public double m00;
+        public readonly double m00;
 
         /// <summary>Element at row 1, column 0.</summary>
-        public double m10;
+        public readonly double m10;
 
         /// <summary>Element at row 2, column 0.</summary>
-        public double m20;
+        public readonly double m20;
 
         // Column 1 elements
         /// <summary>Element at row 0, column 1.</summary>
-        public double m01;
+        public readonly double m01;
 
         /// <summary>Element at row 1, column 1.</summary>
-        public double m11;
+        public readonly double m11;
 
         /// <summary>Element at row 2, column 1.</summary>
-        public double m21;
+        public readonly double m21;
 
         // Column 2 elements
         /// <summary>Element at row 0, column 2.</summary>
-        public double m02;
+        public readonly double m02;
 
         /// <summary>Element at row 1, column 2.</summary>
-        public double m12;
+        public readonly double m12;
 
         /// <summary>Element at row 2, column 2.</summary>
-        public double m22;
+        public readonly double m22;
 
         #endregion
 
@@ -98,7 +100,7 @@ namespace MechJebLib.Primitives
         /// <param name="column1">Second column vector.</param>
         /// <param name="column2">Third column vector.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public M3(V3 column0, V3 column1, V3 column2)
+        public M3(in V3 column0, in V3 column1, in V3 column2)
         {
             m00 = column0.x;
             m01 = column1.x;
@@ -118,42 +120,38 @@ namespace MechJebLib.Primitives
         /// <summary>
         ///     The zero matrix (all elements are 0).
         /// </summary>
-        public static M3 zero { get; } = new M3(new V3(0, 0, 0),
-            new V3(0, 0, 0),
-            new V3(0, 0, 0));
+        public static M3 zero { get; } = new M3(0, 0, 0, 0, 0, 0, 0, 0, 0);
 
         /// <summary>
         ///     The identity matrix (diagonal elements are 1, all others are 0).
         /// </summary>
-        public static M3 identity { get; } = new M3(new V3(1, 0, 0),
-            new V3(0, 1, 0),
-            new V3(0, 0, 1));
+        public static M3 identity { get; } = new M3(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
         #endregion
 
         #region Indexers
 
         /// <summary>
-        ///     Accesses matrix elements by row and column indices.
+        ///     Accesses matrix elements by row and column indices (read-only).
         /// </summary>
         /// <param name="row">Row index [0..2].</param>
         /// <param name="column">Column index [0..2].</param>
         /// <returns>The element at the specified position.</returns>
         public double this[int row, int column]
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => this[row + column * 3];
-
-            set => this[row + column * 3] = value;
         }
 
         /// <summary>
-        ///     Accesses matrix elements by linear index in column-major order.
+        ///     Accesses matrix elements by linear index in column-major order (read-only).
         /// </summary>
         /// <param name="index">Linear index [0..8] in column-major order.</param>
         /// <returns>The element at the specified index.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown when index is outside [0..8].</exception>
         public double this[int index]
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 switch (index)
@@ -167,43 +165,6 @@ namespace MechJebLib.Primitives
                     case 6: return m02;
                     case 7: return m12;
                     case 8: return m22;
-                    default:
-                        throw new IndexOutOfRangeException("Invalid matrix index!");
-                }
-            }
-
-            set
-            {
-                switch (index)
-                {
-                    case 0:
-                        m00 = value;
-                        break;
-                    case 1:
-                        m10 = value;
-                        break;
-                    case 2:
-                        m20 = value;
-                        break;
-                    case 3:
-                        m01 = value;
-                        break;
-                    case 4:
-                        m11 = value;
-                        break;
-                    case 5:
-                        m21 = value;
-                        break;
-                    case 6:
-                        m02 = value;
-                        break;
-                    case 7:
-                        m12 = value;
-                        break;
-                    case 8:
-                        m22 = value;
-                        break;
-
                     default:
                         throw new IndexOutOfRangeException("Invalid matrix index!");
                 }
@@ -253,55 +214,71 @@ namespace MechJebLib.Primitives
         }
 
         /// <summary>
-        ///     Sets a column of the matrix from a vector.
+        ///     Returns a new matrix with the specified column replaced.
         /// </summary>
         /// <param name="index">Column index [0..2].</param>
         /// <param name="column">Vector containing the new column values.</param>
+        /// <returns>A new matrix with the column replaced.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when index is outside [0..2].</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetColumn(int index, V3 column)
+        public M3 WithColumn(int index, in V3 column)
         {
-            this[0, index] = column.x;
-            this[1, index] = column.y;
-            this[2, index] = column.z;
+            switch (index)
+            {
+                case 0: return new M3(column.x, m01, m02, column.y, m11, m12, column.z, m21, m22);
+                case 1: return new M3(m00, column.x, m02, m10, column.y, m12, m20, column.z, m22);
+                case 2: return new M3(m00, m01, column.x, m10, m11, column.y, m20, m21, column.z);
+                default:
+                    throw new IndexOutOfRangeException("Invalid column index!");
+            }
         }
 
         /// <summary>
-        ///     Sets a row of the matrix from a vector.
+        ///     Returns a new matrix with the specified row replaced.
         /// </summary>
         /// <param name="index">Row index [0..2].</param>
         /// <param name="row">Vector containing the new row values.</param>
+        /// <returns>A new matrix with the row replaced.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when index is outside [0..2].</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetRow(int index, V3 row)
+        public M3 WithRow(int index, in V3 row)
         {
-            this[index, 0] = row.x;
-            this[index, 1] = row.y;
-            this[index, 2] = row.z;
+            switch (index)
+            {
+                case 0: return new M3(row.x, row.y, row.z, m10, m11, m12, m20, m21, m22);
+                case 1: return new M3(m00, m01, m02, row.x, row.y, row.z, m20, m21, m22);
+                case 2: return new M3(m00, m01, m02, m10, m11, m12, row.x, row.y, row.z);
+                default:
+                    throw new IndexOutOfRangeException("Invalid row index!");
+            }
         }
 
         /// <summary>
-        ///     Swaps two rows of the matrix.
+        ///     Returns a new matrix with two rows swapped.
         /// </summary>
         /// <param name="i">First row index [0..2].</param>
         /// <param name="j">Second row index [0..2].</param>
+        /// <returns>A new matrix with the rows swapped.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SwapRows(int i, int j)
+        public M3 WithSwappedRows(int i, int j)
         {
-            V3 temp = GetRow(i);
-            SetRow(i, GetRow(j));
-            SetRow(j, temp);
+            V3 rowI = GetRow(i);
+            V3 rowJ = GetRow(j);
+            return WithRow(i, rowJ).WithRow(j, rowI);
         }
 
         /// <summary>
-        ///     Swaps two columns of the matrix.
+        ///     Returns a new matrix with two columns swapped.
         /// </summary>
         /// <param name="i">First column index [0..2].</param>
         /// <param name="j">Second column index [0..2].</param>
+        /// <returns>A new matrix with the columns swapped.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SwapColumns(int i, int j)
+        public M3 WithSwappedColumns(int i, int j)
         {
-            V3 temp = GetColumn(i);
-            SetColumn(i, GetColumn(j));
-            SetColumn(j, temp);
+            V3 colI = GetColumn(i);
+            V3 colJ = GetColumn(j);
+            return WithColumn(i, colJ).WithColumn(j, colI);
         }
 
         #endregion
@@ -314,30 +291,22 @@ namespace MechJebLib.Primitives
         public V3 diagonal => new V3(m00, m11, m22);
 
         /// <summary>
-        ///     Sets the diagonal elements from a vector.
+        ///     Returns a new matrix with the diagonal elements replaced.
         /// </summary>
         /// <param name="v">Vector containing the diagonal values.</param>
+        /// <returns>A new matrix with the diagonal replaced.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetDiagonal(V3 v)
-        {
-            m00 = v.x;
-            m11 = v.y;
-            m22 = v.z;
-        }
+        public M3 WithDiagonal(in V3 v) => new M3(v.x, m01, m02, m10, v.y, m12, m20, m21, v.z);
 
         /// <summary>
-        ///     Sets the diagonal elements from three scalar values.
+        ///     Returns a new matrix with the diagonal elements replaced.
         /// </summary>
         /// <param name="x">First diagonal element (m00).</param>
         /// <param name="y">Second diagonal element (m11).</param>
         /// <param name="z">Third diagonal element (m22).</param>
+        /// <returns>A new matrix with the diagonal replaced.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetDiagonal(double x, double y, double z)
-        {
-            m00 = x;
-            m11 = y;
-            m22 = z;
-        }
+        public M3 WithDiagonal(double x, double y, double z) => new M3(x, m01, m02, m10, y, m12, m20, m21, z);
 
         #endregion
 
@@ -350,23 +319,18 @@ namespace MechJebLib.Primitives
         /// <param name="rhs">Right-hand side matrix.</param>
         /// <returns>The product matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 operator *(M3 lhs, M3 rhs)
-        {
-            M3 res;
-            res.m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20;
-            res.m01 = lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21;
-            res.m02 = lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22;
-
-            res.m10 = lhs.m10 * rhs.m00 + lhs.m11 * rhs.m10 + lhs.m12 * rhs.m20;
-            res.m11 = lhs.m10 * rhs.m01 + lhs.m11 * rhs.m11 + lhs.m12 * rhs.m21;
-            res.m12 = lhs.m10 * rhs.m02 + lhs.m11 * rhs.m12 + lhs.m12 * rhs.m22;
-
-            res.m20 = lhs.m20 * rhs.m00 + lhs.m21 * rhs.m10 + lhs.m22 * rhs.m20;
-            res.m21 = lhs.m20 * rhs.m01 + lhs.m21 * rhs.m11 + lhs.m22 * rhs.m21;
-            res.m22 = lhs.m20 * rhs.m02 + lhs.m21 * rhs.m12 + lhs.m22 * rhs.m22;
-
-            return res;
-        }
+        public static M3 operator *(in M3 lhs, in M3 rhs) =>
+            new M3(
+                lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20,
+                lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21,
+                lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22,
+                lhs.m10 * rhs.m00 + lhs.m11 * rhs.m10 + lhs.m12 * rhs.m20,
+                lhs.m10 * rhs.m01 + lhs.m11 * rhs.m11 + lhs.m12 * rhs.m21,
+                lhs.m10 * rhs.m02 + lhs.m11 * rhs.m12 + lhs.m12 * rhs.m22,
+                lhs.m20 * rhs.m00 + lhs.m21 * rhs.m10 + lhs.m22 * rhs.m20,
+                lhs.m20 * rhs.m01 + lhs.m21 * rhs.m11 + lhs.m22 * rhs.m21,
+                lhs.m20 * rhs.m02 + lhs.m21 * rhs.m12 + lhs.m22 * rhs.m22
+            );
 
         /// <summary>
         ///     Transforms a vector by a matrix (M * v).
@@ -375,14 +339,12 @@ namespace MechJebLib.Primitives
         /// <param name="vector">The vector to transform.</param>
         /// <returns>The transformed vector.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static V3 operator *(M3 lhs, V3 vector)
-        {
-            V3 res;
-            res.x = lhs.m00 * vector.x + lhs.m01 * vector.y + lhs.m02 * vector.z;
-            res.y = lhs.m10 * vector.x + lhs.m11 * vector.y + lhs.m12 * vector.z;
-            res.z = lhs.m20 * vector.x + lhs.m21 * vector.y + lhs.m22 * vector.z;
-            return res;
-        }
+        public static V3 operator *(in M3 lhs, in V3 vector) =>
+            new V3(
+                lhs.m00 * vector.x + lhs.m01 * vector.y + lhs.m02 * vector.z,
+                lhs.m10 * vector.x + lhs.m11 * vector.y + lhs.m12 * vector.z,
+                lhs.m20 * vector.x + lhs.m21 * vector.y + lhs.m22 * vector.z
+            );
 
         /// <summary>
         ///     Multiplies all matrix elements by a scalar.
@@ -391,23 +353,12 @@ namespace MechJebLib.Primitives
         /// <param name="value">The scalar value.</param>
         /// <returns>The scaled matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 operator *(M3 lhs, double value)
-        {
-            M3 res;
-            res.m00 = lhs.m00 * value;
-            res.m01 = lhs.m01 * value;
-            res.m02 = lhs.m02 * value;
-
-            res.m10 = lhs.m10 * value;
-            res.m11 = lhs.m11 * value;
-            res.m12 = lhs.m12 * value;
-
-            res.m20 = lhs.m20 * value;
-            res.m21 = lhs.m21 * value;
-            res.m22 = lhs.m22 * value;
-
-            return res;
-        }
+        public static M3 operator *(in M3 lhs, double value) =>
+            new M3(
+                lhs.m00 * value, lhs.m01 * value, lhs.m02 * value,
+                lhs.m10 * value, lhs.m11 * value, lhs.m12 * value,
+                lhs.m20 * value, lhs.m21 * value, lhs.m22 * value
+            );
 
         /// <summary>
         ///     Multiplies all matrix elements by a scalar.
@@ -416,7 +367,7 @@ namespace MechJebLib.Primitives
         /// <param name="rhs">The matrix.</param>
         /// <returns>The scaled matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 operator *(double value, M3 rhs) => rhs * value;
+        public static M3 operator *(double value, in M3 rhs) => rhs * value;
 
         /// <summary>
         ///     Divides all matrix elements by a scalar.
@@ -425,23 +376,12 @@ namespace MechJebLib.Primitives
         /// <param name="value">The scalar divisor.</param>
         /// <returns>The scaled matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 operator /(M3 lhs, double value)
-        {
-            M3 res;
-            res.m00 = lhs.m00 / value;
-            res.m01 = lhs.m01 / value;
-            res.m02 = lhs.m02 / value;
-
-            res.m10 = lhs.m10 / value;
-            res.m11 = lhs.m11 / value;
-            res.m12 = lhs.m12 / value;
-
-            res.m20 = lhs.m20 / value;
-            res.m21 = lhs.m21 / value;
-            res.m22 = lhs.m22 / value;
-
-            return res;
-        }
+        public static M3 operator /(in M3 lhs, double value) =>
+            new M3(
+                lhs.m00 / value, lhs.m01 / value, lhs.m02 / value,
+                lhs.m10 / value, lhs.m11 / value, lhs.m12 / value,
+                lhs.m20 / value, lhs.m21 / value, lhs.m22 / value
+            );
 
         /// <summary>
         ///     Adds two matrices element-wise.
@@ -450,24 +390,12 @@ namespace MechJebLib.Primitives
         /// <param name="rhs">Second matrix.</param>
         /// <returns>The sum of the matrices.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 operator +(M3 lhs, M3 rhs)
-        {
-            M3 res;
-
-            res.m00 = lhs.m00 + rhs.m00;
-            res.m01 = lhs.m01 + rhs.m01;
-            res.m02 = lhs.m02 + rhs.m02;
-
-            res.m10 = lhs.m10 + rhs.m10;
-            res.m11 = lhs.m11 + rhs.m11;
-            res.m12 = lhs.m12 + rhs.m12;
-
-            res.m20 = lhs.m20 + rhs.m20;
-            res.m21 = lhs.m21 + rhs.m21;
-            res.m22 = lhs.m22 + rhs.m22;
-
-            return res;
-        }
+        public static M3 operator +(in M3 lhs, in M3 rhs) =>
+            new M3(
+                lhs.m00 + rhs.m00, lhs.m01 + rhs.m01, lhs.m02 + rhs.m02,
+                lhs.m10 + rhs.m10, lhs.m11 + rhs.m11, lhs.m12 + rhs.m12,
+                lhs.m20 + rhs.m20, lhs.m21 + rhs.m21, lhs.m22 + rhs.m22
+            );
 
         /// <summary>
         ///     Subtracts two matrices element-wise.
@@ -476,24 +404,12 @@ namespace MechJebLib.Primitives
         /// <param name="rhs">Second matrix to subtract.</param>
         /// <returns>The difference of the matrices.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 operator -(M3 lhs, M3 rhs)
-        {
-            M3 res;
-
-            res.m00 = lhs.m00 - rhs.m00;
-            res.m01 = lhs.m01 - rhs.m01;
-            res.m02 = lhs.m02 - rhs.m02;
-
-            res.m10 = lhs.m10 - rhs.m10;
-            res.m11 = lhs.m11 - rhs.m11;
-            res.m12 = lhs.m12 - rhs.m12;
-
-            res.m20 = lhs.m20 - rhs.m20;
-            res.m21 = lhs.m21 - rhs.m21;
-            res.m22 = lhs.m22 - rhs.m22;
-
-            return res;
-        }
+        public static M3 operator -(in M3 lhs, in M3 rhs) =>
+            new M3(
+                lhs.m00 - rhs.m00, lhs.m01 - rhs.m01, lhs.m02 - rhs.m02,
+                lhs.m10 - rhs.m10, lhs.m11 - rhs.m11, lhs.m12 - rhs.m12,
+                lhs.m20 - rhs.m20, lhs.m21 - rhs.m21, lhs.m22 - rhs.m22
+            );
 
         /// <summary>
         ///     Negates all matrix elements.
@@ -501,7 +417,12 @@ namespace MechJebLib.Primitives
         /// <param name="m">The matrix to negate.</param>
         /// <returns>The negated matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 operator -(M3 m) => m * -1;
+        public static M3 operator -(in M3 m) =>
+            new M3(
+                -m.m00, -m.m01, -m.m02,
+                -m.m10, -m.m11, -m.m12,
+                -m.m20, -m.m21, -m.m22
+            );
 
         #endregion
 
@@ -515,10 +436,10 @@ namespace MechJebLib.Primitives
         /// <param name="rhs">Second matrix.</param>
         /// <returns>True if all elements are exactly equal.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(M3 lhs, M3 rhs) =>
-            lhs.GetColumn(0) == rhs.GetColumn(0)
-            && lhs.GetColumn(1) == rhs.GetColumn(1)
-            && lhs.GetColumn(2) == rhs.GetColumn(2);
+        public static bool operator ==(in M3 lhs, in M3 rhs) =>
+            lhs.m00 == rhs.m00 && lhs.m01 == rhs.m01 && lhs.m02 == rhs.m02 &&
+            lhs.m10 == rhs.m10 && lhs.m11 == rhs.m11 && lhs.m12 == rhs.m12 &&
+            lhs.m20 == rhs.m20 && lhs.m21 == rhs.m21 && lhs.m22 == rhs.m22;
 
         /// <summary>
         ///     Tests for strict element-wise inequality between two matrices.
@@ -528,9 +449,7 @@ namespace MechJebLib.Primitives
         /// <param name="rhs">Second matrix.</param>
         /// <returns>True if any element differs.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(M3 lhs, M3 rhs) =>
-            // Returns true in the presence of NaN values.
-            !(lhs == rhs);
+        public static bool operator !=(in M3 lhs, in M3 rhs) => !(lhs == rhs);
 
         #endregion
 
@@ -544,18 +463,17 @@ namespace MechJebLib.Primitives
         /// <summary>
         ///     Gets the determinant of the matrix.
         /// </summary>
-        public double determinant => GetDeterminant();
+        public double determinant => m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m21 * m02) + m20 * (m01 * m12 - m11 * m02);
 
         /// <summary>
         ///     Gets the transpose of the matrix (rows and columns swapped).
         /// </summary>
-        public M3 transpose => Transpose(this);
+        public M3 transpose => new M3(m00, m10, m20, m01, m11, m21, m02, m12, m22);
 
         /// <summary>
         ///     Gets the transpose of the matrix (rows and columns swapped).
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public M3 T() => Transpose(this);
+        public M3 T() => new M3(m00, m10, m20, m01, m11, m21, m02, m12, m22);
 
         /// <summary>
         ///     Gets the inverse of the matrix.
@@ -565,7 +483,10 @@ namespace MechJebLib.Primitives
         /// <summary>
         ///     Gets whether this matrix is the identity matrix (strict comparison).
         /// </summary>
-        public bool isIdentity => IsIdentity();
+        public bool isIdentity =>
+            m00 == 1.0 && m10 == 0.0 && m20 == 0.0 &&
+            m01 == 0.0 && m11 == 1.0 && m21 == 0.0 &&
+            m02 == 0.0 && m12 == 0.0 && m22 == 1.0;
 
         /// <summary>
         ///     Gets whether this matrix is orthogonal (M * M^T ≈ I).
@@ -590,32 +511,14 @@ namespace MechJebLib.Primitives
         /// <summary>
         ///     Gets the maximum element value in the matrix.
         /// </summary>
-        public double max_magnitude
-        {
-            get
-            {
-                double max = double.NegativeInfinity;
-                for (int i = 0; i < 9; i++)
-                    if (this[i] > max)
-                        max = this[i];
-                return max;
-            }
-        }
+        public double max_magnitude =>
+            Max(Max(Max(Max(Max(Max(Max(Max(m00, m10), m20), m01), m11), m21), m02), m12), m22);
 
         /// <summary>
         ///     Gets the minimum element value in the matrix.
         /// </summary>
-        public double min_magnitude
-        {
-            get
-            {
-                double min = double.PositiveInfinity;
-                for (int i = 0; i < 9; i++)
-                    if (this[i] < min)
-                        min = this[i];
-                return min;
-            }
-        }
+        public double min_magnitude =>
+            Min(Min(Min(Min(Min(Min(Min(Min(m00, m10), m20), m01), m11), m21), m02), m12), m22);
 
         #endregion
 
@@ -647,7 +550,7 @@ namespace MechJebLib.Primitives
         /// <param name="m">The matrix.</param>
         /// <returns>The Frobenius norm.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double FrobeniusNorm(M3 m) => m.frobeniusNorm;
+        public static double FrobeniusNorm(in M3 m) => m.frobeniusNorm;
 
         #endregion
 
@@ -659,7 +562,7 @@ namespace MechJebLib.Primitives
         /// <param name="m">The matrix.</param>
         /// <returns>The trace value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Trace(M3 m) => m.trace;
+        public static double Trace(in M3 m) => m.trace;
 
         /// <summary>
         ///     Computes the determinant of a matrix.
@@ -667,7 +570,7 @@ namespace MechJebLib.Primitives
         /// <param name="m">The matrix.</param>
         /// <returns>The determinant value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Determinant(M3 m) => m.determinant;
+        public static double Determinant(in M3 m) => m.determinant;
 
         /// <summary>
         ///     Computes the transpose of a matrix (rows and columns swapped).
@@ -675,10 +578,7 @@ namespace MechJebLib.Primitives
         /// <param name="m">The matrix.</param>
         /// <returns>The transposed matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 Transpose(M3 m) =>
-            new M3(new V3(m.m00, m.m01, m.m02),
-                new V3(m.m10, m.m11, m.m12),
-                new V3(m.m20, m.m21, m.m22));
+        public static M3 Transpose(in M3 m) => m.transpose;
 
         /// <summary>
         ///     Computes the inverse of a matrix.
@@ -689,20 +589,23 @@ namespace MechJebLib.Primitives
         ///     Uses the classical adjoint method. Does not check for singularity.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 Inverse(M3 m)
+        public static M3 Inverse(in M3 m)
         {
-            double a = m.m11 * m.m22 - m.m21 * m.m12;
-            double b = m.m21 * m.m02 - m.m01 * m.m22;
-            double c = m.m01 * m.m12 - m.m11 * m.m02;
-            double d = m.m20 * m.m12 - m.m10 * m.m22;
-            double e = m.m00 * m.m22 - m.m20 * m.m02;
-            double f = m.m10 * m.m02 - m.m00 * m.m12;
-            double g = m.m10 * m.m21 - m.m20 * m.m11;
-            double h = m.m20 * m.m01 - m.m00 * m.m21;
-            double i = m.m11 * m.m00 - m.m10 * m.m01;
-            return new M3(new V3(a, d, g),
-                new V3(b, e, h),
-                new V3(c, f, i)) * (1 / (m.m00 * a + m.m10 * b + m.m20 * c));
+            double a      = m.m11 * m.m22 - m.m21 * m.m12;
+            double b      = m.m21 * m.m02 - m.m01 * m.m22;
+            double c      = m.m01 * m.m12 - m.m11 * m.m02;
+            double d      = m.m20 * m.m12 - m.m10 * m.m22;
+            double e      = m.m00 * m.m22 - m.m20 * m.m02;
+            double f      = m.m10 * m.m02 - m.m00 * m.m12;
+            double g      = m.m10 * m.m21 - m.m20 * m.m11;
+            double h      = m.m20 * m.m01 - m.m00 * m.m21;
+            double i      = m.m11 * m.m00 - m.m10 * m.m01;
+            double invDet = 1.0 / (m.m00 * a + m.m10 * b + m.m20 * c);
+            return new M3(
+                a * invDet, b * invDet, c * invDet,
+                d * invDet, e * invDet, f * invDet,
+                g * invDet, h * invDet, i * invDet
+            );
         }
 
         /// <summary>
@@ -713,7 +616,7 @@ namespace MechJebLib.Primitives
         /// <param name="t">Interpolation parameter, clamped to [0, 1].</param>
         /// <returns>The interpolated matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 Lerp(M3 a, M3 b, double t)
+        public static M3 Lerp(in M3 a, in M3 b, double t)
         {
             t = Clamp01(t);
             return a + t * (b - a);
@@ -729,47 +632,32 @@ namespace MechJebLib.Primitives
         /// <param name="vector">The vector to transform.</param>
         /// <returns>The transformed vector.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public V3 MultiplyVector(V3 vector) => this * vector;
+        public V3 MultiplyVector(in V3 vector) => this * vector;
 
         #endregion
 
         #region Orthonormalization
 
         /// <summary>
-        ///     Orthonormalizes the column vectors using the Gram-Schmidt process.
-        ///     Modifies the matrix in-place.
+        ///     Gets an orthonormalized copy of this matrix using Gram-Schmidt process.
         /// </summary>
         /// <remarks>
-        ///     After this operation, the columns form an orthonormal basis
+        ///     The resulting columns form an orthonormal basis
         ///     and the matrix represents a pure rotation (det = 1 or -1).
         /// </remarks>
-        public void Orthonormalize()
-        {
-            V3 x = GetColumn(0);
-            V3 y = GetColumn(1);
-            V3 z = GetColumn(2);
-
-            x.Normalize();
-            y -= x * V3.Dot(x, y);
-            y.Normalize();
-            z -= x * V3.Dot(x, z) + y * V3.Dot(y, z);
-            z.Normalize();
-
-            SetColumn(0, x);
-            SetColumn(1, y);
-            SetColumn(2, z);
-        }
-
-        /// <summary>
-        ///     Gets an orthonormalized copy of this matrix.
-        /// </summary>
         public M3 orthonormalized
         {
             get
             {
-                M3 m = this;
-                m.Orthonormalize();
-                return m;
+                V3 x = GetColumn(0);
+                V3 y = GetColumn(1);
+                V3 z = GetColumn(2);
+
+                x = x.normalized;
+                y = (y - x * V3.Dot(x, y)).normalized;
+                z = (z - x * V3.Dot(x, z) - y * V3.Dot(y, z)).normalized;
+
+                return new M3(x, y, z);
             }
         }
 
@@ -791,7 +679,7 @@ namespace MechJebLib.Primitives
         /// <param name="v">Vector containing diagonal values.</param>
         /// <returns>A diagonal matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 Diagonal(V3 v) => new M3(v.x, 0, 0, 0, v.y, 0, 0, 0, v.z);
+        public static M3 Diagonal(in V3 v) => new M3(v.x, 0, 0, 0, v.y, 0, 0, 0, v.z);
 
         /// <summary>
         ///     Creates a diagonal matrix from three scalar values.
@@ -810,7 +698,7 @@ namespace MechJebLib.Primitives
         /// <param name="v">The vector.</param>
         /// <returns>A skew-symmetric matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 Skew(V3 v) => new M3(0, -v.z, v.y, v.z, 0, -v.x, -v.y, v.x, 0);
+        public static M3 Skew(in V3 v) => new M3(0, -v.z, v.y, v.z, 0, -v.x, -v.y, v.x, 0);
 
         #endregion
 
@@ -825,9 +713,8 @@ namespace MechJebLib.Primitives
         ///     The quaternion must be normalized for correct results.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 Rotate(Q3 q)
+        public static M3 Rotate(in Q3 q)
         {
-            // Precalculate coordinate products
             double x  = q.x * 2.0;
             double y  = q.y * 2.0;
             double z  = q.z * 2.0;
@@ -841,18 +728,11 @@ namespace MechJebLib.Primitives
             double wy = q.w * y;
             double wz = q.w * z;
 
-            // Calculate 3x3 matrix from orthonormal basis
-            M3 m;
-            m.m00 = 1.0 - (yy + zz);
-            m.m10 = xy + wz;
-            m.m20 = xz - wy;
-            m.m01 = xy - wz;
-            m.m11 = 1.0 - (xx + zz);
-            m.m21 = yz + wx;
-            m.m02 = xz + wy;
-            m.m12 = yz - wx;
-            m.m22 = 1.0 - (xx + yy);
-            return m;
+            return new M3(
+                1.0 - (yy + zz), xy - wz, xz + wy,
+                xy + wz, 1.0 - (xx + zz), yz - wx,
+                xz - wy, yz + wx, 1.0 - (xx + yy)
+            );
         }
 
         /// <summary>
@@ -862,7 +742,7 @@ namespace MechJebLib.Primitives
         /// <param name="q">A unit quaternion representing the rotation.</param>
         /// <returns>The equivalent rotation matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 FromQuaternion(Q3 q) => Rotate(q);
+        public static M3 FromQuaternion(in Q3 q) => Rotate(q);
 
         /// <summary>
         ///     Creates a rotation matrix from an angle and axis using Rodrigues' rotation formula.
@@ -871,21 +751,17 @@ namespace MechJebLib.Primitives
         /// <param name="axis">Rotation axis (will be normalized internally).</param>
         /// <returns>The rotation matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 AngleAxis(double angle, V3 axis)
+        public static M3 AngleAxis(double angle, in V3 axis)
         {
-            axis = axis.normalized;
+            V3     a = axis.normalized;
             double c = Cos(angle);
             double s = Sin(angle);
             double t = 1.0 - c;
 
-            double x = axis.x;
-            double y = axis.y;
-            double z = axis.z;
-
             return new M3(
-                t * x * x + c, t * x * y - s * z, t * x * z + s * y,
-                t * x * y + s * z, t * y * y + c, t * y * z - s * x,
-                t * x * z - s * y, t * y * z + s * x, t * z * z + c
+                t * a.x * a.x + c, t * a.x * a.y - s * a.z, t * a.x * a.z + s * a.y,
+                t * a.x * a.y + s * a.z, t * a.y * a.y + c, t * a.y * a.z - s * a.x,
+                t * a.x * a.z - s * a.y, t * a.y * a.z + s * a.x, t * a.z * a.z + c
             );
         }
 
@@ -921,7 +797,7 @@ namespace MechJebLib.Primitives
         /// <param name="angles">Vector containing (roll, pitch, yaw) in radians.</param>
         /// <returns>The rotation matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static M3 EulerAngles(V3 angles) => EulerAngles(angles.x, angles.y, angles.z);
+        public static M3 EulerAngles(in V3 angles) => EulerAngles(angles.x, angles.y, angles.z);
 
         #endregion
 
@@ -944,33 +820,37 @@ namespace MechJebLib.Primitives
                     double w = s * 0.5;
                     s = 0.5 / s;
 
-                    double x = (m21 - m12) * s;
-                    double y = (m02 - m20) * s;
-                    double z = (m10 - m01) * s;
-
-                    return new Q3(x, y, z, w);
+                    return new Q3(
+                        (m21 - m12) * s,
+                        (m02 - m20) * s,
+                        (m10 - m01) * s,
+                        w
+                    );
                 }
-                else
+
+                int i = m00 < m11
+                    ? m11 < m22 ? 2 : 1
+                    : m00 < m22
+                        ? 2
+                        : 0;
+                int j = (i + 1) % 3;
+                int k = (i + 2) % 3;
+
+                double s2 = Sqrt(this[i, i] - this[j, j] - this[k, k] + 1.0);
+
+                double qi = s2 * 0.5;
+                s2 = 0.5 / s2;
+
+                double qw = (this[k, j] - this[j, k]) * s2;
+                double qj = (this[j, i] + this[i, j]) * s2;
+                double qk = (this[k, i] + this[i, k]) * s2;
+
+                // Reorder based on which diagonal was largest
+                switch (i)
                 {
-                    int i = m00 < m11
-                        ? m11 < m22 ? 2 : 1
-                        : m00 < m22
-                            ? 2
-                            : 0;
-                    int j = (i + 1) % 3;
-                    int k = (i + 2) % 3;
-
-                    double s = Sqrt(this[i, i] - this[j, j] - this[k, k] + 1.0);
-
-                    double[] temp = new double[4];
-                    temp[i] = s * 0.5;
-                    s       = 0.5 / s;
-
-                    temp[3] = (this[k, j] - this[j, k]) * s;
-                    temp[j] = (this[j, i] + this[i, j]) * s;
-                    temp[k] = (this[k, i] + this[i, k]) * s;
-
-                    return new Q3(temp[0], temp[1], temp[2], temp[3]);
+                    case 0:  return new Q3(qi, qj, qk, qw);
+                    case 1:  return new Q3(qk, qi, qj, qw);
+                    default: return new Q3(qj, qk, qi, qw);
                 }
             }
         }
@@ -987,10 +867,9 @@ namespace MechJebLib.Primitives
         {
             get
             {
-                // ensure that the determinant is 1
                 M3 m = orthonormalized;
                 if (m.determinant < 0)
-                    m *= -1;
+                    m = -m;
 
                 return m.quaternion;
             }
@@ -1004,7 +883,29 @@ namespace MechJebLib.Primitives
         ///     Gets the Euler angles (roll, pitch, yaw) from this rotation matrix.
         ///     Assumes intrinsic ZYX order matching aerospace NED convention.
         /// </summary>
-        public V3 eulerAngles => ToEulerAngles();
+        public V3 eulerAngles
+        {
+            get
+            {
+                double pitch = SafeAsin(-m20);
+
+                double roll, yaw;
+
+                if (Abs(m20) < 1.0 - EPS)
+                {
+                    roll = Atan2(m21, m22);
+                    yaw  = Atan2(m10, m00);
+                }
+                else
+                {
+                    // Gimbal lock: pitch is ±90°
+                    roll = Atan2(-m12, m11);
+                    yaw  = 0;
+                }
+
+                return new V3(roll, pitch, yaw);
+            }
+        }
 
         /// <summary>
         ///     Extracts Euler angles (roll, pitch, yaw) from this rotation matrix.
@@ -1015,30 +916,40 @@ namespace MechJebLib.Primitives
         ///     Handles gimbal lock when pitch is ±90°.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public V3 ToEulerAngles()
-        {
-            double pitch = SafeAsin(-m20);
-
-            double roll, yaw;
-
-            if (Abs(m20) < 1.0 - EPS)
-            {
-                roll = Atan2(m21, m22);
-                yaw  = Atan2(m10, m00);
-            }
-            else
-            {
-                // Gimbal lock: pitch is ±90°
-                roll = Atan2(-m12, m11);
-                yaw  = 0;
-            }
-
-            return new V3(roll, pitch, yaw);
-        }
+        public V3 ToEulerAngles() => eulerAngles;
 
         #endregion
 
         #region Data Transfer
+
+        /// <summary>
+        ///     Creates a matrix from a 2D array.
+        /// </summary>
+        /// <param name="array">Source 2D array.</param>
+        /// <param name="x">Starting row index in the source array.</param>
+        /// <param name="y">Starting column index in the source array.</param>
+        /// <returns>A new matrix containing the values from the array.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static M3 CopyFrom(double[,] array, int x, int y) =>
+            new M3(
+                array[x, y], array[x, y + 1], array[x, y + 2],
+                array[x + 1, y], array[x + 1, y + 1], array[x + 1, y + 2],
+                array[x + 2, y], array[x + 2, y + 1], array[x + 2, y + 2]
+            );
+
+        /// <summary>
+        ///     Creates a matrix from a 1D array.
+        /// </summary>
+        /// <param name="array">Source 1D array.</param>
+        /// <param name="offset">Starting index in the source array.</param>
+        /// <returns>A new matrix containing the values from the array.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static M3 CopyFrom(IList<double> array, int offset) =>
+            new M3(
+                array[offset], array[offset + 1], array[offset + 2],
+                array[offset + 3], array[offset + 4], array[offset + 5],
+                array[offset + 6], array[offset + 7], array[offset + 8]
+            );
 
         /// <summary>
         ///     Copies this matrix to a 2D array.
@@ -1049,9 +960,34 @@ namespace MechJebLib.Primitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(double[,] other, int x, int y)
         {
-            for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 3; j++)
-                other[x + i, y + j] = this[i, j];
+            other[x, y]         = m00;
+            other[x, y + 1]     = m01;
+            other[x, y + 2]     = m02;
+            other[x + 1, y]     = m10;
+            other[x + 1, y + 1] = m11;
+            other[x + 1, y + 2] = m12;
+            other[x + 2, y]     = m20;
+            other[x + 2, y + 1] = m21;
+            other[x + 2, y + 2] = m22;
+        }
+
+        /// <summary>
+        ///     Copies this matrix to a 1D array.
+        /// </summary>
+        /// <param name="other">Target 1D array.</param>
+        /// <param name="offset">Starting index in the target array.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CopyTo(IList<double> other, int offset)
+        {
+            other[offset]     = m00;
+            other[offset + 1] = m01;
+            other[offset + 2] = m02;
+            other[offset + 3] = m10;
+            other[offset + 4] = m11;
+            other[offset + 5] = m12;
+            other[offset + 6] = m20;
+            other[offset + 7] = m21;
+            other[offset + 8] = m22;
         }
 
         #endregion
@@ -1066,9 +1002,9 @@ namespace MechJebLib.Primitives
         /// <returns>True if all elements are equal.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(M3 other) =>
-            GetColumn(0).Equals(other.GetColumn(0))
-            && GetColumn(1).Equals(other.GetColumn(1))
-            && GetColumn(2).Equals(other.GetColumn(2));
+            m00.Equals(other.m00) && m01.Equals(other.m01) && m02.Equals(other.m02) &&
+            m10.Equals(other.m10) && m11.Equals(other.m11) && m12.Equals(other.m12) &&
+            m20.Equals(other.m20) && m21.Equals(other.m21) && m22.Equals(other.m22);
 
         /// <summary>
         ///     Tests for equality with an object.
@@ -1076,20 +1012,29 @@ namespace MechJebLib.Primitives
         /// <param name="other">Object to compare with.</param>
         /// <returns>True if the object is an M3 with equal elements.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object? other)
-        {
-            if (!(other is M3 m))
-                return false;
-
-            return Equals(m);
-        }
+        public override bool Equals(object? other) => other is M3 m && Equals(m);
 
         /// <summary>
         ///     Computes a hash code for the matrix.
         /// </summary>
         /// <returns>A hash code combining all elements.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => GetColumn(0).GetHashCode() ^ (GetColumn(1).GetHashCode() << 2) ^ (GetColumn(2).GetHashCode() >> 2);
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = m00.GetHashCode();
+                hash = (hash * 397) ^ m01.GetHashCode();
+                hash = (hash * 397) ^ m02.GetHashCode();
+                hash = (hash * 397) ^ m10.GetHashCode();
+                hash = (hash * 397) ^ m11.GetHashCode();
+                hash = (hash * 397) ^ m12.GetHashCode();
+                hash = (hash * 397) ^ m20.GetHashCode();
+                hash = (hash * 397) ^ m21.GetHashCode();
+                hash = (hash * 397) ^ m22.GetHashCode();
+                return hash;
+            }
+        }
 
         #endregion
 
@@ -1126,24 +1071,6 @@ namespace MechJebLib.Primitives
                 m10.ToString(format, formatProvider), m11.ToString(format, formatProvider), m12.ToString(format, formatProvider),
                 m20.ToString(format, formatProvider), m21.ToString(format, formatProvider), m22.ToString(format, formatProvider));
         }
-
-        #endregion
-
-        #region Private Helper Methods
-
-        /// <summary>
-        ///     Tests if this matrix is the identity matrix using strict comparison.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IsIdentity() =>
-            m00 == 1.0 && m10 == 0.0 && m20 == 0.0 &&
-            m01 == 0.0 && m11 == 1.0 && m21 == 0.0 &&
-            m02 == 0.0 && m12 == 0.0 && m22 == 1.0;
-
-        /// <summary>
-        ///     Computes the determinant.
-        /// </summary>
-        private double GetDeterminant() => m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m21 * m02) + m20 * (m01 * m12 - m11 * m02);
 
         #endregion
     }

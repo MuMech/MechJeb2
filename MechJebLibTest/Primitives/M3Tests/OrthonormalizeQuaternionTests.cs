@@ -15,7 +15,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void OrthonormalizeIdentityMatrix()
         {
             M3 m = M3.identity;
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             m.ShouldEqual(M3.identity);
         }
@@ -27,7 +27,7 @@ namespace MechJebLibTest.Primitives.M3Tests
             var m        = M3.Rotate(q);
             M3  original = m;
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             m.ShouldEqual(original, 1e-14);
         }
@@ -39,7 +39,7 @@ namespace MechJebLibTest.Primitives.M3Tests
                 0, 1, 0,
                 0, 0, 1);
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             V3 col0 = m.GetColumn(0);
             V3 col1 = m.GetColumn(1);
@@ -59,7 +59,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         {
             M3 m = M3.identity * 2.5;
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             m.ShouldEqual(M3.identity, 1e-14);
         }
@@ -71,7 +71,7 @@ namespace MechJebLibTest.Primitives.M3Tests
                 0.2, 1, 0.4,
                 0.1, 0.2, 1);
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             V3 col0 = m.GetColumn(0);
             V3 col1 = m.GetColumn(1);
@@ -95,7 +95,7 @@ namespace MechJebLibTest.Primitives.M3Tests
 
             V3 originalFirstDir = m.GetColumn(0).normalized;
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             m.GetColumn(0).ShouldEqual(originalFirstDir, 1e-14);
         }
@@ -107,7 +107,7 @@ namespace MechJebLibTest.Primitives.M3Tests
                 0, 1e-100, 0,
                 0, 0, 1e-100);
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             m.ShouldEqual(M3.identity, 1e-14);
         }
@@ -119,7 +119,7 @@ namespace MechJebLibTest.Primitives.M3Tests
                 0, 1e100, 0,
                 0, 0, 1e100);
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             m.ShouldEqual(M3.identity, 1e-14);
         }
@@ -386,7 +386,7 @@ namespace MechJebLibTest.Primitives.M3Tests
                 0, 1e-10, 0,
                 0, 0, 1);
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             V3 col0 = m.GetColumn(0);
             V3 col1 = m.GetColumn(1);
@@ -423,7 +423,7 @@ namespace MechJebLibTest.Primitives.M3Tests
                 -1, 1, 0,
                 0, 0, 1);
 
-            m.Orthonormalize();
+            m = m.orthonormalized;
 
             V3 col0 = m.GetColumn(0);
             V3 col1 = m.GetColumn(1);

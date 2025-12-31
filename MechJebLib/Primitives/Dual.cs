@@ -9,7 +9,7 @@ using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives
 {
-    public struct Dual : IEquatable<Dual>, IComparable<Dual>, IFormattable
+    public readonly struct Dual : IEquatable<Dual>, IComparable<Dual>, IFormattable
     {
         public readonly double M;
         public readonly double D;

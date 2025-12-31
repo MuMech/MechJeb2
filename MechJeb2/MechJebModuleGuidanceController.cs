@@ -6,6 +6,7 @@
 
 extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
+using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using MechJebLibBindings;
@@ -33,12 +34,18 @@ namespace MuMech
 
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
 
-        public double   Pitch;
-        public double   Heading;
-        public Vector3d Inertial = Vector3d.zero;
-        public double   Tgo;
-        public double   VGO;
-        public double   StartCoast;
+        public  double   Pitch;
+        public  double   Heading;
+        public  double   SQPPitch;
+        public  double   SQPHeading;
+        public  double   Dv;
+        public  double   Dr;
+        private V3       _inertial    = V3.zero; // inertial in right-handed non-rotating
+        private V3       _sqpInertial = V3.zero;
+        public  Vector3d Inertial     = Vector3d.zero; // inertial in rotating coordinates
+        public  double   Tgo;
+        public  double   Vgo;
+        public  double   StartCoast;
 
         public Solution? Solution;
 
@@ -335,14 +342,28 @@ namespace MuMech
 
             if (Status != PSGStatus.TERMINAL_RCS)
             {
-                (double pitch, double heading, V3 inertial) = Solution.PitchAndHeading(VesselState.time);
-                Pitch                                       = Rad2Deg(pitch);
-                Heading                                     = Rad2Deg(heading);
-                Inertial                                    = inertial.V3ToWorldRotated();
-                Tgo                                         = Solution.Tgo(VesselState.time);
-                VGO                                         = Solution.Vgo(VesselState.time);
+                // don't update vgo/tgo if we're in RCS
+                Tgo = Solution.Tgo(VesselState.time);
+                Vgo = Solution.Vgo(VesselState.time);
             }
-            /* else leave pitch and heading at the last values, also stop updating vgo/tgo */
+
+            V3 r0 = VesselState.orbitalPosition.WorldToV3Rotated();
+            V3 v0 = VesselState.orbitalVelocity.WorldToV3Rotated();
+
+            // lock the inertial heading at tgo < 2.0 for any staging event or terminal burnout
+            // (2 seconds is to hopefully allow for variance due to residuals, it may be less)
+            int idx = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
+            if (IsGrounded() || Solution.Tgo(VesselState.time, idx) > 2.0)
+                (_inertial, _sqpInertial, Dr, Dv) = Solution.InertialGuidance(VesselState.time, r0, v0);
+
+            (double pitch, double heading)       = Astro.ECIToPitchHeading(r0, _inertial);
+            (double sqpPitch, double sqpHeading) = Astro.ECIToPitchHeading(r0, _sqpInertial);
+
+            Inertial                             = _inertial.V3ToWorldRotated();
+            Pitch                                = Rad2Deg(pitch);
+            Heading                              = Rad2Deg(heading);
+            SQPPitch                             = Rad2Deg(sqpPitch);
+            SQPHeading                           = Rad2Deg(sqpHeading);
         }
 
         private readonly List<Vector3d> _trajectory = new List<Vector3d>();
