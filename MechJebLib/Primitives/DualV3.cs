@@ -6,9 +6,10 @@
 using System;
 using System.Runtime.CompilerServices;
 
+// ReSharper disable InconsistentNaming
 namespace MechJebLib.Primitives
 {
-    public struct DualV3 : IEquatable<DualV3>, IComparable<DualV3>, IFormattable
+    public readonly struct DualV3 : IEquatable<DualV3>, IComparable<DualV3>, IFormattable
     {
         public readonly V3 M;
         public readonly V3 D;

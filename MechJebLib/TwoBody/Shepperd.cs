@@ -167,17 +167,13 @@ namespace MechJebLib.TwoBody
         public static ( V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) Solve2(double mu, double tau, V3 ri, V3 vi)
 
         {
-            double tol   = 1.0e-12;
-            double n0    = V3.Dot(ri, vi);
-            double r0    = ri.magnitude;
-            double beta  = 2.0 * (mu / r0) - vi.sqrMagnitude;
-            double u     = 0;
-            double umax  = double.MaxValue;
-            double umin  = double.MinValue;
-            M3     stm00 = M3.zero;
-            M3     stm01 = M3.zero;
-            M3     stm10 = M3.zero;
-            M3     stm11 = M3.zero;
+            double tol  = 1.0e-12;
+            double n0   = V3.Dot(ri, vi);
+            double r0   = ri.magnitude;
+            double beta = 2.0 * (mu / r0) - vi.sqrMagnitude;
+            double u    = 0;
+            double umax = double.MaxValue;
+            double umin = double.MinValue;
 
             if (beta != 0.0)
             {
@@ -311,25 +307,19 @@ namespace MechJebLib.TwoBody
             double a0 = mu / (r0 * r0 * r0);
             double a1 = mu / (r1 * r1 * r1);
 
-            M3 m = M3.zero;
+            var m = new M3(
+                ff * (u0 / (r0 * r1) + 1.0 / (r0 * r0) + 1.0 / (r1 * r1)) - a0 * a1 * w,
+                (ff * u1 + ggm / r1) / r1,
+                ggm * u1 / r1 - a1 * w,
+                -(ff * u1 + fm / r0) / r0,
+                -ff * u2,
+                -ggm * u2,
+                fm * u1 / r0 - a0 * w,
+                fm * u2,
+                g * u2 - w
+            );
 
-            m[0, 0] = ff * (u0 / (r0 * r1) + 1.0 / (r0 * r0) + 1.0 / (r1 * r1));
-            m[0, 1] = (ff * u1 + ggm / r1) / r1;
-            m[0, 2] = ggm * u1 / r1;
-
-            m[1, 0] = -(ff * u1 + fm / r0) / r0;
-            m[1, 1] = -ff * u2;
-            m[1, 2] = -ggm * u2;
-
-            m[2, 0] = fm * u1 / r0;
-            m[2, 1] = fm * u2;
-            m[2, 2] = g * u2;
-
-            m[0, 0] -= a0 * a1 * w;
-            m[0, 2] -= a1 * w;
-            m[2, 0] -= a0 * w;
-            m[2, 2] -= w;
-
+            /*
             for (int i = 0; i < 3; i++)
             {
                 double t001 = rf[i] * m[1, 0] + vf[i] * m[2, 0];
@@ -360,6 +350,20 @@ namespace MechJebLib.TwoBody
                 stm10[i, i] += ff;
                 stm11[i, i] += gg;
             }
+            */
+
+            V3 t00 = rf * m[1, 0] + vf * m[2, 0];
+            V3 t01 = rf * m[1, 1] + vf * m[2, 1];
+            V3 t02 = rf * m[1, 2] + vf * m[2, 2];
+
+            V3 t10 = rf * m[0, 0] + vf * m[1, 0];
+            V3 t11 = rf * m[0, 1] + vf * m[1, 1];
+            V3 t12 = rf * m[0, 2] + vf * m[1, 2];
+
+            M3 stm00 = V3.Outer(t00, ri) + V3.Outer(t01, vi) + M3.Diagonal(f);
+            M3 stm01 = V3.Outer(t01, ri) + V3.Outer(t02, vi) + M3.Diagonal(g);
+            M3 stm10 = -(V3.Outer(t10, ri) + V3.Outer(t11, vi)) + M3.Diagonal(ff);
+            M3 stm11 = -(V3.Outer(t11, ri) + V3.Outer(t12, vi)) + M3.Diagonal(gg);
 
             return (rf, vf, stm00, stm01, stm10, stm11);
         }

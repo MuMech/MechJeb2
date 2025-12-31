@@ -173,7 +173,7 @@ namespace MechJebLib.PSG
 
         public static Phase NewCoast(double m0, double mint, double maxt, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
         {
-            var phase = new Phase(m0, 0, double.PositiveInfinity, m0, mint, kspStage, mjPhase) { mint = mint, maxt = maxt, Unguided = unguided, MassContinuity = massContinuity };
+            var phase = new Phase(m0, 0, 0, m0, mint, kspStage, mjPhase) { mint = mint, maxt = maxt, Unguided = unguided, MassContinuity = massContinuity };
             return phase;
         }
 

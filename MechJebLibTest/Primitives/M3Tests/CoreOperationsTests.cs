@@ -46,23 +46,6 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void TwoDimensionalSetterTest()
-        {
-            var one = new M3(0, 0, 0, 0, 0, 0, 0, 0, 0);
-            var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            one[0, 0] = 1;
-            one[0, 1] = 2;
-            one[0, 2] = 3;
-            one[1, 0] = 4;
-            one[1, 1] = 5;
-            one[1, 2] = 6;
-            one[2, 0] = 7;
-            one[2, 1] = 8;
-            one[2, 2] = 9;
-            one.ShouldEqual(two);
-        }
-
-        [Fact]
         private void OneDimensionalAccessTest()
         {
             var one = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
@@ -75,23 +58,6 @@ namespace MechJebLibTest.Primitives.M3Tests
             one[6].ShouldEqual(3);
             one[7].ShouldEqual(6);
             one[8].ShouldEqual(9);
-        }
-
-        [Fact]
-        private void OneDimensionalSetterTest()
-        {
-            var one = new M3(0, 0, 0, 0, 0, 0, 0, 0, 0);
-            var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            one[0] = 1;
-            one[1] = 4;
-            one[2] = 7;
-            one[3] = 2;
-            one[4] = 5;
-            one[5] = 8;
-            one[6] = 3;
-            one[7] = 6;
-            one[8] = 9;
-            one.ShouldEqual(two);
         }
 
         [Fact]
@@ -115,27 +81,25 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SetColumnTest()
+        private void WithColumnTest()
         {
-            var one = new M3(0, 0, 0, 0, 0, 0, 0, 0, 0);
+            M3 one = M3.zero
+                .WithColumn(0, new V3(1, 4, 7))
+                .WithColumn(1, new V3(2, 5, 8))
+                .WithColumn(2, new V3(3, 6, 9));
             var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-
-            one.SetColumn(0, new V3(1, 4, 7));
-            one.SetColumn(1, new V3(2, 5, 8));
-            one.SetColumn(2, new V3(3, 6, 9));
 
             one.ShouldEqual(two);
         }
 
         [Fact]
-        private void SetRowTest()
+        private void WithRowTest()
         {
-            var one = new M3(0, 0, 0, 0, 0, 0, 0, 0, 0);
+            M3 one = M3.zero
+                .WithRow(0, new V3(1, 2, 3))
+                .WithRow(1, new V3(4, 5, 6))
+                .WithRow(2, new V3(7, 8, 9));
             var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-
-            one.SetRow(0, new V3(1, 2, 3));
-            one.SetRow(1, new V3(4, 5, 6));
-            one.SetRow(2, new V3(7, 8, 9));
 
             one.ShouldEqual(two);
         }
@@ -150,9 +114,10 @@ namespace MechJebLibTest.Primitives.M3Tests
 
             Assert.True(one == two);
             Assert.False(nan1 == nan2);
-            one[8] = double.NaN;
-            two[8] = double.NaN;
-            Assert.False(one == two);
+
+            var oneWithNaN = new M3(1, 2, 3, 4, 5, 6, 7, 8, double.NaN);
+            var twoWithNaN = new M3(1, 2, 3, 4, 5, 6, 7, 8, double.NaN);
+            Assert.False(oneWithNaN == twoWithNaN);
         }
 
         [Fact]
@@ -165,9 +130,10 @@ namespace MechJebLibTest.Primitives.M3Tests
 
             Assert.False(one != two);
             Assert.True(nan1 != nan2);
-            one[8] = double.NaN;
-            two[8] = double.NaN;
-            Assert.True(one != two);
+
+            var oneWithNaN = new M3(1, 2, 3, 4, 5, 6, 7, 8, double.NaN);
+            var twoWithNaN = new M3(1, 2, 3, 4, 5, 6, 7, 8, double.NaN);
+            Assert.True(oneWithNaN != twoWithNaN);
         }
 
         [Fact]
@@ -181,9 +147,10 @@ namespace MechJebLibTest.Primitives.M3Tests
             Assert.True(one.Equals(two));
             Assert.True(nan1.Equals(nan2));
             Assert.True(nan1.Equals(nan1));
-            one[8] = double.NaN;
-            two[8] = double.NaN;
-            Assert.True(one.Equals(two));
+
+            var oneWithNaN = new M3(1, 2, 3, 4, 5, 6, 7, 8, double.NaN);
+            var twoWithNaN = new M3(1, 2, 3, 4, 5, 6, 7, 8, double.NaN);
+            Assert.True(oneWithNaN.Equals(twoWithNaN));
         }
 
         [Fact]
@@ -192,12 +159,12 @@ namespace MechJebLibTest.Primitives.M3Tests
             var one = new M3(9, 1, 4, 2, 6, 7, 3, 5, 8);
             var two = new M3(5, 3, 1, 6, 2, 4, 9, 7, 8);
 
-            var onetwo = new M3(87, 57, 45, 109, 67, 82, 117, 75, 87);
-            var twoone = new M3(54, 28, 49, 70, 38, 70, 119, 91, 149);
+            var oneTwo = new M3(87, 57, 45, 109, 67, 82, 117, 75, 87);
+            var twoOne = new M3(54, 28, 49, 70, 38, 70, 119, 91, 149);
 
-            (one * two).ShouldEqual(onetwo);
+            (one * two).ShouldEqual(oneTwo);
 
-            (two * one).ShouldEqual(twoone);
+            (two * one).ShouldEqual(twoOne);
         }
 
         [Fact]
@@ -482,9 +449,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         {
             var          a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             var          b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
-            const double s = 2.5;
+            const double S = 2.5;
 
-            (s * (a + b)).ShouldEqual(s * a + s * b);
+            (S * (a + b)).ShouldEqual(S * a + S * b);
         }
 
         [Fact]
@@ -842,10 +809,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SetDiagonalFromVector()
+        private void WithDiagonalFromVector()
         {
-            M3 m = M3.zero;
-            m.SetDiagonal(new V3(1, 2, 3));
+            M3 m = M3.zero.WithDiagonal(new V3(1, 2, 3));
 
             m.m00.ShouldEqual(1);
             m.m11.ShouldEqual(2);
@@ -853,10 +819,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SetDiagonalFromVectorPreservesOffDiagonal()
+        private void WithDiagonalFromVectorPreservesOffDiagonal()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            m.SetDiagonal(new V3(10, 20, 30));
+            M3 m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).WithDiagonal(new V3(10, 20, 30));
 
             m.m00.ShouldEqual(10);
             m.m01.ShouldEqual(2);
@@ -870,10 +835,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SetDiagonalFromScalars()
+        private void WithDiagonalFromScalars()
         {
-            M3 m = M3.zero;
-            m.SetDiagonal(4, 5, 6);
+            M3 m = M3.zero.WithDiagonal(4, 5, 6);
 
             m.m00.ShouldEqual(4);
             m.m11.ShouldEqual(5);
@@ -881,10 +845,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SetDiagonalFromScalarsPreservesOffDiagonal()
+        private void WithDiagonalFromScalarsPreservesOffDiagonal()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            m.SetDiagonal(10, 20, 30);
+            M3 m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).WithDiagonal(10, 20, 30);
 
             m.m00.ShouldEqual(10);
             m.m01.ShouldEqual(2);
@@ -898,10 +861,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SetDiagonalNegativeValues()
+        private void WithDiagonalNegativeValues()
         {
-            M3 m = M3.identity;
-            m.SetDiagonal(-1, -2, -3);
+            M3 m = M3.identity.WithDiagonal(-1, -2, -3);
 
             m.m00.ShouldEqual(-1);
             m.m11.ShouldEqual(-2);
@@ -909,10 +871,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SetDiagonalZeroValues()
+        private void WithDiagonalZeroValues()
         {
-            M3 m = M3.identity;
-            m.SetDiagonal(V3.zero);
+            M3 m = M3.identity.WithDiagonal(V3.zero);
 
             m.m00.ShouldEqual(0);
             m.m11.ShouldEqual(0);
@@ -920,20 +881,18 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SetDiagonalThenGetDiagonal()
+        private void WithDiagonalThenGetDiagonal()
         {
-            M3  m = M3.zero;
             var v = new V3(7, 8, 9);
-            m.SetDiagonal(v);
+            M3  m = M3.zero.WithDiagonal(v);
 
             m.diagonal.ShouldEqual(v);
         }
 
         [Fact]
-        private void SwapRowsFirstAndSecond()
+        private void WithSwappedRowsFirstAndSecond()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            m.SwapRows(0, 1);
+            M3 m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).WithSwappedRows(0, 1);
 
             m.GetRow(0).ShouldEqual(new V3(4, 5, 6));
             m.GetRow(1).ShouldEqual(new V3(1, 2, 3));
@@ -941,10 +900,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SwapRowsFirstAndThird()
+        private void WithSwappedRowsFirstAndThird()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            m.SwapRows(0, 2);
+            M3 m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).WithSwappedRows(0, 2);
 
             m.GetRow(0).ShouldEqual(new V3(7, 8, 9));
             m.GetRow(1).ShouldEqual(new V3(4, 5, 6));
@@ -952,10 +910,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SwapRowsSecondAndThird()
+        private void WithSwappedRowsSecondAndThird()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            m.SwapRows(1, 2);
+            M3 m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).WithSwappedRows(1, 2);
 
             m.GetRow(0).ShouldEqual(new V3(1, 2, 3));
             m.GetRow(1).ShouldEqual(new V3(7, 8, 9));
@@ -963,43 +920,38 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SwapRowsSameIndex()
+        private void WithSwappedRowsSameIndex()
         {
-            var m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            M3  original = m;
-            m.SwapRows(1, 1);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            M3  m        = original.WithSwappedRows(1, 1);
 
             m.ShouldEqual(original);
         }
 
         [Fact]
-        private void SwapRowsTwiceRestoresOriginal()
+        private void WithSwappedRowsTwiceRestoresOriginal()
         {
-            var m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            M3  original = m;
-            m.SwapRows(0, 2);
-            m.SwapRows(0, 2);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            M3  m        = original.WithSwappedRows(0, 2).WithSwappedRows(0, 2);
 
             m.ShouldEqual(original);
         }
 
         [Fact]
-        private void SwapRowsReverseOrder()
+        private void WithSwappedRowsReverseOrder()
         {
-            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-            m1.SwapRows(0, 2);
-            m2.SwapRows(2, 0);
+            M3 m1 = original.WithSwappedRows(0, 2);
+            M3 m2 = original.WithSwappedRows(2, 0);
 
             m1.ShouldEqual(m2);
         }
 
         [Fact]
-        private void SwapColumnsFirstAndSecond()
+        private void WithSwappedColumnsFirstAndSecond()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            m.SwapColumns(0, 1);
+            M3 m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).WithSwappedColumns(0, 1);
 
             m.GetColumn(0).ShouldEqual(new V3(2, 5, 8));
             m.GetColumn(1).ShouldEqual(new V3(1, 4, 7));
@@ -1007,10 +959,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SwapColumnsFirstAndThird()
+        private void WithSwappedColumnsFirstAndThird()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            m.SwapColumns(0, 2);
+            M3 m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).WithSwappedColumns(0, 2);
 
             m.GetColumn(0).ShouldEqual(new V3(3, 6, 9));
             m.GetColumn(1).ShouldEqual(new V3(2, 5, 8));
@@ -1018,10 +969,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SwapColumnsSecondAndThird()
+        private void WithSwappedColumnsSecondAndThird()
         {
-            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            m.SwapColumns(1, 2);
+            M3 m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9).WithSwappedColumns(1, 2);
 
             m.GetColumn(0).ShouldEqual(new V3(1, 4, 7));
             m.GetColumn(1).ShouldEqual(new V3(3, 6, 9));
@@ -1029,43 +979,38 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SwapColumnsSameIndex()
+        private void WithSwappedColumnsSameIndex()
         {
-            var m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            M3  original = m;
-            m.SwapColumns(1, 1);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            M3  m        = original.WithSwappedColumns(1, 1);
 
             m.ShouldEqual(original);
         }
 
         [Fact]
-        private void SwapColumnsTwiceRestoresOriginal()
+        private void WithSwappedColumnsTwiceRestoresOriginal()
         {
-            var m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            M3  original = m;
-            m.SwapColumns(0, 2);
-            m.SwapColumns(0, 2);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            M3  m        = original.WithSwappedColumns(0, 2).WithSwappedColumns(0, 2);
 
             m.ShouldEqual(original);
         }
 
         [Fact]
-        private void SwapColumnsReverseOrder()
+        private void WithSwappedColumnsReverseOrder()
         {
-            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-            m1.SwapColumns(0, 2);
-            m2.SwapColumns(2, 0);
+            M3 m1 = original.WithSwappedColumns(0, 2);
+            M3 m2 = original.WithSwappedColumns(2, 0);
 
             m1.ShouldEqual(m2);
         }
 
         [Fact]
-        private void SwapRowsIdentityMatrix()
+        private void WithSwappedRowsIdentityMatrix()
         {
-            M3 m = M3.identity;
-            m.SwapRows(0, 1);
+            M3 m = M3.identity.WithSwappedRows(0, 1);
 
             m.GetRow(0).ShouldEqual(new V3(0, 1, 0));
             m.GetRow(1).ShouldEqual(new V3(1, 0, 0));
@@ -1073,10 +1018,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SwapColumnsIdentityMatrix()
+        private void WithSwappedColumnsIdentityMatrix()
         {
-            M3 m = M3.identity;
-            m.SwapColumns(0, 1);
+            M3 m = M3.identity.WithSwappedColumns(0, 1);
 
             m.GetColumn(0).ShouldEqual(new V3(0, 1, 0));
             m.GetColumn(1).ShouldEqual(new V3(1, 0, 0));
@@ -1084,36 +1028,32 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
-        private void SwapRowsChangesDeterminantSign()
+        private void WithSwappedRowsChangesDeterminantSign()
         {
-            var    m           = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
-            double originalDet = m.determinant;
-            m.SwapRows(0, 1);
+            var    original    = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
+            double originalDet = original.determinant;
+            M3     m           = original.WithSwappedRows(0, 1);
 
             m.determinant.ShouldEqual(-originalDet, 1e-14);
         }
 
         [Fact]
-        private void SwapColumnsChangesDeterminantSign()
+        private void WithSwappedColumnsChangesDeterminantSign()
         {
-            var    m           = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
-            double originalDet = m.determinant;
-            m.SwapColumns(0, 1);
+            var    original    = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
+            double originalDet = original.determinant;
+            M3     m           = original.WithSwappedColumns(0, 1);
 
             m.determinant.ShouldEqual(-originalDet, 1e-14);
         }
 
         [Fact]
-        private void SwapRowsAndColumnsCommute()
+        private void WithSwappedRowsAndColumnsCommute()
         {
-            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var m2 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-            m1.SwapRows(0, 1);
-            m1.SwapColumns(1, 2);
-
-            m2.SwapColumns(1, 2);
-            m2.SwapRows(0, 1);
+            M3 m1 = original.WithSwappedRows(0, 1).WithSwappedColumns(1, 2);
+            M3 m2 = original.WithSwappedColumns(1, 2).WithSwappedRows(0, 1);
 
             m1.ShouldEqual(m2);
         }

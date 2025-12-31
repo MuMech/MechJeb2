@@ -80,13 +80,13 @@ namespace MechJebLib.PSG
                 if (upper > 0)
                 {
                     if (upper > 1e-5 && debug)
-                        DebugPrint($"Constraint {i - 1} violated: {f[i]} upper limit: {nu[i - 1]}");
+                        DebugPrint($"constraint violation: {f[i]} upper limit: {nu[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
                     PrimalFeasibility += upper * upper;
                 }
                 else if (lower > 0)
                 {
                     if (lower > 1e-5 && debug)
-                        DebugPrint($"Constraint {i - 1} violated: {f[i]} lower limit: {nl[i - 1]}");
+                        DebugPrint($"constraint violation: {f[i]} lower limit: {nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
                     PrimalFeasibility += lower * lower;
                 }
             }
@@ -138,12 +138,17 @@ namespace MechJebLib.PSG
                     V3 v = oldSolution.VBar(oldt0 + olddt);
                     thisPhase.V[k] = v;
 
-                    if (!phase.GuidedCoast)
-                    {
-                        V3 u = oldSolution.UBar(oldt0 + olddt);
-                        if (u.sqrMagnitude < 0.01)
-                            u = v.normalized;
+                    V3 u = oldSolution.UBar(oldt0 + olddt);
 
+                    if (phase.GuidedCoast)
+                    {
+                        if (k == 0)
+                            thisPhase.U[0] = u;
+                        if (k == _k - 1)
+                            thisPhase.U[-1] = u;
+                    }
+                    else
+                    {
                         if (phase.Unguided)
                             thisPhase.U[0] += u;
                         else
@@ -310,7 +315,7 @@ namespace MechJebLib.PSG
             double[] f = new double[_vars.TotalConstraints + 1];
 
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);
-            _ascentProblem.ConstraintFunction(f, j2, _xGuess, null);
+            _ascentProblem.ConstraintFunction(f, j2, _xGuess, new AscentProblem.ConstraintArgs(true));
 
             CalculatePrimalFeasibility(f, true);
 
@@ -445,6 +450,7 @@ namespace MechJebLib.PSG
 
             _vars.WrapVars(x);
             Solution solution = new SolutionBuilder(N, _vars, _problem, _phases).Build();
+            GuidanceLQR.ApplyLQR(solution);
 
             return solution;
         }

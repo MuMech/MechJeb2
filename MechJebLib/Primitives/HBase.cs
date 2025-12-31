@@ -236,11 +236,18 @@ namespace MechJebLib.Primitives
 
             hi = ~hi;
 
-            HFrame<T> testKeyframe  = _list.Values[hi - 1];
-            HFrame<T> testKeyframe2 = _list.Values[hi];
+            try
+            {
+                HFrame<T> testKeyframe  = _list.Values[hi - 1];
+                HFrame<T> testKeyframe2 = _list.Values[hi];
 
-            return Interpolant(testKeyframe.Time, testKeyframe.Value, testKeyframe.OutTangent,
-                testKeyframe2.Time, testKeyframe2.Value, testKeyframe2.InTangent, t);
+                return Interpolant(testKeyframe.Time, testKeyframe.Value, testKeyframe.OutTangent,
+                    testKeyframe2.Time, testKeyframe2.Value, testKeyframe2.InTangent, t);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
         }
 
         public virtual void Clear()

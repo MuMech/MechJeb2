@@ -1,15 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static System.Math;
 using static MechJebLib.Utils.AutoDiff;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PSG
 {
     public class AscentProblem
     {
-        private readonly Optimizer     _optimizer;
-        private readonly VariableProxy _vars;
+        private readonly Optimizer               _optimizer;
+        private readonly VariableProxy           _vars;
+        public readonly  Dictionary<int, string> ConstraintNames = new Dictionary<int, string>();
+        private          bool                    _firstPass;
 
         public AscentProblem(Optimizer optimizer)
         {
@@ -17,9 +19,23 @@ namespace MechJebLib.PSG
             _vars      = new VariableProxy(_optimizer._phases, _optimizer._terminal, _optimizer.N);
         }
 
+        public readonly struct ConstraintArgs
+        {
+            public readonly bool FirstPass;
+
+            public ConstraintArgs(bool firstPass)
+            {
+                FirstPass = firstPass;
+            }
+        }
+
+        private readonly ConstraintArgs _defaultArgs = new ConstraintArgs(false);
+
         public void ConstraintFunction(double[] f, alglib.sparsematrix j, double[] x, object? o)
         {
-            bool debug = o != null;
+            ConstraintArgs args = (ConstraintArgs?)o ?? _defaultArgs;
+
+            _firstPass = args.FirstPass;
 
             _optimizer._timeoutToken.ThrowIfCancellationRequested();
             _vars.WrapVars(x);
@@ -30,23 +46,26 @@ namespace MechJebLib.PSG
 
             for (int p = 0; p < _optimizer._phases.Count; p++)
             {
-                if (debug) DebugPrint($"start of dynamic constraints: {ci - 1}");
-                ci = DynamicConstraints(f, j, ci, p, debug);
-                if (debug) DebugPrint($"start of staging constraints: {ci - 1}");
+                ci = DynamicConstraints(f, j, ci, p);
                 ci = StagingConstraints(f, j, ci, p);
-                if (debug) DebugPrint($"start of control norm constraints: {ci - 1}");
                 ci = ControlNormConstraints(f, j, ci, p);
-                if (debug) DebugPrint($"start of continuity constraints: {ci - 1}");
-                ci = ContinuityConstraints(f, j, ci, p, debug);
+                ci = ContinuityConstraints(f, j, ci, p);
             }
 
-            if (debug) DebugPrint($"start of terminal constraints: {ci - 1}");
             PhaseProxy lastPhase = _vars[-1];
+
+            for (int i = 0; i < _vars.TotalConstraints + 1 - ci; i++)
+                ConstraintNames[i + ci] = $"Terminal Constraint number {i}";
 
             _optimizer._terminal.Constraints(x, lastPhase.R.Idx(-1), lastPhase.V.Idx(-1), f, j, ref ci);
 
             if (ci != _vars.TotalConstraints + 1)
                 throw new Exception("Constraint num mismatch");
+
+            if (_firstPass)
+                for (int i = 0; i < _vars.TotalConstraints + 1; i++)
+                    if (!ConstraintNames.ContainsKey(i))
+                        throw new Exception($"Missing constraint in dictionary: {i}");
         }
 
         private int ControlNormConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
@@ -58,6 +77,8 @@ namespace MechJebLib.PSG
 
             for (int k = 0; k < _optimizer._k; k++)
             {
+                if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} knot {k}";
+
                 ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].sqrMagnitude - 1.0, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
                 if (_optimizer._phases[p].Unguided)
                     break;
@@ -66,10 +87,23 @@ namespace MechJebLib.PSG
             return ci;
         }
 
-        private int ContinuityConstraints(double[] f, alglib.sparsematrix j, int ci, int p, bool debug)
+        private int ContinuityConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
         {
             if (p == 0)
                 return ci;
+
+            if (_firstPass)
+            {
+                ConstraintNames[ci]     = $"Continuity constraint for phase {p} and phase {p - 1}: Rx";
+                ConstraintNames[ci + 1] = $"Continuity constraint for phase {p} and phase {p - 1}: Ry";
+                ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: Rz";
+                ConstraintNames[ci + 3] = $"Continuity constraint for phase {p} and phase {p - 1}: Vx";
+                ConstraintNames[ci + 4] = $"Continuity constraint for phase {p} and phase {p - 1}: Vy";
+                ConstraintNames[ci + 5] = $"Continuity constraint for phase {p} and phase {p - 1}: Vz";
+                ConstraintNames[ci + 6] = $"Continuity constraint for phase {p} and phase {p - 1}: Ux";
+                ConstraintNames[ci + 7] = $"Continuity constraint for phase {p} and phase {p - 1}: Uy";
+                ConstraintNames[ci + 8] = $"Continuity constraint for phase {p} and phase {p - 1}: Uz";
+            }
 
             PhaseProxy thisPhase = _vars[p];
             PhaseProxy prevPhase = _vars[p - 1];
@@ -81,7 +115,8 @@ namespace MechJebLib.PSG
             // mass continuity for coast-within-phase
             if (p <= 0 || !_optimizer._phases[p].MassContinuity) return ci;
 
-            if (debug) DebugPrint($"mass continuity constraint: {ci - 1}");
+            if (_firstPass) ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: M";
+
             ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M[-1], thisPhase.M[0] }, new[] { prevPhase.M.Idx(-1), thisPhase.M.Idx(0) });
 
             return ci;
@@ -112,6 +147,8 @@ namespace MechJebLib.PSG
 
         private int StagingConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
         {
+            if (_firstPass) ConstraintNames[ci] = $"Staging constraint for phase {p}";
+
             if (_optimizer._phases[p].Coast || !_optimizer._phases[p].AllowShutdown || _optimizer._phases[p].MassContinuity)
             {
                 f[ci++] = 0;
@@ -195,7 +232,7 @@ namespace MechJebLib.PSG
             return ci;
         }
 
-        private int DynamicConstraints(double[] f, alglib.sparsematrix j, int ci, int p, bool debug)
+        private int DynamicConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
         {
             _optimizer.Timer.Start();
 
@@ -210,6 +247,22 @@ namespace MechJebLib.PSG
             // dynamical constraints per phase
             for (int n = 0; n < _optimizer.N - 1; n += 1)
             {
+                if (_firstPass)
+                {
+                    ConstraintNames[ci]      = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX";
+                    ConstraintNames[ci + 1]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX midpoint";
+                    ConstraintNames[ci + 2]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY";
+                    ConstraintNames[ci + 3]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY midpoint";
+                    ConstraintNames[ci + 4]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ";
+                    ConstraintNames[ci + 5]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ midpoint";
+                    ConstraintNames[ci + 6]  = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX";
+                    ConstraintNames[ci + 7]  = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX midpoint";
+                    ConstraintNames[ci + 8]  = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY";
+                    ConstraintNames[ci + 9]  = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY midpoint";
+                    ConstraintNames[ci + 10] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ";
+                    ConstraintNames[ci + 11] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ midpoint";
+                }
+
                 int idx = 2 * n;
 
                 double m0,    m1,    m2;
@@ -316,7 +369,12 @@ namespace MechJebLib.PSG
 
                 if (!_optimizer._phases[p].Coast)
                 {
-                    if (debug) DebugPrint($"start of mass constraints for {n}: {ci - 1}");
+                    if (_firstPass)
+                    {
+                        ConstraintNames[ci]     = $"Dynamical Constraints for phase {p} {n}th constraint: MDot";
+                        ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot midpoint";
+                    }
+
                     bool doingMassContinuity = p > 0 && _optimizer._phases[p].MassContinuity;
 
                     double mi = doingMassContinuity ? thisPhase.M[0] : _optimizer._phases[p].m0;
@@ -343,6 +401,8 @@ namespace MechJebLib.PSG
         private int ObjectiveFunction(double[] f, alglib.sparsematrix j, int ci)
         {
             PhaseProxy lastPhase = _vars[-1];
+
+            if (_firstPass) ConstraintNames[ci] = "Objective Function";
 
             double val = 0;
 
