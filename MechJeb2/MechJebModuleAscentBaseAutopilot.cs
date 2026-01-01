@@ -267,7 +267,7 @@ namespace MuMech
                 // FIXME? this inclination correction is unlikely to be at tha AN/DN and will throw the LAN off with anything other than high
                 // TWR launches from equatorial launch sites -- should probably be made optional (or clip it if the correction is too large).
                 Vector3d inclinationCorrection =
-                    OrbitalManeuverCalculator.DeltaVToChangeInclination(Orbit, ut, Math.Abs(AscentSettings.DesiredInclination));
+                    OrbitalManeuverCalculator.DeltaVToChangeInclination(Orbit, ut, AscentSettings.DesiredInclination);
                 Vector3d smaCorrection = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(Orbit.PerturbedOrbit(ut, inclinationCorrection), ut,
                     AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
                 Vector3d dV = inclinationCorrection + smaCorrection;
