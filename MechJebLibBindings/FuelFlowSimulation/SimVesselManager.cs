@@ -47,6 +47,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             Update();
             _builder.UpdateLinks();
             _builder.UpdateCrossFeedSet();
+            _builder.UpdateSymmetryParts();
             DecouplingAnalyzer.Analyze(_vessel);
             _builder.UpdateEngineSet();
         }
