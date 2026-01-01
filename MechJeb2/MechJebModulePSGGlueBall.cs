@@ -118,7 +118,8 @@ namespace MuMech
 
             Exception = _task.Exception?.InnerException;
 
-            Debug.Log(Exception);
+            if (Exception != null)
+                Debug.Log(Exception);
         }
 
         public void SetTarget(double peR, double apR, double attR, double inclination, double lan, double fpa, bool attachAltFlag, bool lanflag)
