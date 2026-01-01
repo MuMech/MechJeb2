@@ -16,10 +16,11 @@ namespace MechJebLib.FuelFlowSimulation
 
         public readonly  List<SimPartModule>          Modules          = new List<SimPartModule>();
         public readonly  List<SimPart>                CrossFeedPartSet = new List<SimPart>();
-        public readonly  List<SimPart>                Links            = new List<SimPart>();
-        public readonly  Dictionary<int, SimResource> Resources        = new Dictionary<int, SimResource>();
-        private readonly Dictionary<int, double>      _resourceDrains  = new Dictionary<int, double>();
-        private readonly Dictionary<int, double>      _rcsDrains       = new Dictionary<int, double>();
+        public readonly  List<SimPart>                SymmetryCounterParts = new List<SimPart>();
+        public readonly  List<SimPart>                Links           = new List<SimPart>();
+        public readonly  Dictionary<int, SimResource> Resources       = new Dictionary<int, SimResource>();
+        private readonly Dictionary<int, double>      _resourceDrains = new Dictionary<int, double>();
+        private readonly Dictionary<int, double>      _rcsDrains      = new Dictionary<int, double>();
 
         public int       DecoupledInStage;
         public bool      StagingOn;
@@ -90,6 +91,7 @@ namespace MechJebLib.FuelFlowSimulation
             p.Modules.Clear();
             p.Links.Clear();
             p.CrossFeedPartSet.Clear();
+            p.SymmetryCounterParts.Clear();
             p.Resources.Clear();
             p._resourceDrains.Clear();
             p._rcsDrains.Clear();

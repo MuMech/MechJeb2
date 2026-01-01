@@ -23,6 +23,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private Dictionary<SimPartModule, PartModule> _inversePartModuleMapping => _manager._inversePartModuleMapping;
 
             private static readonly FieldInfo? _rfSpoolUpTime;
+            private static readonly FieldInfo? _rfAutoCutoff;
 
             private delegate double CrewMass(ProtoCrewMember crew);
 
@@ -55,6 +56,11 @@ namespace MechJebLibBindings.FuelFlowSimulation
                             "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
 
                     _rfType = Type.GetType("RealFuels.ModuleEnginesRF, RealFuels");
+
+                    _rfAutoCutoff = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF",  "autoCutoff");
+                    if (_rfAutoCutoff == null)
+                        Debug.Log(
+                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no autoCutoff field, disabling symmetric flameout");
                 }
             }
 
@@ -100,9 +106,22 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 {
                     SimPart p = _partMapping[kspPart];
 
-                    foreach (Part pset in kspPart.crossfeedPartSet.GetParts())
+                    foreach (Part pSet in kspPart.crossfeedPartSet.GetParts())
                     {
-                        p.CrossFeedPartSet.Add(_partMapping[pset]);
+                        p.CrossFeedPartSet.Add(_partMapping[pSet]);
+                    }
+                }
+            }
+
+            internal void UpdateSymmetryParts()
+            {
+                foreach (Part kspPart in _kspVessel.Parts)
+                {
+                    SimPart p = _partMapping[kspPart];
+
+                    foreach (Part pSym in kspPart.symmetryCounterparts)
+                    {
+                        p.SymmetryCounterParts.Add(_partMapping[pSym]);
                     }
                 }
             }
@@ -264,6 +283,9 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                     if (engine.IsModuleEnginesRf && _rfSpoolUpTime!.GetValue(kspEngine) is float floatVal)
                         engine.ModuleSpoolupTime = floatVal;
+
+                    if (engine.IsModuleEnginesRf && _rfAutoCutoff!.GetValue(kspEngine) is bool boolVal)
+                        engine.AutoCutoff = boolVal;
                 }
 
                 return engine;
@@ -297,8 +319,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
             {
                 double mass = 0;
 
-                for (int i = 0; i < kspPart.Modules.Count; i++)
-                    if (kspPart.Modules[i] is IPartMassModifier m)
+                foreach (PartModule pm in kspPart.Modules)
+                    if (pm is IPartMassModifier m)
                         mass += m.GetModuleMass(defaultMass, sit);
 
                 return mass;
@@ -310,29 +332,26 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                 if (HighLogic.LoadedSceneIsFlight && kspPart.protoModuleCrew != null)
                 {
-                    for (int i = 0; i < kspPart.protoModuleCrew.Count; i++)
-                    {
-                        ProtoCrewMember crewMember = kspPart.protoModuleCrew[i];
+                    foreach (ProtoCrewMember crewMember in kspPart.protoModuleCrew)
                         part.CrewMass += _crewMassDelegate(crewMember);
-                    }
                 }
                 else if (HighLogic.LoadedSceneIsEditor)
                 {
-                    if (!(CrewAssignmentDialog.Instance is null) && CrewAssignmentDialog.Instance.CurrentManifestUnsafe != null)
-                    {
-                        PartCrewManifest partCrewManifest = CrewAssignmentDialog.Instance.CurrentManifestUnsafe.GetPartCrewManifest(kspPart.craftID);
-                        if (partCrewManifest != null)
-                        {
-                            ProtoCrewMember?[]? partCrew = null;
-                            partCrewManifest.GetPartCrew(ref partCrew);
+                    if (CrewAssignmentDialog.Instance is null || CrewAssignmentDialog.Instance.CurrentManifestUnsafe == null)
+                        return;
 
-                            for (int i = 0; i < partCrew.Length; i++)
-                            {
-                                ProtoCrewMember? crewMember = partCrew[i];
-                                if (crewMember == null) continue;
-                                part.CrewMass += _crewMassDelegate(crewMember);
-                            }
-                        }
+                    PartCrewManifest partCrewManifest = CrewAssignmentDialog.Instance.CurrentManifestUnsafe.GetPartCrewManifest(kspPart.craftID);
+
+                    if (partCrewManifest == null)
+                        return;
+
+                    ProtoCrewMember?[]? partCrew = null;
+                    partCrewManifest.GetPartCrew(ref partCrew);
+
+                    foreach (ProtoCrewMember? crewMember in partCrew)
+                    {
+                        if (crewMember == null) continue;
+                        part.CrewMass += _crewMassDelegate(crewMember);
                     }
                 }
             }

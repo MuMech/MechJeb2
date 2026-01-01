@@ -62,6 +62,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public bool   UseVelCurveIsp;
         public double ModuleResiduals;
         public double ModuleSpoolupTime;
+        public bool   AutoCutoff;
         public bool   NoPropellants;
         public bool   IsModuleEnginesRf;
         public bool   IsUnrestartableDeadEngine;
@@ -90,6 +91,19 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 return;
 
             IsOperational = false;
+
+            if (AutoCutoff)
+            {
+                foreach (SimPart part in Part.SymmetryCounterParts)
+                {
+                    foreach (SimPartModule module in part.Modules)
+                    {
+                        if (!(module is SimModuleEngines engine))
+                            continue;
+                        engine.IsOperational = false;
+                    }
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
