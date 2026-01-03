@@ -96,8 +96,6 @@ namespace MechJebLib.PSG
 
             PhaseCollection bootPhases = _phases.DeepCopy();
 
-            // set everything to guided, find the last allowShutdown stage
-            var allowShutdownIndexes = new List<int>();
             for (int p = 0; p < bootPhases.Count; p++)
             {
                 bootPhases[p].Tagged = false;
@@ -106,13 +104,7 @@ namespace MechJebLib.PSG
                     bootPhases[p].Unguided = false;
                     bootPhases[p].Tagged   = true;
                 }
-
-                if (bootPhases[p].AllowShutdown && !bootPhases[p].Coast)
-                    allowShutdownIndexes.Add(p);
             }
-
-            int allowShutdownStage = allowShutdownIndexes[allowShutdownIndexes.Count - 1];
-            bootPhases[allowShutdownStage].AllowInfiniteBurntime = true;
 
             DebugPrint("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
             Optimizer psg      = NewOptimizer(bootPhases, _problem.Terminal.GetFPA(), Optimizer.Cost.MIN_THRUST_ACCEL);

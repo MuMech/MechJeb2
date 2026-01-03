@@ -304,8 +304,25 @@ namespace MechJebLib.PSG
         private          double[]      nl;
         private readonly AscentProblem _ascentProblem;
 
+        private void PreProcess()
+        {
+            int lastShutdownPhase = 0;
+
+            for(int p = 0; p < _phases.Count; p++)
+            {
+                Phase phase = _phases[p];
+
+                if (!phase.Coast && phase.AllowShutdown)
+                    lastShutdownPhase = p;
+            }
+
+            _phases[lastShutdownPhase].AllowInfiniteBurntime = true;
+        }
+
         private Solution UnSafeRun()
         {
+            PreProcess();
+
             double[] x              = new double[_vars.TotalVariables];
             double[] bndl           = new double[_vars.TotalVariables];
             double[] bndu           = new double[_vars.TotalVariables];
