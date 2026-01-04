@@ -194,9 +194,6 @@ namespace MuMech
                 GUILayout.Label(tgo, GuiUtils.LayoutWidth(90));
                 GUILayout.Label(pitch, GuiUtils.LayoutWidth(140));
                 GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(delta, GuiUtils.LayoutWidth(230));
-                GUILayout.EndHorizontal();
                 GUIStyle si;
                 if (Core.Guidance.IsStable())
                     si = GuiUtils.GreenLabel;
@@ -325,7 +322,7 @@ namespace MuMech
         }
 
         private DateTime _lastRefresh = DateTime.MinValue;
-        private string   vgo, heading, tgo, pitch, delta, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
+        private string   vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
         private TimeSpan _refreshInterval = TimeSpan.FromSeconds(0.1);
 
         [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
@@ -339,10 +336,9 @@ namespace MuMech
             _lastRefresh = now;
             Profiler.BeginSample("MJ.GUIWindow.UpdateStrings.StringOps");
             vgo     = $"vgo: {Core.Guidance.Vgo:F1}";
-            heading = $"heading: {Core.Guidance.Heading:F1} ({Core.Guidance.SQPHeading:F1})";
+            heading = $"heading: {Core.Guidance.Heading:F1}";
             tgo     = $"tgo: {Core.Guidance.Tgo:F3}";
-            pitch   = $"pitch: {Core.Guidance.Pitch:F1} ({Core.Guidance.SQPPitch:F1})";
-            delta   = $"δr: {Core.Guidance.Dr:F3} δv: {Core.Guidance.Dv:F3}";
+            pitch   = $"pitch: {Core.Guidance.Pitch:F1}";
             label26 = $"{CachedLocalizer.Instance.MechJebAscentLabel26}{Core.Guidance.Status}";
             label27 = $"{CachedLocalizer.Instance.MechJebAscentLabel27}{Core.Glueball.SuccessfulConverges}";
             label28 = $"{CachedLocalizer.Instance.MechJebAscentLabel28}{Core.Glueball.LastLmStatus}";

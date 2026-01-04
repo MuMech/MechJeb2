@@ -104,15 +104,12 @@
         <Compile Include="PSG\AscentBuilder.cs"/>
         <Compile Include="PSG\AscentGuesser.cs"/>
         <Compile Include="PSG\AscentProblem.cs"/>
-        <Compile Include="PSG\GuidanceLQR.cs"/>
         <Compile Include="PSG\InterpolantLayout.cs"/>
-        <Compile Include="PSG\LQRLayout.cs"/>
         <Compile Include="PSG\Optimizer.cs"/>
         <Compile Include="PSG\Phase.cs"/>
         <Compile Include="PSG\PhaseCollection.cs"/>
         <Compile Include="PSG\PhaseProxy.cs"/>
         <Compile Include="PSG\Problem.cs"/>
-        <Compile Include="PSG\RiccatiLayout.cs"/>
         <Compile Include="PSG\Solution.cs"/>
         <Compile Include="PSG\SolutionBuilder.cs"/>
         <Compile Include="PSG\Terminal\FlightPathAngle3Energy.cs"/>

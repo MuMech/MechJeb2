@@ -308,7 +308,7 @@ namespace MechJebLib.PSG
         {
             int lastShutdownPhase = -1;
 
-            for(int p = 0; p < _phases.Count; p++)
+            for (int p = 0; p < _phases.Count; p++)
             {
                 Phase phase = _phases[p];
 
@@ -468,7 +468,6 @@ namespace MechJebLib.PSG
 
             _vars.WrapVars(x);
             Solution solution = new SolutionBuilder(N, _vars, _problem, _phases).Build();
-            GuidanceLQR.ApplyLQR(solution);
 
             return solution;
         }
