@@ -64,13 +64,9 @@ namespace MechJebLib.PSG.Terminal
             }
         }
 
-        public ITerminal GetFPA()
-        {
-            double attR = Astro.PeriapsisFromKeplerian(_smaT, _eccT);
-            (double vT, double gammaT) = Astro.FPATargetFromKeplerian(_smaT, _eccT, attR, 1.0);
-            return new FlightPathAngle5(gammaT, attR, vT, _incT, _lanT);
-        }
+        /* doing FPA attachment on Kepler5 doesn't work since you wind up with a very different argp */
+        public ITerminal GetFPA() => this;
 
-        public bool IsFPA() => false;
+        public bool IsFPA() => true;
     }
 }

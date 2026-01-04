@@ -80,13 +80,13 @@ namespace MechJebLib.PSG
                 if (upper > 0)
                 {
                     if (upper > 1e-5 && debug)
-                        DebugPrint($"constraint violation: {f[i]} upper limit: {nu[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
+                        DebugPrint($"constraint violation {i}: {f[i]} upper limit: {nu[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
                     PrimalFeasibility += upper * upper;
                 }
                 else if (lower > 0)
                 {
                     if (lower > 1e-5 && debug)
-                        DebugPrint($"constraint violation: {f[i]} lower limit: {nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
+                        DebugPrint($"constraint violation {i}: {f[i]} lower limit: {nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
                     PrimalFeasibility += lower * lower;
                 }
             }
@@ -306,9 +306,9 @@ namespace MechJebLib.PSG
 
         private void PreProcess()
         {
-            int lastShutdownPhase = 0;
+            int lastShutdownPhase = -1;
 
-            for(int p = 0; p < _phases.Count; p++)
+            for (int p = 0; p < _phases.Count; p++)
             {
                 Phase phase = _phases[p];
 
@@ -316,7 +316,8 @@ namespace MechJebLib.PSG
                     lastShutdownPhase = p;
             }
 
-            _phases[lastShutdownPhase].AllowInfiniteBurntime = true;
+            if (lastShutdownPhase >= 0)
+                _phases[lastShutdownPhase].AllowInfiniteBurntime = true;
         }
 
         private Solution UnSafeRun()
@@ -445,9 +446,9 @@ namespace MechJebLib.PSG
             alglib.minnlcoptguardresults(_state, out alglib.optguardreport ogrep);
 
             if (ogrep.badgradsuspected)
-                if (!DoubleMatrixSparsityValidation(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-4))
+                if (!DoubleMatrixSparsityValidation(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-3))
                     throw new Exception(
-                        $"badgradsuspected: constraint: {ogrep.badgradfidx} variable: {ogrep.badgradvidx} {ogrep.badgraduser[ogrep.badgradfidx, ogrep.badgradvidx]:e} != {ogrep.badgradnum[ogrep.badgradfidx, ogrep.badgradvidx]:e}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2)}");
+                        $"badgradsuspected: constraint: {ogrep.badgradfidx} ({_ascentProblem.ConstraintNames[ogrep.badgradfidx]}) variable: {ogrep.badgradvidx} user: {ogrep.badgraduser[ogrep.badgradfidx, ogrep.badgradvidx]:e} != numerical: {ogrep.badgradnum[ogrep.badgradfidx, ogrep.badgradvidx]:e}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-3)}");
 
             if (ogrep.nonc0suspected)
                 throw new Exception("nonc0suspected");
@@ -467,7 +468,6 @@ namespace MechJebLib.PSG
 
             _vars.WrapVars(x);
             Solution solution = new SolutionBuilder(N, _vars, _problem, _phases).Build();
-            GuidanceLQR.ApplyLQR(solution);
 
             return solution;
         }
