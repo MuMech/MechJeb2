@@ -21,7 +21,6 @@ namespace MechJebLib.PSG
         private readonly List<double> _tmin         = new List<double>();
         private readonly List<double> _tmax         = new List<double>();
         private readonly List<Hn>     _interpolants = new List<Hn>();
-        private readonly List<Hn>     _controllers  = new List<Hn>();
         public readonly  List<Phase>  Phases        = new List<Phase>();
         private readonly double       _mu;
         private readonly double       _rbody;
@@ -53,8 +52,6 @@ namespace MechJebLib.PSG
             Phases.Add(phase.DeepCopy());
             _interpolants.Add(interpolant);
         }
-
-        public void AddController(Hn interpolant) => _controllers.Add(interpolant);
 
         // convert kerbal time to normalized time
         public double Tbar(double t)
@@ -297,37 +294,15 @@ namespace MechJebLib.PSG
             return (_tmax[phase] - tbar) * _timeScale;
         }
 
-        public (V3 u, V3 u0, double dr, double dv) InertialGuidance(double t, V3 r, V3 v)
+        public V3 InertialGuidance(double t)
         {
             double tBar = (t - T0) / _timeScale;
-            V3     rBar = r / _lengthScale;
-            V3     vBar = v / _velocityScale;
 
             using Vn xRaw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
-            V3       rd   = x.R;
-            V3       vd   = x.V;
             V3       u0   = x.U.normalized;
-            using Vn kRaw = InterpolateControllers(tBar);
-            var      k    = LQRLayout.CreateFrom(kRaw);
 
-            V3 dr = rBar - rd;
-            V3 dv = vBar - vd;
-            V3 du = -k.Kr * dr - k.Kv * dv;
-
-            return ((u0 + du).normalized, u0, dr.magnitude * _lengthScale, dv.magnitude * _velocityScale);
-
-            /*
-            int phase = IndexForTbar(tBar);
-
-            if (Phases[phase].Coast && phase < Segments - 1)
-            {
-                double   tbar2 = _tmin[phase + 1];
-                using Vn xraw2 = Interpolate(tbar2);
-                var      x2    = InterpolantLayout.CreateFrom(xraw2);
-                u = x2.U.normalized;
-            }
-            */
+            return u0;
         }
 
         public (V3 r, V3 v) TerminalStateVectors() => StateVectors(Tmax);
@@ -375,7 +350,7 @@ namespace MechJebLib.PSG
         {
             int idx = -1;
 
-            for (int i = Phases.Count-1; i >= 0; i--)
+            for (int i = Phases.Count - 1; i >= 0; i--)
             {
                 if (coasting)
                 {
@@ -392,8 +367,7 @@ namespace MechJebLib.PSG
             return idx;
         }
 
-        private Vn Interpolate(double tbar)            => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
-        private Vn InterpolateControllers(double tbar) => _controllers[IndexForTbar(tbar)].Evaluate(tbar);
+        private Vn Interpolate(double tbar) => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
 
         private Vn Interpolate(int segment, double tbar) => _interpolants[segment].Evaluate(tbar);
 
