@@ -297,6 +297,12 @@ namespace MuMech
             Profiler.BeginSample("AllStageStats.DrawColumns");
 
             GUILayout.BeginHorizontal();
+            GuiUtils.SimpleTextBox("Half-stage index: ", stats.HalfStageIndex, width: 30);
+            GUILayout.Space(30);
+            GuiUtils.SimpleTextBox("End mass: ", stats.HalfStageEndMass, "kg");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
             //DrawStageStatsColumn(CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn0, stages.Select(s => s.ToString()).ToList());
 
             bool buttonNotPressed = true;

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -114,6 +114,11 @@ namespace MechJebLib.FuelFlowSimulation
                     return;
 
                 double dt = MinimumTimeStep();
+                if (_currentSegment.KSPStage == vessel.HalfStageIndex)
+                {
+                    double massFlow = ResourceMaxMassFlow(vessel);
+                    dt = Min(dt, (_currentSegment.StartMass - vessel.HalfStageEndMass) / massFlow);
+                }
 
                 // FIXME: if we have constructed a segment which is > 0 dV, but less than 0.02s, and there's a
                 // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
@@ -380,6 +385,17 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double ResourceMaxMassFlow(SimVessel vessel)
+        {
+            double massFlow = 0;
+
+            foreach (SimModuleEngines engine in vessel.ActiveEngines)
+                massFlow += engine.MassFlowRate;
+
+            return massFlow;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinishRcsSegment(bool max, double deltaTime, double startMass, double endMass, double rcsThrust)
         {
             double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Log(startMass / endMass);
@@ -451,6 +467,9 @@ namespace MechJebLib.FuelFlowSimulation
         {
             // always stage if all the engines are burned out
             if (vessel.ActiveEngines.Count == 0)
+                return true;
+
+            if (vessel.CurrentStage == vessel.HalfStageIndex && vessel.Mass <= vessel.HalfStageEndMass + 0.001)
                 return true;
 
             for (int i = 0; i < vessel.ActiveEngines.Count; i++)

@@ -291,6 +291,9 @@ namespace MuMech
             UpdateActiveModuleEngines(_allModuleEngines);
             UpdateBurnedResources();
 
+            if (Vessel.currentStage == _stats.HalfStageIndex && Vessel.totalMass <= _stats.HalfStageEndMass)
+                Stage();
+
             // don't decouple active or idle engines or tanks
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(Vessel.currentStage - 1, _burnedResources, _activeModuleEngines) &&
                 !InverseStageReleasesClamps(Vessel.currentStage - 1))

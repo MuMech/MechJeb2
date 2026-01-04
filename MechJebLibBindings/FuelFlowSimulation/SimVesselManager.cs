@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -13,8 +13,6 @@ namespace MechJebLibBindings.FuelFlowSimulation
     // need to link against KSP GameObjects (MechJebLibBindings.dll or something like that)
     public partial class SimVesselManager
     {
-        public List<FuelStats> Segments => FuelFlowSimulation.Segments;
-
         private readonly SimVesselBuilder                                 _builder;
         private readonly SimVesselUpdater                                 _updater;
         private          SimVessel                                        _vessel;
@@ -58,6 +56,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
             _vessel.SetConditions(atmDensity, atmPressure, machNumber);
 
         public void SetInitial(double t, V3 r, V3 v, V3 u) => _vessel.SetInitial(t, r, v, u);
+
+        public void SetupStageAndAHalf(int halfStageIndex, double endMass) => _vessel.SetupStageAndAHalf(halfStageIndex, endMass);
 
         public void StartFuelFlowSimulationJob()
         {
