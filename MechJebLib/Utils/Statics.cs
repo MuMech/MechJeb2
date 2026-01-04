@@ -285,8 +285,11 @@ namespace MechJebLib.Utils
             if (equalNan && double.IsNaN(num) && double.IsNaN(reference))
                 return true;
 
-            // see numpy.isclose()
-            return Abs(num - reference) <= atol + rtol * Abs(reference) && IsFinite(reference);
+            if (!IsFinite(num) || !IsFinite(reference))
+                return false;
+
+            // see scipy.isclose() - symmetric in arguments
+            return Abs(num - reference) <= atol + rtol * Max(Abs(num), Abs(reference));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -438,7 +441,7 @@ namespace MechJebLib.Utils
         {
             var sb = new StringBuilder();
 
-            sb.Append($"{row:0000}: [");
+            sb.Append($"{row:0000}: ");
             int last = user.Count - 1;
 
             for (int i = 0; i <= last; i++)
@@ -453,12 +456,7 @@ namespace MechJebLib.Utils
                     sb.Append("❗"); // not done yet
                 else
                     sb.Append("❌"); // mistake
-                if (i < last)
-                    sb.Append(",");
             }
-
-            sb.Append("]");
-
 
             return sb.ToString();
         }
