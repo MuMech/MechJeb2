@@ -5,6 +5,7 @@
 
 using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives
@@ -20,14 +21,27 @@ namespace MechJebLib.Primitives
             D = d;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dual Sin(Dual d) => new Dual(Math.Sin(d.M), Math.Cos(d.M) * d.D);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dual Cos(Dual d) => new Dual(Math.Cos(d.M), -Math.Sin(d.M) * d.D);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dual Tan(Dual d)
         {
             double t = Math.Tan(d.M);
             return new Dual(t, (1.0 + t * t) * d.D);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Dual Asin(Dual d) => new Dual(Math.Asin(d.M), 1.0 / Math.Sqrt(1.0 - d.M * d.M) * d.D);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Dual Acos(Dual d) => new Dual(Math.Acos(d.M), -1.0 / Math.Sqrt(1.0 - d.M * d.M) * d.D);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Dual Atan2(Dual a, Dual b) => new Dual(Math.Atan2(a.M, b.M), (a.D * b.M - a.M * b.D) / (a.M * a.M + b.M * b.M));
 
         public static Dual Log(Dual d)           => new Dual(Math.Log(d.M), 1 / d.M * d.D);
         public static Dual Powi(Dual d, int k)   => new Dual(Statics.Powi(d.M, k), k * Statics.Powi(d.M, k - 1) * d.D);

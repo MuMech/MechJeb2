@@ -344,16 +344,6 @@ namespace MechJebLibTest.Primitives.Q3Tests
         }
 
         [Fact]
-        private void NormalizeInPlace()
-        {
-            var q = new Q3(3, 4, 0, 0);
-            q.Normalize();
-
-            double mag = Sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-            mag.ShouldEqual(1.0, 1e-14);
-        }
-
-        [Fact]
         private void NormalizedProperty()
         {
             var q          = new Q3(2, 3, 6, 7);

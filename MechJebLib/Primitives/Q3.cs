@@ -14,9 +14,9 @@ using static System.Math;
 // ReSharper disable NonReadonlyMemberInGetHashCode
 namespace MechJebLib.Primitives
 {
-    public struct Q3 : IEquatable<Q3>, IFormattable
+    public readonly struct Q3 : IEquatable<Q3>, IFormattable
     {
-        public double x, y, z, w;
+        public readonly double x, y, z, w;
 
         // Access the x, y, z, w components using [0], [1], [2], [3] respectively.
         public double this[int index]
@@ -33,27 +33,6 @@ namespace MechJebLib.Primitives
                         throw new IndexOutOfRangeException("Invalid Q3 index!");
                 }
             }
-
-            set
-            {
-                switch (index)
-                {
-                    case 0:
-                        x = value;
-                        break;
-                    case 1:
-                        y = value;
-                        break;
-                    case 2:
-                        z = value;
-                        break;
-                    case 3:
-                        w = value;
-                        break;
-                    default:
-                        throw new IndexOutOfRangeException("Invalid Q3 index!");
-                }
-            }
         }
 
         public Q3(double x, double y, double z, double w)
@@ -62,14 +41,6 @@ namespace MechJebLib.Primitives
             this.y = y;
             this.z = z;
             this.w = w;
-        }
-
-        public void Set(double X, double Y, double Z, double W)
-        {
-            x = X;
-            y = Y;
-            z = Z;
-            w = W;
         }
 
         // The identity rotation (RO). This quaternion corresponds to "no rotation": the object
@@ -254,47 +225,50 @@ namespace MechJebLib.Primitives
             double m22 = -upwards.z;
 
             double trace = m00 + m11 + m22;
-            var    q     = new Q3();
             if (trace > 0f)
             {
-                double num = Sqrt(trace + 1);
-                q.w = num * 0.5;
-                num = 0.5 / num;
-                q.x = (m12 - m21) * num;
-                q.y = (m20 - m02) * num;
-                q.z = (m01 - m10) * num;
-                return q;
+                double num      = Sqrt(trace + 1);
+                double fiveonum = 0.5 / num;
+                return new Q3(
+                    (m12 - m21) * fiveonum,
+                    (m20 - m02) * fiveonum,
+                    (m01 - m10) * fiveonum,
+                    num * 0.5
+                );
             }
 
             if (m00 >= m11 && m00 >= m22)
             {
                 double num7 = Sqrt(1 + m00 - m11 - m22);
                 double num4 = 0.5 / num7;
-                q.x = 0.5 * num7;
-                q.y = (m01 + m10) * num4;
-                q.z = (m02 + m20) * num4;
-                q.w = (m12 - m21) * num4;
-                return q;
+                return new Q3(
+                    0.5 * num7,
+                    (m01 + m10) * num4,
+                    (m02 + m20) * num4,
+                    (m12 - m21) * num4
+                );
             }
 
             if (m11 > m22)
             {
                 double num6 = Sqrt(1 + m11 - m00 - m22);
                 double num3 = 0.5 / num6;
-                q.x = (m10 + m01) * num3;
-                q.y = 0.5 * num6;
-                q.z = (m21 + m12) * num3;
-                q.w = (m20 - m02) * num3;
-                return q;
+                return new Q3(
+                    (m10 + m01) * num3,
+                    0.5 * num6,
+                    (m21 + m12) * num3,
+                    (m20 - m02) * num3
+                );
             }
 
             double num5 = Sqrt(1 + m22 - m00 - m11);
             double num2 = 0.5 / num5;
-            q.x = (m20 + m02) * num2;
-            q.y = (m21 + m12) * num2;
-            q.z = 0.5 * num5;
-            q.w = (m01 - m10) * num2;
-            return q;
+            return new Q3(
+                (m20 + m02) * num2,
+                (m21 + m12) * num2,
+                0.5 * num5,
+                (m01 - m10) * num2
+            );
         }
 
         public static Q3 Lerp(Q3 a, Q3 b, double t)
@@ -372,13 +346,13 @@ namespace MechJebLib.Primitives
 
         public static Q3 AngleAxis(double angle, V3 axis)
         {
-            var q = new Q3();
             V3  a = axis.normalized;
-            q.x = a.x * Sin(angle / 2.0);
-            q.y = a.y * Sin(angle / 2.0);
-            q.z = a.z * Sin(angle / 2.0);
-            q.w = Cos(angle / 2.0);
-            return q;
+            return new  Q3(
+                a.x * Sin(angle / 2.0),
+                a.y * Sin(angle / 2.0),
+                a.z * Sin(angle / 2.0),
+                Cos(angle / 2.0)
+                );
         }
 
         public static Q3 Inverse(Q3 q)
@@ -395,8 +369,6 @@ namespace MechJebLib.Primitives
 
             return mag < EPS ? identity : new Q3(q.x / mag, q.y / mag, q.z / mag, q.w / mag);
         }
-
-        public void Normalize() => this = Normalize(this);
 
         public Q3 normalized => Normalize(this);
 

@@ -17,27 +17,28 @@ namespace MechJebLib.PSG
         {
             private readonly PhaseCollection _phases = new PhaseCollection();
 
-            private V3        _r0            { get; set; }
-            private V3        _v0            { get; set; }
-            private V3        _u0            { get; set; }
-            private double    _t0            { get; set; }
-            private double    _mu            { get; set; }
-            private double    _rbody         { get; set; } = 1.0;
-            private double    _h0            { get; set; }
-            private double    _rho0CdAref    { get; set; }
-            private V3        _w             { get; set; } = V3.zero;
-            private double    _apR           { get; set; }
-            private double    _peR           { get; set; }
-            private double    _attR          { get; set; }
-            private double    _incT          { get; set; }
-            private double    _lanT          { get; set; }
-            private double    _argpT         { get; set; }
-            private double    _fpaT          { get; set; }
-            private bool      _attachAltFlag { get; set; }
-            private bool      _lanflag       { get; set; }
-            private bool      _argpflag      { get; set; }
-            private bool      _fixedBurnTime { get; set; }
-            private Solution? _solution      { get; set; }
+            private V3        _r0               { get; set; }
+            private V3        _v0               { get; set; }
+            private V3        _u0               { get; set; }
+            private double    _t0               { get; set; }
+            private double    _mu               { get; set; }
+            private double    _rbody            { get; set; } = 1.0;
+            private double    _h0               { get; set; }
+            private double    _rho0CdAref       { get; set; }
+            private double    _rho0QAlphaMaxInv { get; set; }
+            private V3        _w                { get; set; } = V3.zero;
+            private double    _apR              { get; set; }
+            private double    _peR              { get; set; }
+            private double    _attR             { get; set; }
+            private double    _incT             { get; set; }
+            private double    _lanT             { get; set; }
+            private double    _argpT            { get; set; }
+            private double    _fpaT             { get; set; }
+            private bool      _attachAltFlag    { get; set; }
+            private bool      _lanflag          { get; set; }
+            private bool      _argpflag         { get; set; }
+            private bool      _fixedBurnTime    { get; set; }
+            private Solution? _solution         { get; set; }
 
             public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage,
                 int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
@@ -83,11 +84,12 @@ namespace MechJebLib.PSG
                 return this;
             }
 
-            public AscentBuilder AerodynamicConstants(double cd, double aRef, double rho0, double h0, V3 w)
+            public AscentBuilder AerodynamicConstants(double cd, double aRef, double rho0, double qAlphaMax, double h0, V3 w)
             {
-                _h0         = h0;
-                _rho0CdAref = cd * aRef * rho0;
-                _w          = w;
+                _h0               = h0;
+                _rho0CdAref       = cd * aRef * rho0;
+                _rho0QAlphaMaxInv = qAlphaMax > 0 ? rho0 / qAlphaMax : 0;
+                _w                = w;
                 return this;
             }
 
@@ -157,7 +159,7 @@ namespace MechJebLib.PSG
                     }
                 }
 
-                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody, _h0, _rho0CdAref, _w, terminal);
+                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody, _h0, _rho0CdAref, _rho0QAlphaMaxInv, _w, terminal);
 
                 var normalizedPhases = new PhaseCollection();
 

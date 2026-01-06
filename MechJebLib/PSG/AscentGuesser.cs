@@ -128,7 +128,7 @@ namespace MechJebLib.PSG
                 if (WillIntraPhaseCoast(phases, p))
                 {
                     double btActual     = interpolant.MaxTime - interpolant.MinTime;
-                    Hn     interpolant2 = Integrate(initial, terminal, phase, t0, t0 + btActual / 2);
+                    Hn     interpolant2 = Integrate(initial, terminal, phase, t0, t0 + btActual * 0.75);
                     solution.AddSegment(interpolant2.MinTime, interpolant2.MaxTime, interpolant2, phase);
                 }
                 else
