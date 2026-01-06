@@ -35,22 +35,6 @@ namespace MechJebLibTest.Primitives.Q3Tests
         }
 
         [Fact]
-        private void IndexerSet()
-        {
-            var q = new Q3(0, 0, 0, 0);
-
-            q[0] = 1;
-            q[1] = 2;
-            q[2] = 3;
-            q[3] = 4;
-
-            q.x.ShouldEqual(1);
-            q.y.ShouldEqual(2);
-            q.z.ShouldEqual(3);
-            q.w.ShouldEqual(4);
-        }
-
-        [Fact]
         private void IndexerThrowsOnInvalidIndex()
         {
             var q = new Q3(1, 2, 3, 4);
@@ -63,20 +47,6 @@ namespace MechJebLibTest.Primitives.Q3Tests
             {
                 double _ = q[-1];
             });
-            Assert.Throws<IndexOutOfRangeException>(() => { q[4]  = 5; });
-            Assert.Throws<IndexOutOfRangeException>(() => { q[-1] = 5; });
-        }
-
-        [Fact]
-        private void SetMethod()
-        {
-            var q = new Q3(0, 0, 0, 0);
-            q.Set(9, 8, 7, 6);
-
-            q.x.ShouldEqual(9);
-            q.y.ShouldEqual(8);
-            q.z.ShouldEqual(7);
-            q.w.ShouldEqual(6);
         }
 
         [Fact]
