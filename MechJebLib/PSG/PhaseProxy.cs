@@ -96,7 +96,7 @@ namespace MechJebLib.PSG
         private          double[] _vars = null!;
         private readonly int      _btOffset;
 
-        public PhaseProxy(int n, int idx, int p, Phase phase)
+        public PhaseProxy(Problem problem, int n, int idx, int p, Phase phase)
         {
             int k     = 2 * n - 1;
             int start = idx;
@@ -172,6 +172,8 @@ namespace MechJebLib.PSG
                 NumConstraints += 9; // continuity constraints
             if (p > 0 && phase.MassContinuity)
                 NumConstraints += 1; // mass continuity with previous stage
+            if (problem.H0 > 0 && problem.Rho0InvQAlphaMax > 0)
+                NumConstraints += k;
         }
 
         public     DoubleArrayProxy Rx             { get; }
