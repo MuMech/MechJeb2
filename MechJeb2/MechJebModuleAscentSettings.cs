@@ -15,7 +15,7 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble PitchStartVelocity = new EditableDouble(PITCH_START_VELOCITY_DEFAULT);
+        public readonly EditableDouble PitchStartHeight = new EditableDouble(PITCH_START_HEIGHT_DEFAULT);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble PitchRate = new EditableDouble(PITCH_RATE_DEFAULT);
@@ -33,16 +33,7 @@ namespace MuMech
         public readonly EditableDoubleMult DesiredFPA = new EditableDoubleMult(DESIRED_FPA_DEFAULT, Math.PI / 180);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult DynamicPressureTrigger = new EditableDoubleMult(DYNAMIC_PRESSURE_TRIGGER_DEFAULT, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableInt StagingTrigger = new EditableInt(1);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool AttachAltFlag = ATTACH_ALT_FLAG_DEFAULT;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool StagingTriggerFlag = STAGING_TRIGGER_FLAG_DEFAULT;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
@@ -280,23 +271,21 @@ namespace MuMech
 
         public void ApplyRODefaults()
         {
-            PitchStartVelocity.Val     = PITCH_START_VELOCITY_DEFAULT;
-            PitchRate.Val              = PITCH_RATE_DEFAULT;
-            DesiredAttachAlt.Val       = DESIRED_ATTACH_ALT_DEFAULT;
-            DesiredAttachAltFixed.Val  = DESIRED_ATTACH_ALT_DEFAULT;
-            DesiredFPA.Val             = DESIRED_FPA_DEFAULT;
-            DynamicPressureTrigger.Val = DYNAMIC_PRESSURE_TRIGGER_DEFAULT;
-            AttachAltFlag              = ATTACH_ALT_FLAG_DEFAULT;
-            StagingTriggerFlag         = STAGING_TRIGGER_FLAG_DEFAULT;
-            LimitQa.Val                = LIMIT_QA_DEFAULT;
-            LimitQaEnabled             = LIMIT_QA_ENABLED_DEFAULT;
-            MinDeltaV.Val              = MIN_DELTAV_DEFAULT;
-            MaxCoast.Val               = MAX_COAST_DEFAULT;
-            MinCoast.Val               = MIN_COAST_DEFAULT;
-            LaunchPhaseAngle.Val       = LAUNCH_PHASE_ANGLE_DEFAULT;
-            LaunchLANDifference.Val    = LAUNCH_LAN_DIFFERENCE;
-            PreStageTime.Val           = PRE_STAGE_TIME_DEFAULT;
-            OptimizerPauseTime.Val     = OPTIMIZER_PAUSE_TIME_DEFAULT;
+            PitchStartHeight.Val      = PITCH_START_HEIGHT_DEFAULT;
+            PitchRate.Val             = PITCH_RATE_DEFAULT;
+            DesiredAttachAlt.Val      = DESIRED_ATTACH_ALT_DEFAULT;
+            DesiredAttachAltFixed.Val = DESIRED_ATTACH_ALT_DEFAULT;
+            DesiredFPA.Val            = DESIRED_FPA_DEFAULT;
+            AttachAltFlag             = ATTACH_ALT_FLAG_DEFAULT;
+            LimitQa.Val               = LIMIT_QA_DEFAULT;
+            LimitQaEnabled            = LIMIT_QA_ENABLED_DEFAULT;
+            MinDeltaV.Val             = MIN_DELTAV_DEFAULT;
+            MaxCoast.Val              = MAX_COAST_DEFAULT;
+            MinCoast.Val              = MIN_COAST_DEFAULT;
+            LaunchPhaseAngle.Val      = LAUNCH_PHASE_ANGLE_DEFAULT;
+            LaunchLANDifference.Val   = LAUNCH_LAN_DIFFERENCE;
+            PreStageTime.Val          = PRE_STAGE_TIME_DEFAULT;
+            OptimizerPauseTime.Val    = OPTIMIZER_PAUSE_TIME_DEFAULT;
 
             SpinupStageFlag         = false;
             SpinupStageInternal.Val = -1;
@@ -344,21 +333,19 @@ namespace MuMech
             Core.Staging.DropSolidsLeadTime.Val        = 1.0;
         }
 
-        private const double LAUNCH_LAN_DIFFERENCE            = 0;
-        private const double LAUNCH_PHASE_ANGLE_DEFAULT       = 0;
-        private const double MIN_COAST_DEFAULT                = 0;
-        private const double MAX_COAST_DEFAULT                = 450;
-        private const double MIN_DELTAV_DEFAULT               = 40;
-        private const double DESIRED_ATTACH_ALT_DEFAULT       = 110000;
-        private const double PITCH_START_VELOCITY_DEFAULT     = 50;
-        private const double PITCH_RATE_DEFAULT               = 0.50;
-        private const double DYNAMIC_PRESSURE_TRIGGER_DEFAULT = 10000;
-        private const bool   ATTACH_ALT_FLAG_DEFAULT          = false;
-        private const double DESIRED_FPA_DEFAULT              = 0;
-        private const bool   STAGING_TRIGGER_FLAG_DEFAULT     = false;
-        private const double LIMIT_QA_DEFAULT                 = 2000;
-        private const bool   LIMIT_QA_ENABLED_DEFAULT         = true;
-        private const double PRE_STAGE_TIME_DEFAULT           = 10;
-        private const double OPTIMIZER_PAUSE_TIME_DEFAULT     = 5;
+        private const double LAUNCH_LAN_DIFFERENCE        = 0;
+        private const double LAUNCH_PHASE_ANGLE_DEFAULT   = 0;
+        private const double MIN_COAST_DEFAULT            = 0;
+        private const double MAX_COAST_DEFAULT            = 450;
+        private const double MIN_DELTAV_DEFAULT           = 40;
+        private const double DESIRED_ATTACH_ALT_DEFAULT   = 110000;
+        private const double PITCH_START_HEIGHT_DEFAULT   = 100;
+        private const double PITCH_RATE_DEFAULT           = 5.0;
+        private const bool   ATTACH_ALT_FLAG_DEFAULT      = false;
+        private const double DESIRED_FPA_DEFAULT          = 0;
+        private const double LIMIT_QA_DEFAULT             = 2000;
+        private const bool   LIMIT_QA_ENABLED_DEFAULT     = true;
+        private const double PRE_STAGE_TIME_DEFAULT       = 10;
+        private const double OPTIMIZER_PAUSE_TIME_DEFAULT = 5;
     }
 }

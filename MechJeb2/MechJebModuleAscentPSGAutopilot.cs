@@ -130,15 +130,15 @@ namespace MuMech
                 return;
             }
 
-            if (VesselState.surfaceVelocity.magnitude > AscentSettings.PitchStartVelocity)
+            if (VesselState.altitudeBottom > AscentSettings.PitchStartHeight)
             {
                 _mode           = AscentMode.PITCHPROGRAM;
                 _pitchStartTime = MET;
                 return;
             }
 
-            double dv = AscentSettings.PitchStartVelocity - VesselState.surfaceVelocity.magnitude;
-            Status = Localizer.Format("#MechJeb_Ascent_status13", $"{dv:F2}"); //Vertical ascent  <<1>>m/s to go
+            double dh = AscentSettings.PitchStartHeight - VesselState.altitudeBottom;
+            Status = $"Vertical ascent {dh:F2}m to go";
         }
 
         private void DrivePitchProgram()
@@ -154,10 +154,7 @@ namespace MuMech
                 return;
             }
 
-            if (!AscentSettings.StagingTriggerFlag)
-                Status = Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}"); //Pitch program <<1>>° to guidance
-            else
-                Status = $"Pitch Program until stage {AscentSettings.StagingTrigger.Val}";
+            Status = Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}"); //Pitch program <<1>>° to guidance
 
             if (CheckForGuidanceTransition(pitch))
             {
@@ -172,19 +169,7 @@ namespace MuMech
         {
             if (!MainBody.atmosphere) return true;
 
-            if (!AscentSettings.StagingTriggerFlag)
-            {
-                if (pitch <= Core.Guidance.Pitch && Core.Guidance.IsStable()) return true;
-
-                // dynamic pressure needs to fall by 10% before we level trigger
-                if (VesselState.maxDynamicPressure > VesselState.dynamicPressure * 1.1)
-                    if (VesselState.dynamicPressure < AscentSettings.DynamicPressureTrigger)
-                        return true;
-            }
-            else
-            {
-                if (Core.Guidance.IsStable() && Vessel.currentStage <= AscentSettings.StagingTrigger) return true;
-            }
+            if (pitch <= Core.Guidance.Pitch && Core.Guidance.IsStable()) return true;
 
             return false;
         }
@@ -193,10 +178,7 @@ namespace MuMech
         {
             double pitch = SrfvelPitch();
 
-            if (!AscentSettings.StagingTriggerFlag)
-                Status = Localizer.Format("#MechJeb_Ascent_status14", $"{pitch - Core.Guidance.Pitch:F}"); //Gravity Turn <<1>>° to guidance
-            else
-                Status = $"Gravity Turn until stage {AscentSettings.StagingTrigger.Val}";
+            Status = Localizer.Format("#MechJeb_Ascent_status14", $"{pitch - Core.Guidance.Pitch:F}"); //Gravity Turn <<1>>° to guidance
 
             if (CheckForGuidanceTransition(pitch))
             {
