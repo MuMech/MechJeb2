@@ -118,14 +118,12 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Cd:", _ascentSettings.Cd, "", 40);
             GuiUtils.SimpleTextBox("Aref:", _ascentSettings.Aref, "m²", 40);
             GUILayout.EndHorizontal();
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel13, _ascentSettings.PitchStartVelocity, "m/s",
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel13, _ascentSettings.PitchStartHeight, "m",
                 40);                                                                                                     //Booster Pitch start:
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel14, _ascentSettings.PitchRate, "°/s", 40); //Booster Pitch rate:
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUI.skin.box);
-            GuiUtils.SimpleTextBox("Q Trigger:", _ascentSettings.DynamicPressureTrigger, "kPa", 40);
-            GuiUtils.ToggledTextBox(ref _ascentSettings.StagingTriggerFlag, "PSG After Stage:", _ascentSettings.StagingTrigger, width: 40);
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel17, _ascentSettings.LimitQa, "Pa-rad"); //Qα limit
             if (_ascentSettings.LimitQa < 1000 || _ascentSettings.LimitQa > 4000)
             {
