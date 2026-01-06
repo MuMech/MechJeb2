@@ -211,12 +211,13 @@ namespace MuMech
                 double rho0 = MainBody.atmDensityASL;
                 double rho1 = MainBody.GetDensity(MainBody.GetPressure(r1), MainBody.GetTemperature(r1));
 
-                double h0   = r1 / Log(rho0 / rho1);
-                double cd   = _ascentSettings.Cd;
-                double aRef = _ascentSettings.Aref;
-                V3     w    = 2 * PI / MainBody.rotationPeriod * V3.northpole;
+                double h0        = r1 / Log(rho0 / rho1);
+                double cd        = _ascentSettings.Cd;
+                double aRef      = _ascentSettings.Aref;
+                double qAlphaMax = _ascentSettings.LimitQa;
+                V3     w         = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
-                ascentBuilder.AerodynamicConstants(cd, aRef, rho0, h0, w);
+                ascentBuilder.AerodynamicConstants(cd, aRef, rho0, qAlphaMax, h0, w);
             }
 
             if (Core.Guidance.Solution != null)

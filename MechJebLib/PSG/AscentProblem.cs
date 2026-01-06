@@ -16,7 +16,7 @@ namespace MechJebLib.PSG
         public AscentProblem(Optimizer optimizer)
         {
             _optimizer = optimizer;
-            _vars      = new VariableProxy(_optimizer._phases, _optimizer._terminal, _optimizer.N);
+            _vars      = new VariableProxy(_optimizer._problem, _optimizer._phases, _optimizer._terminal, _optimizer.N);
         }
 
         public readonly struct ConstraintArgs
@@ -54,10 +54,16 @@ namespace MechJebLib.PSG
 
             PhaseProxy lastPhase = _vars[-1];
 
-            for (int i = 0; i < _vars.TotalConstraints + 1 - ci; i++)
-                ConstraintNames[i + ci] = $"Terminal Constraint number {i}";
+            int start = ci;
 
             _optimizer._terminal.Constraints(x, lastPhase.R.Idx(-1), lastPhase.V.Idx(-1), f, j, ref ci);
+
+            if (_firstPass)
+                for (int i = start; i < ci; i++)
+                    ConstraintNames[i] = $"Terminal Constraint number {i - start + 1}";
+
+            if (_optimizer._problem.H0 > 0 && _optimizer._problem.Rho0InvQAlphaMax > 0)
+                ci = QAlphaConstraints(f, j, ci);
 
             if (ci != _vars.TotalConstraints + 1)
                 throw new Exception("Constraint num mismatch");
@@ -230,6 +236,42 @@ namespace MechJebLib.PSG
             //f[ci++] = a * b;  //where a <= 1e-6 && b <= 1e-6 -- constraint should be 1/2 of the SFB epsilon value
 
             return ci;
+        }
+
+        private int QAlphaConstraints(double[] f, alglib.sparsematrix j, int ci)
+        {
+            double rho0InvQAlphaMax = _optimizer._problem.Rho0InvQAlphaMax;
+            double rBody            = _optimizer._problem.RBody;
+            double h0               = _optimizer._problem.H0;
+            V3     w                = _optimizer._problem.W;
+
+            for (int p = 0; p < _optimizer._phases.Count; p++)
+            {
+                PhaseProxy thisPhase = _vars[p];
+
+                for (int k = 0; k < _optimizer._k; k++)
+                {
+                    if (_firstPass) ConstraintNames[ci] = $"QAlpha constraint for phase {p} knot {k}";
+
+                    ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U[k] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(k) });
+                }
+            }
+
+            return ci;
+
+            Dual QAlphaConstraint(DualV3[] x)
+            {
+                DualV3 r = x[0];
+                DualV3 v = x[1];
+                DualV3 u = x[2];
+
+                Dual   rm    = r.magnitude;
+                DualV3 vr    = v - DualV3.Cross(w, r);
+                Dual   q     = 0.5 * rho0InvQAlphaMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
+                Dual   alpha = DualV3.AngleUnit(vr.normalized, u);
+
+                return q * alpha;
+            }
         }
 
         private int DynamicConstraints(double[] f, alglib.sparsematrix j, int ci, int p)

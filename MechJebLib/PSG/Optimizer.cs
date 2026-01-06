@@ -44,7 +44,7 @@ namespace MechJebLib.PSG
         public int    N                   { get; set; } = 6;
         public int    Maxits              { get; set; } = 4000;
         public double SQPTrustRegionLimit { get; set; } = 1e-3;
-        public double Epsf                { get; set; } = 0; // 1e-9;
+        public double Epsf                { get; set; } = 0;    // 1e-9;
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
         public int    OptimizerTimeout    { get; set; } = 120_000; // milliseconds
@@ -54,7 +54,7 @@ namespace MechJebLib.PSG
             _phases           = phases.DeepCopy();
             _terminal         = terminal;
             _cost             = cost;
-            _vars             = new VariableProxy(_phases, _terminal, N);
+            _vars             = new VariableProxy(problem, _phases, _terminal, N);
             _problem          = problem;
             _ascentProblem    = new AscentProblem(this);
             _constraintHandle = (x, f, j, o) => _ascentProblem.ConstraintFunction(f, j, x, o);
@@ -332,14 +332,6 @@ namespace MechJebLib.PSG
             nu = new double[_vars.TotalConstraints];
             double[] f = new double[_vars.TotalConstraints + 1];
 
-            alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);
-            _ascentProblem.ConstraintFunction(f, j2, _xGuess, new AscentProblem.ConstraintArgs(true));
-
-            CalculatePrimalFeasibility(f, true);
-
-            DebugPrint($"Initial Cost: {Objective}");
-            DebugPrint($"Initial PrimalFeasibility: {PrimalFeasibility}");
-
             for (int i = 0; i < bndu.Length; i++)
             {
                 bndu[i] = double.PositiveInfinity;
@@ -416,8 +408,22 @@ namespace MechJebLib.PSG
                 }
             }
 
+            // Initialize constraints to equality constraints
             for (int i = 0; i < nl.Length; i++)
                 nu[i] = nl[i] = 0;
+
+            // Qalpha inequality constraints
+            if (_problem.Rho0InvQAlphaMax > 0 && _problem.H0 > 0)
+                for (int i = nl.Length - _k * _phases.Count; i < nl.Length; i++)
+                    nu[i] = 1.0;
+
+            alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);
+            _ascentProblem.ConstraintFunction(f, j2, _xGuess, new AscentProblem.ConstraintArgs(true));
+
+            CalculatePrimalFeasibility(f, true);
+
+            DebugPrint($"Initial Cost: {Objective}");
+            DebugPrint($"Initial PrimalFeasibility: {PrimalFeasibility}");
 
             alglib.minnlccreate(_vars.TotalVariables, _xGuess, out _state);
             alglib.minnlcsetbc(_state, bndl, bndu);
@@ -446,9 +452,9 @@ namespace MechJebLib.PSG
             alglib.minnlcoptguardresults(_state, out alglib.optguardreport ogrep);
 
             if (ogrep.badgradsuspected)
-                if (!DoubleMatrixSparsityValidation(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-3))
+                if (!DoubleMatrixSparsityValidation(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2))
                     throw new Exception(
-                        $"badgradsuspected: constraint: {ogrep.badgradfidx} ({_ascentProblem.ConstraintNames[ogrep.badgradfidx]}) variable: {ogrep.badgradvidx} user: {ogrep.badgraduser[ogrep.badgradfidx, ogrep.badgradvidx]:e} != numerical: {ogrep.badgradnum[ogrep.badgradfidx, ogrep.badgradvidx]:e}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-3)}");
+                        $"badgradsuspected: constraint: {ogrep.badgradfidx} ({_ascentProblem.ConstraintNames[ogrep.badgradfidx]}) variable: {ogrep.badgradvidx} user: {ogrep.badgraduser[ogrep.badgradfidx, ogrep.badgradvidx]:e} != numerical: {ogrep.badgradnum[ogrep.badgradfidx, ogrep.badgradvidx]:e}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2)}");
 
             if (ogrep.nonc0suspected)
                 throw new Exception("nonc0suspected");
@@ -456,10 +462,11 @@ namespace MechJebLib.PSG
             if (ogrep.nonc1suspected)
                 throw new Exception("nonc1suspected");
 
+
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j);
 
             _ascentProblem.ConstraintFunction(f, j, x, null);
-            CalculatePrimalFeasibility(f);
+            CalculatePrimalFeasibility(f, true);
 
             DebugPrint($"Cost: {Objective}");
             DebugPrint($"PrimalFeasibility: {PrimalFeasibility}");

@@ -103,6 +103,7 @@ namespace MechJebLib.Primitives
         public int    CompareTo(DualV3 other)                                 => throw new NotImplementedException();
         public string ToString(string format, IFormatProvider formatProvider) => throw new NotImplementedException();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DualV3 Cross(DualV3 v1, DualV3 v2) => new DualV3(
             new V3(
                 v1.M.y * v2.M.z - v1.M.z * v2.M.y,
@@ -116,9 +117,22 @@ namespace MechJebLib.Primitives
             )
         );
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Dual Dot(DualV3 v1, DualV3 v2) => new Dual(
             v1.M.x * v2.M.x + v1.M.y * v2.M.y + v1.M.z * v2.M.z,
             v1.D.x * v2.M.x + v1.M.x * v2.D.x + v1.D.y * v2.M.y + v1.M.y * v2.D.y + v1.D.z * v2.M.z + v1.M.z * v2.D.z
         );
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Dual Angle(DualV3 a, DualV3 b)
+        {
+            DualV3 a2 = a.normalized;
+            DualV3 b2 = b.normalized;
+
+            return Dual.Atan2(Cross(a2, b2).magnitude, Dot(a2, b2));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Dual AngleUnit(DualV3 a, DualV3 b) => Dual.Atan2(Cross(a, b).magnitude, Dot(a, b));
     }
 }

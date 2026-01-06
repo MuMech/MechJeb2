@@ -66,9 +66,9 @@ namespace MechJebLib.PSG
             return tbar;
         }
 
-        public double StartTbar(int p) => _tmin[p];
+        public double StartTime(int p) => T0 + _tmin[p] * _timeScale;
 
-        public double EndTbar(int p) => _tmax[p];
+        public double EndTime(int p) => T0 + _tmax[p] * _timeScale;
 
         public V3 R(double t)
         {
@@ -305,11 +305,13 @@ namespace MechJebLib.PSG
             return u0;
         }
 
-        public (V3 r, V3 v) TerminalStateVectors() => StateVectors(Tmax);
+        public (V3 r, V3 v) TerminalStateVectors() => StateVectors(Tf);
 
-        public (V3 r, V3 v) StateVectors(double tbar)
+        public (V3 r, V3 v) StateVectors(double t)
         {
-            using Vn xraw = Interpolate(tbar);
+            double tBar = (t - T0) / _timeScale;
+
+            using Vn xraw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xraw);
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
@@ -404,7 +406,7 @@ namespace MechJebLib.PSG
             var    hf   = V3.Cross(pos, vel);
             double tbar = (t - T0) / _timeScale;
 
-            (V3 rT, V3 vT) = StateVectors(Tmax);
+            (V3 rT, V3 vT) = StateVectors(Tf);
 
             if (tbar < Tmax)
             {
@@ -417,7 +419,7 @@ namespace MechJebLib.PSG
                 while (idx < Segments - 1 && Phases[idx].AllowShutdown && Phases[idx + 1].AllowShutdown && !Phases[idx + 1].Coast)
                     idx++;
                 double end = _tmax[idx];
-                (rT, vT) = StateVectors(end);
+                (rT, vT) = StateVectors(T0 + end * _timeScale);
             }
 
             var hT = V3.Cross(rT, vT);
