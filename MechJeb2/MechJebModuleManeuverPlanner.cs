@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
+using MechJebLibBindings;
 using UnityEngine;
 
 namespace MuMech
@@ -18,8 +19,7 @@ namespace MuMech
         private readonly string[] _operationNames =
             new List<Operation>(_operation).ConvertAll(x => x.GetName()).ToArray();
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public int _operationId;
 
         // Creation or replacement mode
@@ -32,7 +32,7 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             List<ManeuverNode> maneuverNodes = GetManeuverNodes();
-            bool anyNodeExists = GetManeuverNodes().Any();
+            bool               anyNodeExists = GetManeuverNodes().Any();
 
             if (anyNodeExists)
             {
@@ -57,7 +57,7 @@ namespace MuMech
 
             // Compute orbit and universal time parameters for next maneuver
             double UT = VesselState.time;
-            Orbit o = Orbit;
+            Orbit  o  = Orbit;
             if (anyNodeExists)
             {
                 if (_createNode)
@@ -83,7 +83,7 @@ namespace MuMech
             if (anyNodeExists)
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_createlab3")); //"after the last maneuver node."
 
-            bool makingNode = false;
+            bool makingNode    = false;
             bool executingNode = false;
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button1"))) //"Create node"
@@ -135,7 +135,7 @@ namespace MuMech
                         Core.Node.ExecuteOneNode(this);
                     }
 
-                    if (Vessel.patchedConicSolver.maneuverNodes.Count > 1 || VesselState.isLoadedPrincipia)
+                    if (Vessel.patchedConicSolver.maneuverNodes.Count > 1 || ReflectionUtils.IsLoadedPrincipia)
                     {
                         if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button5"))) //Execute all nodes
                         {

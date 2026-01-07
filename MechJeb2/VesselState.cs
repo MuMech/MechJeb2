@@ -11,11 +11,6 @@ namespace MuMech
 {
     public class VesselState
     {
-        public static bool isLoadedPrincipia;
-        public static bool isLoadedProceduralFairing;
-
-        public static bool isLoadedRealFuels;
-
         // RealFuels.ModuleEngineRF class
         public static Type RFModuleEnginesRFType;
 
@@ -36,8 +31,6 @@ namespace MuMech
 
         // lowestUllage is always VeryStable without RealFuels installed
         public double lowestUllage => einfo.lowestUllage;
-
-        public static bool isLoadedFAR;
 
         private delegate double FARVesselDelegate(Vessel v);
 
@@ -317,7 +310,7 @@ namespace MuMech
         public Vector3d torqueReactionSpeed; // FIXME: probably buggy + needs to be removed (but used in MJAttitudeController)
 
         public Vector3d torqueWeightedExponentialResponseDelay; // Exposed for debugging.
-        public Vector3d torqueWeightedLinearResponseDelay; // Exposed for debugging.
+        public Vector3d torqueWeightedLinearResponseDelay;      // Exposed for debugging.
 
         // model as a first order IIR low pass filter with alpha = torqueResponseSpeed * timestep
         // 50 is no filter at 0.02 sec
@@ -368,36 +361,38 @@ namespace MuMech
 
         public delegate double DTerminalVelocity();
 
-        private static bool reflectionInitDone;
+        private static bool _reflectionInitDone;
+        private static bool _isLoadedRealFuels;
+        private static bool _isLoadedFAR;
 
         // this is written to by OrbitalManeuverCalculator.SuicideBurnCountdown() because it needs to keep track of state between calls
         public double LastSuicideBurnRadius;
         public double LastSuicideBurnDt;
 
-        public void InitReflection()
+        private static void InitReflection()
         {
-            FARVesselDragCoeff        = null;
-            FARVesselRefArea          = null;
-            FARVesselTermVelEst       = null;
-            FARVesselDynPres          = null;
-            isLoadedProceduralFairing = ReflectionUtils.IsAssemblyLoaded("ProceduralFairings");
-            isLoadedRealFuels         = ReflectionUtils.IsAssemblyLoaded("RealFuels");
-            isLoadedPrincipia         = ReflectionUtils.IsAssemblyLoaded("principia.ksp_plugin_adapter");
-            if (isLoadedRealFuels)
+            FARVesselDragCoeff  = null;
+            FARVesselRefArea    = null;
+            FARVesselTermVelEst = null;
+            FARVesselDynPres    = null;
+            _isLoadedRealFuels  = ReflectionUtils.IsLoadedRealFuels;
+            _isLoadedFAR        = ReflectionUtils.IsLoadedFAR;
+
+            if (_isLoadedRealFuels)
             {
                 Debug.Log("MechJeb: RealFuels Assembly is loaded");
                 RFModuleEnginesRFType = ReflectionUtils.GetClassByReflection("RealFuels", "RealFuels.ModuleEnginesRF");
                 if (RFModuleEnginesRFType == null)
                 {
                     Debug.LogWarning("MechJeb BUG: RealFuels loaded, but RealFuels ModuleEnginesRF was not found, disabling RF");
-                    isLoadedRealFuels = false;
+                    _isLoadedRealFuels = false;
                 }
 
                 RFullageSetField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullageSet");
                 if (RFullageSetField == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullageSet field, disabling RF");
-                    isLoadedRealFuels = false;
+                    _isLoadedRealFuels = false;
                 }
 
                 RFGetUllageStabilityMethod = ReflectionUtils.GetMethodByReflection("RealFuels", "RealFuels.Ullage.UllageSet", "GetUllageStability",
@@ -405,14 +400,14 @@ namespace MuMech
                 if (RFGetUllageStabilityMethod == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.Ullage.UllageSet has no GetUllageStability method, disabling RF");
-                    isLoadedRealFuels = false;
+                    _isLoadedRealFuels = false;
                 }
 
                 RFignitionsField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignitions");
                 if (RFignitionsField == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignitions field, disabling RF");
-                    isLoadedRealFuels = false;
+                    _isLoadedRealFuels = false;
                 }
 
                 RFignitedField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignited",
@@ -420,24 +415,23 @@ namespace MuMech
                 if (RFignitedField == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ignited field, disabling RF");
-                    isLoadedRealFuels = false;
+                    _isLoadedRealFuels = false;
                 }
 
                 RFullageField = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
                 if (RFullageField == null)
                 {
                     Debug.Log("MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RF");
-                    isLoadedRealFuels = false;
+                    _isLoadedRealFuels = false;
                 }
 
-                if (isLoadedRealFuels)
+                if (_isLoadedRealFuels)
                 {
                     Debug.Log("MechJeb: RealFuels Assembly is wired up properly");
                 }
             }
 
-            isLoadedFAR = ReflectionUtils.IsAssemblyLoaded("FerramAerospaceResearch");
-            if (isLoadedFAR)
+            if (_isLoadedFAR)
             {
                 var farNames = new List<string> { "VesselDragCoeff", "VesselRefArea", "VesselTermVelEst", "VesselDynPres" };
                 foreach (string name in farNames)
@@ -452,7 +446,7 @@ namespace MuMech
                     if (methodInfo == null)
                     {
                         Debug.Log("MJ BUG: FAR loaded, but FerramAerospaceResearch.FARAPI has no " + name + " method. Disabling FAR");
-                        isLoadedFAR = false;
+                        _isLoadedFAR = false;
                     }
                     else
                     {
@@ -471,7 +465,7 @@ namespace MuMech
                 if (FARCalculateVesselAeroForcesMethodInfo == null)
                 {
                     Debug.Log("MJ BUG: FAR loaded, but FerramAerospaceResearch.FARAPI has no CalculateVesselAeroForces method, disabling FAR");
-                    isLoadedFAR = false;
+                    _isLoadedFAR = false;
                 }
                 else
                 {
@@ -481,14 +475,14 @@ namespace MuMech
                 }
             }
 
-            reflectionInitDone = true;
+            _reflectionInitDone = true;
         }
 
         public VesselState()
         {
-            if (!reflectionInitDone && HighLogic.LoadedSceneIsGame)
+            if (!_reflectionInitDone && HighLogic.LoadedSceneIsGame)
                 InitReflection();
-            if (isLoadedFAR)
+            if (_isLoadedFAR)
             {
                 TerminalVelocityCall = TerminalVelocityFAR;
             }
@@ -720,7 +714,7 @@ namespace MuMech
             double temperature = FlightGlobals.getExternalTemperature(altitudeASL);
             atmosphericDensity      = FlightGlobals.getAtmDensity(atmosphericPressure, temperature);
             atmosphericDensityGrams = atmosphericDensity * 1000;
-            if (isLoadedFAR)
+            if (_isLoadedFAR)
             {
                 dynamicPressure = FARVesselDynPres(vessel) * 1000;
             }
@@ -961,8 +955,8 @@ namespace MuMech
             torqueAvailable = Vector3d.zero;
 
             var torqueWeightedExponentialResponseDelay6 = new Vector6();
-            var torqueWeightedLinearResponseDelay6 = new Vector6();
-            var torqueReactionSpeed6                   = new Vector6(); // FIXME: probably buggy + remove.
+            var torqueWeightedLinearResponseDelay6      = new Vector6();
+            var torqueReactionSpeed6                    = new Vector6(); // FIXME: probably buggy + remove.
 
             torqueReactionWheel.Reset();
             torqueControlSurface.Reset();
@@ -972,7 +966,7 @@ namespace MuMech
             pureDragV = Vector3d.zero;
             pureLiftV = Vector3d.zero;
 
-            if (isLoadedFAR)
+            if (_isLoadedFAR)
             {
                 dragCoef = FARVesselDragCoeff(vessel);
                 areaDrag = FARVesselRefArea(vessel) * dragCoef * PhysicsGlobals.DragMultiplier;
@@ -1010,7 +1004,7 @@ namespace MuMech
                 //if (p.dynamicPressurekPa > 0 && PhysicsGlobals.DragMultiplier > 0)
                 //    dragCoef += p.simDragScalar / (p.dynamicPressurekPa * PhysicsGlobals.DragMultiplier);
 
-                if (!isLoadedFAR)
+                if (!_isLoadedFAR)
                 {
                     dragCoef += p.DragCubes.DragCoeff;
                     areaDrag += p.DragCubes.AreaDrag * PhysicsGlobals.DragCubeMultiplier * PhysicsGlobals.DragMultiplier;
@@ -1158,7 +1152,7 @@ namespace MuMech
                 foreach (KeyValuePair<ModuleEngines, ModuleGimbal> engine in engines)
                 {
                     einfo.AddNewEngine(engine.Key, engine.Value, enginesWrappers, ref CoT, ref DoT, ref CoTScalar);
-                    if (isLoadedRealFuels && RFullageSetField != null && RFignitionsField != null && RFullageField != null)
+                    if (_isLoadedRealFuels && RFullageSetField != null && RFignitionsField != null && RFullageField != null)
                     {
                         einfo.CheckUllageStatus(engine.Key);
                     }
@@ -1202,12 +1196,12 @@ namespace MuMech
                 torqueReactionSpeed.Scale(torqueAvailable.InvertNoNaN());
 
                 torqueWeightedExponentialResponseDelay = Vector3d.Max(torqueWeightedExponentialResponseDelay6.Positive, torqueWeightedExponentialResponseDelay6.Negative);
-                torqueWeightedLinearResponseDelay = Vector3d.Max(torqueWeightedLinearResponseDelay6.Positive, torqueWeightedLinearResponseDelay6.Negative);
+                torqueWeightedLinearResponseDelay      = Vector3d.Max(torqueWeightedLinearResponseDelay6.Positive, torqueWeightedLinearResponseDelay6.Negative);
                 // XXX: this is a little bogus but we should be underestimating the response time of the linear filter, but
                 // we should be preserving the right gain margin and noise sensitivity.
-                Vector3d torqueResponseDelay = (torqueWeightedExponentialResponseDelay + torqueWeightedLinearResponseDelay);
+                Vector3d torqueResponseDelay = torqueWeightedExponentialResponseDelay + torqueWeightedLinearResponseDelay;
                 torqueResponseDelay.Scale(torqueAvailable.InvertNoNaN());
-                torqueResponseSpeed = new Vector3(50,50,50) - torqueResponseDelay;
+                torqueResponseSpeed = new Vector3(50, 50, 50) - torqueResponseDelay;
             }
             else
             {
@@ -1237,7 +1231,7 @@ namespace MuMech
 
             Vector3d liftDir = -Vector3d.Cross(vessel.transform.right, -surfaceVelocity.normalized);
 
-            if (isLoadedFAR && !vessel.packed && surfaceVelocity != Vector3d.zero)
+            if (_isLoadedFAR && !vessel.packed && surfaceVelocity != Vector3d.zero)
             {
                 Vector3 farTorque = Vector3.zero;
                 CalculateVesselAeroForcesWithCache(vessel, out Vector3 farForce, out farTorque, surfaceVelocity, altitudeASL);

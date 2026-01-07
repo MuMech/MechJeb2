@@ -58,6 +58,14 @@ namespace MuMech
             _classicPathMenu = Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
         }
 
+        public void ApplyRODefaults()
+        {
+            _settingsMenu.Enabled    = true;
+            _lastPSGSettingsEnabled  = true;
+            _psgSettingsMenu.Enabled = true;
+            _lastPSGSettingsEnabled  = true;
+        }
+
         [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public bool _lastPSGSettingsEnabled;
 
@@ -129,6 +137,7 @@ namespace MuMech
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel2, _ascentSettings.DesiredApoapsis, "km"); //Target Apoapsis:
                     GuiUtils.ToggledTextBox(ref _ascentSettings.AttachAltFlag, CachedLocalizer.Instance.MechJebAscentAttachAlt,
                         _ascentSettings.DesiredAttachAlt, "km");
+                    GuiUtils.ToggledTextBox(ref _ascentSettings.DesiredArgPFlag, "Arg Periapsis:", _ascentSettings.DesiredArgP, "°");
                 }
                 else
                 {
@@ -226,7 +235,7 @@ namespace MuMech
         private void ShowAutoWarpGUIElements()
         {
             if (!Vessel.LandedOrSplashed) return;
-            const int LAN_WIDTH = 60;
+            const int LAN_WIDTH = 40;
 
             Profiler.BeginSample("MJ.GUIWindow.ShowAutoWarp");
             GUILayout.BeginVertical(GUI.skin.box);
@@ -305,6 +314,8 @@ namespace MuMech
                             )
                         );
                     }
+
+                    _ascentSettings.RelativeLAN = GUILayout.Toggle(_ascentSettings.RelativeLAN, "Use LAN relative to launch site");
                 }
             }
 
@@ -410,15 +421,6 @@ namespace MuMech
                 GUILayout.Label(CachedLocalizer.Instance
                     .MechJebAscentLabel37); //"Warning: MechJeb is unable to circularize without an upgraded Tracking Station."
             }
-
-            GUILayout.BeginHorizontal();
-            if (_ascentSettings.AscentType == AscentType.PSG)
-            {
-                if (GUILayout.Button("Reset to PSG/RO Defaults"))
-                    _ascentSettings.ApplyRODefaults();
-            }
-
-            GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             _ascentSettings.AscentType = (AscentType)GuiUtils.ComboBox.Box((int)_ascentSettings.AscentType, _ascentPathList, this);
