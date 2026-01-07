@@ -1,4 +1,5 @@
 ﻿using System;
+using MechJebLibBindings;
 using UnityEngine;
 
 namespace MuMech
@@ -8,23 +9,6 @@ namespace MuMech
         public static bool HasModule<T>(this Part part) where T : PartModule => part.FindModuleImplementing<T>() != null;
 
         public static T GetModule<T>(this Part part) where T : PartModule => part.FindModuleImplementing<T>();
-
-        // An allocation free version of GetModuleMass
-        public static float GetModuleMassNoAlloc(this Part p, float defaultMass, ModifierStagingSituation sit)
-        {
-            float mass = 0f;
-
-            for (int i = 0; i < p.Modules.Count; i++)
-            {
-                var m = p.Modules[i] as IPartMassModifier;
-                if (m != null)
-                {
-                    mass += m.GetModuleMass(defaultMass, sit);
-                }
-            }
-
-            return mass;
-        }
 
         public static bool EngineHasFuel(this ModuleEngines me) => !me.getFlameoutState && !me.engineShutdown;
 
@@ -36,7 +20,7 @@ namespace MuMech
 
         public static bool UnstableUllage(this Part p)
         {
-            if (!VesselState.isLoadedRealFuels) // stock doesn't have this concept
+            if (!ReflectionUtils.IsLoadedRealFuels) // stock doesn't have this concept
                 return false;
 
             ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
@@ -69,77 +53,10 @@ namespace MuMech
             return false;
         }
 
-        public static double FlowRateAtConditions(this ModuleEngines e, double throttle, double flowMultiplier)
-        {
-            float minFuelFlow = e.minFuelFlow;
-            float maxFuelFlow = e.maxFuelFlow;
-
-            // Some brilliant engine mod seems to consider that FuelFlow is not something they should properly initialize
-            if (minFuelFlow == 0 && e.minThrust > 0)
-            {
-                minFuelFlow = e.minThrust / (e.atmosphereCurve.Evaluate(0f) * e.g);
-            }
-
-            if (maxFuelFlow == 0 && e.maxThrust > 0)
-            {
-                maxFuelFlow = e.maxThrust / (e.atmosphereCurve.Evaluate(0f) * e.g);
-            }
-
-            return Mathf.Lerp(minFuelFlow, maxFuelFlow, (float)throttle * 0.01f * e.thrustPercentage) * flowMultiplier;
-        }
-
-        // for a single EngineModule, determine its flowMultiplier, subject to atmDensity + machNumber
-        public static double FlowMultiplierAtConditions(this ModuleEngines e, double atmDensity, double machNumber)
-        {
-            double flowMultiplier = 1;
-
-            if (e.atmChangeFlow)
-            {
-                if (e.useAtmCurve)
-                    flowMultiplier = e.atmCurve.Evaluate((float)atmDensity * 40 / 49);
-                else
-                    flowMultiplier = atmDensity * 40 / 49;
-            }
-
-            // we take the middle of the thrust curve and hope it looks something like the average
-            // (the ends are often very far from the average)
-            if (e.useThrustCurve)
-                flowMultiplier *= e.thrustCurve.Evaluate(0.5f);
-
-            if (e.useVelCurve)
-                flowMultiplier *= e.velCurve.Evaluate((float)machNumber);
-
-            if (flowMultiplier > e.flowMultCap)
-            {
-                double excess = flowMultiplier - e.flowMultCap;
-                flowMultiplier = e.flowMultCap + excess / (e.flowMultCapSharpness + excess / e.flowMultCap);
-            }
-
-            // some engines have e.CLAMP set to float.MaxValue so we have to have the e.CLAMP < 1 sanity check here
-            if (flowMultiplier < e.CLAMP && e.CLAMP < 1)
-                flowMultiplier = e.CLAMP;
-
-            return flowMultiplier;
-        }
-
-        // for a single EngineModule, evaluate its ISP, subject to all the different possible curves
-        public static double ISPAtConditions(this ModuleEngines e, double throttle, double atmPressure, double atmDensity, double machNumber)
-        {
-            double isp = 0;
-            isp = e.atmosphereCurve.Evaluate((float)atmPressure);
-            if (e.useThrottleIspCurve)
-                isp *= Mathf.Lerp(1f, e.throttleIspCurve.Evaluate((float)throttle), e.throttleIspCurveAtmStrength.Evaluate((float)atmPressure));
-            if (e.useAtmCurveIsp)
-                isp *= e.atmCurveIsp.Evaluate((float)atmDensity * 40 / 49);
-            if (e.useVelCurveIsp)
-                isp *= e.velCurveIsp.Evaluate((float)machNumber);
-            return isp;
-        }
-
         public static bool IsDecoupler(this Part p) =>
             p != null && (p.FindModuleImplementing<ModuleDecouplerBase>() != null ||
-                          p.FindModuleImplementing<ModuleDockingNode>() != null ||
-                          p.Modules.Contains("ProceduralFairingDecoupler"));
+                p.FindModuleImplementing<ModuleDockingNode>() != null ||
+                p.Modules.Contains("ProceduralFairingDecoupler"));
 
         private static bool IsUnfiredDecoupler(this ModuleDecouplerBase decoupler, out Part decoupledPart)
         {
@@ -171,7 +88,7 @@ namespace MuMech
 
         private static bool IsUnfiredProceduralFairingDecoupler(this PartModule decoupler, out Part decoupledPart)
         {
-            if (VesselState.isLoadedProceduralFairing && decoupler.moduleName == "ProceduralFairingDecoupler")
+            if (ReflectionUtils.IsLoadedProceduralFairing && decoupler.moduleName == "ProceduralFairingDecoupler")
             {
                 if (!decoupler.Fields["decoupled"].GetValue<bool>(decoupler) && decoupler.part.stagingOn)
                 {
@@ -189,7 +106,7 @@ namespace MuMech
         {
             if (m is ModuleDecouplerBase @base && IsUnfiredDecoupler(@base, out decoupledPart)) return true;
             if (m is ModuleDockingNode node && IsUnfiredDecoupler(node, out decoupledPart)) return true;
-            if (VesselState.isLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler" &&
+            if (ReflectionUtils.IsLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler" &&
                 m.IsUnfiredProceduralFairingDecoupler(out decoupledPart)) return true;
             decoupledPart = null;
             return false;
@@ -202,7 +119,7 @@ namespace MuMech
         /// <returns>if the part is a procfairing payload decoupler</returns>
         public static bool IsProceduralFairing(this Part p)
         {
-            if (!VesselState.isLoadedProceduralFairing) return false;
+            if (!ReflectionUtils.IsLoadedProceduralFairing) return false;
             return p.Modules.Contains("ProceduralFairingDecoupler");
         }
 

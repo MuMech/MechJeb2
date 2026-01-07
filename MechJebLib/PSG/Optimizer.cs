@@ -41,10 +41,10 @@ namespace MechJebLib.PSG
         public Solution?   Solution;
 
         public int    _k                  => 2 * N - 1;
-        public int    N                   { get; set; } = 6;
+        public int    N                   { get; set; } = 8;
         public int    Maxits              { get; set; } = 4000;
-        public double SQPTrustRegionLimit { get; set; } = 1e-3;
-        public double Epsf                { get; set; } = 0;    // 1e-9;
+        public double SQPTrustRegionLimit { get; set; } = 1e-4;
+        public double Epsf                { get; set; } = 0; // 1e-9;
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
         public int    OptimizerTimeout    { get; set; } = 120_000; // milliseconds
