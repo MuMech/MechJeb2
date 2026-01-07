@@ -137,17 +137,17 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult AOALimitFadeoutPressure = new EditableDoubleMult(2500);
 
-        [Persistent(pass = (int)Pass.TYPE)] public bool LimitingAoA = false;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))] public bool LimitingAoA = false;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LimitQa = new EditableDouble(LIMIT_QA_DEFAULT);
 
-        [Persistent(pass = (int)Pass.TYPE)] public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))] public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LaunchPhaseAngle = LAUNCH_PHASE_ANGLE_DEFAULT;
 
-        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))] public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
 
         [Persistent(pass = (int)Pass.GLOBAL)] public readonly EditableInt WarpCountDown = 11;
 
