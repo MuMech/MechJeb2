@@ -54,13 +54,13 @@ namespace MuMech
         public bool LimitDynamicPressure;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public readonly EditableDouble MaxDynamicPressure = 20000;
+        public readonly EditableDoubleMult MaxDynamicPressure = new EditableDoubleMult(20000, 1000);
 
         [GeneralInfoItem("#MechJeb_LimittoMaxQ", InfoItem.Category.Thrust)] //Limit to Max Q
         public void LimitToMaxDynamicPressureInfoItem()
         {
             GUIStyle s = Limiter == LimitMode.DYNAMIC_PRESSURE ? GuiUtils.GreenToggle : null;
-            GuiUtils.ToggledTextBox(ref LimitDynamicPressure, CachedLocalizer.Instance.MechJebAscentCheckbox11, MaxDynamicPressure, "pa", s, 80);
+            GuiUtils.ToggledTextBox(ref LimitDynamicPressure, CachedLocalizer.Instance.MechJebAscentCheckbox11, MaxDynamicPressure, "kPa", s, 80);
         }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
