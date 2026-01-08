@@ -33,8 +33,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMinAltitude = new EditableDoubleMult(50000, 1000);
 
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableDouble ClampAutoStageThrustPct = 0.99;
+        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableDouble ClampAutoStageThrustPct = 0.99;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMaxAerothermalFlux = new EditableDoubleMult(1135);
@@ -43,7 +42,7 @@ namespace MuMech
         public bool HotStaging;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble HotStagingLeadTime = 1.0;
+        public readonly EditableDouble HotStagingLeadTime = 2.0;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool DropSolids;
@@ -402,7 +401,6 @@ namespace MuMech
 
             if (AutostagingOnce)
                 Users.Clear();
-
         }
 
         public void Stage()
@@ -435,8 +433,8 @@ namespace MuMech
         private double LastNonZeroDVStageBurnTime()
         {
             _stats.RequestUpdate();
-            int kspStage = -1;
-            int mjPhase;
+            int    kspStage = -1;
+            int    mjPhase;
             double dt = 0f;
 
             // Find the last MJ phase and corresponding KSP stage with non-zero burn time
@@ -643,7 +641,7 @@ namespace MuMech
             if (_hasStayingChutesCache.TryGetValue(inverseStage, out bool result))
                 return result;
             result = Vessel.Parts.FirstOrDefault(p => p.inverseStage == inverseStage && p.IsParachute() && !p.IsDecoupledInStage(inverseStage)) !=
-                     null;
+                null;
             _hasStayingChutesCache.Add(inverseStage, result);
             return result;
         }

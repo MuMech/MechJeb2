@@ -1,13 +1,13 @@
 ﻿extern alias JetBrainsAnnotations;
 using KSP.Localization;
+using MechJebLibBindings;
 using UnityEngine;
 
 namespace MuMech
 {
     public class MechJebModuleThrustWindow : DisplayModule
     {
-        [Persistent(pass = (int)Pass.LOCAL)]
-        public bool autostageSavedState;
+        [Persistent(pass = (int)Pass.LOCAL)] public bool autostageSavedState;
 
         public MechJebModuleThrustWindow(MechJebCore core) : base(core) { }
 
@@ -61,7 +61,7 @@ namespace MuMech
             Core.Thrust.LimiterMinThrottleInfoItem();
             Core.Thrust.LimitElectricInfoItem();
             Core.Thrust.LimitToPreventFlameoutInfoItem();
-            if (VesselState.isLoadedRealFuels)
+            if (ReflectionUtils.IsLoadedRealFuels)
             {
                 // does nothing in stock, so we suppress displaying it if RF is not loaded
                 Core.Thrust.LimitToPreventUnstableIgnitionInfoItem();

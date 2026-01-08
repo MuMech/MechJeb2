@@ -49,8 +49,8 @@ namespace MuMech
 
             if (_ascentSettings.AscentType != AscentType.PSG)
             {
-                GUIStyle s = _ascentSettings.LimitingAoA ? GuiUtils.GreenToggle : null;
-                string sCurrentMaxAoA = $"º ({_autopilot.CurrentMaxAoA:F1}°)";
+                GUIStyle s              = _ascentSettings.LimitingAoA ? GuiUtils.GreenToggle : null;
+                string   sCurrentMaxAoA = $"º ({_autopilot.CurrentMaxAoA:F1}°)";
                 GuiUtils.ToggledTextBox(ref _ascentSettings.LimitAoA, CachedLocalizer.Instance.MechJebAscentCheckbox3, _ascentSettings.MaxAoA,
                     sCurrentMaxAoA, s,
                     30); //Limit AoA to
@@ -86,8 +86,8 @@ namespace MuMech
             _ascentSettings.Autostage = GUILayout.Toggle(_ascentSettings.Autostage, CachedLocalizer.Instance.MechJebAscentCheckbox5); //Autostage
             if (_ascentSettings.Autostage) Core.Staging.AutostageSettingsInfoItem();
 
-            _ascentSettings.AutodeploySolarPanels =
-                GUILayout.Toggle(_ascentSettings.AutodeploySolarPanels, CachedLocalizer.Instance.MechJebAscentCheckbox6); //Auto-deploy solar panels
+            _ascentSettings.AutoDeploySolarPanels =
+                GUILayout.Toggle(_ascentSettings.AutoDeploySolarPanels, CachedLocalizer.Instance.MechJebAscentCheckbox6); //Auto-deploy solar panels
             _ascentSettings.AutoDeployAntennas =
                 GUILayout.Toggle(_ascentSettings.AutoDeployAntennas, CachedLocalizer.Instance.MechJebAscentCheckbox7); //Auto-deploy antennas
 

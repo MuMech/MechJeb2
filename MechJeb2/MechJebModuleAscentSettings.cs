@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrainsAnnotations::JetBrains.Annotations;
+using MechJebLibBindings;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
@@ -14,8 +15,11 @@ namespace MuMech
         {
         }
 
+        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool ForceResetROSettings = true;
+
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble PitchStartVelocity = new EditableDouble(PITCH_START_VELOCITY_DEFAULT);
+        public readonly EditableDouble PitchStartHeight = new EditableDouble(PITCH_START_HEIGHT_DEFAULT);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble PitchRate = new EditableDouble(PITCH_RATE_DEFAULT);
@@ -33,16 +37,13 @@ namespace MuMech
         public readonly EditableDoubleMult DesiredFPA = new EditableDoubleMult(DESIRED_FPA_DEFAULT, Math.PI / 180);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult DynamicPressureTrigger = new EditableDoubleMult(DYNAMIC_PRESSURE_TRIGGER_DEFAULT, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableInt StagingTrigger = new EditableInt(1);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool AttachAltFlag = ATTACH_ALT_FLAG_DEFAULT;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool StagingTriggerFlag = STAGING_TRIGGER_FLAG_DEFAULT;
+        public readonly EditableDoubleMult DesiredArgP = new EditableDoubleMult(DESIRED_ARGP_DEFAULT, Math.PI / 180);
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool DesiredArgPFlag = DESIRED_ARGP_FLAG_DEFAULT;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
@@ -75,6 +76,9 @@ namespace MuMech
         public readonly EditableDouble DesiredLan = new EditableDouble(0.0);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool RelativeLAN = false;
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool CorrectiveSteering = false;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -90,7 +94,7 @@ namespace MuMech
         public readonly EditableDouble TurnRoll = new EditableDouble(0);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool AutodeploySolarPanels = true;
+        public bool AutoDeploySolarPanels = true;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool AutoDeployAntennas = true;
@@ -123,7 +127,7 @@ namespace MuMech
             }
         }
 
-        /* classic AoA limter */
+        /* classic AoA limiter */
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool LimitAoA = true;
 
@@ -133,17 +137,17 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult AOALimitFadeoutPressure = new EditableDoubleMult(2500);
 
-        [Persistent(pass = (int)Pass.TYPE)] public bool LimitingAoA = false;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))] public bool LimitingAoA = false;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LimitQa = new EditableDouble(LIMIT_QA_DEFAULT);
 
-        [Persistent(pass = (int)Pass.TYPE)] public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))] public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LaunchPhaseAngle = LAUNCH_PHASE_ANGLE_DEFAULT;
 
-        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))] public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
 
         [Persistent(pass = (int)Pass.GLOBAL)] public readonly EditableInt WarpCountDown = 11;
 
@@ -278,25 +282,36 @@ namespace MuMech
 
         public override void OnFixedUpdate() => DisableAscentModules();
 
-        public void ApplyRODefaults()
+        public override void OnStart(PartModule.StartState state)
         {
-            PitchStartVelocity.Val     = PITCH_START_VELOCITY_DEFAULT;
-            PitchRate.Val              = PITCH_RATE_DEFAULT;
-            DesiredAttachAlt.Val       = DESIRED_ATTACH_ALT_DEFAULT;
-            DesiredAttachAltFixed.Val  = DESIRED_ATTACH_ALT_DEFAULT;
-            DesiredFPA.Val             = DESIRED_FPA_DEFAULT;
-            DynamicPressureTrigger.Val = DYNAMIC_PRESSURE_TRIGGER_DEFAULT;
-            AttachAltFlag              = ATTACH_ALT_FLAG_DEFAULT;
-            StagingTriggerFlag         = STAGING_TRIGGER_FLAG_DEFAULT;
-            LimitQa.Val                = LIMIT_QA_DEFAULT;
-            LimitQaEnabled             = LIMIT_QA_ENABLED_DEFAULT;
-            MinDeltaV.Val              = MIN_DELTAV_DEFAULT;
-            MaxCoast.Val               = MAX_COAST_DEFAULT;
-            MinCoast.Val               = MIN_COAST_DEFAULT;
-            LaunchPhaseAngle.Val       = LAUNCH_PHASE_ANGLE_DEFAULT;
-            LaunchLANDifference.Val    = LAUNCH_LAN_DIFFERENCE;
-            PreStageTime.Val           = PRE_STAGE_TIME_DEFAULT;
-            OptimizerPauseTime.Val     = OPTIMIZER_PAUSE_TIME_DEFAULT;
+            base.OnStart(state);
+
+            if (ForceResetROSettings && ReflectionUtils.IsLoadedRealismOverhaul)
+            {
+                ApplyRODefaults();
+                ForceResetROSettings = false;
+            }
+        }
+
+        private void ApplyRODefaults()
+        {
+            PitchStartHeight.Val      = PITCH_START_HEIGHT_DEFAULT;
+            PitchRate.Val             = PITCH_RATE_DEFAULT;
+            DesiredAttachAlt.Val      = DESIRED_ATTACH_ALT_DEFAULT;
+            DesiredAttachAltFixed.Val = DESIRED_ATTACH_ALT_DEFAULT;
+            DesiredFPA.Val            = DESIRED_FPA_DEFAULT;
+            AttachAltFlag             = ATTACH_ALT_FLAG_DEFAULT;
+            DesiredArgP.Val           = DESIRED_ARGP_DEFAULT;
+            DesiredArgPFlag           = DESIRED_ARGP_FLAG_DEFAULT;
+            LimitQa.Val               = LIMIT_QA_DEFAULT;
+            LimitQaEnabled            = LIMIT_QA_ENABLED_DEFAULT;
+            MinDeltaV.Val             = MIN_DELTAV_DEFAULT;
+            MaxCoast.Val              = MAX_COAST_DEFAULT;
+            MinCoast.Val              = MIN_COAST_DEFAULT;
+            LaunchPhaseAngle.Val      = LAUNCH_PHASE_ANGLE_DEFAULT;
+            LaunchLANDifference.Val   = LAUNCH_LAN_DIFFERENCE;
+            PreStageTime.Val          = PRE_STAGE_TIME_DEFAULT;
+            OptimizerPauseTime.Val    = OPTIMIZER_PAUSE_TIME_DEFAULT;
 
             SpinupStageFlag         = false;
             SpinupStageInternal.Val = -1;
@@ -305,20 +320,16 @@ namespace MuMech
             UnguidedStagesFlag      = false;
             FixedStagesFlag         = false;
 
-            if (DesiredOrbitAltitude.Val < 145000)
-                DesiredOrbitAltitude.Val = 145000;
+            DesiredOrbitAltitude.Val = 145000;
+            DesiredAttachAlt.Val     = 145000;
 
-            if (Math.Abs(DesiredInclination.Val) < Math.Abs(VesselState.latitude))
-                DesiredInclination.Val = Math.Round(VesselState.latitude, 3);
-
-            if (Math.Abs(DesiredInclination.Val) > 180 - Math.Abs(VesselState.latitude))
-                DesiredInclination.Val = 180 - Math.Round(VesselState.latitude, 3);
+            DesiredInclination.Val = Math.Round(Vessel.mainBody.GetLatitude(Vessel.CoMD), 3);
 
             Core.Guidance.UllageLeadTime.Val = 20;
 
             Core.Settings.rssMode = true;
 
-            /* set the thrust controller to sane RO/RSS defaults */
+            // set the thrust controller to sane RO/RSS defaults
             Core.Thrust.LimitToPreventUnstableIgnition = false;
             Core.Thrust.AutoRCSUllaging                = true;
             Core.Thrust.MinThrottle.Val                = 0.05;
@@ -329,7 +340,7 @@ namespace MuMech
             Core.Thrust.LimitDynamicPressure           = false;
             Core.Thrust.MaxDynamicPressure.Val         = 20000;
 
-            /* reset all of the staging controller, and turn on hotstaging and drop solids */
+            // reset the staging controller, turn on hot-staging and drop solids
             Autostage                                  = true;
             Core.Staging.AutostagePreDelay.Val         = 0.0;
             Core.Staging.AutostagePostDelay.Val        = 0.5;
@@ -339,26 +350,41 @@ namespace MuMech
             Core.Staging.ClampAutoStageThrustPct.Val   = 0.99;
             Core.Staging.FairingMaxAerothermalFlux.Val = 1135;
             Core.Staging.HotStaging                    = true;
-            Core.Staging.HotStagingLeadTime.Val        = 1.0;
+            Core.Staging.HotStagingLeadTime.Val        = 2.0;
             Core.Staging.DropSolids                    = true;
             Core.Staging.DropSolidsLeadTime.Val        = 1.0;
+
+            // turn on PSG by default
+            AscentType = AscentType.PSG;
+
+            // open the PSG ascent settings windows for new users
+            MechJebModuleAscentMenu ascentMenu = Core.GetComputerModule<MechJebModuleAscentMenu>();
+            ascentMenu._lastPSGSettingsEnabled  = true;
+            ascentMenu._lastSettingsMenuEnabled = true;
+
+            // live slt
+            Core.StageStats.LiveSLT = true;
+
+            // long stats
+            MechJebModuleInfoItems infoItems = Core.GetComputerModule<MechJebModuleInfoItems>();
+            infoItems.StageDisplayState = 1;
         }
 
-        private const double LAUNCH_LAN_DIFFERENCE            = 0;
-        private const double LAUNCH_PHASE_ANGLE_DEFAULT       = 0;
-        private const double MIN_COAST_DEFAULT                = 0;
-        private const double MAX_COAST_DEFAULT                = 450;
-        private const double MIN_DELTAV_DEFAULT               = 40;
-        private const double DESIRED_ATTACH_ALT_DEFAULT       = 110000;
-        private const double PITCH_START_VELOCITY_DEFAULT     = 50;
-        private const double PITCH_RATE_DEFAULT               = 0.50;
-        private const double DYNAMIC_PRESSURE_TRIGGER_DEFAULT = 10000;
-        private const bool   ATTACH_ALT_FLAG_DEFAULT          = false;
-        private const double DESIRED_FPA_DEFAULT              = 0;
-        private const bool   STAGING_TRIGGER_FLAG_DEFAULT     = false;
-        private const double LIMIT_QA_DEFAULT                 = 2000;
-        private const bool   LIMIT_QA_ENABLED_DEFAULT         = true;
-        private const double PRE_STAGE_TIME_DEFAULT           = 10;
-        private const double OPTIMIZER_PAUSE_TIME_DEFAULT     = 5;
+        private const double LAUNCH_LAN_DIFFERENCE        = 0;
+        private const double LAUNCH_PHASE_ANGLE_DEFAULT   = 0;
+        private const double MIN_COAST_DEFAULT            = 0;
+        private const double MAX_COAST_DEFAULT            = 450;
+        private const double MIN_DELTAV_DEFAULT           = 40;
+        private const double DESIRED_ATTACH_ALT_DEFAULT   = 110000;
+        private const double PITCH_START_HEIGHT_DEFAULT   = 100;
+        private const double PITCH_RATE_DEFAULT           = 5.0;
+        private const bool   ATTACH_ALT_FLAG_DEFAULT      = false;
+        private const double DESIRED_ARGP_DEFAULT         = 0;
+        private const bool   DESIRED_ARGP_FLAG_DEFAULT    = false;
+        private const double DESIRED_FPA_DEFAULT          = 0;
+        private const double LIMIT_QA_DEFAULT             = 2000;
+        private const bool   LIMIT_QA_ENABLED_DEFAULT     = true;
+        private const double PRE_STAGE_TIME_DEFAULT       = 10;
+        private const double OPTIMIZER_PAUSE_TIME_DEFAULT = 5;
     }
 }

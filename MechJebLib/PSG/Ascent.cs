@@ -98,10 +98,7 @@ namespace MechJebLib.PSG
             Solution? solution2 = psg2.Run();
 
             if (!psg2.Success() || solution2 == null)
-            {
-                DebugPrint("*** QALPHA CONSTRAINTS FAILED ***");
-                return psg;
-            }
+                throw new Exception("QAlpha failed (ignore)");
 
             return psg2;
         }

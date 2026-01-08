@@ -21,6 +21,7 @@ namespace MuMech
         // useful to track time since launch event (works around bugs with physics starting early and vessel.launchTime being wildly off)
         // FIXME?: any time we lift off from a rock this should probably be set to that time?
         private double _launchStarted;
+        public  double LaunchLongitude;
 
         public double TMinus => _launchTime - VesselState.time;
 
@@ -50,7 +51,10 @@ namespace MuMech
             // continuously update the launchStarted time if we're sitting on the ground on the water anywhere (once we are not, then we've launched)
             if (Vessel.situation == Vessel.Situations.LANDED || Vessel.situation == Vessel.Situations.PRELAUNCH ||
                 Vessel.situation == Vessel.Situations.SPLASHED)
-                _launchStarted = VesselState.time;
+            {
+                _launchStarted  = VesselState.time;
+                LaunchLongitude = VesselState.celestialLongitude;
+            }
         }
 
         // various events can cause launchStarted to be before or after vessel.launchTime, but the most recent one is so far always the most accurate
@@ -146,7 +150,7 @@ namespace MuMech
 
         private void DriveDeployableComponents()
         {
-            if (AscentSettings.AutodeploySolarPanels)
+            if (AscentSettings.AutoDeploySolarPanels)
             {
                 if (VesselState.altitudeASL > MainBody.RealMaxAtmosphereAltitude())
                 {
@@ -187,7 +191,7 @@ namespace MuMech
                 return;
             }
 
-            if (AscentSettings.AutodeploySolarPanels && MainBody.atmosphere)
+            if (AscentSettings.AutoDeploySolarPanels && MainBody.atmosphere)
             {
                 Core.Solarpanel.RetractAll();
                 if (Core.Solarpanel.AllRetracted())
@@ -245,7 +249,7 @@ namespace MuMech
             {
                 if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 {
-                    MechJebModuleFlightRecorder recorder = Core.GetComputerModule<MechJebModuleFlightRecorder>();
+                    MechJebModuleFlightRecorder recorder                         = Core.GetComputerModule<MechJebModuleFlightRecorder>();
                     if (recorder != null) AscentSettings.LaunchPhaseAngle.Val    = recorder.PhaseAngleFromMark();
                     if (recorder != null) AscentSettings.LaunchLANDifference.Val = VesselState.orbitLAN - recorder.MarkLAN;
 
@@ -329,10 +333,10 @@ namespace MuMech
         protected void AttitudeTo(double desiredPitch, double desiredHeading)
         {
             Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * VesselState.east +
-                                            Math.Cos(desiredHeading * UtilMath.Deg2Rad) * VesselState.north;
+                Math.Cos(desiredHeading * UtilMath.Deg2Rad) * VesselState.north;
 
             Vector3d desiredThrustVector = Math.Cos(desiredPitch * UtilMath.Deg2Rad) * desiredHeadingVector
-                                           + Math.Sin(desiredPitch * UtilMath.Deg2Rad) * VesselState.up;
+                + Math.Sin(desiredPitch * UtilMath.Deg2Rad) * VesselState.up;
 
             AttitudeTo(desiredThrustVector);
         }
@@ -350,14 +354,14 @@ namespace MuMech
             // calculate pitch and heading after applying AoA limiter
             double pitch = 90 - Vector3d.Angle(desiredThrustVector, VesselState.up);
             double hdg = MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(desiredThrustVector, VesselState.east),
-                    Vector3d.Dot(desiredThrustVector, VesselState.north)));
+                Vector3d.Dot(desiredThrustVector, VesselState.north)));
 
             if (AscentSettings.ForceRoll)
                 Core.Attitude.attitudeTo(hdg, pitch, AscentSettings.TurnRoll, this, fixCOT: true);
             else
                 Core.Attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
 
-            Core.Attitude.SetActuationControl(true, true, true);
+            Core.Attitude.SetActuationControl();
             Core.Attitude.SetAxisControl(true, true, AscentSettings.ForceRoll);
         }
 
@@ -377,7 +381,7 @@ namespace MuMech
             AscentSettings.LimitingAoA = VesselState.dynamicPressure * Vector3.Angle(VesselState.surfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
             if (AscentSettings.LimitingAoA)
             {
-                CurrentMaxAoA = lim / VesselState.dynamicPressure * UtilMath.Rad2Deg;
+                CurrentMaxAoA       = lim / VesselState.dynamicPressure * UtilMath.Rad2Deg;
                 desiredThrustVector = MathExtensions.RotateTowards(VesselState.surfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
             }
 
@@ -386,8 +390,8 @@ namespace MuMech
 
         private Vector3d ApplyStockAOALimiter(Vector3d desiredThrustVector)
         {
-            double fade = VesselState.dynamicPressure < AscentSettings.AOALimitFadeoutPressure ? (AscentSettings.AOALimitFadeoutPressure / VesselState.dynamicPressure) : 1;
-            CurrentMaxAoA = Math.Min(fade * AscentSettings.MaxAoA, 180d);
+            double fade = VesselState.dynamicPressure < AscentSettings.AOALimitFadeoutPressure ? AscentSettings.AOALimitFadeoutPressure / VesselState.dynamicPressure : 1;
+            CurrentMaxAoA              = Math.Min(fade * AscentSettings.MaxAoA, 180d);
             AscentSettings.LimitingAoA = Vessel.altitude < MainBody.atmosphereDepth && Vector3d.Angle(VesselState.surfaceVelocity, desiredThrustVector) > CurrentMaxAoA;
 
             if (AscentSettings.LimitingAoA)
