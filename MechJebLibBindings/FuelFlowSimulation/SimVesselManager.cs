@@ -39,9 +39,12 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
         public void Build(IShipconstruct vessel)
         {
+            _vessel.Dispose();
+            _vessel = SimVessel.Borrow();
+            _kspVessel = vessel;
+
             Clear();
-            _builder.BuildVessel(vessel);
-            _builder.BuildParts();
+            _builder.BuildVessel();
             Update();
             _builder.UpdateLinks();
             _builder.UpdateCrossFeedSet();
