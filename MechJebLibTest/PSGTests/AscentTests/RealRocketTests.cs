@@ -38,13 +38,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double       rho0        = 1.225;
             double       h0          = 7200;
             const double Q_ALPHA_MAX = 0;
+            const double Q_MAX       = 0;
             V3           w           = 7.29211585e-5 * V3.northpole;
 
             double PeR = Astro.PeriapsisFromKeplerian(smaT, eccT);
             double ApR = Astro.ApoapsisFromKeplerian(smaT, eccT);
 
             Ascent ascent = Ascent.Builder()
-                .AerodynamicConstants(cd, aref, rho0, Q_ALPHA_MAX, h0, w)
+                .AerodynamicConstants(cd, aref, rho0, Q_ALPHA_MAX, Q_MAX, h0, w)
                 .AddStageUsingFinalMassAndThrust(301454.000000, 171863.885057, 4854100.000000, 75.200000, 4, 4)
                 .AddStageUsingFinalMassAndThrust(158183.885057, 79623.770115, 2968600.000000, 75.200000, 3, 3)
                 .AddStageUsingFinalMassAndThrust(72783.770115, 32294.000000, 1083100.000000, 110.600000, 2, 2)
@@ -109,6 +110,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             const double RHO0        = 1.225;
             const double H0          = 7200;
             const double Q_ALPHA_MAX = 2000;
+            const double Q_MAX       = 35000;
             V3           w           = 7.29211585e-5 * V3.northpole;
 
             const double FIRST_STAGE_DRY  = 22200;
@@ -132,7 +134,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             const double SECOND_BT   = (SECOND_STAGE_M0 - SECOND_STAGE_MF) / SECOND_MDOT;
 
             Ascent ascent = Ascent.Builder()
-                .AerodynamicConstants(CD, aref, RHO0, Q_ALPHA_MAX, H0, w)
+                .AerodynamicConstants(CD, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
                 .AddStageUsingFinalMassThrustAndIsp(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 2, 2, allowShutdown: false)
                 .AddStageUsingFinalMassThrustAndIsp(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1)
                 .AddCoast(SECOND_STAGE_M0, 0, 1300, 1, 1, massContinuity: true)
@@ -152,20 +154,20 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             solution.Tgo(solution.T0, 0).ShouldEqual(FIRST_BT, 1e-3);
             solution.Tgo(solution.T0, 1).ShouldBeLessThanOrEqual(SECOND_BT);
-            solution.Tgo(solution.T0, 2).ShouldEqual( 1051.8520933100863, 1e-3);
-            (solution.Tgo(solution.T0, 1) + solution.Tgo(solution.T0, 3)).ShouldEqual(379.94676112187636, 1e-3);
+            solution.Tgo(solution.T0, 2).ShouldEqual( 1055.0665736765161, 1e-3);
+            (solution.Tgo(solution.T0, 1) + solution.Tgo(solution.T0, 3)).ShouldEqual(381.26954084989723, 1e-3);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            solution.Tgo(0).ShouldEqual(1596.0109342206683, 1e-3);
-            solution.Vgo(0).ShouldEqual(11042.741365246275, 1e-3);
+            solution.Tgo(0).ShouldEqual(1600.5481943151187, 1e-3);
+            solution.Vgo(0).ShouldEqual(11121.76870357063, 1e-3);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, solution.U(0));
-            Rad2Deg(pitch).ShouldEqual(68.502331735952239);
-            Rad2Deg(heading).ShouldEqual(90.018781066955555);
+            Rad2Deg(pitch).ShouldEqual(83.43983312789355);
+            Rad2Deg(heading).ShouldEqual(89.521327857018321);
 
             (V3 rf1, V3 vf1) = solution.StateVectors(solution.EndTime(1));
 
-            (rf1.magnitude - R_BODY).ShouldEqual(101796.65939029027, 1e-5);
+            (rf1.magnitude - R_BODY).ShouldEqual(101458.0442971671 ,1e-5);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -180,7 +182,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             incf.ShouldEqual(INC_T, 1e-5);
             lanf.ShouldEqual(LAN_T, 1e-2);
             argpf.ShouldEqual(ARGP_T, 1e-2);
-            nuf.ShouldEqual(Deg2Rad(5.1296046527343959), 1e-2);
+            nuf.ShouldEqual(Deg2Rad(5.0628047097903268), 1e-2);
         }
     }
 }

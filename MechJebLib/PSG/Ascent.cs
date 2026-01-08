@@ -98,7 +98,7 @@ namespace MechJebLib.PSG
             Solution? solution2 = psg2.Run();
 
             if (!psg2.Success() || solution2 == null)
-                throw new Exception("QAlpha failed (ignore)");
+                throw new Exception("MaxQ/QAlpha failed");
 
             return psg2;
         }
@@ -121,7 +121,7 @@ namespace MechJebLib.PSG
                 }
             }
 
-            Problem problemNoQa = _problem.WithoutQAlpha();
+            Problem problemNoQa = _problem.WithoutDynamicPressure();
 
             DebugPrint("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
             var       psg      = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.Cost.MIN_THRUST_ACCEL);

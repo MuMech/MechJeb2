@@ -174,6 +174,8 @@ namespace MechJebLib.PSG
                 NumConstraints += 1; // mass continuity with previous stage
             if (problem.H0 > 0 && problem.Rho0InvQAlphaMax > 0)
                 NumConstraints += k;
+            if (problem.H0 > 0 && problem.Rho0InvQMax > 0)
+                NumConstraints += k;
         }
 
         public     DoubleArrayProxy Rx             { get; }
