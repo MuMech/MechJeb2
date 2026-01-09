@@ -412,9 +412,14 @@ namespace MechJebLib.PSG
             for (int i = 0; i < nl.Length; i++)
                 nu[i] = nl[i] = 0;
 
-            // Qalpha inequality constraints
+            // Dynamic Pressure inequality constraints
+            int inequalityPoints = 0;
             if (_problem.Rho0InvQAlphaMax > 0 && _problem.H0 > 0)
-                for (int i = nl.Length - _k * _phases.Count; i < nl.Length; i++)
+                inequalityPoints += _k;
+            if (_problem.Rho0InvQMax > 0 && _problem.H0 > 0)
+                inequalityPoints += _k;
+
+            for (int i = nl.Length - inequalityPoints * _phases.Count; i < nl.Length; i++)
                     nu[i] = 1.0;
 
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);

@@ -62,8 +62,7 @@ namespace MechJebLib.PSG
                 for (int i = start; i < ci; i++)
                     ConstraintNames[i] = $"Terminal Constraint number {i - start + 1}";
 
-            if (_optimizer._problem.H0 > 0 && _optimizer._problem.Rho0InvQAlphaMax > 0)
-                ci = QAlphaConstraints(f, j, ci);
+            ci = DynamicPressureConstraints(f, j, ci);
 
             if (ci != _vars.TotalConstraints + 1)
                 throw new Exception("Constraint num mismatch");
@@ -238,22 +237,45 @@ namespace MechJebLib.PSG
             return ci;
         }
 
-        private int QAlphaConstraints(double[] f, alglib.sparsematrix j, int ci)
+        private int DynamicPressureConstraints(double[] f, alglib.sparsematrix j, int ci)
         {
             double rho0InvQAlphaMax = _optimizer._problem.Rho0InvQAlphaMax;
+            double rho0InvQMax      = _optimizer._problem.Rho0InvQMax;
             double rBody            = _optimizer._problem.RBody;
             double h0               = _optimizer._problem.H0;
             V3     w                = _optimizer._problem.W;
 
-            for (int p = 0; p < _optimizer._phases.Count; p++)
+            if (h0 <= 0)
+                return ci;
+
+
+            if (rho0InvQAlphaMax > 0)
             {
-                PhaseProxy thisPhase = _vars[p];
-
-                for (int k = 0; k < _optimizer._k; k++)
+                for (int p = 0; p < _optimizer._phases.Count; p++)
                 {
-                    if (_firstPass) ConstraintNames[ci] = $"QAlpha constraint for phase {p} knot {k}";
+                    PhaseProxy thisPhase = _vars[p];
 
-                    ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U[k] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(k) });
+                    for (int k = 0; k < _optimizer._k; k++)
+                    {
+                        if (_firstPass) ConstraintNames[ci] = $"QAlpha constraint for phase {p} knot {k}";
+
+                        ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U[k] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(k) });
+                    }
+                }
+            }
+
+            if (rho0InvQMax > 0)
+            {
+                for (int p = 0; p < _optimizer._phases.Count; p++)
+                {
+                    PhaseProxy thisPhase = _vars[p];
+
+                    for (int k = 0; k < _optimizer._k; k++)
+                    {
+                        if (_firstPass) ConstraintNames[ci] = $"MaxQ constraint for phase {p} knot {k}";
+
+                        ci = ApplyScalarConstraintV3(f, j, ci, QConstraint, new[] { thisPhase.R[k], thisPhase.V[k] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k) });
+                    }
                 }
             }
 
@@ -271,6 +293,18 @@ namespace MechJebLib.PSG
                 Dual   alpha = DualV3.AngleUnit(vr.normalized, u);
 
                 return q * alpha;
+            }
+
+            Dual QConstraint(DualV3[] x)
+            {
+                DualV3 r = x[0];
+                DualV3 v = x[1];
+
+                Dual   rm = r.magnitude;
+                DualV3 vr = v - DualV3.Cross(w, r);
+                Dual   q  = 0.5 * rho0InvQMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
+
+                return q;
             }
         }
 
