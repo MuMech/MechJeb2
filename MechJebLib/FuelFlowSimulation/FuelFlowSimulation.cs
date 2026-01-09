@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using MechJebLib.Utils;
@@ -112,6 +113,13 @@ namespace MechJebLib.FuelFlowSimulation
             {
                 if (AllowedToStage(vessel))
                     return;
+
+                int earliestDroppedEgineInStage = vessel.ActiveEngines.Max(x => x.Part.DecoupledInStage);
+                int earliestDroppedTankInStage = _sources.Max(x => x.DecoupledInStage);
+                if (earliestDroppedEgineInStage > earliestDroppedTankInStage)
+                {
+                    vessel.HalfStageIndex = earliestDroppedEgineInStage + 1;
+                }
 
                 double dt = MinimumTimeStep();
                 if (_currentSegment.KSPStage == vessel.HalfStageIndex)

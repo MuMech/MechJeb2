@@ -29,6 +29,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
         public V3     V => _vessel.V;
         public V3     U => _vessel.U;
 
+        public int HalfStageIndex => _vessel.HalfStageIndex;
+
         public SimVesselManager()
         {
             _builder   = new SimVesselBuilder(this);
@@ -60,7 +62,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
         public void SetInitial(double t, V3 r, V3 v, V3 u) => _vessel.SetInitial(t, r, v, u);
 
-        public void SetupStageAndAHalf(int halfStageIndex, double endMass) => _vessel.SetupStageAndAHalf(halfStageIndex, endMass);
+        public void SetupStageAndAHalf(double endMass) => _vessel.SetupStageAndAHalf(endMass);
 
         public void StartFuelFlowSimulationJob()
         {

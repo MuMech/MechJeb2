@@ -294,13 +294,16 @@ namespace MuMech
 
             Profiler.EndSample();
 
-            Profiler.BeginSample("AllStageStats.DrawColumns");
+            if (stats.HalfStageIndex != -1)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Half-stage index: {stats.HalfStageIndex}", GUILayout.Width(130));
+                GUILayout.Space(30);
+                GuiUtils.SimpleTextBox("End mass: ", stats.HalfStageEndMass, "kg");
+                GUILayout.EndHorizontal();
+            }
 
-            GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox("Half-stage index: ", stats.HalfStageIndex, width: 30);
-            GUILayout.Space(30);
-            GuiUtils.SimpleTextBox("End mass: ", stats.HalfStageEndMass, "kg");
-            GUILayout.EndHorizontal();
+            Profiler.BeginSample("AllStageStats.DrawColumns");
 
             GUILayout.BeginHorizontal();
             //DrawStageStatsColumn(CachedLocalizer.Instance.MechJeb_InfoItems_StatsColumn0, stages.Select(s => s.ToString()).ToList());

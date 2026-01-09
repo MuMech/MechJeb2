@@ -19,8 +19,7 @@ namespace MuMech
         public double        AltSLT  = 0;
         public double        Mach    = 0;
 
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableInt HalfStageIndex = new EditableInt(-1);
+        public int HalfStageIndex => _vesselManagerVac.HalfStageIndex;
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult HalfStageEndMass = new EditableDoubleMult(0, 0.001);
 
@@ -129,7 +128,7 @@ namespace MuMech
                 _vesselManagerVac.SetConditions(0, 0, 0);
                 _vesselManagerVac.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
                     VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
-                _vesselManagerVac.SetupStageAndAHalf(HalfStageIndex, HalfStageEndMass);
+                _vesselManagerVac.SetupStageAndAHalf(HalfStageEndMass);
                 _vesselManagerVac.StartFuelFlowSimulationJob();
             }
 
@@ -139,7 +138,7 @@ namespace MuMech
                 _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
                 _vesselManagerAtmo.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
                     VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
-                _vesselManagerAtmo.SetupStageAndAHalf(HalfStageIndex, HalfStageEndMass);
+                _vesselManagerAtmo.SetupStageAndAHalf(HalfStageEndMass);
                 _vesselManagerAtmo.StartFuelFlowSimulationJob();
             }
         }
