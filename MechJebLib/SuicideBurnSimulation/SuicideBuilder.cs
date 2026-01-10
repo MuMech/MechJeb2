@@ -19,9 +19,9 @@ namespace MechJebLib.SuicideBurnSimulation
 
             public SuicideBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu, double rbody) => this;
 
-            public SuicideBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage, int mjPhase)
+            public SuicideBuilder AddStage(double m0, double mf, double thrust, double isp, int kspStage, int mjPhase)
             {
-                _phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage, mjPhase));
+                _phases.Add(Phase.NewStage(m0, mf, thrust, isp, kspStage, mjPhase));
 
                 return this;
             }

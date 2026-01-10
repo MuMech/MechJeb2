@@ -382,8 +382,20 @@ namespace MechJebLib.PSG
             }
 
             // FIXME: set box path boundaries on control
+            for (int p = 0; p < _phases.Count; p++)
+            {
+                PhaseProxy thisPhase = _vars[p];
 
-            // equality constraints on initial stage masses
+                for (int k = 0; k < thisPhase.U.Length; k++)
+                {
+                    (int idxX, int idxY, int idxZ) = thisPhase.U.Idx(k);
+
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = -2.0;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = 2.0;
+                }
+            }
+
+            // box constraints on stage masses
             for (int p = 0; p < _phases.Count; p++)
             {
                 PhaseProxy thisPhase = _vars[p];

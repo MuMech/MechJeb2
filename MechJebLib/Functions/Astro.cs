@@ -745,5 +745,17 @@ namespace MechJebLib.Functions
 
         public static (double dt, V3 rland) SuicideBurnCalc(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess = double.NaN) =>
             RealSuicideBurnCalc.Run(mu, r0, v0, beta, radius, dtGuess);
+
+        public static double IspFromMassesThrustBurntime(double m0, double mf, double thrust, double bt)
+        {
+            double mdot = (m0 - mf) / bt;
+            return thrust / (mdot * G0);
+        }
+
+        public static double ThrustFromMassesIspBurntime(double m0, double mf, double isp, double bt)
+        {
+            double mdot = (m0 - mf) / bt;
+            return mdot * isp * G0;
+        }
     }
 }
