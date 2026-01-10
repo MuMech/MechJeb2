@@ -247,7 +247,7 @@ namespace MuMech
                         {
                             if (fuelStats.DeltaV > _ascentSettings.MinDeltaV)
                             {
-                                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust, fuelStats.Isp,
+                                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
                                     kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), ispCurrent: ispCurrent);
                                 massContinuity = true;
                             }
@@ -273,7 +273,7 @@ namespace MuMech
                 if (fuelStats.DeltaV < _ascentSettings.MinDeltaV)
                     continue;
 
-                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust, fuelStats.Isp,
+                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
                     kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), massContinuity, ispCurrent);
             }
 
