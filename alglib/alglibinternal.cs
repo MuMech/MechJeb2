@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.06.0 (source code generated 2025-10-08)
+ALGLIB 4.07.0 (source code generated 2025-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -2932,6 +2932,29 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function returns min(r0,r1,r2)
+        *************************************************************************/
+        public static double rmin3(double r0,
+            double r1,
+            double r2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            result = r0;
+            if( r1<result )
+            {
+                result = r1;
+            }
+            if( r2<result )
+            {
+                result = r2;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
         This function returns max(|r0|,|r1|,|r2|)
         *************************************************************************/
         public static double rmaxabs2(double r0,
@@ -4961,6 +4984,39 @@ public partial class alglib
         #endif
 
 
+        /*************************************************************************
+        Computes scaled dot product (S*X,S*Y) for elements [0,N) of X[] and Y[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+            Y       -   array[N], vector to process
+            S       -   array[N], vector to process
+
+        RESULT:
+            (X,Y)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rdotscl1v(int n,
+            double[] x,
+            double[] y,
+            double[] s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+
+            result = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                result = result+x[i]*s[i]*(y[i]*s[i]);
+            }
+            return result;
+        }
+
+
         #if ALGLIB_NO_FAST_KERNELS
         /*************************************************************************
         Computes dot product (X,A[i]) for elements [0,N) of vector X[] and row A[i,*]
@@ -5063,6 +5119,39 @@ public partial class alglib
             return result;
         }
         #endif
+
+
+        /*************************************************************************
+        Computes scaled dot product (S*X,S*X) for elements [0,N) of X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+            S       -   array[N], vector to process
+
+        RESULT:
+            (X,X)
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rdotscl1v2(int n,
+            double[] x,
+            double[] s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            double v = 0;
+
+            result = 0;
+            for(i=0; i<=n-1; i++)
+            {
+                v = x[i]*s[i];
+                result = result+v*v;
+            }
+            return result;
+        }
 
 
         /*************************************************************************
@@ -5947,6 +6036,46 @@ public partial class alglib
             }
         }
         #endif
+
+
+        /*************************************************************************
+        Returns minimum X
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], vector to process
+
+        OUTPUT PARAMETERS:
+            max(X[i])
+            zero for N=0
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static double rminv(int n,
+            double[] x,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            int i = 0;
+            double v = 0;
+
+            if( n<=0 )
+            {
+                result = 0;
+                return result;
+            }
+            result = x[0];
+            for(i=1; i<=n-1; i++)
+            {
+                v = x[i];
+                if( v<result )
+                {
+                    result = v;
+                }
+            }
+            return result;
+        }
 
 
         #if ALGLIB_NO_FAST_KERNELS
@@ -10650,16 +10779,16 @@ public partial class alglib
 
 
     }
-    public class ablasmkl
+    public class ablaspbl
     {
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              12.10.2017
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixgermkl(int m,
+        public static bool rmatrixgerpbl(int m,
             int n,
             double[,] a,
             int ia,
@@ -10679,13 +10808,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              12.10.2017
              Bochkanov Sergey
         *************************************************************************/
-        public static bool cmatrixrank1mkl(int m,
+        public static bool cmatrixrank1pbl(int m,
             int n,
             complex[,] a,
             int ia,
@@ -10704,13 +10833,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              12.10.2017
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixrank1mkl(int m,
+        public static bool rmatrixrank1pbl(int m,
             int n,
             double[,] a,
             int ia,
@@ -10729,13 +10858,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              12.10.2017
              Bochkanov Sergey
         *************************************************************************/
-        public static bool cmatrixmvmkl(int m,
+        public static bool cmatrixmvpbl(int m,
             int n,
             complex[,] a,
             int ia,
@@ -10755,13 +10884,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              12.10.2017
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixmvmkl(int m,
+        public static bool rmatrixmvpbl(int m,
             int n,
             double[,] a,
             int ia,
@@ -10781,13 +10910,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              12.10.2017
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixgemvmkl(int m,
+        public static bool rmatrixgemvpbl(int m,
             int n,
             double alpha,
             double[,] a,
@@ -10809,13 +10938,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL kernel
 
           -- ALGLIB routine --
              12.10.2017
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixtrsvmkl(int n,
+        public static bool rmatrixtrsvpbl(int n,
             double[,] a,
             int ia,
             int ja,
@@ -10834,13 +10963,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              01.10.2013
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixsyrkmkl(int n,
+        public static bool rmatrixsyrkpbl(int n,
             int k,
             double alpha,
             double[,] a,
@@ -10862,13 +10991,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              01.10.2013
              Bochkanov Sergey
         *************************************************************************/
-        public static bool cmatrixherkmkl(int n,
+        public static bool cmatrixherkpbl(int n,
             int k,
             double alpha,
             complex[,] a,
@@ -10890,13 +11019,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              01.10.2013
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixgemmmkl(int m,
+        public static bool rmatrixgemmpbl(int m,
             int n,
             int k,
             double alpha,
@@ -10922,13 +11051,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              01.10.2017
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixsymvmkl(int n,
+        public static bool rmatrixsymvpbl(int n,
             double alpha,
             double[,] a,
             int ia,
@@ -10949,13 +11078,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              16.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool cmatrixgemmmkl(int m,
+        public static bool cmatrixgemmpbl(int m,
             int n,
             int k,
             complex alpha,
@@ -10981,13 +11110,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              16.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool cmatrixlefttrsmmkl(int m,
+        public static bool cmatrixlefttrsmpbl(int m,
             int n,
             complex[,] a,
             int i1,
@@ -11008,13 +11137,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              16.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool cmatrixrighttrsmmkl(int m,
+        public static bool cmatrixrighttrsmpbl(int m,
             int n,
             complex[,] a,
             int i1,
@@ -11035,13 +11164,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              16.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixlefttrsmmkl(int m,
+        public static bool rmatrixlefttrsmpbl(int m,
             int n,
             double[,] a,
             int i1,
@@ -11062,13 +11191,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel
+        PBL-based kernel
 
           -- ALGLIB routine --
              16.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixrighttrsmmkl(int m,
+        public static bool rmatrixrighttrsmpbl(int m,
             int n,
             double[,] a,
             int i1,
@@ -11089,7 +11218,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         NOTE:
 
@@ -11101,7 +11230,7 @@ public partial class alglib
              16.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool spdmatrixcholeskymkl(double[,] a,
+        public static bool spdmatrixcholeskypbl(double[,] a,
             int offs,
             int n,
             bool isupper,
@@ -11116,13 +11245,13 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
           -- ALGLIB routine --
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixplumkl(double[,] a,
+        public static bool rmatrixplupbl(double[,] a,
             int offs,
             int m,
             int n,
@@ -11137,7 +11266,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         NOTE: this function needs preallocated output/temporary arrays.
               D and E must be at least max(M,N)-wide.
@@ -11146,7 +11275,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixbdmkl(double[,] a,
+        public static bool rmatrixbdpbl(double[,] a,
             int m,
             int n,
             double[] d,
@@ -11163,7 +11292,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         If ByQ is True,  TauP is not used (can be empty array).
         If ByQ is False, TauQ is not used (can be empty array).
@@ -11172,7 +11301,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixbdmultiplybymkl(double[,] qp,
+        public static bool rmatrixbdmultiplybypbl(double[,] qp,
             int m,
             int n,
             double[] tauq,
@@ -11193,7 +11322,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         NOTE: Tau must be preallocated array with at least N-1 elements.
 
@@ -11201,7 +11330,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixhessenbergmkl(double[,] a,
+        public static bool rmatrixhessenbergpbl(double[,] a,
             int n,
             double[] tau,
             alglib.xparams _params)
@@ -11214,7 +11343,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         NOTE: Q must be preallocated N*N array
 
@@ -11222,7 +11351,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixhessenbergunpackqmkl(double[,] a,
+        public static bool rmatrixhessenbergunpackqpbl(double[,] a,
             int n,
             double[] tau,
             double[,] q,
@@ -11236,7 +11365,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         NOTE: Tau, D, E must be preallocated arrays;
               length(E)=length(Tau)=N-1 (or larger)
@@ -11246,7 +11375,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool smatrixtdmkl(double[,] a,
+        public static bool smatrixtdpbl(double[,] a,
             int n,
             bool isupper,
             double[] tau,
@@ -11262,7 +11391,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         NOTE: Q must be preallocated N*N array
 
@@ -11270,7 +11399,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool smatrixtdunpackqmkl(double[,] a,
+        public static bool smatrixtdunpackqpbl(double[,] a,
             int n,
             bool isupper,
             double[] tau,
@@ -11285,7 +11414,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         NOTE: Tau, D, E must be preallocated arrays;
               length(E)=length(Tau)=N-1 (or larger)
@@ -11295,7 +11424,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool hmatrixtdmkl(complex[,] a,
+        public static bool hmatrixtdpbl(complex[,] a,
             int n,
             bool isupper,
             complex[] tau,
@@ -11311,7 +11440,7 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
         NOTE: Q must be preallocated N*N array
 
@@ -11319,7 +11448,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool hmatrixtdunpackqmkl(complex[,] a,
+        public static bool hmatrixtdunpackqpbl(complex[,] a,
             int n,
             bool isupper,
             complex[] tau,
@@ -11334,21 +11463,21 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
-        Returns True if MKL was present and handled request (MKL  completion  code
+        Returns True if PBL was present and handled request (PBL  completion  code
         is returned as separate output parameter).
 
         D and E are pre-allocated arrays with length N (both of them!). On output,
         D constraints singular values, and E is destroyed.
 
-        SVDResult is modified if and only if MKL is present.
+        SVDResult is modified if and only if PBL is present.
 
           -- ALGLIB routine --
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixbdsvdmkl(double[] d,
+        public static bool rmatrixbdsvdpbl(double[] d,
             double[] e,
             int n,
             bool isupper,
@@ -11369,9 +11498,9 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based DHSEQR kernel.
+        PBL-based DHSEQR kernel.
 
-        Returns True if MKL was present and handled request.
+        Returns True if PBL was present and handled request.
 
         WR and WI are pre-allocated arrays with length N.
         Z is pre-allocated array[N,N].
@@ -11380,7 +11509,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixinternalschurdecompositionmkl(double[,] h,
+        public static bool rmatrixinternalschurdecompositionpbl(double[,] h,
             int n,
             int tneeded,
             int zneeded,
@@ -11398,9 +11527,9 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based DTREVC kernel.
+        PBL-based DTREVC kernel.
 
-        Returns True if MKL was present and handled request.
+        Returns True if PBL was present and handled request.
 
         NOTE: this function does NOT support HOWMNY=3!!!!
 
@@ -11411,7 +11540,7 @@ public partial class alglib
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool rmatrixinternaltrevcmkl(double[,] t,
+        public static bool rmatrixinternaltrevcpbl(double[,] t,
             int n,
             int side,
             int howmny,
@@ -11429,9 +11558,9 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
-        Returns True if MKL was present and handled request (MKL  completion  code
+        Returns True if PBL was present and handled request (PBL  completion  code
         is returned as separate output parameter).
 
         D and E are pre-allocated arrays with length N (both of them!). On output,
@@ -11439,13 +11568,13 @@ public partial class alglib
 
         Z is preallocated array[N,N] for ZNeeded<>0; ignored for ZNeeded=0.
 
-        EVDResult is modified if and only if MKL is present.
+        EVDResult is modified if and only if PBL is present.
 
           -- ALGLIB routine --
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool smatrixtdevdmkl(double[] d,
+        public static bool smatrixtdevdpbl(double[] d,
             double[] e,
             int n,
             int zneeded,
@@ -11461,9 +11590,9 @@ public partial class alglib
 
 
         /*************************************************************************
-        MKL-based kernel.
+        PBL-based kernel.
 
-        Returns True if MKL was present and handled request (MKL  completion  code
+        Returns True if PBL was present and handled request (PBL  completion  code
         is returned as separate output parameter).
 
         D and E are pre-allocated arrays with length N (both of them!). On output,
@@ -11471,13 +11600,13 @@ public partial class alglib
 
         Z is preallocated array[N,N] for ZNeeded<>0; ignored for ZNeeded=0.
 
-        EVDResult is modified if and only if MKL is present.
+        EVDResult is modified if and only if PBL is present.
 
           -- ALGLIB routine --
              20.10.2014
              Bochkanov Sergey
         *************************************************************************/
-        public static bool sparsegemvcrsmkl(int opa,
+        public static bool sparsegemvcrspbl(int opa,
             int arows,
             int acols,
             double alpha,
