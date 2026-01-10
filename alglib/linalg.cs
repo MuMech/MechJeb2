@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.06.0 (source code generated 2025-10-08)
+ALGLIB 4.07.0 (source code generated 2025-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -514,8 +514,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -577,8 +577,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -639,8 +639,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -701,8 +701,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -771,8 +771,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -839,8 +839,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -923,8 +923,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1005,8 +1005,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1102,8 +1102,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1173,8 +1173,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1229,8 +1229,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1286,8 +1286,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1344,8 +1344,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1429,8 +1429,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1514,8 +1514,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1599,8 +1599,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1661,8 +1661,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1741,8 +1741,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1789,8 +1789,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1957,8 +1957,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2014,8 +2014,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2083,8 +2083,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2179,8 +2179,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2221,8 +2221,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -2317,8 +2317,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -5118,6 +5118,42 @@ public partial class alglib
     }
     
     /*************************************************************************
+    This function performs copying with transposition of CRS matrix  (buffered
+    version which reuses memory already allocated by  the  target as  much  as
+    possible).
+
+    Unlike SparseCopyTransposeCRSBuf() it can copy/transpose only lower or
+    upper triangle or both, depending on Triangle parameter
+
+    INPUT PARAMETERS
+        S0      -   sparse matrix in CRS format.
+        Triangle-   triangle to copy:
+                    * -1    the lower triangle and diagonal are transposed,
+                            S1 is upper triangular
+                    *  0    both triangles are copied
+                    * +1    the upper triangle and diagonal are transposed,
+                            S1 is lower triangular
+
+    OUTPUT PARAMETERS
+        S1      -   sparse matrix, transposed; previously allocated memory  is
+                    reused if possible.
+
+      -- ALGLIB PROJECT --
+         Copyright 23.07.2018 by Bochkanov Sergey
+    *************************************************************************/
+    public static void sparsecopytransposecrsxbuf(sparsematrix s0, int triangle, sparsematrix s1)
+    {
+    
+        sparse.sparsecopytransposecrsxbuf(s0.innerobj, triangle, s1.innerobj, null);
+    }
+    
+    public static void sparsecopytransposecrsxbuf(sparsematrix s0, int triangle, sparsematrix s1, alglib.xparams _params)
+    {
+    
+        sparse.sparsecopytransposecrsxbuf(s0.innerobj, triangle, s1.innerobj, _params);
+    }
+    
+    /*************************************************************************
     This  function  performs  in-place  conversion  to  desired sparse storage
     format.
 
@@ -6367,8 +6403,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -6441,8 +6477,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -6499,8 +6535,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -6619,8 +6655,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -6800,8 +6836,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -7000,8 +7036,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -7190,8 +7226,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -7278,8 +7314,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -7369,8 +7405,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -7458,8 +7494,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -7868,8 +7904,22 @@ public partial class alglib
     Sparse Cholesky decomposition for a matrix  stored  in  any sparse storage,
     without rows/cols permutation.
 
-    This function is the most convenient (less parameters to specify), although
+    This function is the most convenient (less parameters to specify) although
     the less efficient, version of sparse Cholesky.
+
+    IMPORTANT: if all you need is to solve a linear system A*x=b with positive
+               definite A, we strongly recommend you to use functions provided
+               by the DIRECTSPARSESOLVERS  subpackage  of  the SOLVERS package
+               instead of this function.
+
+               Functions provided by the TRFAC  subpackage   are  designed  to
+               return factorizations, i.e. such L that A=LL' or A=LDL'.  Thus,
+               TRFAC unit can not utilize some performance  improvements  that
+               allow to solve Ax=b without returning factors L and D.
+
+               In particular, performance backends, dynamic regularization and
+               iterative refinement are not supported  by  TRFAC  but  can  be
+               included in DIRECTSPARSESOLVERS.
 
     IMPORTANT: the commercial edition of ALGLIB can parallelize this function.
                Specific speed-up due  to  parallelism  heavily  depends  on  a
@@ -7944,6 +7994,20 @@ public partial class alglib
 
     Present version is configured  to  perform  supernodal  permutation   with
     a sparsity reducing ordering.
+
+    IMPORTANT: if all you need is to solve a linear system A*x=b with positive
+               definite A, we strongly recommend you to use functions provided
+               by the DIRECTSPARSESOLVERS  subpackage  of  the SOLVERS package
+               instead of this function.
+
+               Functions provided by the TRFAC  subpackage   are  designed  to
+               return factorizations, i.e. such L that A=LL' or A=LDL'.  Thus,
+               TRFAC unit can not utilize some performance  improvements  that
+               allow to solve Ax=b without returning factors L and D.
+
+               In particular, performance backends, dynamic regularization and
+               iterative refinement are not supported  by  TRFAC  but  can  be
+               included in DIRECTSPARSESOLVERS.
 
     IMPORTANT: the commercial edition of ALGLIB can parallelize this function.
                Specific speed-up due  to  parallelism  heavily  depends  on  a
@@ -8030,6 +8094,20 @@ public partial class alglib
     latter is computed with strictly diagonal D, i.e.  without  Bunch-Kauffman
     pivoting).
 
+    IMPORTANT: if all you need is to solve a linear system A*x=b with positive
+               definite A, we strongly recommend you to use functions provided
+               by the DIRECTSPARSESOLVERS  subpackage  of  the SOLVERS package
+               instead of this function.
+
+               Functions provided by the TRFAC  subpackage   are  designed  to
+               return factorizations, i.e. such L that A=LL' or A=LDL'.  Thus,
+               TRFAC unit can not utilize some performance  improvements  that
+               allow to solve Ax=b without returning factors L and D.
+
+               In particular, performance backends, dynamic regularization and
+               iterative refinement are not supported  by  TRFAC  but  can  be
+               included in DIRECTSPARSESOLVERS.
+
     NOTE: L*D*LT family of factorization may be used to  factorize  indefinite
           matrices. However, numerical stability is guaranteed ONLY for a class
           of quasi-definite matrices.
@@ -8114,6 +8192,20 @@ public partial class alglib
     Depending on settings specified during SparseCholeskyAnalyze() call it may
     produce classic Cholesky or L*D*LT  decomposition  (with strictly diagonal
     D), without permutation or with performance-enhancing permutation P.
+
+    IMPORTANT: if all you need is to solve a linear system A*x=b with positive
+               definite A, we strongly recommend you to use functions provided
+               by the DIRECTSPARSESOLVERS  subpackage  of  the SOLVERS package
+               instead of this function.
+
+               Functions provided by the TRFAC  subpackage   are  designed  to
+               return factorizations, i.e. such L that A=LL' or A=LDL'.  Thus,
+               TRFAC unit can not utilize some performance  improvements  that
+               allow to solve Ax=b without returning factors L and D.
+
+               In particular, performance backends, dynamic regularization and
+               iterative refinement are not supported  by  TRFAC  but  can  be
+               included in DIRECTSPARSESOLVERS.
 
     NOTE: all internal processing is performed with lower triangular  matrices
           stored  in  CRS  format.  Any  other  storage  formats  and/or upper
@@ -8248,12 +8340,13 @@ public partial class alglib
 
       ! Commercial version of ALGLIB includes one  important  improvement   of
       ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * Hardware vendor library support (Intel MKL  support  on  x64,  other
+      !   libraries on other platforms)
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
-      ! worker threads) acceleration factor which depends on CPU  being  used,
-      ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-      ! comparison.
+      ! Vendor  libraries  give  approximately  constant  with  respect to the
+      ! number of worker threads) acceleration factor which depends on the CPU
+      ! being  used, problem  size  and  "baseline"  ALGLIB  edition  which is
+      ! used for comparison.
       !
       ! Generally, commercial ALGLIB is several times faster than  open-source
       ! generic C edition, and many times faster than open-source C# edition.
@@ -8370,8 +8463,8 @@ public partial class alglib
       ! Commercial Edition of ALGLIB includes following important improvements
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions, x64/ARM platform)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -9330,8 +9423,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -9422,8 +9515,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -9516,8 +9609,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -9608,8 +9701,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -9712,8 +9805,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -9815,8 +9908,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -9917,8 +10010,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -10020,8 +10113,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -10131,8 +10224,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -10245,8 +10338,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -10445,9 +10538,10 @@ public partial class alglib
 
       ! Commercial version of ALGLIB includes one  important  improvement   of
       ! this function, which can be used from C++ and C#:
-      ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+      ! * Hardware vendor library support (lightweight Intel  MKL  is  shipped
+      !   with ALGLIB for x64, other libs for other platforms)
       !
-      ! Intel MKL gives approximately constant  (with  respect  to  number  of
+      ! Vendor libs give approximately constant  (with  respect  to  number of
       ! worker threads) acceleration factor which depends on CPU  being  used,
       ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
       ! comparison.
@@ -11814,9 +11908,9 @@ public partial class alglib
             {
                 
                 //
-                // Try MKL kernel first
+                // Try PBL kernel first
                 //
-                if( ablasmkl.rmatrixgermkl(m, n, a, ia, ja, alpha, u, iu, v, iv, _params) )
+                if( ablaspbl.rmatrixgerpbl(m, n, a, ia, ja, alpha, u, iu, v, iv, _params) )
                 {
                     return;
                 }
@@ -11889,9 +11983,9 @@ public partial class alglib
             {
                 
                 //
-                // Try MKL kernel first
+                // Try PBL kernel first
                 //
-                if( ablasmkl.cmatrixrank1mkl(m, n, a, ia, ja, u, iu, v, iv, _params) )
+                if( ablaspbl.cmatrixrank1pbl(m, n, a, ia, ja, u, iu, v, iv, _params) )
                 {
                     return;
                 }
@@ -11967,9 +12061,9 @@ public partial class alglib
             {
                 
                 //
-                // Try MKL kernel first
+                // Try PBL kernel first
                 //
-                if( ablasmkl.rmatrixrank1mkl(m, n, a, ia, ja, u, iu, v, iv, _params) )
+                if( ablaspbl.rmatrixrank1pbl(m, n, a, ia, ja, u, iu, v, iv, _params) )
                 {
                     return;
                 }
@@ -12038,9 +12132,9 @@ public partial class alglib
             {
                 
                 //
-                // Try MKL kernel
+                // Try PBL kernel
                 //
-                if( ablasmkl.rmatrixgemvmkl(m, n, alpha, a, ia, ja, opa, x, ix, beta, y, iy, _params) )
+                if( ablaspbl.rmatrixgemvpbl(m, n, alpha, a, ia, ja, opa, x, ix, beta, y, iy, _params) )
                 {
                     return;
                 }
@@ -12129,9 +12223,9 @@ public partial class alglib
             {
                 
                 //
-                // Try MKL kernel
+                // Try PBL kernel
                 //
-                if( ablasmkl.cmatrixmvmkl(m, n, a, ia, ja, opa, x, ix, y, iy, _params) )
+                if( ablaspbl.cmatrixmvpbl(m, n, a, ia, ja, opa, x, ix, y, iy, _params) )
                 {
                     return;
                 }
@@ -12276,9 +12370,9 @@ public partial class alglib
             {
                 
                 //
-                // Try MKL kernel
+                // Try PBL kernel
                 //
-                if( ablasmkl.rmatrixmvmkl(m, n, a, ia, ja, opa, x, ix, y, iy, _params) )
+                if( ablaspbl.rmatrixmvpbl(m, n, a, ia, ja, opa, x, ix, y, iy, _params) )
                 {
                     return;
                 }
@@ -12384,9 +12478,9 @@ public partial class alglib
             {
                 
                 //
-                // Try MKL kernel
+                // Try PBL kernel
                 //
-                if( ablasmkl.rmatrixsymvmkl(n, alpha, a, ia, ja, isupper, x, ix, beta, y, iy, _params) )
+                if( ablaspbl.rmatrixsymvpbl(n, alpha, a, ia, ja, isupper, x, ix, beta, y, iy, _params) )
                 {
                     return;
                 }
@@ -12571,9 +12665,9 @@ public partial class alglib
             {
                 
                 //
-                // Try MKL kernel
+                // Try PBL kernel
                 //
-                if( ablasmkl.rmatrixtrsvmkl(n, a, ia, ja, isupper, isunit, optype, x, ix, _params) )
+                if( ablaspbl.rmatrixtrsvpbl(n, a, ia, ja, isupper, isunit, optype, x, ix, _params) )
                 {
                     return;
                 }
@@ -12702,8 +12796,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -12766,11 +12860,11 @@ public partial class alglib
             }
             
             //
-            // Basecase: either MKL-supported code or ALGLIB basecase code
+            // Basecase: either PBL-supported code or ALGLIB basecase code
             //
             if( apserv.imax2(m, n, _params)<=tsb )
             {
-                if( ablasmkl.cmatrixrighttrsmmkl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2, _params) )
+                if( ablaspbl.cmatrixrighttrsmpbl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2, _params) )
                 {
                     return;
                 }
@@ -12918,8 +13012,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -12978,11 +13072,11 @@ public partial class alglib
             }
             
             //
-            // Basecase: either MKL-supported code or ALGLIB basecase code
+            // Basecase: either PBL-supported code or ALGLIB basecase code
             //
             if( apserv.imax2(m, n, _params)<=tsb )
             {
-                if( ablasmkl.cmatrixlefttrsmmkl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2, _params) )
+                if( ablaspbl.cmatrixlefttrsmpbl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2, _params) )
                 {
                     return;
                 }
@@ -13123,8 +13217,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -13187,11 +13281,11 @@ public partial class alglib
             }
             
             //
-            // Basecase: MKL or ALGLIB code
+            // Basecase: PBL or ALGLIB code
             //
             if( apserv.imax2(m, n, _params)<=tsb )
             {
-                if( ablasmkl.rmatrixrighttrsmmkl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2, _params) )
+                if( ablaspbl.rmatrixrighttrsmpbl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2, _params) )
                 {
                     return;
                 }
@@ -13338,8 +13432,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -13398,11 +13492,11 @@ public partial class alglib
             }
             
             //
-            // Basecase: MKL or ALGLIB code
+            // Basecase: PBL or ALGLIB code
             //
             if( apserv.imax2(m, n, _params)<=tsb )
             {
-                if( ablasmkl.rmatrixlefttrsmmkl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2, _params) )
+                if( ablaspbl.rmatrixlefttrsmpbl(m, n, a, i1, j1, isupper, isunit, optype, x, i2, j2, _params) )
                 {
                     return;
                 }
@@ -13551,8 +13645,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -13603,11 +13697,11 @@ public partial class alglib
             }
             
             //
-            // Use MKL or ALGLIB basecase code
+            // Use PBL or ALGLIB basecase code
             //
             if( apserv.imax2(n, k, _params)<=tsb )
             {
-                if( ablasmkl.cmatrixherkmkl(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper, _params) )
+                if( ablaspbl.cmatrixherkpbl(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper, _params) )
                 {
                     return;
                 }
@@ -13739,8 +13833,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -13791,11 +13885,11 @@ public partial class alglib
             }
             
             //
-            // Use MKL or generic basecase code
+            // Use PBL or generic basecase code
             //
             if( apserv.imax2(n, k, _params)<=tsb )
             {
-                if( ablasmkl.rmatrixsyrkmkl(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper, _params) )
+                if( ablaspbl.rmatrixsyrkpbl(n, k, alpha, a, ia, ja, optypea, beta, c, ic, jc, isupper, _params) )
                 {
                     return;
                 }
@@ -13943,8 +14037,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -14085,8 +14179,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -15513,11 +15607,11 @@ public partial class alglib
             alglib.ap.assert(tscur>=1, "CMatrixGEMMRec: integrity check failed");
             
             //
-            // Use MKL or ALGLIB basecase code
+            // Use PBL or ALGLIB basecase code
             //
             if( apserv.imax3(m, n, k, _params)<=tsb )
             {
-                if( ablasmkl.cmatrixgemmmkl(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc, _params) )
+                if( ablaspbl.cmatrixgemmpbl(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc, _params) )
                 {
                     return;
                 }
@@ -15668,11 +15762,11 @@ public partial class alglib
             alglib.ap.assert(tscur>=1, "RMatrixGEMMRec: integrity check failed");
             
             //
-            // Use MKL or ALGLIB basecase code
+            // Use PBL or ALGLIB basecase code
             //
             if( (m<=tsb && n<=tsb) && k<=tsb )
             {
-                if( ablasmkl.rmatrixgemmmkl(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc, _params) )
+                if( ablaspbl.rmatrixgemmpbl(m, n, k, alpha, a, ia, ja, optypea, b, ib, jb, optypeb, beta, c, ic, jc, _params) )
                 {
                     return;
                 }
@@ -15831,8 +15925,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -16013,8 +16107,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -16179,8 +16273,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -16347,8 +16441,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -16515,8 +16609,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -16749,8 +16843,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -16983,8 +17077,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -17220,8 +17314,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -17551,8 +17645,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -17660,12 +17754,12 @@ public partial class alglib
             }
             
             //
-            // Try to use MKL code
+            // Try to use PBL code
             //
             // NOTE: buffers Work[] and T[] are used for temporary storage of diagonals;
             // because they are present in A[], we do not use them.
             //
-            if( ablasmkl.rmatrixbdmkl(a, m, n, work, t, tauq, taup, _params) )
+            if( ablaspbl.rmatrixbdpbl(a, m, n, work, t, tauq, taup, _params) )
             {
                 return;
             }
@@ -17808,8 +17902,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -17890,8 +17984,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -17951,9 +18045,9 @@ public partial class alglib
             alglib.ap.assert((fromtheright && zcolumns==m) || (!fromtheright && zrows==m), "RMatrixBDMultiplyByQ: incorrect Z size!");
             
             //
-            // Try to use MKL code
+            // Try to use PBL code
             //
-            if( ablasmkl.rmatrixbdmultiplybymkl(qp, m, n, tauq, dummy, z, zrows, zcolumns, true, fromtheright, dotranspose, _params) )
+            if( ablaspbl.rmatrixbdmultiplybypbl(qp, m, n, tauq, dummy, z, zrows, zcolumns, true, fromtheright, dotranspose, _params) )
             {
                 return;
             }
@@ -18388,8 +18482,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -18457,9 +18551,9 @@ public partial class alglib
             work = new double[n-1+1];
             
             //
-            // MKL version
+            // PBL version
             //
-            if( ablasmkl.rmatrixhessenbergmkl(a, n, tau, _params) )
+            if( ablaspbl.rmatrixhessenbergpbl(a, n, tau, _params) )
             {
                 return;
             }
@@ -18508,8 +18602,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -18571,9 +18665,9 @@ public partial class alglib
             }
             
             //
-            // MKL version
+            // PBL version
             //
-            if( ablasmkl.rmatrixhessenbergunpackqmkl(a, n, tau, q, _params) )
+            if( ablaspbl.rmatrixhessenbergunpackqpbl(a, n, tau, q, _params) )
             {
                 return;
             }
@@ -18655,8 +18749,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -18766,9 +18860,9 @@ public partial class alglib
             }
             
             //
-            // Try to use MKL
+            // Try to use PBL
             //
-            if( ablasmkl.smatrixtdmkl(a, n, isupper, tau, d, e, _params) )
+            if( ablaspbl.smatrixtdpbl(a, n, isupper, tau, d, e, _params) )
             {
                 return;
             }
@@ -18965,8 +19059,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -19028,9 +19122,9 @@ public partial class alglib
             }
             
             //
-            // MKL version
+            // PBL version
             //
-            if( ablasmkl.smatrixtdunpackqmkl(a, n, isupper, tau, q, _params) )
+            if( ablaspbl.smatrixtdunpackqpbl(a, n, isupper, tau, q, _params) )
             {
                 return;
             }
@@ -19085,8 +19179,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -19201,9 +19295,9 @@ public partial class alglib
             t3 = new complex[n-1+1];
             
             //
-            // MKL version
+            // PBL version
             //
-            if( ablasmkl.hmatrixtdmkl(a, n, isupper, tau, d, e, _params) )
+            if( ablaspbl.hmatrixtdpbl(a, n, isupper, tau, d, e, _params) )
             {
                 return;
             }
@@ -19410,8 +19504,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -19459,9 +19553,9 @@ public partial class alglib
             work = new complex[n-1+1];
             
             //
-            // MKL version
+            // PBL version
             //
-            if( ablasmkl.hmatrixtdunpackqmkl(a, n, isupper, tau, q, _params) )
+            if( ablaspbl.hmatrixtdunpackqpbl(a, n, isupper, tau, q, _params) )
             {
                 return;
             }
@@ -22732,7 +22826,7 @@ public partial class alglib
                 //
                 // Try vendor kernels
                 //
-                if( ablasmkl.sparsegemvcrsmkl(0, s.m, s.n, 1.0, s.vals, s.idx, s.ridx, x, 0, 0.0, y, 0, _params) )
+                if( ablaspbl.sparsegemvcrspbl(0, s.m, s.n, 1.0, s.vals, s.idx, s.ridx, x, 0, 0.0, y, 0, _params) )
                 {
                     return;
                 }
@@ -22860,7 +22954,7 @@ public partial class alglib
                 //
                 // Try vendor kernels
                 //
-                if( ablasmkl.sparsegemvcrsmkl(1, s.m, s.n, 1.0, s.vals, s.idx, s.ridx, x, 0, 0.0, y, 0, _params) )
+                if( ablaspbl.sparsegemvcrspbl(1, s.m, s.n, 1.0, s.vals, s.idx, s.ridx, x, 0, 0.0, y, 0, _params) )
                 {
                     return;
                 }
@@ -23070,7 +23164,7 @@ public partial class alglib
                     //
                     // Try vendor kernels
                     //
-                    if( ablasmkl.sparsegemvcrsmkl(0, s.m, s.n, alpha, s.vals, s.idx, s.ridx, x, ix, 1.0, y, iy, _params) )
+                    if( ablaspbl.sparsegemvcrspbl(0, s.m, s.n, alpha, s.vals, s.idx, s.ridx, x, ix, 1.0, y, iy, _params) )
                     {
                         return;
                     }
@@ -23148,7 +23242,7 @@ public partial class alglib
                     //
                     // Try vendor kernels
                     //
-                    if( ablasmkl.sparsegemvcrsmkl(1, s.m, s.n, alpha, s.vals, s.idx, s.ridx, x, ix, 1.0, y, iy, _params) )
+                    if( ablaspbl.sparsegemvcrspbl(1, s.m, s.n, alpha, s.vals, s.idx, s.ridx, x, ix, 1.0, y, iy, _params) )
                     {
                         return;
                     }
@@ -27138,6 +27232,136 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function performs copying with transposition of CRS matrix  (buffered
+        version which reuses memory already allocated by  the  target as  much  as
+        possible).
+
+        Unlike SparseCopyTransposeCRSBuf() it can copy/transpose only lower or
+        upper triangle or both, depending on Triangle parameter
+
+        INPUT PARAMETERS
+            S0      -   sparse matrix in CRS format.
+            Triangle-   triangle to copy:
+                        * -1    the lower triangle and diagonal are transposed,
+                                S1 is upper triangular
+                        *  0    both triangles are copied
+                        * +1    the upper triangle and diagonal are transposed,
+                                S1 is lower triangular
+
+        OUTPUT PARAMETERS
+            S1      -   sparse matrix, transposed; previously allocated memory  is
+                        reused if possible.
+
+          -- ALGLIB PROJECT --
+             Copyright 23.07.2018 by Bochkanov Sergey
+        *************************************************************************/
+        public static void sparsecopytransposecrsxbuf(sparsematrix s0,
+            int triangle,
+            sparsematrix s1,
+            alglib.xparams _params)
+        {
+            int oldn = 0;
+            int oldm = 0;
+            int newn = 0;
+            int newm = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int kk = 0;
+            int j0 = 0;
+            int j1 = 0;
+
+            alglib.ap.assert(s0.matrixtype==1, "SparseCopyTransposeCRSXBuf: only CRS matrices are supported");
+            alglib.ap.assert((triangle==-1 || triangle==0) || triangle==1, "SparseCopyTransposeCRSXBuf: Triangle parameter must be -1, 0 or +1");
+            if( triangle==0 )
+            {
+                sparsecopytransposecrsbuf(s0, s1, _params);
+                return;
+            }
+            oldn = s0.n;
+            oldm = s0.m;
+            newn = oldm;
+            newm = oldn;
+            
+            //
+            // Update matrix size
+            //
+            s1.matrixtype = 1;
+            s1.n = newn;
+            s1.m = newm;
+            
+            //
+            // Fill RIdx by number of elements per row:
+            // RIdx[I+1] stores number of elements in I-th row.
+            //
+            // Convert RIdx from row sizes to row offsets.
+            // Set NInitialized
+            //
+            ablasf.isetallocv(newm+1, 0, ref s1.ridx, _params);
+            for(i=0; i<=oldm-1; i++)
+            {
+                if( triangle>0 )
+                {
+                    j0 = s0.didx[i];
+                    j1 = s0.ridx[i+1]-1;
+                }
+                else
+                {
+                    j0 = s0.ridx[i];
+                    j1 = s0.uidx[i]-1;
+                }
+                for(j=j0; j<=j1; j++)
+                {
+                    k = s0.idx[j]+1;
+                    s1.ridx[k] = s1.ridx[k]+1;
+                }
+            }
+            for(i=0; i<=newm-1; i++)
+            {
+                s1.ridx[i+1] = s1.ridx[i+1]+s1.ridx[i];
+            }
+            s1.ninitialized = s1.ridx[newm];
+            
+            //
+            // Allocate memory and move elements to Vals/Idx.
+            //
+            apserv.ivectorsetlengthatleast(ref s1.didx, newm, _params);
+            for(i=0; i<=newm-1; i++)
+            {
+                s1.didx[i] = s1.ridx[i];
+            }
+            apserv.rvectorsetlengthatleast(ref s1.vals, s1.ninitialized, _params);
+            apserv.ivectorsetlengthatleast(ref s1.idx, s1.ninitialized, _params);
+            for(i=0; i<=oldm-1; i++)
+            {
+                if( triangle>0 )
+                {
+                    j0 = s0.didx[i];
+                    j1 = s0.ridx[i+1]-1;
+                }
+                else
+                {
+                    j0 = s0.ridx[i];
+                    j1 = s0.uidx[i]-1;
+                }
+                for(j=j0; j<=j1; j++)
+                {
+                    kk = s0.idx[j];
+                    k = s1.didx[kk];
+                    s1.idx[k] = i;
+                    s1.vals[k] = s0.vals[j];
+                    s1.didx[kk] = k+1;
+                }
+            }
+            
+            //
+            // Initialization 'S.UIdx' and 'S.DIdx'
+            //
+            sparseinitduidx(s1, _params);
+        }
+
+
+        /*************************************************************************
         This  function  performs  in-place  conversion  to  desired sparse storage
         format.
 
@@ -29295,9 +29519,9 @@ public partial class alglib
             }
             
             //
-            // MKL version
+            // PBL version
             //
-            if( ablasmkl.rmatrixinternalschurdecompositionmkl(h, n, tneeded, zneeded, wr, wi, z, ref info, _params) )
+            if( ablaspbl.rmatrixinternalschurdecompositionpbl(h, n, tneeded, zneeded, wr, wi, z, ref info, _params) )
             {
                 return;
             }
@@ -31394,8 +31618,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -31946,8 +32170,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -32017,8 +32241,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -32167,8 +32391,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -32593,8 +32817,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -32697,14 +32921,14 @@ public partial class alglib
             }
             
             //
-            // Try to solve problem with MKL
+            // Try to solve problem with PBL
             //
             ex = new double[n];
             for(i=0; i<=n-2; i++)
             {
                 ex[i] = e[i];
             }
-            if( ablasmkl.smatrixtdevdmkl(d, ex, n, zneeded, z, ref result, _params) )
+            if( ablaspbl.smatrixtdevdpbl(d, ex, n, zneeded, z, ref result, _params) )
             {
                 return result;
             }
@@ -33398,8 +33622,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -36397,9 +36621,9 @@ public partial class alglib
             }
             
             //
-            // Try to use MKL kernel
+            // Try to use PBL kernel
             //
-            if( ablasmkl.rmatrixinternaltrevcmkl(t, n, side, howmny, vl, vr, ref m, ref info, _params) )
+            if( ablaspbl.rmatrixinternaltrevcpbl(t, n, side, howmny, vl, vr, ref m, ref info, _params) )
             {
                 return;
             }
@@ -38745,7 +38969,7 @@ public partial class alglib
             tsb = apserv.matrixtilesizeb(_params);
             if( n<=tsb )
             {
-                if( ablasmkl.rmatrixplumkl(a, offs, m, n, ref pivots, _params) )
+                if( ablaspbl.rmatrixplupbl(a, offs, m, n, ref pivots, _params) )
                 {
                     return;
                 }
@@ -43638,8 +43862,19 @@ public partial class alglib
         {
             public int tasktype;
             public int n;
-            public int permtype;
             public bool unitd;
+            public bool dotrace;
+            public bool pblrequested;
+            public bool pblused;
+            public alglib.ap.opaque_object pbl;
+            public bool pblneedsl;
+            public sparse.sparsematrix pbla;
+            public bool pblachanged;
+            public int[] fillinperm;
+            public int[] invfillinperm;
+            public int[] effectiveperm;
+            public int[] inveffectiveperm;
+            public int permtype;
             public int modtype;
             public double modparam0;
             public double modparam1;
@@ -43648,7 +43883,6 @@ public partial class alglib
             public bool[] bsigns;
             public bool debugblocksupernodal;
             public bool extendeddebug;
-            public bool dotrace;
             public bool dotracescheduler;
             public bool dotracesupernodalstructure;
             public double[] rpivotsigns;
@@ -43661,12 +43895,8 @@ public partial class alglib
             public int[] superrowridx;
             public int[] superrowidx;
             public bool useparallelism;
-            public int[] fillinperm;
-            public int[] invfillinperm;
             public int[] superperm;
             public int[] invsuperperm;
-            public int[] effectiveperm;
-            public int[] inveffectiveperm;
             public bool istopologicalordering;
             public bool applypermutationtooutput;
             public spcholadj ladj;
@@ -43705,6 +43935,12 @@ public partial class alglib
             }
             public override void init()
             {
+                pbl = new alglib.ap.opaque_object();
+                pbla = new sparse.sparsematrix();
+                fillinperm = new int[0];
+                invfillinperm = new int[0];
+                effectiveperm = new int[0];
+                inveffectiveperm = new int[0];
                 bsigns = new bool[0];
                 rpivotsigns = new double[0];
                 referenceridx = new int[0];
@@ -43714,12 +43950,8 @@ public partial class alglib
                 supercolrange = new int[0];
                 superrowridx = new int[0];
                 superrowidx = new int[0];
-                fillinperm = new int[0];
-                invfillinperm = new int[0];
                 superperm = new int[0];
                 invsuperperm = new int[0];
-                effectiveperm = new int[0];
-                inveffectiveperm = new int[0];
                 ladj = new spcholadj();
                 outrowcounts = new int[0];
                 inputstorage = new double[0];
@@ -43756,8 +43988,19 @@ public partial class alglib
                 spcholanalysis _result = new spcholanalysis();
                 _result.tasktype = tasktype;
                 _result.n = n;
-                _result.permtype = permtype;
                 _result.unitd = unitd;
+                _result.dotrace = dotrace;
+                _result.pblrequested = pblrequested;
+                _result.pblused = pblused;
+                _result.pbl = pbl!=null ? (alglib.ap.opaque_object)pbl.make_copy() : null;
+                _result.pblneedsl = pblneedsl;
+                _result.pbla = pbla!=null ? (sparse.sparsematrix)pbla.make_copy() : null;
+                _result.pblachanged = pblachanged;
+                _result.fillinperm = (int[])fillinperm.Clone();
+                _result.invfillinperm = (int[])invfillinperm.Clone();
+                _result.effectiveperm = (int[])effectiveperm.Clone();
+                _result.inveffectiveperm = (int[])inveffectiveperm.Clone();
+                _result.permtype = permtype;
                 _result.modtype = modtype;
                 _result.modparam0 = modparam0;
                 _result.modparam1 = modparam1;
@@ -43766,7 +44009,6 @@ public partial class alglib
                 _result.bsigns = (bool[])bsigns.Clone();
                 _result.debugblocksupernodal = debugblocksupernodal;
                 _result.extendeddebug = extendeddebug;
-                _result.dotrace = dotrace;
                 _result.dotracescheduler = dotracescheduler;
                 _result.dotracesupernodalstructure = dotracesupernodalstructure;
                 _result.rpivotsigns = (double[])rpivotsigns.Clone();
@@ -43779,12 +44021,8 @@ public partial class alglib
                 _result.superrowridx = (int[])superrowridx.Clone();
                 _result.superrowidx = (int[])superrowidx.Clone();
                 _result.useparallelism = useparallelism;
-                _result.fillinperm = (int[])fillinperm.Clone();
-                _result.invfillinperm = (int[])invfillinperm.Clone();
                 _result.superperm = (int[])superperm.Clone();
                 _result.invsuperperm = (int[])invsuperperm.Clone();
-                _result.effectiveperm = (int[])effectiveperm.Clone();
-                _result.inveffectiveperm = (int[])inveffectiveperm.Clone();
                 _result.istopologicalordering = istopologicalordering;
                 _result.applypermutationtooutput = applypermutationtooutput;
                 _result.ladj = ladj!=null ? (spcholadj)ladj.make_copy() : null;
@@ -43867,7 +44105,7 @@ public partial class alglib
             A           -   sparse square matrix in CRS format, with LOWER triangle
                             being used to store the matrix.
             Priorities  -   array[N], optional priorities:
-                            * ignored for PermType in in [-4,-3,3] (not referenced at
+                            * ignored for PermType not in [-4,-3,3] (not referenced at
                               all)
                             * for   PermType=3  or  PermType=-3  this  array  stores
                               nonnegative  column  elimination  priorities.  Columns
@@ -43902,8 +44140,22 @@ public partial class alglib
                             * Avoid specifying too large values (above 10) because
                               algorithm will perform at least (PromoteTo+1) elimination rounds.
             FactType    -   factorization type:
-                            * 0 for traditional Cholesky
-                            * 1 for LDLT decomposition with strictly diagonal D
+                            *  0 for traditional Cholesky
+                            *  1 for LDLT decomposition with strictly diagonal D
+                            * 20/21 for a quasi-definite LLT or LDLT decomposition performed by
+                                 a Performance Backend Library (PBL), if available.
+                                 This option comes with the restriction that A is guaranteed
+                                 to be quasi-definite, with no ability to SPSymmExtract() the matrix,
+                                 but with the ability to call SPSymmSolve() and SPSymmReload()
+                                 and some other functions.
+                                 Depending on the specific library being used, Priorities[],
+                                 PromoteAbove[], PromoteTo[], PermType and MemReuse can be
+                                 ignored by the library.
+                                 If no PBL is available, decomposition is performed according
+                                 to FactType=1, using Priorities[], PromoteAbove[], PromoteTo[],
+                                 PermType and MemReuse to guide the factorization. But still
+                                 limitations above apply.
+                                 See below for more comments on PBL for sparse factorizations.
             PermType    -   permutation type:
                             *-4 for user permutation given by Priorities[]
                             *-3 for debug improved AMD which debugs AMD itself, parallel
@@ -43994,12 +44246,43 @@ public partial class alglib
             alglib.ap.assert(promoteto>=0, "SPSymmAnalyze: PromoteTo is negative");
             alglib.ap.assert(sparse.sparseiscrs(a, _params), "SPSymmAnalyze: A is not stored in CRS format");
             alglib.ap.assert(sparse.sparsegetnrows(a, _params)==sparse.sparsegetncols(a, _params), "SPSymmAnalyze: non-square A");
-            alglib.ap.assert(facttype==0 || facttype==1, "SPSymmAnalyze: unexpected FactType");
+            alglib.ap.assert(((facttype==0 || facttype==1) || facttype==20) || facttype==21, "SPSymmAnalyze: unexpected FactType");
             alglib.ap.assert(((((((permtype==0 || permtype==1) || permtype==2) || permtype==3) || permtype==-1) || permtype==-2) || permtype==-3) || permtype==-4, "SPSymmAnalyze: unexpected PermType");
             alglib.ap.assert(memreuse==-1 || memreuse==1, "SPSymmAnalyze: unexpected MemType");
             alglib.ap.assert((permtype!=3 && permtype!=-3) || (math.isfinite(promoteabove) && (double)(promoteabove)>=(double)(0)), "SPSymmAnalyze: unexpected PromoteAbove - infinite or negative");
-            result = true;
             n = sparse.sparsegetnrows(a, _params);
+            result = true;
+            
+            //
+            // Analysis parameters that are always set, independently of whether we have platform-specific libraries or not
+            //
+            analysis.tasktype = 0;
+            analysis.n = n;
+            analysis.unitd = facttype==0 || facttype==20;
+            analysis.pblrequested = facttype==20 || facttype==21;
+            analysis.pblused = false;
+            analysis.dotrace = ap.istraceenabled("SCHOLESKY", _params);
+            analysis.dotracescheduler = analysis.dotrace && ap.istraceenabled("SCHOLESKY.SCHEDULER", _params);
+            analysis.dotracesupernodalstructure = analysis.dotrace && ap.istraceenabled("SCHOLESKY.SS", _params);
+            if( analysis.dotrace )
+            {
+                alglib.ap.trace("\n\n");
+                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
+                alglib.ap.trace("//  SPARSE CHOLESKY ANALYSIS STARTED                                                              //\n");
+                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
+            }
+            
+            //
+            // Try to setup PBL
+            //
+            if( (facttype==20 || facttype==21) && spsymmpblsetup(analysis, a, priorities, facttype, permtype, _params) )
+            {
+                return result;
+            }
+            
+            //
+            // Analysis parameters that are set only when no PBL intercepts the factorization.
+            //
             if( permtype==-3 || permtype==3 )
             {
                 alglib.ap.assert(alglib.ap.len(priorities)>=n, "SPSymmAnalyze: length(Priorities)<N");
@@ -44012,15 +44295,9 @@ public partial class alglib
                 promoteabove = 0.0;
                 promoteto = 0;
             }
-            analysis.tasktype = 0;
-            analysis.n = n;
-            analysis.unitd = facttype==0;
             analysis.permtype = permtype;
             analysis.debugblocksupernodal = permtype==-3;
             analysis.extendeddebug = ap.istraceenabled("DEBUG.SLOW", _params) && n<=100;
-            analysis.dotrace = ap.istraceenabled("SCHOLESKY", _params);
-            analysis.dotracescheduler = analysis.dotrace && ap.istraceenabled("SCHOLESKY.SCHEDULER", _params);
-            analysis.dotracesupernodalstructure = analysis.dotrace && ap.istraceenabled("SCHOLESKY.SS", _params);
             analysis.istopologicalordering = permtype==-1 || permtype==1;
             analysis.applypermutationtooutput = permtype==-1;
             analysis.modtype = 0;
@@ -44045,14 +44322,10 @@ public partial class alglib
             analysis.nrealpool.alloc_double(n);
             
             //
-            // Initial trace message
+            // Continue trace message
             //
             if( analysis.dotrace )
             {
-                alglib.ap.trace("\n\n");
-                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
-                alglib.ap.trace("//  SPARSE CHOLESKY ANALYSIS STARTED                                                              //\n");
-                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
                 
                 //
                 // Nonzeros count of the original matrix
@@ -44246,7 +44519,9 @@ public partial class alglib
 
 
         /*************************************************************************
-        Sets modified Cholesky type
+        Sets modified Cholesky type.
+
+        This function can be ignored by Performance Backend Libraries.
 
         INPUT PARAMETERS:
             Analysis    -   symbolic analysis of the matrix structure
@@ -44307,6 +44582,8 @@ public partial class alglib
         of elements, being strictly less than -EPS for another set of elements).
 
         The factorization fails if this property is not satisfied.
+
+        This function can be ignored by Performance Backend Libraries.
 
         INPUT PARAMETERS:
             Analysis    -   symbolic analysis of the matrix structure
@@ -44373,6 +44650,19 @@ public partial class alglib
         {
             alglib.ap.assert(sparse.sparseiscrs(a, _params), "SPSymmReload: A is not stored in CRS format");
             alglib.ap.assert(sparse.sparsegetnrows(a, _params)==sparse.sparsegetncols(a, _params), "SPSymmReload: non-square A");
+            if( analysis.pblused )
+            {
+                if( analysis.pblneedsl )
+                {
+                    sparse.sparsecopybuf(a, analysis.pbla, _params);
+                }
+                else
+                {
+                    sparse.sparsecopytransposecrsxbuf(a, -1, analysis.pbla, _params);
+                }
+                analysis.pblachanged = true;
+                return;
+            }
             if( analysis.istopologicalordering )
             {
                 
@@ -44436,6 +44726,19 @@ public partial class alglib
             int j = 0;
 
             alglib.ap.assert(alglib.ap.len(d)>=analysis.n, "SPSymmReloadDiagonal: length(D)<N");
+            if( analysis.pblused )
+            {
+                for(j=0; j<=analysis.n-1; j++)
+                {
+                    if( analysis.pbla.uidx[j]!=analysis.pbla.didx[j]+1 )
+                    {
+                        alglib.ap.assert(false, "SPSymmReloadDiagonal: integrity check 031154 failed");
+                    }
+                    analysis.pbla.vals[analysis.pbla.didx[j]] = d[j];
+                }
+                analysis.pblachanged = true;
+                return;
+            }
             for(sidx=0; sidx<=analysis.nsuper-1; sidx++)
             {
                 cols0 = analysis.supercolrange[sidx];
@@ -44505,6 +44808,32 @@ public partial class alglib
 
             alglib.ap.assert(analysis.tasktype==0, "SPCholFactorize: Analysis type does not match current task");
             n = analysis.n;
+            
+            //
+            // Invoke Performance Backend Library, if present
+            //
+            if( analysis.pblused )
+            {
+                if( analysis.modtype==3 )
+                {
+                    
+                    //
+                    // Sign control: PBL controls that sign of diagonal elements of the factorized matrix matches
+                    // that of the original matrix. Additionally, we control outside of PBL that the original matrix
+                    // has correct signs.
+                    //
+                    for(i=0; i<=analysis.n-1; i++)
+                    {
+                        if( (double)(apserv.rcase2(analysis.bsigns[analysis.effectiveperm[i]], 1, -1, _params)*analysis.pbla.vals[analysis.pbla.didx[i]])<=(double)(0.0) )
+                        {
+                            result = false;
+                            return result;
+                        }
+                    }
+                }
+                result = spsymmpblfactorize(analysis.pbl, analysis.pbla, analysis.pblachanged, _params);
+                return result;
+            }
             
             //
             // Allocate temporaries
@@ -44612,6 +44941,10 @@ public partial class alglib
         * calling for Analysis that was not factorized with SPSymmFactorize()
         * calling after SPSymmFactorize() returned False
 
+        This function is NOT supported when FactType suggests using Performance
+        Backend Libraries (e.g. FactType=20 or FactType=21), whether these libraries
+        were actually activated or not.
+
         INPUT PARAMETERS:
             Analysis    -   prior factorization performed on some sparse matrix
             D, P        -   possibly preallocated buffers
@@ -44638,6 +44971,7 @@ public partial class alglib
             ref int[] p,
             alglib.xparams _params)
         {
+            alglib.ap.assert(!analysis.pblrequested, "SPSymmExtract: not supported when Performance Backend was requested");
             extractmatrix(analysis, analysis.rowoffsets, analysis.rowstrides, analysis.outputstorage, analysis.diagd, analysis.n, a, ref d, ref p, analysis.tmp0, _params);
         }
 
@@ -44683,6 +45017,22 @@ public partial class alglib
             double x2 = 0;
             double x3 = 0;
 
+            
+            //
+            // Invoke Performance Backend Library, if present
+            //
+            if( analysis.pblused )
+            {
+                if( !spsymmpblsolve(analysis.pbl, analysis.pbla, b, _params) )
+                {
+                    alglib.ap.assert(false, "SPSymmSolve: Performance Backend solve unexpectedly failed");
+                }
+                return;
+            }
+            
+            //
+            // Our own implementation
+            //
             n = analysis.n;
             ablasf.rsetallocv(n, 0.0, ref analysis.tmpx, _params);
             x0 = 0;
@@ -45075,6 +45425,9 @@ public partial class alglib
 
         OUTPUT PARAMETERS:
             SumSq, ErrSq-   diagonal magnitude and absolute diagonal error
+            
+        NOTE: this function can be unsupported by some Performance Backends,
+              in which case both ErrSq and SumSq will be exactly zero.
 
           -- ALGLIB routine --
              08.09.2021
@@ -45107,6 +45460,15 @@ public partial class alglib
 
             n = analysis.n;
             simdwidth = 1;
+            
+            //
+            // Invoke Performance Backend Library, if present
+            //
+            if( analysis.pblused )
+            {
+                spsymmpbldiagerr(analysis.pbl, ref sumsq, ref errsq, _params);
+                return;
+            }
             
             //
             // Scan L, compute diag(L*L')
@@ -45173,6 +45535,217 @@ public partial class alglib
             return result;
         }
         #endif
+
+
+        /*************************************************************************
+        Tries to setup Performance Backend Library (PBL) for sparse factorizations.
+
+        Returns True on success, False on failure to setup the library (due to the
+        library being unavailable or problem size being too small). Also sets
+        Analysis.PBLUsed to the value returned.
+
+        This function assumes than Analysis is partially initialized, with the
+        following fields being set:
+        * Analysis.TaskType
+        * Analysis.N
+        * Analysis.UnitD
+        * Analysis.PBLUsed=False
+        * Analysis.DoTrace
+
+        If False is returned, the caller is responsible for the continuation of
+        the factorization.
+
+          -- ALGLIB routine --
+             20.10.2025
+             Bochkanov Sergey
+        *************************************************************************/
+        private static bool spsymmpblsetup(spcholanalysis analysis,
+            sparse.sparsematrix a,
+            int[] priorities,
+            int facttype,
+            int permtype,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+            int i = 0;
+            int j = 0;
+            int n = 0;
+
+            alglib.ap.assert(((((((permtype==0 || permtype==1) || permtype==2) || permtype==3) || permtype==-1) || permtype==-2) || permtype==-3) || permtype==-4, "SPSymmPBLSetup: unexpected PermType");
+            alglib.ap.assert(facttype==20 || facttype==21, "SPSymmPBLSetup: unexpected FactType");
+            n = analysis.n;
+            analysis.pblused = false;
+            result = false;
+            if( spsymmpblhasdss(_params) )
+            {
+                if( analysis.dotrace )
+                {
+                    alglib.ap.trace("> detected support for DSS in a Performance Backend Library, trying to initialize the library\n");
+                }
+                sparse.sparsecopytransposecrsxbuf(a, -1, analysis.pbla, _params);
+                if( (permtype==-4 || permtype==-3) || permtype==3 )
+                {
+                    ablasf.icopyallocv(analysis.n, priorities, ref analysis.curpriorities, _params);
+                }
+                else
+                {
+                    ablasf.isetallocv(analysis.n, 0, ref analysis.curpriorities, _params);
+                }
+                if( !spsymmpblsetupdss(analysis.pbl, analysis.pbla, analysis.n, analysis.curpriorities, facttype, permtype, analysis.dotrace, _params) )
+                {
+                    return result;
+                }
+                ablasf.icopyallocv(n, analysis.curpriorities, ref analysis.fillinperm, _params);
+                ablasf.isetallocv(n, -1, ref analysis.invfillinperm, _params);
+                for(i=0; i<=n-1; i++)
+                {
+                    j = analysis.fillinperm[i];
+                    if( j<0 || j>=n )
+                    {
+                        alglib.ap.assert(false, "SPSymmAnalyze: permutation passed to / returned by PBL has indexes outside of [0,N) range");
+                    }
+                    if( analysis.invfillinperm[j]>=0 )
+                    {
+                        alglib.ap.assert(false, "SPSymmAnalyze: permutation passed to / returned by PBL has non-distinct indexes");
+                    }
+                    analysis.invfillinperm[j] = i;
+                }
+                ablasf.icopyallocv(n, analysis.fillinperm, ref analysis.effectiveperm, _params);
+                ablasf.icopyallocv(n, analysis.invfillinperm, ref analysis.inveffectiveperm, _params);
+                analysis.pblneedsl = false;
+                analysis.pblachanged = false;
+                analysis.pblused = true;
+                result = true;
+                return result;
+            }
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function detects DSS backend support.
+
+        It can return False if:
+        * no DSS backend is linked
+        * a DSS backend is linked but signaled that it is not ready to provide
+          services.
+        * a DSS backend is linked and ready to run, but current ALGLIB flags
+          prohibit external DSS activation. The result of this function depends
+          on both call-local and global flags. The latter ones can change at
+          any moment.
+          
+        This function is allowed to return different values at different moments,
+        so code using it should not rely on the same value being always returned.
+
+        This function should be used as a relatively inexpensive gatekeeper for
+        SPSymmPBLSetupDSS().
+
+          -- ALGLIB routine --
+             20.10.2025
+             Bochkanov Sergey
+        *************************************************************************/
+        private static bool spsymmpblhasdss(alglib.xparams _params)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This function tries to setup a direct sparse solver (DSS).
+
+        It may return False:
+        * if no DSS backend is linked
+        * if a DSS backend is linked, but not ready to run
+        * if ALGLIB flags prohibit DSS backend usage
+        * even if previous call to SPSymmPBLHasDSS() returned True
+
+        The code using this function should be ready to handle False value returned.
+
+        If it returned True, the DSS opaque object can be used for the rest of its
+        life (even if ALGLIB flags started to prohibit usage of a DSS backend).
+
+          -- ALGLIB routine --
+             20.10.2025
+             Bochkanov Sergey
+        *************************************************************************/
+        private static bool spsymmpblsetupdss(alglib.ap.opaque_object pbl,
+            sparse.sparsematrix tmpat,
+            int n,
+            int[] priorities,
+            int facttype,
+            int permtype,
+            bool dotrace,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Stub for PBL factorizer call
+
+          -- ALGLIB routine --
+             20.10.2025
+             Bochkanov Sergey
+        *************************************************************************/
+        private static bool spsymmpblfactorize(alglib.ap.opaque_object pbl,
+            sparse.sparsematrix a,
+            bool achanged,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+
+            alglib.ap.assert(false, "SPSymmPBLFactorize: no PBL support is enabled, but stub was called");
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Stub for PBL solver call
+
+          -- ALGLIB routine --
+             20.10.2025
+             Bochkanov Sergey
+        *************************************************************************/
+        private static bool spsymmpblsolve(alglib.ap.opaque_object pbl,
+            sparse.sparsematrix a,
+            double[] b,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+
+            result = false;
+            alglib.ap.assert(false, "SPSymmPBLSolve: no PBL support is enabled, but stub was called");
+            return result;
+        }
+
+
+        /*************************************************************************
+        Stub for PBL diagonal error call
+
+          -- ALGLIB routine --
+             20.10.2025
+             Bochkanov Sergey
+        *************************************************************************/
+        private static void spsymmpbldiagerr(alglib.ap.opaque_object pbl,
+            ref double sumsq,
+            ref double errsq,
+            alglib.xparams _params)
+        {
+            sumsq = 0;
+            errsq = 0;
+
+            sumsq = 0;
+            errsq = 0;
+            alglib.ap.assert(false, "SPSymmPBLDiagErr: no PBL support is enabled, but stub was called");
+        }
 
 
         #if ALGLIB_NO_FAST_KERNELS
@@ -49080,8 +49653,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -49147,8 +49720,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -49217,8 +49790,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -49287,8 +49860,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -50126,8 +50699,22 @@ public partial class alglib
         Sparse Cholesky decomposition for a matrix  stored  in  any sparse storage,
         without rows/cols permutation.
 
-        This function is the most convenient (less parameters to specify), although
+        This function is the most convenient (less parameters to specify) although
         the less efficient, version of sparse Cholesky.
+
+        IMPORTANT: if all you need is to solve a linear system A*x=b with positive
+                   definite A, we strongly recommend you to use functions provided
+                   by the DIRECTSPARSESOLVERS  subpackage  of  the SOLVERS package
+                   instead of this function.
+                   
+                   Functions provided by the TRFAC  subpackage   are  designed  to
+                   return factorizations, i.e. such L that A=LL' or A=LDL'.  Thus,
+                   TRFAC unit can not utilize some performance  improvements  that
+                   allow to solve Ax=b without returning factors L and D.
+                   
+                   In particular, performance backends, dynamic regularization and
+                   iterative refinement are not supported  by  TRFAC  but  can  be
+                   included in DIRECTSPARSESOLVERS.
 
         IMPORTANT: the commercial edition of ALGLIB can parallelize this function.
                    Specific speed-up due  to  parallelism  heavily  depends  on  a
@@ -50276,6 +50863,20 @@ public partial class alglib
 
         Present version is configured  to  perform  supernodal  permutation   with
         a sparsity reducing ordering.
+
+        IMPORTANT: if all you need is to solve a linear system A*x=b with positive
+                   definite A, we strongly recommend you to use functions provided
+                   by the DIRECTSPARSESOLVERS  subpackage  of  the SOLVERS package
+                   instead of this function.
+                   
+                   Functions provided by the TRFAC  subpackage   are  designed  to
+                   return factorizations, i.e. such L that A=LL' or A=LDL'.  Thus,
+                   TRFAC unit can not utilize some performance  improvements  that
+                   allow to solve Ax=b without returning factors L and D.
+                   
+                   In particular, performance backends, dynamic regularization and
+                   iterative refinement are not supported  by  TRFAC  but  can  be
+                   included in DIRECTSPARSESOLVERS.
 
         IMPORTANT: the commercial edition of ALGLIB can parallelize this function.
                    Specific speed-up due  to  parallelism  heavily  depends  on  a
@@ -50437,6 +51038,20 @@ public partial class alglib
         choose between classic Cholesky and  indefinite  LDLT  factorization  (the
         latter is computed with strictly diagonal D, i.e.  without  Bunch-Kauffman
         pivoting).
+
+        IMPORTANT: if all you need is to solve a linear system A*x=b with positive
+                   definite A, we strongly recommend you to use functions provided
+                   by the DIRECTSPARSESOLVERS  subpackage  of  the SOLVERS package
+                   instead of this function.
+                   
+                   Functions provided by the TRFAC  subpackage   are  designed  to
+                   return factorizations, i.e. such L that A=LL' or A=LDL'.  Thus,
+                   TRFAC unit can not utilize some performance  improvements  that
+                   allow to solve Ax=b without returning factors L and D.
+                   
+                   In particular, performance backends, dynamic regularization and
+                   iterative refinement are not supported  by  TRFAC  but  can  be
+                   included in DIRECTSPARSESOLVERS.
 
         NOTE: L*D*LT family of factorization may be used to  factorize  indefinite
               matrices. However, numerical stability is guaranteed ONLY for a class
@@ -50640,6 +51255,20 @@ public partial class alglib
         Depending on settings specified during SparseCholeskyAnalyze() call it may
         produce classic Cholesky or L*D*LT  decomposition  (with strictly diagonal
         D), without permutation or with performance-enhancing permutation P.
+
+        IMPORTANT: if all you need is to solve a linear system A*x=b with positive
+                   definite A, we strongly recommend you to use functions provided
+                   by the DIRECTSPARSESOLVERS  subpackage  of  the SOLVERS package
+                   instead of this function.
+                   
+                   Functions provided by the TRFAC  subpackage   are  designed  to
+                   return factorizations, i.e. such L that A=LL' or A=LDL'.  Thus,
+                   TRFAC unit can not utilize some performance  improvements  that
+                   allow to solve Ax=b without returning factors L and D.
+                   
+                   In particular, performance backends, dynamic regularization and
+                   iterative refinement are not supported  by  TRFAC  but  can  be
+                   included in DIRECTSPARSESOLVERS.
 
         NOTE: all internal processing is performed with lower triangular  matrices
               stored  in  CRS  format.  Any  other  storage  formats  and/or upper
@@ -51137,7 +51766,7 @@ public partial class alglib
             }
             if( n<=tsb )
             {
-                if( ablasmkl.spdmatrixcholeskymkl(a, offs, n, isupper, ref result, _params) )
+                if( ablaspbl.spdmatrixcholeskypbl(a, offs, n, isupper, ref result, _params) )
                 {
                     return result;
                 }
@@ -51238,7 +51867,7 @@ public partial class alglib
             //
             // Basecases
             //
-            // NOTE: we do not use MKL for basecases because their price is only
+            // NOTE: we do not use PBL for basecases because their price is only
             //       minor part of overall running time for N>256.
             //
             if( n==1 )
@@ -51621,12 +52250,13 @@ public partial class alglib
 
           ! Commercial version of ALGLIB includes one  important  improvement   of
           ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * Hardware vendor library support (Intel MKL  support  on  x64,  other
+          !   libraries on other platforms)
           !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
-          ! worker threads) acceleration factor which depends on CPU  being  used,
-          ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
-          ! comparison.
+          ! Vendor  libraries  give  approximately  constant  with  respect to the
+          ! number of worker threads) acceleration factor which depends on the CPU
+          ! being  used, problem  size  and  "baseline"  ALGLIB  edition  which is
+          ! used for comparison.
           !
           ! Generally, commercial ALGLIB is several times faster than  open-source
           ! generic C edition, and many times faster than open-source C# edition.
@@ -51744,7 +52374,7 @@ public partial class alglib
             result = false;
             
             //
-            // Try to use MKL
+            // Try to use PBL
             //
             en = new double[n];
             for(i=0; i<=n-2; i++)
@@ -51752,7 +52382,7 @@ public partial class alglib
                 en[i] = e[i];
             }
             en[n-1] = 0.0;
-            if( ablasmkl.rmatrixbdsvdmkl(d, en, n, isupper, u, nru, c, ncc, vt, ncvt, ref result, _params) )
+            if( ablaspbl.rmatrixbdsvdpbl(d, en, n, isupper, u, nru, c, ncc, vt, ncvt, ref result, _params) )
             {
                 return result;
             }
@@ -53069,8 +53699,8 @@ public partial class alglib
           ! Commercial Edition of ALGLIB includes following important improvements
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions, x64/ARM platform)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -58443,8 +59073,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -58567,8 +59197,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -58641,8 +59271,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -58765,8 +59395,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -58849,8 +59479,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -58973,8 +59603,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -59060,8 +59690,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -59184,8 +59814,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -59280,8 +59910,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -59399,8 +60029,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -61081,9 +61711,10 @@ public partial class alglib
 
           ! Commercial version of ALGLIB includes one  important  improvement   of
           ! this function, which can be used from C++ and C#:
-          ! * Intel MKL support (lightweight Intel MKL is shipped with ALGLIB)
+          ! * Hardware vendor library support (lightweight Intel  MKL  is  shipped
+          !   with ALGLIB for x64, other libs for other platforms)
           !
-          ! Intel MKL gives approximately constant  (with  respect  to  number  of
+          ! Vendor libs give approximately constant  (with  respect  to  number of
           ! worker threads) acceleration factor which depends on CPU  being  used,
           ! problem  size  and  "baseline"  ALGLIB  edition  which  is  used   for
           ! comparison.

@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.06.0 (source code generated 2025-10-08)
+ALGLIB 4.07.0 (source code generated 2025-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -617,8 +617,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -688,8 +688,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -759,8 +759,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -830,8 +830,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -913,8 +913,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -996,8 +996,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -1864,7 +1864,12 @@ public partial class alglib
     /*************************************************************************
     These fields store MCMC report:
     * nfev                      number of function evaluations
-    * acceptrate                acceptance rate of a MCMC algo
+    * acceptrate                acceptance rate of a MCMC algo; when  parallel
+                                tempering is used, this field stores acceptance
+                                rate for the lowest level (T=1).
+    * swapacceptrate            acceptance rate for swaps between levels of the
+                                temperature ladder. When no parallel tempering
+                                is used, stores zero.
     * autocorrtimes             array[N], per-variable autocorrelation times
     *************************************************************************/
     public class mcmcreport : alglibobject
@@ -1874,6 +1879,7 @@ public partial class alglib
         //
         public int nfev { get { return _innerobj.nfev; } set { _innerobj.nfev = value; } }
         public double acceptrate { get { return _innerobj.acceptrate; } set { _innerobj.acceptrate = value; } }
+        public double swapacceptrate { get { return _innerobj.swapacceptrate; } set { _innerobj.swapacceptrate = value; } }
         public double[] autocorrtimes { get { return _innerobj.autocorrtimes; } set { _innerobj.autocorrtimes = value; } }
     
         public mcmcreport()
@@ -2054,8 +2060,139 @@ public partial class alglib
     }
     
     /*************************************************************************
+    This function controls adaptation rate of the temperature ladder  used  by
+    adaptive parallel tempering algorithms.
+
+    The sampler changes the logarithmic difference between temperatures in the
+    ladder ln(T[i+1]-T[i]) as a product of different between swap accept rates
+    A[i]-A[i+1] and current adaptation rate, which is nu0/(1+iteridx/tau).
+
+    Here nu0 is an initial adaptation rate that similar to stochastic gradient
+    descent learning rate. Recommended values 0.01-0.1. And tau is a  learning
+    rate decay time, depending on the problem it can be 100 or 1000.
+
+    The MCMC sampler uses some default values for these parameters,  but  they
+    can change in future versions without notice.
+
+    This function has no effect when adaptive tempering is not active.
+
+    INPUT PARAMETERS:
+        State   -   structure stores algorithm state
+        Nu0     -   initial learning rate, >=0.
+                    Zero value effectively turns off adaptation.
+        Tau     -   characteristic decay time, >=0.
+                    Zero value effectively turns off adaptation.
+
+      -- ALGLIB --
+         Copyright 15.05.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetladderadaptationrate(mcmcstate state, double nu0, double tau)
+    {
+    
+        mcmc.mcmcsetladderadaptationrate(state.innerobj, nu0, tau, null);
+    }
+    
+    public static void mcmcsetladderadaptationrate(mcmcstate state, double nu0, double tau, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetladderadaptationrate(state.innerobj, nu0, tau, _params);
+    }
+    
+    /*************************************************************************
+    This function activates parallel  tempering  with  the  fixed  temperature
+    ladder.
+
+    Parallel tempering is  intended  for sampling of multimodal distributions,
+    with the T=1 corresponding to sampling of the original distribution  (what
+    you get as result), and  higher temperatures  corresponding  to   smoothed
+    versions of the distribution,  helping  the  sampler  to  reach  otherwise
+    unreachable remote peaks.
+
+    INPUT PARAMETERS:
+        State   -   structure stores algorithm state
+        T       -   array[NTemp], T[0]=1, T[I+1]>T[I], sampling  temperatures.
+                    If the  first  element  of  T  is  different  from  1,  or
+                    temperatures are not strictly increasing,  an exception is
+                    raised
+        NTemp   -   >=1, temperature ladder height
+
+      -- ALGLIB --
+         Copyright 15.05.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetfixedtemperatureladder(mcmcstate state, double[] t, int ntemp)
+    {
+    
+        mcmc.mcmcsetfixedtemperatureladder(state.innerobj, t, ntemp, null);
+    }
+    
+    public static void mcmcsetfixedtemperatureladder(mcmcstate state, double[] t, int ntemp, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetfixedtemperatureladder(state.innerobj, t, ntemp, _params);
+    }
+    
+    /*************************************************************************
+    This function activates parallel  tempering  with the adaptive temperature
+    ladder using uniform Swap Acceptance Rate (SAR) proposal.
+
+    Parallel tempering is  intended  for sampling of multimodal distributions,
+    with the T=1 corresponding to sampling of the original distribution  (what
+    you get as result), and  higher temperatures  corresponding  to   smoothed
+    versions of the distribution,  helping  the  sampler  to  reach  otherwise
+    unreachable remote peaks.
+
+    The function accepts the hottest temperature in the ladder TMax,  as  well
+    as ladder height NTemp>=1.
+
+    You can control adaptation rate wuth mcmcsetladderadaptationrate() function.
+
+    INPUT PARAMETERS:
+        State   -   structure stores algorithm state
+        TMax    -   initial value of the maximum temperature in the ladder,
+                    TMax>1 (strictly)
+        NTemp   -   >=1, temperature ladder height:
+                    * NTemp=1 means that no temperature ladder is actually used
+                    * NTemp=2 means that we have a ladder with temperatures
+                      [1,TMax] and no adaptation
+                    * NTemp>2 means that we have  a  ladder  with  T[0]=1  and
+                      T[NTemp-1]=TMax, and adaptive temperatures between them.
+
+      -- ALGLIB --
+         Copyright 15.05.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetsartemperatureladder(mcmcstate state, double tmax, int ntemp)
+    {
+    
+        mcmc.mcmcsetsartemperatureladder(state.innerobj, tmax, ntemp, null);
+    }
+    
+    public static void mcmcsetsartemperatureladder(mcmcstate state, double tmax, int ntemp, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetsartemperatureladder(state.innerobj, tmax, ntemp, _params);
+    }
+    
+    /*************************************************************************
+    Same as mcmcsetalgostretch().
+    *************************************************************************/
+    public static void mcmcsetalgogoodmanweare(mcmcstate state, int popsize, int epochscnt)
+    {
+    
+        mcmc.mcmcsetalgogoodmanweare(state.innerobj, popsize, epochscnt, null);
+    }
+    
+    public static void mcmcsetalgogoodmanweare(mcmcstate state, int popsize, int epochscnt, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetalgogoodmanweare(state.innerobj, popsize, epochscnt, _params);
+    }
+    
+    /*************************************************************************
     This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
     the specified ensemble size and number of iterations being reported.
+
+    Uses  stretch  move,   as   defined  in  'Ensemble  samplers  with  affine
+    invariance', Goodman and Weare, 2010.
 
     NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
           to EpochsCnt iterations being  reported.
@@ -2068,22 +2205,296 @@ public partial class alglib
 
     INPUT PARAMETERS:
         State   -   structure that stores MCMC sampler state
-        PopSize -   ensemble size, PopSize>=2, recommended: >=2*N
+        PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
         EpochsCnt-  iterations count to be reported, >=1
 
       -- ALGLIB --
          Copyright 20.01.2025 by Bochkanov Sergey
     *************************************************************************/
-    public static void mcmcsetalgogoodmanweare(mcmcstate state, int popsize, int epochscnt)
+    public static void mcmcsetalgostretch(mcmcstate state, int popsize, int epochscnt)
     {
     
-        mcmc.mcmcsetalgogoodmanweare(state.innerobj, popsize, epochscnt, null);
+        mcmc.mcmcsetalgostretch(state.innerobj, popsize, epochscnt, null);
     }
     
-    public static void mcmcsetalgogoodmanweare(mcmcstate state, int popsize, int epochscnt, alglib.xparams _params)
+    public static void mcmcsetalgostretch(mcmcstate state, int popsize, int epochscnt, alglib.xparams _params)
     {
     
-        mcmc.mcmcsetalgogoodmanweare(state.innerobj, popsize, epochscnt, _params);
+        mcmc.mcmcsetalgostretch(state.innerobj, popsize, epochscnt, _params);
+    }
+    
+    /*************************************************************************
+    This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+    the specified ensemble size and number of iterations being reported.
+
+    Uses walk move, as defined in 'Ensemble  samplers with affine invariance',
+    Goodman and Weare, 2010.
+
+    NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+          to EpochsCnt iterations being  reported.
+
+          By  default, it performs exactly the same number of iterations as it
+          reports. However, it will perform more iterations than it reports if
+          using a  burn-in  phase  (discards  initial  samples  that  are  too
+          influenced by the initial state) and by specifying a thinning factor
+          greater than 1 (helps to combat autocorrelations).
+
+    NOTE: for consistency with the rest of the library this move type requires
+          PopSize>=N+1. However, it also has a special requirement  PopSize>=4
+          that follows from the fact that  each  walker  needs  at  least  two
+          helpers, and that we can use parallel moves.
+
+          For N=1 or N=2 it is possible to  specify PopSize=N+1 that  is  less
+          than 4. In order to simplify the algorithm, in this case we silently
+          override selection with the stretch move.
+
+    INPUT PARAMETERS:
+        State   -   structure that stores MCMC sampler state
+
+        PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+
+        EpochsCnt-  iterations count to be reported, >=1
+
+        HelpersCnt- helpers count, >=2. Number of  helpers  used  to  generate
+                    proposal. Recommended values: some small number like  3-5.
+                    It is possible  to  specify  HelpersCnt=PopSize,  but  for
+                    large populations it will result  in  proposal  generation
+                    overhead growing as O(N*PopSize^2).
+                    Values larger than PopSize will be silently  truncated  to
+                    PopSize.
+
+      -- ALGLIB --
+         Copyright 20.11.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetalgowalk(mcmcstate state, int popsize, int epochscnt, int helperscnt)
+    {
+    
+        mcmc.mcmcsetalgowalk(state.innerobj, popsize, epochscnt, helperscnt, null);
+    }
+    
+    public static void mcmcsetalgowalk(mcmcstate state, int popsize, int epochscnt, int helperscnt, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetalgowalk(state.innerobj, popsize, epochscnt, helperscnt, _params);
+    }
+    
+    /*************************************************************************
+    This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+    the specified ensemble size and number of iterations being reported.
+
+    Uses DE move, as defined in 'RUN DMC:  an  efficient,  parallel  code  for
+    analyzing radial  velocity  observations  using  n-body  integrations  and
+    differential evolution Markov chain Monte Carlo' by Benjamin Nelson,  Eric
+    B. Ford, and Matthew J. Payne.
+
+    NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+          to EpochsCnt iterations being  reported.
+
+          By  default, it performs exactly the same number of iterations as it
+          reports. However, it will perform more iterations than it reports if
+          using a  burn-in  phase  (discards  initial  samples  that  are  too
+          influenced by the initial state) and by specifying a thinning factor
+          greater than 1 (helps to combat autocorrelations).
+
+    NOTE: for consistency with the rest of the library this move type requires
+          PopSize>=N+1. However, it also has a special requirement  PopSize>=4
+          that follows from the fact that  each  walker  needs  at  least  two
+          other walkers to produce a DE proposal, and that we can use parallel
+          moves (that need larger ensembles).
+
+          For N=1 or N=2 it is possible to  specify PopSize=N+1 that  is  less
+          than 4. In order to simplify the algorithm, in this case we silently
+          override selection with the stretch move.
+
+    NOTE: it is recommended to specify PopSize and EpochsCnt and  leave  other
+          parameters to their default values.
+
+    INPUT PARAMETERS:
+        State   -   structure that stores MCMC sampler state
+
+        PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+
+        EpochsCnt-  iterations count to be reported, >=1
+
+        Sigma   -   non-negative, standard deviation of  a  Gaussian  used  to
+                    randomly modify the proposal vector.  Recommended  values:
+                    about 1E-5. Zero value (or omitted) means that  a  default
+                    one is used.
+
+        Gamma0  -   the mean stretch factor for the proposal vector, >=0. Zero
+                    value  means  that  a  default  value  is  used  which  is
+                    2.38/sqrt(2N), as recommended by the original paper.
+
+
+      -- ALGLIB --
+         Copyright 20.11.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetalgode(mcmcstate state, int popsize, int epochscnt, double sigma, double gamma0)
+    {
+    
+        mcmc.mcmcsetalgode(state.innerobj, popsize, epochscnt, sigma, gamma0, null);
+    }
+    
+    public static void mcmcsetalgode(mcmcstate state, int popsize, int epochscnt, double sigma, double gamma0, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetalgode(state.innerobj, popsize, epochscnt, sigma, gamma0, _params);
+    }
+            
+    public static void mcmcsetalgode(mcmcstate state, int popsize, int epochscnt)
+    {
+        double sigma;
+        double gamma0;
+    
+    
+        sigma = 0;
+        gamma0 = 0;
+        mcmc.mcmcsetalgode(state.innerobj, popsize, epochscnt, sigma, gamma0, null);
+    
+        return;
+    }
+            
+    public static void mcmcsetalgode(mcmcstate state, int popsize, int epochscnt, alglib.xparams _params)
+    {
+        double sigma;
+        double gamma0;
+    
+    
+        sigma = 0;
+        gamma0 = 0;
+        mcmc.mcmcsetalgode(state.innerobj, popsize, epochscnt, sigma, gamma0, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    This function sets MCMC algorithm to Goodman-Weare  (ensemble  MCMC)  with
+    the specified ensemble size and number of iterations being reported.
+
+    Uses DE move with snooker update, as defined  in  'Differential  Evolution
+    Markov Chain with snooker updater and fewer chains' by Cajo J.F. ter Braak
+    and Jasper A. Vrugt.
+
+    NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+          to EpochsCnt iterations being  reported.
+
+          By  default, it performs exactly the same number of iterations as it
+          reports. However, it will perform more iterations than it reports if
+          using a  burn-in  phase  (discards  initial  samples  that  are  too
+          influenced by the initial state) and by specifying a thinning factor
+          greater than 1 (helps to combat autocorrelations).
+
+    NOTE: for consistency with the rest of the library this move type requires
+          PopSize>=N+1. However, it also has a special requirement  PopSize>=6
+          that follows from the fact that  each update  needs  at  least three
+          other walkers to produce a DE proposal, and that we can use parallel
+          moves (that need larger ensembles).
+
+          In order to simplify the algorithm, if N+1<=PopSize<6,  we  silently
+          override selection with the stretch move.
+
+    NOTE: it is recommended to specify PopSize and EpochsCnt and  leave  other
+          parameters to their default values.
+
+    INPUT PARAMETERS:
+        State   -   structure that stores MCMC sampler state
+
+        PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+
+        EpochsCnt-  iterations count to be reported, >=1
+
+        Gamma0  -   the mean stretch factor for the proposal vector, >=0. Zero
+                    value  means  that  a  default  value  is  used  which  is
+                    2.38/sqrt(2), as recommended by the original paper.
+
+
+      -- ALGLIB --
+         Copyright 20.11.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetalgodesnooker(mcmcstate state, int popsize, int epochscnt, double gamma0)
+    {
+    
+        mcmc.mcmcsetalgodesnooker(state.innerobj, popsize, epochscnt, gamma0, null);
+    }
+    
+    public static void mcmcsetalgodesnooker(mcmcstate state, int popsize, int epochscnt, double gamma0, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetalgodesnooker(state.innerobj, popsize, epochscnt, gamma0, _params);
+    }
+            
+    public static void mcmcsetalgodesnooker(mcmcstate state, int popsize, int epochscnt)
+    {
+        double gamma0;
+    
+    
+        gamma0 = 0;
+        mcmc.mcmcsetalgodesnooker(state.innerobj, popsize, epochscnt, gamma0, null);
+    
+        return;
+    }
+            
+    public static void mcmcsetalgodesnooker(mcmcstate state, int popsize, int epochscnt, alglib.xparams _params)
+    {
+        double gamma0;
+    
+    
+        gamma0 = 0;
+        mcmc.mcmcsetalgodesnooker(state.innerobj, popsize, epochscnt, gamma0, _params);
+    
+        return;
+    }
+    
+    /*************************************************************************
+    This function sets MCMC algorithm to Goodman-Weare  (ensemble  MCMC)  with
+    the specified ensemble size and number of iterations being reported.
+
+    Uses Gaussian random walk, an ensemble of PopSize  completely  independent
+    walkers.
+
+    NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+          to EpochsCnt iterations being  reported.
+
+          By  default, it performs exactly the same number of iterations as it
+          reports. However, it will perform more iterations than it reports if
+          using a  burn-in  phase  (discards  initial  samples  that  are  too
+          influenced by the initial state) and by specifying a thinning factor
+          greater than 1 (helps to combat autocorrelations).
+
+    NOTE: this  move  is  special  because it can work with any ensemble size,
+          including PopSize=1 (most other moves  need  at  least  4,  5  or  6
+          walkers in the ensemble). Other moves will  throw  an  exception  if
+          called with PopSize<N+1.
+
+    INPUT PARAMETERS:
+        State   -   structure that stores MCMC sampler state
+
+        PopSize -   ensemble size, PopSize>=1.
+
+        EpochsCnt-  iterations count to be reported, >=1
+
+        C       -   array[N,N], a positive definite covariance matrix.  Walker
+                    position  is  perturbed  with  Gaussian  perturbation with
+                    covariance C.
+
+        IsUpper -   if IsUpper=True, only upper triangle of  C  is  used  (the
+                    lower one is ignored). Otherwise, only lower  triangle  is
+                    used.
+
+
+      -- ALGLIB --
+         Copyright 20.11.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void mcmcsetalgogaussian(mcmcstate state, int popsize, int epochscnt, double[,] c, bool isupper)
+    {
+    
+        mcmc.mcmcsetalgogaussian(state.innerobj, popsize, epochscnt, c, isupper, null);
+    }
+    
+    public static void mcmcsetalgogaussian(mcmcstate state, int popsize, int epochscnt, double[,] c, bool isupper, alglib.xparams _params)
+    {
+    
+        mcmc.mcmcsetalgogaussian(state.innerobj, popsize, epochscnt, c, isupper, _params);
     }
     
     /*************************************************************************
@@ -2274,7 +2685,7 @@ public partial class alglib
                             callback).
 
     OUTPUT PARAMETERS:
-        Sample          -   array[SampleSize*PopSize,N+1], current sample:
+        Sample          -   array[SampleSize,N+1], current sample:
                             * first N columns store variable values, the  last
                               one stores log-likelihood value as  computed  by
                               the callback
@@ -2288,10 +2699,10 @@ public partial class alglib
                               at the row PopSize*J+I.
 
         SampleSize      -   current sample size:
-                            * for a sampler that stopped it is equal to PopSize
+                            * for a sampler that stopped it is equal to PopSize*EpochsCnt
                             * for a sampler that is  still  running,  we  have
-                              0<=SampleSize<PopSize. Zero sample  is  reported
-                              upon the first call to rep().
+                              0<=SampleSize<PopSize*EpochsCnt. Zero sample  is
+                              reported upon the first call to rep().
 
         Rep             -   other information being reported, including:
                             * acceptance rate
@@ -3355,8 +3766,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -3483,8 +3894,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -3558,8 +3969,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -3731,8 +4142,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -3917,8 +4328,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -4154,8 +4565,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -14842,32 +15253,50 @@ public partial class alglib
         public class mcmcstate : apobject
         {
             public int n;
-            public int cntx0;
+            public int x0width;
+            public int x0height;
             public double[,] x0m;
             public int x0type;
             public double x0stddev;
             public int algokind;
+            public int ladderkind;
+            public int proposalkind;
+            public int helperscnt;
+            public double desigma;
+            public double degamma0;
+            public double[] initialladder;
+            public double laddernu0;
+            public double laddertau;
+            public bool noladderadaptationafterburnin;
+            public double[,] gausslowerc;
+            public double[,] gaussl;
             public bool useparallelmoves;
             public int epochscnt;
-            public int popsize;
+            public int popwidth;
+            public int popheight;
             public int burninlen;
             public int thinby;
+            public bool reportalllevels;
             public int rngseed;
             public double[] s;
             public bool initialstart;
             public bool xrep;
-            public double[,] population;
+            public double[,] population2d;
+            public double[] currentladder;
             public hqrnd.hqrndstate globalrs;
             public bool reseedglobalrs;
             public int[] propidx;
             public double[] propz;
+            public double[] propt;
             public double[,] propxf;
-            public int[] grpidx;
-            public int grp0size;
+            public int[] grpabidx;
+            public int grpasize;
+            public int[] grpdsidx;
             public bool haslastpopulation;
-            public double[,] lastpopulation;
-            public int[] lastgrpidx;
-            public int lastpopulationsize;
+            public double[,] lastpopulation2d;
+            public int[] lastgrpabidx;
+            public int lastpopulationwidth;
+            public int lastpopulationheight;
             public bool userterminationneeded;
             public int protocolversion;
             public bool issuesparserequests;
@@ -14890,9 +15319,14 @@ public partial class alglib
             public double[,] tmpj1;
             public sparse.sparsematrix tmps1;
             public int repnfev;
-            public int repacceptcnt;
+            public int repaccept1cnt;
+            public int repaccepthcnt;
             public int repepochscnt;
-            public int reppopsize;
+            public int reppopwidth;
+            public int reppopheight;
+            public int repswapacceptcnt;
+            public int repswapattemptcnt;
+            public double[] repavgswaprates;
             public double[,] repsample;
             public int repsamplesize;
             public bool dotrace;
@@ -14904,6 +15338,15 @@ public partial class alglib
             public double[] tmp0;
             public double[] tmp1;
             public double[] tmp2;
+            public int[] tmpi0;
+            public int[] gphelperidx;
+            public double[] gpmeanhelper;
+            public double[] gpproposal;
+            public double[] gpdelta;
+            public double[] gptmp0;
+            public double[] saacceptrates;
+            public double[] savecsi;
+            public double[] saproposedladder;
             public rcommstate rstate;
             public mcmcstate()
             {
@@ -14912,15 +15355,21 @@ public partial class alglib
             public override void init()
             {
                 x0m = new double[0,0];
+                initialladder = new double[0];
+                gausslowerc = new double[0,0];
+                gaussl = new double[0,0];
                 s = new double[0];
-                population = new double[0,0];
+                population2d = new double[0,0];
+                currentladder = new double[0];
                 globalrs = new hqrnd.hqrndstate();
                 propidx = new int[0];
                 propz = new double[0];
+                propt = new double[0];
                 propxf = new double[0,0];
-                grpidx = new int[0];
-                lastpopulation = new double[0,0];
-                lastgrpidx = new int[0];
+                grpabidx = new int[0];
+                grpdsidx = new int[0];
+                lastpopulation2d = new double[0,0];
+                lastgrpabidx = new int[0];
                 reportx = new double[0];
                 querydata = new double[0];
                 replyfi = new double[0];
@@ -14932,6 +15381,7 @@ public partial class alglib
                 tmpg1 = new double[0];
                 tmpj1 = new double[0,0];
                 tmps1 = new sparse.sparsematrix();
+                repavgswaprates = new double[0];
                 repsample = new double[0,0];
                 timertotal = new apserv.stimer();
                 timercallback = new apserv.stimer();
@@ -14939,38 +15389,65 @@ public partial class alglib
                 tmp0 = new double[0];
                 tmp1 = new double[0];
                 tmp2 = new double[0];
+                tmpi0 = new int[0];
+                gphelperidx = new int[0];
+                gpmeanhelper = new double[0];
+                gpproposal = new double[0];
+                gpdelta = new double[0];
+                gptmp0 = new double[0];
+                saacceptrates = new double[0];
+                savecsi = new double[0];
+                saproposedladder = new double[0];
                 rstate = new rcommstate();
             }
             public override alglib.apobject make_copy()
             {
                 mcmcstate _result = new mcmcstate();
                 _result.n = n;
-                _result.cntx0 = cntx0;
+                _result.x0width = x0width;
+                _result.x0height = x0height;
                 _result.x0m = (double[,])x0m.Clone();
                 _result.x0type = x0type;
                 _result.x0stddev = x0stddev;
                 _result.algokind = algokind;
+                _result.ladderkind = ladderkind;
+                _result.proposalkind = proposalkind;
+                _result.helperscnt = helperscnt;
+                _result.desigma = desigma;
+                _result.degamma0 = degamma0;
+                _result.initialladder = (double[])initialladder.Clone();
+                _result.laddernu0 = laddernu0;
+                _result.laddertau = laddertau;
+                _result.noladderadaptationafterburnin = noladderadaptationafterburnin;
+                _result.gausslowerc = (double[,])gausslowerc.Clone();
+                _result.gaussl = (double[,])gaussl.Clone();
                 _result.useparallelmoves = useparallelmoves;
                 _result.epochscnt = epochscnt;
-                _result.popsize = popsize;
+                _result.popwidth = popwidth;
+                _result.popheight = popheight;
                 _result.burninlen = burninlen;
                 _result.thinby = thinby;
+                _result.reportalllevels = reportalllevels;
                 _result.rngseed = rngseed;
                 _result.s = (double[])s.Clone();
                 _result.initialstart = initialstart;
                 _result.xrep = xrep;
-                _result.population = (double[,])population.Clone();
+                _result.population2d = (double[,])population2d.Clone();
+                _result.currentladder = (double[])currentladder.Clone();
                 _result.globalrs = globalrs!=null ? (hqrnd.hqrndstate)globalrs.make_copy() : null;
                 _result.reseedglobalrs = reseedglobalrs;
                 _result.propidx = (int[])propidx.Clone();
                 _result.propz = (double[])propz.Clone();
+                _result.propt = (double[])propt.Clone();
                 _result.propxf = (double[,])propxf.Clone();
-                _result.grpidx = (int[])grpidx.Clone();
-                _result.grp0size = grp0size;
+                _result.grpabidx = (int[])grpabidx.Clone();
+                _result.grpasize = grpasize;
+                _result.grpdsidx = (int[])grpdsidx.Clone();
                 _result.haslastpopulation = haslastpopulation;
-                _result.lastpopulation = (double[,])lastpopulation.Clone();
-                _result.lastgrpidx = (int[])lastgrpidx.Clone();
-                _result.lastpopulationsize = lastpopulationsize;
+                _result.lastpopulation2d = (double[,])lastpopulation2d.Clone();
+                _result.lastgrpabidx = (int[])lastgrpabidx.Clone();
+                _result.lastpopulationwidth = lastpopulationwidth;
+                _result.lastpopulationheight = lastpopulationheight;
                 _result.userterminationneeded = userterminationneeded;
                 _result.protocolversion = protocolversion;
                 _result.issuesparserequests = issuesparserequests;
@@ -14993,9 +15470,14 @@ public partial class alglib
                 _result.tmpj1 = (double[,])tmpj1.Clone();
                 _result.tmps1 = tmps1!=null ? (sparse.sparsematrix)tmps1.make_copy() : null;
                 _result.repnfev = repnfev;
-                _result.repacceptcnt = repacceptcnt;
+                _result.repaccept1cnt = repaccept1cnt;
+                _result.repaccepthcnt = repaccepthcnt;
                 _result.repepochscnt = repepochscnt;
-                _result.reppopsize = reppopsize;
+                _result.reppopwidth = reppopwidth;
+                _result.reppopheight = reppopheight;
+                _result.repswapacceptcnt = repswapacceptcnt;
+                _result.repswapattemptcnt = repswapattemptcnt;
+                _result.repavgswaprates = (double[])repavgswaprates.Clone();
                 _result.repsample = (double[,])repsample.Clone();
                 _result.repsamplesize = repsamplesize;
                 _result.dotrace = dotrace;
@@ -15007,6 +15489,15 @@ public partial class alglib
                 _result.tmp0 = (double[])tmp0.Clone();
                 _result.tmp1 = (double[])tmp1.Clone();
                 _result.tmp2 = (double[])tmp2.Clone();
+                _result.tmpi0 = (int[])tmpi0.Clone();
+                _result.gphelperidx = (int[])gphelperidx.Clone();
+                _result.gpmeanhelper = (double[])gpmeanhelper.Clone();
+                _result.gpproposal = (double[])gpproposal.Clone();
+                _result.gpdelta = (double[])gpdelta.Clone();
+                _result.gptmp0 = (double[])gptmp0.Clone();
+                _result.saacceptrates = (double[])saacceptrates.Clone();
+                _result.savecsi = (double[])savecsi.Clone();
+                _result.saproposedladder = (double[])saproposedladder.Clone();
                 _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 return _result;
             }
@@ -15016,7 +15507,12 @@ public partial class alglib
         /*************************************************************************
         These fields store MCMC report:
         * nfev                      number of function evaluations
-        * acceptrate                acceptance rate of a MCMC algo
+        * acceptrate                acceptance rate of a MCMC algo; when  parallel
+                                    tempering is used, this field stores acceptance
+                                    rate for the lowest level (T=1).
+        * swapacceptrate            acceptance rate for swaps between levels of the
+                                    temperature ladder. When no parallel tempering
+                                    is used, stores zero.
         * autocorrtimes             array[N], per-variable autocorrelation times
 
         *************************************************************************/
@@ -15024,6 +15520,7 @@ public partial class alglib
         {
             public int nfev;
             public double acceptrate;
+            public double swapacceptrate;
             public double[] autocorrtimes;
             public mcmcreport()
             {
@@ -15038,6 +15535,7 @@ public partial class alglib
                 mcmcreport _result = new mcmcreport();
                 _result.nfev = nfev;
                 _result.acceptrate = acceptrate;
+                _result.swapacceptrate = swapacceptrate;
                 _result.autocorrtimes = (double[])autocorrtimes.Clone();
                 return _result;
             }
@@ -15090,7 +15588,8 @@ public partial class alglib
             alglib.ap.assert(apserv.isfinitevector(x, n, _params), "MCMCCreate1: X contains infinite or NaN values");
             alglib.ap.assert(math.isfinite(xstddev) && (double)(xstddev)>(double)(0), "MCMCCreate1: XStdDev<=0 or is not finite");
             initinternal(state, n, _params);
-            state.cntx0 = 1;
+            state.x0width = 1;
+            state.x0height = 1;
             ablasf.rallocm(1, n, ref state.x0m, _params);
             ablasf.rcopyvr(n, x, state.x0m, 0, _params);
             state.x0stddev = xstddev;
@@ -15134,7 +15633,8 @@ public partial class alglib
             alglib.ap.assert(alglib.ap.rows(p)>=popsize, "MCMCCreateFromPopulation: Rows(P)<PopSize");
             alglib.ap.assert(apserv.apservisfinitematrix(p, popsize, n, _params), "MCMCCreateFromPopulation: P contains infinite or NaN values");
             initinternal(state, n, _params);
-            state.cntx0 = popsize;
+            state.x0width = popsize;
+            state.x0height = 1;
             ablasf.rcopyallocm(popsize, n, p, ref state.x0m, _params);
             state.x0type = 1;
         }
@@ -15175,8 +15675,161 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function controls adaptation rate of the temperature ladder  used  by
+        adaptive parallel tempering algorithms.
+
+        The sampler changes the logarithmic difference between temperatures in the
+        ladder ln(T[i+1]-T[i]) as a product of different between swap accept rates
+        A[i]-A[i+1] and current adaptation rate, which is nu0/(1+iteridx/tau).
+
+        Here nu0 is an initial adaptation rate that similar to stochastic gradient
+        descent learning rate. Recommended values 0.01-0.1. And tau is a  learning
+        rate decay time, depending on the problem it can be 100 or 1000.
+
+        The MCMC sampler uses some default values for these parameters,  but  they
+        can change in future versions without notice.
+
+        This function has no effect when adaptive tempering is not active.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            Nu0     -   initial learning rate, >=0.
+                        Zero value effectively turns off adaptation.
+            Tau     -   characteristic decay time, >=0.
+                        Zero value effectively turns off adaptation.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetladderadaptationrate(mcmcstate state,
+            double nu0,
+            double tau,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(math.isfinite(nu0), "MCMCSetLadderAdaptationRate: Nu0 is not finite");
+            alglib.ap.assert(math.isfinite(tau), "MCMCSetLadderAdaptationRate: Tau is not finite");
+            alglib.ap.assert((double)(nu0)>=(double)(0), "MCMCSetLadderAdaptationRate: Nu0<0");
+            alglib.ap.assert((double)(tau)>=(double)(0), "MCMCSetLadderAdaptationRate: Tau<0");
+            state.laddernu0 = nu0;
+            state.laddertau = tau;
+        }
+
+
+        /*************************************************************************
+        This function activates parallel  tempering  with  the  fixed  temperature
+        ladder.
+
+        Parallel tempering is  intended  for sampling of multimodal distributions,
+        with the T=1 corresponding to sampling of the original distribution  (what
+        you get as result), and  higher temperatures  corresponding  to   smoothed
+        versions of the distribution,  helping  the  sampler  to  reach  otherwise
+        unreachable remote peaks.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            T       -   array[NTemp], T[0]=1, T[I+1]>T[I], sampling  temperatures.
+                        If the  first  element  of  T  is  different  from  1,  or
+                        temperatures are not strictly increasing,  an exception is
+                        raised
+            NTemp   -   >=1, temperature ladder height
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetfixedtemperatureladder(mcmcstate state,
+            double[] t,
+            int ntemp,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.assert(ntemp>=1, "MCMCSetFixedTemperatureLadder: NTemp<1");
+            alglib.ap.assert(alglib.ap.len(t)>=ntemp, "MCMCSetFixedTemperatureLadder: Length(T)<NTemp");
+            alglib.ap.assert(apserv.isfinitevector(t, ntemp, _params), "MCMCSetFixedTemperatureLadder: T contains INF/NAN");
+            alglib.ap.assert((double)(t[0])==(double)(1), "MCMCSetFixedTemperatureLadder: T[0]<>1");
+            for(i=0; i<=ntemp-2; i++)
+            {
+                alglib.ap.assert((double)(t[i+1])>(double)(t[i]), "MCMCSetFixedTemperatureLadder: T[I+1]<=T[I]");
+            }
+            state.ladderkind = 0;
+            state.popheight = ntemp;
+            ablasf.rcopyallocv(ntemp, t, ref state.initialladder, _params);
+        }
+
+
+        /*************************************************************************
+        This function activates parallel  tempering  with the adaptive temperature
+        ladder using uniform Swap Acceptance Rate (SAR) proposal.
+
+        Parallel tempering is  intended  for sampling of multimodal distributions,
+        with the T=1 corresponding to sampling of the original distribution  (what
+        you get as result), and  higher temperatures  corresponding  to   smoothed
+        versions of the distribution,  helping  the  sampler  to  reach  otherwise
+        unreachable remote peaks.
+
+        The function accepts the hottest temperature in the ladder TMax,  as  well
+        as ladder height NTemp>=1.
+
+        You can control adaptation rate wuth mcmcsetladderadaptationrate() function.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            TMax    -   initial value of the maximum temperature in the ladder,
+                        TMax>1 (strictly)
+            NTemp   -   >=1, temperature ladder height:
+                        * NTemp=1 means that no temperature ladder is actually used
+                        * NTemp=2 means that we have a ladder with temperatures
+                          [1,TMax] and no adaptation
+                        * NTemp>2 means that we have  a  ladder  with  T[0]=1  and
+                          T[NTemp-1]=TMax, and adaptive temperatures between them.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetsartemperatureladder(mcmcstate state,
+            double tmax,
+            int ntemp,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            double growth = 0;
+
+            alglib.ap.assert(ntemp>=1, "MCMCSetSARTemperatureLadder: NTemp<1");
+            alglib.ap.assert(math.isfinite(tmax), "MCMCSetSARTemperatureLadder: TMax is INF/NAN");
+            alglib.ap.assert((double)(tmax)>(double)(1), "MCMCSetSARTemperatureLadder: TMax<=1");
+            state.ladderkind = 1;
+            state.popheight = ntemp;
+            ablasf.rallocv(ntemp, ref state.initialladder, _params);
+            state.initialladder[0] = 1.0;
+            if( ntemp>1 )
+            {
+                growth = Math.Pow(tmax, (double)1/(double)(ntemp-1));
+                for(i=1; i<=ntemp-1; i++)
+                {
+                    state.initialladder[i] = state.initialladder[i-1]*growth;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Same as mcmcsetalgostretch().
+        *************************************************************************/
+        public static void mcmcsetalgogoodmanweare(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            alglib.xparams _params)
+        {
+            mcmcsetalgostretch(state, popsize, epochscnt, _params);
+        }
+
+
+        /*************************************************************************
         This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
         the specified ensemble size and number of iterations being reported.
+
+        Uses  stretch  move,   as   defined  in  'Ensemble  samplers  with  affine
+        invariance', Goodman and Weare, 2010.
 
         NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
               to EpochsCnt iterations being  reported.
@@ -15189,22 +15842,301 @@ public partial class alglib
 
         INPUT PARAMETERS:
             State   -   structure that stores MCMC sampler state
-            PopSize -   ensemble size, PopSize>=2, recommended: >=2*N
+            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
             EpochsCnt-  iterations count to be reported, >=1
 
           -- ALGLIB --
              Copyright 20.01.2025 by Bochkanov Sergey
         *************************************************************************/
-        public static void mcmcsetalgogoodmanweare(mcmcstate state,
+        public static void mcmcsetalgostretch(mcmcstate state,
             int popsize,
             int epochscnt,
             alglib.xparams _params)
         {
-            alglib.ap.assert(popsize>=2, "MCMCSetAlgoGoodmanWeare: PopSize<2");
-            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoGoodmanWeare: EpochsCnt<1");
-            state.popsize = popsize;
+            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoStretch: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoStretch: EpochsCnt<1");
+            state.popwidth = popsize;
             state.epochscnt = epochscnt;
             state.algokind = 0;
+            state.proposalkind = 0;
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses walk move, as defined in 'Ensemble  samplers with affine invariance',
+        Goodman and Weare, 2010.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: for consistency with the rest of the library this move type requires
+              PopSize>=N+1. However, it also has a special requirement  PopSize>=4
+              that follows from the fact that  each  walker  needs  at  least  two
+              helpers, and that we can use parallel moves.
+              
+              For N=1 or N=2 it is possible to  specify PopSize=N+1 that  is  less
+              than 4. In order to simplify the algorithm, in this case we silently
+              override selection with the stretch move.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            
+            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+            
+            EpochsCnt-  iterations count to be reported, >=1
+            
+            HelpersCnt- helpers count, >=2. Number of  helpers  used  to  generate
+                        proposal. Recommended values: some small number like  3-5.
+                        It is possible  to  specify  HelpersCnt=PopSize,  but  for
+                        large populations it will result  in  proposal  generation
+                        overhead growing as O(N*PopSize^2).
+                        Values larger than PopSize will be silently  truncated  to
+                        PopSize.
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgowalk(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            int helperscnt,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoWalk: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoWalk: EpochsCnt<1");
+            alglib.ap.assert(helperscnt>=2, "MCMCSetAlgoWalk: HelpersCnt<2");
+            if( popsize<4 )
+            {
+                mcmcsetalgostretch(state, popsize, epochscnt, _params);
+                return;
+            }
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 1;
+            state.helperscnt = helperscnt;
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses DE move, as defined in 'RUN DMC:  an  efficient,  parallel  code  for
+        analyzing radial  velocity  observations  using  n-body  integrations  and
+        differential evolution Markov chain Monte Carlo' by Benjamin Nelson,  Eric
+        B. Ford, and Matthew J. Payne.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: for consistency with the rest of the library this move type requires
+              PopSize>=N+1. However, it also has a special requirement  PopSize>=4
+              that follows from the fact that  each  walker  needs  at  least  two
+              other walkers to produce a DE proposal, and that we can use parallel
+              moves (that need larger ensembles).
+              
+              For N=1 or N=2 it is possible to  specify PopSize=N+1 that  is  less
+              than 4. In order to simplify the algorithm, in this case we silently
+              override selection with the stretch move.
+              
+        NOTE: it is recommended to specify PopSize and EpochsCnt and  leave  other
+              parameters to their default values.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            
+            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+            
+            EpochsCnt-  iterations count to be reported, >=1
+            
+            Sigma   -   non-negative, standard deviation of  a  Gaussian  used  to
+                        randomly modify the proposal vector.  Recommended  values:
+                        about 1E-5. Zero value (or omitted) means that  a  default
+                        one is used.
+                        
+            Gamma0  -   the mean stretch factor for the proposal vector, >=0. Zero
+                        value  means  that  a  default  value  is  used  which  is
+                        2.38/sqrt(2N), as recommended by the original paper.
+            
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgode(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            double sigma,
+            double gamma0,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoDE: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoDE: EpochsCnt<1");
+            alglib.ap.assert(math.isfinite(sigma), "MCMCSetAlgoDE: Sigma is not finite value");
+            alglib.ap.assert(math.isfinite(gamma0), "MCMCSetAlgoDE: Gamma0 is not finite value");
+            alglib.ap.assert((double)(sigma)>=(double)(0), "MCMCSetAlgoDE: Sigma<0");
+            alglib.ap.assert((double)(gamma0)>=(double)(0), "MCMCSetAlgoDE: Gamma0<0");
+            if( popsize<4 )
+            {
+                mcmcsetalgostretch(state, popsize, epochscnt, _params);
+                return;
+            }
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 2;
+            state.desigma = apserv.rcase2((double)(sigma)>(double)(0), sigma, 1.0E-5, _params);
+            state.degamma0 = apserv.rcase2((double)(gamma0)>(double)(0), gamma0, 2.38/Math.Sqrt(2*state.n), _params);
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare  (ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses DE move with snooker update, as defined  in  'Differential  Evolution
+        Markov Chain with snooker updater and fewer chains' by Cajo J.F. ter Braak
+        and Jasper A. Vrugt.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: for consistency with the rest of the library this move type requires
+              PopSize>=N+1. However, it also has a special requirement  PopSize>=6
+              that follows from the fact that  each update  needs  at  least three
+              other walkers to produce a DE proposal, and that we can use parallel
+              moves (that need larger ensembles).
+              
+              In order to simplify the algorithm, if N+1<=PopSize<6,  we  silently
+              override selection with the stretch move.
+              
+        NOTE: it is recommended to specify PopSize and EpochsCnt and  leave  other
+              parameters to their default values.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            
+            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+            
+            EpochsCnt-  iterations count to be reported, >=1
+                        
+            Gamma0  -   the mean stretch factor for the proposal vector, >=0. Zero
+                        value  means  that  a  default  value  is  used  which  is
+                        2.38/sqrt(2), as recommended by the original paper.
+            
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgodesnooker(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            double gamma0,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoDESnooker: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoDESnooker: EpochsCnt<1");
+            alglib.ap.assert(math.isfinite(gamma0), "MCMCSetAlgoDESnooker: Gamma0 is not finite value");
+            alglib.ap.assert((double)(gamma0)>=(double)(0), "MCMCSetAlgoDESnooker: Gamma0<0");
+            if( popsize<6 )
+            {
+                mcmcsetalgostretch(state, popsize, epochscnt, _params);
+                return;
+            }
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 3;
+            state.degamma0 = apserv.rcase2((double)(gamma0)>(double)(0), gamma0, 2.38/Math.Sqrt(2), _params);
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare  (ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses Gaussian random walk, an ensemble of PopSize  completely  independent
+        walkers.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: this  move  is  special  because it can work with any ensemble size,
+              including PopSize=1 (most other moves  need  at  least  4,  5  or  6
+              walkers in the ensemble). Other moves will  throw  an  exception  if
+              called with PopSize<N+1.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            
+            PopSize -   ensemble size, PopSize>=1.
+            
+            EpochsCnt-  iterations count to be reported, >=1
+                        
+            C       -   array[N,N], a positive definite covariance matrix.  Walker
+                        position  is  perturbed  with  Gaussian  perturbation with
+                        covariance C.
+            
+            IsUpper -   if IsUpper=True, only upper triangle of  C  is  used  (the
+                        lower one is ignored). Otherwise, only lower  triangle  is
+                        used.
+            
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgogaussian(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            double[,] c,
+            bool isupper,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=1, "MCMCSetAlgoGaussian: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoGaussian: EpochsCnt<1");
+            alglib.ap.assert(alglib.ap.rows(c)>=state.n, "MCMCSetAlgoGaussian: rows(C)<N");
+            alglib.ap.assert(alglib.ap.cols(c)>=state.n, "MCMCSetAlgoGaussian: cols(C)<N");
+            alglib.ap.assert(apserv.isfinitertrmatrix(c, state.n, isupper, _params), "MCMCSetAlgoGaussian: C contains infinite or NaN values!");
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 4;
+            ablasf.rallocm(state.n, state.n, ref state.gausslowerc, _params);
+            if( isupper )
+            {
+                ablas.rmatrixtranspose(state.n, state.n, c, 0, 0, state.gausslowerc, 0, 0, _params);
+            }
+            else
+            {
+                ablasf.rcopym(state.n, state.n, c, state.gausslowerc, _params);
+            }
         }
 
 
@@ -15298,14 +16230,10 @@ public partial class alglib
             int itidx = 0;
             int itmax = 0;
             int groupscnt = 0;
-            int groupsize = 0;
-            int i0 = 0;
-            int i1 = 0;
-            int j0 = 0;
-            int j1 = 0;
-            int src = 0;
+            int grpdstsize = 0;
             int dst = 0;
-            int acceptcnt = 0;
+            int accept1cnt = 0;
+            int accepthcnt = 0;
             double v = 0;
 
             
@@ -15328,14 +16256,10 @@ public partial class alglib
                 itidx = state.rstate.ia[4];
                 itmax = state.rstate.ia[5];
                 groupscnt = state.rstate.ia[6];
-                groupsize = state.rstate.ia[7];
-                i0 = state.rstate.ia[8];
-                i1 = state.rstate.ia[9];
-                j0 = state.rstate.ia[10];
-                j1 = state.rstate.ia[11];
-                src = state.rstate.ia[12];
-                dst = state.rstate.ia[13];
-                acceptcnt = state.rstate.ia[14];
+                grpdstsize = state.rstate.ia[7];
+                dst = state.rstate.ia[8];
+                accept1cnt = state.rstate.ia[9];
+                accepthcnt = state.rstate.ia[10];
                 v = state.rstate.ra[0];
             }
             else
@@ -15347,15 +16271,11 @@ public partial class alglib
                 itidx = 81;
                 itmax = 255;
                 groupscnt = 74;
-                groupsize = -788;
-                i0 = 809;
-                i1 = 205;
-                j0 = -838;
-                j1 = 939;
-                src = -526;
-                dst = 763;
-                acceptcnt = -541;
-                v = -698.0;
+                grpdstsize = -788;
+                dst = 809;
+                accept1cnt = 205;
+                accepthcnt = -838;
+                v = 939.0;
             }
             if( state.rstate.stage==0 )
             {
@@ -15391,7 +16311,11 @@ public partial class alglib
                 alglib.ap.trace("//  MCMC SAMPLER STARTED                                                                          //\n");
                 alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
                 alglib.ap.trace(System.String.Format("N             = {0,6:d} (variables)\n", state.n));
-                alglib.ap.trace(System.String.Format("PopSize       = {0,6:d} (walkers)\n", state.popsize));
+                alglib.ap.trace(System.String.Format("PopSize       = {0,6:d} (walkers)\n", state.popwidth));
+                if( state.popheight>1 )
+                {
+                    alglib.ap.trace(System.String.Format("TemperLvls    = {0,6:d} (tempering levels)\n", state.popheight));
+                }
                 if( state.burninlen>0 )
                 {
                     alglib.ap.trace(System.String.Format("BurnIn        = {0,6:d} (burn-in phase, not reported)\n", state.burninlen));
@@ -15404,9 +16328,14 @@ public partial class alglib
             apserv.stimerstartcond(state.timertotal, state.dotimers, _params);
             state.userterminationneeded = false;
             state.repnfev = 0;
-            state.repacceptcnt = 0;
+            state.repaccept1cnt = 0;
+            state.repaccepthcnt = 0;
             state.repepochscnt = 0;
-            state.reppopsize = state.popsize;
+            state.repswapacceptcnt = 0;
+            state.repswapattemptcnt = 0;
+            ablasf.rsetallocv(state.popheight-1, 0.0, ref state.repavgswaprates, _params);
+            state.reppopwidth = state.popwidth;
+            state.reppopheight = state.popheight;
             state.repsamplesize = 0;
             n = state.n;
             if( state.reseedglobalrs )
@@ -15426,17 +16355,52 @@ public partial class alglib
             }
             if( state.useparallelmoves )
             {
-                ablasf.iallocv(state.popsize, ref state.propidx, _params);
-                ablasf.rallocv(state.popsize, ref state.propz, _params);
-                ablasf.rallocm(state.popsize, n+1, ref state.propxf, _params);
-                ablasf.iallocv(state.popsize, ref state.grpidx, _params);
+                ablasf.iallocv(state.popwidth*state.popheight, ref state.propidx, _params);
+                ablasf.rallocv(state.popwidth*state.popheight, ref state.propz, _params);
+                ablasf.rallocv(state.popwidth*state.popheight, ref state.propt, _params);
+                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.propxf, _params);
+                ablasf.iallocv(state.popwidth, ref state.grpabidx, _params);
             }
             else
             {
-                ablasf.iallocv(1, ref state.propidx, _params);
-                ablasf.rallocv(1, ref state.propz, _params);
-                ablasf.rallocm(1, n+1, ref state.propxf, _params);
+                ablasf.iallocv(state.popheight, ref state.propidx, _params);
+                ablasf.rallocv(state.popheight, ref state.propz, _params);
+                ablasf.rallocv(state.popheight, ref state.propt, _params);
+                ablasf.rallocm(state.popheight, n+1, ref state.propxf, _params);
             }
+            ablasf.iallocv(state.popwidth, ref state.grpdsidx, _params);
+            
+            //
+            // Initialize proposal generators
+            //
+            alglib.ap.assert((state.algokind==0 && state.proposalkind>=0) && state.proposalkind<=4, "MCMC: integrity check 795613 failed");
+            if( state.proposalkind==4 )
+            {
+                v = 0;
+                while( true )
+                {
+                    ablasf.rcopyallocm(n, n, state.gausslowerc, ref state.gaussl, _params);
+                    for(i=0; i<=n-1; i++)
+                    {
+                        state.gaussl[i,i] = state.gaussl[i,i]+v;
+                        for(j=i+1; j<=n-1; j++)
+                        {
+                            state.gaussl[i,j] = 0.0;
+                        }
+                    }
+                    if( trfac.spdmatrixcholesky(state.gaussl, n, false, _params) )
+                    {
+                        break;
+                    }
+                    v = apserv.coalesce(2*v, math.machineepsilon, _params);
+                }
+            }
+            
+            //
+            // Initial temperature ladder
+            //
+            alglib.ap.assert(state.ladderkind>=0 && state.ladderkind<=1, "MCMC: 915033 failed");
+            ablasf.rcopyallocv(state.popheight, state.initialladder, ref state.currentladder, _params);
             
             //
             // Allocate buffers, as mandated by the V2 protocol
@@ -15458,77 +16422,87 @@ public partial class alglib
             alglib.ap.assert((state.x0type==0 || state.x0type==1) || state.x0type==2, "MCMC: integrity check 221342 failed");
             if( state.useparallelmoves )
             {
-                for(i=0; i<=state.popsize-1; i++)
+                for(i=0; i<=state.popwidth-1; i++)
                 {
-                    state.grpidx[i] = i;
+                    state.grpabidx[i] = i;
                 }
-                alglib.ap.assert(state.popsize>=2, "MCMC: integrity check 294008 failed");
-                state.grp0size = state.popsize/2;
+                if( state.proposalkind!=4 )
+                {
+                    alglib.ap.assert(state.popwidth>=2, "MCMC: integrity check 294008 failed");
+                    state.grpasize = state.popwidth/2;
+                }
+                else
+                {
+                    state.grpasize = state.popwidth;
+                }
             }
             if( state.x0type==0 )
             {
-                alglib.ap.assert(state.cntx0>=1, "MCMC: integrity check 426148 failed");
-                ablasf.rallocm(state.popsize, n+1, ref state.population, _params);
-                for(i=0; i<=state.popsize-1; i++)
+                alglib.ap.assert(state.x0width>=1, "MCMC: integrity check 426148 failed");
+                alglib.ap.assert(state.x0height>=1, "MCMC: integrity check 884204 failed");
+                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
+                for(i=0; i<=state.popwidth*state.popheight-1; i++)
                 {
                     for(j=0; j<=n-1; j++)
                     {
-                        state.population[i,j] = state.x0m[0,j]+state.x0stddev*state.s[j]*hqrnd.hqrndnormal(state.globalrs, _params);
+                        state.population2d[i,j] = state.x0m[0,j]+state.x0stddev*state.s[j]*hqrnd.hqrndnormal(state.globalrs, _params);
                     }
                 }
             }
             if( state.x0type==1 )
             {
-                alglib.ap.assert(state.cntx0>=1, "MCMC: integrity check 487508 failed");
-                k = Math.Min(state.cntx0, state.popsize);
-                ablasf.rallocm(state.popsize, n+1, ref state.population, _params);
-                for(i=0; i<=k-1; i++)
+                alglib.ap.assert(state.x0width>=1, "MCMC: integrity check 487508 failed");
+                
+                //
+                // Prepare for the case when we do not have enough points to seed the algorithm.
+                //
+                // Compute a bounding box for the user-provided set of points, with center at
+                // tmp0[] and per-variable scaled radii in tmp2[]
+                //
+                // Make sure that the box has no zero radius and that his aspect ratio is well-normalized
+                //
+                ablasf.rallocv(n, ref state.tmp0, _params);
+                ablasf.rallocv(n, ref state.tmp1, _params);
+                ablasf.rcopyrv(n, state.x0m, 0, state.tmp0, _params);
+                ablasf.rcopyrv(n, state.x0m, 0, state.tmp1, _params);
+                for(i=1; i<=state.x0width-1; i++)
                 {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        state.population[i,j] = state.x0m[i,j];
-                    }
+                    ablasf.rmergeminrv(n, state.x0m, i, state.tmp0, _params);
+                    ablasf.rmergemaxrv(n, state.x0m, i, state.tmp1, _params);
                 }
-                if( k<state.popsize )
+                ablasf.rcopyallocv(n, state.tmp1, ref state.tmp2, _params);
+                ablasf.raddv(n, -1.0, state.tmp0, state.tmp2, _params);
+                ablasf.rmulv(n, 0.5, state.tmp2, _params);
+                ablasf.rmergedivv(n, state.s, state.tmp2, _params);
+                ablasf.raddv(n, 1.0, state.tmp1, state.tmp0, _params);
+                ablasf.rmulv(n, 0.5, state.tmp0, _params);
+                v = ablasf.rmaxabsv(n, state.tmp2, _params);
+                for(j=0; j<=n-1; j++)
                 {
-                    
-                    //
-                    // Not enough points to seed the algorithm. Compute a bounding box for the user-provided
-                    // set of points, with center at tmp0[] and per-variable scaled radii in tmp2[]
-                    //
-                    ablasf.rallocv(n, ref state.tmp0, _params);
-                    ablasf.rallocv(n, ref state.tmp1, _params);
-                    ablasf.rcopyrv(n, state.x0m, 0, state.tmp0, _params);
-                    ablasf.rcopyrv(n, state.x0m, 0, state.tmp1, _params);
-                    for(i=1; i<=state.cntx0-1; i++)
-                    {
-                        ablasf.rmergeminrv(n, state.x0m, i, state.tmp0, _params);
-                        ablasf.rmergemaxrv(n, state.x0m, i, state.tmp1, _params);
-                    }
-                    ablasf.rcopyallocv(n, state.tmp1, ref state.tmp2, _params);
-                    ablasf.raddv(n, -1.0, state.tmp0, state.tmp2, _params);
-                    ablasf.rmulv(n, 0.5, state.tmp2, _params);
-                    ablasf.rmergedivv(n, state.s, state.tmp2, _params);
-                    ablasf.raddv(n, 1.0, state.tmp1, state.tmp0, _params);
-                    ablasf.rmulv(n, 0.5, state.tmp0, _params);
-                    
-                    //
-                    // Make sure that the box has no zero radius and that his aspect ratio is well-normalized
-                    //
-                    v = ablasf.rmaxabsv(n, state.tmp2, _params);
-                    for(j=0; j<=n-1; j++)
-                    {
-                        state.tmp2[j] = apserv.coalesce(Math.Max(state.tmp2[j], 1.0E-6*v), 1, _params);
-                    }
-                    
-                    //
-                    // Seed the rest of the population
-                    //
-                    for(i=k; i<=state.popsize-1; i++)
+                    state.tmp2[j] = apserv.coalesce(Math.Max(state.tmp2[j], 1.0E-6*v), 1, _params);
+                }
+                
+                //
+                // Seed the algorithm using population in X0, when present; fill with random values when not present.
+                // The same population is used for all levels of the temperature ladder.
+                //
+                alglib.ap.assert(state.x0height==1, "MCMC: integrity check 894205 failed");
+                k = Math.Min(state.x0width, state.popwidth);
+                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
+                for(i=0; i<=state.popwidth*state.popheight-1; i++)
+                {
+                    if( i<state.x0width )
                     {
                         for(j=0; j<=n-1; j++)
                         {
-                            state.population[i,j] = hqrnd.hqrndnormal(state.globalrs, _params)*(0.33*state.tmp2[j]*state.s[j])+state.tmp0[j];
+                            state.population2d[i,j] = state.x0m[i,j];
+                        }
+                    }
+                    else
+                    {
+                        for(j=0; j<=n-1; j++)
+                        {
+                            state.population2d[i,j] = hqrnd.hqrndnormal(state.globalrs, _params)*(0.33*state.tmp2[j]*state.s[j])+state.tmp0[j];
                         }
                     }
                 }
@@ -15540,20 +16514,22 @@ public partial class alglib
                 //
                 // Reuse last population
                 //
-                k = Math.Min(state.lastpopulationsize, state.popsize);
-                ablasf.rallocm(state.popsize, n+1, ref state.population, _params);
-                for(i=0; i<=k-1; i++)
+                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
+                for(i=0; i<=state.popheight-1; i++)
                 {
-                    for(j=0; j<=n-1; j++)
+                    for(j=0; j<=state.popwidth-1; j++)
                     {
-                        state.population[i,j] = state.lastpopulation[i,j];
-                    }
-                }
-                for(i=k; i<=state.popsize-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        state.population[i,j] = state.lastpopulation[hqrnd.hqrnduniformi(state.globalrs, state.lastpopulationsize, _params),j];
+                        if( i<state.lastpopulationheight && j<state.lastpopulationwidth )
+                        {
+                            ablasf.rcopyrr(n, state.lastpopulation2d, i*state.lastpopulationwidth+j, state.population2d, i*state.popwidth+j, _params);
+                        }
+                        else
+                        {
+                            for(k=0; k<=n-1; k++)
+                            {
+                                state.population2d[i*state.popwidth+j,k] = state.lastpopulation2d[Math.Min(i, state.lastpopulationheight-1)*state.lastpopulationwidth+hqrnd.hqrnduniformi(state.globalrs, state.lastpopulationwidth, _params),k];
+                            }
+                        }
                     }
                 }
                 
@@ -15561,14 +16537,14 @@ public partial class alglib
                 // If parallel moves are used AND new population size matches its old size, reuse previous subdivision
                 // into groups (it is important for smooth restarts)
                 //
-                if( state.useparallelmoves && state.lastpopulationsize==state.popsize )
+                if( (state.useparallelmoves && state.lastpopulationwidth==state.popwidth) && state.lastpopulationheight==state.popheight )
                 {
-                    ablasf.icopyv(state.popsize, state.lastgrpidx, state.grpidx, _params);
+                    ablasf.icopyv(state.popwidth, state.lastgrpabidx, state.grpabidx, _params);
                 }
             }
             i = 0;
         lbl_4:
-            if( i>state.popsize-1 )
+            if( i>state.popwidth*state.popheight-1 )
             {
                 goto lbl_6;
             }
@@ -15580,14 +16556,14 @@ public partial class alglib
             state.querysize = 1;
             for(j=0; j<=n-1; j++)
             {
-                state.querydata[j] = state.population[i,j];
+                state.querydata[j] = state.population2d[i,j];
             }
             apserv.stimerstartcond(state.timercallback, state.dotimers, _params);
             state.rstate.stage = 0;
             goto lbl_rcomm;
         lbl_0:
             apserv.stimerstopcond(state.timercallback, state.dotimers, _params);
-            state.population[i,n] = state.replyfi[0];
+            state.population2d[i,n] = state.replyfi[0];
             i = i+1;
             goto lbl_4;
         lbl_6:
@@ -15608,9 +16584,9 @@ public partial class alglib
             // Subsequent moves
             //
             alglib.ap.assert(state.algokind==0, "MCMC: integrity check 238038 failed");
-            alglib.ap.assert(state.popsize>=2, "MCMC: integrity check 238039 failed");
+            alglib.ap.assert(state.popwidth>=2, "MCMC: integrity check 238039 failed");
             itmax = apserv.icase2(state.initialstart, state.burninlen, 0, _params)+state.epochscnt*state.thinby;
-            ablasf.rallocm(state.epochscnt*state.popsize, n+1, ref state.repsample, _params);
+            ablasf.rallocm(state.epochscnt*state.popwidth*apserv.icase2(state.reportalllevels, state.popheight, 1, _params), n+1, ref state.repsample, _params);
             itidx = 0;
         lbl_9:
             if( itidx>itmax-1 )
@@ -15621,8 +16597,22 @@ public partial class alglib
             //
             // Perform moves
             //
-            acceptcnt = 0;
-            groupscnt = apserv.icase2(state.useparallelmoves, 2, state.popsize, _params);
+            accept1cnt = 0;
+            accepthcnt = 0;
+            groupscnt = apserv.icase2(state.useparallelmoves, 2, state.popwidth, _params);
+            if( state.useparallelmoves )
+            {
+                ablasf.icopyv(state.popwidth, state.grpabidx, state.grpdsidx, _params);
+                grpdstsize = state.grpasize;
+            }
+            else
+            {
+                for(i=0; i<=state.popwidth-1; i++)
+                {
+                    state.grpdsidx[i] = i;
+                }
+                grpdstsize = 1;
+            }
             i = 0;
         lbl_12:
             if( i>groupscnt-1 )
@@ -15631,61 +16621,25 @@ public partial class alglib
             }
             
             //
+            // Handle degenerate cases (walk move with group size = pop size)
+            //
+            if( grpdstsize==0 )
+            {
+                alglib.ap.assert(i==groupscnt-1, "MCMC: 018015 failed");
+                goto lbl_14;
+            }
+            
+            //
             // Generate proposals
             //
-            if( state.useparallelmoves )
-            {
-                if( i==0 )
-                {
-                    i0 = 0;
-                    i1 = state.grp0size;
-                    j0 = state.grp0size;
-                    j1 = state.popsize;
-                }
-                else
-                {
-                    j0 = 0;
-                    j1 = state.grp0size;
-                    i0 = state.grp0size;
-                    i1 = state.popsize;
-                }
-                groupsize = i1-i0;
-                for(j=0; j<=groupsize-1; j++)
-                {
-                    dst = state.grpidx[i0+j];
-                    src = state.grpidx[j0+hqrnd.hqrnduniformi(state.globalrs, j1-j0, _params)];
-                    state.propidx[j] = dst;
-                    v = math.sqr((goodmanwearea-1)*hqrnd.hqrnduniformr(state.globalrs, _params)+1)/goodmanwearea;
-                    state.propz[j] = v;
-                    for(k=0; k<=n-1; k++)
-                    {
-                        state.propxf[j,k] = state.population[src,k]+v*(state.population[dst,k]-state.population[src,k]);
-                    }
-                }
-            }
-            else
-            {
-                groupsize = 1;
-                j = hqrnd.hqrnduniformi(state.globalrs, state.popsize-1, _params);
-                if( j>=i )
-                {
-                    j = j+1;
-                }
-                state.propidx[0] = i;
-                v = math.sqr((goodmanwearea-1)*hqrnd.hqrnduniformr(state.globalrs, _params)+1)/goodmanwearea;
-                state.propz[0] = v;
-                for(k=0; k<=n-1; k++)
-                {
-                    state.propxf[0,k] = state.population[j,k]+v*(state.population[i,k]-state.population[j,k]);
-                }
-            }
+            generateproposals(state, state.globalrs, state.grpdsidx, grpdstsize, state.propidx, state.propz, state.propt, state.propxf, _params);
             
             //
             // Issue RCOMM-V2 request
             //
             j = 0;
         lbl_15:
-            if( j>groupsize-1 )
+            if( j>grpdstsize-1 )
             {
                 goto lbl_17;
             }
@@ -15709,12 +16663,42 @@ public partial class alglib
             //
             // Acceptance test
             //
-            for(j=0; j<=groupsize-1; j++)
+            for(j=0; j<=grpdstsize-1; j++)
             {
-                if( (double)(hqrnd.hqrnduniformr(state.globalrs, _params))<(double)(Math.Min(1.0, Math.Exp((n-1)*Math.Log(state.propz[j])+state.propxf[j,n]-state.population[state.propidx[j],n]))) )
+                if( (double)(hqrnd.hqrnduniformr(state.globalrs, _params))<(double)(Math.Min(1.0, Math.Exp(state.propz[j]+(state.propxf[j,n]-state.population2d[state.propidx[j],n])/state.propt[j]))) )
                 {
-                    ablasf.rcopyrr(n+1, state.propxf, j, state.population, state.propidx[j], _params);
-                    acceptcnt = acceptcnt+1;
+                    ablasf.rcopyrr(n+1, state.propxf, j, state.population2d, state.propidx[j], _params);
+                    accept1cnt = accept1cnt+1;
+                    if( state.propidx[j]>state.popwidth )
+                    {
+                        accepthcnt = accepthcnt+1;
+                    }
+                }
+            }
+            
+            //
+            // Update split into A and B groups
+            //
+            if( state.useparallelmoves )
+            {
+                alglib.ap.assert(i<=1, "MCMC: 071013 failed");
+                if( i==0 )
+                {
+                    ablasf.iallocv(state.popwidth, ref state.tmpi0, _params);
+                    ablasf.icopyvx(state.grpasize, state.grpdsidx, 0, state.tmpi0, state.popwidth-state.grpasize, _params);
+                    ablasf.icopyvx(state.popwidth-state.grpasize, state.grpdsidx, state.grpasize, state.tmpi0, 0, _params);
+                    ablasf.icopyv(state.popwidth, state.tmpi0, state.grpdsidx, _params);
+                    grpdstsize = state.popwidth-state.grpasize;
+                }
+            }
+            else
+            {
+                alglib.ap.assert(grpdstsize==1, "MCMC: 092019 failed");
+                if( i<state.popwidth-1 )
+                {
+                    k = state.grpdsidx[0];
+                    state.grpdsidx[0] = state.grpdsidx[i+1];
+                    state.grpdsidx[i+1] = k;
                 }
             }
             i = i+1;
@@ -15722,16 +16706,21 @@ public partial class alglib
         lbl_14:
             
             //
+            // Apply swaps between temperature ladder levels and perform adaptation, if needed
+            //
+            applyswapsandadapt(state, itidx, itidx>=apserv.icase2(state.initialstart, state.burninlen, 0, _params), state.globalrs, _params);
+            
+            //
             // If parallel moves are used, update splits into groups
             //
             if( state.useparallelmoves )
             {
-                for(i=0; i<=state.popsize-1; i++)
+                for(i=0; i<=state.popwidth-1; i++)
                 {
-                    j = i+hqrnd.hqrnduniformi(state.globalrs, state.popsize-i, _params);
-                    k = state.grpidx[i];
-                    state.grpidx[i] = state.grpidx[j];
-                    state.grpidx[j] = k;
+                    j = i+hqrnd.hqrnduniformi(state.globalrs, state.popwidth-i, _params);
+                    k = state.grpabidx[i];
+                    state.grpabidx[i] = state.grpabidx[j];
+                    state.grpabidx[j] = k;
                 }
             }
             
@@ -15747,7 +16736,7 @@ public partial class alglib
             //
             if( state.dotrace )
             {
-                dologging(state, itidx, acceptcnt, _params);
+                dologging(state, itidx, accept1cnt, accepthcnt, _params);
             }
             if( state.userterminationneeded )
             {
@@ -15762,13 +16751,15 @@ public partial class alglib
             {
                 goto lbl_18;
             }
-            alglib.ap.assert(alglib.ap.rows(state.repsample)>=state.repsamplesize+state.popsize && alglib.ap.cols(state.repsample)>=n+1, "MCMC: integrity check 497055 failed");
-            for(i=0; i<=state.popsize-1; i++)
+            alglib.ap.assert(alglib.ap.rows(state.repsample)>=state.repsamplesize+state.popwidth*apserv.icase2(state.reportalllevels, state.popheight, 1, _params) && alglib.ap.cols(state.repsample)>=n+1, "MCMC: integrity check 497055 failed");
+            alglib.ap.assert(!state.reportalllevels, "$rep-all-lvl");
+            for(i=0; i<=state.popwidth-1; i++)
             {
-                ablasf.rcopyrr(n+1, state.population, i, state.repsample, state.repsamplesize, _params);
+                ablasf.rcopyrr(n+1, state.population2d, i, state.repsample, state.repsamplesize, _params);
                 state.repsamplesize = state.repsamplesize+1;
             }
-            state.repacceptcnt = state.repacceptcnt+acceptcnt;
+            state.repaccept1cnt = state.repaccept1cnt+accept1cnt;
+            state.repaccepthcnt = state.repaccepthcnt+accepthcnt;
             state.repepochscnt = state.repepochscnt+1;
             if( !state.xrep )
             {
@@ -15819,14 +16810,10 @@ public partial class alglib
             state.rstate.ia[4] = itidx;
             state.rstate.ia[5] = itmax;
             state.rstate.ia[6] = groupscnt;
-            state.rstate.ia[7] = groupsize;
-            state.rstate.ia[8] = i0;
-            state.rstate.ia[9] = i1;
-            state.rstate.ia[10] = j0;
-            state.rstate.ia[11] = j1;
-            state.rstate.ia[12] = src;
-            state.rstate.ia[13] = dst;
-            state.rstate.ia[14] = acceptcnt;
+            state.rstate.ia[7] = grpdstsize;
+            state.rstate.ia[8] = dst;
+            state.rstate.ia[9] = accept1cnt;
+            state.rstate.ia[10] = accepthcnt;
             state.rstate.ra[0] = v;
             return result;
         }
@@ -15845,7 +16832,7 @@ public partial class alglib
                                 callback).
                                 
         OUTPUT PARAMETERS:
-            Sample          -   array[SampleSize*PopSize,N+1], current sample:
+            Sample          -   array[SampleSize,N+1], current sample:
                                 * first N columns store variable values, the  last
                                   one stores log-likelihood value as  computed  by
                                   the callback
@@ -15859,10 +16846,10 @@ public partial class alglib
                                   at the row PopSize*J+I.
                                 
             SampleSize      -   current sample size:
-                                * for a sampler that stopped it is equal to PopSize
+                                * for a sampler that stopped it is equal to PopSize*EpochsCnt
                                 * for a sampler that is  still  running,  we  have
-                                  0<=SampleSize<PopSize. Zero sample  is  reported
-                                  upon the first call to rep().
+                                  0<=SampleSize<PopSize*EpochsCnt. Zero sample  is
+                                  reported upon the first call to rep().
                                   
             Rep             -   other information being reported, including:
                                 * acceptance rate
@@ -15931,7 +16918,8 @@ public partial class alglib
             // Parameters that are always valid + default state for RepSampleSize=0
             //
             rep.nfev = state.repnfev;
-            rep.acceptrate = state.repacceptcnt/apserv.coalesce(state.repepochscnt*state.reppopsize, 1, _params);
+            rep.acceptrate = state.repaccept1cnt/apserv.coalesce(state.repepochscnt*state.reppopwidth, 1, _params);
+            rep.swapacceptrate = state.repswapacceptcnt/apserv.coalesce(state.repswapattemptcnt, 1, _params);
             ablasf.rsetallocv(state.n, 0.0, ref rep.autocorrtimes, _params);
             samplesize = state.repsamplesize;
             
@@ -16059,7 +17047,7 @@ public partial class alglib
             }
             state.x0type = 2;
             state.reseedglobalrs = false;
-            state.rstate.ia = new int[14+1];
+            state.rstate.ia = new int[10+1];
             state.rstate.ra = new double[0+1];
             state.rstate.stage = -1;
             return result;
@@ -16074,7 +17062,7 @@ public partial class alglib
         {
             state.protocolversion = 2;
             state.issuesparserequests = false;
-            state.rstate.ia = new int[14+1];
+            state.rstate.ia = new int[10+1];
             state.rstate.ra = new double[0+1];
             state.rstate.stage = -1;
         }
@@ -16088,7 +17076,7 @@ public partial class alglib
         {
             state.protocolversion = 2;
             state.issuesparserequests = true;
-            state.rstate.ia = new int[14+1];
+            state.rstate.ia = new int[10+1];
             state.rstate.ra = new double[0+1];
             state.rstate.stage = -1;
         }
@@ -16105,13 +17093,22 @@ public partial class alglib
             alglib.xparams _params)
         {
             state.n = n;
-            state.cntx0 = 0;
+            state.x0width = 0;
+            state.x0height = 0;
             state.x0type = -1;
             state.algokind = 0;
-            state.popsize = 10*n;
+            state.proposalkind = 0;
+            state.popwidth = 10*n;
+            state.ladderkind = 0;
+            state.popheight = 1;
+            ablasf.rsetallocv(1, 1.0, ref state.initialladder, _params);
+            state.laddernu0 = 0.05;
+            state.laddertau = 1000.0;
+            state.noladderadaptationafterburnin = false;
             state.epochscnt = 100;
             state.burninlen = 0;
             state.thinby = 1;
+            state.reportalllevels = false;
             state.initialstart = true;
             state.protocolversion = 2;
             state.haslastpopulation = false;
@@ -16120,8 +17117,8 @@ public partial class alglib
             ablasf.rsetallocv(n, 1.0, ref state.s, _params);
             hqrnd.hqrndseed(state.rngseed, 856446, state.globalrs, _params);
             state.reseedglobalrs = true;
-            state.useparallelmoves = false;
-            state.rstate.ia = new int[14+1];
+            state.useparallelmoves = true;
+            state.rstate.ia = new int[10+1];
             state.rstate.ra = new double[0+1];
             state.rstate.stage = -1;
         }
@@ -16135,7 +17132,8 @@ public partial class alglib
         *************************************************************************/
         private static void dologging(mcmcstate state,
             int iteridx,
-            int acceptcnt,
+            int accept1cnt,
+            int accepthcnt,
             alglib.xparams _params)
         {
             double[] popmean = new double[0];
@@ -16143,39 +17141,39 @@ public partial class alglib
             int i = 0;
             int j = 0;
             int n = 0;
-            int popsize = 0;
+            int popwidth = 0;
             double llmean = 0;
             double llstddev = 0;
 
             alglib.ap.assert(state.dotrace, "MCMC: DoLogging() is called with tracing disable; this function shall not be called when logging is turned off");
             n = state.n;
-            popsize = state.popsize;
+            popwidth = state.popwidth;
             if( state.dodetailedtrace )
             {
                 alglib.ap.trace(System.String.Format("=== ITERATION {0,5:d} ================================================================================\n", iteridx));
                 ablasf.rsetallocv(n, 0.0, ref popmean, _params);
                 ablasf.rsetallocv(n, 0.0, ref popstddev, _params);
-                for(i=0; i<=popsize-1; i++)
+                for(i=0; i<=popwidth-1; i++)
                 {
                     for(j=0; j<=n-1; j++)
                     {
-                        popmean[j] = popmean[j]+state.population[i,j];
+                        popmean[j] = popmean[j]+state.population2d[i,j];
                     }
                 }
                 for(j=0; j<=n-1; j++)
                 {
-                    popmean[j] = popmean[j]/popsize;
+                    popmean[j] = popmean[j]/popwidth;
                 }
-                for(i=0; i<=popsize-1; i++)
+                for(i=0; i<=popwidth-1; i++)
                 {
                     for(j=0; j<=n-1; j++)
                     {
-                        popstddev[j] = popstddev[j]+(state.population[i,j]-popmean[j])*(state.population[i,j]-popmean[j]);
+                        popstddev[j] = popstddev[j]+(state.population2d[i,j]-popmean[j])*(state.population2d[i,j]-popmean[j]);
                     }
                 }
                 for(j=0; j<=n-1; j++)
                 {
-                    popstddev[j] = Math.Sqrt(popstddev[j]/popsize);
+                    popstddev[j] = Math.Sqrt(popstddev[j]/popwidth);
                 }
                 alglib.ap.trace("pop.mean   = ");
                 apserv.tracevectore3(popmean, 0, n, _params);
@@ -16184,23 +17182,146 @@ public partial class alglib
                 apserv.tracevectore3(popstddev, 0, n, _params);
                 alglib.ap.trace("\n");
                 llmean = 0;
-                for(i=0; i<=popsize-1; i++)
+                for(i=0; i<=popwidth-1; i++)
                 {
-                    llmean = llmean+state.population[i,n];
+                    llmean = llmean+state.population2d[i,n];
                 }
-                llmean = llmean/popsize;
+                llmean = llmean/popwidth;
                 llstddev = 0;
-                for(i=0; i<=popsize-1; i++)
+                for(i=0; i<=popwidth-1; i++)
                 {
-                    llstddev = llstddev+math.sqr(state.population[i,n]-llmean);
+                    llstddev = llstddev+math.sqr(state.population2d[i,n]-llmean);
                 }
-                llstddev = Math.Sqrt(llstddev/popsize);
+                llstddev = Math.Sqrt(llstddev/popwidth);
                 alglib.ap.trace(System.String.Format("loglik.mean   = {0,0:F3}\n", llmean));
                 alglib.ap.trace(System.String.Format("loglik.stddev = {0,0:F3}\n", llstddev));
-                alglib.ap.trace(System.String.Format("accept.rate   = {0,0:F3}\n", (double)acceptcnt/(double)popsize));
+                alglib.ap.trace(System.String.Format("accept.rate   = {0,0:F3}\n", (double)accept1cnt/(double)popwidth));
+                if( state.popheight>1 )
+                {
+                    alglib.ap.trace("> Temperature ladder:\n");
+                    alglib.ap.trace("temperatures  = [");
+                    apserv.tracevectore3(state.currentladder, 0, state.popheight, _params);
+                    alglib.ap.trace("]\n");
+                    alglib.ap.trace("accept rates  = [");
+                    apserv.tracevectore3(state.repavgswaprates, 0, state.popheight-1, _params);
+                    alglib.ap.trace("]\n");
+                }
             }
             else
             {
+            }
+        }
+
+
+        /*************************************************************************
+        Apply temperature ladder swaps and perform adaptation;
+        does nothing for popheight=1.
+
+        INPUT PARAMETERS:
+            RawItIdx        iteration index, starts from the very beginning,
+                            is NOT thinned (counts all iterations)
+            BurnInOver      if True, burn-in phase is completed
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void applyswapsandadapt(mcmcstate state,
+            int rawitidx,
+            bool burninover,
+            hqrnd.hqrndstate rs,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int popheight = 0;
+            int popwidth = 0;
+            int i = 0;
+            int widx = 0;
+            int hidx = 0;
+            int idx0 = 0;
+            int idx1 = 0;
+            double deltabeta = 0;
+            double logprob = 0;
+            bool adaptationdone = new bool();
+            double decay = 0;
+            double v = 0;
+
+            n = state.n;
+            popheight = state.popheight;
+            popwidth = state.popwidth;
+            if( popheight==1 )
+            {
+                return;
+            }
+            
+            //
+            // Apply swaps
+            //
+            ablasf.rsetallocv(popheight-1, 0.0, ref state.saacceptrates, _params);
+            for(hidx=popheight-1; hidx>=1; hidx--)
+            {
+                deltabeta = 1/state.currentladder[hidx]-1/state.currentladder[hidx-1];
+                for(widx=0; widx<=popwidth-1; widx++)
+                {
+                    idx0 = hidx*popwidth+widx;
+                    idx1 = (hidx-1)*popwidth+widx;
+                    logprob = -(deltabeta*(state.population2d[idx0,n]-state.population2d[idx1,n]));
+                    if( (double)(hqrnd.hqrnduniformr(rs, _params))<(double)(Math.Min(Math.Exp(logprob), 1)) )
+                    {
+                        apserv.swaprows(state.population2d, idx0, idx1, n+1, _params);
+                        state.repswapacceptcnt = state.repswapacceptcnt+1;
+                        state.saacceptrates[hidx-1] = state.saacceptrates[hidx-1]+(double)1/(double)popwidth;
+                    }
+                    state.repswapattemptcnt = state.repswapattemptcnt+1;
+                }
+            }
+            if( popheight>1 )
+            {
+                if( (double)(ablasf.rmaxabsv(popheight-1, state.repavgswaprates, _params))>(double)(0) )
+                {
+                    v = 0.01;
+                    ablasf.rmulv(popheight-1, 1-v, state.repavgswaprates, _params);
+                    ablasf.raddv(popheight-1, v, state.saacceptrates, state.repavgswaprates, _params);
+                }
+                else
+                {
+                    ablasf.rcopyv(popheight-1, state.saacceptrates, state.repavgswaprates, _params);
+                }
+            }
+            
+            //
+            // Perform adaptation
+            //
+            if( !burninover || !state.noladderadaptationafterburnin )
+            {
+                decay = state.laddernu0*state.laddertau/(rawitidx+state.laddertau+math.machineepsilon);
+                adaptationdone = false;
+                if( state.ladderkind==0 )
+                {
+                    adaptationdone = true;
+                }
+                if( state.ladderkind==1 )
+                {
+                    if( popheight>=3 )
+                    {
+                        ablasf.rallocv(popheight-2, ref state.savecsi, _params);
+                        ablasf.rallocv(popheight-1, ref state.saproposedladder, _params);
+                        for(i=0; i<=popheight-3; i++)
+                        {
+                            state.savecsi[i] = Math.Log(state.currentladder[i+1]-state.currentladder[i])+decay*(state.saacceptrates[i]-state.saacceptrates[i+1]);
+                        }
+                        state.saproposedladder[0] = state.currentladder[0];
+                        for(i=1; i<=popheight-2; i++)
+                        {
+                            state.saproposedladder[i] = state.saproposedladder[i-1]+Math.Exp(state.savecsi[i-1]);
+                        }
+                        if( (double)(state.saproposedladder[popheight-2])<(double)(state.currentladder[popheight-1]) )
+                        {
+                            ablasf.rcopyv(popheight-1, state.saproposedladder, state.currentladder, _params);
+                        }
+                    }
+                    adaptationdone = true;
+                }
+                alglib.ap.assert(adaptationdone, "MCMC: 728137");
             }
         }
 
@@ -16215,12 +17336,283 @@ public partial class alglib
             alglib.xparams _params)
         {
             state.haslastpopulation = true;
-            state.lastpopulationsize = state.popsize;
-            ablasf.rcopyallocm(state.popsize, state.n+1, state.population, ref state.lastpopulation, _params);
+            state.lastpopulationwidth = state.popwidth;
+            state.lastpopulationheight = state.popheight;
+            ablasf.rcopyallocm(state.popwidth*state.popheight, state.n+1, state.population2d, ref state.lastpopulation2d, _params);
             if( state.useparallelmoves )
             {
-                ablasf.icopyallocv(state.popsize, state.grpidx, ref state.lastgrpidx, _params);
+                ablasf.icopyallocv(state.popwidth, state.grpabidx, ref state.lastgrpabidx, _params);
             }
+        }
+
+
+        /*************************************************************************
+        Generates proposals for walkers
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void generateproposals(mcmcstate state,
+            hqrnd.hqrndstate rs,
+            int[] grpidx,
+            int dstgrpsize,
+            int[] propidx,
+            double[] propz,
+            double[] propt,
+            double[,] propxf,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int popwidth = 0;
+            int popheight = 0;
+            int helperscnt = 0;
+            int widx = 0;
+            int hidx = 0;
+            int offs = 0;
+            int j = 0;
+            int jj = 0;
+            int itmp = 0;
+            int k = 0;
+            int src = 0;
+            int srca = 0;
+            int srcb = 0;
+            int srcc = 0;
+            int dst = 0;
+            double v = 0;
+            double vs = 0;
+            double vnrm = 0;
+
+            n = state.n;
+            popwidth = state.popwidth;
+            popheight = state.popheight;
+            alglib.ap.assert(state.algokind==0, "MCMC 188955 failed");
+            alglib.ap.assert((((state.proposalkind==0 || state.proposalkind==1) || state.proposalkind==2) || state.proposalkind==3) || state.proposalkind==4, "MCMC 250131 failed");
+            
+            //
+            // Prepare group structure
+            //
+            alglib.ap.assert(state.proposalkind!=0 || popwidth-dstgrpsize>=1, "MCMC 564025 failed");
+            alglib.ap.assert(state.proposalkind!=1 || (popwidth-dstgrpsize>=2 && state.helperscnt>=2), "MCMC 272113 failed");
+            alglib.ap.assert(state.proposalkind!=2 || popwidth-dstgrpsize>=2, "MCMC 367147 failed");
+            alglib.ap.assert(state.proposalkind!=3 || popwidth-dstgrpsize>=3, "MCMC 432520 failed");
+            
+            //
+            // Generate proposals
+            //
+            alglib.ap.assert((((alglib.ap.len(propidx)>=dstgrpsize*popheight && alglib.ap.len(propz)>=dstgrpsize*popheight) && alglib.ap.len(propt)>=dstgrpsize*popheight) && alglib.ap.rows(propxf)>=dstgrpsize*popheight) && alglib.ap.cols(propxf)>=n+1, "MCMC 188955 failed");
+            if( state.proposalkind==0 )
+            {
+                
+                //
+                // Stretch move
+                //
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        dst = grpidx[widx];
+                        src = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        dst = hidx*popwidth+dst;
+                        src = hidx*popwidth+src;
+                        propidx[offs] = dst;
+                        v = math.sqr((goodmanwearea-1)*hqrnd.hqrnduniformr(rs, _params)+1)/goodmanwearea;
+                        propz[offs] = (n-1)*Math.Log(v);
+                        propt[offs] = state.currentladder[hidx];
+                        for(k=0; k<=n-1; k++)
+                        {
+                            propxf[offs,k] = state.population2d[src,k]+v*(state.population2d[dst,k]-state.population2d[src,k]);
+                        }
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            if( state.proposalkind==1 )
+            {
+                
+                //
+                // Walk move
+                //
+                helperscnt = Math.Min(state.helperscnt, popwidth-dstgrpsize);
+                ablasf.iallocv(popwidth, ref state.gphelperidx, _params);
+                ablasf.rallocv(n, ref state.gpmeanhelper, _params);
+                ablasf.rallocv(n, ref state.gpproposal, _params);
+                ablasf.icopyvx(popwidth-dstgrpsize, grpidx, dstgrpsize, state.gphelperidx, 0, _params);
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        
+                        //
+                        // Determine Dst and Helper indexes
+                        //
+                        dst = grpidx[widx];
+                        for(jj=0; jj<=helperscnt-1; jj++)
+                        {
+                            apserv.swapelementsi(state.gphelperidx, jj, jj+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize-jj, _params), _params);
+                        }
+                        dst = hidx*popwidth+dst;
+                        
+                        //
+                        // Generate proposal
+                        //
+                        propidx[offs] = dst;
+                        ablasf.rsetv(n, 0.0, state.gpmeanhelper, _params);
+                        ablasf.rsetv(n, 0.0, state.gpproposal, _params);
+                        vs = 0;
+                        for(jj=0; jj<=helperscnt-1; jj++)
+                        {
+                            v = hqrnd.hqrndnormal(rs, _params);
+                            ablasf.raddrv(n, v, state.population2d, hidx*popwidth+state.gphelperidx[jj], state.gpproposal, _params);
+                            ablasf.raddrv(n, 1.0/helperscnt, state.population2d, hidx*popwidth+state.gphelperidx[jj], state.gpmeanhelper, _params);
+                            vs = vs+v;
+                        }
+                        ablasf.raddv(n, -vs, state.gpmeanhelper, state.gpproposal, _params);
+                        propz[offs] = 0.0;
+                        propt[offs] = state.currentladder[hidx];
+                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
+                        ablasf.raddvr(n, 1.0, state.gpproposal, propxf, offs, _params);
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            if( state.proposalkind==2 )
+            {
+                
+                //
+                // DE move
+                //
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        
+                        //
+                        // Determine Dst and SrcA/SrcB indexes
+                        //
+                        dst = grpidx[widx];
+                        do
+                        {
+                            srca = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                            srcb = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        }
+                        while( srca==srcb );
+                        dst = hidx*popwidth+dst;
+                        srca = hidx*popwidth+srca;
+                        srcb = hidx*popwidth+srcb;
+                        
+                        //
+                        // Generate proposal
+                        //
+                        propidx[offs] = dst;
+                        propz[offs] = 0.0;
+                        propt[offs] = state.currentladder[hidx];
+                        v = state.degamma0+state.desigma*hqrnd.hqrndnormal(rs, _params);
+                        for(k=0; k<=n-1; k++)
+                        {
+                            propxf[offs,k] = state.population2d[dst,k]+v*(state.population2d[srca,k]-state.population2d[srcb,k]);
+                        }
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            if( state.proposalkind==3 )
+            {
+                
+                //
+                // DE move with snooker update
+                //
+                ablasf.rallocv(n, ref state.gpdelta, _params);
+                ablasf.rallocv(n, ref state.gptmp0, _params);
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        
+                        //
+                        // Determine Dst and SrcA/SrcB/SrcC indexes
+                        //
+                        dst = grpidx[widx];
+                        srca = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        do
+                        {
+                            srcb = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        }
+                        while( srcb==srca );
+                        do
+                        {
+                            srcc = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        }
+                        while( !(srcc!=srcb && srcc!=srca) );
+                        dst = hidx*popwidth+dst;
+                        srca = hidx*popwidth+srca;
+                        srcb = hidx*popwidth+srcb;
+                        srcc = hidx*popwidth+srcc;
+                        
+                        //
+                        // Generate proposal
+                        //
+                        propidx[offs] = dst;
+                        ablasf.rcopyrv(n, state.population2d, dst, state.gpdelta, _params);
+                        ablasf.raddrv(n, -1.0, state.population2d, srca, state.gpdelta, _params);
+                        vnrm = Math.Sqrt(ablasf.rdotv2(n, state.gpdelta, _params));
+                        ablasf.rmulv(n, 1/(vnrm+math.minrealnumber), state.gpdelta, _params);
+                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
+                        ablasf.raddvr(n, state.degamma0*(ablasf.rdotvr(n, state.gpdelta, state.population2d, srcb, _params)-ablasf.rdotvr(n, state.gpdelta, state.population2d, srcc, _params)), state.gpdelta, propxf, offs, _params);
+                        ablasf.rcopyrv(n, propxf, offs, state.gptmp0, _params);
+                        ablasf.raddrv(n, -1.0, state.population2d, srca, state.gptmp0, _params);
+                        v = Math.Sqrt(ablasf.rdotv2(n, state.gptmp0, _params));
+                        propz[offs] = (n-1)*Math.Log((v+math.minrealnumber)/(vnrm+math.minrealnumber));
+                        propt[offs] = state.currentladder[hidx];
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            if( state.proposalkind==4 )
+            {
+                
+                //
+                // Gaussian move
+                //
+                ablasf.rallocv(n, ref state.gpdelta, _params);
+                ablasf.rallocv(n, ref state.gptmp0, _params);
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        
+                        //
+                        // Determine Dst to update
+                        //
+                        dst = hidx*popwidth+grpidx[widx];
+                        
+                        //
+                        // Generate proposal
+                        //
+                        for(k=0; k<=n-1; k++)
+                        {
+                            state.gptmp0[k] = hqrnd.hqrndnormal(rs, _params);
+                        }
+                        ablasf.rgemv(n, n, 1.0, state.gaussl, 0, state.gptmp0, 0.0, state.gpdelta, _params);
+                        propidx[offs] = dst;
+                        propz[offs] = 0.0;
+                        propt[offs] = state.currentladder[hidx];
+                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
+                        ablasf.raddvr(n, 1.0, state.gpdelta, propxf, offs, _params);
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            alglib.ap.assert(false, "MCMC: 319132 failed");
         }
 
 
@@ -16237,7 +17629,7 @@ public partial class alglib
             int n = 0;
             int m = 0;
             int epochscnt = 0;
-            int popsize = 0;
+            int popwidth = 0;
             int idxv = 0;
             int idxw = 0;
             double[] a = new double[0];
@@ -16245,8 +17637,9 @@ public partial class alglib
 
             n = state.n;
             epochscnt = state.repepochscnt;
-            popsize = state.reppopsize;
-            alglib.ap.assert(epochscnt*popsize==state.repsamplesize, "MCMC: integrity check 657126 failed");
+            popwidth = state.reppopwidth;
+            alglib.ap.assert(!state.reportalllevels, "MCMC: 778552 failed");
+            alglib.ap.assert(epochscnt*popwidth==state.repsamplesize, "MCMC: integrity check 657126 failed");
             ablasf.rsetallocv(n, 0.0, ref autocorrtimes, _params);
             
             //
@@ -16259,12 +17652,12 @@ public partial class alglib
                 // Compute averaged autocorrelation function
                 //
                 ablasf.rsetallocv(epochscnt, 0.0, ref a, _params);
-                for(idxw=0; idxw<=popsize-1; idxw++)
+                for(idxw=0; idxw<=popwidth-1; idxw++)
                 {
                     autocorrij(state, idxw, idxv, ref a2, _params);
-                    ablasf.raddv(epochscnt, (double)1/(double)popsize, a2, a, _params);
+                    ablasf.raddv(epochscnt, (double)1/(double)popwidth, a2, a, _params);
                 }
-                ablasf.rmulv(epochscnt, 1/a[0], a, _params);
+                ablasf.rmulv(epochscnt, 1/(a[0]+Math.Sqrt(math.minrealnumber)*apserv.possign(a[0], _params)), a, _params);
                 
                 //
                 // Compute integrated autocorrelation time using finite window M, such that time(M)*C<=M for C~5.
@@ -16291,15 +17684,16 @@ public partial class alglib
         {
             int epochscnt = 0;
             int ex2 = 0;
-            int popsize = 0;
+            int popwidth = 0;
             double[] x = new double[0];
             double meanx = 0;
             int i = 0;
             complex[] f = new complex[0];
 
             epochscnt = state.repepochscnt;
-            popsize = state.reppopsize;
-            alglib.ap.assert(epochscnt*popsize==state.repsamplesize, "MCMC: integrity check 678132 failed");
+            popwidth = state.reppopwidth;
+            alglib.ap.assert(!state.reportalllevels, "MCMC: 778552 failed");
+            alglib.ap.assert(epochscnt*popwidth==state.repsamplesize, "MCMC: integrity check 678132 failed");
             ex2 = 1;
             while( ex2<epochscnt )
             {
@@ -16309,7 +17703,7 @@ public partial class alglib
             meanx = 0;
             for(i=0; i<=epochscnt-1; i++)
             {
-                x[i] = state.repsample[state.reppopsize*i+idxw,idxv];
+                x[i] = state.repsample[popwidth*i+idxw,idxv];
                 meanx = meanx+x[i];
             }
             meanx = meanx/epochscnt;

@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 4.06.0 (source code generated 2025-10-08)
+ALGLIB 4.07.0 (source code generated 2025-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -8307,6 +8307,19 @@ public partial class alglib
     /*
      * Parts of alglib class that are shared between all (commercial and free) managed editions of ALGLIB
      */
+    public partial class ap
+    {
+        public class opaque_object : apobject
+        {
+            public override void init()
+            {
+            }
+            public override apobject make_copy()
+            {
+                return new opaque_object();
+            }
+        }
+    }
     static internal ulong ae_get_effective_threading_wrk(xparams p)
     {
         if( p==null || (p.flags&FLG_THREADING_MASK_WRK)==FLG_THREADING_DEFAULT )
@@ -8322,6 +8335,7 @@ public partial class alglib
     }
     
 }
+
 public partial class alglib
 {
     /*
