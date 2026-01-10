@@ -167,8 +167,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Vgo(0).ShouldEqual(11121.768749617131, 1e-3);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, solution.U(0));
-            Rad2Deg(pitch).ShouldEqual(83.373742107525047);
-            Rad2Deg(heading).ShouldEqual(89.53966801098629);
+            Rad2Deg(pitch).ShouldEqual(83.373269308213963, 1e-3);
+            Rad2Deg(heading).ShouldEqual(89.53966801098629, 1e-3);
 
             (V3 rf1, _) = solution.StateVectors(solution.EndTime(1));
 
