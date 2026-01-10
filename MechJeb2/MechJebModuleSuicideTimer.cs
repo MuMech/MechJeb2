@@ -67,9 +67,9 @@ namespace MuMech
             for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
                 FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
-                int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
+                int       kspStage  = Core.StageStats.VacStats[mjPhase].KSPStage;
 
-                suicideBuilder.AddStageUsingFinalMass(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Isp, fuelStats.DeltaTime,
+                suicideBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust, fuelStats.Isp,
                     kspStage, mjPhase);
             }
 
