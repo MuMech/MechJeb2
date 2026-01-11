@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 
@@ -344,8 +343,6 @@ namespace MechJebLib.Utils
             }
         }
 
-        public static Stopwatch timer1 = new Stopwatch();
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ApplyHermiteSimpsonDynamics(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot, HermiteSimpsonSegment segment, HermiteSimpsonIndexes indexes, int n)
         {
@@ -361,8 +358,6 @@ namespace MechJebLib.Utils
             /*
              * RDot
              */
-
-            timer1.Start();
 
             Dual H  = dbt / (n - 1);
             Dual H6 = H / 6.0;
@@ -529,8 +524,6 @@ namespace MechJebLib.Utils
             for (int k = 0; k < NUM_VARS; k++)
                 if (jac[k].z != 0)
                     alglib.sparseappendelement(j, indexes.Index(k), jac[k].z);
-
-            timer1.Stop();
 
             /*
              * VDOT

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Linq;
 using System.Text;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
@@ -109,7 +110,7 @@ namespace MechJebLib.PSG
 
             public Ascent Build()
             {
-                double    m0 = _phases[0].m0;
+                double    m0 = _phases[0].M0;
                 ITerminal terminal;
 
                 _fixedBurnTime = true;
@@ -150,13 +151,15 @@ namespace MechJebLib.PSG
 
                 var normalizedPhases = new PhaseCollection();
 
-                foreach (Phase phase in _phases)
-                    normalizedPhases.Add(phase.Rescale(problem.Scale));
+                normalizedPhases.AddRange(_phases.Select(phase => phase.Rescale(problem.Scale)));
+
+                normalizedPhases.FixLastShutdownStage();
 
                 var ascent = new Ascent(problem, normalizedPhases, _solution, _fixedBurnTime);
 
                 return ascent;
             }
+
 
             public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, double argp,
                 double fpa, bool attachAltFlag, bool lanflag, bool argpflag)
