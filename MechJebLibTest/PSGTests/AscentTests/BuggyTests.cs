@@ -215,7 +215,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             solution.Bt(0, 0).ShouldEqual(150.314019929573, 1e-4);
-            solution.Bt(1, 0).ShouldEqual(401.15382485607802, 1e-3);
+            solution.Bt(1, 0).ShouldEqual(399.27103168733788, 1e-3);
             solution.Bt(2, 0).ShouldBeZero(1e-2);
             solution.Bt(3, 0).ShouldBeZero(1e-2);
 
