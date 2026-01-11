@@ -244,11 +244,15 @@ namespace MuMech
             if (Core.Node.Autowarp)
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel33, _ascentSettings.WarpCountDown, "s", 35); //Launch countdown:
 
-            bool targetExists = Core.Target.NormalTargetExists;
+            bool targetExists = Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == VesselState.mainBody;
             if (!_launchingWithAnyPlaneControl && !targetExists)
             {
                 _launchingToPlane = _launchingToRendezvous = _launchingToMatchLan = false;
-                GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel34); //Select a target for a timed launch.
+                if (Core.Target.NormalTargetExists)
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnInvalidTarget,
+                        GuiUtils.OrangeLabel); // Target must be in the same sphere of influence.
+                else
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel34); //Select a target for a timed launch.
             }
 
             if (!_launchingWithAnyPlaneControl)
