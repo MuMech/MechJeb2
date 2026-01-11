@@ -170,7 +170,8 @@ namespace MuMech
                 _ascentSettings.DesiredInclination.Val = Math.Round(VesselState.latitude, 3);
             GUILayout.EndHorizontal();
 
-            double delta = Math.Abs(VesselState.latitude) - Math.Abs(_ascentSettings.DesiredInclination);
+            double inclination = Math.Abs(_ascentSettings.DesiredInclination);
+            double delta = Math.Abs(VesselState.latitude) - (inclination < 90.0 ? inclination : 180.0 - inclination);
             if (2.001 < delta)
                 GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label7", delta), GuiUtils.RedLabel); //inc {0:F1}º below current latitude
 
