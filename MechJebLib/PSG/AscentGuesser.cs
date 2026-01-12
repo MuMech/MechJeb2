@@ -31,7 +31,7 @@ namespace MechJebLib.PSG
                 var y  = InterpolantLayout.CreateFrom(yin);
                 var dy = new InterpolantLayout();
 
-                double thrust = Phase.Infinite ? 2 * Phase.Thrust : Phase.Thrust;
+                double thrust = Phase.VacThrust;
                 double at     = thrust / y.M;
 
                 double r2 = V3.Dot(y.R, y.R);
@@ -40,7 +40,7 @@ namespace MechJebLib.PSG
 
                 dy.R  = y.V;
                 dy.V  = -y.R / r3 + at * y.U;
-                dy.M  = Phase.Infinite ? 0 : -Phase.Mdot;
+                dy.M  = -Phase.Mdot;
                 dy.U  = V3.zero;
                 dy.Dv = at;
 
@@ -111,9 +111,9 @@ namespace MechJebLib.PSG
                 Phase phase = phases[p];
 
                 if (!phase.MassContinuity)
-                    y0.M = phase.m0;
+                    y0.M = phase.M0;
 
-                double bt = phase.Coast ? phase.mint + 0.5 * (phase.maxt - phase.mint) : phase.BurnTimeFromMass(y0.M);
+                double bt = phase.Coast ? phase.MinT + 0.5 * (phase.MaxT - phase.MinT) : phase.BurnTimeFromMass(y0.M);
                 if (bt < 0)
                     bt = 0;
 

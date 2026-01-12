@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.06.0 (source code generated 2025-10-08)
+ALGLIB 4.07.0 (source code generated 2025-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -72,8 +72,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -183,8 +183,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -301,8 +301,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -4018,8 +4018,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -4100,8 +4100,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -4177,8 +4177,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -8087,8 +8087,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -8177,8 +8177,8 @@ public partial class alglib
       ! of this function:
       ! * high-performance native backend with same C# interface (C# version)
       ! * multithreading support (C++ and C# versions)
-      ! * hardware vendor (Intel) implementations of linear algebra primitives
-      !   (C++ and C# versions, x86/x64 platform)
+      ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+      !   other primitives (C++ and C# versions)
       !
       ! We recommend you to read 'Working with commercial version' section  of
       ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -11559,8 +11559,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -11743,8 +11743,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -11935,8 +11935,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -23497,8 +23497,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -23641,8 +23641,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -23767,8 +23767,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -36414,8 +36414,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-
@@ -36487,8 +36487,8 @@ public partial class alglib
           ! of this function:
           ! * high-performance native backend with same C# interface (C# version)
           ! * multithreading support (C++ and C# versions)
-          ! * hardware vendor (Intel) implementations of linear algebra primitives
-          !   (C++ and C# versions, x86/x64 platform)
+          ! * hardware vendor (Intel, ARM) implementations of linear algebra and
+          !   other primitives (C++ and C# versions)
           ! 
           ! We recommend you to read 'Working with commercial version' section  of
           ! ALGLIB Reference Manual in order to find out how to  use  performance-

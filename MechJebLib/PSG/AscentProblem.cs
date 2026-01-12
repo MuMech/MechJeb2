@@ -16,7 +16,7 @@ namespace MechJebLib.PSG
         public AscentProblem(Optimizer optimizer)
         {
             _optimizer = optimizer;
-            _vars      = new VariableProxy(_optimizer._problem, _optimizer._phases, _optimizer._terminal, _optimizer.N);
+            _vars      = new VariableProxy(_optimizer.Problem, _optimizer.Phases, _optimizer.Terminal, _optimizer.N);
         }
 
         public readonly struct ConstraintArgs
@@ -37,14 +37,14 @@ namespace MechJebLib.PSG
 
             _firstPass = args.FirstPass;
 
-            _optimizer._timeoutToken.ThrowIfCancellationRequested();
+            _optimizer.TimeoutToken.ThrowIfCancellationRequested();
             _vars.WrapVars(x);
 
             int ci = 0;
 
             ci = ObjectiveFunction(f, j, ci);
 
-            for (int p = 0; p < _optimizer._phases.Count; p++)
+            for (int p = 0; p < _optimizer.Phases.Count; p++)
             {
                 ci = DynamicConstraints(f, j, ci, p);
                 ci = StagingConstraints(f, j, ci, p);
@@ -56,7 +56,7 @@ namespace MechJebLib.PSG
 
             int start = ci;
 
-            _optimizer._terminal.Constraints(x, lastPhase.R.Idx(-1), lastPhase.V.Idx(-1), f, j, ref ci);
+            _optimizer.Terminal.Constraints(x, lastPhase.R.Idx(-1), lastPhase.V.Idx(-1), f, j, ref ci);
 
             if (_firstPass)
                 for (int i = start; i < ci; i++)
@@ -77,15 +77,15 @@ namespace MechJebLib.PSG
         {
             PhaseProxy thisPhase = _vars[p];
 
-            if (_optimizer._phases[p].GuidedCoast)
+            if (_optimizer.Phases[p].GuidedCoast)
                 return ci;
 
-            for (int k = 0; k < _optimizer._k; k++)
+            for (int k = 0; k < _optimizer.K; k++)
             {
                 if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} knot {k}";
 
                 ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].sqrMagnitude - 1.0, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
-                if (_optimizer._phases[p].Unguided)
+                if (_optimizer.Phases[p].Unguided)
                     break;
             }
 
@@ -118,7 +118,7 @@ namespace MechJebLib.PSG
             ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.U[-1], thisPhase.U[0] }, new[] { prevPhase.U.Idx(-1), thisPhase.U.Idx(0) });
 
             // mass continuity for coast-within-phase
-            if (p <= 0 || !_optimizer._phases[p].MassContinuity) return ci;
+            if (p <= 0 || !_optimizer.Phases[p].MassContinuity) return ci;
 
             if (_firstPass) ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: M";
 
@@ -139,9 +139,9 @@ namespace MechJebLib.PSG
 
         private int NextAdjustableBurn(int p)
         {
-            for (int p2 = p + 1; p2 < _optimizer._phases.Count; p2++)
+            for (int p2 = p + 1; p2 < _optimizer.Phases.Count; p2++)
             {
-                if (_optimizer._phases[p2].Coast || !_optimizer._phases[p2].AllowShutdown)
+                if (_optimizer.Phases[p2].Coast || !_optimizer.Phases[p2].AllowShutdown)
                     continue;
 
                 return p2;
@@ -154,7 +154,7 @@ namespace MechJebLib.PSG
         {
             if (_firstPass) ConstraintNames[ci] = $"Staging constraint for phase {p}";
 
-            if (_optimizer._phases[p].Coast || !_optimizer._phases[p].AllowShutdown || _optimizer._phases[p].MassContinuity)
+            if (_optimizer.Phases[p].Coast || !_optimizer.Phases[p].AllowShutdown || _optimizer.Phases[p].MassContinuity)
             {
                 f[ci++] = 0;
                 alglib.sparseappendemptyrow(j);
@@ -172,7 +172,7 @@ namespace MechJebLib.PSG
 
             int nextNextBurnPhaseIndex = NextAdjustableBurn(nextBurnPhaseIndex);
 
-            if (nextNextBurnPhaseIndex < 0 && _optimizer._phases[nextBurnPhaseIndex].MassContinuity)
+            if (nextNextBurnPhaseIndex < 0 && _optimizer.Phases[nextBurnPhaseIndex].MassContinuity)
             {
                 f[ci++] = 0;
                 alglib.sparseappendemptyrow(j);
@@ -182,8 +182,8 @@ namespace MechJebLib.PSG
             PhaseProxy thisPhase     = _vars[p];
             PhaseProxy nextBurnPhase = _vars[nextBurnPhaseIndex];
 
-            bool combiningThisBurn = nextNextBurnPhaseIndex > 0 && _optimizer._phases[nextBurnPhaseIndex].MassContinuity;
-            bool combiningNextBurn = nextNextBurnPhaseIndex > 0 && !combiningThisBurn && _optimizer._phases[nextNextBurnPhaseIndex].MassContinuity;
+            bool combiningThisBurn = nextNextBurnPhaseIndex > 0 && _optimizer.Phases[nextBurnPhaseIndex].MassContinuity;
+            bool combiningNextBurn = nextNextBurnPhaseIndex > 0 && !combiningThisBurn && _optimizer.Phases[nextNextBurnPhaseIndex].MassContinuity;
 
             double thisBt;
             double nextBt;
@@ -207,7 +207,7 @@ namespace MechJebLib.PSG
             // next burn time
             double a = nextBt;
             // this burn time remaining
-            double b = _optimizer._phases[p].bt - thisBt;
+            double b = _optimizer.Phases[p].Bt - thisBt;
             double u = a * a + b * b + 2e-6;
 
             // smoothed Fischer-Burmeister constraint on burn times
@@ -239,11 +239,11 @@ namespace MechJebLib.PSG
 
         private int DynamicPressureConstraints(double[] f, alglib.sparsematrix j, int ci)
         {
-            double rho0InvQAlphaMax = _optimizer._problem.Rho0InvQAlphaMax;
-            double rho0InvQMax      = _optimizer._problem.Rho0InvQMax;
-            double rBody            = _optimizer._problem.RBody;
-            double h0               = _optimizer._problem.H0;
-            V3     w                = _optimizer._problem.W;
+            double rho0InvQAlphaMax = _optimizer.Problem.Rho0InvQAlphaMax;
+            double rho0InvQMax      = _optimizer.Problem.Rho0InvQMax;
+            double rBody            = _optimizer.Problem.RBody;
+            double h0               = _optimizer.Problem.H0;
+            V3     w                = _optimizer.Problem.W;
 
             if (h0 <= 0)
                 return ci;
@@ -251,11 +251,11 @@ namespace MechJebLib.PSG
 
             if (rho0InvQAlphaMax > 0)
             {
-                for (int p = 0; p < _optimizer._phases.Count; p++)
+                for (int p = 0; p < _optimizer.Phases.Count; p++)
                 {
                     PhaseProxy thisPhase = _vars[p];
 
-                    for (int k = 0; k < _optimizer._k; k++)
+                    for (int k = 0; k < _optimizer.K; k++)
                     {
                         if (_firstPass) ConstraintNames[ci] = $"QAlpha constraint for phase {p} knot {k}";
 
@@ -266,11 +266,11 @@ namespace MechJebLib.PSG
 
             if (rho0InvQMax > 0)
             {
-                for (int p = 0; p < _optimizer._phases.Count; p++)
+                for (int p = 0; p < _optimizer.Phases.Count; p++)
                 {
                     PhaseProxy thisPhase = _vars[p];
 
-                    for (int k = 0; k < _optimizer._k; k++)
+                    for (int k = 0; k < _optimizer.K; k++)
                     {
                         if (_firstPass) ConstraintNames[ci] = $"MaxQ constraint for phase {p} knot {k}";
 
@@ -292,7 +292,7 @@ namespace MechJebLib.PSG
                 Dual   q     = 0.5 * rho0InvQAlphaMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
                 Dual   alpha = DualV3.AngleUnit(vr.normalized, u);
 
-                return q * alpha;
+                return q * alpha / 100.0;
             }
 
             Dual QConstraint(DualV3[] x)
@@ -304,20 +304,18 @@ namespace MechJebLib.PSG
                 DualV3 vr = v - DualV3.Cross(w, r);
                 Dual   q  = 0.5 * rho0InvQMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
 
-                return q;
+                return q / 100.0;
             }
         }
 
         private int DynamicConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
         {
-            _optimizer.Timer.Start();
-
             PhaseProxy thisPhase = _vars[p];
 
-            double mdot       = _optimizer._phases[p].Mdot;
-            double vacThrust  = _optimizer._phases[p].Thrust;
-            double vexVacuum  = _optimizer._phases[p].VexVacuum;
-            double vexCurrent = _optimizer._phases[p].VexCurrent;
+            double mdot       = _optimizer.Phases[p].Mdot;
+            double vacThrust  = _optimizer.Phases[p].VacThrust;
+            double vexVacuum  = _optimizer.Phases[p].VexVacuum;
+            double vexCurrent = _optimizer.Phases[p].VexCurrent;
             double h          = thisPhase.Bt() / (_optimizer.N - 1);
 
             // dynamical constraints per phase
@@ -344,7 +342,7 @@ namespace MechJebLib.PSG
                 double m0,    m1,    m2;
                 int    m0Idx, m1Idx, m2Idx;
 
-                if (_optimizer._phases[p].Coast)
+                if (_optimizer.Phases[p].Coast)
                 {
                     m0    = m1    = m2    = thisPhase.M[0];
                     m0Idx = m1Idx = m2Idx = thisPhase.M.Idx(0);
@@ -362,7 +360,7 @@ namespace MechJebLib.PSG
                 V3              u0,    u1,    u2;
                 (int, int, int) u0Idx, u1Idx, u2Idx;
 
-                if (_optimizer._phases[p].Unguided || _optimizer._phases[p].GuidedCoast)
+                if (_optimizer.Phases[p].Unguided || _optimizer.Phases[p].GuidedCoast)
                 {
                     u0    = u1    = u2    = thisPhase.U[0];
                     u0Idx = u1Idx = u2Idx = thisPhase.U.Idx(0);
@@ -411,11 +409,11 @@ namespace MechJebLib.PSG
                     BtIdx = thisPhase.BtIdx()
                 };
 
-                double rho0CdAref = _optimizer._problem.Rho0CdAref;
-                double rBody      = _optimizer._problem.RBody;
-                double h0         = _optimizer._problem.H0;
-                double r0         = _optimizer._problem.R0.magnitude;
-                V3     w          = _optimizer._problem.W;
+                double rho0CdAref = _optimizer.Problem.Rho0CdAref;
+                double rBody      = _optimizer.Problem.RBody;
+                double h0         = _optimizer.Problem.H0;
+                double r0         = _optimizer.Problem.R0.magnitude;
+                V3     w          = _optimizer.Problem.W;
 
                 DualV3 VDot(ref HermiteSimpsonDualPoint d)
                 {
@@ -443,7 +441,7 @@ namespace MechJebLib.PSG
 
                 // dm/dt = -mdot (as algebraic constraints rather than defect constraints)
 
-                if (!_optimizer._phases[p].Coast)
+                if (!_optimizer.Phases[p].Coast)
                 {
                     if (_firstPass)
                     {
@@ -451,9 +449,9 @@ namespace MechJebLib.PSG
                         ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot midpoint";
                     }
 
-                    bool doingMassContinuity = p > 0 && _optimizer._phases[p].MassContinuity;
+                    bool doingMassContinuity = p > 0 && _optimizer.Phases[p].MassContinuity;
 
-                    double mi = doingMassContinuity ? thisPhase.M[0] : _optimizer._phases[p].m0;
+                    double mi = doingMassContinuity ? thisPhase.M[0] : _optimizer.Phases[p].M0;
                     f[ci++] = m1 - mi + (n + 0.5) * h * mdot;
                     f[ci++] = m2 - mi + (n + 1.0) * h * mdot;
                     alglib.sparseappendemptyrow(j);
@@ -469,8 +467,6 @@ namespace MechJebLib.PSG
                 }
             }
 
-            _optimizer.Timer.Stop();
-
             return ci;
         }
 
@@ -483,14 +479,14 @@ namespace MechJebLib.PSG
             double val = 0;
 
             // cost metric
-            switch (_optimizer._cost)
+            switch (_optimizer.Objective)
             {
-                case Optimizer.Cost.MIN_TIME:
+                case Optimizer.ObjectiveType.MIN_TIME:
                     alglib.sparseappendemptyrow(j);
 
-                    for (int p = 0; p < _optimizer._phases.Count; p++)
+                    for (int p = 0; p < _optimizer.Phases.Count; p++)
                     {
-                        if (_optimizer._phases[p].Coast || !_optimizer._phases[p].AllowShutdown)
+                        if (_optimizer.Phases[p].Coast || !_optimizer.Phases[p].AllowShutdown)
                             continue;
 
                         PhaseProxy thisPhase = _vars[p];
@@ -503,13 +499,13 @@ namespace MechJebLib.PSG
                     f[ci++] = val;
 
                     break;
-                case Optimizer.Cost.MAX_MASS:
+                case Optimizer.ObjectiveType.MAX_MASS:
                     f[ci++] = -lastPhase.M[-1];
                     alglib.sparseappendemptyrow(j);
                     alglib.sparseappendelement(j, lastPhase.M.Idx(-1), -1.0);
 
                     break;
-                case Optimizer.Cost.MAX_ENERGY:
+                case Optimizer.ObjectiveType.MAX_ENERGY:
                     V3              rf = lastPhase.R[-1];
                     V3              vf = lastPhase.V[-1];
                     (int, int, int) ri = lastPhase.R.Idx(-1);
@@ -518,25 +514,25 @@ namespace MechJebLib.PSG
                     ci = ApplyScalarConstraintV3(f, j, ci, MaxOrbitalEnergyObjective, new[] { rf, vf }, new[] { ri, vi });
 
                     break;
-                case Optimizer.Cost.MIN_THRUST_ACCEL:
+                case Optimizer.ObjectiveType.MIN_THRUST_ACCEL:
                     alglib.sparseappendemptyrow(j);
-                    for (int p = 0; p < _optimizer._phases.Count; p++)
+                    for (int p = 0; p < _optimizer.Phases.Count; p++)
                     {
-                        if (_optimizer._phases[p].Coast || !_optimizer._phases[p].AllowShutdown)
+                        if (_optimizer.Phases[p].Coast || !_optimizer.Phases[p].AllowShutdown)
                             continue;
 
                         PhaseProxy thisPhase = _vars[p];
 
-                        double thrust = _optimizer._phases[p].Thrust;
+                        double thrust = _optimizer.Phases[p].VacThrust;
                         double den    = (_optimizer.N - 1) * 6;
                         double h6     = thisPhase.Bt() / den;
 
                         double sum = 0;
-                        for (int k = 0; k < _optimizer._k; k += 1)
+                        for (int k = 0; k < _optimizer.K; k += 1)
                         {
                             double mk = thisPhase.M[k];
 
-                            if (k == 0 || k == _optimizer._k - 1)
+                            if (k == 0 || k == _optimizer.K - 1)
                             {
                                 val += thrust * h6 / mk;
                                 alglib.sparseappendelement(j, thisPhase.M.Idx(k), -thrust * h6 / (mk * mk));

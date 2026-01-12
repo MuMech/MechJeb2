@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Linq;
+using System.Text;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG.Terminal;
@@ -41,46 +43,23 @@ namespace MechJebLib.PSG
             private bool      _fixedBurnTime    { get; set; }
             private Solution? _solution         { get; set; }
 
-            public AscentBuilder AddStageUsingFinalMass(double m0, double mf, double isp, double bt, int kspStage,
+            public AscentBuilder AddStage(double m0, double mf, double thrust, double isp, int kspStage,
                 int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
             {
-                DebugPrint(
-                    $"[MechJebLib.AscentBuilder] AddStageUsingFinalMass({m0}, {mf}, {isp}, {bt}, {kspStage}, {mjPhase}, {(unguided ? "true" : "false")}, {(allowShutdown ? "true" : "false")})");
+                var sb = new StringBuilder();
+                sb.Append($"[MechJebLib.AscentBuilder] AddStage({m0}, {mf}, {thrust}, {isp}, {kspStage}, {mjPhase}");
+                if (unguided)
+                    sb.Append(", unguided: true");
+                if (allowShutdown)
+                    sb.Append(", allowShutdown: true");
+                if (massContinuity)
+                    sb.Append(", massContinuity: true");
+                if (ispCurrent >= 0)
+                    sb.Append($", ispCurrent: {ispCurrent}");
+                sb.Append(")");
+                DebugPrint(sb.ToString());
 
-                _phases.Add(Phase.NewStageUsingFinalMass(m0, mf, isp, bt, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent));
-
-                return this;
-            }
-
-            public AscentBuilder AddStageUsingThrust(double m0, double thrust, double isp, double bt, int kspStage,
-                int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
-            {
-                DebugPrint(
-                    $"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {thrust}, {isp}, {bt}, {kspStage}, {mjPhase}, {(unguided ? "true" : "false")}, {(allowShutdown ? "true" : "false")})");
-
-                _phases.Add(Phase.NewStageUsingThrust(m0, thrust, isp, bt, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent));
-
-                return this;
-            }
-
-            public AscentBuilder AddStageUsingFinalMassAndThrust(double m0, double mf, double thrust, double bt, int kspStage,
-                int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double thrustSeaLevel = -1)
-            {
-                DebugPrint(
-                    $"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {mf}, {thrust}, {bt}, {kspStage}, {mjPhase}, {(unguided ? "true" : "false")}, {(allowShutdown ? "true" : "false")})");
-
-                _phases.Add(Phase.NewStageUsingFinalMassAndThrust(m0, mf, thrust, bt, kspStage, mjPhase, unguided, allowShutdown, massContinuity, thrustSeaLevel));
-
-                return this;
-            }
-
-            public AscentBuilder AddStageUsingFinalMassThrustAndIsp(double m0, double mf, double thrust, double isp, int kspStage,
-                int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
-            {
-                DebugPrint(
-                    $"[MechJebLib.AscentBuilder] AddStageUsingThrust({m0}, {mf}, {thrust}, {isp}, {kspStage}, {mjPhase}, {(unguided ? "true" : "false")}, {(allowShutdown ? "true" : "false")})");
-
-                _phases.Add(Phase.NewStageUsingFinalMassThrustAndIsp(m0, mf, thrust, isp, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent));
+                _phases.Add(Phase.NewStage(m0, mf, thrust, isp, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent));
 
                 return this;
             }
@@ -97,7 +76,14 @@ namespace MechJebLib.PSG
 
             public AscentBuilder AddCoast(double m0, double mint, double maxt, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
             {
-                DebugPrint($"[MechJebLib.AscentBuilder] AddOptimizedCoast({m0}, {mint}, {maxt}, {kspStage}, {mjPhase}, {(unguided ? "true" : "false")})");
+                var sb = new StringBuilder();
+                sb.Append($"[MechJebLib.AscentBuilder] AddOptimizedCoast({m0}, {mint}, {maxt}, {kspStage}, {mjPhase}");
+                if (unguided)
+                    sb.Append(", unguided: true");
+                if (massContinuity)
+                    sb.Append(", massContinuity: true");
+                sb.Append(")");
+                DebugPrint(sb.ToString());
 
                 _phases.Add(Phase.NewCoast(m0, mint, maxt, kspStage, mjPhase, unguided, massContinuity));
 
@@ -124,7 +110,7 @@ namespace MechJebLib.PSG
 
             public Ascent Build()
             {
-                double    m0 = _phases[0].m0;
+                double    m0 = _phases[0].M0;
                 ITerminal terminal;
 
                 _fixedBurnTime = true;
@@ -165,13 +151,15 @@ namespace MechJebLib.PSG
 
                 var normalizedPhases = new PhaseCollection();
 
-                foreach (Phase phase in _phases)
-                    normalizedPhases.Add(phase.Rescale(problem.Scale));
+                normalizedPhases.AddRange(_phases.Select(phase => phase.Rescale(problem.Scale)));
+
+                normalizedPhases.FixLastShutdownStage();
 
                 var ascent = new Ascent(problem, normalizedPhases, _solution, _fixedBurnTime);
 
                 return ascent;
             }
+
 
             public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, double argp,
                 double fpa, bool attachAltFlag, bool lanflag, bool argpflag)

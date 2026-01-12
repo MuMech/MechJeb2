@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.06.0 (source code generated 2025-10-08)
+ALGLIB 4.07.0 (source code generated 2025-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -791,6 +791,66 @@ public partial class alglib
     }
     
     /*************************************************************************
+    This function sets BBSYNC profile to "small tree".
+
+    It means that we expect our problem to have a shallow B&B  tree  with  the
+    number of nodes comparable to the integer variables count, or below.
+
+    BBSYNC solver will run with simplified settings:
+    * pseudocost branching is used
+
+    INPUT PARAMETERS:
+        State   -   structure that stores algorithm state
+
+      -- ALGLIB --
+         Copyright 01.12.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void minlpsolversetbbsyncprofilesmalltree(minlpsolverstate state)
+    {
+    
+        minlpsolvers.minlpsolversetbbsyncprofilesmalltree(state.innerobj, null);
+    }
+    
+    public static void minlpsolversetbbsyncprofilesmalltree(minlpsolverstate state, alglib.xparams _params)
+    {
+    
+        minlpsolvers.minlpsolversetbbsyncprofilesmalltree(state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function sets BBSYNC profile to "large tree".
+
+    It means that we expect our problem to have a large  B&B  tree  with  much
+    more than NInt (the integer variables count) nodes. However, we expect  it
+    to be solvable within our computational budget (i.e. that we are  able  to
+    explore the entire B&B tree).
+
+    BBSYNC solver will run with heuristics that are  costly  to  power-up, but
+    greatly improve performance on long distances:
+    * reliability branching is used
+
+    BBSYNC will not use  heuristics  that  increase  chance  of  finding  good
+    solutions early at the cost of increasing total time to prove optimality.
+
+    INPUT PARAMETERS:
+        State   -   structure that stores algorithm state
+
+      -- ALGLIB --
+         Copyright 01.12.2025 by Bochkanov Sergey
+    *************************************************************************/
+    public static void minlpsolversetbbsyncprofilelargetree(minlpsolverstate state)
+    {
+    
+        minlpsolvers.minlpsolversetbbsyncprofilelargetree(state.innerobj, null);
+    }
+    
+    public static void minlpsolversetbbsyncprofilelargetree(minlpsolverstate state, alglib.xparams _params)
+    {
+    
+        minlpsolvers.minlpsolversetbbsyncprofilelargetree(state.innerobj, _params);
+    }
+    
+    /*************************************************************************
     This function sets tolerance for nonlinear constraints;  points  violating
     constraints by no more than CTol are considered feasible.
 
@@ -1195,7 +1255,7 @@ public partial class alglib
     The BBSYNC algorithm is an NLP-based branch-and-bound method with integral
     and spatial splits, supporting both convex  and  nonconvex  problems.  The
     algorithm combines parallelism support with deterministic  behavior  (i.e.
-    the same branching decisions are performed with every paralell run).
+    the same branching decisions are performed with every parallel run).
 
     Non-convex (multiextremal) problems can be solved with  multiple  restarts
     from random points, which are activated by minlpsolversetmultistarts()
@@ -1203,17 +1263,36 @@ public partial class alglib
     IMPORTANT: contrary to the popular  misconception,  MINLP  is  not  easily
                parallelizable. B&B trees often have  profiles  unsuitable  for
                parallel processing (too short and/or too linear).  Spatial  or
-               integral splits adds some limited degree of parallelism (up  to
+               integral splits add  some limited degree of parallelism (up  to
                2x in the very best case), but in practice it often results  in
-               just a 1.5x speed-up at best  due  imbalanced  leaf  processing
-               times.  Furthermore ,  determinism  is  always  at   odds  with
+               just a 1.5x speed-up at best due to imbalanced  leaf processing
+               times.  Furthermore,  determinism  is   always  at   odds  with
                efficiency.
 
                Achieving good parallel speed-up requires some amount of tuning
-               and having a 2x-3x speed-up is already a good result.
+               and having a 2x-3x speed-up is  already  a  good  result.  Only
+               difficult long-running problems (here  'difficult'  means  that
+               the value of rep.ntreenodes is at least several larger than the
+               variables count) have good parallelism properties.
 
                On the other hand, setups using multiple  random  restarts  are
                obviously highly parallelizable.
+
+    IMPORTANT: the commercial edition of ALGLIB can  accelerate  factorization
+               phase of this function (this phase takes significant amounts of
+               time when solving large problems) by using SIMD intrinsics or a
+               performance  backend  library   (Intel   PARDISO   or   another
+               platform-specific sparse factorization library).
+
+               Specific speed-up due  to  performance  backend  usage  heavily
+               depends  on  the  sparsity  pattern  of  constraints.  For some
+               problem types performance backends provide great speed-up.  For
+               other ones, ALGLIB's  own  sparse  factorization  code  is  the
+               preferred option.
+
+               See the ALGLIB Reference Manual for more information on how  to
+               activate parallelism and backend support.
+
 
     INPUT PARAMETERS:
         State           -   structure that stores algorithm state
@@ -1844,8 +1923,10 @@ public partial class alglib
             public double[] x0;
             public double[] bndl;
             public double[] bndu;
-            public int leafidx;
+            public int branchbucket;
             public double parentfdual;
+            public int branchvar;
+            public double branchval;
             public int ncuttingplanes;
             public bool hasprimalsolution;
             public double[] xprim;
@@ -1881,8 +1962,10 @@ public partial class alglib
                 _result.x0 = (double[])x0.Clone();
                 _result.bndl = (double[])bndl.Clone();
                 _result.bndu = (double[])bndu.Clone();
-                _result.leafidx = leafidx;
+                _result.branchbucket = branchbucket;
                 _result.parentfdual = parentfdual;
+                _result.branchvar = branchvar;
+                _result.branchval = branchval;
                 _result.ncuttingplanes = ncuttingplanes;
                 _result.hasprimalsolution = hasprimalsolution;
                 _result.xprim = (double[])xprim.Clone();
@@ -2029,25 +2112,43 @@ public partial class alglib
         * stSolved if all subproblems were solved
         * stTimeout if timeout was signalled, or if similar stopping condition was
           fired (soft or hard max nodes)
+          
+        Additional status flags used for integrity checks:
+        * AddStatusSolutionsAggregated - set to true after loading data from
+          Solutions[] to RootProblem/ChildSubproblem0/ChildSubproblem1 and updating
+          global statistics
+        * AddStatusDecisionsMade - set to true after deciding on fathoming RootProblem,
+          ChildSubproblem0/1 (depending on IsRootEntry)
         *************************************************************************/
         public class bbgdfrontentry : apobject
         {
             public int entrystatus;
+            public bool addstatussolutionsaggregated;
+            public bool addstatusdecisionsmade;
             public int entrylock;
-            public bool isroot;
+            public bool isrootentry;
             public int maxsubsolvers;
             public bool hastimeout;
             public int timeout;
             public apserv.stimer timerlocal;
             public bbgdsubproblem parentsubproblem;
-            public bbgdsubproblem bestsubproblem0;
-            public bbgdsubproblem bestsubproblem1;
+            public bbgdsubproblem rootproblem;
+            public bbgdsubproblem childsubproblem0;
+            public bbgdsubproblem childsubproblem1;
             public rcommstate rstate;
+            public bool fathomroot;
+            public bool fathomchild0;
+            public bool fathomchild1;
             public ap.objarray subsolvers;
-            public bbgdfrontsubsolver commonsubsolver;
             public ap.objarray spqueue;
-            public int branchvar;
-            public double branchval;
+            public ap.objarray solutions;
+            public bbgdsubproblem tmpsubproblem;
+            public int[] tmpreliablebranchidx;
+            public double[] tmpreliablebranchscore;
+            public int[] tmpunreliablebranchidx;
+            public double[] tmpunreliablebranchscore;
+            public int[] tmpchosenbranchidx;
+            public double[] tmpchosenbranchscore;
             public bbgdfrontentry()
             {
                 init();
@@ -2056,32 +2157,51 @@ public partial class alglib
             {
                 timerlocal = new apserv.stimer();
                 parentsubproblem = new bbgdsubproblem();
-                bestsubproblem0 = new bbgdsubproblem();
-                bestsubproblem1 = new bbgdsubproblem();
+                rootproblem = new bbgdsubproblem();
+                childsubproblem0 = new bbgdsubproblem();
+                childsubproblem1 = new bbgdsubproblem();
                 rstate = new rcommstate();
                 subsolvers = new ap.objarray();
-                commonsubsolver = new bbgdfrontsubsolver();
                 spqueue = new ap.objarray();
+                solutions = new ap.objarray();
+                tmpsubproblem = new bbgdsubproblem();
+                tmpreliablebranchidx = new int[0];
+                tmpreliablebranchscore = new double[0];
+                tmpunreliablebranchidx = new int[0];
+                tmpunreliablebranchscore = new double[0];
+                tmpchosenbranchidx = new int[0];
+                tmpchosenbranchscore = new double[0];
             }
             public override alglib.apobject make_copy()
             {
                 bbgdfrontentry _result = new bbgdfrontentry();
                 _result.entrystatus = entrystatus;
+                _result.addstatussolutionsaggregated = addstatussolutionsaggregated;
+                _result.addstatusdecisionsmade = addstatusdecisionsmade;
                 _result.entrylock = entrylock;
-                _result.isroot = isroot;
+                _result.isrootentry = isrootentry;
                 _result.maxsubsolvers = maxsubsolvers;
                 _result.hastimeout = hastimeout;
                 _result.timeout = timeout;
                 _result.timerlocal = timerlocal!=null ? (apserv.stimer)timerlocal.make_copy() : null;
                 _result.parentsubproblem = parentsubproblem!=null ? (bbgdsubproblem)parentsubproblem.make_copy() : null;
-                _result.bestsubproblem0 = bestsubproblem0!=null ? (bbgdsubproblem)bestsubproblem0.make_copy() : null;
-                _result.bestsubproblem1 = bestsubproblem1!=null ? (bbgdsubproblem)bestsubproblem1.make_copy() : null;
+                _result.rootproblem = rootproblem!=null ? (bbgdsubproblem)rootproblem.make_copy() : null;
+                _result.childsubproblem0 = childsubproblem0!=null ? (bbgdsubproblem)childsubproblem0.make_copy() : null;
+                _result.childsubproblem1 = childsubproblem1!=null ? (bbgdsubproblem)childsubproblem1.make_copy() : null;
                 _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.fathomroot = fathomroot;
+                _result.fathomchild0 = fathomchild0;
+                _result.fathomchild1 = fathomchild1;
                 _result.subsolvers = subsolvers!=null ? (ap.objarray)subsolvers.make_copy() : null;
-                _result.commonsubsolver = commonsubsolver!=null ? (bbgdfrontsubsolver)commonsubsolver.make_copy() : null;
                 _result.spqueue = spqueue!=null ? (ap.objarray)spqueue.make_copy() : null;
-                _result.branchvar = branchvar;
-                _result.branchval = branchval;
+                _result.solutions = solutions!=null ? (ap.objarray)solutions.make_copy() : null;
+                _result.tmpsubproblem = tmpsubproblem!=null ? (bbgdsubproblem)tmpsubproblem.make_copy() : null;
+                _result.tmpreliablebranchidx = (int[])tmpreliablebranchidx.Clone();
+                _result.tmpreliablebranchscore = (double[])tmpreliablebranchscore.Clone();
+                _result.tmpunreliablebranchidx = (int[])tmpunreliablebranchidx.Clone();
+                _result.tmpunreliablebranchscore = (double[])tmpunreliablebranchscore.Clone();
+                _result.tmpchosenbranchidx = (int[])tmpchosenbranchidx.Clone();
+                _result.tmpchosenbranchscore = (double[])tmpchosenbranchscore.Clone();
                 return _result;
             }
         };
@@ -2099,7 +2219,6 @@ public partial class alglib
             public int frontsize;
             public ap.objarray entries;
             public alglib.smp.shared_pool entrypool;
-            public int flag;
             public rcommstate rstate;
             public int[] jobs;
             public bbgdfront()
@@ -2123,7 +2242,6 @@ public partial class alglib
                 _result.frontsize = frontsize;
                 _result.entries = entries!=null ? (ap.objarray)entries.make_copy() : null;
                 _result.entrypool = entrypool!=null ? (alglib.smp.shared_pool)entrypool.make_copy() : null;
-                _result.flag = flag;
                 _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 _result.jobs = (int[])jobs.Clone();
                 return _result;
@@ -2142,6 +2260,7 @@ public partial class alglib
             public optserv.nlpstoppingcriteria criteria;
             public double diffstep;
             public int convexityflag;
+            public double nonconvexitygain;
             public double pdgap;
             public double ctol;
             public double epsx;
@@ -2150,13 +2269,16 @@ public partial class alglib
             public int nonrootmaxitsconst;
             public int nonrootadditsforfeasibility;
             public double pseudocostmu;
-            public int minbranchreliability;
+            public double pseudocostminfrac;
+            public double pseudocostinfeaspenaly;
             public int nmultistarts;
-            public bool usepseudocosts;
+            public int branchingtype;
+            public int krel;
+            public int kevalunreliable;
+            public int kevalreliable;
             public int dodiving;
             public int timeout;
             public int bbgdgroupsize;
-            public int bbalgo;
             public int maxsubsolvers;
             public bool forceserial;
             public int softmaxnodes;
@@ -2279,6 +2401,7 @@ public partial class alglib
                 _result.criteria = criteria!=null ? (optserv.nlpstoppingcriteria)criteria.make_copy() : null;
                 _result.diffstep = diffstep;
                 _result.convexityflag = convexityflag;
+                _result.nonconvexitygain = nonconvexitygain;
                 _result.pdgap = pdgap;
                 _result.ctol = ctol;
                 _result.epsx = epsx;
@@ -2287,13 +2410,16 @@ public partial class alglib
                 _result.nonrootmaxitsconst = nonrootmaxitsconst;
                 _result.nonrootadditsforfeasibility = nonrootadditsforfeasibility;
                 _result.pseudocostmu = pseudocostmu;
-                _result.minbranchreliability = minbranchreliability;
+                _result.pseudocostminfrac = pseudocostminfrac;
+                _result.pseudocostinfeaspenaly = pseudocostinfeaspenaly;
                 _result.nmultistarts = nmultistarts;
-                _result.usepseudocosts = usepseudocosts;
+                _result.branchingtype = branchingtype;
+                _result.krel = krel;
+                _result.kevalunreliable = kevalunreliable;
+                _result.kevalreliable = kevalreliable;
                 _result.dodiving = dodiving;
                 _result.timeout = timeout;
                 _result.bbgdgroupsize = bbgdgroupsize;
-                _result.bbalgo = bbalgo;
                 _result.maxsubsolvers = maxsubsolvers;
                 _result.forceserial = forceserial;
                 _result.softmaxnodes = softmaxnodes;
@@ -2377,7 +2503,6 @@ public partial class alglib
         public const double alphaint = 0.01;
         public const int ftundefined = -1;
         public const int ftroot = 0;
-        public const int ftbasic = 1;
         public const int ftdynamic = 2;
         public const int stundefined = -1;
         public const int stfrontrunning = 698;
@@ -2537,6 +2662,38 @@ public partial class alglib
             alglib.xparams _params)
         {
             state.epsf = epsf;
+        }
+
+
+        /*************************************************************************
+        Small tree profile
+
+          -- ALGLIB --
+             Copyright 01.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void bbgdsetsmalltree(bbgdstate state,
+            alglib.xparams _params)
+        {
+            state.branchingtype = 1;
+            state.krel = 1;
+            state.kevalunreliable = 1;
+            state.kevalreliable = 1;
+        }
+
+
+        /*************************************************************************
+        Large tree profile
+
+          -- ALGLIB --
+             Copyright 01.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void bbgdsetlargetree(bbgdstate state,
+            alglib.xparams _params)
+        {
+            state.branchingtype = 2;
+            state.krel = 1;
+            state.kevalunreliable = state.n;
+            state.kevalreliable = 1;
         }
 
 
@@ -2708,10 +2865,6 @@ public partial class alglib
             {
                 goto lbl_2;
             }
-            if( state.rstate.stage==3 )
-            {
-                goto lbl_3;
-            }
             
             //
             // Routine body
@@ -2765,7 +2918,7 @@ public partial class alglib
             apserv.stimerinit(state.timerglobal, _params);
             apserv.stimerstart(state.timerglobal, _params);
             state.rootsubproblem.leafid = apserv.weakatomicfetchadd(ref state.nextleafid, 1, _params);
-            state.rootsubproblem.leafidx = -1;
+            state.rootsubproblem.branchbucket = -1;
             state.rootsubproblem.parentfdual = math.maxrealnumber;
             state.rootsubproblem.n = n;
             alglib.ap.assert(state.hasx0, "BBGD: integrity check 500655 failed");
@@ -2818,126 +2971,41 @@ public partial class alglib
                 alglib.ap.trace("> generated root node, starting to solve it\n");
             }
             frontstartroot(state.front, state.rootsubproblem, state, _params);
-        lbl_4:
+        lbl_3:
             if( !frontrun(state.front, state, _params) )
             {
-                goto lbl_5;
+                goto lbl_4;
             }
             state.requestsource = rqsrcfront;
             state.rstate.stage = 0;
             goto lbl_rcomm;
         lbl_0:
-            goto lbl_4;
-        lbl_5:
+            goto lbl_3;
+        lbl_4:
             alglib.ap.assert(state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout, "BBGD: integrity check 184017 failed");
-            if( state.front.frontstatus==stsolved )
+            if( state.front.frontstatus!=stsolved )
             {
-                frontpushsolution(state.front, state, _params);
-                if( state.dotrace )
-                {
-                    alglib.ap.trace(System.String.Format("> root subproblem solved in {0,0:F0} ms\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
-                    alglib.ap.trace(System.String.Format(">> primal (upper) bound is {0,0:E12}\n", state.fprim));
-                    alglib.ap.trace(System.String.Format(">> dual   (lower) bound is {0,0:E12}\n", state.ffdual));
-                }
+                goto lbl_5;
             }
-            else
+            if( state.dotrace )
             {
-                if( state.dotrace )
-                {
-                    alglib.ap.trace(System.String.Format("> timeout was signaled during solution of the root subproblem, {0,0:F0} ms passed\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
-                }
-                state.timedout = true;
+                alglib.ap.trace(System.String.Format("> root subproblem solved in {0,0:F0} ms\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
+                alglib.ap.trace(System.String.Format(">> primal (upper) bound is {0,0:E12}\n", state.fprim));
+                alglib.ap.trace(System.String.Format(">> dual   (lower) bound is {0,0:E12}\n", state.ffdual));
             }
-            
-            //
-            // The part below is different for different values of BBAlgo
-            //
-            alglib.ap.assert(state.bbalgo==0 || state.bbalgo==1, "BBGD: 767318 failed");
-            if( state.bbalgo!=0 )
-            {
-                goto lbl_6;
-            }
-            
-            //
-            // Initial BBGD version: iterate until small gap is achieved
-            //
             state.repterminationtype = 1;
-        lbl_8:
-            if( state.bbsubproblems.getlength()<=0 )
-            {
-                goto lbl_9;
-            }
-            
-            //
-            // Check for small primal-dual gap
-            //
-            if( state.hasprimalsolution && (double)(state.ffdual)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
-            {
-                if( state.dotrace )
-                {
-                    alglib.ap.trace(System.String.Format("> relative duality gap decreased below {0,0:E2}, stopping\n", state.pdgap));
-                }
-                goto lbl_9;
-            }
-            
-            //
-            // Explore B&B tree:
-            // * if no primal solution was found yet, try diving from most recently added subproblems
-            // * otherwise, start from from the best problem(s) in the tree
-            //
-            if( state.hasprimalsolution || !frontstartfromrecentlyadded(state.front, state, _params) )
-            {
-                if( !frontstart(state.front, state, _params) )
-                {
-                    goto lbl_9;
-                }
-            }
-        lbl_10:
+            frontstartdynamic(state.front, state, _params);
+        lbl_7:
             if( !frontrun(state.front, state, _params) )
             {
-                goto lbl_11;
+                goto lbl_8;
             }
             state.requestsource = rqsrcfront;
             state.rstate.stage = 1;
             goto lbl_rcomm;
         lbl_1:
-            goto lbl_10;
-        lbl_11:
-            alglib.ap.assert(state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout, "BBGD: integrity check 231020 failed");
-            if( state.front.frontstatus==sttimeout )
-            {
-                if( state.dotrace )
-                {
-                    alglib.ap.trace(System.String.Format("> timeout was signaled, {0,0:F0} ms passed\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
-                }
-                state.timedout = true;
-                goto lbl_9;
-            }
-            frontpushsolution(state.front, state, _params);
-            goto lbl_8;
-        lbl_9:
-        lbl_6:
-            if( state.bbalgo!=1 )
-            {
-                goto lbl_12;
-            }
-            
-            //
-            // Dynamic front with better parallelism options
-            //
-            state.repterminationtype = 1;
-            frontstartdynamic(state.front, state, _params);
-        lbl_14:
-            if( !frontrun(state.front, state, _params) )
-            {
-                goto lbl_15;
-            }
-            state.requestsource = rqsrcfront;
-            state.rstate.stage = 2;
-            goto lbl_rcomm;
-        lbl_2:
-            goto lbl_14;
-        lbl_15:
+            goto lbl_7;
+        lbl_8:
             alglib.ap.assert(state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout, "BBGD: integrity check 826253 failed");
             if( state.front.frontstatus==sttimeout )
             {
@@ -2947,14 +3015,21 @@ public partial class alglib
                 }
                 state.timedout = true;
             }
-        lbl_12:
+            goto lbl_6;
+        lbl_5:
+            if( state.dotrace )
+            {
+                alglib.ap.trace(System.String.Format("> timeout was signaled during solution of the root subproblem, {0,0:F0} ms passed\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
+            }
+            state.timedout = true;
+        lbl_6:
             
             //
             // Write out solution
             //
             if( !state.hasprimalsolution )
             {
-                goto lbl_16;
+                goto lbl_9;
             }
             
             //
@@ -2965,16 +3040,16 @@ public partial class alglib
             ablasf.rcopyallocv(n, state.xprim, ref state.xc, _params);
             if( state.objtype!=0 )
             {
-                goto lbl_18;
+                goto lbl_11;
             }
             state.requestsource = rqsrcxc;
-            state.rstate.stage = 3;
+            state.rstate.stage = 2;
             goto lbl_rcomm;
-        lbl_3:
-            goto lbl_19;
-        lbl_18:
+        lbl_2:
+            goto lbl_12;
+        lbl_11:
             state.repf = 0.5*sparse.sparsevsmv(state.obja, false, state.xc, _params)+ablasf.rdotv(n, state.xc, state.objb, _params)+state.objc0;
-        lbl_19:
+        lbl_12:
             state.reppdgap = Math.Max(state.fprim-state.ffdual, 0)/apserv.rmaxabs2(state.fprim, 1, _params);
             state.repterminationtype = 1;
             if( state.timedout )
@@ -2985,8 +3060,8 @@ public partial class alglib
             {
                 alglib.ap.trace(System.String.Format("> the solution is found: f={0,0:E9}, relative duality gap is {1,0:E3}\n", state.repf, state.reppdgap));
             }
-            goto lbl_17;
-        lbl_16:
+            goto lbl_10;
+        lbl_9:
             
             //
             // The problem is infeasible
@@ -3001,7 +3076,7 @@ public partial class alglib
             {
                 alglib.ap.trace("> the problem is infeasible (or feasible point is too difficult to find)\n");
             }
-        lbl_17:
+        lbl_10:
             result = false;
             return result;
             
@@ -3131,14 +3206,18 @@ public partial class alglib
             state.nonrootmaxitslin = 2;
             state.nonrootmaxitsconst = 50;
             state.nonrootadditsforfeasibility = 5;
-            state.minbranchreliability = 1;
             state.nmultistarts = 1;
-            state.usepseudocosts = true;
+            state.branchingtype = 1;
+            state.krel = 1;
+            state.kevalunreliable = 1;
+            state.kevalreliable = 1;
             state.dodiving = diveuntilprimal;
             state.pseudocostmu = 0.001;
+            state.pseudocostminfrac = 0.001;
+            state.pseudocostinfeaspenaly = 25.0;
+            state.nonconvexitygain = 100;
             state.diffstep = diffstep;
             state.userterminationneeded = false;
-            state.bbalgo = 1;
             state.maxsubsolvers = 4*apserv.maxconcurrency(_params);
             state.softmaxnodes = 0;
             state.hardmaxnodes = 0;
@@ -3358,8 +3437,10 @@ public partial class alglib
             alglib.xparams _params)
         {
             dst.leafid = newid;
-            dst.leafidx = src.leafidx;
+            dst.branchbucket = src.branchbucket;
             dst.parentfdual = src.parentfdual;
+            dst.branchvar = src.branchvar;
+            dst.branchval = src.branchval;
             dst.n = src.n;
             ablasf.rcopyallocv(src.n, src.x0, ref dst.x0, _params);
             ablasf.rcopyallocv(src.n, src.bndl, ref dst.bndl, _params);
@@ -3467,6 +3548,73 @@ public partial class alglib
 
 
         /*************************************************************************
+        Randomize initial point of a subproblem
+        *************************************************************************/
+        private static void subproblemappendcopytoarray(bbgdsubproblem p,
+            bbgdstate state,
+            bool randomizeinitialpoint,
+            ap.objarray a,
+            alglib.xparams _params)
+        {
+            bbgdsubproblem subproblem = null;
+
+            alglib.smp.ae_shared_pool_retrieve(state.sppool, ref subproblem);
+            subproblemcopy(p, p.leafid, subproblem, _params);
+            if( randomizeinitialpoint )
+            {
+                subproblemrandomizex0(subproblem, state, _params);
+            }
+            a.append(subproblem);
+        }
+
+
+        /*************************************************************************
+        Decides whether subproblem can be fathomed due to:
+        * infeasibility
+        * primal bound
+        *************************************************************************/
+        private static bool subproblemcanfathom(bbgdsubproblem subproblem,
+            bbgdstate state,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+
+            if( state.dotrace )
+            {
+                alglib.ap.trace(System.String.Format(">> analyzing {0,8:d}P: ", subproblem.leafid));
+            }
+            if( !subproblem.hasdualsolution )
+            {
+                if( state.dotrace )
+                {
+                    alglib.ap.trace(System.String.Format("infeasible (err={0,0:E2}), fathomed\n", subproblem.besthdual));
+                }
+                result = true;
+                return result;
+            }
+            if( state.dotrace )
+            {
+                alglib.ap.trace(System.String.Format("(bestfdual={0,0:E12}, dualbound={1,0:E12}, fprim={2,0:E12})", subproblem.bestfdual, subproblem.dualbound, subproblem.fprim));
+            }
+            if( state.hasprimalsolution && (double)(subproblem.dualbound)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
+            {
+                if( state.dotrace )
+                {
+                    alglib.ap.trace(", fathomed\n");
+                }
+                result = true;
+                return result;
+            }
+            if( state.dotrace )
+            {
+                alglib.ap.trace("\n");
+            }
+            result = false;
+            return result;
+        }
+
+
+        /*************************************************************************
         Initialize front in an undefined state. Ideally, it should be called  once
         per entire optimization session.
         *************************************************************************/
@@ -3514,106 +3662,6 @@ public partial class alglib
 
 
         /*************************************************************************
-        Starts ftBasic front.
-
-        Retrieves subproblems that are located on top of the heap.
-
-        After that it creates two copies in an unsolved state, performs branch on
-        the most infeasible variable and returns True.
-
-        The original subproblem is returned to the spPool.
-
-        Handling of special cases:
-        * Problems that have no variables to branch on are skipped
-        * Silently returns False on an empty B&B tree or on a tree that have no
-          subproblems that can be branched
-        *************************************************************************/
-        private static bool frontstart(bbgdfront front,
-            bbgdstate sstate,
-            alglib.xparams _params)
-        {
-            bool result = new bool();
-            bbgdsubproblem p = null;
-            bbgdfrontentry e = null;
-
-            result = true;
-            
-            //
-            // Clear the front
-            //
-            front.frontmode = ftbasic;
-            front.frontstatus = stfrontreadytorun;
-            front.frontsize = 0;
-            while( front.entries.getlength()>front.frontsize )
-            {
-                front.entries.pop_transfer(ref e);
-                alglib.smp.ae_shared_pool_recycle(front.entrypool, ref e);
-            }
-            
-            //
-            // Iterate until the B&B tree is empty or until we find a subproblem
-            // that can be split.
-            //
-            while( sstate.bbsubproblems.getlength()>0 && front.frontsize<sstate.bbgdgroupsize )
-            {
-                
-                //
-                // Retrieve either the most recently added subproblem (one that is not moved
-                // to the heap yet) or one from the top of the heap, depending on the PopMostRecent
-                // flag.
-                //
-                growheapandpoptop(sstate, _params);
-                sstate.bbsubproblems.pop_transfer(ref p);
-                alglib.ap.assert(p.hasdualsolution, "BBGD: integrity check 456217 failed");
-                if( sstate.hasprimalsolution && (double)(p.dualbound)>=(double)(sstate.fprim-sstate.pdgap*apserv.rmaxabs2(sstate.fprim, 1, _params)) )
-                {
-                    if( sstate.dotrace )
-                    {
-                        alglib.ap.trace(System.String.Format("> fathomed {0,8:d}P during tree search (p.bestfdual={1,0:E2}, p.dual_bound={2,0:E2}, global.fprim={3,0:E2})\n", p.leafid, p.bestfdual, p.dualbound, sstate.fprim));
-                    }
-                    alglib.smp.ae_shared_pool_recycle(sstate.sppool, ref p);
-                    continue;
-                }
-                alglib.smp.ae_shared_pool_retrieve(front.entrypool, ref e);
-                front.entries.append(e);
-                if( !entryprepareleafs(e, front, p, sstate, _params) )
-                {
-                    
-                    //
-                    // Looks like the subproblem we extracted does not need splitting.
-                    // Next one, please.
-                    //
-                    if( sstate.dotrace )
-                    {
-                        alglib.ap.trace(System.String.Format("> subproblem {0,8:d}P does not need integral or spatial branching, skipping\n", p.leafid));
-                    }
-                    front.entries.pop_transfer(ref e);
-                    alglib.smp.ae_shared_pool_recycle(front.entrypool, ref e);
-                    alglib.smp.ae_shared_pool_recycle(sstate.sppool, ref p);
-                    continue;
-                }
-                front.frontsize = front.frontsize+1;
-                alglib.smp.ae_shared_pool_recycle(sstate.sppool, ref p);
-            }
-            if( front.frontsize==0 )
-            {
-                if( sstate.dotrace )
-                {
-                    alglib.ap.trace("> B&B tree has no subproblems that can be split, stopping\n");
-                }
-                result = false;
-                return result;
-            }
-            
-            //
-            // Done
-            //
-            front.rstate.stage = -1;
-            return result;
-        }
-
-
-        /*************************************************************************
         Starts synchronous dynamic front.
 
         Basically, it creates an empty front that will be dynamically populated by
@@ -3640,109 +3688,6 @@ public partial class alglib
 
 
         /*************************************************************************
-        Retrieves subproblems that were most recently added, decreasing
-        State.bbSubproblemsRecentlyAdded variable until zero.
-
-        After that it creates two copies in an unsolved state, performs branch on
-        the most infeasible variable and returns True.
-
-        The original subproblem is returned to the spPool.
-
-        Handling of special cases:
-        * Problems that have no variables to branch on are skipped
-        * Silently returns False on an empty B&B tree or on a tree that have no
-          subproblems that can be branched
-        *************************************************************************/
-        private static bool frontstartfromrecentlyadded(bbgdfront front,
-            bbgdstate sstate,
-            alglib.xparams _params)
-        {
-            bool result = new bool();
-            bbgdsubproblem p = null;
-            bbgdfrontentry e = null;
-
-            result = front.popmostrecent && sstate.bbsubproblemsrecentlyadded>0;
-            if( !result )
-            {
-                return result;
-            }
-            
-            //
-            // Clear the front
-            //
-            front.frontmode = ftbasic;
-            front.frontstatus = stfrontreadytorun;
-            front.frontsize = 0;
-            while( front.entries.getlength()>front.frontsize )
-            {
-                front.entries.pop_transfer(ref e);
-                alglib.smp.ae_shared_pool_recycle(front.entrypool, ref e);
-            }
-            
-            //
-            // Iterate until the B&B tree is empty or until we find a subproblem
-            // that can be split.
-            //
-            while( (sstate.bbsubproblemsrecentlyadded>0 && sstate.bbsubproblemsheapsize<sstate.bbsubproblems.getlength()) && front.frontsize<sstate.bbgdgroupsize )
-            {
-                
-                //
-                // Retrieve either the most recently added subproblem (one that is not moved
-                // to the heap yet) or one from the top of the heap, depending on the PopMostRecent
-                // flag.
-                //
-                sstate.bbsubproblems.pop_transfer(ref p);
-                sstate.bbsubproblemsrecentlyadded = sstate.bbsubproblemsrecentlyadded-1;
-                alglib.ap.assert(p.hasdualsolution, "BBGD: integrity check 282550 failed");
-                if( sstate.hasprimalsolution && (double)(p.dualbound)>=(double)(sstate.fprim-sstate.pdgap*apserv.rmaxabs2(sstate.fprim, 1, _params)) )
-                {
-                    if( sstate.dotrace )
-                    {
-                        alglib.ap.trace(System.String.Format("> fathomed {0,8:d}P during tree search (p.bestfdual={1,0:E2}, p.dual_bound={2,0:E2}, global.fprim={3,0:E2})\n", p.leafid, p.bestfdual, p.dualbound, sstate.fprim));
-                    }
-                    alglib.smp.ae_shared_pool_recycle(sstate.sppool, ref p);
-                    continue;
-                }
-                alglib.smp.ae_shared_pool_retrieve(front.entrypool, ref e);
-                front.entries.append(e);
-                if( !entryprepareleafs(e, front, p, sstate, _params) )
-                {
-                    
-                    //
-                    // Looks like the subproblem we extracted does not need splitting.
-                    // Next one, please.
-                    //
-                    if( sstate.dotrace )
-                    {
-                        alglib.ap.trace(System.String.Format("> subproblem {0,8:d}P does not need integral or spatial branching, skipping\n", p.leafid));
-                    }
-                    front.entries.pop_transfer(ref e);
-                    alglib.smp.ae_shared_pool_recycle(front.entrypool, ref e);
-                    alglib.smp.ae_shared_pool_recycle(sstate.sppool, ref p);
-                    continue;
-                }
-                front.frontsize = front.frontsize+1;
-                alglib.smp.ae_shared_pool_recycle(sstate.sppool, ref p);
-            }
-            if( front.frontsize==0 )
-            {
-                if( sstate.dotrace )
-                {
-                    alglib.ap.trace("> B&B tree has no subproblems that can be split, stopping\n");
-                }
-                result = false;
-                return result;
-            }
-            
-            //
-            // Done
-            //
-            front.rstate.stage = -1;
-            return result;
-        }
-
-
-        /*************************************************************************
         Recomputes State.FFDual using current heap and front entries being processed.
         Works only with dynamic fronts.
         *************************************************************************/
@@ -3754,7 +3699,7 @@ public partial class alglib
             bbgdsubproblem p = null;
             int i = 0;
 
-            alglib.ap.assert(front.frontmode==ftdynamic, "BBGD: 647012 failed");
+            alglib.ap.assert(front.frontmode==ftroot || front.frontmode==ftdynamic, "BBGD: 647012 failed");
             state.ffdual = math.maxrealnumber;
             if( state.hasprimalsolution )
             {
@@ -3763,8 +3708,11 @@ public partial class alglib
             for(i=0; i<=front.frontsize-1; i++)
             {
                 front.entries.get(i, ref e);
-                alglib.ap.assert(e.parentsubproblem.hasdualsolution, "BBGD: 775356 failed");
-                state.ffdual = Math.Min(state.ffdual, e.parentsubproblem.dualbound);
+                alglib.ap.assert(e.parentsubproblem.hasdualsolution || front.frontmode==ftroot, "BBGD: 775356 failed");
+                if( front.frontmode!=ftroot && e.parentsubproblem.hasdualsolution )
+                {
+                    state.ffdual = Math.Min(state.ffdual, e.parentsubproblem.dualbound);
+                }
             }
             if( state.bbsubproblems.getlength()>0 )
             {
@@ -3861,65 +3809,183 @@ public partial class alglib
             bool bdummy = new bool();
             bool continuediving = new bool();
             bool handled = new bool();
+            bool someentriessolved = new bool();
 
             result = true;
             
             //
-            // Front types for initial BBGD
+            // Root front
             //
-            if( front.frontmode==ftroot || front.frontmode==ftbasic )
+            if( front.frontmode==ftroot )
             {
-                alglib.ap.assert(front.frontsize>=1, "BBGD: 551121 failed");
-                jobscnt = 0;
-                for(i=0; i<=front.frontsize-1; i++)
-                {
-                    ablasf.igrowappendv(jobscnt+1, ref front.jobs, i, _params);
-                    jobscnt = jobscnt+1;
-                }
-                System.Threading.Thread.VolatileWrite(ref front.flag, 0);
-                frontparallelrunentries(front, 0, jobscnt, true, state, _params);
-                result = front.flag!=0;
                 
                 //
-                // If finished, set front status to stSolved or stTimeout
+                // Phase 0: integrity check. At the entry the front must have single entry in stReadyToRun or stWaitingForRComm state.
+                //          All subsolvers, if present, must also be stWaitingForRComm
                 //
-                if( !result )
+                alglib.ap.assert(front.frontsize==1 && state.bbsubproblems.getlength()==0, "BBGD: 909109 failed");
+                front.entries.get(0, ref e);
+                waitingcnt = 0;
+                for(j=0; j<=e.subsolvers.getlength()-1; j++)
                 {
-                    front.frontstatus = stsolved;
-                    for(i=0; i<=front.frontsize-1; i++)
+                    e.subsolvers.get(j, ref subsolver);
+                    alglib.ap.assert(subsolver.subsolverstatus==stwaitingforrcomm || subsolver.subsolverstatus==streadytorun, "BBGD: 915110 failed");
+                    if( subsolver.subsolverstatus==stwaitingforrcomm )
                     {
-                        front.entries.get(i, ref e);
-                        alglib.ap.assert(e.entrystatus==stsolved || e.entrystatus==sttimeout, "BBGD: integrity check 282324 failed");
-                        if( e.entrystatus==sttimeout )
+                        waitingcnt = waitingcnt+1;
+                    }
+                }
+                alglib.ap.assert((e.entrystatus==streadytorun && waitingcnt==0) || (e.entrystatus==stwaitingforrcomm && waitingcnt>0), "BBGD: 919110 failed");
+                
+                //
+                // Internal loop: repeat until front size at the end of the loop is non-zero
+                //
+                do
+                {
+                    
+                    //
+                    // Prepare
+                    //
+                    frontrecomputedualbound(front, state, _params);
+                    front.entries.get(0, ref e);
+                    
+                    //
+                    // Activate subsolvers until we hit MaxSubsolvers limit
+                    //
+                    while( e.spqueue.getlength()>0 && e.subsolvers.getlength()<e.maxsubsolvers )
+                    {
+                        e.spqueue.pop_transfer(ref p);
+                        alglib.smp.ae_shared_pool_retrieve(state.subsolverspool, ref subsolver);
+                        entrypreparesubsolver(state, front, e, p, true, subsolver, _params);
+                        e.subsolvers.append(subsolver);
+                        alglib.smp.ae_shared_pool_recycle(state.sppool, ref p);
+                    }
+                    
+                    //
+                    // Parallel call to FrontRunKthEntry()
+                    //
+                    jobscnt = 0;
+                    for(j=0; j<=e.subsolvers.getlength()-1; j++)
+                    {
+                        ablasf.igrowappendv(jobscnt+1, ref front.jobs, j, _params);
+                        jobscnt = jobscnt+1;
+                    }
+                    frontparallelrunentries(front, 0, jobscnt, true, state, _params);
+                    
+                    //
+                    // Analyze solution: signal timeout, check that all entries are stSolved or stWaitingForRComm,
+                    // first-phase process solved entries (update global stats).
+                    //
+                    e.entrystatus = apserv.icase2(e.spqueue.getlength()>0, streadytorun, stsolved, _params);
+                    j = 0;
+                    while( j<e.subsolvers.getlength() )
+                    {
+                        e.subsolvers.get(j, ref subsolver);
+                        if( subsolver.subsolverstatus==sttimeout )
                         {
+                            e.entrystatus = sttimeout;
                             front.frontstatus = sttimeout;
+                            result = false;
+                            return result;
                         }
+                        if( subsolver.subsolverstatus==stwaitingforrcomm )
+                        {
+                            e.entrystatus = stwaitingforrcomm;
+                            j = j+1;
+                            continue;
+                        }
+                        alglib.ap.assert(subsolver.subsolverstatus==stsolved, "BBGD: integrity check 976115 failed");
+                        if( j!=e.subsolvers.getlength()-1 )
+                        {
+                            e.subsolvers.swap(j, e.subsolvers.getlength()-1);
+                        }
+                        e.subsolvers.pop_transfer(ref subsolver);
+                        alglib.smp.ae_shared_pool_recycle(state.subsolverspool, ref subsolver);
                     }
-                }
-                if( (state.softmaxnodes>0 && state.hasprimalsolution) && state.repntreenodes>=state.softmaxnodes )
-                {
-                    if( state.dotrace )
+                    if( e.entrystatus!=streadytorun && e.entrystatus!=stwaitingforrcomm )
                     {
-                        alglib.ap.trace("> soft max nodes triggered (stop if have primal solution), stopping\n");
+                        alglib.ap.assert(e.entrystatus==stsolved, "BBGD: integrity check 670157 failed");
+                        entryaggregateandupdateglobalstats(e, state, _params);
+                        if( state.hasprimalsolution && state.repnnodesbeforefeasibility<0 )
+                        {
+                            state.repnnodesbeforefeasibility = state.repntreenodes;
+                        }
+                        entrydecideonfathoming(e, state, _params);
                     }
-                    front.frontstatus = sttimeout;
-                }
-                if( state.hardmaxnodes>0 && state.repntreenodes>=state.hardmaxnodes )
-                {
-                    if( state.dotrace )
+                    
+                    //
+                    // Push solutions to the heap, check stopping criteria for PDGap, recompute dual bound.
+                    //
+                    // After this phase is done either:
+                    // a) the front is empty (in which case we repeat the loop), or
+                    // b) there are entries, with all of them being stWaitingForRComm or stReadyToRun,
+                    //    in which case we exit in order for RComm request to be processed by the caller
+                    //
+                    if( e.entrystatus!=streadytorun && e.entrystatus!=stwaitingforrcomm )
                     {
-                        alglib.ap.trace("> hard max nodes triggered (stop independently of primal solution status), stopping\n");
+                        alglib.ap.assert(e.entrystatus==stsolved, "BBGD: integrity check 000116 failed");
+                        entrypushsolution(e, state, ref bdummy, _params);
+                        front.entries.pop_transfer(ref e);
+                        alglib.smp.ae_shared_pool_recycle(front.entrypool, ref e);
+                        front.frontsize = front.frontsize-1;
+                        frontrecomputedualbound(front, state, _params);
+                        if( state.dotrace )
+                        {
+                            alglib.ap.trace("> root problem solved\n");
+                        }
+                        result = false;
+                        front.frontstatus = stsolved;
+                        return result;
                     }
-                    front.frontstatus = sttimeout;
-                }
-                if( (state.maxprimalcandidates>0 && state.hasprimalsolution) && state.repnprimalcandidates>=state.maxprimalcandidates )
-                {
-                    if( state.dotrace )
+                    frontrecomputedualbound(front, state, _params);
+                    if( state.hasprimalsolution && (double)(state.ffdual)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
                     {
-                        alglib.ap.trace(System.String.Format("> maximum number of primal candidates tried (more than {0,0:d}), stopping\n", state.maxprimalcandidates));
+                        if( state.dotrace )
+                        {
+                            alglib.ap.trace(System.String.Format("> relative duality gap decreased below {0,0:E2}, stopping\n", state.pdgap));
+                        }
+                        result = false;
+                        front.frontstatus = stsolved;
+                        return result;
                     }
-                    front.frontstatus = sttimeout;
+                    if( (state.softmaxnodes>0 && state.hasprimalsolution) && state.repntreenodes>=state.softmaxnodes )
+                    {
+                        if( state.dotrace )
+                        {
+                            alglib.ap.trace("> soft max nodes triggered (stop if have primal solution), stopping\n");
+                        }
+                        result = false;
+                        front.frontstatus = sttimeout;
+                        return result;
+                    }
+                    if( state.hardmaxnodes>0 && state.repntreenodes>=state.hardmaxnodes )
+                    {
+                        if( state.dotrace )
+                        {
+                            alglib.ap.trace("> hard max nodes triggered (stop independently of primal solution status), stopping\n");
+                        }
+                        result = false;
+                        front.frontstatus = sttimeout;
+                        return result;
+                    }
+                    if( (state.maxprimalcandidates>0 && state.hasprimalsolution) && state.repnprimalcandidates>=state.maxprimalcandidates )
+                    {
+                        if( state.dotrace )
+                        {
+                            alglib.ap.trace(System.String.Format("> maximum number of primal candidates tried (more than {0,0:d}), stopping\n", state.maxprimalcandidates));
+                        }
+                        result = false;
+                        front.frontstatus = sttimeout;
+                        return result;
+                    }
+                    
+                    //
+                    // Count entries that wait for RComm; exit if RComm is needed. Continue iteration if all entries are stReadyToRun,
+                    // we will generate RComm requests at the next round.
+                    //
+                    waitingcnt = apserv.icase2(e.entrystatus==stwaitingforrcomm, 1, 0, _params);
                 }
+                while( waitingcnt<=0 );
                 return result;
             }
             
@@ -4074,7 +4140,7 @@ public partial class alglib
                             continue;
                         }
                         alglib.ap.assert(e.entrystatus==stsolved, "BBGD: integrity check 670157 failed");
-                        entryupdateglobalstats(e, state, _params);
+                        entryaggregateandupdateglobalstats(e, state, _params);
                     }
                     if( state.hasprimalsolution && state.repnnodesbeforefeasibility<0 )
                     {
@@ -4090,6 +4156,7 @@ public partial class alglib
                     //    in which case we exit in order for RComm request to be processed by the caller
                     //
                     i = 0;
+                    someentriessolved = false;
                     while( i<front.frontsize )
                     {
                         
@@ -4103,11 +4170,13 @@ public partial class alglib
                             continue;
                         }
                         alglib.ap.assert(e.entrystatus==stsolved, "BBGD: integrity check 670158 failed");
+                        someentriessolved = true;
                         
                         //
                         // Process entry by either pushing both leaves to the heap or by perfoming
                         // a diving (the better leaf is continued, the worse one is pushed to the heap)
                         //
+                        entrydecideonfathoming(e, state, _params);
                         continuediving = false;
                         handled = false;
                         if( state.dodiving==divealways )
@@ -4150,7 +4219,7 @@ public partial class alglib
                         front.frontstatus = stsolved;
                         return result;
                     }
-                    if( state.dotrace )
+                    if( someentriessolved && state.dotrace )
                     {
                         alglib.ap.trace(System.String.Format(">> global dual bound was recomputed as {0,0:E12}, global primal bound is {1,0:E12}\n", state.ffdual, state.fprim));
                     }
@@ -4271,12 +4340,6 @@ public partial class alglib
 
         /*************************************************************************
         Run k-th entry of the front.
-
-        For Front.FrontMode=ftBasic or ftRoot:
-
-            If the entry is in stReadyToRun or stWaitingForRComm state and
-            EntryRun() returned True, sets Front.Flag to 1. Does not change
-            it otherwise.
         *************************************************************************/
         private static void frontrunkthentryjthsubsolver(bbgdfront front,
             int k,
@@ -4288,21 +4351,14 @@ public partial class alglib
             bbgdfrontsubsolver s = null;
 
             front.entries.get(k, ref e);
-            if( front.frontmode==ftroot || front.frontmode==ftbasic )
-            {
-                if( (e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) && entryrunnondynamicfront(e, state, _params) )
-                {
-                    System.Threading.Thread.VolatileWrite(ref front.flag, 1);
-                }
-                return;
-            }
-            if( front.frontmode==ftdynamic )
+            if( front.frontmode==ftroot || front.frontmode==ftdynamic )
             {
                 e.subsolvers.get(j, ref s);
                 alglib.ap.assert(s.subsolverstatus==streadytorun || s.subsolverstatus==stwaitingforrcomm, "BBGD: 979201 failed");
                 subsolverrun(state, front, e, s, _params);
                 return;
             }
+            alglib.ap.assert(false, "BBGD: 963109 failed");
         }
 
 
@@ -4331,12 +4387,7 @@ public partial class alglib
                 alglib.ap.assert(((e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) || e.entrystatus==stsolved) || e.entrystatus==sttimeout, "BBGD: integrity check 304325 failed");
                 if( e.entrystatus==stwaitingforrcomm )
                 {
-                    if( front.frontmode==ftroot || front.frontmode==ftbasic )
-                    {
-                        reduceandappendrequestto(e.commonsubsolver.nlpsubsolver, state, ref requesttype, ref querysize, ref queryfuncs, ref queryvars, ref querydim, ref queryformulasize, ref querydata, _params);
-                        continue;
-                    }
-                    if( front.frontmode==ftdynamic )
+                    if( front.frontmode==ftroot || front.frontmode==ftdynamic )
                     {
                         for(j=0; j<=e.subsolvers.getlength()-1; j++)
                         {
@@ -4381,12 +4432,7 @@ public partial class alglib
                 alglib.ap.assert(((e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) || e.entrystatus==stsolved) || e.entrystatus==sttimeout, "BBGD: integrity check 304325 failed");
                 if( e.entrystatus==stwaitingforrcomm )
                 {
-                    if( front.frontmode==ftroot || front.frontmode==ftbasic )
-                    {
-                        extractextendandforwardreplyto(state, requesttype, querysize, queryfuncs, queryvars, querydim, queryformulasize, replyfi, replydj, replysj, ref offs, e.commonsubsolver.nlpsubsolver, _params);
-                        continue;
-                    }
-                    if( front.frontmode==ftdynamic )
+                    if( front.frontmode==ftroot || front.frontmode==ftdynamic )
                     {
                         for(j=0; j<=e.subsolvers.getlength()-1; j++)
                         {
@@ -4404,75 +4450,6 @@ public partial class alglib
 
 
         /*************************************************************************
-        Having fully processed front, pushes its solution to the B&B tree,
-        initializing (when working with a root front) or updating (when working
-        with subsequent fronts) global primal/dual bounds as well as best solution so far.
-        *************************************************************************/
-        private static void frontpushsolution(bbgdfront front,
-            bbgdstate state,
-            alglib.xparams _params)
-        {
-            bbgdfrontentry e = null;
-            bbgdsubproblem p = null;
-            int i = 0;
-            int cnt = 0;
-            int offs = 0;
-            int appendlen = 0;
-
-            alglib.ap.assert(front.frontstatus==stsolved && (front.frontmode==ftroot || front.frontmode==ftbasic), "BBGD: integrity check 332315 failed");
-            
-            //
-            // First, update global information (primal bound, pseudocosts, subproblem counts)
-            //
-            for(i=0; i<=front.frontsize-1; i++)
-            {
-                front.entries.get(i, ref e);
-                alglib.ap.assert(e.entrystatus==stsolved, "BBGD: integrity check 259949 failed");
-                entryupdateglobalstats(e, state, _params);
-            }
-            if( state.hasprimalsolution && state.repnnodesbeforefeasibility<0 )
-            {
-                state.repnnodesbeforefeasibility = state.repntreenodes;
-            }
-            
-            //
-            // Then push solutions to the end of the bbSubproblems array and resort last AppendLen
-            // elements using heapsort.
-            //
-            front.popmostrecent = false;
-            offs = state.bbsubproblems.getlength();
-            for(i=0; i<=front.frontsize-1; i++)
-            {
-                front.entries.get(i, ref e);
-                entrypushsolution(e, state, ref front.popmostrecent, _params);
-            }
-            appendlen = state.bbsubproblems.getlength()-offs;
-            state.bbsubproblemsrecentlyadded = appendlen;
-            subproblemheapgrow(state.bbsubproblems, offs, 0, appendlen, _params);
-            while( appendlen>0 )
-            {
-                appendlen = subproblemheappoptop(state.bbsubproblems, offs, appendlen, _params);
-            }
-            
-            //
-            // Update dual bound, print report
-            //
-            state.ffdual = math.maxrealnumber;
-            cnt = state.bbsubproblems.getlength();
-            for(i=0; i<=cnt-1; i++)
-            {
-                state.bbsubproblems.get(i, ref p);
-                alglib.ap.assert(p.hasdualsolution, "BBGD: integrity check 613337 failed");
-                state.ffdual = Math.Min(state.ffdual, p.dualbound);
-            }
-            if( state.dotrace )
-            {
-                alglib.ap.trace(System.String.Format(">> global dual bound was recomputed as {0,0:E12}, global primal bound is {1,0:E12}\n", state.ffdual, state.fprim));
-            }
-        }
-
-
-        /*************************************************************************
         Prepare subsolver for the front entry. Sets timers if timeout was specified.
         *************************************************************************/
         private static void entryprepareroot(bbgdfrontentry entry,
@@ -4481,10 +4458,26 @@ public partial class alglib
             bbgdstate state,
             alglib.xparams _params)
         {
-            subproblemcopyasunsolved(rootsubproblem, rootsubproblem.leafid, entry.parentsubproblem, _params);
-            subproblemcopyasunsolved(rootsubproblem, rootsubproblem.leafid, entry.bestsubproblem0, _params);
-            subproblemcopyasunsolved(rootsubproblem, rootsubproblem.leafid, entry.bestsubproblem1, _params);
+            int restartidx = 0;
+            bbgdsubproblem subproblem = null;
+
             entrypreparex(entry, front, state, true, _params);
+            subproblemcopyasunsolved(rootsubproblem, rootsubproblem.leafid, entry.parentsubproblem, _params);
+            subproblemcopyasunsolved(rootsubproblem, rootsubproblem.leafid, entry.rootproblem, _params);
+            alglib.smp.ae_shared_pool_retrieve(state.sppool, ref subproblem);
+            subproblemcopyasunsolved(entry.rootproblem, entry.rootproblem.leafid, subproblem, _params);
+            entry.solutions.append(subproblem);
+            for(restartidx=0; restartidx<=state.nmultistarts-1; restartidx++)
+            {
+                alglib.smp.ae_shared_pool_retrieve(state.sppool, ref subproblem);
+                subproblemcopyasunsolved(entry.rootproblem, entry.rootproblem.leafid, subproblem, _params);
+                if( restartidx>0 )
+                {
+                    subproblemrandomizex0(subproblem, state, _params);
+                }
+                entry.spqueue.append(subproblem);
+            }
+            entry.maxsubsolvers = Math.Min(entry.spqueue.getlength(), state.maxsubsolvers);
         }
 
 
@@ -4501,6 +4494,7 @@ public partial class alglib
             bool done = new bool();
             int n = 0;
             int i = 0;
+            int choiceidx = 0;
             int branchidx = 0;
             double v = 0;
             double vcostup = 0;
@@ -4511,10 +4505,21 @@ public partial class alglib
             double maxinterr = 0;
             int leaf0 = 0;
             int leaf1 = 0;
+            int restartidx = 0;
+            int cntreliable = 0;
+            int cntunreliable = 0;
+            int cntchosen = 0;
+            bool isreliable = new bool();
 
             done = false;
             n = s.n;
             alglib.ap.assert(s.hasdualsolution, "BBGD: integrity check 391031 failed");
+            
+            //
+            // Entry initialization
+            //
+            entrypreparex(entry, front, state, false, _params);
+            subproblemcopy(s, s.leafid, entry.parentsubproblem, _params);
             
             //
             // Our first attempt to split: split subproblems with significant integrality errors.
@@ -4523,8 +4528,9 @@ public partial class alglib
             {
                 
                 //
-                // Select the most infeasible variable to branch on.
+                // Evaluate variables potential for branching
                 //
+                alglib.ap.assert((state.branchingtype==0 || state.branchingtype==1) || state.branchingtype==2, "BBGD: 167923 failed");
                 maxinterr = 0;
                 for(i=0; i<=n-1; i++)
                 {
@@ -4535,8 +4541,12 @@ public partial class alglib
                     }
                 }
                 alglib.ap.assert((double)(alphaint)<=(double)(0.95), "BBGD: integrity check 943151 failed");
-                branchidx = -1;
-                branchscore = 0;
+                ablasf.iallocv(n, ref entry.tmpreliablebranchidx, _params);
+                ablasf.rallocv(n, ref entry.tmpreliablebranchscore, _params);
+                ablasf.iallocv(n, ref entry.tmpunreliablebranchidx, _params);
+                ablasf.rallocv(n, ref entry.tmpunreliablebranchscore, _params);
+                cntreliable = 0;
+                cntunreliable = 0;
                 for(i=0; i<=n-1; i++)
                 {
                     
@@ -4554,71 +4564,140 @@ public partial class alglib
                     }
                     
                     //
-                    // Choose variable to branch
+                    // Evaluate variable potential, add to one of lists
                     //
                     vscore = Math.Min(v, 1-v);
-                    if( state.usepseudocosts )
+                    isreliable = true;
+                    if( state.branchingtype==1 || state.branchingtype==2 )
                     {
                         vcostup = state.globalpseudocostup;
                         vcostdown = state.globalpseudocostdown;
-                        if( state.pseudocostscntup[i]>=state.minbranchreliability )
+                        if( state.pseudocostscntup[i]>=state.krel )
                         {
                             vcostup = state.pseudocostsup[i];
                         }
-                        if( state.pseudocostscntdown[i]>=state.minbranchreliability )
+                        else
+                        {
+                            isreliable = false;
+                        }
+                        if( state.pseudocostscntdown[i]>=state.krel )
                         {
                             vcostdown = state.pseudocostsdown[i];
                         }
+                        else
+                        {
+                            isreliable = false;
+                        }
                         vscore = (1-state.pseudocostmu)*Math.Min(v*vcostdown, (1-v)*vcostup)+state.pseudocostmu*Math.Max(v*vcostdown, (1-v)*vcostup);
                     }
-                    vscore = Math.Max(vscore, 0);
-                    
-                    //
-                    // Update best candidate
-                    //
-                    if( branchidx<0 || (double)(vscore)>(double)(branchscore) )
+                    alglib.ap.assert((double)(vscore)>=(double)(0), "BBGD: 230640 failed");
+                    if( isreliable )
                     {
-                        branchidx = i;
-                        branchscore = vscore;
+                        ablasf.igrowappendv(cntreliable+1, ref entry.tmpreliablebranchidx, i, _params);
+                        ablasf.rgrowappendv(cntreliable+1, ref entry.tmpreliablebranchscore, -vscore, _params);
+                        cntreliable = cntreliable+1;
+                    }
+                    else
+                    {
+                        ablasf.igrowappendv(cntunreliable+1, ref entry.tmpunreliablebranchidx, i, _params);
+                        ablasf.rgrowappendv(cntunreliable+1, ref entry.tmpunreliablebranchscore, -vscore, _params);
+                        cntunreliable = cntunreliable+1;
                     }
                 }
-                alglib.ap.assert(branchidx>=0, "BBGD: integrity check 982152 failed");
+                alglib.ap.assert(cntreliable+cntunreliable>0, "BBGD: integrity check 982152 failed");
+                tsort.tagsortmiddleri(entry.tmpreliablebranchscore, entry.tmpreliablebranchidx, 0, cntreliable, _params);
+                tsort.tagsortmiddleri(entry.tmpunreliablebranchscore, entry.tmpunreliablebranchidx, 0, cntunreliable, _params);
+                
+                //
+                // Depending on branch strategy, generate a list of candidates for the evaluation
+                //
+                ablasf.iallocv(n, ref entry.tmpchosenbranchidx, _params);
+                ablasf.rallocv(n, ref entry.tmpchosenbranchscore, _params);
+                cntchosen = 0;
+                if( state.branchingtype==0 || state.branchingtype==1 )
+                {
+                    if( cntreliable>0 && (cntchosen==0 || (double)(-entry.tmpreliablebranchscore[0])>(double)(entry.tmpchosenbranchscore[0])) )
+                    {
+                        entry.tmpchosenbranchidx[0] = entry.tmpreliablebranchidx[0];
+                        entry.tmpchosenbranchscore[0] = -entry.tmpreliablebranchscore[0];
+                        cntchosen = 1;
+                    }
+                    if( cntunreliable>0 && (cntchosen==0 || (double)(-entry.tmpunreliablebranchscore[0])>(double)(entry.tmpchosenbranchscore[0])) )
+                    {
+                        entry.tmpchosenbranchidx[0] = entry.tmpunreliablebranchidx[0];
+                        entry.tmpchosenbranchscore[0] = -entry.tmpunreliablebranchscore[0];
+                        cntchosen = 1;
+                    }
+                }
+                if( state.branchingtype==2 )
+                {
+                    for(i=0; i<=Math.Min(cntreliable, state.kevalreliable)-1; i++)
+                    {
+                        ablasf.igrowappendv(cntchosen+1, ref entry.tmpchosenbranchidx, entry.tmpreliablebranchidx[i], _params);
+                        ablasf.rgrowappendv(cntchosen+1, ref entry.tmpchosenbranchscore, -entry.tmpreliablebranchscore[i], _params);
+                        cntchosen = cntchosen+1;
+                    }
+                    for(i=0; i<=Math.Min(cntunreliable, state.kevalunreliable)-1; i++)
+                    {
+                        ablasf.igrowappendv(cntchosen+1, ref entry.tmpchosenbranchidx, entry.tmpunreliablebranchidx[i], _params);
+                        ablasf.rgrowappendv(cntchosen+1, ref entry.tmpchosenbranchscore, -entry.tmpunreliablebranchscore[i], _params);
+                        cntchosen = cntchosen+1;
+                    }
+                }
+                alglib.ap.assert(cntchosen>0, "BBGD: 269713 failed");
                 
                 //
                 // Append new subproblems to the group
                 //
-                if( state.dotrace )
+                for(choiceidx=0; choiceidx<=cntchosen-1; choiceidx++)
                 {
-                    alglib.ap.trace(System.String.Format("> branching {0,8:d}P on var {1,8:d}:", s.leafid, branchidx));
+                    branchidx = entry.tmpchosenbranchidx[choiceidx];
+                    leaf0 = apserv.weakatomicfetchadd(ref state.nextleafid, 1, _params);
+                    leaf1 = apserv.weakatomicfetchadd(ref state.nextleafid, 1, _params);
+                    if( state.dotrace )
+                    {
+                        alglib.ap.trace(System.String.Format("> branching {0,8:d}P on var {1,8:d}:", s.leafid, branchidx));
+                    }
+                    subproblemcopyasunsolved(s, leaf0, entry.tmpsubproblem, _params);
+                    entry.tmpsubproblem.branchbucket = 2*choiceidx+0;
+                    entry.tmpsubproblem.parentfdual = s.bestfdual;
+                    entry.tmpsubproblem.branchvar = branchidx;
+                    entry.tmpsubproblem.branchval = s.bestxdual[branchidx];
+                    ablasf.rcopyv(n, s.bestxdual, entry.tmpsubproblem.x0, _params);
+                    entry.tmpsubproblem.x0[branchidx] = (int)Math.Floor(s.bestxdual[branchidx]);
+                    entry.tmpsubproblem.bndu[branchidx] = entry.tmpsubproblem.x0[branchidx];
+                    subproblemappendcopytoarray(entry.tmpsubproblem, state, false, entry.solutions, _params);
+                    for(restartidx=0; restartidx<=state.nmultistarts-1; restartidx++)
+                    {
+                        subproblemappendcopytoarray(entry.tmpsubproblem, state, restartidx>0, entry.spqueue, _params);
+                    }
+                    if( state.dotrace )
+                    {
+                        alglib.ap.trace(System.String.Format(" creating {0,8:d}P (x<={1,0:E2})", entry.tmpsubproblem.leafid, entry.tmpsubproblem.bndu[branchidx]));
+                    }
+                    subproblemcopyasunsolved(s, leaf1, entry.tmpsubproblem, _params);
+                    entry.tmpsubproblem.branchbucket = 2*choiceidx+1;
+                    entry.tmpsubproblem.parentfdual = s.bestfdual;
+                    entry.tmpsubproblem.branchvar = branchidx;
+                    entry.tmpsubproblem.branchval = s.bestxdual[branchidx];
+                    ablasf.rcopyv(n, s.bestxdual, entry.tmpsubproblem.x0, _params);
+                    entry.tmpsubproblem.x0[branchidx] = (int)Math.Ceiling(s.bestxdual[branchidx]);
+                    entry.tmpsubproblem.bndl[branchidx] = entry.tmpsubproblem.x0[branchidx];
+                    subproblemappendcopytoarray(entry.tmpsubproblem, state, false, entry.solutions, _params);
+                    for(restartidx=0; restartidx<=state.nmultistarts-1; restartidx++)
+                    {
+                        subproblemappendcopytoarray(entry.tmpsubproblem, state, restartidx>0, entry.spqueue, _params);
+                    }
+                    if( state.dotrace )
+                    {
+                        alglib.ap.trace(System.String.Format(" and {0,8:d}P (x>={1,0:E2})", entry.tmpsubproblem.leafid, entry.tmpsubproblem.bndl[branchidx]));
+                    }
+                    if( state.dotrace )
+                    {
+                        alglib.ap.trace("\n");
+                    }
                 }
-                leaf0 = apserv.weakatomicfetchadd(ref state.nextleafid, 1, _params);
-                leaf1 = apserv.weakatomicfetchadd(ref state.nextleafid, 1, _params);
-                subproblemcopyasunsolved(s, leaf0, entry.bestsubproblem0, _params);
-                subproblemcopyasunsolved(s, leaf1, entry.bestsubproblem1, _params);
-                entry.bestsubproblem0.leafidx = 0;
-                entry.bestsubproblem1.leafidx = 1;
-                entry.bestsubproblem0.parentfdual = s.bestfdual;
-                entry.bestsubproblem1.parentfdual = s.bestfdual;
-                ablasf.rcopyv(n, s.bestxdual, entry.bestsubproblem0.x0, _params);
-                ablasf.rcopyv(n, s.bestxdual, entry.bestsubproblem1.x0, _params);
-                entry.bestsubproblem0.x0[branchidx] = (int)Math.Floor(entry.bestsubproblem0.x0[branchidx]);
-                entry.bestsubproblem0.bndu[branchidx] = entry.bestsubproblem0.x0[branchidx];
-                if( state.dotrace )
-                {
-                    alglib.ap.trace(System.String.Format(" creating {0,8:d}P (x<={1,0:E2})", entry.bestsubproblem0.leafid, entry.bestsubproblem0.bndu[branchidx]));
-                }
-                entry.bestsubproblem1.x0[branchidx] = (int)Math.Ceiling(entry.bestsubproblem1.x0[branchidx]);
-                entry.bestsubproblem1.bndl[branchidx] = entry.bestsubproblem1.x0[branchidx];
-                if( state.dotrace )
-                {
-                    alglib.ap.trace(System.String.Format(" and {0,8:d}P (x>={1,0:E2})", entry.bestsubproblem1.leafid, entry.bestsubproblem1.bndl[branchidx]));
-                }
-                if( state.dotrace )
-                {
-                    alglib.ap.trace("\n");
-                }
-                entry.branchvar = branchidx;
-                entry.branchval = s.bestxdual[branchidx];
+                entry.maxsubsolvers = Math.Min(entry.spqueue.getlength(), state.maxsubsolvers);
                 
                 //
                 // Splitting on integer variable is done.
@@ -4661,40 +4740,53 @@ public partial class alglib
                     }
                     leaf0 = apserv.weakatomicfetchadd(ref state.nextleafid, 1, _params);
                     leaf1 = apserv.weakatomicfetchadd(ref state.nextleafid, 1, _params);
-                    subproblemcopyasunsolved(s, leaf0, entry.bestsubproblem0, _params);
-                    subproblemcopyasunsolved(s, leaf1, entry.bestsubproblem1, _params);
-                    entry.bestsubproblem0.leafidx = 0;
-                    entry.bestsubproblem1.leafidx = 1;
-                    entry.bestsubproblem0.parentfdual = s.bestfdual;
-                    entry.bestsubproblem1.parentfdual = s.bestfdual;
+                    subproblemcopyasunsolved(s, leaf0, entry.tmpsubproblem, _params);
+                    entry.tmpsubproblem.branchbucket = 0;
+                    entry.tmpsubproblem.parentfdual = s.bestfdual;
+                    entry.tmpsubproblem.branchvar = branchidx;
+                    entry.tmpsubproblem.branchval = vmid;
                     if( (double)(s.bestxdual[branchidx])<=(double)(vmid) )
                     {
-                        ablasf.rcopyv(n, s.bestxdual, entry.bestsubproblem0.x0, _params);
+                        ablasf.rcopyv(n, s.bestxdual, entry.tmpsubproblem.x0, _params);
                     }
                     else
                     {
-                        ablasf.rcopyv(n, s.worstxdual, entry.bestsubproblem0.x0, _params);
+                        ablasf.rcopyv(n, s.worstxdual, entry.tmpsubproblem.x0, _params);
                     }
-                    entry.bestsubproblem0.bndu[branchidx] = apserv.rcase2(state.isintegral[i], (int)Math.Floor(vmid), vmid, _params);
+                    entry.tmpsubproblem.bndu[branchidx] = apserv.rcase2(state.isintegral[i], (int)Math.Floor(vmid), vmid, _params);
+                    subproblemappendcopytoarray(entry.tmpsubproblem, state, false, entry.solutions, _params);
+                    for(restartidx=0; restartidx<=state.nmultistarts-1; restartidx++)
+                    {
+                        subproblemappendcopytoarray(entry.tmpsubproblem, state, restartidx>0, entry.spqueue, _params);
+                    }
                     if( state.dotrace )
                     {
-                        alglib.ap.trace(System.String.Format(" creating {0,8:d}P (x<={1,0:E2})", entry.bestsubproblem0.leafid, entry.bestsubproblem0.bndu[branchidx]));
+                        alglib.ap.trace(System.String.Format(" creating {0,8:d}P (x<={1,0:E2})", entry.tmpsubproblem.leafid, entry.tmpsubproblem.bndu[branchidx]));
                     }
+                    subproblemcopyasunsolved(s, leaf1, entry.tmpsubproblem, _params);
+                    entry.tmpsubproblem.branchbucket = 1;
+                    entry.tmpsubproblem.parentfdual = s.bestfdual;
+                    entry.tmpsubproblem.branchvar = branchidx;
+                    entry.tmpsubproblem.branchval = vmid;
                     if( (double)(s.bestxdual[branchidx])>=(double)(vmid) )
                     {
-                        ablasf.rcopyv(n, s.bestxdual, entry.bestsubproblem1.x0, _params);
+                        ablasf.rcopyv(n, s.bestxdual, entry.tmpsubproblem.x0, _params);
                     }
                     else
                     {
-                        ablasf.rcopyv(n, s.worstxdual, entry.bestsubproblem1.x0, _params);
+                        ablasf.rcopyv(n, s.worstxdual, entry.tmpsubproblem.x0, _params);
                     }
-                    entry.bestsubproblem1.bndl[branchidx] = apserv.rcase2(state.isintegral[i], (int)Math.Floor(vmid)+1, vmid, _params);
+                    entry.tmpsubproblem.bndl[branchidx] = apserv.rcase2(state.isintegral[i], (int)Math.Floor(vmid)+1, vmid, _params);
+                    subproblemappendcopytoarray(entry.tmpsubproblem, state, false, entry.solutions, _params);
+                    for(restartidx=0; restartidx<=state.nmultistarts-1; restartidx++)
+                    {
+                        subproblemappendcopytoarray(entry.tmpsubproblem, state, restartidx>0, entry.spqueue, _params);
+                    }
                     if( state.dotrace )
                     {
-                        alglib.ap.trace(System.String.Format(" and {0,8:d}P (x>={1,0:E2})", entry.bestsubproblem1.leafid, entry.bestsubproblem1.bndl[branchidx]));
+                        alglib.ap.trace(System.String.Format(" and {0,8:d}P (x>={1,0:E2})\n", entry.tmpsubproblem.leafid, entry.tmpsubproblem.bndl[branchidx]));
                     }
-                    entry.branchvar = branchidx;
-                    entry.branchval = vmid;
+                    entry.maxsubsolvers = Math.Min(entry.spqueue.getlength(), state.maxsubsolvers);
                     
                     //
                     // Splitting on integer variable is done.
@@ -4707,18 +4799,18 @@ public partial class alglib
             // Done or not done
             //
             result = done;
-            if( !done )
-            {
-                return result;
-            }
-            subproblemcopy(s, s.leafid, entry.parentsubproblem, _params);
-            entrypreparex(entry, front, state, false, _params);
             return result;
         }
 
 
         /*************************************************************************
-        Prepare the front entry, generates subproblem queue.
+        Prepares the front entry generating ready to run instance with empty
+        subproblems queue, empty solutions list, and maxsubsolvers=1.
+
+        The caller must generate subproblems as necessary for that node type, set
+        up initial state of the solutions list and set maxsubsolvers as it sees
+        fit.
+
         Sets timers if timeout was specified.
         *************************************************************************/
         private static void entrypreparex(bbgdfrontentry entry,
@@ -4727,21 +4819,18 @@ public partial class alglib
             bool isroot,
             alglib.xparams _params)
         {
-            int restartidx = 0;
-            int leafidx = 0;
             bbgdsubproblem subproblem = null;
             bbgdfrontsubsolver subsolver = null;
 
-            alglib.ap.assert((front.frontmode==ftroot || front.frontmode==ftbasic) || front.frontmode==ftdynamic, "BBGD: 776046 failed");
-            entry.isroot = isroot;
+            alglib.ap.assert(front.frontmode==ftroot || front.frontmode==ftdynamic, "BBGD: 776046 failed");
+            entry.isrootentry = isroot;
             entry.entrystatus = streadytorun;
-            entry.entrylock = 0;
-            if( front.frontmode==ftroot || front.frontmode==ftbasic )
-            {
-                entry.rstate.ia = new int[4+1];
-                entry.rstate.ba = new bool[1+1];
-                entry.rstate.stage = -1;
-            }
+            entry.addstatussolutionsaggregated = false;
+            entry.addstatusdecisionsmade = false;
+            entry.fathomroot = true;
+            entry.fathomchild0 = true;
+            entry.fathomchild1 = true;
+            System.Threading.Thread.VolatileWrite(ref entry.entrylock, 0);
             entry.hastimeout = state.timeout>0;
             if( entry.hastimeout )
             {
@@ -4758,27 +4847,7 @@ public partial class alglib
                 entry.spqueue.pop_transfer(ref subproblem);
                 alglib.smp.ae_shared_pool_recycle(state.sppool, ref subproblem);
             }
-            for(leafidx=0; leafidx<=apserv.icase2(isroot, 0, 1, _params); leafidx++)
-            {
-                for(restartidx=0; restartidx<=state.nmultistarts-1; restartidx++)
-                {
-                    alglib.smp.ae_shared_pool_retrieve(state.sppool, ref subproblem);
-                    if( leafidx==0 )
-                    {
-                        subproblemcopy(entry.bestsubproblem0, entry.bestsubproblem0.leafid, subproblem, _params);
-                    }
-                    else
-                    {
-                        subproblemcopy(entry.bestsubproblem1, entry.bestsubproblem1.leafid, subproblem, _params);
-                    }
-                    if( restartidx>0 )
-                    {
-                        subproblemrandomizex0(subproblem, state, _params);
-                    }
-                    entry.spqueue.append(subproblem);
-                }
-            }
-            entry.maxsubsolvers = Math.Min(entry.spqueue.getlength(), state.maxsubsolvers);
+            entry.maxsubsolvers = 1;
             
             //
             // Clear subsolver list
@@ -4787,6 +4856,15 @@ public partial class alglib
             {
                 entry.subsolvers.pop_transfer(ref subsolver);
                 alglib.smp.ae_shared_pool_recycle(state.subsolverspool, ref subsolver);
+            }
+            
+            //
+            // Clear solutions list
+            //
+            while( entry.solutions.getlength()>0 )
+            {
+                entry.solutions.pop_transfer(ref subproblem);
+                alglib.smp.ae_shared_pool_recycle(state.sppool, ref subproblem);
             }
         }
 
@@ -4802,222 +4880,12 @@ public partial class alglib
             bbgdfrontsubsolver subsolver,
             alglib.xparams _params)
         {
-            alglib.ap.assert(front.frontmode==ftdynamic, "BBGD: 415212 failed");
+            alglib.ap.assert((front.frontmode==ftroot && isroot) || (front.frontmode==ftdynamic && !isroot), "BBGD: 415212 failed");
             subsolver.rstate.ia = new int[1+1];
             subsolver.rstate.ba = new bool[1+1];
             subsolver.rstate.stage = -1;
             subproblemcopy(subproblem, subproblem.leafid, subsolver.subproblem, _params);
             subsolver.subsolverstatus = streadytorun;
-        }
-
-
-        /*************************************************************************
-        Run subproblem solver, prepare RComm fields
-        *************************************************************************/
-        private static bool entryrunnondynamicfront(bbgdfrontentry entry,
-            bbgdstate state,
-            alglib.xparams _params)
-        {
-            bool result = new bool();
-            int n = 0;
-            int i = 0;
-            int leafidx = 0;
-            int restartidx = 0;
-            int terminationtype = 0;
-            bool uselock = new bool();
-            bool done = new bool();
-
-            
-            //
-            // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
-            //
-            // This code initializes locals by:
-            // * random values determined during code
-            //   generation - on first subroutine call
-            // * values from previous call - on subsequent calls
-            //
-            if( entry.rstate.stage>=0 )
-            {
-                n = entry.rstate.ia[0];
-                i = entry.rstate.ia[1];
-                leafidx = entry.rstate.ia[2];
-                restartidx = entry.rstate.ia[3];
-                terminationtype = entry.rstate.ia[4];
-                uselock = entry.rstate.ba[0];
-                done = entry.rstate.ba[1];
-            }
-            else
-            {
-                n = -909;
-                i = 81;
-                leafidx = 255;
-                restartidx = 74;
-                terminationtype = -788;
-                uselock = true;
-                done = true;
-            }
-            if( entry.rstate.stage==0 )
-            {
-                goto lbl_0;
-            }
-            
-            //
-            // Routine body
-            //
-            
-            //
-            // Init
-            //
-            uselock = false;
-            n = entry.parentsubproblem.n;
-            alglib.ap.assert(entry.entrystatus==streadytorun, "BBGD: integrity check 613322 failed");
-            
-            //
-            // Handle various objective types
-            //
-            done = false;
-            if( state.objtype==1 && state.nnlc==0 )
-            {
-                solveqpnode(entry, entry.commonsubsolver, state, entry.parentsubproblem.x0, entry.bestsubproblem0.bndl, entry.bestsubproblem0.bndu, entry.bestsubproblem0, uselock, _params);
-                if( !entry.isroot )
-                {
-                    solveqpnode(entry, entry.commonsubsolver, state, entry.parentsubproblem.x0, entry.bestsubproblem1.bndl, entry.bestsubproblem1.bndu, entry.bestsubproblem1, uselock, _params);
-                }
-                if( entry.hastimeout && (double)(apserv.stimergetmsrunning(entry.timerlocal, _params))>(double)(entry.timeout) )
-                {
-                    entry.entrystatus = sttimeout;
-                    result = false;
-                    return result;
-                }
-                entry.entrystatus = stsolved;
-                done = true;
-            }
-            if( done )
-            {
-                goto lbl_1;
-            }
-            
-            //
-            // Generic NLP subproblem is solved.
-            //
-            minnlc.minnlccreatebuf(entry.parentsubproblem.n, entry.parentsubproblem.x0, entry.commonsubsolver.nlpsubsolver, _params);
-            minnlc.minnlcsetscale(entry.commonsubsolver.nlpsubsolver, state.s, _params);
-            minnlc.minnlcsetlc2(entry.commonsubsolver.nlpsubsolver, state.rawa, state.rawal, state.rawau, state.lccnt, _params);
-            minnlc.minnlcsetnlc2(entry.commonsubsolver.nlpsubsolver, state.nl, state.nu, state.nnlc, _params);
-            minnlc.minnlcsetprotocolv2s(entry.commonsubsolver.nlpsubsolver, _params);
-            if( !entry.isroot )
-            {
-                minnlc.minnlcsetcond3(entry.commonsubsolver.nlpsubsolver, state.epsf, state.epsx, state.nonrootmaxitsconst+state.nonrootmaxitslin*entry.parentsubproblem.n, _params);
-                minnlc.minnlcsetfsqpadditsforctol(entry.commonsubsolver.nlpsubsolver, state.nonrootadditsforfeasibility, state.ctol, _params);
-            }
-            leafidx = 0;
-        lbl_3:
-            if( leafidx>apserv.icase2(entry.isroot, 0, 1, _params) )
-            {
-                goto lbl_5;
-            }
-            restartidx = 0;
-        lbl_6:
-            if( restartidx>state.nmultistarts-1 )
-            {
-                goto lbl_8;
-            }
-            
-            //
-            // Setup box constraints and best subproblem so far
-            //
-            if( leafidx==0 )
-            {
-                minnlc.minnlcsetbc(entry.commonsubsolver.nlpsubsolver, entry.bestsubproblem0.bndl, entry.bestsubproblem0.bndu, _params);
-                minnlc.minnlcrestartfrom(entry.commonsubsolver.nlpsubsolver, entry.bestsubproblem0.x0, _params);
-            }
-            else
-            {
-                minnlc.minnlcsetbc(entry.commonsubsolver.nlpsubsolver, entry.bestsubproblem1.bndl, entry.bestsubproblem1.bndu, _params);
-                minnlc.minnlcrestartfrom(entry.commonsubsolver.nlpsubsolver, entry.bestsubproblem1.x0, _params);
-            }
-            
-            //
-            // Solve NLP relaxation
-            //
-        lbl_9:
-            if( !minnlc.minnlciteration(entry.commonsubsolver.nlpsubsolver, _params) )
-            {
-                goto lbl_10;
-            }
-            if( entry.commonsubsolver.nlpsubsolver.requesttype==-1 )
-            {
-                goto lbl_11;
-            }
-            entry.entrystatus = stwaitingforrcomm;
-            entry.rstate.stage = 0;
-            goto lbl_rcomm;
-        lbl_0:
-        lbl_11:
-            if( entry.hastimeout && (double)(apserv.stimergetmsrunning(entry.timerlocal, _params))>(double)(entry.timeout) )
-            {
-                entry.entrystatus = sttimeout;
-                result = false;
-                return result;
-            }
-            goto lbl_9;
-        lbl_10:
-            minnlc.minnlcresultsbuf(entry.commonsubsolver.nlpsubsolver, ref entry.commonsubsolver.xsol, entry.commonsubsolver.nlprep, _params);
-            
-            //
-            // Analyze solution
-            //
-            if( leafidx==0 )
-            {
-                analyzenlpsolutionandenforceintegrality(entry, entry.commonsubsolver.xsol, entry.commonsubsolver.nlprep, state, entry.bestsubproblem0, uselock, _params);
-            }
-            else
-            {
-                analyzenlpsolutionandenforceintegrality(entry, entry.commonsubsolver.xsol, entry.commonsubsolver.nlprep, state, entry.bestsubproblem1, uselock, _params);
-            }
-            
-            //
-            // Randomize initial position for possible restarts
-            //
-            if( state.nmultistarts>1 )
-            {
-                if( leafidx==0 )
-                {
-                    subproblemrandomizex0(entry.bestsubproblem0, state, _params);
-                }
-                else
-                {
-                    subproblemrandomizex0(entry.bestsubproblem1, state, _params);
-                }
-            }
-            restartidx = restartidx+1;
-            goto lbl_6;
-        lbl_8:
-            leafidx = leafidx+1;
-            goto lbl_3;
-        lbl_5:
-            entry.entrystatus = stsolved;
-            done = true;
-        lbl_1:
-            alglib.ap.assert(done, "BBGD: integrity check 155534 failed");
-            result = false;
-            return result;
-            
-            //
-            // Saving state
-            //
-        lbl_rcomm:
-            result = true;
-            entry.rstate.ia[0] = n;
-            entry.rstate.ia[1] = i;
-            entry.rstate.ia[2] = leafidx;
-            entry.rstate.ia[3] = restartidx;
-            entry.rstate.ia[4] = terminationtype;
-            entry.rstate.ba[0] = uselock;
-            entry.rstate.ba[1] = done;
-            return result;
         }
 
 
@@ -5056,10 +4924,10 @@ public partial class alglib
             }
             else
             {
-                i = -838;
-                terminationtype = 939;
-                uselock = false;
-                done = true;
+                i = -909;
+                terminationtype = 81;
+                uselock = true;
+                done = false;
             }
             if( subsolver.rstate.stage==0 )
             {
@@ -5074,7 +4942,7 @@ public partial class alglib
             // Init
             //
             uselock = true;
-            alglib.ap.assert((subsolver.subsolverstatus==streadytorun && subsolver.subproblem.leafidx>=0) && subsolver.subproblem.leafidx<=1, "BBGD: integrity check 589220 failed");
+            alglib.ap.assert(subsolver.subsolverstatus==streadytorun && ((front.frontmode==ftdynamic && subsolver.subproblem.branchbucket>=0) || (front.frontmode==ftroot && subsolver.subproblem.branchbucket==-1)), "BBGD: integrity check 589220 failed");
             
             //
             // Handle various objective types
@@ -5082,14 +4950,7 @@ public partial class alglib
             done = false;
             if( state.objtype==1 && state.nnlc==0 )
             {
-                if( subsolver.subproblem.leafidx==0 )
-                {
-                    solveqpnode(entry, subsolver, state, subsolver.subproblem.x0, subsolver.subproblem.bndl, subsolver.subproblem.bndu, entry.bestsubproblem0, uselock, _params);
-                }
-                else
-                {
-                    solveqpnode(entry, subsolver, state, subsolver.subproblem.x0, subsolver.subproblem.bndl, subsolver.subproblem.bndu, entry.bestsubproblem1, uselock, _params);
-                }
+                solveqpnode(entry, subsolver, state, subsolver.subproblem.x0, subsolver.subproblem.bndl, subsolver.subproblem.bndu, entry.solutions, Math.Max(subsolver.subproblem.branchbucket, 0), uselock, _params);
                 if( entry.hastimeout && (double)(apserv.stimergetmsrunning(entry.timerlocal, _params))>(double)(entry.timeout) )
                 {
                     subsolver.subsolverstatus = sttimeout;
@@ -5113,7 +4974,7 @@ public partial class alglib
             minnlc.minnlcsetlc2(subsolver.nlpsubsolver, state.rawa, state.rawal, state.rawau, state.lccnt, _params);
             minnlc.minnlcsetnlc2(subsolver.nlpsubsolver, state.nl, state.nu, state.nnlc, _params);
             minnlc.minnlcsetprotocolv2s(subsolver.nlpsubsolver, _params);
-            if( subsolver.subproblem.leafidx>=0 )
+            if( subsolver.subproblem.branchbucket>=0 )
             {
                 minnlc.minnlcsetcond3(subsolver.nlpsubsolver, state.epsf, state.epsx, state.nonrootmaxitsconst+state.nonrootmaxitslin*subsolver.subproblem.n, _params);
                 minnlc.minnlcsetfsqpadditsforctol(subsolver.nlpsubsolver, state.nonrootadditsforfeasibility, state.ctol, _params);
@@ -5149,14 +5010,7 @@ public partial class alglib
             //
             // Analyze solution
             //
-            if( subsolver.subproblem.leafidx==0 )
-            {
-                analyzenlpsolutionandenforceintegrality(entry, subsolver.xsol, subsolver.nlprep, state, entry.bestsubproblem0, uselock, _params);
-            }
-            else
-            {
-                analyzenlpsolutionandenforceintegrality(entry, subsolver.xsol, subsolver.nlprep, state, entry.bestsubproblem1, uselock, _params);
-            }
+            analyzenlpsolutionandenforceintegrality(entry, subsolver.xsol, subsolver.nlprep, state, entry.solutions, Math.Max(subsolver.subproblem.branchbucket, 0), uselock, _params);
             subsolver.subsolverstatus = stsolved;
             done = true;
         lbl_1:
@@ -5178,97 +5032,315 @@ public partial class alglib
 
 
         /*************************************************************************
+        Aggregates data from the Solutions[] array into RootProblem or
+        ChildSubproblem0/ChildSubproblem1, depending on entry type. Updates global
+        statistics (pseudocosts etc).
+
+
         Uses entry data to update global statistics in State:
         * primal bound
         * pseudocosts
 
-        This update should be performed prior to feeding data from the entry  into
+        This function must be called on all solved entries, prior to calling
+        EntryDecideOnFathoming() for all solved entries.
+
+        update should be performed prior to feeding data from the entry  into
         State with EntryPushSolution() or EntryTryPushAndDive().
         *************************************************************************/
-        private static void entryupdateglobalstats(bbgdfrontentry entry,
+        private static void entryaggregateandupdateglobalstats(bbgdfrontentry entry,
             bbgdstate state,
             alglib.xparams _params)
         {
+            int i = 0;
             int k = 0;
+            int solcnt = 0;
             double v = 0;
+            double vfrac = 0;
             double vup = 0;
             double vdown = 0;
+            int cntsimplebranch = 0;
+            int cnttighten = 0;
+            int infeassolidx = 0;
+            int bestbranch = 0;
+            int besttighten = 0;
+            int bestbranchsolidx = 0;
+            int besttightensolidx = 0;
+            double bestbranchlowerscore = 0;
+            double bestbranchscore = 0;
+            double besttightenlowerscore = 0;
+            bool isinfeasible = new bool();
+            double vscore = 0;
+            double vrnddn = 0;
+            double vrndup = 0;
+            bbgdsubproblem sol = null;
+            bbgdsubproblem sol0 = null;
+            bbgdsubproblem sol1 = null;
 
-            alglib.ap.assert(entry.entrystatus==stsolved, "BBGD: integrity check 828957 failed");
+            alglib.ap.assert(entry.entrystatus==stsolved && !entry.addstatussolutionsaggregated, "BBGD: integrity check 828957 failed");
+            solcnt = entry.solutions.getlength();
             
             //
-            // Analyze solutions #0 and #1 (if present)
+            // Update primal bound
             //
-            if( entry.bestsubproblem0.hasprimalsolution )
+            for(i=0; i<=solcnt-1; i++)
             {
-                alglib.ap.assert(entry.bestsubproblem0.n==state.n, "BBGD: integrity check 832958 failed");
-                if( !state.hasprimalsolution || (double)(entry.bestsubproblem0.fprim)<(double)(state.fprim) )
+                entry.solutions.get(i, ref sol);
+                if( sol.hasprimalsolution )
                 {
-                    ablasf.rcopyallocv(entry.bestsubproblem0.n, entry.bestsubproblem0.xprim, ref state.xprim, _params);
-                    state.fprim = entry.bestsubproblem0.fprim;
-                    state.hprim = entry.bestsubproblem0.hprim;
-                    state.hasprimalsolution = true;
+                    alglib.ap.assert(sol.n==state.n, "BBGD: integrity check 832958 failed");
+                    if( !state.hasprimalsolution || (double)(sol.fprim)<(double)(state.fprim) )
+                    {
+                        ablasf.rcopyallocv(sol.n, sol.xprim, ref state.xprim, _params);
+                        state.fprim = sol.fprim;
+                        state.hprim = sol.hprim;
+                        state.hasprimalsolution = true;
+                    }
+                    state.repnprimalcandidates = state.repnprimalcandidates+1;
                 }
-                state.repnprimalcandidates = state.repnprimalcandidates+1;
-            }
-            if( entry.bestsubproblem1.hasprimalsolution )
-            {
-                alglib.ap.assert(entry.bestsubproblem1.n==state.n, "BBGD: integrity check 832958 failed");
-                if( !state.hasprimalsolution || (double)(entry.bestsubproblem1.fprim)<(double)(state.fprim) )
-                {
-                    ablasf.rcopyallocv(entry.bestsubproblem1.n, entry.bestsubproblem1.xprim, ref state.xprim, _params);
-                    state.fprim = entry.bestsubproblem1.fprim;
-                    state.hprim = entry.bestsubproblem1.hprim;
-                    state.hasprimalsolution = true;
-                }
-                state.repnprimalcandidates = state.repnprimalcandidates+1;
             }
             
             //
-            // Update pseudocosts
+            // Update pseudocosts:
+            // * per-variable ones are always updated, for feasible and infeasible problems (in the latter case the global cost times penalty is used)
+            // * global pseudocosts are updated only when subproblem is feasible (to avoid updating them with their own value times penalty)
             //
-            if( !entry.isroot )
+            if( !entry.isrootentry )
+            {
+                for(i=0; i<=solcnt-1; i++)
+                {
+                    entry.solutions.get(i, ref sol);
+                    if( state.isintegral[sol.branchvar] )
+                    {
+                        alglib.ap.assert(sol.branchbucket>=0 && sol.branchbucket<solcnt, "BBGD: 546152 failed");
+                        if( sol.branchbucket%2==0 )
+                        {
+                            k = sol.branchvar;
+                            v = sol.branchval;
+                            vfrac = v-(int)Math.Floor(v);
+                            vdown = 0;
+                            if( sol.hasdualsolution )
+                            {
+                                vdown = Math.Max(sol.bestfdual-sol.parentfdual, 0)/Math.Max(vfrac, math.machineepsilon);
+                            }
+                            if( !sol.hasdualsolution && state.globalpseudocostcntdown>0 )
+                            {
+                                vdown = state.pseudocostinfeaspenaly*state.globalpseudocostdown;
+                            }
+                            if( (double)(vdown)>=(double)(0) && (double)(vfrac)>(double)(state.pseudocostminfrac) )
+                            {
+                                state.pseudocostsdown[k] = (state.pseudocostsdown[k]*state.pseudocostscntdown[k]+vdown)/(state.pseudocostscntdown[k]+1);
+                                state.pseudocostscntdown[k] = state.pseudocostscntdown[k]+1;
+                            }
+                            if( ((double)(vdown)>=(double)(0) && (double)(vfrac)>(double)(state.pseudocostminfrac)) && sol.hasdualsolution )
+                            {
+                                state.globalpseudocostdown = (state.globalpseudocostdown*state.globalpseudocostcntdown+vdown)/(state.globalpseudocostcntdown+1);
+                                state.globalpseudocostcntdown = state.globalpseudocostcntdown+1;
+                            }
+                        }
+                        if( sol.branchbucket%2==1 )
+                        {
+                            k = sol.branchvar;
+                            v = sol.branchval;
+                            vfrac = (int)Math.Ceiling(v)-v;
+                            vup = 0;
+                            if( sol.hasdualsolution )
+                            {
+                                vup = Math.Max(sol.bestfdual-sol.parentfdual, 0)/Math.Max(vfrac, math.machineepsilon);
+                            }
+                            if( !sol.hasdualsolution && state.globalpseudocostcntup>0 )
+                            {
+                                vup = state.pseudocostinfeaspenaly*state.globalpseudocostup;
+                            }
+                            if( (double)(vup)>=(double)(0) && (double)(vfrac)>(double)(state.pseudocostminfrac) )
+                            {
+                                state.pseudocostsup[k] = (state.pseudocostsup[k]*state.pseudocostscntup[k]+vup)/(state.pseudocostscntup[k]+1);
+                                state.pseudocostscntup[k] = state.pseudocostscntup[k]+1;
+                            }
+                            if( ((double)(vup)>=(double)(0) && (double)(vfrac)>(double)(state.pseudocostminfrac)) && sol.hasdualsolution )
+                            {
+                                state.globalpseudocostup = (state.globalpseudocostup*state.globalpseudocostcntup+vup)/(state.globalpseudocostcntup+1);
+                                state.globalpseudocostcntup = state.globalpseudocostcntup+1;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            //
+            // Select the most promising branching across ones proposed.
+            // Upload to RootProblem/ChildSubproblem0/ChildSubproblem1
+            //
+            if( entry.isrootentry )
             {
                 
                 //
-                // Update pseudocosts
+                // Root problem being solved, upload results to RootProblem
                 //
-                if( state.isintegral[entry.branchvar] )
+                alglib.ap.assert(solcnt==1, "BBGD: 587200 failed");
+                entry.solutions.get(0, ref sol);
+                subproblemcopy(sol, sol.leafid, entry.rootproblem, _params);
+            }
+            else
+            {
+                
+                //
+                // Branching is over, analyze results
+                //
+                alglib.ap.assert(solcnt%2==0, "BBGD: 599208 failed");
+                alglib.ap.assert(state.convexityflag>=0, "BBGD: 701838 failed");
+                cntsimplebranch = 0;
+                cnttighten = 0;
+                isinfeasible = false;
+                infeassolidx = -1;
+                bestbranch = -1;
+                bestbranchsolidx = -1;
+                bestbranchscore = 0;
+                bestbranchlowerscore = 0;
+                besttighten = -1;
+                besttightensolidx = -1;
+                besttightenlowerscore = 0;
+                for(i=0; i<=solcnt/2-1; i++)
                 {
-                    if( entry.bestsubproblem0.hasdualsolution )
+                    entry.solutions.get(2*i+0, ref sol0);
+                    entry.solutions.get(2*i+1, ref sol1);
+                    alglib.ap.assert(sol0.branchbucket>=0 && sol0.branchbucket<solcnt, "BBGD: 715531 failed");
+                    alglib.ap.assert(sol1.branchbucket==sol0.branchbucket+1, "BBGD: 715532 failed");
+                    alglib.ap.assert(sol0.branchvar==sol1.branchvar, "BBGD: 715533 failed");
+                    if( !sol0.hasdualsolution && !sol1.hasdualsolution )
                     {
-                        k = entry.branchvar;
-                        v = entry.branchval;
-                        vdown = Math.Max(entry.bestsubproblem0.bestfdual-entry.bestsubproblem0.parentfdual, 0)/Math.Max(v-(int)Math.Floor(v), math.machineepsilon);
-                        if( (double)(vdown)>(double)(0) )
+                        
+                        //
+                        // Branching on the variable produced two infeasible problems: good opportunity to prune the entire branch!
+                        //
+                        infeassolidx = i;
+                        isinfeasible = true;
+                        continue;
+                    }
+                    if( sol0.hasdualsolution && sol1.hasdualsolution )
+                    {
+                        
+                        //
+                        // Both leafs are feasible, compute score for the branching decision.
+                        //
+                        // The score handles both convex problems (Sol0.BestFDual>Sol0.ParentFDual) and non-convex ones, where
+                        // introducing a branching constraint suddenly moves us to a better extremum. Such branchings are given
+                        // higher priority by using NonconvexityGain>1.
+                        //
+                        vrnddn = Math.Max(sol0.bestfdual-sol0.parentfdual, state.nonconvexitygain*(sol0.parentfdual-sol0.bestfdual));
+                        vrndup = Math.Max(sol1.bestfdual-sol1.parentfdual, state.nonconvexitygain*(sol1.parentfdual-sol1.bestfdual));
+                        vscore = (1-state.pseudocostmu)*Math.Min(vrnddn, vrndup)+state.pseudocostmu*Math.Max(vrnddn, vrndup);
+                        if( bestbranch<0 || (double)(vscore)>(double)(bestbranchscore) )
                         {
-                            state.pseudocostsdown[k] = (state.pseudocostsdown[k]*state.pseudocostscntdown[k]+vdown)/(state.pseudocostscntdown[k]+1);
-                            state.pseudocostscntdown[k] = state.pseudocostscntdown[k]+1;
-                            state.globalpseudocostdown = (state.globalpseudocostdown*state.globalpseudocostcntdown+vdown)/(state.globalpseudocostcntdown+1);
-                            state.globalpseudocostcntdown = state.globalpseudocostcntdown+1;
+                            bestbranch = sol0.branchvar;
+                            bestbranchsolidx = i;
+                            bestbranchscore = vscore;
+                            bestbranchlowerscore = Math.Min(vrnddn, vrndup);
+                        }
+                        cntsimplebranch = cntsimplebranch+1;
+                        continue;
+                    }
+                    
+                    //
+                    // Branching produced one feasible and one infeasible problem: we can tighten a variable.
+                    //
+                    // Non-convexity is handled similarly to the 'both leafs are feasible' case.
+                    //
+                    if( sol0.hasdualsolution )
+                    {
+                        vscore = Math.Max(sol0.bestfdual-sol0.parentfdual, state.nonconvexitygain*(sol0.parentfdual-sol0.bestfdual));
+                        if( besttighten<0 || (double)(vscore)>(double)(besttightenlowerscore) )
+                        {
+                            besttighten = sol0.branchvar;
+                            besttightensolidx = i;
+                            besttightenlowerscore = vscore;
                         }
                     }
-                    if( entry.bestsubproblem1.hasdualsolution )
+                    else
                     {
-                        k = entry.branchvar;
-                        v = entry.branchval;
-                        vup = Math.Max(entry.bestsubproblem1.bestfdual-entry.bestsubproblem1.parentfdual, 0)/Math.Max((int)Math.Ceiling(v)-v, math.machineepsilon);
-                        if( (double)(vup)>(double)(0) )
+                        vscore = Math.Max(sol1.bestfdual-sol1.parentfdual, state.nonconvexitygain*(sol1.parentfdual-sol1.bestfdual));
+                        if( besttighten<0 || (double)(vscore)>(double)(besttightenlowerscore) )
                         {
-                            state.pseudocostsup[k] = (state.pseudocostsup[k]*state.pseudocostscntup[k]+vup)/(state.pseudocostscntup[k]+1);
-                            state.pseudocostscntup[k] = state.pseudocostscntup[k]+1;
-                            state.globalpseudocostup = (state.globalpseudocostup*state.globalpseudocostcntup+vup)/(state.globalpseudocostcntup+1);
-                            state.globalpseudocostcntup = state.globalpseudocostcntup+1;
+                            besttighten = sol1.branchvar;
+                            besttightensolidx = i;
+                            besttightenlowerscore = vscore;
                         }
+                    }
+                    cnttighten = cnttighten+1;
+                }
+                alglib.ap.assert(state.convexityflag>=0, "BBGD: 783600");
+                if( isinfeasible )
+                {
+                    
+                    //
+                    // The problem is infeasible
+                    //
+                    entry.solutions.get(2*infeassolidx+0, ref sol0);
+                    entry.solutions.get(2*infeassolidx+1, ref sol1);
+                    subproblemcopy(sol0, sol0.leafid, entry.childsubproblem0, _params);
+                    subproblemcopy(sol1, sol1.leafid, entry.childsubproblem1, _params);
+                }
+                else
+                {
+                    if( cnttighten>0 )
+                    {
+                        
+                        //
+                        // At least one of variables can be tightened
+                        //
+                        entry.solutions.get(2*besttightensolidx+0, ref sol0);
+                        entry.solutions.get(2*besttightensolidx+1, ref sol1);
+                        subproblemcopy(sol0, sol0.leafid, entry.childsubproblem0, _params);
+                        subproblemcopy(sol1, sol1.leafid, entry.childsubproblem1, _params);
+                    }
+                    else
+                    {
+                        
+                        //
+                        // Basic split
+                        //
+                        alglib.ap.assert(cntsimplebranch>0, "BBGD: 809607");
+                        entry.solutions.get(2*bestbranchsolidx+0, ref sol0);
+                        entry.solutions.get(2*bestbranchsolidx+1, ref sol1);
+                        subproblemcopy(sol0, sol0.leafid, entry.childsubproblem0, _params);
+                        subproblemcopy(sol1, sol1.leafid, entry.childsubproblem1, _params);
                     }
                 }
             }
+            entry.addstatussolutionsaggregated = true;
             
             //
             // Update subproblem counts
             //
-            state.repnsubproblems = state.repnsubproblems+apserv.icase2(entry.isroot, 1, 2, _params)*state.nmultistarts;
-            state.repntreenodes = state.repntreenodes+apserv.icase2(entry.isroot, 1, 2, _params);
+            state.repnsubproblems = state.repnsubproblems+entry.solutions.getlength()*state.nmultistarts;
+            state.repntreenodes = state.repntreenodes+apserv.icase2(entry.isrootentry, 1, 2, _params);
+        }
+
+
+        /*************************************************************************
+        Decides on fathoming RootSubproblem or Child0/1, depending on IsRootEntry.
+
+        Sets corresponding flags, but does not push solution and does not perform
+        diving.
+
+        This function must be called on all solved entries after calling
+        EntryAggregateAndUpdateGlobalStats(), prior to  to feeding data from the
+        entry into State with EntryPushSolution() or EntryTryPushAndDive().
+        *************************************************************************/
+        private static void entrydecideonfathoming(bbgdfrontentry entry,
+            bbgdstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert((entry.entrystatus==stsolved && entry.addstatussolutionsaggregated) && !entry.addstatusdecisionsmade, "BBGD: integrity check 902210 failed");
+            if( entry.isrootentry )
+            {
+                entry.fathomroot = subproblemcanfathom(entry.rootproblem, state, _params);
+            }
+            else
+            {
+                entry.fathomchild0 = subproblemcanfathom(entry.childsubproblem0, state, _params);
+                entry.fathomchild1 = subproblemcanfathom(entry.childsubproblem1, state, _params);
+            }
+            entry.addstatusdecisionsmade = true;
         }
 
 
@@ -5287,9 +5359,25 @@ public partial class alglib
             ref bool setonupdate,
             alglib.xparams _params)
         {
-            alglib.ap.assert(entry.entrystatus==stsolved, "BBGD: integrity check 863011 failed");
-            pushsubproblemsolution(entry.bestsubproblem0, state, ref setonupdate, _params);
-            pushsubproblemsolution(entry.bestsubproblem1, state, ref setonupdate, _params);
+            alglib.ap.assert((entry.entrystatus==stsolved && entry.addstatussolutionsaggregated) && entry.addstatusdecisionsmade, "BBGD: integrity check 863011 failed");
+            if( entry.isrootentry )
+            {
+                if( !entry.fathomroot )
+                {
+                    pushsubproblemsolution(entry.rootproblem, state, ref setonupdate, _params);
+                }
+            }
+            else
+            {
+                if( !entry.fathomchild0 )
+                {
+                    pushsubproblemsolution(entry.childsubproblem0, state, ref setonupdate, _params);
+                }
+                if( !entry.fathomchild1 )
+                {
+                    pushsubproblemsolution(entry.childsubproblem1, state, ref setonupdate, _params);
+                }
+            }
         }
 
 
@@ -5318,7 +5406,7 @@ public partial class alglib
             bbgdsubproblem eligiblep = null;
             bool bdummy = new bool();
 
-            alglib.ap.assert(entry.entrystatus==stsolved, "BBGD: integrity check 905205 failed");
+            alglib.ap.assert(((entry.entrystatus==stsolved && entry.addstatussolutionsaggregated) && entry.addstatusdecisionsmade) && !entry.isrootentry, "BBGD: integrity check 905205 failed");
             eligibleleafidx = -1;
             eligibleleafdual = math.maxrealnumber;
             alglib.smp.ae_shared_pool_retrieve(state.sppool, ref eligiblep);
@@ -5326,27 +5414,23 @@ public partial class alglib
             //
             // Analyze leaf 0
             //
-            iseligibleleaf = entry.bestsubproblem0.hasdualsolution;
-            iseligibleleaf = iseligibleleaf && (!state.hasprimalsolution || (double)(entry.bestsubproblem0.dualbound)<(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)));
-            iseligibleleaf = iseligibleleaf && (eligibleleafidx<0 || (double)(entry.bestsubproblem0.dualbound)<(double)(eligibleleafdual));
+            iseligibleleaf = !entry.fathomchild0 && (eligibleleafidx<0 || (double)(entry.childsubproblem0.dualbound)<(double)(eligibleleafdual));
             if( iseligibleleaf )
             {
                 eligibleleafidx = 0;
-                eligibleleafdual = entry.bestsubproblem0.dualbound;
-                subproblemcopy(entry.bestsubproblem0, entry.bestsubproblem0.leafid, eligiblep, _params);
+                eligibleleafdual = entry.childsubproblem0.dualbound;
+                subproblemcopy(entry.childsubproblem0, entry.childsubproblem0.leafid, eligiblep, _params);
             }
             
             //
             // Analyze leaf 1
             //
-            iseligibleleaf = entry.bestsubproblem1.hasdualsolution;
-            iseligibleleaf = iseligibleleaf && (!state.hasprimalsolution || (double)(entry.bestsubproblem1.dualbound)<(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)));
-            iseligibleleaf = iseligibleleaf && (eligibleleafidx<0 || (double)(entry.bestsubproblem1.dualbound)<(double)(eligibleleafdual));
+            iseligibleleaf = !entry.fathomchild1 && (eligibleleafidx<0 || (double)(entry.childsubproblem1.dualbound)<(double)(eligibleleafdual));
             if( iseligibleleaf )
             {
                 eligibleleafidx = 1;
-                eligibleleafdual = entry.bestsubproblem1.dualbound;
-                subproblemcopy(entry.bestsubproblem1, entry.bestsubproblem1.leafid, eligiblep, _params);
+                eligibleleafdual = entry.childsubproblem1.dualbound;
+                subproblemcopy(entry.childsubproblem1, entry.childsubproblem1.leafid, eligiblep, _params);
             }
             
             //
@@ -5354,8 +5438,14 @@ public partial class alglib
             //
             if( eligibleleafidx<0 )
             {
-                pushsubproblemsolution(entry.bestsubproblem0, state, ref bdummy, _params);
-                pushsubproblemsolution(entry.bestsubproblem1, state, ref bdummy, _params);
+                if( !entry.fathomchild0 )
+                {
+                    pushsubproblemsolution(entry.childsubproblem0, state, ref bdummy, _params);
+                }
+                if( !entry.fathomchild1 )
+                {
+                    pushsubproblemsolution(entry.childsubproblem1, state, ref bdummy, _params);
+                }
                 if( state.dotrace )
                 {
                     alglib.ap.trace("> no eligible leaves to continue diving, retrieving problem from the heap\n");
@@ -5379,21 +5469,33 @@ public partial class alglib
             //
             if( eligibleleafidx==0 )
             {
-                pushsubproblemsolution(entry.bestsubproblem1, state, ref bdummy, _params);
+                if( !entry.fathomchild1 )
+                {
+                    pushsubproblemsolution(entry.childsubproblem1, state, ref bdummy, _params);
+                }
             }
             else
             {
-                pushsubproblemsolution(entry.bestsubproblem0, state, ref bdummy, _params);
+                if( !entry.fathomchild0 )
+                {
+                    pushsubproblemsolution(entry.childsubproblem0, state, ref bdummy, _params);
+                }
             }
             if( !entryprepareleafs(entry, front, eligiblep, state, _params) )
             {
                 if( eligibleleafidx==0 )
                 {
-                    pushsubproblemsolution(entry.bestsubproblem0, state, ref bdummy, _params);
+                    if( !entry.fathomchild0 )
+                    {
+                        pushsubproblemsolution(entry.childsubproblem0, state, ref bdummy, _params);
+                    }
                 }
                 else
                 {
-                    pushsubproblemsolution(entry.bestsubproblem1, state, ref bdummy, _params);
+                    if( !entry.fathomchild1 )
+                    {
+                        pushsubproblemsolution(entry.childsubproblem1, state, ref bdummy, _params);
+                    }
                 }
                 result = false;
             }
@@ -5415,30 +5517,7 @@ public partial class alglib
         {
             bbgdsubproblem p = null;
 
-            if( !subproblem.hasdualsolution )
-            {
-                if( state.dotrace )
-                {
-                    alglib.ap.trace(System.String.Format(">> analyzing {0,8:d}P: infeasible (err={1,0:E2}), fathomed\n", subproblem.leafid, subproblem.besthdual));
-                }
-                return;
-            }
-            if( state.dotrace )
-            {
-                alglib.ap.trace(System.String.Format(">> analyzing {0,8:d}P (bestfdual={1,0:E12}, dualbound={2,0:E12}, fprim={3,0:E12})", subproblem.leafid, subproblem.bestfdual, subproblem.dualbound, subproblem.fprim));
-            }
-            if( state.hasprimalsolution && (double)(subproblem.dualbound)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
-            {
-                if( state.dotrace )
-                {
-                    alglib.ap.trace(", fathomed\n");
-                }
-                return;
-            }
-            if( state.dotrace )
-            {
-                alglib.ap.trace("\n");
-            }
+            alglib.ap.assert(subproblem.hasdualsolution, "BBGD: 096224 failed");
             alglib.smp.ae_shared_pool_retrieve(state.sppool, ref p);
             subproblemcopy(subproblem, subproblem.leafid, p, _params);
             state.bbsubproblems.append(p);
@@ -5805,9 +5884,13 @@ public partial class alglib
         /*************************************************************************
         Solve QP subproblem given by its bounds and initial point. Internally
         applies iterative refinement to produce highly accurate solutions (essential
-        for proper functioning of the B&B solver)
+        for proper functioning of the B&B solver).
 
-        If UseLock=True, then SubproblemToUpdate is accessed by acquiring Entry.EntryLock
+        The solution is loaded into SubproblemArray[itemIdx], with the array object
+        storing instances of BBGDSubproblem. Usual rules of updating competing
+        solutions (BestXDual, WorstXDual) are followed.
+
+        If UseLock=True, then subproblem is updated by acquiring Entry.EntryLock
         *************************************************************************/
         private static void solveqpnode(bbgdfrontentry entry,
             bbgdfrontsubsolver subsolver,
@@ -5815,7 +5898,8 @@ public partial class alglib
             double[] x0,
             double[] bndl,
             double[] bndu,
-            bbgdsubproblem subproblemtoupdate,
+            ap.objarray subproblemarray,
+            int itemidx,
             bool uselock,
             alglib.xparams _params)
         {
@@ -5836,10 +5920,12 @@ public partial class alglib
             double trustrad = 0;
             bool applytrustrad = new bool();
             bool isintfeasible = new bool();
+            bbgdsubproblem subproblemtoupdate = null;
 
             alglib.ap.assert(state.objtype==1 && state.nnlc==0, "BBGD: integrity check 330714 failed");
-            n = entry.parentsubproblem.n;
+            n = state.n;
             ablasf.rallocv(Math.Max(n, state.lccnt), ref subsolver.tmp0, _params);
+            subproblemarray.get(itemidx, ref subproblemtoupdate);
             
             //
             // Quick exit for infeasible with respect to box constraints
@@ -6193,8 +6279,10 @@ public partial class alglib
 
 
         /*************************************************************************
-        Analyze solution of an NLP relaxation, and send it to the subproblem,
-        updating its best and worst primal/dual solutions.
+        Analyze solution of an NLP relaxation, and send it to the subproblem array.
+        The solution is loaded into SubproblemArray[itemIdx], with the array object
+        storing instances of BBGDSubproblem. Usual rules of updating competing
+        solutions (BestXDual, WorstXDual) are followed.
 
         Can modify XSol.
         *************************************************************************/
@@ -6202,14 +6290,17 @@ public partial class alglib
             double[] xsol,
             minnlc.minnlcreport rep,
             bbgdstate state,
-            bbgdsubproblem subproblem,
+            ap.objarray subproblemarray,
+            int itemidx,
             bool uselock,
             alglib.xparams _params)
         {
             int i = 0;
             int n = 0;
             bool isintfeas = new bool();
+            bbgdsubproblem subproblem = null;
 
+            subproblemarray.get(itemidx, ref subproblem);
             n = subproblem.n;
             if( rep.terminationtype>0 && (double)(rep.sclfeaserr)<=(double)(state.ctol) )
             {
@@ -11322,6 +11413,7 @@ public partial class alglib
             public int mirbfvnsbatchsize;
             public int mirbfvnsalgo;
             public int adaptiveinternalparallelism;
+            public int bbsyncprofile;
             public double[] s;
             public double[] bndl;
             public double[] bndu;
@@ -11431,6 +11523,7 @@ public partial class alglib
                 _result.mirbfvnsbatchsize = mirbfvnsbatchsize;
                 _result.mirbfvnsalgo = mirbfvnsalgo;
                 _result.adaptiveinternalparallelism = adaptiveinternalparallelism;
+                _result.bbsyncprofile = bbsyncprofile;
                 _result.s = (double[])s.Clone();
                 _result.bndl = (double[])bndl.Clone();
                 _result.bndu = (double[])bndu.Clone();
@@ -12161,6 +12254,56 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function sets BBSYNC profile to "small tree".
+
+        It means that we expect our problem to have a shallow B&B  tree  with  the
+        number of nodes comparable to the integer variables count, or below.
+
+        BBSYNC solver will run with simplified settings:
+        * pseudocost branching is used
+
+        INPUT PARAMETERS:
+            State   -   structure that stores algorithm state
+
+          -- ALGLIB --
+             Copyright 01.12.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void minlpsolversetbbsyncprofilesmalltree(minlpsolverstate state,
+            alglib.xparams _params)
+        {
+            state.bbsyncprofile = 0;
+        }
+
+
+        /*************************************************************************
+        This function sets BBSYNC profile to "large tree".
+
+        It means that we expect our problem to have a large  B&B  tree  with  much
+        more than NInt (the integer variables count) nodes. However, we expect  it
+        to be solvable within our computational budget (i.e. that we are  able  to
+        explore the entire B&B tree).
+
+        BBSYNC solver will run with heuristics that are  costly  to  power-up, but
+        greatly improve performance on long distances:
+        * reliability branching is used
+
+        BBSYNC will not use  heuristics  that  increase  chance  of  finding  good
+        solutions early at the cost of increasing total time to prove optimality.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores algorithm state
+
+          -- ALGLIB --
+             Copyright 01.12.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void minlpsolversetbbsyncprofilelargetree(minlpsolverstate state,
+            alglib.xparams _params)
+        {
+            state.bbsyncprofile = 1;
+        }
+
+
+        /*************************************************************************
         This function sets tolerance for nonlinear constraints;  points  violating
         constraints by no more than CTol are considered feasible.
 
@@ -12552,7 +12695,7 @@ public partial class alglib
         The BBSYNC algorithm is an NLP-based branch-and-bound method with integral
         and spatial splits, supporting both convex  and  nonconvex  problems.  The
         algorithm combines parallelism support with deterministic  behavior  (i.e.
-        the same branching decisions are performed with every paralell run).
+        the same branching decisions are performed with every parallel run).
 
         Non-convex (multiextremal) problems can be solved with  multiple  restarts
         from random points, which are activated by minlpsolversetmultistarts()
@@ -12560,17 +12703,36 @@ public partial class alglib
         IMPORTANT: contrary to the popular  misconception,  MINLP  is  not  easily
                    parallelizable. B&B trees often have  profiles  unsuitable  for
                    parallel processing (too short and/or too linear).  Spatial  or
-                   integral splits adds some limited degree of parallelism (up  to
+                   integral splits add  some limited degree of parallelism (up  to
                    2x in the very best case), but in practice it often results  in
-                   just a 1.5x speed-up at best  due  imbalanced  leaf  processing
-                   times.  Furthermore ,  determinism  is  always  at   odds  with
+                   just a 1.5x speed-up at best due to imbalanced  leaf processing
+                   times.  Furthermore,  determinism  is   always  at   odds  with
                    efficiency.
                    
                    Achieving good parallel speed-up requires some amount of tuning
-                   and having a 2x-3x speed-up is already a good result.
+                   and having a 2x-3x speed-up is  already  a  good  result.  Only
+                   difficult long-running problems (here  'difficult'  means  that
+                   the value of rep.ntreenodes is at least several larger than the
+                   variables count) have good parallelism properties.
                    
                    On the other hand, setups using multiple  random  restarts  are
                    obviously highly parallelizable.
+
+        IMPORTANT: the commercial edition of ALGLIB can  accelerate  factorization
+                   phase of this function (this phase takes significant amounts of
+                   time when solving large problems) by using SIMD intrinsics or a
+                   performance  backend  library   (Intel   PARDISO   or   another
+                   platform-specific sparse factorization library).
+                   
+                   Specific speed-up due  to  performance  backend  usage  heavily
+                   depends  on  the  sparsity  pattern  of  constraints.  For some
+                   problem types performance backends provide great speed-up.  For
+                   other ones, ALGLIB's  own  sparse  factorization  code  is  the
+                   preferred option.
+                   
+                   See the ALGLIB Reference Manual for more information on how  to
+                   activate parallelism and backend support.
+                   
 
         INPUT PARAMETERS:
             State           -   structure that stores algorithm state
@@ -13093,6 +13255,14 @@ public partial class alglib
                 {
                     bbgd.bbgdsetepsf(state.bbgdsubsolver, state.subsolverepsf, _params);
                 }
+                if( state.bbsyncprofile==0 )
+                {
+                    bbgd.bbgdsetsmalltree(state.bbgdsubsolver, _params);
+                }
+                if( state.bbsyncprofile==1 )
+                {
+                    bbgd.bbgdsetlargetree(state.bbgdsubsolver, _params);
+                }
                 done = true;
             }
             if( state.algoidx==1 )
@@ -13518,6 +13688,7 @@ public partial class alglib
             //
             // Final setup
             //
+            minlpsolversetbbsyncprofilesmalltree(state, _params);
             minlpsolvercautiousinternalparallelism(state, _params);
             minlpsolversetalgobbsync(state, 1, _params);
         }

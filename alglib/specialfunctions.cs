@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.06.0 (source code generated 2025-10-08)
+ALGLIB 4.07.0 (source code generated 2025-12-29)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
