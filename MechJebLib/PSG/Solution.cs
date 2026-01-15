@@ -294,7 +294,7 @@ namespace MechJebLib.PSG
             return (_tmax[phase] - tbar) * _timeScale;
         }
 
-        public V3 InertialGuidance(double t)
+        public (V3, double) InertialGuidance(double t)
         {
             double tBar = (t - T0) / _timeScale;
 
@@ -302,7 +302,12 @@ namespace MechJebLib.PSG
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             V3       u0   = x.U.normalized;
 
-            return u0;
+            double thrustPct   = x.U.magnitude;
+            int    phase       = IndexForTbar(tBar);
+            double minThrottle = Phases[phase].MinThrottle;
+            double kspThrottle = (thrustPct - minThrottle) / (1.0 - minThrottle);
+
+            return (u0, Clamp(kspThrottle, 0.0001, 1.0));
         }
 
         public (V3 r, V3 v) TerminalStateVectors() => StateVectors(Tf);
