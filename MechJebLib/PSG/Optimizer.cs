@@ -424,14 +424,14 @@ namespace MechJebLib.PSG
 
                 if (phase.Unguided)
                 {
-                    _nl[ci] = phase.MinThrottle * phase.MinThrottle;
+                    _nl[ci] = phase.MinThrottle;
                     _nu[ci++] = 1.0;
                 }
                 else
                 {
                     for (int i = 0; i < K; i++)
                     {
-                        _nl[ci] = phase.MinThrottle * phase.MinThrottle;
+                        _nl[ci] = phase.MinThrottle;
                         _nu[ci++] = 1.0;
                     }
                 }

@@ -88,7 +88,7 @@ namespace MechJebLib.PSG
                 {
                     if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} knot {k}";
 
-                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].sqrMagnitude, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
+                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
                     if (_optimizer.Phases[p].Unguided)
                         break;
                 }
