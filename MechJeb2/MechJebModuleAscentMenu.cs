@@ -355,7 +355,7 @@ namespace MuMech
             label28 = $"{CachedLocalizer.Instance.MechJebAscentLabel28}{Core.Glueball.LastLmStatus}";
             n       = $"n: {Core.Glueball.LastLmIterations}({Core.Glueball.MaxLmIterations})";
             label29 = $"{CachedLocalizer.Instance.MechJebAscentLabel29} {GuiUtils.TimeToDHMS(Core.Glueball.Staleness)}";
-            znorm   = $"znorm: {Core.Glueball.LastZnorm:G5}";
+            znorm   = $"infeasibility: {Core.Glueball.LastInfeasibility:G5}";
             if (Core.Glueball.Exception != null)
                 label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.Glueball.Exception.Message}";
 
