@@ -33,7 +33,7 @@ namespace MuMech
 
         public  Exception? Exception;
         public  double     Staleness;
-        public  double     LastZnorm;
+        public  double     LastInfeasibility;
         private double     _lastTime;
 
         public MechJebModulePSGGlueBall(MechJebCore core) : base(core) { }
@@ -47,9 +47,9 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             Debug.Log("Enabling PSG GlueBall");
-            SuccessfulConverges = LastLmStatus     = MaxLmIterations = 0;
-            LastLmStatus        = LastLmIterations = 0;
-            Staleness           = LastZnorm        = _lastTime = 0;
+            SuccessfulConverges = LastLmStatus      = MaxLmIterations = 0;
+            LastLmStatus        = LastLmIterations  = 0;
+            Staleness           = LastInfeasibility = _lastTime = 0;
             _task               = null;
             _ascent             = null;
         }
@@ -86,9 +86,9 @@ namespace MuMech
                 if (psg == null)
                     return;
 
-                LastLmStatus     = psg.TerminationType;
-                LastLmIterations = psg.Iterations;
-                LastZnorm        = psg.PrimalFeasibility;
+                LastLmStatus      = psg.TerminationType;
+                LastLmIterations  = psg.Iterations;
+                LastInfeasibility = psg.PrimalFeasibility;
 
                 if (LastLmIterations > MaxLmIterations)
                     MaxLmIterations = LastLmIterations;
@@ -228,11 +228,15 @@ namespace MuMech
 
             for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
-                FuelStats fuelStats  = Core.StageStats.VacStats[mjPhase];
-                int       kspStage   = Core.StageStats.VacStats[mjPhase].KSPStage;
-                double    ispCurrent = Core.StageStats.AtmoStats[mjPhase].Isp;
+                FuelStats fuelStats   = Core.StageStats.VacStats[mjPhase];
+                int       kspStage    = Core.StageStats.VacStats[mjPhase].KSPStage;
+                double    ispCurrent  = Core.StageStats.AtmoStats[mjPhase].Isp;
+                double    minThrottle = Core.StageStats.VacStats[mjPhase].MinThrust / Core.StageStats.VacStats[mjPhase].MaxThrust;
+
                 if (kspStage < _ascentSettings.LastStage)
                     break;
+
+                Debug.Log($"{Core.StageStats.VacStats[mjPhase].Thrust} {Core.StageStats.VacStats[mjPhase].MinThrust}/{Core.StageStats.VacStats[mjPhase].MaxThrust}");
 
                 bool massContinuity = false;
 
@@ -247,8 +251,8 @@ namespace MuMech
                         {
                             if (fuelStats.DeltaV > _ascentSettings.MinDeltaV)
                             {
-                                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
-                                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), ispCurrent: ispCurrent);
+                                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.MaxThrust * 1000, fuelStats.Isp,
+                                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), ispCurrent: ispCurrent, minThrottle: minThrottle);
                                 massContinuity = true;
                             }
                         }
@@ -273,8 +277,8 @@ namespace MuMech
                 if (fuelStats.DeltaV < _ascentSettings.MinDeltaV)
                     continue;
 
-                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
-                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), massContinuity, ispCurrent);
+                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.MaxThrust * 1000, fuelStats.Isp,
+                    kspStage, mjPhase, IsUnguided(kspStage), !IsFixed(kspStage), massContinuity, ispCurrent, minThrottle);
             }
 
             _ascent = ascentBuilder.Build();

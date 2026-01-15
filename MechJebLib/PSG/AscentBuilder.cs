@@ -44,7 +44,8 @@ namespace MechJebLib.PSG
             private Solution? _solution         { get; set; }
 
             public AscentBuilder AddStage(double m0, double mf, double thrust, double isp, int kspStage,
-                int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
+                int mjPhase, bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1,
+                double minThrottle = 1.0)
             {
                 var sb = new StringBuilder();
                 sb.Append($"[MechJebLib.AscentBuilder] AddStage({m0}, {mf}, {thrust}, {isp}, {kspStage}, {mjPhase}");
@@ -56,10 +57,13 @@ namespace MechJebLib.PSG
                     sb.Append(", massContinuity: true");
                 if (ispCurrent >= 0)
                     sb.Append($", ispCurrent: {ispCurrent}");
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (minThrottle != 1.0)
+                    sb.Append($", minThrottle: {minThrottle}");
                 sb.Append(")");
                 DebugPrint(sb.ToString());
 
-                _phases.Add(Phase.NewStage(m0, mf, thrust, isp, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent));
+                _phases.Add(Phase.NewStage(m0, mf, thrust, isp, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent, minThrottle));
 
                 return this;
             }

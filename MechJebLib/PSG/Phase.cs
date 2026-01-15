@@ -21,6 +21,7 @@ namespace MechJebLib.PSG
         public double VexVacuum;
         public double VexCurrent;
         public double Mdot;
+        public double MinThrottle;
 
         public bool PreciseShutdown = false;
         public bool TerminalStage   = false;
@@ -32,11 +33,11 @@ namespace MechJebLib.PSG
         public readonly int KSPStage;
         public readonly int MJPhase;
 
-        public bool AllowShutdown => MinT < MaxT;
-        public double VacThrust => Mdot * VexVacuum;
-        public double Tau => Coast ? double.PositiveInfinity : VexVacuum / VacThrust * M0;
-        public bool   Coast       => Mdot == 0;
-        public bool   GuidedCoast => Coast && !Unguided;
+        public bool   AllowShutdown => MinT < MaxT;
+        public double VacThrust     => Mdot * VexVacuum;
+        public double Tau           => Coast ? double.PositiveInfinity : VexVacuum / VacThrust * M0;
+        public bool   Coast         => Mdot == 0;
+        public bool   GuidedCoast   => Coast && !Unguided;
 
         public Phase DeepCopy()
         {
@@ -49,12 +50,12 @@ namespace MechJebLib.PSG
         {
             KSPStage   = kspStage;
             MJPhase    = mjPhase;
-            this.M0    = m0;
-            this.Mf    = mf;
-            this.Bt    = bt;
+            M0         = m0;
+            Mf         = mf;
+            Bt         = bt;
             VexVacuum  = ispVacuum * G0;
             VexCurrent = ispCurrent >= 0 ? ispCurrent * G0 : VexVacuum;
-            Mdot = VexVacuum == 0 ? 0 : vacThrust / VexVacuum;
+            Mdot       = VexVacuum == 0 ? 0 : vacThrust / VexVacuum;
         }
 
         public Phase Rescale(Scale scale)
@@ -77,12 +78,13 @@ namespace MechJebLib.PSG
         }
 
         public static Phase NewStage(double m0, double mf, double thrust, double isp, int kspStage, int mjPhase,
-            bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1)
+            bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1, double minThrottle = 1.0)
         {
             Check.PositiveFinite(m0);
             Check.PositiveFinite(thrust);
             Check.PositiveFinite(mf);
             Check.PositiveFinite(isp);
+            Check.PositiveFinite(minThrottle);
 
             double mdot = thrust / (isp * G0);
             double bt   = (m0 - mf) / mdot;
@@ -95,7 +97,8 @@ namespace MechJebLib.PSG
                 MinT           = allowShutdown ? 0 : bt,
                 MaxT           = bt,
                 Unguided       = unguided,
-                MassContinuity = massContinuity
+                MassContinuity = massContinuity,
+                MinThrottle    = minThrottle
             };
 
             return phase;
@@ -110,7 +113,7 @@ namespace MechJebLib.PSG
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append($"stage: {KSPStage} m0: {M0} mf: {Mf} thrust: {VacThrust} bt: {MinT}<={Bt}<={MaxT} ve: {VexVacuum}/{VexCurrent} mdot: {Mdot}");
+            sb.Append($"stage: {KSPStage} m0: {M0:F4} mf: {Mf:F4} thrust: {VacThrust:F4} bt: {MinT:F4}<={Bt:F4}<={MaxT:F4} ve: {VexVacuum:F4}/{VexCurrent:F4} mdot: {Mdot:F4} minThrottle: {MinThrottle:P1}");
             if (Unguided)
                 sb.Append(" (unguided)");
             sb.Append(!AllowShutdown ? " (no shutdown)" : " (allow shutdown)");
