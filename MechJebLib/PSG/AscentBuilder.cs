@@ -26,7 +26,8 @@ namespace MechJebLib.PSG
             private double    _mu               { get; set; }
             private double    _rbody            { get; set; } = 1.0;
             private double    _h0               { get; set; }
-            private double    _rho0CdAref       { get; set; }
+            private double    _rho0CaAref       { get; set; }
+            private double    _rho0CnAref       { get; set; }
             private double    _rho0QAlphaMaxInv { get; set; }
             private double    _rho0QMaxInv      { get; set; }
             private V3        _w                { get; set; } = V3.zero;
@@ -68,10 +69,11 @@ namespace MechJebLib.PSG
                 return this;
             }
 
-            public AscentBuilder AerodynamicConstants(double cd, double aRef, double rho0, double qAlphaMax, double qMax, double h0, V3 w)
+            public AscentBuilder AerodynamicConstants(double ca, double cn, double aRef, double rho0, double qAlphaMax, double qMax, double h0, V3 w)
             {
                 _h0               = h0;
-                _rho0CdAref       = cd * aRef * rho0;
+                _rho0CaAref       = ca * aRef * rho0;
+                _rho0CnAref       = cn * aRef * rho0;
                 _rho0QAlphaMaxInv = qAlphaMax > 0 ? rho0 / qAlphaMax : 0;
                 _rho0QMaxInv      = qMax > 0 ? rho0 / qMax : 0;
                 _w                = w;
@@ -151,7 +153,7 @@ namespace MechJebLib.PSG
                     }
                 }
 
-                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody, _h0, _rho0CdAref, _rho0QAlphaMaxInv, _rho0QMaxInv, _w, terminal);
+                var problem = new Problem(_r0, _v0, _u0, m0, _t0, _mu, _rbody, _h0, _rho0CaAref, _rho0CnAref, _rho0QAlphaMaxInv, _rho0QMaxInv, _w, terminal);
 
                 var normalizedPhases = new PhaseCollection();
 

@@ -19,13 +19,14 @@ namespace MechJebLib.PSG
         public readonly V3        U0;
         public readonly double    Mu;
         public readonly double    RBody;
-        public readonly double    Rho0CdAref;
+        public readonly double    Rho0CaAref;
+        public readonly double    Rho0CnAref;
         public readonly double    Rho0InvQAlphaMax;
         public readonly double    Rho0InvQMax;
         public readonly double    H0;
         public readonly V3        W;
 
-        public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody, double h0, double rho0CdAref, double rho0InvQAlphaMax, double rho0InvQMax, V3 w, ITerminal terminal)
+        public Problem(V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody, double h0, double rho0CaAref, double rho0CnAref, double rho0InvQAlphaMax, double rho0InvQMax, V3 w, ITerminal terminal)
         {
             Scale            = Scale.Create(mu, r0.magnitude, m0);
             Mu               = mu;
@@ -35,7 +36,8 @@ namespace MechJebLib.PSG
             U0               = u0;
             RBody            = rbody / Scale.LengthScale;
             H0               = h0 / Scale.LengthScale;
-            Rho0CdAref       = rho0CdAref / Scale.MassScale * Scale.LengthScale;
+            Rho0CaAref       = rho0CaAref / Scale.MassScale * Scale.LengthScale;
+            Rho0CnAref       = rho0CnAref / Scale.MassScale * Scale.LengthScale;
             Rho0InvQAlphaMax = rho0InvQAlphaMax * (Scale.VelocityScale * Scale.VelocityScale);
             Rho0InvQMax      = rho0InvQMax * (Scale.VelocityScale * Scale.VelocityScale);
             Terminal         = terminal.Rescale(Scale);
@@ -43,7 +45,7 @@ namespace MechJebLib.PSG
             W                = w * Scale.TimeScale;
         }
 
-        public Problem(Scale scale, V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody, double h0, double rho0CdAref, double rho0InvQAlphaMax, double rho0InvQMax, V3 w, ITerminal terminal)
+        public Problem(Scale scale, V3 r0, V3 v0, V3 u0, double m0, double t0, double mu, double rbody, double h0, double rho0CaAref, double rho0CnAref, double rho0InvQAlphaMax, double rho0InvQMax, V3 w, ITerminal terminal)
         {
             Scale            = scale;
             Mu               = mu;
@@ -53,7 +55,8 @@ namespace MechJebLib.PSG
             U0               = u0;
             RBody            = rbody;
             H0               = h0;
-            Rho0CdAref       = rho0CdAref;
+            Rho0CaAref       = rho0CaAref;
+            Rho0CnAref       = rho0CnAref;
             Rho0InvQAlphaMax = rho0InvQAlphaMax;
             Rho0InvQMax      = rho0InvQMax;
             Terminal         = terminal;
@@ -64,7 +67,7 @@ namespace MechJebLib.PSG
         public Problem WithoutDynamicPressure()
         {
             return new Problem(
-                Scale, R0, V0, U0, M0, T0, Mu, RBody, H0, Rho0CdAref, 0, 0, W, Terminal
+                Scale, R0, V0, U0, M0, T0, Mu, RBody, H0, Rho0CaAref, Rho0CnAref, 0, 0, W, Terminal
             );
         }
     }

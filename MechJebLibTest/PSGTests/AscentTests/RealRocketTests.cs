@@ -54,7 +54,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double isp4 = Astro.IspFromMassesThrustBurntime(23464.000000, 6644.000000, 110094.000000, 700.000000);
 
             Ascent ascent = Ascent.Builder()
-                .AerodynamicConstants(cd, aref, rho0, Q_ALPHA_MAX, Q_MAX, h0, w)
+                .AerodynamicConstants(cd, cd, aref, rho0, Q_ALPHA_MAX, Q_MAX, h0, w)
                 .AddStage(301454.000000, 171863.885057, 4854100.000000, isp1, 4, 4)
                 .AddStage(158183.885057, 79623.770115, 2968600.000000, isp2, 3, 3)
                 .AddStage(72783.770115, 32294.000000, 1083100.000000, isp3, 2, 2)
@@ -115,11 +115,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             const double ARGP_T      = 180.0 * DEG2RAD;
             const double MU          = 3.986012e14;
             double       aref        = Powi(3.7 / 2, 2) * PI;
-            const double CD          = 0.5;
+            const double CA          = 0.75;
+            const double CN          = 2.00;
             const double RHO0        = 1.225;
             const double H0          = 7200;
-            const double Q_ALPHA_MAX = 2000;
-            const double Q_MAX       = 35000;
+            const double Q_ALPHA_MAX = 0; //2000;
+            const double Q_MAX       = 0; // 35000;
             V3           w           = 7.29211585e-5 * V3.northpole;
 
             const double FIRST_STAGE_DRY  = 22200;
@@ -143,13 +144,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             const double SECOND_BT   = (SECOND_STAGE_M0 - SECOND_STAGE_MF) / SECOND_MDOT;
 
             Ascent ascent = Ascent.Builder()
-                .AerodynamicConstants(CD, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
+                .AerodynamicConstants(CA, CN, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
                 .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 2, 2, allowShutdown: false)
                 .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1)
-                .AddCoast(SECOND_STAGE_M0, 0, 1300, 1, 1, massContinuity: true)
+                .AddCoast(SECOND_STAGE_M0, 30, 30, 1, 1, massContinuity: true)
                 .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1, massContinuity: true)
                 .Initial(r0, v0, r0.normalized, T0, MU, R_BODY)
-                .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, true)
+                .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, false)
                 .Build();
 
             ascent.Run();
