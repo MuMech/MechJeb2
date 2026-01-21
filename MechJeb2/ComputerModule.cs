@@ -14,9 +14,9 @@ namespace MuMech
         public readonly MechJebCore Core;
 
         //conveniences:
-        public Vessel        Vessel      => Part.vessel;
-        public CelestialBody MainBody    => Part.vessel.mainBody;
-        public VesselState   VesselState => Core.VesselState;
+        public Vessel Vessel => Part.vessel;
+        public CelestialBody MainBody => Part.vessel.mainBody;
+        public VesselState VesselState => Core.VesselState;
 
         [UsedImplicitly]
         public Part Part => Core.part;
@@ -29,11 +29,11 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.LOCAL)]
-        public readonly string UnlockParts = "";
+        public string unlockParts = "";
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.LOCAL)]
-        public readonly string UnlockTechs = "";
+        public string unlockTechs = "";
 
         public bool UnlockChecked;
 
@@ -48,7 +48,7 @@ namespace MuMech
             {
                 if (value == _enabled) return;
 
-                Dirty    = true;
+                Dirty = true;
                 _enabled = value;
 
                 if (_enabled)
@@ -79,7 +79,7 @@ namespace MuMech
 
         protected ComputerModule(MechJebCore core)
         {
-            Core         = core;
+            Core = core;
             ProfilerName = GetType().Name;
 
             Users = new UserPool(this);
@@ -190,50 +190,65 @@ namespace MuMech
         {
             if (UnlockChecked) return;
 
+            // Bypass check for Sandbox mode
+            if (HighLogic.CurrentGame != null && HighLogic.CurrentGame.Mode == Game.Modes.SANDBOX)
+            {
+                UnlockChecked = true;
+                return;
+            }
+
+            if (ResearchAndDevelopment.Instance == null) return;
+
             bool unlock = true;
 
-            if (ResearchAndDevelopment.Instance != null)
+            string[] parts = unlockParts.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 0)
             {
-                string[] parts = UnlockParts.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length > 0)
+                unlock = false;
+                foreach (string p in parts)
                 {
-                    unlock = false;
-                    foreach (string p in parts)
+                    if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 &&
+                        ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
                     {
-                        if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 &&
-                            ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
-                        {
-                            unlock = true;
-                            break;
-                        }
+                        unlock = true;
+                        break;
                     }
                 }
+            }
 
-                string[] techs = UnlockTechs.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                if (techs.Length > 0)
+            string[] techs = unlockTechs.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (techs.Length > 0)
+            {
+                if (parts.Length == 0)
                 {
-                    if (parts.Length == 0)
-                    {
-                        unlock = false;
-                    }
+                    unlock = false;
+                }
 
-                    foreach (string t in techs)
+                foreach (string t in techs)
+                {
+                    if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
                     {
-                        if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
-                        {
-                            unlock = true;
-                            break;
-                        }
+                        unlock = true;
+                        break;
                     }
                 }
             }
 
             unlock = unlock && IsSpaceCenterUpgradeUnlocked();
 
+            // Debug start
+
+            Debug.Log($"[MechJeb2] UnlockCheck {GetType().Name}: unlock={unlock}, " +
+                      $"mode={HighLogic.CurrentGame?.Mode}, " +
+                      $"RnD={(ResearchAndDevelopment.Instance != null)}, " +
+                      $"unlockTechs='{unlockTechs}', unlockParts='{unlockParts}'");
+
+            // End of debug
             UnlockChecked = true;
+
             if (!unlock)
             {
-                Enabled                  = false;
+                Enabled = false;
                 Core.someModuleAreLocked = true;
             }
         }
@@ -252,8 +267,8 @@ namespace MuMech
     [Flags]
     public enum Pass
     {
-        LOCAL  = 1,
-        TYPE   = 2,
+        LOCAL = 1,
+        TYPE = 2,
         GLOBAL = 4
     }
 
@@ -261,7 +276,7 @@ namespace MuMech
     {
         public delegate void OnEvent();
 
-        private readonly List<OnEvent>            _events     = new List<OnEvent>();
+        private readonly List<OnEvent> _events = new List<OnEvent>();
         private readonly Dictionary<OnEvent, int> _eventIndex = new Dictionary<OnEvent, int>();
 
         public void Add(OnEvent evt)
