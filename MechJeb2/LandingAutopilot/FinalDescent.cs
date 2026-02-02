@@ -72,7 +72,7 @@ namespace MuMech
                     }
                     else
                     {
-                        //if we're above 200m, point retrograde and control surface velocity:
+                        //if we're above 300m, point retrograde and control surface velocity:
                         Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
 
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
@@ -91,7 +91,7 @@ namespace MuMech
                 else
                 {
                     // last 300 meters:
-                    float desiredSpeed = -Mathf.Lerp(0, (float)Math.Sqrt((VesselState.limitedMaxThrustAccel - VesselState.localg) * 2 * 200) * 0.90F, (float)minalt / 200);
+                    float desiredSpeed = -Mathf.Lerp(0, (float)Math.Sqrt((VesselState.limitedMaxThrustAccel - VesselState.localg) * 2 * 300) * 0.90F, (float)minalt / 300);
                     if (VesselState.speedSurfaceHorizontal < 5)
                     {
                         if (desiredSpeed < VesselState.speedVertical && !_finalThrottleUpTriggered)
