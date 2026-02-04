@@ -401,15 +401,41 @@ namespace MechJebLib.PSG
             for (int i = 0; i < _nl.Length; i++)
                 _nu[i] = _nl[i] = 0;
 
-            // Dynamic Pressure inequality constraints
-            int inequalityPoints = 0;
-            if (Problem.Rho0InvQAlphaMax > 0 && Problem.H0 > 0)
-                inequalityPoints += K;
-            if (Problem.Rho0InvQMax > 0 && Problem.H0 > 0)
-                inequalityPoints += K;
+            int ci = 0;
 
-            for (int i = _nl.Length - inequalityPoints * Phases.Count; i < _nl.Length; i++)
-                _nu[i] = 1.0 / 100.0;
+            // Dynamic Pressure inequality constraints
+            if (Problem.Rho0InvQAlphaMax > 0 && Problem.H0 > 0)
+            {
+                for (int i = 0; i < K * Phases.Count; i++)
+                    _nu[ci++] = 1.0 / 100.0;
+            }
+
+            if (Problem.Rho0InvQMax > 0 && Problem.H0 > 0)
+            {
+                for (int i = 0; i < K * Phases.Count; i++)
+                    _nu[ci++] = 1.0 / 100.0;
+            }
+
+            // Control norm inequality constraints
+            foreach (Phase phase in Phases)
+            {
+                if (phase.GuidedCoast)
+                    continue;
+
+                if (phase.Unguided)
+                {
+                    _nl[ci] = phase.MinThrottle;
+                    _nu[ci++] = 1.0;
+                }
+                else
+                {
+                    for (int i = 0; i < K; i++)
+                    {
+                        _nl[ci] = phase.MinThrottle;
+                        _nu[ci++] = 1.0;
+                    }
+                }
+            }
 
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);
             _ascentProblem.ConstraintFunction(f, j2, _xGuess, new AscentProblem.ConstraintArgs(true));

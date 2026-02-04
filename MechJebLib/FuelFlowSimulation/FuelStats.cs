@@ -16,6 +16,8 @@ namespace MechJebLib.FuelFlowSimulation
         public double StartMass;
         public double StartTime;
         public double Thrust;
+        public double MinThrust;
+        public double MaxThrust;
         public double SpoolUpTime;
         public double MaxRcsDeltaV;
         public double MinRcsDeltaV;

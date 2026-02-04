@@ -37,6 +37,7 @@ namespace MuMech
         public  double   Pitch;
         public  double   Heading;
         private V3       _inertial = V3.zero;       // inertial in right-handed non-rotating
+        private double   _throttle;
         public  Vector3d Inertial  = Vector3d.zero; // inertial in rotating coordinates
         public  double   Tgo;
         public  double   Vgo;
@@ -348,7 +349,7 @@ namespace MuMech
             // (2 seconds is to hopefully allow for variance due to residuals, it may be less)
             int idx = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
             if (IsGrounded() || Solution.Tgo(VesselState.time, idx) > 2.0)
-                _inertial = Solution.InertialGuidance(VesselState.time);
+                (_inertial, _throttle) = Solution.InertialGuidance(VesselState.time);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, _inertial);
 
@@ -396,7 +397,7 @@ namespace MuMech
             GLUtils.DrawOrbit(_finalOrbit, Color.yellow);
         }
 
-        private void ThrottleOn() => Core.Thrust.TargetThrottle = 1.0F;
+        private void ThrottleOn() => Core.Thrust.TargetThrottle = _throttle > 0 ? (float)_throttle : 1.0f;
 
         private void RCSOn()
         {

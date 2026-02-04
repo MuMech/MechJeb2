@@ -92,16 +92,16 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
             IsOperational = false;
 
-            if (AutoCutoff)
+            if (!AutoCutoff)
+                return;
+
+            foreach (SimPart part in Part.SymmetryCounterParts)
             {
-                foreach (SimPart part in Part.SymmetryCounterParts)
+                foreach (SimPartModule module in part.Modules)
                 {
-                    foreach (SimPartModule module in part.Modules)
-                    {
-                        if (!(module is SimModuleEngines engine))
-                            continue;
-                        engine.IsOperational = false;
-                    }
+                    if (!(module is SimModuleEngines engine))
+                        continue;
+                    engine.IsOperational = false;
                 }
             }
         }
@@ -277,9 +277,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 V3 thrustDirectionVector = ThrustDirectionVectors[i];
 
                 double thrustTransformMultiplier = ThrustTransformMultipliers[i];
-                double tCurrentThrust            = eCurrentThrust * thrustTransformMultiplier;
 
-                ThrustCurrent += tCurrentThrust * thrustDirectionVector;
+                ThrustCurrent += eCurrentThrust * thrustDirectionVector * thrustTransformMultiplier;
                 ThrustMax     += eMaxThrust * thrustDirectionVector * thrustTransformMultiplier;
                 ThrustMin     += eMinThrust * thrustDirectionVector * thrustTransformMultiplier;
             }
@@ -348,7 +347,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 SimPropellant p       = Propellants[j];
                 double        density = p.density;
 
-                // skip zero density (eC, air intakes, etc) assuming those are available and infinite
+                // skip zero density (eC, air intakes, etc.) assuming those are available and infinite
                 if (density <= 0)
                     continue;
 

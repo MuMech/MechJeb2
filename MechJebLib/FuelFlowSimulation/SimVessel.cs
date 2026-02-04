@@ -32,8 +32,12 @@ namespace MechJebLib.FuelFlowSimulation
         public  double MainThrottle = 1.0;
         public  double Mass;
         public  V3     ThrustCurrent;
+        public  V3     ThrustMax;
+        public  V3     ThrustMin;
         public  double RcsThrust;
         public  double ThrustMagnitude;
+        public  double ThrustMinMagnitude;
+        public  double ThrustMaxMagnitude;
         public  double ThrustNoCosLoss;
         public  double SpoolupCurrent;
         public  double ATMPressure;
@@ -130,7 +134,7 @@ namespace MechJebLib.FuelFlowSimulation
         {
             ActiveEngines.Clear();
 
-            // FIXME: why am i not iterating over the last ActiveEngines?
+            // FIXME: why am I not iterating over the last ActiveEngines?
             for (int i = -1; i < CurrentStage; i++)
             {
                 foreach (SimModuleEngines e in EnginesDroppedInStage[i])
@@ -157,7 +161,7 @@ namespace MechJebLib.FuelFlowSimulation
         {
             ActiveRcs.Clear();
 
-            // FIXME: why am i not iterating over the last ActiveRcs?
+            // FIXME: why am I not iterating over the last ActiveRcs?
             for (int i = -1; i < CurrentStage; i++)
             {
                 foreach (SimModuleRCS r in RCSDroppedInStage[i])
@@ -193,10 +197,14 @@ namespace MechJebLib.FuelFlowSimulation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ComputeThrustAndSpoolup()
         {
-            ThrustCurrent   = V3.zero;
-            ThrustMagnitude = 0;
-            ThrustNoCosLoss = 0;
-            SpoolupCurrent  = 0;
+            ThrustCurrent      = V3.zero;
+            ThrustMax          = V3.zero;
+            ThrustMin          = V3.zero;
+            ThrustMagnitude    = 0;
+            ThrustMinMagnitude = 0;
+            ThrustMaxMagnitude = 0;
+            ThrustNoCosLoss    = 0;
+            SpoolupCurrent     = 0;
 
             for (int i = 0; i < ActiveEngines.Count; i++)
             {
@@ -209,11 +217,15 @@ namespace MechJebLib.FuelFlowSimulation
 
                 e.Update();
                 ThrustCurrent   += e.ThrustCurrent;
+                ThrustMin       += e.ThrustMin;
+                ThrustMax       += e.ThrustMax;
                 ThrustNoCosLoss += e.ThrustCurrent.magnitude;
             }
 
-            ThrustMagnitude =  ThrustCurrent.magnitude;
-            SpoolupCurrent  /= ThrustCurrent.magnitude;
+            ThrustMagnitude    =  ThrustCurrent.magnitude;
+            ThrustMinMagnitude =  ThrustMin.magnitude;
+            ThrustMaxMagnitude =  ThrustMax.magnitude;
+            SpoolupCurrent     /= ThrustCurrent.magnitude;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -29,7 +29,11 @@ namespace MechJebLib.FuelFlowSimulation
 
         protected override bool Run(object? o)
         {
-            var vessel = (SimVessel)o!;
+            if (o == null)
+                throw new ArgumentNullException(nameof(o));
+
+            if (!(o is SimVessel vessel))
+                throw new ArgumentException("o is not a SimVessel", nameof(o));
 
             _allocatedFirstSegment = false;
             _time                  = 0;
@@ -463,6 +467,8 @@ namespace MechJebLib.FuelFlowSimulation
             {
                 KSPStage    = vessel.CurrentStage,
                 Thrust      = DVLinearThrust ? vessel.ThrustMagnitude : vessel.ThrustNoCosLoss,
+                MaxThrust   = vessel.ThrustMaxMagnitude,
+                MinThrust   = vessel.ThrustMinMagnitude,
                 StartTime   = _time,
                 StartMass   = vessel.Mass,
                 SpoolUpTime = vessel.SpoolupCurrent,

@@ -44,11 +44,14 @@ namespace MechJebLib.PSG
 
             ci = ObjectiveFunction(f, j, ci);
 
+            ci = DynamicPressureConstraints(f, j, ci);
+
+            ci = ControlNormConstraints(f, j, ci);
+
             for (int p = 0; p < _optimizer.Phases.Count; p++)
             {
                 ci = DynamicConstraints(f, j, ci, p);
                 ci = StagingConstraints(f, j, ci, p);
-                ci = ControlNormConstraints(f, j, ci, p);
                 ci = ContinuityConstraints(f, j, ci, p);
             }
 
@@ -62,7 +65,6 @@ namespace MechJebLib.PSG
                 for (int i = start; i < ci; i++)
                     ConstraintNames[i] = $"Terminal Constraint number {i - start + 1}";
 
-            ci = DynamicPressureConstraints(f, j, ci);
 
             if (ci != _vars.TotalConstraints + 1)
                 throw new Exception("Constraint num mismatch");
@@ -73,20 +75,23 @@ namespace MechJebLib.PSG
                         throw new Exception($"Missing constraint in dictionary: {i}");
         }
 
-        private int ControlNormConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
+        private int ControlNormConstraints(double[] f, alglib.sparsematrix j, int ci)
         {
-            PhaseProxy thisPhase = _vars[p];
-
-            if (_optimizer.Phases[p].GuidedCoast)
-                return ci;
-
-            for (int k = 0; k < _optimizer.K; k++)
+            for (int p = 0; p < _optimizer.Phases.Count; p++)
             {
-                if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} knot {k}";
+                PhaseProxy thisPhase = _vars[p];
 
-                ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].sqrMagnitude - 1.0, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
-                if (_optimizer.Phases[p].Unguided)
-                    break;
+                if (_optimizer.Phases[p].GuidedCoast)
+                    continue;
+
+                for (int k = 0; k < _optimizer.K; k++)
+                {
+                    if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} knot {k}";
+
+                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
+                    if (_optimizer.Phases[p].Unguided)
+                        break;
+                }
             }
 
             return ci;
