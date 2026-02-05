@@ -305,9 +305,9 @@ namespace MechJebLib.PSG
             double thrustPct   = x.U.magnitude;
             int    phase       = IndexForTbar(tBar);
             double minThrottle = Phases[phase].MinThrottle;
-            double kspThrottle = (thrustPct - minThrottle) / (1.0 - minThrottle);
+            double kspThrottle = minThrottle < 1.0 ? (thrustPct - minThrottle) / (1.0 - minThrottle) : 1.0;
 
-            return (u0, Clamp(kspThrottle, 0.0001, 1.0));
+            return (u0, Clamp(kspThrottle, 0.01, 1.0));
         }
 
         public (V3 r, V3 v) TerminalStateVectors() => StateVectors(Tf);
