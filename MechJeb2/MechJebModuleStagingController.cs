@@ -277,7 +277,7 @@ namespace MuMech
             if (Vessel.currentStage <= ActiveAutoStageModuleLimit())
             {
                 // force staging once if fairing conditions are met in the next stage
-                if (!WaitingForFairing())
+                if (HasFairing(Vessel.currentStage - 1) && !WaitingForFairing())
                 {
                     Stage();
                 }
