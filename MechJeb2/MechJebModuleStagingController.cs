@@ -277,7 +277,7 @@ namespace MuMech
             if (Vessel.currentStage <= ActiveAutoStageModuleLimit())
             {
                 // force staging once if fairing conditions are met in the next stage
-                if (HasFairing(Vessel.currentStage - 1) && !WaitingForFairing())
+                if (!WaitingForFairing())
                 {
                     Stage();
                 }
@@ -455,10 +455,10 @@ namespace MuMech
         }
 
         // allModuleEngines => IsEngine() && !IsSepratron()
-        private bool InverseStageHasActiveEngines(int kspStage)
+        private bool InverseStageHasActiveEngines(int inverseStage)
         {
             foreach (ModuleEngines engine in _allModuleEngines)
-                if (engine.part.inverseStage >= kspStage && engine.EngineHasFuel())
+                if (engine.part.inverseStage >= inverseStage && engine.EngineHasFuel())
                     return true;
             return false;
         }
