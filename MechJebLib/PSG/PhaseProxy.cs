@@ -141,15 +141,6 @@ namespace MechJebLib.PSG
                 U   =  new V3ArrayProxy(1, idx, idx + 1, idx + 2);
                 idx += 3;
             }
-            else if (phase.GuidedCoast)
-            {
-                // guided coasts have initial and terminal controls (unconstrained other than linkages)
-                Ux  =  new DoubleArrayProxy(2, idx);
-                Uy  =  new DoubleArrayProxy(2, idx + 2);
-                Uz  =  new DoubleArrayProxy(2, idx + 4);
-                U   =  new V3ArrayProxy(2, idx, idx + 2, idx + 4);
-                idx += 6;
-            }
             else
             {
                 // control grid points
@@ -164,10 +155,10 @@ namespace MechJebLib.PSG
             idx++;
             NumVars = idx - start;
 
-            NumConstraints += (n - 1) * 6 * 2; // dynamical constraints for r, v
-            NumConstraints += 1;               // staging constraint
-            if (!phase.GuidedCoast)
-                NumConstraints += phase.Unguided ? 1 : k; // control magnitude constraint
+            NumConstraints += (n - 1) * 6 * 2;        // dynamical constraints for r, v
+            NumConstraints += 1;                      // staging constraint
+            NumConstraints += phase.Unguided ? 1 : k; // control norm constraint
+            NumConstraints += k;                      // position norm constraint
             //if (phase.Unguided)
             //NumConstraints += 3; // unguided control constraint
             if (!phase.Coast)

@@ -52,6 +52,8 @@ namespace MechJebLib.PSG
 
             ci = ControlNormConstraints(f, j, ci);
 
+            ci = PositionNormConstraints(f, j, ci);
+
             for (int p = 0; p < _optimizer.Phases.Count; p++)
             {
                 ci = DynamicConstraints(f, j, ci, p);
@@ -85,9 +87,6 @@ namespace MechJebLib.PSG
             {
                 PhaseProxy thisPhase = _vars[p];
 
-                if (_optimizer.Phases[p].GuidedCoast)
-                    continue;
-
                 for (int k = 0; k < _optimizer.K; k++)
                 {
                     if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} knot {k}";
@@ -95,6 +94,23 @@ namespace MechJebLib.PSG
                     ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
                     if (_optimizer.Phases[p].Unguided)
                         break;
+                }
+            }
+
+            return ci;
+        }
+
+        private int PositionNormConstraints(double[] f, alglib.sparsematrix j, int ci)
+        {
+            for (int p = 0; p < _optimizer.Phases.Count; p++)
+            {
+                PhaseProxy thisPhase = _vars[p];
+
+                for (int k = 0; k < _optimizer.K; k++)
+                {
+                    if (_firstPass) ConstraintNames[ci] = $"Position norm constraint for phase {p} knot {k}";
+
+                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude, new[] { thisPhase.R[k] }, new[] { thisPhase.R.Idx(k) });
                 }
             }
 
@@ -369,7 +385,7 @@ namespace MechJebLib.PSG
                 V3              u0,    u1,    u2;
                 (int, int, int) u0Idx, u1Idx, u2Idx;
 
-                if (_optimizer.Phases[p].Unguided || _optimizer.Phases[p].GuidedCoast)
+                if (_optimizer.Phases[p].Unguided)
                 {
                     u0    = u1    = u2    = thisPhase.U[0];
                     u0Idx = u1Idx = u2Idx = thisPhase.U.Idx(0);
@@ -426,7 +442,7 @@ namespace MechJebLib.PSG
                 V3     w          = _optimizer.Problem.W;
 
                 if (h0 > 0 && rho0CaAref > 0)
-                    ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
+                    ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDotFullAero, point, indexes, _optimizer.N);
                 else
                     ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDotVacuum, point, indexes, _optimizer.N);
 
@@ -459,7 +475,7 @@ namespace MechJebLib.PSG
 
                 continue;
 
-                DualV3 VDot(ref HermiteSimpsonDualPoint d)
+                DualV3 VDotFullAero(ref HermiteSimpsonDualPoint d)
                 {
                     Dual   r          = d.R.magnitude;
                     Dual   r3         = d.R.sqrMagnitude * r;
@@ -473,6 +489,20 @@ namespace MechJebLib.PSG
 
                     Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - atmCurrent));
                     return -d.R / r3 + thrust / d.M * d.U + axial / d.M + normal / d.M;
+                }
+
+                DualV3 VDotCoast(ref HermiteSimpsonDualPoint d)
+                {
+                    Dual   r          = d.R.magnitude;
+                    Dual   r3         = d.R.sqrMagnitude * r;
+                    DualV3 vr         = d.V - DualV3.Cross(w, d.R);
+                    Dual   vrm        = vr.magnitude;
+                    var    atmSurface = Dual.Exp(-(r - rBody) / h0);
+                    DualV3 u          = d.U.normalized;
+                    DualV3 axial      = -0.5 * rho0CaAref * atmSurface * DualV3.Dot(u, vr) * vrm * u;
+                    DualV3 normal     = 0.5 * rho0CnAref * atmSurface * vrm * DualV3.Cross(DualV3.Cross(u, vr), u);
+
+                    return -d.R / r3; //  + axial / d.M + normal / d.M;
                 }
 
                 DualV3 VDotVacuum(ref HermiteSimpsonDualPoint d)

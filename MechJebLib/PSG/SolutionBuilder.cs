@@ -121,23 +121,16 @@ namespace MechJebLib.PSG
             return solution;
         }
 
-        private Vn InterpolantValues(PhaseProxy thisPhase, int k, Phase phase, double dv, double m0, double dt)
+        private static Vn InterpolantValues(PhaseProxy thisPhase, int k, Phase phase, double dv, double m0, double dt)
         {
-            var layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k] };
-
-            if (phase.GuidedCoast)
+            var layout = new InterpolantLayout
             {
-                V3 u0 = thisPhase.U[0];
-                V3 uf = thisPhase.U[-1];
-
-                layout.U = V3.Slerp(u0, uf, (double)k / (_k - 1));
-            }
-            else
-            {
-                layout.U = phase.Unguided ? thisPhase.U[0] : thisPhase.U[k];
-            }
-
-            layout.Dv = dv + phase.DeltaVForTime(m0, dt);
+                R  = thisPhase.R[k],
+                V  = thisPhase.V[k],
+                M  = phase.Coast ? thisPhase.M[0] : thisPhase.M[k],
+                U  = phase.Unguided ? thisPhase.U[0] : thisPhase.U[k],
+                Dv = dv + phase.DeltaVForTime(m0, dt)
+            };
 
             var array = Vn.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             layout.CopyTo(array);

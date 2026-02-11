@@ -119,8 +119,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             const double CN          = 2.00;
             const double RHO0        = 1.225;
             const double H0          = 7200;
-            const double Q_ALPHA_MAX = 0; //2000;
-            const double Q_MAX       = 0; // 35000;
+            const double Q_ALPHA_MAX = 2000;
+            const double Q_MAX       = 35000;
             V3           w           = 7.29211585e-5 * V3.northpole;
 
             const double FIRST_STAGE_DRY  = 22200;
@@ -144,10 +144,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             const double SECOND_BT   = (SECOND_STAGE_M0 - SECOND_STAGE_MF) / SECOND_MDOT;
 
             Ascent ascent = Ascent.Builder()
-                .AerodynamicConstants(CA, CN, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
+                //.AerodynamicConstants(CA, CN, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
                 .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 2, 2, allowShutdown: false)
                 .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1)
-                .AddCoast(SECOND_STAGE_M0, 30, 30, 1, 1, massContinuity: true)
+                .AddCoast(SECOND_STAGE_M0, 0, 1600, 1, 1, massContinuity: true)
                 .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1, massContinuity: true)
                 .Initial(r0, v0, r0.normalized, T0, MU, R_BODY)
                 .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, false)
@@ -158,28 +158,60 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
-            solution.R(0).ShouldEqual(r0, 1e-9);
-            solution.V(0).ShouldEqual(v0, 1e-9);
-            solution.M(0).ShouldEqual(FIRST_STAGE_M0, 1e-9);
+            Ascent ascent2 = Ascent.Builder()
+                //.AerodynamicConstants(CA, CN, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
+                .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 2, 2, allowShutdown: false)
+                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1)
+                .AddCoast(SECOND_STAGE_M0, 0, 1600, 1, 1, massContinuity: true)
+                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1, massContinuity: true)
+                .Initial(r0, v0, r0.normalized, T0, MU, R_BODY)
+                .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, true)
+                .OldSolution(solution)
+                .Build();
 
-            solution.Tgo(solution.T0, 0).ShouldEqual(FIRST_BT, 1e-3);
-            solution.Tgo(solution.T0, 1).ShouldBeLessThanOrEqual(SECOND_BT);
-            solution.Tgo(solution.T0, 2).ShouldEqual(1055.0665736765161, 1e-3);
-            (solution.Tgo(solution.T0, 1) + solution.Tgo(solution.T0, 3)).ShouldEqual(381.26954084989723, 1e-3);
+            ascent2.Run();
 
-            psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            solution.Tgo(0).ShouldEqual(1600.5671186447382, 1e-3);
-            solution.Vgo(0).ShouldEqual(11121.768749617131, 1e-3);
+            Optimizer      psg2      = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
 
-            (double pitch, double heading) = Astro.ECIToPitchHeading(r0, solution.U(0));
+            Ascent ascent3 = Ascent.Builder()
+                .AerodynamicConstants(CA, CN, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
+                .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 2, 2, allowShutdown: false)
+                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1)
+                .AddCoast(SECOND_STAGE_M0, 0, 1600, 1, 1, massContinuity: true)
+                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1, massContinuity: true)
+                .Initial(r0, v0, r0.normalized, T0, MU, R_BODY)
+                .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, true)
+                .OldSolution(solution2)
+                .Build();
+
+            ascent3.Run();
+
+            Optimizer      psg3      = ascent3.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution3 = psg3.Solution ?? throw new Exception("null solution");
+
+            solution2.R(0).ShouldEqual(r0, 1e-9);
+            solution2.V(0).ShouldEqual(v0, 1e-9);
+            solution2.M(0).ShouldEqual(FIRST_STAGE_M0, 1e-9);
+
+            solution2.Tgo(solution2.T0, 0).ShouldEqual(FIRST_BT, 1e-3);
+            solution2.Tgo(solution2.T0, 1).ShouldBeLessThanOrEqual(SECOND_BT);
+            solution2.Tgo(solution2.T0, 2).ShouldEqual(1055.0665736765161, 1e-3);
+            (solution2.Tgo(solution2.T0, 1) + solution2.Tgo(solution2.T0, 3)).ShouldEqual(381.26954084989723, 1e-3);
+
+            psg2.PrimalFeasibility.ShouldBeZero(1e-5);
+            solution2.Tgo(0).ShouldEqual(1600.5671186447382, 1e-3);
+            solution2.Vgo(0).ShouldEqual(11121.768749617131, 1e-3);
+
+            (double pitch, double heading) = Astro.ECIToPitchHeading(r0, solution2.U(0));
             Rad2Deg(pitch).ShouldEqual(83.373269308213963, 1e-3);
             Rad2Deg(heading).ShouldEqual(89.53966801098629, 1e-3);
 
-            (V3 rf1, _) = solution.StateVectors(solution.EndTime(1));
+            (V3 rf1, _) = solution2.StateVectors(solution2.EndTime(1));
 
             (rf1.magnitude - R_BODY).ShouldEqual(101459.50200797338, 1e-5);
 
-            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+            (V3 rf, V3 vf) = solution2.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double nuf, _) =
                 Astro.KeplerianFromStateVectors(MU, rf, vf);

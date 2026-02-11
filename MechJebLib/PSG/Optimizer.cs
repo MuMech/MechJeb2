@@ -37,11 +37,11 @@ namespace MechJebLib.PSG
         public int    K                   => 2 * N - 1;
         public int    N                   { get; set; } = 8;
         public int    Maxits              { get; set; } = 4000;
-        public double SQPTrustRegionLimit { get; set; } = 1e-4;
+        public double SQPTrustRegionLimit { get; set; } = 0; // 1e-4;
         public double Epsf                { get; set; } = 0; // 1e-9;
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
-        public int    OptimizerTimeout    { get; set; } = 120_000; // milliseconds
+        public int    OptimizerTimeout    { get; set; } = 10 * 120_000; // milliseconds
 
         public Optimizer(Problem problem, PhaseCollection phases, ITerminal terminal, ObjectiveType objective)
         {
@@ -69,13 +69,13 @@ namespace MechJebLib.PSG
                 if (upper > 0)
                 {
                     if (upper > 1e-5 && debug)
-                        DebugPrint($"constraint violation {i}: {f[i]} upper limit: {_nu[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
+                        Print($"constraint violation {i}: {f[i]} upper limit: {_nu[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
                     PrimalFeasibility += upper * upper;
                 }
                 else if (lower > 0)
                 {
                     if (lower > 1e-5 && debug)
-                        DebugPrint($"constraint violation {i}: {f[i]} lower limit: {_nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
+                        Print($"constraint violation {i}: {f[i]} lower limit: {_nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
                     PrimalFeasibility += lower * lower;
                 }
             }
@@ -113,8 +113,10 @@ namespace MechJebLib.PSG
                 double tf = t0 + bt;
                 double h  = bt / (K - 1);
 
-                double m0   = phase.M0;
+                double m0   = phase.MassContinuity ? oldSolution.MBar(oldt0) : phase.M0;
                 double mdot = -phase.Mdot;
+
+                Print($"Old solution [{oldt0},{oldt0 + oldbt}] to [{t0},{tf}]");
 
                 for (int k = 0; k < K; k++)
                 {
@@ -124,32 +126,20 @@ namespace MechJebLib.PSG
                     V3 r = oldSolution.RBar(oldt0 + olddt);
                     thisPhase.R[k] = r;
 
+                    Print($"r: {r.magnitude}");
+
                     V3 v = oldSolution.VBar(oldt0 + olddt);
                     thisPhase.V[k] = v;
 
                     V3 u = oldSolution.UBar(oldt0 + olddt);
 
-                    if (phase.GuidedCoast)
-                    {
-                        if (k == 0)
-                            thisPhase.U[0] = u;
-                        if (k == K - 1)
-                            thisPhase.U[-1] = u;
-                    }
+                    if (phase.Unguided)
+                        thisPhase.U[0] += u;
                     else
-                    {
-                        if (phase.Unguided)
-                            thisPhase.U[0] += u;
-                        else
-                            thisPhase.U[k] = u;
-                    }
+                        thisPhase.U[k] = u;
 
-                    if (!phase.Coast)
-                        thisPhase.M[k] = m0 + mdot * dt;
+                    thisPhase.M[k] = m0 + mdot * dt;
                 }
-
-                if (phase.Coast)
-                    thisPhase.M[0] = m0;
 
                 if (phase.Unguided)
                     thisPhase.U[0] = thisPhase.U[0].normalized;
@@ -255,14 +245,7 @@ namespace MechJebLib.PSG
 
                     V3 u = oldSolution.UBar(t0 + olddt);
 
-                    if (phase.GuidedCoast)
-                    {
-                        if (k == 0)
-                            thisPhase.U[0] = u;
-                        if (k == K - 1)
-                            thisPhase.U[-1] = u;
-                    }
-                    else if (phase.Unguided)
+                    if (phase.Unguided)
                     {
                         thisPhase.U[0] += u;
                     }
@@ -419,21 +402,28 @@ namespace MechJebLib.PSG
             // Control norm inequality constraints
             foreach (Phase phase in Phases)
             {
-                if (phase.GuidedCoast)
-                    continue;
-
                 if (phase.Unguided)
                 {
-                    _nl[ci] = phase.MinThrottle;
+                    _nl[ci]   = phase.MinThrottle;
                     _nu[ci++] = 1.0;
                 }
                 else
                 {
                     for (int i = 0; i < K; i++)
                     {
-                        _nl[ci] = phase.MinThrottle;
+                        _nl[ci]   = phase.MinThrottle;
                         _nu[ci++] = 1.0;
                     }
+                }
+            }
+
+            // Position norm inequality constraints
+            foreach (Phase _ in Phases)
+            {
+                for (int i = 0; i < K; i++)
+                {
+                    _nl[ci]   = Problem.RBody;
+                    _nu[ci++] = double.PositiveInfinity;
                 }
             }
 
@@ -442,8 +432,8 @@ namespace MechJebLib.PSG
 
             CalculatePrimalFeasibility(f, true);
 
-            DebugPrint($"Initial Cost: {Cost}");
-            DebugPrint($"Initial PrimalFeasibility: {PrimalFeasibility}");
+            Print($"Initial Cost: {Cost}");
+            Print($"Initial PrimalFeasibility: {PrimalFeasibility}");
 
             alglib.minnlccreate(_vars.TotalVariables, _xGuess, out _state);
             alglib.minnlcsetbc(_state, bndl, bndu);
@@ -466,8 +456,8 @@ namespace MechJebLib.PSG
             TerminationType = _rep.terminationtype;
             Iterations      = _rep.iterationscount;
 
-            DebugPrint("terminationtype: " + TerminationType);
-            DebugPrint("iterations: " + Iterations);
+            Print("terminationtype: " + TerminationType);
+            Print("iterations: " + Iterations);
 
             alglib.minnlcoptguardresults(_state, out alglib.optguardreport ogrep);
 
@@ -487,9 +477,8 @@ namespace MechJebLib.PSG
 
             _ascentProblem.ConstraintFunction(f, j, x, null);
             CalculatePrimalFeasibility(f, true);
-
-            DebugPrint($"Cost: {Cost}");
-            DebugPrint($"PrimalFeasibility: {PrimalFeasibility}");
+            Print($"Cost: {Cost}");
+            Print($"PrimalFeasibility: {PrimalFeasibility}");
 
             _vars.WrapVars(x);
             Solution solution = new SolutionBuilder(N, _vars, Problem, Phases).Build();
@@ -500,7 +489,7 @@ namespace MechJebLib.PSG
         public Solution? Run()
         {
             foreach (Phase phase in Phases)
-                DebugPrint(phase.ToString());
+                Print(phase.ToString());
 
             try
             {

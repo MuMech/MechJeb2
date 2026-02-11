@@ -109,6 +109,8 @@ namespace MechJebLib.PSG
              * Initial bootstrapping with infinite stage, forced FPA attachment
              */
 
+            bool            reConverge = false;
+
             PhaseCollection bootPhases = _phases.DeepCopy();
 
             for (int p = 0; p < bootPhases.Count; p++)
@@ -118,6 +120,7 @@ namespace MechJebLib.PSG
                 {
                     bootPhases[p].Unguided = false;
                     bootPhases[p].Tagged   = true;
+                    reConverge             = true;
                 }
             }
 
@@ -132,21 +135,10 @@ namespace MechJebLib.PSG
             if (!psg.Success() || solution == null)
                 throw new Exception("Target unreachable (bootstrapping)");
 
-            bool reConverge = false;
-
-            foreach (Phase p in bootPhases)
-            {
-                if (!p.Tagged) continue;
-
-                reConverge = true;
-                p.Unguided = true;
-                p.Tagged   = false;
-            }
-
             if (reConverge)
             {
                 DebugPrint("*** PHASE 4: ADDING BACK UNGUIDED STAGES ***");
-                psg = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
+                psg = new Optimizer(problemNoQa, _phases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
                 psg.TranscribePreviousBootSolution(solution);
                 solution = psg.Run();
 
@@ -162,7 +154,7 @@ namespace MechJebLib.PSG
              */
 
             DebugPrint("*** PHASE 5: RELAXING TO FREE ATTACHMENT ***");
-            var psg2 = new Optimizer(problemNoQa, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
+            var psg2 = new Optimizer(problemNoQa, _phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
             psg2.TranscribePreviousBootSolution(solution);
             Solution? solution2 = psg2.Run();
 
