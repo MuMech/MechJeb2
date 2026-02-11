@@ -168,14 +168,21 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double ApR  = 6.371e+6 + 10e+6;
             double incT = Deg2Rad(28.608);
 
-            const double OPTIMUMVGO = 9673.8952123189683;
-
             double thrust1 = Astro.ThrustFromMassesIspBurntime(49119.7842689869, 7114.2513992454, 288.000034332275, 170.308460385726);
             double thrust2 = Astro.ThrustFromMassesIspBurntime(2848.62586760223, 1363.71123994759, 270.15767003304, 116.391834883409);
             double thrust3 = Astro.ThrustFromMassesIspBurntime(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005);
 
+            double       aref        = 10;
+            const double CD          = 0.5;
+            const double RHO0        = 1.225;
+            const double H0          = 7200;
+            const double Q_ALPHA_MAX = 2000;
+            const double Q_MAX       = 35000;
+            V3           w           = 7.29211585e-5 * V3.northpole;
+
             Ascent ascent = Ascent.Builder()
                 .Initial(r0, v0, u0, t0, mu, rbody)
+                .AerodynamicConstants(aref, CD, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
                 .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
                 .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275,  3, 3)
                 .AddStage(2848.62586760223, 1363.71123994759, thrust2,270.15767003304,  1, 1)
@@ -191,7 +198,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
             solution.Tgo(solution.T0, 1).ShouldBePositive();
-            solution.Tgo(solution.T0, 2).ShouldEqual(236.563629014638, 1e-2);
+            solution.Tgo(solution.T0, 2).ShouldEqual(135.22924418942029, 1e-2);
             solution.Tgo(solution.T0, 3).ShouldBePositive();
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
@@ -204,14 +211,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.R(t0).ShouldEqual(r0);
             solution.V(t0).ShouldEqual(v0);
             solution.M(t0).ShouldEqual(49119.7842689869);
-            solution.Vgo(t0).ShouldEqual(OPTIMUMVGO, 1e-3);
-            solution.U(t0).normalized.ShouldEqual(new V3(0.77930143698028731, -0.56665965776430649, 0.26755579340185925), 1e-2);
+            solution.Vgo(t0).ShouldEqual(10510.620490322281, 1e-3);
+            solution.U(t0).normalized.ShouldEqual(new V3(-0.012214116666567524, -0.87839128647452269, 0.47778610611830125), 1e-2);
 
             smaf.ShouldEqual(11463499.98898875, 1e-4);
             eccf.ShouldEqual(0.4280978753095433, 1e-4);
             incf.ShouldEqual(incT, 1e-4);
             lanf.ShouldEqual(3.0481683077792203, 1e-2);
-            argpf.ShouldEqual(1.9887149870712548, 1e-2);
+            argpf.ShouldEqual(1.8907189606177459, 1e-2);
             tanof.ShouldBeZeroRadians(1e-3);
         }
     }
