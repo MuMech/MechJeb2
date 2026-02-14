@@ -305,7 +305,7 @@ namespace MuMech
             }
 
             // always stage if we have no active engines
-            if (!InverseStageHasActiveEngines(Vessel.currentStage))
+            if (!InverseStageHasActiveEngines(Vessel.currentStage) && !WaitingForFairing())
             {
                 Stage();
             }
@@ -321,7 +321,7 @@ namespace MuMech
                 return;
 
             // Always drop deactivated engines or tanks
-            if (InverseStageDecouplesDeactivatedEngineOrTank(Vessel.currentStage - 1))
+            if (InverseStageDecouplesDeactivatedEngineOrTank(Vessel.currentStage - 1) && !WaitingForFairing())
             {
                 Stage();
             }
@@ -670,6 +670,9 @@ namespace MuMech
                 // if we have any PF in the stage we must have ALL payload fairings, and we do not do the
                 // decoupler check below
                 return _partsInStage.Slinq().All(p => p.IsProceduralFairingPayloadFairing());
+
+            if (_partsInStage.Slinq().Any(p => p.Modules.Contains("ModuleProceduralFairing")))
+                return true;
 
             // this is simple, but subtle:
             //   1. we do not identify fairings as separate from decouplers here because of part mods like RSB
