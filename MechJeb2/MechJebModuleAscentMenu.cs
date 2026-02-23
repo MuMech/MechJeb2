@@ -147,12 +147,12 @@ namespace MuMech
                         _ascentSettings.DesiredAttachAltFixed, "km");
                 }
 
-                if (_ascentSettings.DesiredApoapsis >= 0 && _ascentSettings.DesiredApoapsis < _ascentSettings.DesiredOrbitAltitude)
+                if (_ascentSettings.DesiredApoapsis + MainBody.Radius >= 0 && _ascentSettings.DesiredApoapsis < _ascentSettings.DesiredOrbitAltitude)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel3, GuiUtils.YellowLabel); //Ap < Pe: circularizing orbit
                 else if (_ascentSettings.AttachAltFlag && _ascentSettings.DesiredAttachAlt > _ascentSettings.DesiredApoapsis)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnAttachAltHigh,
                         GuiUtils.OrangeLabel); //Attach > Ap: apoapsis insertion
-                if (_ascentSettings.DesiredApoapsis < 0)
+                if (_ascentSettings.DesiredApoapsis + MainBody.Radius < 0)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel4, GuiUtils.OrangeLabel); //Hyperbolic target orbit (neg Ap)
                 if (_ascentSettings.AttachAltFlag && _ascentSettings.DesiredAttachAlt < _ascentSettings.DesiredOrbitAltitude)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnAttachAltLow,
