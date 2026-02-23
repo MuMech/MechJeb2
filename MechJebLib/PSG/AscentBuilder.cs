@@ -136,9 +136,9 @@ namespace MechJebLib.PSG
                     if (_attachAltFlag || eccT < 1e-4)
                     {
                         if (_lanflag)
-                            terminal = new FlightPathAngle5(gammaT, _attR, vT, _incT, _lanT);
+                            terminal = new FlightPathAngle5(gammaT, _attachAltFlag ? _attR : smaT, vT, _incT, _lanT);
                         else
-                            terminal = new FlightPathAngle4(gammaT, _attR, vT, _incT);
+                            terminal = new FlightPathAngle4(gammaT, _attachAltFlag ? _attR : smaT, vT, _incT);
                     }
                     else
                     {
