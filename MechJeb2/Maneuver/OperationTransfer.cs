@@ -51,34 +51,39 @@ namespace MuMech
         {
             bool isCelestialTarget = target.Target is CelestialBody;
 
+            // two-burn capture vs single-burn intercept/flyby
             GUILayout.BeginHorizontal();
-            if (GUILayout.Toggle(Capture, isCelestialTarget ? "Transfer" : "Rendezvous")) // two-burn Hohmann transfer with capture
+            if (GUILayout.Toggle(Capture, isCelestialTarget
+                    ? Localizer.Format("#MechJeb_Hohm_transfer") //Transfer
+                    : Localizer.Format("#MechJeb_Hohm_rendezvous"))) //Rendezvous
                 Capture = true;
-            if (GUILayout.Toggle(!Capture, isCelestialTarget ? "Flyby / Impact" : "Intercept")) // single-burn intercept/flyby/impact transfer
+            if (GUILayout.Toggle(!Capture, isCelestialTarget
+                    ? Localizer.Format("#MechJeb_Hohm_flyby") //Flyby / Impact
+                    : Localizer.Format("#MechJeb_Hohm_intercept"))) //Intercept
                 Capture = false;
             GUILayout.EndHorizontal();
 
-            // are we trying to hit the target (transfer to celestial / rendezvous with ship) or just match an orbit
+            // match the target's orbit rather than intercepting the target itself
             if (Capture)
             {
                 GUILayout.BeginHorizontal();
-                MatchOrbit = GUILayout.Toggle(MatchOrbit, "Match orbit");
+                MatchOrbit = GUILayout.Toggle(MatchOrbit, Localizer.Format("#MechJeb_Hohm_matchOrbit")); //Match orbit
                 GUILayout.EndHorizontal();
             }
 
-            // arrival offset is for doing a transfer to e.g. 10 seconds behind a space station, or half the moon's period behind the moon
+            // arrival delay offsets the intercept point (e.g. 10 seconds behind a station, or half a moon's period)
             if (Capture && !MatchOrbit)
-                GuiUtils.SimpleTextBox(Localizer.Format("Arrival delay"), LagTime, "sec");
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_arrivalDelay"), LagTime, "sec"); //Arrival delay
 
-            // if we are planning a capture node (doing the math), do we also plot the maneuver node
-            // (for a simple transfer to a Moon we don't allow this, without Match orbit or Arrival delay)
+            // optionally create a maneuver node for the arrival burn
+            // (not offered for a direct transfer to a celestial without match orbit or arrival delay)
             if (Capture && (!isCelestialTarget || MatchOrbit || LagTime.Val != 0))
-                PlanCapture = GUILayout.Toggle(PlanCapture, "Create arrival node");
+                PlanCapture = GUILayout.Toggle(PlanCapture, Localizer.Format("#MechJeb_Hohm_createArrivalNode")); //Create arrival node
             else
                 PlanCapture = false;
 
-            // coplanar transfer is for doing in-plane maneuver to the radius of the e.g. Moon and then the user does a MCC to intercept with a lower cost
-            Coplanar = GUILayout.Toggle(Coplanar, "Coplanar only");
+            // coplanar restricts the transfer to the parking orbit plane (user can add a mid-course correction)
+            Coplanar = GUILayout.Toggle(Coplanar, Localizer.Format("#MechJeb_Hohm_simpleTransfer")); //Coplanar only
             _timeSelector.DoChooseTimeGUI();
         }
 
