@@ -22,7 +22,7 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool Rendezvous = true;
+        public bool MatchOrbit = false;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -49,19 +49,41 @@ namespace MuMech
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            Capture =
-                !GUILayout.Toggle(!Capture, Localizer.Format("#MechJeb_Hohm_intercept_only")); //no capture burn (impact/flyby)
-            if (Capture)
-                PlanCapture = GUILayout.Toggle(PlanCapture, "Plan insertion burn");
-            Coplanar = GUILayout.Toggle(Coplanar, Localizer.Format("#MechJeb_Hohm_simpleTransfer")); //coplanar maneuver
+            bool isCelestialTarget = target.Target is CelestialBody;
+
+            // two-burn capture vs single-burn intercept/flyby
             GUILayout.BeginHorizontal();
-            if (GUILayout.Toggle(Rendezvous, "Rendezvous"))
-                Rendezvous = true;
-            if (GUILayout.Toggle(!Rendezvous, "Transfer"))
-                Rendezvous = false;
+            if (GUILayout.Toggle(Capture, isCelestialTarget
+                    ? Localizer.Format("#MechJeb_Hohm_transfer") //Transfer
+                    : Localizer.Format("#MechJeb_Hohm_rendezvous"))) //Rendezvous
+                Capture = true;
+            if (GUILayout.Toggle(!Capture, isCelestialTarget
+                    ? Localizer.Format("#MechJeb_Hohm_flyby") //Flyby / Impact
+                    : Localizer.Format("#MechJeb_Hohm_intercept"))) //Intercept
+                Capture = false;
             GUILayout.EndHorizontal();
-            if (Rendezvous)
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_Label1"), LagTime, "sec"); //fractional target period offset
+
+            // match the target's orbit rather than intercepting the target itself
+            if (Capture)
+            {
+                GUILayout.BeginHorizontal();
+                MatchOrbit = GUILayout.Toggle(MatchOrbit, Localizer.Format("#MechJeb_Hohm_matchOrbit")); //Match orbit
+                GUILayout.EndHorizontal();
+            }
+
+            // arrival delay offsets the intercept point (e.g. 10 seconds behind a station, or half a moon's period)
+            if (Capture && !MatchOrbit)
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Hohm_arrivalDelay"), LagTime, "sec"); //Arrival delay
+
+            // optionally create a maneuver node for the arrival burn
+            // (not offered for a direct transfer to a celestial without match orbit or arrival delay)
+            if (Capture && (!isCelestialTarget || MatchOrbit || LagTime.Val != 0))
+                PlanCapture = GUILayout.Toggle(PlanCapture, Localizer.Format("#MechJeb_Hohm_createArrivalNode")); //Create arrival node
+            else
+                PlanCapture = false;
+
+            // coplanar restricts the transfer to the parking orbit plane (user can add a mid-course correction)
+            Coplanar = GUILayout.Toggle(Coplanar, Localizer.Format("#MechJeb_Hohm_simpleTransfer")); //Coplanar only
             _timeSelector.DoChooseTimeGUI();
         }
 
@@ -75,13 +97,9 @@ namespace MuMech
                     new OperationException(
                         Localizer.Format("#MechJeb_Hohm_Exception2")); //target for bi-impulsive transfer must be in the same sphere of influence.
 
-            if (target.Target is CelestialBody && Capture && PlanCapture)
-                ErrorMessage =
-                    "Insertion burn to a celestial with an SOI is not supported by this maneuver.  A Transfer-to-Moon maneuver needs to be written to properly support this case.";
-
             Orbit targetOrbit = target.TargetOrbit;
 
-            double lagTime = Rendezvous ? LagTime.Val : 0;
+            double lagTime = !MatchOrbit ? LagTime.Val : 0;
 
             bool fixedTime = false;
 
@@ -105,7 +123,7 @@ namespace MuMech
             }
 
             (Vector3d dV1, double ut1, Vector3d dV2, double ut2) =
-                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, lagTime, fixedTime, Coplanar, Rendezvous,
+                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, lagTime, fixedTime, Coplanar, Capture && !MatchOrbit,
                     Capture);
 
             if (Capture && PlanCapture)
