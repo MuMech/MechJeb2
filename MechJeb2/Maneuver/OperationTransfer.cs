@@ -22,7 +22,7 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool Rendezvous = true;
+        public bool MatchOrbit = false;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -62,17 +62,17 @@ namespace MuMech
             if (Capture)
             {
                 GUILayout.BeginHorizontal();
-                Rendezvous = !GUILayout.Toggle(!Rendezvous, "Match orbit");
+                MatchOrbit = GUILayout.Toggle(MatchOrbit, "Match orbit");
                 GUILayout.EndHorizontal();
             }
 
             // arrival offset is for doing a transfer to e.g. 10 seconds behind a space station, or half the moon's period behind the moon
-            if (Capture && Rendezvous)
+            if (Capture && !MatchOrbit)
                 GuiUtils.SimpleTextBox(Localizer.Format("Arrival delay"), LagTime, "sec");
 
             // if we are planning a capture node (doing the math), do we also plot the maneuver node
             // (for a simple transfer to a Moon we don't allow this, without Match orbit or Arrival delay)
-            if (Capture && (!isCelestialTarget || !Rendezvous || LagTime.Val != 0))
+            if (Capture && (!isCelestialTarget || MatchOrbit || LagTime.Val != 0))
                 PlanCapture = GUILayout.Toggle(PlanCapture, "Create arrival node");
             else
                 PlanCapture = false;
@@ -94,7 +94,7 @@ namespace MuMech
 
             Orbit targetOrbit = target.TargetOrbit;
 
-            double lagTime = Rendezvous ? LagTime.Val : 0;
+            double lagTime = !MatchOrbit ? LagTime.Val : 0;
 
             bool fixedTime = false;
 
@@ -118,7 +118,7 @@ namespace MuMech
             }
 
             (Vector3d dV1, double ut1, Vector3d dV2, double ut2) =
-                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, Rendezvous ? lagTime : 0, fixedTime, Coplanar, Capture && Rendezvous,
+                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targetOrbit, universalTime, lagTime, fixedTime, Coplanar, Capture && !MatchOrbit,
                     Capture);
 
             if (Capture && PlanCapture)
