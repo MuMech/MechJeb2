@@ -147,12 +147,12 @@ namespace MuMech
                         _ascentSettings.DesiredAttachAltFixed, "km");
                 }
 
-                if (_ascentSettings.DesiredApoapsis >= 0 && _ascentSettings.DesiredApoapsis < _ascentSettings.DesiredOrbitAltitude)
+                if (_ascentSettings.DesiredApoapsis + MainBody.Radius >= 0 && _ascentSettings.DesiredApoapsis < _ascentSettings.DesiredOrbitAltitude)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel3, GuiUtils.YellowLabel); //Ap < Pe: circularizing orbit
                 else if (_ascentSettings.AttachAltFlag && _ascentSettings.DesiredAttachAlt > _ascentSettings.DesiredApoapsis)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnAttachAltHigh,
                         GuiUtils.OrangeLabel); //Attach > Ap: apoapsis insertion
-                if (_ascentSettings.DesiredApoapsis < 0)
+                if (_ascentSettings.DesiredApoapsis + MainBody.Radius < 0)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel4, GuiUtils.OrangeLabel); //Hyperbolic target orbit (neg Ap)
                 if (_ascentSettings.AttachAltFlag && _ascentSettings.DesiredAttachAlt < _ascentSettings.DesiredOrbitAltitude)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnAttachAltLow,
@@ -170,7 +170,8 @@ namespace MuMech
                 _ascentSettings.DesiredInclination.Val = Math.Round(VesselState.latitude, 3);
             GUILayout.EndHorizontal();
 
-            double delta = Math.Abs(VesselState.latitude) - Math.Abs(_ascentSettings.DesiredInclination);
+            double inclination = Math.Abs(_ascentSettings.DesiredInclination);
+            double delta = Math.Abs(VesselState.latitude) - (inclination < 90.0 ? inclination : 180.0 - inclination);
             if (2.001 < delta)
                 GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label7", delta), GuiUtils.RedLabel); //inc {0:F1}º below current latitude
 
@@ -243,11 +244,15 @@ namespace MuMech
             if (Core.Node.Autowarp)
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel33, _ascentSettings.WarpCountDown, "s", 35); //Launch countdown:
 
-            bool targetExists = Core.Target.NormalTargetExists;
+            bool targetExists = Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == VesselState.mainBody;
             if (!_launchingWithAnyPlaneControl && !targetExists)
             {
                 _launchingToPlane = _launchingToRendezvous = _launchingToMatchLan = false;
-                GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel34); //Select a target for a timed launch.
+                if (Core.Target.NormalTargetExists)
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnInvalidTarget,
+                        GuiUtils.OrangeLabel); // Target must be in the same sphere of influence.
+                else
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel34); //Select a target for a timed launch.
             }
 
             if (!_launchingWithAnyPlaneControl)
