@@ -77,6 +77,7 @@ namespace MuMech
 
         [NonSerialized]
         public string MechJebAscentLaunchToTargetLan,
+            MechJebAscentWarnInvalidTarget,
             MechJebAscentLaunchToLan,
             MechJebAscentLaunchingToTargetLAN,
             MechJebAscentLaunchingToManualLAN;
@@ -257,6 +258,7 @@ namespace MuMech
             MechJebAscentWarnAttachAltHigh    = Localizer.Format("#MechJeb_Ascent_warnAttachAltHigh");
             MechJebAscentWarnAttachAltLow     = Localizer.Format("#MechJeb_Ascent_warnAttachAltLow");
             MechJebAscentLaunchToTargetLan    = Localizer.Format("#MechJeb_Ascent_LaunchToTargetLan");
+            MechJebAscentWarnInvalidTarget    = Localizer.Format("#MechJeb_Ascent_warnInvalidTarget");
             MechJebAscentLaunchToLan          = Localizer.Format("#MechJeb_Ascent_LaunchToLan");
             MechJebAscentLaunchingToTargetLAN = Localizer.Format("#MechJeb_Ascent_LaunchingToTargetLAN");
             MechJebAscentLaunchingToManualLAN = Localizer.Format("#MechJeb_Ascent_LaunchingToManualLAN");
