@@ -913,7 +913,7 @@ namespace MuMech
 
             // if desiredThrust is less than the RCS thrust then don't worry about ullage.  avoids RCS
             // being applied when the user is doing dribble throttle (unlikely with RF loaded, but possible).
-            double desiredThrust = (VesselState.thrustAvailable - VesselState.thrustMinimum) * s.mainThrottle;
+            double desiredThrust = (VesselState.thrustAvailable - VesselState.thrustMinimum) * s.mainThrottle + VesselState.thrustMinimum;
 
             if (stableUllage && desiredThrust < VesselState.rcsThrustAvailable.Up)
                 return;
