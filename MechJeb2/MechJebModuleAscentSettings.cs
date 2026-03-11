@@ -372,6 +372,9 @@ namespace MuMech
             // turn on Q-limiter with reasonable limit
             Core.Thrust.MaxDynamicPressure.Val = 35000;
             Core.Thrust.LimitDynamicPressure   = true;
+
+            // Disable 'kill roll' toggle
+            Core.Node.KillRollRotation = false;
         }
 
         private const double LAUNCH_LAN_DIFFERENCE        = 0;
