@@ -296,7 +296,6 @@ namespace MuMech
 
         private void SetAttitude()
         {
-            Core.Attitude.SetAxisControl(true, true, false);
             Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL, this);
         }
 
