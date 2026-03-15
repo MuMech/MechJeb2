@@ -155,7 +155,7 @@ namespace MuMech
                 Core.Node.Autowarp =
                     GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GUILayout.ExpandWidth(true)); //"Auto-warp"
                 Core.Node.RCSOnly = GUILayout.Toggle(Core.Node.RCSOnly, "RCS Burn", GUILayout.ExpandWidth(true));
-
+                Core.Node.KillRollRotation = GUILayout.Toggle(Core.Node.KillRollRotation, "Kill Rotation", GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
