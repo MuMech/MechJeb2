@@ -29,6 +29,10 @@ namespace MuMech
         // do burn on RCS engines only
         public bool RCSOnly = false;
 
+        // whether to kill roll rotation
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool KillRollRotation = true;
+
         // Node Burn Length
         [ValueInfoItem("#MechJeb_NodeBurnLength", InfoItem.Category.Thrust)]
         public string NextNodeBurnTime()
@@ -296,8 +300,7 @@ namespace MuMech
 
         private void SetAttitude()
         {
-            Core.Attitude.SetAxisControl(true, true, false);
-            Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL, this);
+            Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL, this, killRollRotation:KillRollRotation);
         }
 
         private bool ShouldTerminatePrincipia()
@@ -334,7 +337,7 @@ namespace MuMech
 
         private bool AlignedAndSettled() =>
             Aligned()
-            && Vector3.Scale(Core.vessel.angularVelocity, new Vector3(1f, 0f, 1f)).magnitude < 0.001;
+            && Vector3.Scale(Core.vessel.angularVelocity, new Vector3(1f, KillRollRotation ? 1f : 0f, 1f)).magnitude < 0.001;
 
         // This returns the angle to the node (in radians), note that you probably don't want to use this outside of
         // stock checks for maneuver termination, and probably never in principia (see SafeCurrentPrincipiaNode()).

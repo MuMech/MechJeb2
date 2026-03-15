@@ -54,13 +54,13 @@ namespace MuMech
         public bool LimitDynamicPressure;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public readonly EditableDoubleMult MaxDynamicPressure = new EditableDoubleMult(20000, 1000);
+        public readonly EditableDouble MaxDynamicPressure = new EditableDouble(20000);
 
         [GeneralInfoItem("#MechJeb_LimittoMaxQ", InfoItem.Category.Thrust)] //Limit to Max Q
         public void LimitToMaxDynamicPressureInfoItem()
         {
             GUIStyle s = Limiter == LimitMode.DYNAMIC_PRESSURE ? GuiUtils.GreenToggle : null;
-            GuiUtils.ToggledTextBox(ref LimitDynamicPressure, CachedLocalizer.Instance.MechJebAscentCheckbox11, MaxDynamicPressure, "kPa", s, 80);
+            GuiUtils.ToggledTextBox(ref LimitDynamicPressure, CachedLocalizer.Instance.MechJebAscentCheckbox11, MaxDynamicPressure, "Pa", s, 80);
         }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -913,7 +913,7 @@ namespace MuMech
 
             // if desiredThrust is less than the RCS thrust then don't worry about ullage.  avoids RCS
             // being applied when the user is doing dribble throttle (unlikely with RF loaded, but possible).
-            double desiredThrust = (VesselState.thrustAvailable - VesselState.thrustMinimum) * s.mainThrottle;
+            double desiredThrust = (VesselState.thrustAvailable - VesselState.thrustMinimum) * s.mainThrottle + VesselState.thrustMinimum;
 
             if (stableUllage && desiredThrust < VesselState.rcsThrustAvailable.Up)
                 return;

@@ -132,8 +132,17 @@ namespace MechJebLib.PSG
                 else
                 {
                     (double smaT, double eccT) = Astro.SmaEccFromApsides(_peR, _apR);
+
+                    // for nearly circular orbits, force periapsis attachment
+                    if (!_attachAltFlag && eccT < 1e-4)
+                    {
+                        _attachAltFlag = true;
+                        _attR          = _peR;
+                    }
+
                     (double vT, double gammaT) = Astro.FPATargetFromApsides(_peR, _apR, _attR, _mu);
-                    if (_attachAltFlag || eccT < 1e-4)
+
+                    if (_attachAltFlag)
                     {
                         if (_lanflag)
                             terminal = new FlightPathAngle5(gammaT, _attR, vT, _incT, _lanT);

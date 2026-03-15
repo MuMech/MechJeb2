@@ -1,9 +1,14 @@
+/*
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
+ */
 ﻿using System;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLib.Maneuvers
@@ -219,6 +224,8 @@ namespace MechJebLib.Maneuvers
             double lagTime = double.NaN, bool coplanar = true, bool rendezvous = true, bool capture = true,
             bool fixedTime = false, bool optguard = false)
         {
+            Print($"[MechJebLib] Maneuvers.NextManeuver.TwoImpulseTransfer({mu}, {r1}, {r2}, {v1}, {v2}, maxiter: {maxiter}, lagTime: {lagTime}, coplanar: {coplanar}, rendezvous: {rendezvous}, capture: {capture}, fixedTime: {fixedTime}, optguard: {optguard})");
+
             double synodicPeriod = Astro.SynodicPeriod(mu, r1, v1, r2, v2);
 
             if (fixedTime)
@@ -236,7 +243,7 @@ namespace MechJebLib.Maneuvers
                 dtguess += synodicPeriod * 0.10;
             }
 
-            throw new MechJebLibException($"TwoImpulseTransfer.NextManeuver({mu}, {r1}, {v1}, {v2}, {r2}): too many iterations");
+            throw new MechJebLibException($"[MechJebLib] Maneuvers.NextManeuver.TwoImpulseTransfer(): too many iterations");
         }
     }
 }
