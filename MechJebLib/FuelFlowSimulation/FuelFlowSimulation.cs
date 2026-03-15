@@ -26,6 +26,7 @@ namespace MechJebLib.FuelFlowSimulation
         private readonly HashSet<SimPart> _partsWithRCSDrains      = new HashSet<SimPart>();
         private readonly HashSet<SimPart> _partsWithRCSDrains2     = new HashSet<SimPart>();
         private          bool             _allocatedFirstSegment;
+        private          bool             _halfStageIsDetected;
 
         protected override bool Run(object? o)
         {
@@ -35,6 +36,7 @@ namespace MechJebLib.FuelFlowSimulation
             if (!(o is SimVessel vessel))
                 throw new ArgumentException("o is not a SimVessel", nameof(o));
 
+            _halfStageIsDetected   = false;
             _allocatedFirstSegment = false;
             _time                  = 0;
             Segments.Clear();
@@ -54,6 +56,9 @@ namespace MechJebLib.FuelFlowSimulation
             Segments.Reverse();
 
             _partsWithResourceDrains.Clear();
+
+            if (!_halfStageIsDetected)
+                vessel.HalfStageIndex = -1;
 
             return true; // we pull results off the object not off the return value
         }
@@ -113,23 +118,29 @@ namespace MechJebLib.FuelFlowSimulation
             UpdateResourceDrainsAndResiduals(vessel);
             double currentThrust = vessel.ThrustMagnitude;
 
+            if (!_halfStageIsDetected //is anyone insane enough to build a rocket with multiple half-stages? You never know
+                && vessel.ActiveEngines.Count > 0
+                && _sources.Count > 0)
+            {
+                int earliestDroppedEgineInStage = vessel.ActiveEngines.Max(x => x.Part.DecoupledInStage);
+                int earliestDroppedTankInStage = _sources.Max(x => x.DecoupledInStage);
+                if (earliestDroppedEgineInStage > earliestDroppedTankInStage)
+                {
+                    _halfStageIsDetected = true;
+                    vessel.HalfStageIndex = earliestDroppedEgineInStage + 1;
+                }
+            }
+
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
                 if (AllowedToStage(vessel))
                     return;
 
-                int earliestDroppedEgineInStage = vessel.ActiveEngines.Max(x => x.Part.DecoupledInStage);
-                int earliestDroppedTankInStage = _sources.Max(x => x.DecoupledInStage);
-                if (earliestDroppedEgineInStage > earliestDroppedTankInStage)
-                {
-                    vessel.HalfStageIndex = earliestDroppedEgineInStage + 1;
-                }
-
                 double dt = MinimumTimeStep();
                 if (_currentSegment.KSPStage == vessel.HalfStageIndex)
-                {
+                {   
                     double massFlow = ResourceMaxMassFlow(vessel);
-                    dt = Min(dt, (_currentSegment.StartMass - vessel.HalfStageEndMass) / massFlow);
+                    dt = Min(dt, (vessel.Mass - vessel.HalfStageEndMass) / massFlow);
                 }
 
                 // FIXME: if we have constructed a segment which is > 0 dV, but less than 0.02s, and there's a
@@ -483,7 +494,7 @@ namespace MechJebLib.FuelFlowSimulation
             if (vessel.ActiveEngines.Count == 0)
                 return true;
 
-            if (vessel.CurrentStage == vessel.HalfStageIndex && vessel.Mass <= vessel.HalfStageEndMass + 0.001)
+            if (vessel.CurrentStage == vessel.HalfStageIndex && vessel.Mass - vessel.HalfStageEndMass < 1e-6)
                 return true;
 
             for (int i = 0; i < vessel.ActiveEngines.Count; i++)
