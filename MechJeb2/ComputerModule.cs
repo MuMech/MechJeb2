@@ -235,6 +235,7 @@ namespace MuMech
             }
 
             unlock = unlock && IsSpaceCenterUpgradeUnlocked();
+            UnlockChecked = true;
 
             if (!unlock)
             {
