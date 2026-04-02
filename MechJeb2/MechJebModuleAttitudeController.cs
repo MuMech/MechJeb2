@@ -257,10 +257,11 @@ namespace MuMech
             Users.Add(controller);
             attitudeReference = reference;
             attitudeTarget    = attitude;
+            SetOmegaTarget();
             SetAxisControl(AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
         }
 
-        public void attitudeTo(Vector3d direction, AttitudeReference reference, object controller)
+        public void attitudeTo(Vector3d direction, AttitudeReference reference, object controller, bool killRollRotation = false)
         {
             //double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
 
@@ -271,8 +272,8 @@ namespace MuMech
             else
                 up = attitudeWorldToReference(attitudeReferenceToWorld(attitudeTarget * Vector3d.up, reference), reference);
             Vector3.OrthoNormalize(ref dir, ref up);
-            attitudeTo(QuaternionD.LookRotation(dir, up), reference, controller);
-            SetAxisControl(true, true, false);
+            attitudeTo(QuaternionD.LookRotation(dir, up), reference, controller, AxisCtrlRoll:killRollRotation);
+            if (killRollRotation) { SetOmegaTarget(roll:0); }
         }
 
         public void attitudeTo(double heading, double pitch, double roll, object controller, bool AxisCtrlPitch = true, bool AxisCtrlYaw = true,

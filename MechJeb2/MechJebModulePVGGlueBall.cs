@@ -104,7 +104,8 @@ namespace MuMech
 
             Exception = _task.Exception?.InnerException;
 
-            Debug.Log(Exception);
+            if (Exception != null)
+                Debug.Log(Exception);
         }
 
         public void SetTarget(double peR, double apR, double attR, double inclination, double lan, double fpa, bool attachAltFlag, bool lanflag)
@@ -124,10 +125,14 @@ namespace MuMech
 
             if (_ascentSettings.OptimizeStageFlag)
             {
-                // clamp the AttR between peR and apR but not if we're using AttR for a fixed time rocket
+                // Except if we're using AttR for a fixed time rocket;
+                // If 0 < apR < peR then circularize at peR (apR < 0 means hyperbolic orbit)
+                if (apR > 0 && apR < peR)
+                    apR = peR;
+                // Clamp the AttR between peR and apR
                 if (attR < peR)
                     attR = peR;
-                if (attR > apR && apR > peR)
+                if (apR > 0 && attR > apR)
                     attR = apR;
             }
 
