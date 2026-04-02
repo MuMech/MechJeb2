@@ -38,7 +38,7 @@ namespace MechJebLibTest.ManeuversTests
             const double PER = 6.3781e6 + 60000;     // PeA = 60 km
             var random = new Random();
 
-            // this test does randomly fail
+            // this test will randomly fail, but should be able to do ~100 test without failure
             for (int i = 0; i < 1; i++)
             {
                 // FIXME: weakly bound orbits give the algorithm problems.

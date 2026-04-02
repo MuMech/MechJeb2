@@ -141,6 +141,18 @@ namespace MechJebLib.Utils
         public static void CanContain(double[] arry, int len) => DoCheck(arry.Length >= len);
 
         [Conditional("DEBUG")]
+        public static void CanContain(IList<double> arry, int len) => DoCheck(arry.Count >= len);
+
+        [Conditional("DEBUG")]
         public static void CanContain(IReadOnlyList<double> arry, int len) => DoCheck(arry.Count >= len);
+
+        [Conditional("DEBUG")]
+        public static void Length(double[] arry, int len) => DoCheck(arry.Length == len);
+
+        [Conditional("DEBUG")]
+        public static void Length(IList<double> arry, int len) => DoCheck(arry.Count == len);
+
+        [Conditional("DEBUG")]
+        public static void Length(IReadOnlyList<double> arry, int len) => DoCheck(arry.Count == len);
     }
 }

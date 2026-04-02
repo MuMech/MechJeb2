@@ -75,6 +75,7 @@
         <Compile Include="StaticTests.cs"/>
         <Compile Include="Structs\HTests.cs"/>
         <Compile Include="Structs\M3Tests.cs"/>
+        <Compile Include="Structs\PolynomialTests.cs"/>
         <Compile Include="Structs\Q3Tests.cs"/>
         <Compile Include="Structs\V3Tests.cs"/>
         <Compile Include="TestInitialization.cs"/>

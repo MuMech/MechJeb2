@@ -5,8 +5,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using MechJebLib.Primitives;
 using static System.Math;
@@ -350,6 +350,45 @@ namespace MechJebLib.Utils
         }
         */
 
+        [StructLayout(LayoutKind.Explicit)]
+        private struct DoubleIntUnion
+        {
+            [FieldOffset(0)]
+            public int i;
+
+            [FieldOffset(0)]
+            public double d;
+        }
+
+        /// <summary>
+        ///     Returns the next double after x in the direction of y.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static double NextAfter(double x, double y)
+        {
+            if (double.IsNaN(x) || double.IsNaN(y)) return x + y;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (x == y) return y; // nextafter(0, -0) = -0
+
+            DoubleIntUnion u;
+            u.i = 0;
+            u.d = x; // shut up the compiler
+
+            if (x == 0)
+            {
+                u.i = 1;
+                return y > 0 ? u.d : -u.d;
+            }
+
+            if (x > 0 == y > x)
+                u.i++;
+            else
+                u.i--;
+            return u.d;
+        }
+
         /// <summary>
         ///     Debugging helper for printing double arrays to logs
         /// </summary>
@@ -364,7 +403,7 @@ namespace MechJebLib.Utils
 
             for (int i = 0; i <= last; i++)
             {
-                sb.Append(array[i].ToString(CultureInfo.CurrentCulture));
+                sb.Append($"{array[i]:R}");
                 if (i < last)
                     sb.Append(",");
             }
