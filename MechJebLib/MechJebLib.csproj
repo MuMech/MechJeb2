@@ -39,10 +39,19 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib">
+      <HintPath>$(KSPData)/Managed/mscorlib.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System">
+      <HintPath>$(KSPData)/Managed/System.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System.Core">
+      <HintPath>$(KSPData)/Managed/System.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
