@@ -36,20 +36,32 @@
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KSPData)/Managed/Assembly-CSharp.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="mscorlib">
+            <HintPath>$(KSPData)/Managed/mscorlib.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
         </Reference>
         <Reference Include="System">
+            <HintPath>$(KSPData)/Managed/System.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
         </Reference>
         <Reference Include="System.Core">
+            <HintPath>$(KSPData)/Managed/System.Core.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KSPData)/Managed/UnityEngine.CoreModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KSPData)/Managed/UnityEngine.UI.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
