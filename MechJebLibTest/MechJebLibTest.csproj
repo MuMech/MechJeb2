@@ -1,117 +1,131 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
+  <Import Project="../packages/xunit.core.2.9.3/build/xunit.core.props" Condition="Exists('../packages/xunit.core.2.9.3/build/xunit.core.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{D21C9231-4F36-494F-988A-8352CFE7CCCE}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MechJebLibTest</RootNamespace>
+    <AssemblyName>MechJebLibTest</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <LangVersion>8</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="xunit.abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
+      <HintPath>../packages/xunit.abstractions.2.0.3/lib/net35/xunit.abstractions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.assert, Version=2.9.3.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
+      <HintPath>../packages/xunit.assert.2.9.3/lib/netstandard1.1/xunit.assert.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.core, Version=2.9.3.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
+      <HintPath>../packages/xunit.extensibility.core.2.9.3/lib/net452/xunit.core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.execution.desktop, Version=2.9.3.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
+      <HintPath>../packages/xunit.extensibility.execution.2.9.3/lib/net452/xunit.execution.desktop.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ApproximateEqualException.cs" />
+    <Compile Include="AssertionExtensions.cs" />
+    <Compile Include="ControlTests\PIDLoopTests.cs" />
+    <Compile Include="FunctionsTests.cs" />
+    <Compile Include="LambertTests\GoodingTests.cs" />
+    <Compile Include="ManeuversTests\ChangeOrbitalElementTests.cs" />
+    <Compile Include="ManeuversTests\TwoImpulseTransferTests.cs" />
+    <Compile Include="ManeuversTests\ReturnFromMoonTests.cs" />
+    <Compile Include="ManeuversTests\Simple.cs" />
+    <Compile Include="ODETests\BS3Tests.c.cs" />
+    <Compile Include="ODETests\DP5Tests.cs" />
+    <Compile Include="Primitives\M3Tests\CoreOperationsTests.cs" />
+    <Compile Include="Primitives\M3Tests\DiagonalSkewConstructionTests.cs" />
+    <Compile Include="Primitives\M3Tests\EqualityHashingTests.cs" />
+    <Compile Include="Primitives\M3Tests\EulerAngleTests.cs" />
+    <Compile Include="Primitives\M3Tests\MatrixAnalysisTests.cs" />
+    <Compile Include="Primitives\M3Tests\MiscConstructorTests.cs" />
+    <Compile Include="Primitives\M3Tests\NormTests.cs" />
+    <Compile Include="Primitives\M3Tests\OrthonormalizeQuaternionTests.cs" />
+    <Compile Include="Primitives\M3Tests\RotationTests.cs" />
+    <Compile Include="Primitives\Q3Tests\InterpolationTests.cs" />
+    <Compile Include="Primitives\Q3Tests\MagnitudeConjugateTests.cs" />
+    <Compile Include="Primitives\Q3Tests\MatrixConversionTests.cs" />
+    <Compile Include="Primitives\Q3Tests\OperationTests.cs" />
+    <Compile Include="Primitives\V3Tests\ComponentAnalysisTests.cs" />
+    <Compile Include="Primitives\V3Tests\ComponentOperationsTests.cs" />
+    <Compile Include="Primitives\V3Tests\ConstructorAccessorTests.cs" />
+    <Compile Include="Primitives\V3Tests\CoordinateConversionTests.cs" />
+    <Compile Include="Primitives\V3Tests\EqualityHashingTests.cs" />
+    <Compile Include="Primitives\V3Tests\InterpolationTests.cs" />
+    <Compile Include="Primitives\V3Tests\MagnitudeNormalizationTests.cs" />
+    <Compile Include="Primitives\V3Tests\ConstantDirectionalVectorTests.cs" />
+    <Compile Include="Primitives\V3Tests\OperatorTests.cs" />
+    <Compile Include="Primitives\V3Tests\StringRepresentationTests.cs" />
+    <Compile Include="Primitives\V3Tests\UtilityTests.cs" />
+    <Compile Include="Primitives\V3Tests\VectorMathOperationTests.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PSGTests\AscentTests\BuggyTests.cs" />
+    <Compile Include="PSGTests\AscentTests\RealRocketTests.cs" />
+    <Compile Include="PSGTests\AscentTests\TheStandardTests.cs" />
+    <Compile Include="PSGTests\AscentTests\Titan2Tests.cs" />
+    <Compile Include="RootfindingTests\BisectionTests.cs" />
+    <Compile Include="RootfindingTests\BrentRootTests.cs" />
+    <Compile Include="RootfindingTests\NewtonTests.cs" />
+    <Compile Include="StaticTests.cs" />
+    <Compile Include="Primitives\HTests.cs" />
+    <Compile Include="TestInitialization.cs" />
+    <Compile Include="TwoBodyTests\FarnocchiaTests.cs" />
+    <Compile Include="TwoBodyTests\ShepperdTests.cs" />
+    <Compile Include="Utils\AutoDiffTests.cs" />
+    <Compile Include="Utils\StaticsTests\TrigonometryTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
+      <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
+      <Name>MechJebLib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{D21C9231-4F36-494F-988A-8352CFE7CCCE}</ProjectGuid>
-        <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>MechJebLibTest</RootNamespace>
-        <AssemblyName>MechJebLibTest</AssemblyName>
-        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
-        <LangVersion>8</LangVersion>
-        <Nullable>enable</Nullable>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <ItemGroup>
-        <Reference Include="System"/>
-        <Reference Include="System.Core"/>
-        <Reference Include="System.Data"/>
-        <Reference Include="System.Xml"/>
-        <Reference Include="xunit.abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
-            <HintPath>..\packages\xunit.abstractions.2.0.0\lib\net35\xunit.abstractions.dll</HintPath>
-        </Reference>
-        <Reference Include="xunit.assert, Version=2.1.0.3179, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
-            <HintPath>..\packages\xunit.assert.2.1.0\lib\dotnet\xunit.assert.dll</HintPath>
-        </Reference>
-        <Reference Include="xunit.core, Version=2.1.0.3179, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
-            <HintPath>..\packages\xunit.extensibility.core.2.1.0\lib\dotnet\xunit.core.dll</HintPath>
-        </Reference>
-        <Reference Include="xunit.execution.desktop, Version=2.1.0.3179, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
-            <HintPath>..\packages\xunit.extensibility.execution.2.1.0\lib\net45\xunit.execution.desktop.dll</HintPath>
-        </Reference>
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="AssertionExtensions.cs"/>
-        <Compile Include="ControlTests\PIDLoopTests.cs"/>
-        <Compile Include="FunctionsTests.cs"/>
-        <Compile Include="LambertTests\GoodingTests.cs"/>
-        <Compile Include="ManeuversTests\ChangeOrbitalElementTests.cs"/>
-        <Compile Include="ManeuversTests\TwoImpulseTransferTests.cs"/>
-        <Compile Include="ManeuversTests\ReturnFromMoonTests.cs"/>
-        <Compile Include="ManeuversTests\Simple.cs"/>
-        <Compile Include="ODETests\BS3Tests.c.cs"/>
-        <Compile Include="ODETests\DP5Tests.cs"/>
-        <Compile Include="Primitives\M3Tests\CoreOperationsTests.cs"/>
-        <Compile Include="Primitives\M3Tests\DiagonalSkewConstructionTests.cs" />
-        <Compile Include="Primitives\M3Tests\EqualityHashingTests.cs"/>
-        <Compile Include="Primitives\M3Tests\EulerAngleTests.cs"/>
-        <Compile Include="Primitives\M3Tests\MatrixAnalysisTests.cs"/>
-        <Compile Include="Primitives\M3Tests\MiscConstructorTests.cs" />
-        <Compile Include="Primitives\M3Tests\NormTests.cs"/>
-        <Compile Include="Primitives\M3Tests\OrthonormalizeQuaternionTests.cs"/>
-        <Compile Include="Primitives\M3Tests\RotationTests.cs"/>
-        <Compile Include="Primitives\Q3Tests\InterpolationTests.cs"/>
-        <Compile Include="Primitives\Q3Tests\MagnitudeConjugateTests.cs"/>
-        <Compile Include="Primitives\Q3Tests\MatrixConversionTests.cs"/>
-        <Compile Include="Primitives\Q3Tests\OperationTests.cs"/>
-        <Compile Include="Primitives\V3Tests\ComponentAnalysisTests.cs"/>
-        <Compile Include="Primitives\V3Tests\ComponentOperationsTests.cs"/>
-        <Compile Include="Primitives\V3Tests\ConstructorAccessorTests.cs"/>
-        <Compile Include="Primitives\V3Tests\CoordinateConversionTests.cs"/>
-        <Compile Include="Primitives\V3Tests\EqualityHashingTests.cs"/>
-        <Compile Include="Primitives\V3Tests\InterpolationTests.cs"/>
-        <Compile Include="Primitives\V3Tests\MagnitudeNormalizationTests.cs"/>
-        <Compile Include="Primitives\V3Tests\ConstantDirectionalVectorTests.cs"/>
-        <Compile Include="Primitives\V3Tests\OperatorTests.cs"/>
-        <Compile Include="Primitives\V3Tests\StringRepresentationTests.cs"/>
-        <Compile Include="Primitives\V3Tests\UtilityTests.cs"/>
-        <Compile Include="Primitives\V3Tests\VectorMathOperationTests.cs"/>
-        <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="PSGTests\AscentTests\BuggyTests.cs"/>
-        <Compile Include="PSGTests\AscentTests\RealRocketTests.cs"/>
-        <Compile Include="PSGTests\AscentTests\TheStandardTests.cs"/>
-        <Compile Include="PSGTests\AscentTests\Titan2Tests.cs"/>
-        <Compile Include="RootfindingTests\BisectionTests.cs"/>
-        <Compile Include="RootfindingTests\BrentRootTests.cs"/>
-        <Compile Include="RootfindingTests\NewtonTests.cs"/>
-        <Compile Include="StaticTests.cs"/>
-        <Compile Include="Primitives\HTests.cs"/>
-        <Compile Include="TestInitialization.cs"/>
-        <Compile Include="TwoBodyTests\FarnocchiaTests.cs"/>
-        <Compile Include="TwoBodyTests\ShepperdTests.cs"/>
-        <Compile Include="Utils\AutoDiffTests.cs"/>
-        <Compile Include="Utils\StaticsTests\TrigonometryTests.cs"/>
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
-            <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
-            <Name>MechJebLib</Name>
-        </ProjectReference>
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+    <Error Condition="!Exists('../packages/xunit.core.2.9.3/build/xunit.core.props')" Text="$([System.String]::Format('$(ErrorText)', '../packages/xunit.core.2.9.3/build/xunit.core.props'))" />
+    <Error Condition="!Exists('../packages/xunit.core.2.9.3/build/xunit.core.targets')" Text="$([System.String]::Format('$(ErrorText)', '../packages/xunit.core.2.9.3/build/xunit.core.targets'))" />
+  </Target>
+  <Import Project="../packages/xunit.core.2.9.3/build/xunit.core.targets" Condition="Exists('../packages/xunit.core.2.9.3/build/xunit.core.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
          Other similar extension points exist, see Microsoft.Common.targets.
     <Target Name="BeforeBuild">
     </Target>
