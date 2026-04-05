@@ -8,7 +8,7 @@ Thumbs.db
 /MechJeb2-Unity/*.csproj
 /MechJeb2-Unity/*.sln
 
-Directory.Build.props
+Directory.Build.props.user
 
 .idea/**/.name
 

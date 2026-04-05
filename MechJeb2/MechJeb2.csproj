@@ -186,10 +186,12 @@
     </ItemGroup>
     <ItemGroup>
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/Assembly-CSharp.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/Assembly-CSharp-firstpass.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
@@ -198,52 +200,72 @@
             <Aliases>JetBrainsAnnotations</Aliases>
         </Reference>
         <Reference Include="mscorlib">
+            <HintPath>$(KspData)/Managed/mscorlib.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
         </Reference>
         <Reference Include="System">
+            <HintPath>$(KspData)/Managed/System.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
         </Reference>
         <Reference Include="System.Core">
+            <HintPath>$(KspData)/Managed/System.Core.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.AnimationModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.AssetBundleModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.CoreModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.ImageConversionModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.IMGUIModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.PhysicsModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.UI.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.VehiclesModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+            <HintPath>$(KspData)/Managed/UnityEngine.VehiclesModule.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>

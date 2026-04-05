@@ -1,0 +1,40 @@
+<Project>
+
+  <!--
+    Defaults to the standard Steam install location for each OS.
+    Override by creating Directory.Build.props.user (gitignored) with your machine's KSP paths:
+
+      <Project>
+        <PropertyGroup>
+          <KspDir>/your/path/to/KSP</KspDir>
+          <KspData>/your/path/to/KSP/Data</KspData>
+        </PropertyGroup>
+      </Project>
+
+    You do not have to include KspData, and the layout depends on the OS you're using.
+
+    Default Steam paths:
+      Mac:     ~/Library/Application Support/Steam/steamapps/common/Kerbal Space Program
+      Windows: C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program
+      Linux:   ~/.steam/steam/steamapps/common/Kerbal Space Program
+  -->
+  <Import Project="Directory.Build.props.user" Condition="Exists('Directory.Build.props.user')"/>
+
+  <!-- Derive KspDir from default Steam install path if not explicitly set.
+       Mac is detected by the presence of /Library, which does not exist on Linux. -->
+  <PropertyGroup Condition="'$(KspDir)' == ''">
+    <KspDir Condition="'$(OS)' == 'Windows_NT'">$([System.Environment]::GetEnvironmentVariable('ProgramFiles(x86)'))\Steam\steamapps\common\Kerbal Space Program</KspDir>
+    <KspDir Condition="'$(OS)' != 'Windows_NT' And Exists('/Library')">$(HOME)/Library/Application Support/Steam/steamapps/common/Kerbal Space Program</KspDir>
+    <KspDir Condition="'$(OS)' != 'Windows_NT' And !Exists('/Library')">$(HOME)/.steam/steam/steamapps/common/Kerbal Space Program</KspDir>
+  </PropertyGroup>
+
+  <!-- Derive KspData from KspDir if not explicitly set. -->
+  <PropertyGroup Condition="'$(KspData)' == ''">
+    <KspData Condition="'$(OS)' == 'Windows_NT'">$(KspDir)\KSP_x64_Data</KspData>
+    <!-- Mac: KSP ships as an .app bundle -->
+    <KspData Condition="'$(OS)' != 'Windows_NT' And Exists('$(KspDir)/KSP.app')">$(KspDir)/KSP.app/Contents/Resources/Data</KspData>
+    <!-- Linux: KSP_Data sits directly under KspDir -->
+    <KspData Condition="'$(OS)' != 'Windows_NT' And !Exists('$(KspDir)/KSP.app')">$(KspDir)/KSP_Data</KspData>
+  </PropertyGroup>
+
+</Project>
