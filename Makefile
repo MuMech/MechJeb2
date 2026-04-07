@@ -25,6 +25,9 @@ endif
 
 
 MECHJEBFILES := $(shell find MechJeb2 -name "*.cs")
+MECHJABLIBFILES := $(shell find MechJebLib -name "*.cs")
+MECHJABLIBIBINDINGSFILES := $(shell find MechJebLibBindings -name "*.cs")
+ALGLIBFILES := $(shell find alglib -name "*.cs")
 
 RESGEN2 := resgen2
 CSC     := csc
@@ -46,13 +49,50 @@ info:
 	@echo "  KSP Data: ${KSPDIR}"
 	@echo "================================"
 
-build: build/MechJeb2.dll
+build: build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll
 
+# Build alglib first (no dependencies beyond system)
+build/alglib.dll: ${ALGLIBFILES}
+	mkdir -p build
+	${CSC} /noconfig /target:library /checked- /nowarn:1701,1702,2008 /langversion:9.0 /nostdlib+ /platform:AnyCPU /warn:4 /errorendlocation /highentropyva- /optimize+ /debug- /filealign:512 \
+		/reference:"${MANAGED}/mscorlib.dll" \
+		/reference:"${MANAGED}/System.Core.dll" \
+		/reference:"${MANAGED}/System.dll" \
+		/reference:"${MANAGED}/System.Xml.dll" \
+		/recurse:"alglib/*.cs" \
+		-out:$@
 
-build/%.dll: ${MECHJEBFILES}
+# Build MechJebLib (depends on alglib and JetBrains.Annotations)
+build/MechJebLib.dll: ${MECHJABLIBFILES} build/alglib.dll
+	mkdir -p build
+	${CSC} /noconfig /target:library /checked- /nowarn:1701,1702,2008 /langversion:9.0 /nostdlib+ /platform:AnyCPU /warn:4 /errorendlocation /highentropyva- /optimize+ /debug- /filealign:512 \
+		/reference:"${MANAGED}/mscorlib.dll" \
+		/reference:"${MANAGED}/System.Core.dll" \
+		/reference:"${MANAGED}/System.dll" \
+		/reference:"build/alglib.dll" \
+		/reference:"packages/JetBrains.Annotations.2023.3.0/lib/net20/JetBrains.Annotations.dll" \
+		/recurse:"MechJebLib/*.cs" \
+		-out:$@
+
+# Build MechJebLibBindings (depends on MechJebLib and KSP assemblies)  
+build/MechJebLibBindings.dll: ${MECHJABLIBIBINDINGSFILES} build/MechJebLib.dll
+	mkdir -p build
+	${CSC} /noconfig /target:library /checked- /nowarn:1701,1702,2008 /langversion:9.0 /nostdlib+ /platform:AnyCPU /warn:4 /errorendlocation /highentropyva- /optimize+ /debug- /filealign:512 \
+		/reference:"${MANAGED}/Assembly-CSharp.dll" \
+		/reference:"${MANAGED}/Assembly-CSharp-firstpass.dll" \
+		/reference:"${MANAGED}/mscorlib.dll" \
+		/reference:"${MANAGED}/System.Core.dll" \
+		/reference:"${MANAGED}/System.dll" \
+		/reference:"${MANAGED}/UnityEngine.CoreModule.dll" \
+		/reference:"build/MechJebLib.dll" \
+		/recurse:"MechJebLibBindings/*.cs" \
+		-out:$@
+
+# Build main MechJeb2 assembly (depends on everything)
+build/MechJeb2.dll: ${MECHJEBFILES} build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll
 	mkdir -p build
 	${RESGEN2} -usesourcepath MechJeb2/Properties/Resources.resx build/Resources.resources
-	${CSC} /noconfig /target:library /checked- /nowarn:1701,1702,2008 /langversion:8.0 /nostdlib+ /platform:AnyCPU /warn:4 /errorendlocation /highentropyva- /optimize+ /debug- /filealign:512 \
+	${CSC} /noconfig /target:library /checked- /nowarn:1701,1702,2008 /langversion:9.0 /nostdlib+ /platform:AnyCPU /warn:4 /errorendlocation /highentropyva- /optimize+ /debug- /filealign:512 \
 		/reference:"${MANAGED}/Assembly-CSharp.dll" \
 		/reference:"${MANAGED}/Assembly-CSharp-firstpass.dll" \
 		/reference:"${MANAGED}/mscorlib.dll" \
@@ -67,6 +107,10 @@ build/%.dll: ${MECHJEBFILES}
 		/reference:"${MANAGED}/UnityEngine.TextRenderingModule.dll" \
 		/reference:"${MANAGED}/UnityEngine.UI.dll" \
 		/reference:"${MANAGED}/UnityEngine.VehiclesModule.dll" \
+		/reference:"build/MechJebLib.dll" \
+		/reference:"build/MechJebLibBindings.dll" \
+		/reference:"build/alglib.dll" \
+		/reference:JetBrainsAnnotations="packages/JetBrains.Annotations.2023.3.0/lib/net20/JetBrains.Annotations.dll" \
 		/recurse:"MechJeb2/*.cs" \
 		-out:$@ \
 		-resource:build/Resources.resources,MuMech.Properties.Resources.resources
@@ -77,7 +121,7 @@ package: build ${MECHJEBFILES}
 	cp -r Icons package/MechJeb2/
 	cp -r Bundles package/MechJeb2/
 	cp -r Localization package/MechJeb2/
-	cp build/MechJeb2.dll package/MechJeb2/Plugins/
+	cp build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll package/MechJeb2/Plugins/
 	cp LICENSE.md README.md package/MechJeb2/
 
 %.tar.gz:
@@ -101,7 +145,7 @@ install: build
 	cp -r Icons "${KSPDIR}"/GameData/MechJeb2/
 	cp -r Bundles "${KSPDIR}"/GameData/MechJeb2/
 	cp -r Localization "${KSPDIR}"/GameData/MechJeb2/
-	cp build/MechJeb2.dll "${KSPDIR}"/GameData/MechJeb2/Plugins/
+	cp build/MechJeb2.dll build/MechJebLib.dll build/MechJebLibBindings.dll build/alglib.dll "${KSPDIR}"/GameData/MechJeb2/Plugins/
 
 uninstall: info
 	rm -rf "${KSPDIR}"/GameData/MechJeb2/Plugins
