@@ -136,13 +136,13 @@ export KSPDIR="${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program"
 nuget restore
 ```
 
-2. Build the mod
+3. Build the mod
 
 ```sh
 make build
 ```
 
-3. (optional) Install the mod into your KSP directory
+4. (optional) Install the mod into your KSP directory
 
 ```sh
 make install
