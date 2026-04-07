@@ -304,6 +304,13 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("HDG", srfHdg, "°", 37);
+
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfHdg -= 10;
+                                changed = true;
+                            }
+                            
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfHdg  -= val;
@@ -313,6 +320,12 @@ namespace MuMech
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfHdg  += val;
+                                changed =  true;
+                            }
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfHdg  += 10;
                                 changed =  true;
                             }
 
@@ -332,6 +345,13 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forcePitch = GUILayout.Toggle(forcePitch, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("PIT", srfPit, "°", 37);
+                            
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfPit -= 10;
+                                changed = true;
+                            }
+                            
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfPit  -= val;
@@ -341,6 +361,12 @@ namespace MuMech
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfPit  += val;
+                                changed =  true;
+                            }
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfPit  += 10;
                                 changed =  true;
                             }
 
@@ -360,6 +386,13 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("ROL", srfRol, "°", 37);
+
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfRol -= 10;
+                                changed = true;
+                            }
+                            
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfRol  -= val;
@@ -369,6 +402,13 @@ namespace MuMech
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfRol  += val;
+                                changed =  true;
+                            }
+
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfRol  += 10;
                                 changed =  true;
                             }
 
@@ -404,6 +444,13 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("ROL", srfVelRol, "°", 37);
+
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelRol -= 10;
+                                changed = true;
+                            }
+                            
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelRol -= val;
@@ -413,6 +460,12 @@ namespace MuMech
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelRol += val;
+                                changed   =  true;
+                            }
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelRol += 10;
                                 changed   =  true;
                             }
 
@@ -432,6 +485,12 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forcePitch = GUILayout.Toggle(forcePitch, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 37);
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelPit -= 10;
+                                changed   =  true;
+                            }
+                            
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelPit -= val;
@@ -441,6 +500,12 @@ namespace MuMech
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelPit += val;
+                                changed   =  true;
+                            }
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelPit += 10;
                                 changed   =  true;
                             }
 
@@ -460,6 +525,12 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 37);
+                            
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelYaw -= 10;
+                                changed   =  true;
+                            }
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelYaw -= val;
@@ -469,6 +540,13 @@ namespace MuMech
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelYaw += val;
+                                changed   =  true;
+                            }
+
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelYaw += 10;
                                 changed   =  true;
                             }
 
