@@ -163,6 +163,8 @@ namespace MuMech
         private Quaternion targetAttitude = Quaternion.identity;
         private AttitudeReference targetReference = AttitudeReference.ORBIT;
 
+        private static readonly double LARGE_INCREMENT = 10.0;
+
         // Current attitude/direction (for smooth interpolation)
         private Vector3d curDirection = Vector3d.zero;
         private Quaternion curAttitude = Quaternion.identity;
@@ -321,7 +323,7 @@ namespace MuMech
 
                             if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
                             {
-                                srfHdg -= 10;
+                                srfHdg -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -339,7 +341,7 @@ namespace MuMech
 
                             if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
                             {
-                                srfHdg += 10;
+                                srfHdg += LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -362,7 +364,7 @@ namespace MuMech
 
                             if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
                             {
-                                srfPit -= 10;
+                                srfPit -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -380,7 +382,7 @@ namespace MuMech
 
                             if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
                             {
-                                srfPit += 10;
+                                srfPit += LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -403,7 +405,7 @@ namespace MuMech
 
                             if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
                             {
-                                srfRol -= 10;
+                                srfRol -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -422,7 +424,7 @@ namespace MuMech
 
                             if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
                             {
-                                srfRol += 10;
+                                srfRol += LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -464,7 +466,7 @@ namespace MuMech
 
                             if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelRol -= 10;
+                                srfVelRol -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -482,7 +484,7 @@ namespace MuMech
 
                             if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelRol += 10;
+                                srfVelRol += LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -504,7 +506,7 @@ namespace MuMech
                             GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 37);
                             if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelPit -= 10;
+                                srfVelPit -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -522,7 +524,7 @@ namespace MuMech
 
                             if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelPit += 10;
+                                srfVelPit += LARGE_INCREMENT;
                                 changed = true;
                             }
 
@@ -545,7 +547,7 @@ namespace MuMech
 
                             if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelYaw -= 10;
+                                srfVelYaw -= LARGE_INCREMENT;
                                 changed = true;
                             }
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
@@ -563,7 +565,7 @@ namespace MuMech
 
                             if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
                             {
-                                srfVelYaw += 10;
+                                srfVelYaw += LARGE_INCREMENT;
                                 changed = true;
                             }
 
