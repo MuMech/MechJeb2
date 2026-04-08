@@ -35,6 +35,5 @@
     <KspData Condition="'$(OS)' != 'Windows_NT' And Exists('$(KspDir)/KSP.app')">$(KspDir)/KSP.app/Contents/Resources/Data</KspData>
     <!-- Linux: KSP_Data sits directly under KspDir -->
     <KspData Condition="'$(OS)' != 'Windows_NT' And !Exists('$(KspDir)/KSP.app')">$(KspDir)/KSP_Data</KspData>
-  </PropertyGroup>
-
+</PropertyGroup>
 </Project>
