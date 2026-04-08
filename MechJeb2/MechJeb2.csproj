@@ -1,297 +1,293 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>MuMech</RootNamespace>
-        <AssemblyName>MechJeb2</AssemblyName>
-        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-        <NoStdLib>true</NoStdLib>
-        <FileAlignment>512</FileAlignment>
-        <TargetFrameworkProfile/>
-        <NuGetPackageImportStamp>
-        </NuGetPackageImportStamp>
-        <LangVersion>8</LangVersion>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>portable</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>TRACE;DEBUG;ENABLE_PROFILER;UNITY_2017_1</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <UseVSHostingProcess>false</UseVSHostingProcess>
-        <Prefer32Bit>false</Prefer32Bit>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <DebugType>None</DebugType>
-        <Optimize>True</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE;UNITY_2017_1</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <Prefer32Bit>false</Prefer32Bit>
-        <CodeAnalysisRuleSet>MechJeb2.ruleset</CodeAnalysisRuleSet>
-    </PropertyGroup>
-    <ItemGroup>
-        <Compile Include="AttitudeControllers\BaseAttitudeController.cs"/>
-        <Compile Include="AttitudeControllers\BetterController.cs"/>
-        <Compile Include="AttitudeControllers\DirectionTracker.cs"/>
-        <Compile Include="AttitudeControllers\HybridController.cs"/>
-        <Compile Include="AttitudeControllers\KosAttitudeController.cs"/>
-        <Compile Include="AttitudeControllers\LQRController.cs"/>
-        <Compile Include="AttitudeControllers\MJAttitudeController.cs"/>
-        <Compile Include="AttitudeControllers\KosPIDLoop.cs"/>
-        <Compile Include="AttitudeControllers\TorquePI.cs"/>
-        <Compile Include="AutopilotModule.cs"/>
-        <Compile Include="CachedLocalizer.cs"/>
-        <Compile Include="CelestialBodyExtensions.cs"/>
-        <Compile Include="CompatibilityChecker.cs"/>
-        <Compile Include="ComputerModule.cs"/>
-        <Compile Include="DisplayModule.cs"/>
-        <Compile Include="FlyingSim\SimulatedParachute.cs"/>
-        <Compile Include="FlyingSim\SimulatedPart.cs"/>
-        <Compile Include="FlyingSim\SimulatedVessel.cs"/>
-        <Compile Include="GlobalSuppressions.cs"/>
-        <Compile Include="GLUtils.cs"/>
-        <Compile Include="GuiUtils.cs"/>
-        <Compile Include="InstallChecker.cs"/>
-        <Compile Include="LandingAutopilot\CoastToDeceleration.cs"/>
-        <Compile Include="LandingAutopilot\CourseCorrection.cs"/>
-        <Compile Include="LandingAutopilot\DecelerationBurn.cs"/>
-        <Compile Include="LandingAutopilot\DeorbitBurn.cs"/>
-        <Compile Include="LandingAutopilot\FinalDescent.cs"/>
-        <Compile Include="LandingAutopilot\KillHorizontalVelocity.cs"/>
-        <Compile Include="LandingAutopilot\LowDeorbitBurn.cs"/>
-        <Compile Include="LandingAutopilot\PlaneChange.cs"/>
-        <Compile Include="LandingAutopilot\UntargetedDeorbit.cs"/>
-        <Compile Include="Maneuver\Operation.cs"/>
-        <Compile Include="Maneuver\OperationAdvancedTransfer.cs"/>
-        <Compile Include="Maneuver\OperationApoapsis.cs"/>
-        <Compile Include="Maneuver\OperationCircularize.cs"/>
-        <Compile Include="Maneuver\OperationCourseCorrection.cs"/>
-        <Compile Include="Maneuver\OperationEccentricity.cs"/>
-        <Compile Include="Maneuver\OperationEllipticize.cs"/>
-        <Compile Include="Maneuver\OperationInclination.cs"/>
-        <Compile Include="Maneuver\OperationInterplanetaryTransfer.cs"/>
-        <Compile Include="Maneuver\OperationKillRelVel.cs"/>
-        <Compile Include="Maneuver\OperationLambert.cs"/>
-        <Compile Include="Maneuver\OperationLan.cs"/>
-        <Compile Include="Maneuver\OperationLongitude.cs"/>
-        <Compile Include="Maneuver\OperationMoonReturn.cs"/>
-        <Compile Include="Maneuver\OperationPeriapsis.cs"/>
-        <Compile Include="Maneuver\OperationPlane.cs"/>
-        <Compile Include="Maneuver\OperationResonantOrbit.cs"/>
-        <Compile Include="Maneuver\OperationSemiMajor.cs"/>
-        <Compile Include="Maneuver\OperationTransfer.cs"/>
-        <Compile Include="Maneuver\PlotArea.cs"/>
-        <Compile Include="Maneuver\Porkchop.cs"/>
-        <Compile Include="Maneuver\TimeSelector.cs"/>
-        <Compile Include="Maneuver\TransferCalculator.cs"/>
-        <Compile Include="MathExtensions.cs"/>
-        <Compile Include="MechJebAR202.cs"/>
-        <Compile Include="MechJebCore.cs"/>
-        <Compile Include="MechJebModuleAirplaneAutopilot.cs"/>
-        <Compile Include="MechJebModuleAirplaneGuidance.cs"/>
-        <Compile Include="MechJebModuleAscentBaseAutopilot.cs"/>
-        <Compile Include="MechJebModuleAscentClassicAutopilot.cs"/>
-        <Compile Include="MechJebModuleAscentClassicPathMenu.cs"/>
-        <Compile Include="MechJebModuleAscentMenu.cs"/>
-        <Compile Include="MechJebModuleAscentPSGAutopilot.cs"/>
-        <Compile Include="MechJebModuleAscentPSGSettingsMenu.cs"/>
-        <Compile Include="MechJebModuleAscentSettings.cs"/>
-        <Compile Include="MechJebModuleAscentSettingsMenu.cs"/>
-        <Compile Include="MechJebModuleAttitudeAdjustment.cs"/>
-        <Compile Include="MechJebModuleAttitudeController.cs"/>
-        <Compile Include="MechJebModuleCustomInfoWindow.cs"/>
-        <Compile Include="MechJebModuleDebugArrows.cs"/>
-        <Compile Include="MechJebModuleDeployableAntennaController.cs"/>
-        <Compile Include="MechJebModuleDeployableController.cs"/>
-        <Compile Include="MechJebModuleDockingAutopilot.cs"/>
-        <Compile Include="MechJebModuleDockingGuidance.cs"/>
-        <Compile Include="MechJebModuleFlightRecorder.cs"/>
-        <Compile Include="MechJebModuleFlightRecorderGraph.cs"/>
-        <Compile Include="MechJebModuleInfoItems.cs"/>
-        <Compile Include="MechJebModuleLandingAutopilot.cs"/>
-        <Compile Include="MechJebModuleLandingGuidance.cs"/>
-        <Compile Include="MechJebModuleLandingPredictions.cs"/>
-        <Compile Include="MechJebModuleManeuverPlanner.cs"/>
-        <Compile Include="MechJebModuleMenu.cs"/>
-        <Compile Include="MechJebModuleStageStats.cs"/>
-        <Compile Include="MechJebModuleNodeEditor.cs"/>
-        <Compile Include="MechJebModuleNodeExecutor.cs"/>
-        <Compile Include="MechJebModuleGuidanceController.cs"/>
-        <Compile Include="MechJebModuleRCSBalancer.cs"/>
-        <Compile Include="MechJebModuleRCSBalancerWindow.cs"/>
-        <Compile Include="MechJebModuleRCSController.cs"/>
-        <Compile Include="MechJebModuleRendezvousAutopilot.cs"/>
-        <Compile Include="MechJebModuleRendezvousAutopilotWindow.cs"/>
-        <Compile Include="MechJebModuleRendezvousGuidance.cs"/>
-        <Compile Include="MechJebModuleRoverController.cs"/>
-        <Compile Include="MechJebModuleRoverWindow.cs"/>
-        <Compile Include="MechJebModuleSettings.cs"/>
-        <Compile Include="MechJebModuleSmartASS.cs"/>
-        <Compile Include="MechJebModuleSmartRcs.cs"/>
-        <Compile Include="MechJebModuleSolarPanelController.cs"/>
-        <Compile Include="MechJebModuleSpaceplaneAutopilot.cs"/>
-        <Compile Include="MechJebModuleSpaceplaneGuidance.cs"/>
-        <Compile Include="MechJebModuleSpinupController.cs"/>
-        <Compile Include="MechJebModuleStagingController.cs"/>
-        <Compile Include="MechJebModuleSuicideTimer.cs"/>
-        <Compile Include="MechJebModuleTargetController.cs"/>
-        <Compile Include="MechJebModuleThrustController.cs"/>
-        <Compile Include="MechJebModuleThrustWindow.cs"/>
-        <Compile Include="MechJebModuleTranslatron.cs"/>
-        <Compile Include="MechJebModuleWarpController.cs"/>
-        <Compile Include="MechJebModuleWarpHelper.cs"/>
-        <Compile Include="MechJebModuleWaypointWindow.cs"/>
-        <Compile Include="MechjebBundlesManager.cs"/>
-        <Compile Include="MechJebStageStatsHelper.cs"/>
-        <Compile Include="ModExtensionDemo.cs"/>
-        <Compile Include="MuUtils.cs"/>
-        <Compile Include="OrbitExtensions.cs"/>
-        <Compile Include="OrbitalManeuverCalculator.cs"/>
-        <Compile Include="PIDController.cs"/>
-        <Compile Include="PartExtensions.cs"/>
-        <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="Properties\Resources.Designer.cs"/>
-        <Compile Include="MechJebModulePSGGlueBall.cs" />
-        <Compile Include="RCSSolver.cs"/>
-        <Compile Include="ReentrySimulation.cs"/>
-        <Compile Include="ReentrySimulation\SimCurves.cs"/>
-        <Compile Include="ToolbarWrapper.cs"/>
-        <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs"/>
-        <Compile Include="UnityToolbag\Future\Future.cs"/>
-        <Compile Include="Vector6.cs"/>
-        <Compile Include="VesselExtensions.cs"/>
-        <Compile Include="VesselState.cs"/>
-    </ItemGroup>
-    <ItemGroup>
-        <EmbeddedResource Include="Properties\Resources.resx"/>
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="copy_build.bat"/>
-        <None Include="copy_build.sh"/>
-        <None Include="Properties\shader"/>
-        <None Include="Properties\shader2"/>
-        <None Include="Properties\shader3"/>
-        <None Include="UnityToolbag\Dispatcher\README.md"/>
-        <None Include="UnityToolbag\Future\README.md"/>
-    </ItemGroup>
-    <ItemGroup>
-        <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/Assembly-CSharp.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/Assembly-CSharp-firstpass.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="JetBrains.Annotations">
-            <HintPath>..\packages\JetBrains.Annotations.2023.3.0\lib\net20\JetBrains.Annotations.dll</HintPath>
-            <Aliases>JetBrainsAnnotations</Aliases>
-        </Reference>
-        <Reference Include="mscorlib">
-            <HintPath>$(KspData)/Managed/mscorlib.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="System">
-            <HintPath>$(KspData)/Managed/System.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="System.Core">
-            <HintPath>$(KspData)/Managed/System.Core.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.AnimationModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.AssetBundleModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.CoreModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.ImageConversionModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.IMGUIModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.PhysicsModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.UI.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.VehiclesModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>$(KspData)/Managed/UnityEngine.VehiclesModule.dll</HintPath>
-            <SpecificVersion>False</SpecificVersion>
-            <Private>False</Private>
-        </Reference>
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\alglib\alglib.csproj">
-            <Project>{e8cbcddd-bcfc-4f03-9309-f58395ca4762}</Project>
-            <Name>alglib</Name>
-        </ProjectReference>
-        <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj">
-            <Project>{da770208-1300-4c86-8996-c1790b945999}</Project>
-            <Name>MechJebLibBindings</Name>
-        </ProjectReference>
-        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
-            <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
-            <Name>MechJebLib</Name>
-        </ProjectReference>
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
-    <Target Name="AfterBuild" Condition=" '$(OS)' == 'Windows_NT' ">
-        <Exec Command="call &quot;$(ProjectDir)copy_build.bat&quot; &quot;$(TargetPath)&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(ProjectDir)&quot;"/>
-    </Target>
-    <Target Name="AfterBuild" Condition=" '$(OS)' != 'Windows_NT' ">
-        <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)' '$(KspDir)'"/>
-    </Target>
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MuMech</RootNamespace>
+    <AssemblyName>MechJeb2</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <NoStdLib>true</NoStdLib>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;ENABLE_PROFILER;UNITY_2017_1</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>None</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;UNITY_2017_1</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <CodeAnalysisRuleSet>MechJeb2.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AttitudeControllers\BaseAttitudeController.cs" />
+    <Compile Include="AttitudeControllers\BetterController.cs" />
+    <Compile Include="AttitudeControllers\DirectionTracker.cs" />
+    <Compile Include="AttitudeControllers\HybridController.cs" />
+    <Compile Include="AttitudeControllers\KosAttitudeController.cs" />
+    <Compile Include="AttitudeControllers\LQRController.cs" />
+    <Compile Include="AttitudeControllers\MJAttitudeController.cs" />
+    <Compile Include="AttitudeControllers\KosPIDLoop.cs" />
+    <Compile Include="AttitudeControllers\TorquePI.cs" />
+    <Compile Include="AutopilotModule.cs" />
+    <Compile Include="CachedLocalizer.cs" />
+    <Compile Include="CelestialBodyExtensions.cs" />
+    <Compile Include="CompatibilityChecker.cs" />
+    <Compile Include="ComputerModule.cs" />
+    <Compile Include="DisplayModule.cs" />
+    <Compile Include="FlyingSim\SimulatedParachute.cs" />
+    <Compile Include="FlyingSim\SimulatedPart.cs" />
+    <Compile Include="FlyingSim\SimulatedVessel.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="GLUtils.cs" />
+    <Compile Include="GuiUtils.cs" />
+    <Compile Include="InstallChecker.cs" />
+    <Compile Include="LandingAutopilot\CoastToDeceleration.cs" />
+    <Compile Include="LandingAutopilot\CourseCorrection.cs" />
+    <Compile Include="LandingAutopilot\DecelerationBurn.cs" />
+    <Compile Include="LandingAutopilot\DeorbitBurn.cs" />
+    <Compile Include="LandingAutopilot\FinalDescent.cs" />
+    <Compile Include="LandingAutopilot\KillHorizontalVelocity.cs" />
+    <Compile Include="LandingAutopilot\LowDeorbitBurn.cs" />
+    <Compile Include="LandingAutopilot\PlaneChange.cs" />
+    <Compile Include="LandingAutopilot\UntargetedDeorbit.cs" />
+    <Compile Include="Maneuver\Operation.cs" />
+    <Compile Include="Maneuver\OperationAdvancedTransfer.cs" />
+    <Compile Include="Maneuver\OperationApoapsis.cs" />
+    <Compile Include="Maneuver\OperationCircularize.cs" />
+    <Compile Include="Maneuver\OperationCourseCorrection.cs" />
+    <Compile Include="Maneuver\OperationEccentricity.cs" />
+    <Compile Include="Maneuver\OperationEllipticize.cs" />
+    <Compile Include="Maneuver\OperationInclination.cs" />
+    <Compile Include="Maneuver\OperationInterplanetaryTransfer.cs" />
+    <Compile Include="Maneuver\OperationKillRelVel.cs" />
+    <Compile Include="Maneuver\OperationLambert.cs" />
+    <Compile Include="Maneuver\OperationLan.cs" />
+    <Compile Include="Maneuver\OperationLongitude.cs" />
+    <Compile Include="Maneuver\OperationMoonReturn.cs" />
+    <Compile Include="Maneuver\OperationPeriapsis.cs" />
+    <Compile Include="Maneuver\OperationPlane.cs" />
+    <Compile Include="Maneuver\OperationResonantOrbit.cs" />
+    <Compile Include="Maneuver\OperationSemiMajor.cs" />
+    <Compile Include="Maneuver\OperationTransfer.cs" />
+    <Compile Include="Maneuver\PlotArea.cs" />
+    <Compile Include="Maneuver\Porkchop.cs" />
+    <Compile Include="Maneuver\TimeSelector.cs" />
+    <Compile Include="Maneuver\TransferCalculator.cs" />
+    <Compile Include="MathExtensions.cs" />
+    <Compile Include="MechJebAR202.cs" />
+    <Compile Include="MechJebCore.cs" />
+    <Compile Include="MechJebModuleAscentBaseAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentClassicAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentClassicPathMenu.cs" />
+    <Compile Include="MechJebModuleAscentMenu.cs" />
+    <Compile Include="MechJebModuleAscentPSGAutopilot.cs" />
+    <Compile Include="MechJebModuleAscentPSGSettingsMenu.cs" />
+    <Compile Include="MechJebModuleAscentSettings.cs" />
+    <Compile Include="MechJebModuleAscentSettingsMenu.cs" />
+    <Compile Include="MechJebModuleAttitudeAdjustment.cs" />
+    <Compile Include="MechJebModuleAttitudeController.cs" />
+    <Compile Include="MechJebModuleCustomInfoWindow.cs" />
+    <Compile Include="MechJebModuleDebugArrows.cs" />
+    <Compile Include="MechJebModuleDeployableAntennaController.cs" />
+    <Compile Include="MechJebModuleDeployableController.cs" />
+    <Compile Include="MechJebModuleDockingAutopilot.cs" />
+    <Compile Include="MechJebModuleDockingGuidance.cs" />
+    <Compile Include="MechJebModuleFlightRecorder.cs" />
+    <Compile Include="MechJebModuleFlightRecorderGraph.cs" />
+    <Compile Include="MechJebModuleInfoItems.cs" />
+    <Compile Include="MechJebModuleLandingAutopilot.cs" />
+    <Compile Include="MechJebModuleLandingGuidance.cs" />
+    <Compile Include="MechJebModuleLandingPredictions.cs" />
+    <Compile Include="MechJebModuleManeuverPlanner.cs" />
+    <Compile Include="MechJebModuleMenu.cs" />
+    <Compile Include="MechJebModuleStageStats.cs" />
+    <Compile Include="MechJebModuleNodeEditor.cs" />
+    <Compile Include="MechJebModuleNodeExecutor.cs" />
+    <Compile Include="MechJebModuleGuidanceController.cs" />
+    <Compile Include="MechJebModuleRCSBalancer.cs" />
+    <Compile Include="MechJebModuleRCSBalancerWindow.cs" />
+    <Compile Include="MechJebModuleRCSController.cs" />
+    <Compile Include="MechJebModuleRendezvousAutopilot.cs" />
+    <Compile Include="MechJebModuleRendezvousAutopilotWindow.cs" />
+    <Compile Include="MechJebModuleRendezvousGuidance.cs" />
+    <Compile Include="MechJebModuleRoverController.cs" />
+    <Compile Include="MechJebModuleRoverWindow.cs" />
+    <Compile Include="MechJebModuleSettings.cs" />
+    <Compile Include="MechJebModuleSmartASS.cs" />
+    <Compile Include="MechJebModuleSmartRcs.cs" />
+    <Compile Include="MechJebModuleSolarPanelController.cs" />
+    <Compile Include="MechJebModuleSpinupController.cs" />
+    <Compile Include="MechJebModuleStagingController.cs" />
+    <Compile Include="MechJebModuleSuicideTimer.cs" />
+    <Compile Include="MechJebModuleTargetController.cs" />
+    <Compile Include="MechJebModuleThrustController.cs" />
+    <Compile Include="MechJebModuleThrustWindow.cs" />
+    <Compile Include="MechJebModuleTranslatron.cs" />
+    <Compile Include="MechJebModuleWarpController.cs" />
+    <Compile Include="MechJebModuleWarpHelper.cs" />
+    <Compile Include="MechJebModuleWaypointWindow.cs" />
+    <Compile Include="MechjebBundlesManager.cs" />
+    <Compile Include="MechJebStageStatsHelper.cs" />
+    <Compile Include="ModExtensionDemo.cs" />
+    <Compile Include="MuUtils.cs" />
+    <Compile Include="OrbitExtensions.cs" />
+    <Compile Include="OrbitalManeuverCalculator.cs" />
+    <Compile Include="PIDController.cs" />
+    <Compile Include="PartExtensions.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs" />
+    <Compile Include="MechJebModulePSGGlueBall.cs" />
+    <Compile Include="RCSSolver.cs" />
+    <Compile Include="ReentrySimulation.cs" />
+    <Compile Include="ReentrySimulation\SimCurves.cs" />
+    <Compile Include="ToolbarWrapper.cs" />
+    <Compile Include="UnityToolbag\Dispatcher\Dispatcher.cs" />
+    <Compile Include="UnityToolbag\Future\Future.cs" />
+    <Compile Include="Vector6.cs" />
+    <Compile Include="VesselExtensions.cs" />
+    <Compile Include="VesselState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="copy_build.bat" />
+    <None Include="copy_build.sh" />
+    <None Include="Properties\shader" />
+    <None Include="Properties\shader2" />
+    <None Include="Properties\shader3" />
+    <None Include="UnityToolbag\Dispatcher\README.md" />
+    <None Include="UnityToolbag\Future\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/Assembly-CSharp.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/Assembly-CSharp-firstpass.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\packages\JetBrains.Annotations.2023.3.0\lib\net20\JetBrains.Annotations.dll</HintPath>
+      <Aliases>JetBrainsAnnotations</Aliases>
+    </Reference>
+    <Reference Include="mscorlib">
+      <HintPath>$(KspData)/Managed/mscorlib.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>$(KspData)/Managed/System.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>$(KspData)/Managed/System.Core.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.AnimationModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.AssetBundleModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.CoreModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.ImageConversionModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.InputLegacyModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.PhysicsModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.TextRenderingModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.UI.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VehiclesModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>$(KspData)/Managed/UnityEngine.VehiclesModule.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\alglib\alglib.csproj">
+      <Project>{e8cbcddd-bcfc-4f03-9309-f58395ca4762}</Project>
+      <Name>alglib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj">
+      <Project>{da770208-1300-4c86-8996-c1790b945999}</Project>
+      <Name>MechJebLibBindings</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MechJebLib\MechJebLib.csproj">
+      <Project>{ba86665b-a72e-41fb-858a-c0ff29e05768}</Project>
+      <Name>MechJebLib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="AfterBuild" Condition=" '$(OS)' == 'Windows_NT' ">
+    <Exec Command="call &quot;$(ProjectDir)copy_build.bat&quot; &quot;$(TargetPath)&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(ProjectDir)&quot;" />
+  </Target>
+  <Target Name="AfterBuild" Condition=" '$(OS)' != 'Windows_NT' ">
+    <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)' '$(KspDir)'" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
          Other similar extension points exist, see Microsoft.Common.targets.
     <Target Name="BeforeBuild">
     </Target>

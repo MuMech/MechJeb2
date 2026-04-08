@@ -48,7 +48,6 @@ namespace MuMech
         public MechJebModuleDeployableAntennaController AntennaControl;
         public MechJebModuleLandingAutopilot            Landing;
         public MechJebModuleSettings                    Settings;
-        public MechJebModuleAirplaneAutopilot           Airplane;
         public MechJebModuleStageStats                  StageStats;
         public MechJebModuleAscentSettings              AscentSettings;
         public MechJebModuleSpinupController            Spinup;
@@ -746,7 +745,6 @@ namespace MuMech
             AntennaControl = GetComputerModule<MechJebModuleDeployableAntennaController>();
             Landing        = GetComputerModule<MechJebModuleLandingAutopilot>();
             Settings       = GetComputerModule<MechJebModuleSettings>();
-            Airplane       = GetComputerModule<MechJebModuleAirplaneAutopilot>();
             Guidance       = GetComputerModule<MechJebModuleGuidanceController>();
             Glueball       = GetComputerModule<MechJebModulePSGGlueBall>();
             StageStats     = GetComputerModule<MechJebModuleStageStats>();
