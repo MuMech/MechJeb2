@@ -29,7 +29,7 @@ namespace MechJebLib.PSG.Terminal
             _gammaT        = gammaT;
             _rT            = rT;
             _vT            = vT;
-            _incT          = Abs(ClampPi(incT));
+            _incT          = incT;
         }
 
         public ITerminal Rescale(Scale scale)  => new FlightPathAngle4(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT);
