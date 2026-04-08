@@ -26,7 +26,7 @@ namespace MechJebLib.PSG.Terminal
             NumConstraints = 6;
             _smaT          = smaT;
             _eccT          = eccT;
-            _incT          = Abs(ClampPi(incT));
+            _incT          = incT;
             _lanT          = lanT;
             _argpT         = argpT;
 
