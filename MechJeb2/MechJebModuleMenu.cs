@@ -1,4 +1,5 @@
 ﻿extern alias JetBrainsAnnotations;
+using ClickThroughFix;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -568,7 +569,7 @@ namespace MuMech
 
             if (windowStat != WindowStat.HIDDEN)
             {
-                WindowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + Core.version,
+                WindowPos = ClickThruBlocker.GUILayoutWindow(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + Core.version,
                     GUILayout.Width(colWidth), GUILayout.Height(20));
             }
             else

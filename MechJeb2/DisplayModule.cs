@@ -1,4 +1,5 @@
 ﻿extern alias JetBrainsAnnotations;
+using ClickThroughFix;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
@@ -179,7 +180,7 @@ namespace MuMech
             // Cache the array to not create one each frame
             _windowOptions ??= WindowOptions();
 
-            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, IsOverlayConfig ? "" : GetName(), _windowOptions);
+            WindowPos = ClickThruBlocker.GUILayoutWindow(_id, WindowPos, ProfiledWindowGUI, IsOverlayConfig ? "" : GetName(), _windowOptions);
 
             //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
             //

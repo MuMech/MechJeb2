@@ -181,6 +181,11 @@
     <None Include="UnityToolbag\Future\README.md" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="ClickThroughBlocker">
+        <HintPath>$(KspData)/GameData/000_ClickThroughBlocker/Plugins/ClickThroughBlocker.dll</HintPath>
+        <SpecificVersion>False</SpecificVersion>
+        <Private>False</Private>
+    </Reference>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>$(KspData)/Managed/Assembly-CSharp.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>

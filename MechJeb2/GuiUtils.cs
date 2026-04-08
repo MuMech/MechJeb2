@@ -1,4 +1,5 @@
 ﻿extern alias JetBrainsAnnotations;
+using ClickThroughFix;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -825,7 +826,7 @@ namespace MuMech
                 _rect.x = Math.Max(0, Math.Min(_rect.x, ScaledScreenWidth - _rect.width));
                 _rect.y = Math.Max(0, Math.Min(_rect.y, ScaledScreenHeight - _rect.height));
 
-                _rect = GUILayout.Window(_id, _rect, identifier =>
+                _rect = ClickThruBlocker.GUILayoutWindow(_id, _rect, identifier =>
                 {
                     _selectedItem = GUILayout.SelectionGrid(-1, _entries, 1, YellowOnHover);
                     if (GUI.changed)
