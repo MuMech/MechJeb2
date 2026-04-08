@@ -10,7 +10,7 @@ namespace MuMech.AttitudeControllers
 {
     internal class BetterController : BaseAttitudeController
     {
-        private const int SETTINGS_VERSION = 16;
+        private const int SETTINGS_VERSION = 17;
 
         private const double POS_KP_DEFAULT         = 2.03;
         private const double POS_TI_DEFAULT         = 1.97;
@@ -39,6 +39,8 @@ namespace MuMech.AttitudeControllers
         private const double ROLL_CONTROL_RANGE_DEFAULT = 5;
         private const double SMOOTH_TORQUE_DEFAULT      = 0.10;
         private const double SOFTEN_DEFAULT             = 0.5;
+        private const double KP_SCALE_REF_DEFAULT       = 1.0;
+        private const double KP_SCALE_MIN_DEFAULT       = 0.25;
 
         private readonly PIDLoop2[]       _velPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
         private readonly PIDLoop2[]       _posPID           = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
@@ -113,6 +115,17 @@ namespace MuMech.AttitudeControllers
         // Soften should run between (0,1] to reduce overshoot on large angle maneuvers
         [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble Soften = new EditableDouble(SOFTEN_DEFAULT);
+
+        // maxAlpha (rad/s²) at which the user's configured Kp values apply unmodified.
+        // Below this maxAlpha, Kp_pos and Kp_vel both scale linearly with maxAlpha to keep
+        // the velocity loop out of saturation. Above it, the scale is clamped to 1.0 so
+        // strong-actuator stages always use the user's configured gains.
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble KpScaleRef = new EditableDouble(KP_SCALE_REF_DEFAULT);
+
+        // Lower bound on kpScale. Prevents pathological gain reduction on near-uncontrolled axes.
+        [UsedImplicitly] [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDouble KpScaleMin = new EditableDouble(KP_SCALE_MIN_DEFAULT);
 
         private Vector3d _actuation = Vector3d.zero;
 
@@ -192,6 +205,8 @@ namespace MuMech.AttitudeControllers
             UseStoppingTime      = true;
             SmoothTorque.Val     = SMOOTH_TORQUE_DEFAULT;
             Soften.Val           = SOFTEN_DEFAULT;
+            KpScaleRef.Val       = KP_SCALE_REF_DEFAULT;
+            KpScaleMin.Val       = KP_SCALE_MIN_DEFAULT;
 
             Version = SETTINGS_VERSION;
         }
@@ -244,6 +259,17 @@ namespace MuMech.AttitudeControllers
                 if (_maxAlpha[i] == 0)
                     _maxAlpha[i] = 1;
 
+                // Kp gain schedule: scale loop gains down on weak-actuator stages so the
+                // velocity loop's commanded targetAlpha stays below the available maxAlpha.
+                // The saturation-relevant quantity is the PRODUCT Kp_pos × Kp_vel, so to
+                // reduce the combined gain by factor N we reduce each loop by sqrt(N).
+                // KpScaleRef / KpScaleMin are interpreted as the combined-gain factor; the
+                // per-loop factor applied here is sqrt(kpScaleBase).
+                // Scale never exceeds 1.0 (strong vessels keep the user's full gains).
+                double kpScaleBase = Clamp(_maxAlpha[i] / KpScaleRef, KpScaleMin, 1.0);
+                double kpScale     = Sqrt(kpScaleBase);
+                double velKp       = VelKp * kpScale;
+
                 if (Ac.OmegaTarget[i].IsFinite())
                 {
                     _targetOmega[i] = Ac.OmegaTarget[i];
@@ -251,7 +277,7 @@ namespace MuMech.AttitudeControllers
                 else
                 {
                     double soften = Clamp01(Soften);
-                    double posKp  = PosKp / warpFactor;
+                    double posKp  = (PosKp / warpFactor) * kpScale;
                     double effLD  = soften * soften * _maxAlpha[i] / (2 * posKp * posKp);
 
                     double maxOmega = double.PositiveInfinity;
@@ -295,7 +321,7 @@ namespace MuMech.AttitudeControllers
                     }
                 }
 
-                _velPID[i].Kp               = VelKp;
+                _velPID[i].Kp               = velKp;
                 _velPID[i].Ti               = VelTi;
                 _velPID[i].Td               = VelTd;
                 _velPID[i].N                = VelN;
@@ -473,6 +499,16 @@ namespace MuMech.AttitudeControllers
             GUILayout.BeginHorizontal();
             GUILayout.Label("Soften", GUILayout.ExpandWidth(false));
             Soften.Text = GUILayout.TextField(Soften.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Kp Scale Ref", GUILayout.ExpandWidth(false));
+            KpScaleRef.Text = GUILayout.TextField(KpScaleRef.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Kp Scale Min", GUILayout.ExpandWidth(false));
+            KpScaleMin.Text = GUILayout.TextField(KpScaleMin.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
