@@ -295,7 +295,6 @@ namespace MuMech
                 Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
         }
 
-        private        bool   _weLockedInputs;
         private        float  _lastSettingsSaveTime;
         private        bool   _wasMasterAndFocus;
         private static Vessel _lastFocus;
@@ -436,7 +435,6 @@ namespace MuMech
 
             GameEvents.onShowUI.Add(OnShowGUI);
             GameEvents.onHideUI.Add(OnHideGUI);
-            GameEvents.onVesselChange.Add(UnlockControl);
             GameEvents.onVesselWasModified.Add(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Add(OnVesselStandardModification);
 
@@ -995,15 +993,8 @@ namespace MuMech
 
             GameEvents.onShowUI.Remove(OnShowGUI);
             GameEvents.onHideUI.Remove(OnHideGUI);
-            GameEvents.onVesselChange.Remove(UnlockControl);
             GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
             GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
-
-            if (_weLockedInputs)
-            {
-                UnlockControl();
-                ManeuverGizmoBase.HasMouseFocus = false;
-            }
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
@@ -1126,7 +1117,6 @@ namespace MuMech
                     Profiler.EndSample();
                 }
 
-                PreventClickthrough();
                 GUI.matrix = previousGuiMatrix;
 
                 for (int i = 0; i < _postDrawQueue.Count; i++)
@@ -1142,53 +1132,6 @@ namespace MuMech
 
         // VAB/SPH description
         public override string GetInfo() => Localizer.Format("#MechJeb_MechJebInfo_VABSPH"); //"Attitude control by MechJeb™"
-
-        //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
-        private void PreventClickthrough()
-        {
-            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
-            switch (_weLockedInputs)
-            {
-                case false when mouseOverWindow && !Input.GetMouseButton(1):
-                    LockControl();
-                    break;
-                case true when !mouseOverWindow:
-                    UnlockControl();
-                    break;
-            }
-        }
-
-        private const string LOCK_ID = "MechJeb_noclick";
-
-        private void LockControl()
-        {
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                EditorLogic.fetch.Lock(true, true, true, LOCK_ID);
-            }
-            else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
-            {
-                InputLockManager.SetControlLock(ControlTypes.ALLBUTCAMERAS, LOCK_ID);
-            }
-
-            _weLockedInputs = true;
-        }
-
-        private void UnlockControl(Vessel v) => UnlockControl();
-
-        private void UnlockControl()
-        {
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                EditorLogic.fetch.Unlock(LOCK_ID);
-            }
-            else if (HighLogic.LoadedSceneIsFlight || HighLogic.LoadedSceneHasPlanetarium)
-            {
-                InputLockManager.RemoveControlLock(LOCK_ID);
-            }
-
-            _weLockedInputs = false;
-        }
 
         private void OnVesselWasModified(Vessel v)
         {
