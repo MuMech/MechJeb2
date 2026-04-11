@@ -29,11 +29,11 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.LOCAL)]
-        public readonly string UnlockParts = "";
+        public string unlockParts = "";
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.LOCAL)]
-        public readonly string UnlockTechs = "";
+        public string unlockTechs = "";
 
         public bool UnlockChecked;
 
@@ -190,47 +190,53 @@ namespace MuMech
         {
             if (UnlockChecked) return;
 
+            // Bypass check for Sandbox mode
+            if (HighLogic.CurrentGame != null && HighLogic.CurrentGame.Mode == Game.Modes.SANDBOX)
+            {
+                UnlockChecked = true;
+                return;
+            }
+
+            if (ResearchAndDevelopment.Instance == null) return;
+
             bool unlock = true;
 
-            if (ResearchAndDevelopment.Instance != null)
+            string[] parts = unlockParts.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 0)
             {
-                string[] parts = UnlockParts.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length > 0)
+                unlock = false;
+                foreach (string p in parts)
                 {
-                    unlock = false;
-                    foreach (string p in parts)
+                    if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 &&
+                        ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
                     {
-                        if (PartLoader.LoadedPartsList.Count(a => a.name == p) > 0 &&
-                            ResearchAndDevelopment.PartModelPurchased(PartLoader.LoadedPartsList.First(a => a.name == p)))
-                        {
-                            unlock = true;
-                            break;
-                        }
+                        unlock = true;
+                        break;
                     }
                 }
+            }
 
-                string[] techs = UnlockTechs.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                if (techs.Length > 0)
+            string[] techs = unlockTechs.Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (techs.Length > 0)
+            {
+                if (parts.Length == 0)
                 {
-                    if (parts.Length == 0)
-                    {
-                        unlock = false;
-                    }
+                    unlock = false;
+                }
 
-                    foreach (string t in techs)
+                foreach (string t in techs)
+                {
+                    if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
                     {
-                        if (ResearchAndDevelopment.GetTechnologyState(t) == RDTech.State.Available)
-                        {
-                            unlock = true;
-                            break;
-                        }
+                        unlock = true;
+                        break;
                     }
                 }
             }
 
             unlock = unlock && IsSpaceCenterUpgradeUnlocked();
-
             UnlockChecked = true;
+
             if (!unlock)
             {
                 Enabled                  = false;

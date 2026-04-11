@@ -2,11 +2,6 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-/*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
- */
 
 using System;
 using System.Globalization;
@@ -25,22 +20,22 @@ namespace MechJebLibTest
         public static void ShouldEqual(this int actual, int expected)
         {
             if (actual != expected)
-                throw new EqualException(
-                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
-                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                throw new XunitException(
+                    string.Format(CultureInfo.CurrentCulture, "Expected integer to be '{0}', but was '{1}'", expected, actual)
                 );
         }
 
-        // A proper relative tolerance comparison comparison between float values.
+        // A rtol==atol comparison between double precision floats
         public static void ShouldEqual(this double actual, double expected, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
 
             if (!NearlyEqual(actual, expected, epsilon))
-                throw new EqualException(
+                throw new ApproximateEqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
-                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
                 );
         }
 
@@ -50,9 +45,10 @@ namespace MechJebLibTest
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
 
             if (!NearlyEqual(actual, expected, epsilon))
-                throw new EqualException(
+                throw new ApproximateEqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
-                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
                 );
         }
 
@@ -62,9 +58,10 @@ namespace MechJebLibTest
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
 
             if (!NearlyEqual(actual, expected, epsilon))
-                throw new EqualException(
+                throw new ApproximateEqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
-                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
                 );
         }
 
@@ -74,9 +71,10 @@ namespace MechJebLibTest
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
 
             if (!NearlyEqual(actual, expected, epsilon))
-                throw new EqualException(
+                throw new ApproximateEqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
-                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
                 );
         }
 
@@ -94,9 +92,8 @@ namespace MechJebLibTest
         public static void ShouldEqual(this string actual, string expected)
         {
             if (actual != expected)
-                throw new EqualException(
-                    string.Format(CultureInfo.CurrentCulture, "{0}", expected),
-                    string.Format(CultureInfo.CurrentCulture, "{0}", actual)
+                throw new XunitException(
+                    string.Format(CultureInfo.CurrentCulture, "Expected string to be '{0}', but was '{1}'", expected, actual)
                 );
         }
 
@@ -139,9 +136,10 @@ namespace MechJebLibTest
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
 
             if (Abs(actual) > epsilon)
-                throw new EqualException(
+                throw new ApproximateEqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", 0.0),
-                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
                 );
         }
 
@@ -158,9 +156,10 @@ namespace MechJebLibTest
                 throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
 
             if (Abs(actual.x) > epsilon || Abs(actual.y) > epsilon || Abs(actual.z) > epsilon)
-                throw new EqualException(
+                throw new ApproximateEqualException(
                     string.Format(CultureInfo.CurrentCulture, "{0:G17}", 0.0),
-                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual)
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
                 );
         }
 

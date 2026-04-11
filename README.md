@@ -120,7 +120,9 @@ If you want the unstable dev version of MechJeb then :
 
 #### Linux
 
-The project uses Mono and Make to build the addon, make sure you have both installed.
+The project uses Mono and Make to build the addon, make sure you have both installed. You need Nuget to download the external dependencies.
+
+You can also use the [flake.nix](./flake.nix) with direnv or by runnning `nix develop` to set up the development environment.
 
 1. (optional) Set your KSP directory
 
@@ -128,13 +130,19 @@ The project uses Mono and Make to build the addon, make sure you have both insta
 export KSPDIR="${XDG_DATA_HOME}/Steam/SteamApps/common/Kerbal Space Program"
 ```
 
-2. Build the mod
+2. Fetch external packages
+
+```
+nuget restore
+```
+
+3. Build the mod
 
 ```sh
 make build
 ```
 
-3. (optional) Install the mod into your KSP directory
+4. (optional) Install the mod into your KSP directory
 
 ```sh
 make install

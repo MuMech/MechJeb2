@@ -28,7 +28,7 @@ namespace MechJebLib.PSG.Terminal
             _rT            = rT;
             _vT            = vT;
             _lanT          = Clamp2Pi(lanT);
-            _incT          = Abs(ClampPi(incT));
+            _incT          = incT;
 
             _hT = Astro.HvecFromFlightPathAngle(_rT, _vT, _gammaT, _incT, _lanT);
         }

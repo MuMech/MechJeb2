@@ -8,7 +8,7 @@ Thumbs.db
 /MechJeb2-Unity/*.csproj
 /MechJeb2-Unity/*.sln
 
-Directory.Build.props
+Directory.Build.props.user
 
 .idea/**/.name
 
@@ -216,3 +216,6 @@ http-client.private.env.json
 
 # Github Copilot persisted session migrations, see: https://github.com/microsoft/copilot-intellij-feedback/issues/712#issuecomment-3322062215
 .idea/**/copilot.data.migration.*.xml
+
+# Nix
+.direnv/

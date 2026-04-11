@@ -24,7 +24,7 @@ namespace MechJebLib.PSG.Terminal
             NumConstraints = 4;
             _smaT          = smaT;
             _eccT          = eccT;
-            _incT          = Abs(ClampPi(incT));
+            _incT          = incT;
             _lanT          = lanT;
             _hT            = Astro.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
         }
