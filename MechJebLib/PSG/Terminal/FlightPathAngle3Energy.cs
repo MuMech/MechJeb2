@@ -21,7 +21,7 @@ namespace MechJebLib.PSG.Terminal
             NumConstraints = 3;
             _gammaT        = gammaT;
             _rT            = rT;
-            _incT          = Abs(ClampPi(incT));
+            _incT          = incT;
         }
 
         public ITerminal Rescale(Scale scale)  => new FlightPathAngle3Energy(_gammaT, _rT / scale.LengthScale, _incT);
