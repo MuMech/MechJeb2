@@ -71,7 +71,10 @@ namespace MuMech
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (V3 pos, V3 vel) RightHandedStateVectorsAtUT(this Orbit o, double ut)
         {
-            o.GetOrbitalStateVectorsAtUT(ut, out Vector3d pos, out Vector3d vel);
+            // GetOrbitalStateVectorsAtUT() uses a crazy future-rotation-at-UT to rotate vectors, so carefully avoid it.
+            o.GetOrbitalStateVectorsAtTrueAnomaly(o.TrueAnomalyAtT(o.getObtAtUT(ut)), ut, false, out Vector3d pos, out Vector3d vel);
+            pos = Planetarium.Zup.WorldToLocal(pos);
+            vel = Planetarium.Zup.WorldToLocal(vel);
             return (pos.ToV3(), vel.ToV3());
         }
 
