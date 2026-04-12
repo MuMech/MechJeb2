@@ -78,6 +78,14 @@ namespace MuMech
             return (pos.ToV3(), vel.ToV3());
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FixedGetOrbitalStateVectorsAtUT(this Orbit o, double ut, out Vector3d pos, out Vector3d vel)
+        {
+            o.GetOrbitalStateVectorsAtTrueAnomaly(o.TrueAnomalyAtT(o.getObtAtUT(ut)), ut, false, out pos, out vel);
+            pos = Planetarium.Zup.WorldToLocal(pos);
+            vel = Planetarium.Zup.WorldToLocal(vel);
+        }
+
         //normalized vector perpendicular to the orbital plane
         //convention: as you look down along the orbit normal, the satellite revolves counterclockwise
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
