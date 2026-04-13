@@ -240,9 +240,6 @@ namespace MechJebLib.PSG
                 alglib.sparseappendelement(j, nextBurnPhase.BtIdx(), a / Sqrt(u) - 1);
             }
 
-            // relaxed bilinear constraint on burn times (needs inequality constraint)
-            //f[ci++] = a * b;  //where a <= 1e-6 && b <= 1e-6 -- constraint should be 1/2 of the SFB epsilon value
-
             return ci;
         }
 
