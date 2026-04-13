@@ -88,7 +88,7 @@ namespace MechJebLib.PSG
         {
             if (p + 2 > phases.Count - 1) // need three phases in a row
                 return false;
-            if (!phases[p + 1].MassContinuity || !phases[p + 2].MassContinuity) // need 2 mass continuity stages
+            if (!phases[p + 2].MassContinuity) // next burn should be mass continuity stage
                 return false;
             if (phases[p].Coast || !phases[p + 1].Coast || phases[p + 2].Coast) // need burn-coast-burn
                 return false;

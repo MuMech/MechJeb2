@@ -70,6 +70,7 @@ namespace MechJebLib.PSG
 
             public AscentBuilder AerodynamicConstants(double cd, double aRef, double rho0, double qAlphaMax, double qMax, double h0, V3 w)
             {
+                DebugPrint($"AerodynamicConstants({cd},  {aRef}, {rho0}, {qAlphaMax}, {qMax}, {h0}, new V3({w}))");
                 _h0               = h0;
                 _rho0CdAref       = cd * aRef * rho0;
                 _rho0QAlphaMaxInv = qAlphaMax > 0 ? rho0 / qAlphaMax : 0;
@@ -81,7 +82,7 @@ namespace MechJebLib.PSG
             public AscentBuilder AddCoast(double m0, double mint, double maxt, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
             {
                 var sb = new StringBuilder();
-                sb.Append($"[MechJebLib.AscentBuilder] AddOptimizedCoast({m0}, {mint}, {maxt}, {kspStage}, {mjPhase}");
+                sb.Append($"[MechJebLib.AscentBuilder] AddCoast({m0}, {mint}, {maxt}, {kspStage}, {mjPhase}");
                 if (unguided)
                     sb.Append(", unguided: true");
                 if (massContinuity)
@@ -102,7 +103,7 @@ namespace MechJebLib.PSG
                 Check.PositiveFinite(mu);
                 Check.PositiveFinite(rbody);
 
-                DebugPrint($"[MechJebLib.AscentBuilder] Initial({r0}, {v0}, {u0}, {t0}, {mu}, {rbody})");
+                DebugPrint($"[MechJebLib.AscentBuilder] Initial(new V3({r0}), new V3({v0}), new V3({u0}), {t0}, {mu}, {rbody})");
                 _r0    = r0;
                 _v0    = v0;
                 _u0    = u0.normalized;
@@ -178,7 +179,7 @@ namespace MechJebLib.PSG
                 double fpa, bool attachAltFlag, bool lanflag, bool argpflag)
             {
                 DebugPrint(
-                    $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")})");
+                    $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {argp}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")}, {(argpflag ? "true" : "false")})");
                 _peR           = peR;
                 _apR           = apR;
                 _attR          = attR;

@@ -240,8 +240,6 @@ namespace MuMech
                 if (kspStage < _ascentSettings.LastStage)
                     break;
 
-                Debug.Log($"{Core.StageStats.VacStats[mjPhase].Thrust} {Core.StageStats.VacStats[mjPhase].MinThrust}/{Core.StageStats.VacStats[mjPhase].MaxThrust}");
-
                 bool massContinuity = false;
 
                 if (!hasCoast)
@@ -295,7 +293,7 @@ namespace MuMech
 
         private bool IsCurrentCoastAfterStage(int kspStage)
         {
-            if (kspStage == Vessel.currentStage && Core.Guidance.IsCoasting() && !CoastingBefore())
+            if (kspStage == Vessel.currentStage && Core.Guidance.IsCoasting() && CoastingAfter())
                 return true;
 
             return false;
