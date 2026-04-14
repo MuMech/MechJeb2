@@ -286,7 +286,7 @@ namespace MuMech
         {
             base.OnStart(state);
 
-            if (ForceResetROSettings && ReflectionUtils.IsLoadedRealismOverhaul)
+            if ((int)state > 1 && ForceResetROSettings && ReflectionUtils.IsLoadedRealismOverhaul)
             {
                 ApplyRODefaults();
                 ForceResetROSettings = false;
@@ -323,7 +323,8 @@ namespace MuMech
             DesiredOrbitAltitude.Val = 145000;
             DesiredAttachAlt.Val     = 145000;
 
-            DesiredInclination.Val = Math.Round(Vessel.mainBody.GetLatitude(Vessel.CoMD), 3);
+            if (Vessel != null && Vessel.mainBody != null)
+                DesiredInclination.Val = Math.Round(Vessel.mainBody.GetLatitude(Vessel.CoMD), 3);
 
             Core.Guidance.UllageLeadTime.Val = 20;
 
