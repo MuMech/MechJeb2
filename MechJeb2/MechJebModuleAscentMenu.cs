@@ -45,26 +45,11 @@ namespace MuMech
 
         private bool _launchingWithAnyPlaneControl => _launchingToPlane || _launchingToRendezvous || _launchingToMatchLan || _launchingToLan;
 
-        private MechJebModuleAscentBaseAutopilot   _autopilot      => Core.Ascent;
-        private MechJebModuleAscentSettings        _ascentSettings => Core.AscentSettings;
-        private MechJebModuleAscentClassicPathMenu _classicPathMenu;
-        private MechJebModuleAscentPSGSettingsMenu _psgSettingsMenu;
-        private MechJebModuleAscentSettingsMenu    _settingsMenu;
-
-        public override void OnStart(PartModule.StartState state)
-        {
-            _psgSettingsMenu = Core.GetComputerModule<MechJebModuleAscentPSGSettingsMenu>();
-            _settingsMenu    = Core.GetComputerModule<MechJebModuleAscentSettingsMenu>();
-            _classicPathMenu = Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
-        }
-
-        public void ApplyRODefaults()
-        {
-            _settingsMenu.Enabled    = true;
-            _lastPSGSettingsEnabled  = true;
-            _psgSettingsMenu.Enabled = true;
-            _lastPSGSettingsEnabled  = true;
-        }
+        private MechJebModuleAscentBaseAutopilot   _autopilot       => Core.Ascent;
+        private MechJebModuleAscentSettings        _ascentSettings  => Core.AscentSettings;
+        private MechJebModuleAscentClassicPathMenu _classicPathMenu => Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
+        private MechJebModuleAscentPSGSettingsMenu _psgSettingsMenu => Core.GetComputerModule<MechJebModuleAscentPSGSettingsMenu>();
+        private MechJebModuleAscentSettingsMenu    _settingsMenu    => Core.GetComputerModule<MechJebModuleAscentSettingsMenu>();
 
         [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
         public bool _lastPSGSettingsEnabled;
