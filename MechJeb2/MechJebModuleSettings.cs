@@ -1,4 +1,6 @@
-﻿using KSP.IO;
+﻿using System;
+using System.Linq;
+using KSP.IO;
 using KSP.Localization;
 using UnityEngine;
 
@@ -39,6 +41,24 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showAdvancedWindowSettings;
+
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool firstLoad = true;
+
+        public override void OnAwake()
+        {
+            if (!firstLoad)
+            {
+                firstLoad = true;
+
+                bool ROinstalled = AssemblyLoader.loadedAssemblies.Any(a => a.name.Equals("RealismOverhaul", StringComparison.OrdinalIgnoreCase));
+
+                if (ROinstalled)
+                {
+                    rssMode = true;
+                }
+            }
+        }
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
