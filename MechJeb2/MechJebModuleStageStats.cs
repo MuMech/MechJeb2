@@ -60,7 +60,7 @@ namespace MuMech
 
         private void GetResults()
         {
-            if (_vesselManagerAtmo.FuelFlowSimulation.IsFinished)
+            if (_vesselManagerAtmo.FuelFlowSimulation.IsStopped)
             {
                 if (_vesselManagerAtmo.FuelFlowSimulation.IsCompleted)
                 {
@@ -77,11 +77,12 @@ namespace MuMech
                 {
                     Debug.Log("[MechJebModuleStageStats] atmo stats failed");
                 }
+
                 if (!_vesselManagerAtmo.FuelFlowSimulation.TryMarkReady())
                     throw new Exception("[MechJebModuleStageStats] Tried to mark a running atmo stage stats as ready.");
             }
 
-            if (_vesselManagerVac.FuelFlowSimulation.IsFinished)
+            if (_vesselManagerVac.FuelFlowSimulation.IsStopped)
             {
                 if (_vesselManagerVac.FuelFlowSimulation.IsCompleted)
                 {
@@ -98,6 +99,7 @@ namespace MuMech
                 {
                     Debug.Log("[MechJebModuleStageStats] vac stats failed");
                 }
+
                 if (!_vesselManagerVac.FuelFlowSimulation.TryMarkReady())
                     throw new Exception("[MechJebModuleStageStats] Tried to mark a running vcc stage stats as ready.");
             }
