@@ -4,11 +4,12 @@
  */
 
 using System;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PSG
 {
-    public partial class Ascent
+    public partial class Ascent : AsyncJob
     {
         private readonly Problem         _problem;
         private          Optimizer?      _optimizer;
@@ -27,7 +28,7 @@ namespace MechJebLib.PSG
 
         private readonly Solution? _solution;
 
-        public void Run()
+        public override void Run(object? o = null)
         {
             if (_solution == null)
             {

@@ -26,7 +26,7 @@ namespace MechJebLib.FuelFlowSimulation
         private readonly HashSet<SimPart> _partsWithRCSDrains2     = new HashSet<SimPart>();
         private          bool             _allocatedFirstSegment;
 
-        protected override void Run(object? o)
+        public override void Run(object? o = null)
         {
             if (o == null)
                 throw new ArgumentNullException(nameof(o));

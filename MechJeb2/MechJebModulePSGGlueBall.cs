@@ -6,7 +6,6 @@
 
 extern alias JetBrainsAnnotations;
 using System;
-using System.Threading.Tasks;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
@@ -40,8 +39,6 @@ namespace MuMech
 
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
 
-        private Task? _task;
-
         private Ascent? _ascent;
 
         protected override void OnModuleEnabled()
@@ -50,14 +47,12 @@ namespace MuMech
             SuccessfulConverges = LastLmStatus      = MaxLmIterations = 0;
             LastLmStatus        = LastLmIterations  = 0;
             Staleness           = LastInfeasibility = _lastTime = 0;
-            _task               = null;
             _ascent             = null;
         }
 
         protected override void OnModuleDisabled()
         {
             Debug.Log("Disabling PSG GlueBall");
-            _task   = null;
             _ascent = null;
         }
 
@@ -73,15 +68,13 @@ namespace MuMech
 
         private bool IsFixed(int s) => _ascentSettings.FixedStages.Contains(s);
 
-        // FIXME: maybe this could be a callback to the Task?
         private void HandleDoneTask()
         {
-            if (!(_task is { IsCompleted: true }) || _ascent == null)
+            if (!(_ascent is { IsCompleted: true }))
                 return;
 
             try
             {
-                // FIXME: the way this pokes around the optimizer has code smell
                 Optimizer? psg = _ascent.GetOptimizer();
                 if (psg == null)
                     return;
@@ -107,19 +100,26 @@ namespace MuMech
             }
             finally
             {
-                _task = null;
+                _ascent.TryMarkReady();
             }
         }
 
         private void GatherException()
         {
-            if (!(_task is { IsCompleted: true }))
+            if (!(_ascent is { IsFaulted: true }))
                 return;
 
-            Exception = _task.Exception?.InnerException;
+            if (_ascent.ExceptionMessage != null)
+                Debug.Log(_ascent.ExceptionMessage);
+        }
 
-            if (Exception != null)
-                Debug.Log(Exception);
+        private void MarkReady()
+        {
+            if (!(_ascent is { IsStopped: true }))
+                return;
+
+            if (!_ascent.TryMarkReady())
+                throw new Exception("[MechJebModulePSGGlueBall] could not mark job as ready");
         }
 
         public void SetTarget(double peR, double apR, double attR, double inclination, double lan, double fpa, bool attachAltFlag, bool lanflag)
@@ -130,12 +130,14 @@ namespace MuMech
 
             Staleness = VesselState.time - _lastTime;
 
+            if (_ascent is { IsRunning: true })
+                return;
+
             GatherException();
 
             HandleDoneTask();
 
-            if (_task is { IsCompleted: false })
-                return;
+            MarkReady();
 
             if (_ascentSettings.OptimizeStageFlag)
             {
@@ -285,8 +287,9 @@ namespace MuMech
 
             _ascent = ascentBuilder.Build();
 
-            _task = new Task(_ascent.Run);
-            _task.Start();
+            // TODO: wire up Cancellation and Timeouts
+            if (!_ascent.TryStartJob())
+                throw new Exception("[MechJebModulePSGGlueBall] could not start optimizer job");
 
             _blockOptimizerUntilTime = VesselState.time + 1;
         }
