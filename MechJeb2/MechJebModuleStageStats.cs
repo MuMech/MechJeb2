@@ -1,4 +1,5 @@
 extern alias JetBrainsAnnotations;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using MechJebLib.FuelFlowSimulation;
@@ -6,6 +7,7 @@ using MechJebLib.Primitives;
 using MechJebLibBindings;
 using MechJebLibBindings.FuelFlowSimulation;
 using Unity.Profiling;
+using Debug = UnityEngine.Debug;
 
 namespace MuMech
 {
@@ -58,30 +60,46 @@ namespace MuMech
 
         private void GetResults()
         {
-            if (_vesselManagerAtmo.FuelFlowSimulation.ResultReady)
+            if (_vesselManagerAtmo.FuelFlowSimulation.IsFinished)
             {
-                AtmoStats.Clear();
-                foreach (FuelStats item in _vesselManagerAtmo.FuelFlowSimulation.Segments)
-                    AtmoStats.Add(item);
-                AtmoT = _vesselManagerAtmo.T;
-                AtmoR = _vesselManagerAtmo.R;
-                AtmoV = _vesselManagerAtmo.V;
-                AtmoU = _vesselManagerAtmo.U;
+                if (_vesselManagerAtmo.FuelFlowSimulation.IsCompleted)
+                {
+                    AtmoStats.Clear();
+                    foreach (FuelStats item in _vesselManagerAtmo.FuelFlowSimulation.Segments)
+                        AtmoStats.Add(item);
 
-                _vesselManagerAtmo.FuelFlowSimulation.ResultReady = false;
+                    AtmoT = _vesselManagerAtmo.T;
+                    AtmoR = _vesselManagerAtmo.R;
+                    AtmoV = _vesselManagerAtmo.V;
+                    AtmoU = _vesselManagerAtmo.U;
+                }
+                else
+                {
+                    Debug.Log("[MechJebModuleStageStats] atmo stats failed");
+                }
+                if (!_vesselManagerAtmo.FuelFlowSimulation.TryMarkReady())
+                    throw new Exception("[MechJebModuleStageStats] Tried to mark a running atmo stage stats as ready.");
             }
 
-            if (_vesselManagerVac.FuelFlowSimulation.ResultReady)
+            if (_vesselManagerVac.FuelFlowSimulation.IsFinished)
             {
-                VacStats.Clear();
-                foreach (FuelStats item in _vesselManagerVac.FuelFlowSimulation.Segments)
-                    VacStats.Add(item);
-                VacT = _vesselManagerVac.T;
-                VacR = _vesselManagerVac.R;
-                VacV = _vesselManagerVac.V;
-                VacU = _vesselManagerVac.U;
+                if (_vesselManagerVac.FuelFlowSimulation.IsCompleted)
+                {
+                    VacStats.Clear();
+                    foreach (FuelStats item in _vesselManagerVac.FuelFlowSimulation.Segments)
+                        VacStats.Add(item);
 
-                _vesselManagerVac.FuelFlowSimulation.ResultReady = false;
+                    VacT = _vesselManagerVac.T;
+                    VacR = _vesselManagerVac.R;
+                    VacV = _vesselManagerVac.V;
+                    VacU = _vesselManagerVac.U;
+                }
+                else
+                {
+                    Debug.Log("[MechJebModuleStageStats] vac stats failed");
+                }
+                if (!_vesselManagerVac.FuelFlowSimulation.TryMarkReady())
+                    throw new Exception("[MechJebModuleStageStats] Tried to mark a running vcc stage stats as ready.");
             }
         }
 
@@ -124,7 +142,8 @@ namespace MuMech
                 _vesselManagerVac.SetConditions(0, 0, 0);
                 _vesselManagerVac.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
                     VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
-                _vesselManagerVac.StartFuelFlowSimulationJob();
+                if (!_vesselManagerVac.TryStartFuelFlowSimulationJob())
+                    throw new Exception("[MechJebModuleStageStats] could not start vac stats job");
             }
 
             using (_newAtmoProfile.Auto())
@@ -133,7 +152,8 @@ namespace MuMech
                 _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
                 _vesselManagerAtmo.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
                     VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
-                _vesselManagerAtmo.StartFuelFlowSimulationJob();
+                if (!_vesselManagerAtmo.TryStartFuelFlowSimulationJob())
+                    throw new Exception("[MechJebModuleStageStats] could not start atmo stats job");
             }
         }
 
@@ -154,13 +174,13 @@ namespace MuMech
             RunSimulation();
         }
 
-        private bool SimulationIsRunning() => _vesselManagerAtmo.FuelFlowSimulation.IsRunning() || _vesselManagerVac.FuelFlowSimulation.IsRunning();
+        private bool SimulationReady() => _vesselManagerAtmo.FuelFlowSimulation.IsReady && _vesselManagerVac.FuelFlowSimulation.IsReady;
 
         private readonly Stopwatch _stopwatch = new Stopwatch();
 
         private void TryStartSimulation()
         {
-            if (SimulationIsRunning())
+            if (!SimulationReady())
                 return;
 
             if (HighLogic.LoadedSceneIsEditor)

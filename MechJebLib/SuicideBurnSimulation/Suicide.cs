@@ -8,7 +8,7 @@ using MechJebLib.Utils;
 
 namespace MechJebLib.SuicideBurnSimulation
 {
-    public partial class Suicide : BackgroundJob<Suicide.SuicideResult>
+    public partial class Suicide : AsyncJob
     {
         public struct SuicideResult
         {
@@ -16,8 +16,10 @@ namespace MechJebLib.SuicideBurnSimulation
             public double Tf;
         }
 
+        public SuicideResult Result;
+
         public static SuicideBuilder Builder() => new SuicideBuilder();
 
-        protected override SuicideResult Run(object? o) => throw new NotImplementedException();
+        protected override void Run(object? o) => throw new NotImplementedException();
     }
 }
