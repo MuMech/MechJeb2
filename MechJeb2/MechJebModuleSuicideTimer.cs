@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 extern alias JetBrainsAnnotations;
+using System;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.SuicideBurnSimulation;
@@ -53,10 +54,11 @@ namespace MuMech
 
             if (_suicide != null)
             {
-                if (_suicide.IsRunning())
+                if (_suicide.IsRunning)
                     return;
 
-                _lastResult = _suicide.Result;
+                if (_suicide.IsCompleted)
+                    _lastResult = _suicide.Result;
             }
 
             Suicide.SuicideBuilder suicideBuilder = Suicide.Builder()
@@ -74,7 +76,8 @@ namespace MuMech
             }
 
             _suicide = suicideBuilder.Build();
-            _suicide.StartJob(null);
+            if (!_suicide.TryStartJob(null))
+                throw new Exception("[MechJebModuleSuicideTimer] could not start job");
         }
     }
 }

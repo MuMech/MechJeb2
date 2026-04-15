@@ -13,7 +13,7 @@ using static System.Math;
 
 namespace MechJebLib.FuelFlowSimulation
 {
-    public class FuelFlowSimulation : BackgroundJob<bool>
+    public class FuelFlowSimulation : AsyncJob
     {
         private const int MAXSTEPS = 100;
 
@@ -26,7 +26,7 @@ namespace MechJebLib.FuelFlowSimulation
         private readonly HashSet<SimPart> _partsWithRCSDrains2     = new HashSet<SimPart>();
         private          bool             _allocatedFirstSegment;
 
-        protected override bool Run(object? o)
+        protected override void Run(object? o)
         {
             if (o == null)
                 throw new ArgumentNullException(nameof(o));
@@ -53,8 +53,6 @@ namespace MechJebLib.FuelFlowSimulation
             Segments.Reverse();
 
             _partsWithResourceDrains.Clear();
-
-            return true; // we pull results off the object not off the return value
         }
 
         private void SimulateRCS(SimVessel vessel, bool max)
