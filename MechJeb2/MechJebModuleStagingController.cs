@@ -682,7 +682,7 @@ namespace MuMech
             //      payload fairing now (fixing payload fairings causing stacks to not decouple).
             // if a user requires an interstage fairing that is alone in a stage with no stack decoupler, engine, or
             // anything else in the stage (for cinematics?) then the user MUST use proc fairings.
-            return _partsInStage.Slinq().All(p => p.IsDecoupler() && !p.IsLaunchClamp() && p.children.Count == 0);
+            return _partsInStage.Slinq().All(p => (p.IsDecoupler() || p.HasModule<ModuleProceduralFairing>()) && !p.IsLaunchClamp() && p.children.Count == 0);
         }
     }
 }
