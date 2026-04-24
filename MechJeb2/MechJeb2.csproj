@@ -89,6 +89,7 @@
     <Compile Include="Maneuver\OperationPlane.cs" />
     <Compile Include="Maneuver\OperationResonantOrbit.cs" />
     <Compile Include="Maneuver\OperationSemiMajor.cs" />
+    <Compile Include="Maneuver\OperationStationary.cs" />
     <Compile Include="Maneuver\OperationTransfer.cs" />
     <Compile Include="Maneuver\PlotArea.cs" />
     <Compile Include="Maneuver\Porkchop.cs" />
