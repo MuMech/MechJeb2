@@ -71,8 +71,19 @@ namespace MuMech
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (V3 pos, V3 vel) RightHandedStateVectorsAtUT(this Orbit o, double ut)
         {
-            o.GetOrbitalStateVectorsAtUT(ut, out Vector3d pos, out Vector3d vel);
+            // GetOrbitalStateVectorsAtUT() uses a crazy future-rotation-at-UT to rotate vectors, so carefully avoid it.
+            o.GetOrbitalStateVectorsAtTrueAnomaly(o.TrueAnomalyAtT(o.getObtAtUT(ut)), ut, false, out Vector3d pos, out Vector3d vel);
+            pos = Planetarium.Zup.WorldToLocal(pos);
+            vel = Planetarium.Zup.WorldToLocal(vel);
             return (pos.ToV3(), vel.ToV3());
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FixedGetOrbitalStateVectorsAtUT(this Orbit o, double ut, out Vector3d pos, out Vector3d vel)
+        {
+            o.GetOrbitalStateVectorsAtTrueAnomaly(o.TrueAnomalyAtT(o.getObtAtUT(ut)), ut, false, out pos, out vel);
+            pos = Planetarium.Zup.WorldToLocal(pos);
+            vel = Planetarium.Zup.WorldToLocal(vel);
         }
 
         //normalized vector perpendicular to the orbital plane
@@ -119,51 +130,6 @@ namespace MuMech
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Orbit PerturbedOrbit(this Orbit o, double ut, Vector3d dV) =>
             MuUtils.OrbitFromStateVectors(o.WorldPositionAtUT(ut), o.WorldOrbitalVelocityAtUT(ut) + dV, o.referenceBody, ut);
-
-        // returns a new orbit that is identical to the current one (although the epoch will change)
-        // (i tried many different APIs in the orbit class, but the GetOrbitalStateVectors/UpdateFromStateVectors route was the only one that worked)
-        public static Orbit Clone(this Orbit o, double ut = double.NegativeInfinity)
-        {
-            // hack up a dynamic default value to the current time
-            if (double.IsNegativeInfinity(ut))
-                ut = Planetarium.GetUniversalTime();
-
-            var newOrbit = new Orbit();
-            o.GetOrbitalStateVectorsAtUT(ut, out Vector3d pos, out Vector3d vel);
-            newOrbit.UpdateFromStateVectors(pos, vel, o.referenceBody, ut);
-
-            return newOrbit;
-        }
-
-        // calculate the next patch, which makes patchEndTransition be valid
-        //
-        public static Orbit CalculateNextOrbit(this Orbit o, double ut = double.NegativeInfinity)
-        {
-            var solverParameters = new PatchedConics.SolverParameters();
-
-            // hack up a dynamic default value to the current time
-            if (double.IsNegativeInfinity(ut))
-                ut = Planetarium.GetUniversalTime();
-
-            o.StartUT = ut;
-            o.EndUT   = o.eccentricity >= 1.0 ? o.period : ut + o.period;
-            var nextOrbit = new Orbit();
-            PatchedConics.CalculatePatch(o, nextOrbit, ut, solverParameters, null);
-
-            return nextOrbit;
-        }
-
-        // This does not allocate a new orbit object and the caller should call new Orbit if/when required
-        public static void MutatedOrbit(this Orbit o, double periodOffset = double.NegativeInfinity)
-        {
-            double ut = Planetarium.GetUniversalTime();
-
-            if (!periodOffset.IsFinite())
-                return;
-
-            o.GetOrbitalStateVectorsAtUT(ut + o.period * periodOffset, out Vector3d pos, out Vector3d vel);
-            o.UpdateFromStateVectors(pos, vel, o.referenceBody, ut);
-        }
 
         // circular orbital speed at this instant
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

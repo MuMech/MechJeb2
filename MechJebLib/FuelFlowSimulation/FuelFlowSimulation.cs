@@ -14,7 +14,7 @@ using static System.Math;
 
 namespace MechJebLib.FuelFlowSimulation
 {
-    public class FuelFlowSimulation : BackgroundJob<bool>
+    public class FuelFlowSimulation : AsyncJob
     {
         private const int MAXSTEPS = 100;
 
@@ -28,7 +28,7 @@ namespace MechJebLib.FuelFlowSimulation
         private          bool             _allocatedFirstSegment;
         private          bool             _halfStageIsDetected;
 
-        protected override bool Run(object? o)
+        public override void Run(object? o = null)
         {
             if (o == null)
                 throw new ArgumentNullException(nameof(o));
@@ -59,8 +59,6 @@ namespace MechJebLib.FuelFlowSimulation
 
             if (!_halfStageIsDetected)
                 vessel.HalfStageIndex = -1;
-
-            return true; // we pull results off the object not off the return value
         }
 
         private void SimulateRCS(SimVessel vessel, bool max)

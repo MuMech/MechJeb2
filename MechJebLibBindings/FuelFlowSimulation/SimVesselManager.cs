@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
@@ -64,10 +65,10 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
         public void SetupStageAndAHalf(double endMass) => _vessel.SetupStageAndAHalf(endMass);
 
-        public void StartFuelFlowSimulationJob()
+        public bool TryStartFuelFlowSimulationJob()
         {
             FuelFlowSimulation.DVLinearThrust = DVLinearThrust;
-            FuelFlowSimulation.StartJob(_vessel);
+            return FuelFlowSimulation.TryStartJob(_vessel);
         }
 
         private void Clear()
