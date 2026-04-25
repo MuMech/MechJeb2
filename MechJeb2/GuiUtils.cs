@@ -720,14 +720,16 @@ namespace MuMech
 
         public static bool MouseIsOverWindow(MechJebCore core)
         {
+            Vector2 mousePos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / Scale;
+
+            if (ComboBox.IsPopupActive && ComboBox.PopupRect.Contains(mousePos))
+                return true;
+
             //try to check if the mouse is over any active DisplayModule
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
-                if (m.Enabled && m.ShowInCurrentScene && !m.IsOverlay
-                    && m.WindowPos.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y) / Scale))
-                {
+                if (m.Enabled && m.ShowInCurrentScene && !m.IsOverlay && m.WindowPos.Contains(mousePos))
                     return true;
-                }
             }
 
             return false;
@@ -802,6 +804,9 @@ namespace MuMech
 
             // ComboBox GUI Style
             private static readonly GUIStyle _style;
+
+            public static bool IsPopupActive => _popupOwner != null && _rect.height > 0 && _popupActive;
+            public static Rect PopupRect => _rect;
 
             static ComboBox()
             {

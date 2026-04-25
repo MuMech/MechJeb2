@@ -84,7 +84,7 @@ namespace MechJebLib.PSG
             Check.PositiveFinite(thrust);
             Check.PositiveFinite(mf);
             Check.PositiveFinite(isp);
-            Check.PositiveFinite(minThrottle);
+            Check.NonNegativeFinite(minThrottle);
 
             double mdot = thrust / (isp * G0);
             double bt   = (m0 - mf) / mdot;

@@ -336,7 +336,7 @@ namespace MechJebLib.PSG
                 int        idx       = thisPhase.BtIdx();
 
                 bndl[idx] = Phases[p].MinT;
-                bndu[idx] = Phases[p].MaxT;
+                bndu[idx] = Phases[p].MaxT / Phases[p].MinThrottle;
 
                 /*
                 if (Phases[p].Coast)

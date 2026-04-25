@@ -323,8 +323,6 @@ namespace MuMech
             DesiredOrbitAltitude.Val = 145000;
             DesiredAttachAlt.Val     = 145000;
 
-            DesiredInclination.Val = Math.Round(Vessel.mainBody.GetLatitude(Vessel.CoMD), 3);
-
             Core.Guidance.UllageLeadTime.Val = 20;
 
             Core.Settings.rssMode = true;

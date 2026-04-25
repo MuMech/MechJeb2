@@ -137,8 +137,8 @@
     <Compile Include="SuicideBurnSimulation\SuicideBuilder.cs" />
     <Compile Include="TwoBody\Farnocchia.cs" />
     <Compile Include="TwoBody\Shepperd.cs" />
+    <Compile Include="Utils\AsyncJob.cs" />
     <Compile Include="Utils\AutoDiff.cs" />
-    <Compile Include="Utils\BackgroundJob.cs" />
     <Compile Include="Utils\Check.cs" />
     <Compile Include="Utils\DictOfLists.cs" />
     <Compile Include="Utils\Logger.cs" />

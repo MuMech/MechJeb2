@@ -96,6 +96,7 @@
     <Compile Include="Primitives\V3Tests\VectorMathOperationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PSGTests\AscentTests\BuggyTests.cs" />
+    <Compile Include="PSGTests\AscentTests\KerbinTests.cs" />
     <Compile Include="PSGTests\AscentTests\RealRocketTests.cs" />
     <Compile Include="PSGTests\AscentTests\TheStandardTests.cs" />
     <Compile Include="PSGTests\AscentTests\Titan2Tests.cs" />

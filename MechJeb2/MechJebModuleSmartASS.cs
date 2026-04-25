@@ -136,10 +136,10 @@ namespace MuMech
         public readonly EditableDouble rol = new EditableDouble(0);
 
         [Persistent(pass = (int)Pass.LOCAL)]
-        public AttitudeReference advReference = AttitudeReference.INERTIAL;
+        public AttitudeReference advReference = AttitudeReference.SUN;
 
         [Persistent(pass = (int)Pass.LOCAL)]
-        public Vector6.Direction advDirection = Vector6.Direction.FORWARD;
+        public Vector6.Direction advDirection = Vector6.Direction.DOWN;
 
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool forceRol;
