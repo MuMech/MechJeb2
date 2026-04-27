@@ -33,7 +33,6 @@ namespace MuMech.Landing
         // -----------------------------------------------------------------------
 
         public bool LandAtTarget      = true;   // true → use Core.target coords; false → use worldTargetPos
-        public bool UseRcsOnly        = false;   // drive RCS translation instead of main throttle
         public bool UseApolloTerminal = false;   // Apollo zero-jerk vs gravity-turn terminal law
 
         // -----------------------------------------------------------------------
@@ -42,6 +41,9 @@ namespace MuMech.Landing
 
         public double TargetClearance = 100.0;  // terrain clearance above landing site [m]
         public double PlanThrottle    = 0.95;   // nominal throttle fraction used in solver
+        public double MinThrottle = 0.375;
+        public double TerminalHandoverDownrange = 1000.0;  
+        public double TerminalGlideConstraint = 15.0; // Constraint cone for approach    
 
         private const double GuidancePeriodDescent  = 1.0;   // solver cadence [s]
         private const double GuidancePeriodTerminal = 0.1;
@@ -82,12 +84,6 @@ namespace MuMech.Landing
         public string DbgStage      { get; private set; } = "idle";
         public string DbgIterLog    { get; private set; } = "";
 
-        // RCS telemetry
-        public double RcsThrust     { get; private set; }
-        public double RcsMassFlow   { get; private set; }
-        public double RcsVe         { get; private set; }
-        public double RcsAvailTWR   { get; private set; }
-
         // -----------------------------------------------------------------------
         // Private guidance state
         // -----------------------------------------------------------------------
@@ -107,9 +103,6 @@ namespace MuMech.Landing
         private double   _rawMaxThrust    = 0.0;
         private double   _Ve              = 0.0;
         private double   _mass            = 0.0;
-        private double   _rcsThrust       = 0.0;
-        private double   _rcsMassFlow     = 0.0;
-        private double   _rcsVe           = 0.0;
 
         // Debug scratch written during solver
         private double   _dbgDet         = 0.0;
@@ -158,7 +151,7 @@ namespace MuMech.Landing
             {
                 _targetThrottle = 0f;
                 Core.Thrust.ThrustOff();
-                Status = UseRcsOnly ? "CTGIG: waiting for active RCS." : "CTGIG: waiting for active engine.";
+                Status = "CTGIG: waiting for active engine.";
                 return this;
             }
 
@@ -330,7 +323,7 @@ namespace MuMech.Landing
                         Status = $"Powered. TGO={_current_tf:F1}s T={_current_T / 1000.0:F2}kN";
 
                         // Transition to terminal when close to target
-                        if (IsFinite(_current_tf) && (target_x_loc < 1000.0 || altRadar < 30.0))
+                        if (IsFinite(_current_tf) && (target_x_loc < TerminalHandoverDownrange || altRadar < 30.0))
                         {
                             TargetClearance = 0.0;
 
@@ -401,9 +394,9 @@ namespace MuMech.Landing
                         GTGuidanceOutput gt = ComputeGravityTurnCommand(
                             pos, vel, targetPos, x_hat, y_hat, z_hat,
                             mu, _mass, _availableThrust, _Ve,
-                            Tmin_abs:    _availableThrust * 0.375,
+                            Tmin_abs:    _availableThrust * MinThrottle,
                             C_b:         0.95,   k_gain:      2.4,
-                            C_e:         20.0,   phi_rad:     Math.PI / 45.0,
+                            C_e:         20.0,   phi_rad:     TerminalGlideConstraint * Math.PI / 180.0,
                             delta:       5.0,    C_col_lower: 0.75,
                             C_col_upper: 0.95);
 
@@ -451,27 +444,11 @@ namespace MuMech.Landing
 
         /// <summary>
         /// Drive is called every physics tick after OnFixedUpdate.
-        /// Sets throttle (main or RCS). Attitude is driven by Core.Attitude.
+        /// Sets throttle. Attitude is driven by Core.Attitude.
         /// </summary>
         public override AutopilotStep Drive(FlightCtrlState s)
         {
-            if (UseRcsOnly)
-            {
-                s.mainThrottle = 0f;
-
-                if (_targetPointing.sqrMagnitude > 1e-6 && Vessel != null)
-                {
-                    Transform refT = Vessel.ReferenceTransform;
-                    s.X = Mathf.Clamp((float)Vector3d.Dot(_targetPointing.normalized, refT.right),   -1f, 1f);
-                    s.Y = Mathf.Clamp((float)Vector3d.Dot(_targetPointing.normalized, refT.forward), -1f, 1f);
-                    s.Z = Mathf.Clamp((float)Vector3d.Dot(_targetPointing.normalized, refT.up),      -1f, 1f);
-                }
-            }
-            else
-            {
-                Core.Thrust.RequestActiveThrottle(_targetThrottle, allowZero: true);
-            }
-
+            Core.Thrust.RequestActiveThrottle(_targetThrottle, allowZero: true);
             return this;
         }
 
@@ -715,7 +692,7 @@ namespace MuMech.Landing
 
         /// <summary>
         /// Reads engine stats directly from KSP part modules.
-        /// Returns false if no active engines (or no RCS thrusters in UseRcsOnly mode).
+        /// Returns false if no active engines.
         /// </summary>
         private bool UpdateShipStats()
         {
@@ -726,33 +703,6 @@ namespace MuMech.Landing
             _rawMaxThrust    = 0.0;
             _availableThrust = 0.0;
             _Ve              = 0.0;
-
-            if (UseRcsOnly)
-            {
-                _rcsThrust = _rcsMassFlow = _rcsVe = 0.0;
-                foreach (Part p in vessel.parts)
-                {
-                    foreach (ModuleRCS rcs in p.FindModulesImplementing<ModuleRCS>())
-                    {
-                        if (!rcs.rcsEnabled || !rcs.isEnabled || rcs.thrusterPower <= 0) continue;
-                        int    nozzles = (rcs.thrusterTransforms != null && rcs.thrusterTransforms.Count > 0)
-                                         ? rcs.thrusterTransforms.Count : 1;
-                        double thrustN = rcs.thrusterPower * 1000.0 * nozzles;
-                        double isp     = rcs.realISP > 0 ? rcs.realISP : rcs.atmosphereCurve.Evaluate(0);
-                        if (!IsFinite(isp) || isp <= 1e-6 || thrustN <= 1e-6) continue;
-                        _rcsThrust   += thrustN;
-                        _rcsMassFlow += thrustN / (isp * 9.80665);
-                    }
-                }
-                if (_rcsThrust <= 0 || _rcsMassFlow <= 0) return false;
-                _rcsVe = _rcsThrust / _rcsMassFlow;
-                _availableThrust = _rcsThrust;
-                _Ve              = _rcsVe;
-                RcsThrust        = _rcsThrust;
-                RcsMassFlow      = _rcsMassFlow;
-                RcsVe            = _rcsVe;
-                return IsFinite(_Ve) && _mass > 0;
-            }
 
             double massFlow = 0.0;
             foreach (Part p in vessel.parts)
@@ -781,21 +731,11 @@ namespace MuMech.Landing
             double mu = MainBody.gravParameter;
             LocalG = mu / (r * r);
 
-            if (UseRcsOnly)
-            {
-                AvailableTWR = _rcsThrust > 1e-6 ? _rcsThrust / (mass * LocalG) : 0.0;
-                CurrentTWR   = _current_T > 1e-6 ? _current_T / (mass * LocalG) : 0.0;
-                RcsAvailTWR  = AvailableTWR;
-                DvUsed       = (_guidanceStartMass > mass && mass > 1e-6 && _rcsVe > 1e-6)
-                               ? _rcsVe * Math.Log(_guidanceStartMass / mass) : 0.0;
-            }
-            else
-            {
-                AvailableTWR = availThrust > 1e-6 ? availThrust / (mass * LocalG) : 0.0;
-                CurrentTWR   = _current_T > 1e-6 ? _current_T  / (mass * LocalG) : 0.0;
-                DvUsed       = (_guidanceStartMass > mass && mass > 1e-6 && ve > 1e-6)
-                               ? ve * Math.Log(_guidanceStartMass / mass) : 0.0;
-            }
+            AvailableTWR = availThrust > 1e-6 ? availThrust / (mass * LocalG) : 0.0;
+            CurrentTWR   = _current_T > 1e-6 ? _current_T  / (mass * LocalG) : 0.0;
+            DvUsed       = (_guidanceStartMass > mass && mass > 1e-6 && ve > 1e-6)
+                            ? ve * Math.Log(_guidanceStartMass / mass) : 0.0;
+
         }
 
         private void ApplyDbgFromResult(CTGResult res)

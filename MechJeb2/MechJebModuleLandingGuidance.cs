@@ -17,6 +17,11 @@ namespace MuMech
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public int _landingSiteIdx;
+        private string _ctgigPlanThrottleText = "";
+        private string _ctgigMinThrottleText = "";
+        private string _ctgigClearanceText = "";
+        private string _ctgigTerminalHandoverText = "";
+        private string _ctgigTerminalGlideConstraintText = "";
 
         public struct LandingSite
         {
@@ -40,6 +45,25 @@ namespace MuMech
         {
             double angularDelta = distance * UtilMath.Rad2Deg / (alt + MainBody.Radius);
             angle += angularDelta;
+        }
+
+        private void DrawDoubleField(string label, ref string text, ref double value, string units, double min, double max)
+        {
+            if (string.IsNullOrEmpty(text))
+                text = value.ToString("F3");
+
+            GUILayout.BeginHorizontal();
+
+            GUILayout.Label(label, GUILayout.Width(120));
+            text = GUILayout.TextField(text, GUILayout.Width(55));
+
+            if (!string.IsNullOrEmpty(units))
+                GUILayout.Label(units, GUILayout.Width(25));
+
+            GUILayout.EndHorizontal();
+
+            if (double.TryParse(text, out double parsed))
+                value = Math.Max(min, Math.Min(max, parsed));
         }
 
         protected override void WindowGUI(int windowID)
@@ -116,8 +140,74 @@ namespace MuMech
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label2")); //Autopilot:
 
-                _predictor.maxOrbits        = Core.Landing.Enabled ? 0.5 : 4;
-                _predictor.noSkipToFreefall = !Core.Landing.Enabled;
+                GUILayout.Space(5);
+                GUILayout.Label("CTGIG Settings");
+
+                DrawDoubleField(
+                    "Plan throttle",
+                    ref _ctgigPlanThrottleText,
+                    ref Core.Landing.CtgigPlanThrottle,
+                    "",
+                    0.01,
+                    1.0
+                );
+
+                DrawDoubleField(
+                    "Min throttle",
+                    ref _ctgigMinThrottleText,
+                    ref Core.Landing.CtgigMinThrottle,
+                    "",
+                    0.0,
+                    1.0
+                );
+
+                DrawDoubleField(
+                    "Clearance",
+                    ref _ctgigClearanceText,
+                    ref Core.Landing.CtgigTargetClearance,
+                    "m",
+                    0.0,
+                    10000.0
+                );
+
+                DrawDoubleField(
+                    "Terminal handover",
+                    ref _ctgigTerminalHandoverText,
+                    ref Core.Landing.CtgigTerminalHandoverDownrange,
+                    "m",
+                    0.0,
+                    100000.0
+                );
+
+                GUI.enabled = !Core.Landing.CtgigUseApolloTerminal;
+                DrawDoubleField(
+                    "GT Cone limit",
+                    ref _ctgigTerminalGlideConstraintText,
+                    ref Core.Landing.CtgigTerminalGlideConstraint,
+                    "deg",
+                    0.0,
+                    60.0
+                );
+                GUI.enabled = true;
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Terminal mode", GUILayout.Width(120));
+
+                string terminalModeLabel = Core.Landing.CtgigUseApolloTerminal
+                    ? "Apollo"
+                    : "Gravity Turn";
+
+                if (GUILayout.Button(terminalModeLabel, GUILayout.Width(95)))
+                {
+                    Core.Landing.CtgigUseApolloTerminal = !Core.Landing.CtgigUseApolloTerminal;
+                }
+
+                GUILayout.EndHorizontal();
+
+
+
+                // _predictor.maxOrbits        = Core.Landing.Enabled ? 0.5 : 4;
+                // _predictor.noSkipToFreefall = !Core.Landing.Enabled;
 
                 if (Core.Landing.Enabled)
                 {
@@ -173,6 +263,21 @@ namespace MuMech
                     //    GUILayout.Label(parachuteInfo);
                     //}
                 }
+                
+                Landing.CTGIGLandingStep ctgig = Core.Landing.CurrentStep as Landing.CTGIGLandingStep;
+
+                //<--- CTGIG Live Debug--->
+                if (ctgig != null)
+                {
+                    GUILayout.Space(5);
+                    GUILayout.Label("CTGIG Live");
+                    GUILayout.Label($"TGO: {ctgig.TimeToGo:F1}s");
+                    GUILayout.Label($"Throttle: {ctgig.CurrentThrottle * 100.0f:F0}%");
+                    GUILayout.Label($"Pred X: {ctgig.PredDownrange:F0}m");
+                    GUILayout.Label($"Err X: {ctgig.DownrangeError:F0}m");
+                    GUILayout.Label($"TWR: {ctgig.CurrentTWR:F2}/{ctgig.AvailableTWR:F2}");
+                }
+
             }
 
             GUILayout.EndVertical();
