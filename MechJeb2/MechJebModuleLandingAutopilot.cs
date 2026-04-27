@@ -117,20 +117,37 @@ namespace MuMech
             Users.Add(controller);
 
             _predictor.Users.Add(this);
-            Vessel.RemoveAllManeuverNodes(); // For the benefit of the landing predictions module
+            Vessel.RemoveAllManeuverNodes();
 
             _deployedGears = false;
 
-            // Create a new parachute plan
             _parachutePlan = new ParachutePlan(this);
             _parachutePlan.StartPlanning();
 
-            if (Orbit.PeA < 0)
-                SetStep(new CourseCorrection(Core));
-            else if (UseLowDeorbitStrategy())
-                SetStep(new PlaneChange(Core));
-            else
-                SetStep(new DeorbitBurn(Core));
+            SetStep(new Landing.CTGIGLandingStep(Core)
+            {
+                LandAtTarget = true,
+                UseRcsOnly = false,
+                UseApolloTerminal = false,
+                TargetClearance = 100.0,
+                PlanThrottle = 0.95
+            });
+
+            // if (Orbit.PeA < 0)
+            // {
+            //     SetStep(new Landing.CTGIGLandingStep(Core)
+            //     {
+            //         LandAtTarget = true,
+            //         UseRcsOnly = false,
+            //         UseApolloTerminal = false,
+            //         TargetClearance = 100.0,
+            //         PlanThrottle = 0.95
+            //     });
+            // }
+            // else
+            // {
+            //     SetStep(new DeorbitBurn(Core));
+            // }
         }
 
         public void LandUntargeted(object controller)
@@ -140,11 +157,17 @@ namespace MuMech
 
             _deployedGears = false;
 
-            // Create a new parachute plan
             _parachutePlan = new ParachutePlan(this);
             _parachutePlan.StartPlanning();
 
-            SetStep(new UntargetedDeorbit(Core));
+            SetStep(new Landing.CTGIGLandingStep(Core)
+            {
+                LandAtTarget = false,
+                UseRcsOnly = false,
+                UseApolloTerminal = true,
+                TargetClearance = 100.0,
+                PlanThrottle = 0.95,
+            });
         }
 
         public void StopLanding()

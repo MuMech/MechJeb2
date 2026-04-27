@@ -71,6 +71,7 @@
     <Compile Include="LandingAutopilot\LowDeorbitBurn.cs" />
     <Compile Include="LandingAutopilot\PlaneChange.cs" />
     <Compile Include="LandingAutopilot\UntargetedDeorbit.cs" />
+    <Compile Include="LandingAutopilot\CTGIGLandingStep.cs" />
     <Compile Include="Maneuver\Operation.cs" />
     <Compile Include="Maneuver\OperationAdvancedTransfer.cs" />
     <Compile Include="Maneuver\OperationApoapsis.cs" />
