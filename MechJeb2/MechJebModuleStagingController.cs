@@ -276,6 +276,11 @@ namespace MuMech
             // (e.g. bool PSGIsCoasting) since it is getting tightly coupled.
             if (Vessel.currentStage <= ActiveAutoStageModuleLimit())
             {
+                if (!HasFairing(Vessel.currentStage - 1))
+                {
+                    Debug.Log("next stage has no fairing in autostagelimit");
+                }
+
                 // force staging once if fairing conditions are met in the next stage
                 if (HasFairing(Vessel.currentStage - 1) && !WaitingForFairing())
                 {
@@ -293,12 +298,16 @@ namespace MuMech
             // don't decouple active or idle engines or tanks
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(Vessel.currentStage - 1, _burnedResources, _activeModuleEngines) &&
                 !InverseStageReleasesClamps(Vessel.currentStage - 1))
+            {
+                Debug.Log("check one");
                 return;
+            }
 
             // prevent staging if we have unstable ullage and we have RCS
             if (InverseStageHasUnstableEngines(Vessel.currentStage - 1) && Core.Thrust.AutoRCSUllaging && Vessel.hasEnabledRCSModules() &&
                 Core.Thrust.LastThrottle > 0)
             {
+                Debug.Log("check two");
                 if (!Vessel.ActionGroups[KSPActionGroup.RCS])
                     Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
                 return;
@@ -314,11 +323,17 @@ namespace MuMech
             if (HotStaging && InverseStageHasEngines(Vessel.currentStage - 1) &&
                 !InverseStageFiresDecoupler(Vessel.currentStage - 1) && !InverseStageReleasesClamps(Vessel.currentStage - 1) &&
                 LastNonZeroDVStageBurnTime() > HotStagingLeadTime)
+            {
+                Debug.Log("check three");
                 return;
+            }
 
             // Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
             if (HasStayingChutes(Vessel.currentStage - 1))
+            {
+                Debug.Log("check four");
                 return;
+            }
 
             // Always drop deactivated engines or tanks
             if (InverseStageDecouplesDeactivatedEngineOrTank(Vessel.currentStage - 1))
@@ -328,7 +343,10 @@ namespace MuMech
 
             // only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
             if (WaitingForFairing())
+            {
+                Debug.Log("check five");
                 return;
+            }
 
             // only release launch clamps if we're at nearly full thrust and no failed engines
             if ((VesselState.thrustCurrent / VesselState.thrustAvailable < ClampAutoStageThrustPct || AnyFailedEngines(_allModuleEngines)) &&
@@ -345,16 +363,28 @@ namespace MuMech
         private bool WaitingForFairing()
         {
             if (!HasFairing(Vessel.currentStage - 1))
+            {
+                Debug.Log("no fairing in next stage");
                 return false;
+            }
 
             if (Core.VesselState.dynamicPressure > FairingMaxDynamicPressure)
+            {
+                Debug.Log("dynamic pressure constraint not met");
                 return true;
+            }
 
             if (Core.VesselState.altitudeASL < FairingMinAltitude)
+            {
+                Debug.Log("altitude constraint not met");
                 return true;
+            }
 
             if (Core.VesselState.freeMolecularAerothermalFlux > FairingMaxAerothermalFlux)
+            {
+                Debug.Log("heat flux constraint not met");
                 return true;
+            }
 
             return false;
         }

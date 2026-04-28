@@ -51,6 +51,8 @@ namespace MuMech
         public MechJebModuleStageStats                  StageStats;
         public MechJebModuleAscentSettings              AscentSettings;
         public MechJebModuleSpinupController            Spinup;
+        public MechJebModuleHoverslamSimulation         Hoverslam;
+        public MechJebModuleSmartASS                    SmartASS;
         public MechJebModuleAscentBaseAutopilot         Ascent => AscentSettings.AscentAutopilot;
 
         public readonly VesselState VesselState = new VesselState();
@@ -750,6 +752,8 @@ namespace MuMech
             StageStats     = GetComputerModule<MechJebModuleStageStats>();
             AscentSettings = GetComputerModule<MechJebModuleAscentSettings>();
             Spinup         = GetComputerModule<MechJebModuleSpinupController>();
+            Hoverslam      = GetComputerModule<MechJebModuleHoverslamSimulation>();
+            SmartASS       = GetComputerModule<MechJebModuleSmartASS>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)

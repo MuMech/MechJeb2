@@ -7,6 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.FunctionImpls;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -165,6 +166,20 @@ namespace MechJebLib.Functions
             return (sma, Sqrt(Max(1 - h.sqrMagnitude / (sma * mu), 0)));
         }
 
+        public static double SlrFromStateVectors(double mu, V3 r, V3 v)
+        {
+            var h = V3.Cross(r, v);
+            return h.sqrMagnitude / mu;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (double l, double ecc) SlrEccFromStateVectors(double mu, V3 r, V3 v)
+        {
+            double l   = SlrFromStateVectors(mu, r, v);
+            double ecc = EccVecFromStateVectors(mu, r, v).magnitude;
+            return (l, ecc);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Dual sma, Dual ecc) SmaEccFromStateVectors(Dual mu, DualV3 r, DualV3 v)
         {
@@ -202,24 +217,21 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double RadiusFromTrueAnomaly(double mu, V3 r, V3 v, double nu)
         {
+            // FIXME: buggy at ecc = 1.0
             (double sma, double ecc) = SmaEccFromStateVectors(mu, r, v);
 
             return RadiusFromTrueAnomaly(sma, ecc, nu);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double TrueAnomalyFromRadius(double sma, double ecc, double radius)
-        {
-            double l = sma * (1 - ecc * ecc);
-            return SafeAcos((l / radius - 1) / ecc);
-        }
+        public static double TrueAnomalyFromRadius(double l, double ecc, double radius) => SafeAcos((l / radius - 1) / ecc);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TrueAnomalyFromRadius(double mu, V3 r, V3 v, double radius)
         {
-            (double sma, double ecc) = SmaEccFromStateVectors(mu, r, v);
+            (double l, double ecc) = SlrEccFromStateVectors(mu, r, v);
 
-            return TrueAnomalyFromRadius(sma, ecc, radius);
+            return TrueAnomalyFromRadius(l, ecc, radius);
         }
 
         /// <summary>
@@ -743,9 +755,6 @@ namespace MechJebLib.Functions
             return (dv1, dv2, tt, alpha);
         }
 
-        public static (double dt, V3 rland) SuicideBurnCalc(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess = double.NaN) =>
-            RealSuicideBurnCalc.Run(mu, r0, v0, beta, radius, dtGuess);
-
         public static double IspFromMassesThrustBurntime(double m0, double mf, double thrust, double bt)
         {
             double mdot = (m0 - mf) / bt;
@@ -756,6 +765,18 @@ namespace MechJebLib.Functions
         {
             double mdot = (m0 - mf) / bt;
             return mdot * isp * G0;
+        }
+
+        public static double DeltaVFromMassThrustIspBurntime(double m0, double thrust, double isp, double bt)
+        {
+            Check.PositiveFinite(m0);
+            Check.PositiveFinite(thrust);
+            Check.PositiveFinite(isp);
+            Check.Finite(bt);
+            double mdot = thrust / (isp * G0);
+            double mf   = m0 - mdot * bt;
+            Check.PositiveFinite(mf);
+            return isp * G0 * Log(m0 / mf);
         }
     }
 }

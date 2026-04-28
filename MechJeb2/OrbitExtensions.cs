@@ -538,32 +538,5 @@ namespace MuMech
         public static string MuString(this Orbit o) =>
             "PeA:" + o.PeA + " ApA:" + o.ApA + " SMA:" + o.semiMajorAxis + " ECC:" + o.eccentricity + " INC:" + o.inclination + " LAN:" +
             o.LAN + " ArgP:" + o.argumentOfPeriapsis + " TA:" + o.trueAnomaly;
-
-        public static double SuicideBurnCountdown(Orbit orbit, VesselState vesselState)
-        {
-            if (vesselState.mainBody is null) return 0;
-            if (orbit.PeA > 0) return double.PositiveInfinity;
-
-            double mu          = vesselState.mainBody.gravParameter;
-            double thrustAccel = vesselState.limitedMaxThrustAccel;
-            double radius      = vesselState.LastSuicideBurnRadius;
-            double lastDt      = vesselState.LastSuicideBurnDt;
-            double twr         = thrustAccel / (vesselState.mainBody.GeeASL * PhysicsGlobals.GravitationalAcceleration);
-
-            // we need to have some kind of sanity check here to reset the value to something reasonable
-            if (!IsFinite(radius) || radius < 0.5 * vesselState.mainBody.Radius || radius > 1.5 * vesselState.mainBody.Radius)
-                radius = vesselState.mainBody.Radius + vesselState.mainBody.TerrainAltitude(vesselState.orbitalPosition);
-
-            V3 r0 = vesselState.orbitalPosition.WorldToV3Rotated();
-            V3 v0 = vesselState.orbitalVelocity.WorldToV3Rotated();
-
-            (double dt, V3 rland) = Astro.SuicideBurnCalc(mu, r0, v0, twr, radius, lastDt);
-
-            Vector3d estimatedLandingSite = rland.V3ToWorldRotated();
-            vesselState.LastSuicideBurnRadius = vesselState.mainBody.Radius + vesselState.mainBody.TerrainAltitude(estimatedLandingSite);
-            vesselState.LastSuicideBurnDt = dt;
-
-            return dt;
-        }
     }
 }
