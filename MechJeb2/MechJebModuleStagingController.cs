@@ -308,6 +308,7 @@ namespace MuMech
             if (!InverseStageHasActiveEngines(Vessel.currentStage))
             {
                 Stage();
+                return;
             }
 
             // prevent staging when the current stage has active engines and the next stage has any engines (but not decouplers or clamps)
@@ -324,6 +325,7 @@ namespace MuMech
             if (InverseStageDecouplesDeactivatedEngineOrTank(Vessel.currentStage - 1))
             {
                 Stage();
+                return;
             }
 
             // only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
@@ -453,7 +455,7 @@ namespace MuMech
         private bool InverseStageHasActiveEngines(int inverseStage)
         {
             foreach (ModuleEngines engine in _allModuleEngines)
-                if (engine.part.inverseStage == inverseStage && engine.EngineHasFuel())
+                if (engine.part.inverseStage >= inverseStage && engine.EngineHasFuel())
                     return true;
             return false;
         }
