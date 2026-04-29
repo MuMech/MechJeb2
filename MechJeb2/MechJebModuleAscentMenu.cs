@@ -49,18 +49,11 @@ namespace MuMech
 
         private bool _launchingWithAnyPlaneControl => _launchingToPlane || _launchingToRendezvous || _launchingToMatchLan || _launchingToLan;
 
-        private MechJebModuleAscentBaseAutopilot   _autopilot      => Core.Ascent;
-        private MechJebModuleAscentSettings        _ascentSettings => Core.AscentSettings;
-        private MechJebModuleAscentClassicPathMenu _classicPathMenu;
-        private MechJebModuleAscentPVGSettingsMenu _pvgSettingsMenu;
-        private MechJebModuleAscentSettingsMenu    _settingsMenu;
-
-        public override void OnStart(PartModule.StartState state)
-        {
-            _pvgSettingsMenu = Core.GetComputerModule<MechJebModuleAscentPVGSettingsMenu>();
-            _settingsMenu    = Core.GetComputerModule<MechJebModuleAscentSettingsMenu>();
-            _classicPathMenu = Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
-        }
+        private MechJebModuleAscentBaseAutopilot   _autopilot       => Core.Ascent;
+        private MechJebModuleAscentSettings        _ascentSettings  => Core.AscentSettings;
+        private MechJebModuleAscentClassicPathMenu _classicPathMenu => Core.GetComputerModule<MechJebModuleAscentClassicPathMenu>();
+        private MechJebModuleAscentPVGSettingsMenu _pvgSettingsMenu => Core.GetComputerModule<MechJebModuleAscentPVGSettingsMenu>();
+        private MechJebModuleAscentSettingsMenu    _settingsMenu    => Core.GetComputerModule<MechJebModuleAscentSettingsMenu>();
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
