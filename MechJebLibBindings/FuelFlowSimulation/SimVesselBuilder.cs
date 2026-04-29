@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -29,17 +29,9 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private static readonly CrewMass _crewMassDelegate;
 
-            private SimVessel _vessel
-            {
-                get => _manager._vessel;
-                set => _manager._vessel = value;
-            }
+            private SimVessel _vessel => _manager._vessel;
 
-            private IShipconstruct _kspVessel
-            {
-                get => _manager._kspVessel;
-                set => _manager._kspVessel = value;
-            }
+            private IShipconstruct _kspVessel => _manager._kspVessel;
 
             private readonly        SimVesselManager _manager;
             private static readonly Type?            _rfType;
@@ -68,7 +60,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private static double CrewMassNew(ProtoCrewMember crew) => PhysicsGlobals.KerbalCrewMass + crew.ResourceMass() + crew.InventoryMass();
 
-            public SimVesselBuilder(SimVesselManager manager)
+            internal SimVesselBuilder(SimVesselManager manager)
             {
                 _manager = manager;
             }
@@ -126,14 +118,12 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 }
             }
 
-            internal void BuildVessel(IShipconstruct kspVessel)
+            internal void BuildVessel()
             {
-                _vessel.Dispose();
-                _vessel    = SimVessel.Borrow();
-                _kspVessel = kspVessel;
+                BuildParts();
             }
 
-            internal void BuildParts()
+            private void BuildParts()
             {
                 _vessel.SetCurrentStage(StageManager.CurrentStage);
 

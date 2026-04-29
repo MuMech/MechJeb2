@@ -294,6 +294,15 @@ namespace MuMech
 
             Profiler.EndSample();
 
+            if (stats.HalfStageIndex != -1)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Half-stage index: {stats.HalfStageIndex}", GUILayout.Width(130));
+                GUILayout.Space(30);
+                GuiUtils.SimpleTextBox("End mass: ", stats.HalfStageEndMass, "kg");
+                GUILayout.EndHorizontal();
+            }
+
             Profiler.BeginSample("AllStageStats.DrawColumns");
 
             GUILayout.BeginHorizontal();

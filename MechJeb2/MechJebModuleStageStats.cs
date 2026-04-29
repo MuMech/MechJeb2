@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,6 +20,10 @@ namespace MuMech
         public bool          LiveSLT = true;
         public double        AltSLT  = 0;
         public double        Mach    = 0;
+
+        public int HalfStageIndex => _vesselManagerVac.HalfStageIndex;
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public readonly EditableDoubleMult HalfStageEndMass = new EditableDoubleMult(0, 0.001);
 
         private int _vabRebuildTimer = 1;
 
@@ -144,6 +148,7 @@ namespace MuMech
                 _vesselManagerVac.SetConditions(0, 0, 0);
                 _vesselManagerVac.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
                     VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
+                _vesselManagerVac.SetupStageAndAHalf(HalfStageEndMass);
                 if (!_vesselManagerVac.TryStartFuelFlowSimulationJob())
                     throw new Exception("[MechJebModuleStageStats] could not start vac stats job");
             }
@@ -154,6 +159,7 @@ namespace MuMech
                 _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
                 _vesselManagerAtmo.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
                     VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
+                _vesselManagerAtmo.SetupStageAndAHalf(HalfStageEndMass);
                 if (!_vesselManagerAtmo.TryStartFuelFlowSimulationJob())
                     throw new Exception("[MechJebModuleStageStats] could not start atmo stats job");
             }
