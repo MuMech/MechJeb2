@@ -5,7 +5,7 @@ namespace MuMech
 {
     public class MechJebModulePoweredDescentGuidance : AutopilotModule
     {
-        private CTGIGLandingStep _guidanceStep;
+        private PDGGuidanceLoop _guidanceStep;
 
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public double PlanThrottle = 0.95;
@@ -50,7 +50,7 @@ namespace MuMech
             }
         }
 
-        public CTGIGLandingStep CurrentGuidanceStep
+        public PDGGuidanceLoop CurrentGuidanceStep
         {
             get { return _guidanceStep; }
         }
@@ -79,7 +79,7 @@ namespace MuMech
             Users.Add(controller);
             Vessel.RemoveAllManeuverNodes();
 
-            _guidanceStep = new CTGIGLandingStep(Core)
+            _guidanceStep = new PDGGuidanceLoop(Core)
             {
                 LandAtTarget = landAtTarget,
                 UseApolloTerminal = UseApolloTerminal,

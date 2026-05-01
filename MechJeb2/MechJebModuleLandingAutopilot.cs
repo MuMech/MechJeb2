@@ -35,30 +35,6 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool RCSAdjustment = true;
 
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public double CtgigPlanThrottle = 0.95;
-
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public double CtgigMinThrottle = 0.375;
-
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public double CtgigTargetClearance = 100.0;
-
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public double CtgigTerminalHandoverDownrange = 1000.0;
-
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public bool CtgigUseApolloTerminal = false;
-
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public double CtgigTerminalGlideConstraint = 15.0;
-
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public bool CtgigPulseThrottleMode = false;
-
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
-        public double CtgigPulsePeriod = 1.0;
-
         // This is used to adjust the height at which the parachutes semi deploy as a means of
         // targeting the landing in an atmosphere where it is not possible to control atitude
         // to perform course correction burns.
@@ -141,26 +117,20 @@ namespace MuMech
             Users.Add(controller);
 
             _predictor.Users.Add(this);
-            Vessel.RemoveAllManeuverNodes();
+            Vessel.RemoveAllManeuverNodes(); // For the benefit of the landing predictions module
 
             _deployedGears = false;
 
+            // Create a new parachute plan
             _parachutePlan = new ParachutePlan(this);
             _parachutePlan.StartPlanning();
 
-            SetStep(new Landing.CTGIGLandingStep(Core)
-            {
-                LandAtTarget = true,
-                UseApolloTerminal = CtgigUseApolloTerminal,
-                TargetClearance = CtgigTargetClearance,
-                PlanThrottle = CtgigPlanThrottle,
-                MinThrottle = CtgigMinThrottle,
-                TerminalHandoverDownrange = CtgigTerminalHandoverDownrange,
-                TerminalGlideConstraint = CtgigTerminalGlideConstraint,
-                PulseThrottleMode = CtgigPulseThrottleMode,
-                PulsePeriod = CtgigPulsePeriod
-            });
-
+            if (Orbit.PeA < 0)
+                SetStep(new CourseCorrection(Core));
+            else if (UseLowDeorbitStrategy())
+                SetStep(new PlaneChange(Core));
+            else
+                SetStep(new DeorbitBurn(Core));
         }
 
         public void LandUntargeted(object controller)
@@ -170,21 +140,11 @@ namespace MuMech
 
             _deployedGears = false;
 
+            // Create a new parachute plan
             _parachutePlan = new ParachutePlan(this);
             _parachutePlan.StartPlanning();
 
-            SetStep(new Landing.CTGIGLandingStep(Core)
-            {
-                LandAtTarget = false,
-                UseApolloTerminal = CtgigUseApolloTerminal,
-                TargetClearance = CtgigTargetClearance,
-                PlanThrottle = CtgigPlanThrottle,
-                MinThrottle = CtgigMinThrottle,
-                TerminalHandoverDownrange = CtgigTerminalHandoverDownrange,
-                TerminalGlideConstraint = CtgigTerminalGlideConstraint,
-                PulseThrottleMode = CtgigPulseThrottleMode,
-                PulsePeriod = CtgigPulsePeriod
-            });
+            SetStep(new UntargetedDeorbit(Core));
         }
 
         public void StopLanding()

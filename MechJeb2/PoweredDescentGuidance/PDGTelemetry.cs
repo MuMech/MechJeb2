@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MuMech.Landing
 {
-    public partial class CTGIGLandingStep
+    public partial class PDGGuidanceLoop
     {
         private void UpdatePerformanceStats(Vector3d pos, double mass, double availThrust, double ve)
         {

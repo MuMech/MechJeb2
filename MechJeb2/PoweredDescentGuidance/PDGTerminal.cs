@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MuMech.Landing
 {
-    public partial class CTGIGLandingStep
+    public partial class PDGGuidanceLoop
     {
         #region Apollo zero-jerk terminal law
 

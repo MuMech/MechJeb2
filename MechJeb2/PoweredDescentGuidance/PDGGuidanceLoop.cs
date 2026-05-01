@@ -1,4 +1,4 @@
-// CTGIGLandingStep.cs
+
 // Powered + terminal descent guidance for MechJeb2 dev branch.
 //
 // Drop-in landing step for MechJebModuleLandingAutopilot.
@@ -6,9 +6,9 @@
 // Replace DecelerationBurn + FinalDescent with this one class.
 //
 // Usage in MechJebModuleLandingAutopilot after plane-change / deorbit:
-//     _currentPhase = new CTGIGLandingStep(Core) { LandAtTarget = LandAtTarget };
+//     _currentPhase = new PDGGuidanceLoop(Core) { LandAtTarget = LandAtTarget };
 //
-// Solvers (verbatim from standalone CTGIGPlugin):
+// Solvers:
 //   - DCTGIG powered descent (SolveDCTGIG_Outer / IterateCTGCore)
 //   - Gravity-turn terminal law (Han, Jo & Ho arXiv:2409.01465)
 //   - Apollo zero-jerk terminal law
@@ -19,7 +19,7 @@ using UnityEngine;
 
 namespace MuMech.Landing
 {
-    public partial class CTGIGLandingStep : AutopilotStep
+    public partial class PDGGuidanceLoop : AutopilotStep
     {
         // -----------------------------------------------------------------------
         // State machine
@@ -124,9 +124,9 @@ namespace MuMech.Landing
         // Constructor
         // -----------------------------------------------------------------------
 
-        public CTGIGLandingStep(MechJebCore core) : base(core)
+        public PDGGuidanceLoop(MechJebCore core) : base(core)
         {
-            Status = "CTGIG: initialized";
+            Status = "PDG: initialized";
         }
 
         // -----------------------------------------------------------------------

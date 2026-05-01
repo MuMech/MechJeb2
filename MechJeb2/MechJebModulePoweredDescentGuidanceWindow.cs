@@ -236,7 +236,7 @@ namespace MuMech
 
             GUILayout.Label("Status: " + pdg.PdgStatus);
 
-            CTGIGLandingStep step = pdg.CurrentGuidanceStep;
+            PDGGuidanceLoop step = pdg.CurrentGuidanceStep;
             if (step == null)
                 return;
 

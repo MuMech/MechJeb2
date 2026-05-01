@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MuMech.Landing
 {
-    public partial class CTGIGLandingStep
+    public partial class PDGGuidanceLoop
     {
         
 

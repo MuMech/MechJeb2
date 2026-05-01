@@ -17,13 +17,6 @@ namespace MuMech
         [UsedImplicitly]
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public int _landingSiteIdx;
-        private string _ctgigPlanThrottleText = "";
-        private string _ctgigMinThrottleText = "";
-        private string _ctgigClearanceText = "";
-        private string _ctgigTerminalHandoverText = "";
-        private string _ctgigTerminalGlideConstraintText = "";
-        private string _ctgigPulsePeriodText = "";
-
 
         public struct LandingSite
         {
@@ -47,25 +40,6 @@ namespace MuMech
         {
             double angularDelta = distance * UtilMath.Rad2Deg / (alt + MainBody.Radius);
             angle += angularDelta;
-        }
-
-        private void DrawDoubleField(string label, ref string text, ref double value, string units, double min, double max)
-        {
-            if (string.IsNullOrEmpty(text))
-                text = value.ToString("F3");
-
-            GUILayout.BeginHorizontal();
-
-            GUILayout.Label(label, GUILayout.Width(120));
-            text = GUILayout.TextField(text, GUILayout.Width(55));
-
-            if (!string.IsNullOrEmpty(units))
-                GUILayout.Label(units, GUILayout.Width(25));
-
-            GUILayout.EndHorizontal();
-
-            if (double.TryParse(text, out double parsed))
-                value = Math.Max(min, Math.Min(max, parsed));
         }
 
         protected override void WindowGUI(int windowID)
@@ -135,95 +109,14 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
 
-            // Don't want legacy predictions
-            //DrawGUITogglePredictions();
+            DrawGUITogglePredictions();
 
             if (Core.Landing != null)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label2")); //Autopilot:
 
-                GUILayout.Space(5);
-                GUILayout.Label("CTGIG Settings");
-
-                Core.Landing.CtgigPulseThrottleMode =
-                GUILayout.Toggle(Core.Landing.CtgigPulseThrottleMode, "Pulse throttle mode");
-
-                GUI.enabled = Core.Landing.CtgigPulseThrottleMode;
-                DrawDoubleField(
-                    "Pulse period",
-                    ref _ctgigPulsePeriodText,
-                    ref Core.Landing.CtgigPulsePeriod,
-                    "s",
-                    0.1,
-                    10.0
-                );
-                GUI.enabled = true;
-                
-                DrawDoubleField(
-                    "Plan throttle",
-                    ref _ctgigPlanThrottleText,
-                    ref Core.Landing.CtgigPlanThrottle,
-                    "",
-                    0.01,
-                    1.0
-                );
-
-                DrawDoubleField(
-                    "Min throttle",
-                    ref _ctgigMinThrottleText,
-                    ref Core.Landing.CtgigMinThrottle,
-                    "",
-                    0.0,
-                    1.0
-                );
-
-                DrawDoubleField(
-                    "Clearance",
-                    ref _ctgigClearanceText,
-                    ref Core.Landing.CtgigTargetClearance,
-                    "m",
-                    0.0,
-                    10000.0
-                );
-
-                DrawDoubleField(
-                    "Terminal handover",
-                    ref _ctgigTerminalHandoverText,
-                    ref Core.Landing.CtgigTerminalHandoverDownrange,
-                    "m",
-                    0.0,
-                    100000.0
-                );
-
-                GUI.enabled = !Core.Landing.CtgigUseApolloTerminal;
-                DrawDoubleField(
-                    "GT Cone limit",
-                    ref _ctgigTerminalGlideConstraintText,
-                    ref Core.Landing.CtgigTerminalGlideConstraint,
-                    "deg",
-                    0.0,
-                    60.0
-                );
-                GUI.enabled = true;
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Terminal mode", GUILayout.Width(120));
-
-                string terminalModeLabel = Core.Landing.CtgigUseApolloTerminal
-                    ? "Apollo"
-                    : "Gravity Turn";
-
-                if (GUILayout.Button(terminalModeLabel, GUILayout.Width(95)))
-                {
-                    Core.Landing.CtgigUseApolloTerminal = !Core.Landing.CtgigUseApolloTerminal;
-                }
-
-                GUILayout.EndHorizontal();
-
-
-
-                // _predictor.maxOrbits        = Core.Landing.Enabled ? 0.5 : 4;
-                // _predictor.noSkipToFreefall = !Core.Landing.Enabled;
+                _predictor.maxOrbits        = Core.Landing.Enabled ? 0.5 : 4;
+                _predictor.noSkipToFreefall = !Core.Landing.Enabled;
 
                 if (Core.Landing.Enabled)
                 {
@@ -241,24 +134,23 @@ namespace MuMech
                     GUILayout.EndHorizontal();
                 }
 
-                //GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label3"), Core.Landing.TouchdownSpeed, "m/s",
-                //    35); //Touchdown speed:
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label3"), Core.Landing.TouchdownSpeed, "m/s",
+                    35); //Touchdown speed:
 
-                //if (Core.Landing != null)
-                //    Core.Node.Autowarp = GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_LandingGuidance_checkbox1")); //Auto-warp
+                if (Core.Landing != null)
+                    Core.Node.Autowarp = GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_LandingGuidance_checkbox1")); //Auto-warp
 
                 Core.Landing.DeployGears =
                     GUILayout.Toggle(Core.Landing.DeployGears, Localizer.Format("#MechJeb_LandingGuidance_checkbox2")); //Deploy Landing Gear
-                //GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label4"), Core.Landing.LimitGearsStage, "", 35); //"Stage Limit:"
-                
-                //Core.Landing.DeployChutes =
-                //    GUILayout.Toggle(Core.Landing.DeployChutes, Localizer.Format("#MechJeb_LandingGuidance_checkbox3")); //Deploy Parachutes
-                //_predictor.deployChutes = Core.Landing.DeployChutes;
-                //GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label5"), Core.Landing.LimitChutesStage, "", 35); //Stage Limit:
-                //_predictor.limitChutesStage = Core.Landing.LimitChutesStage;
-                // Core.Landing.RCSAdjustment =
-                //     GUILayout.Toggle(Core.Landing.RCSAdjustment,
-                //         Localizer.Format("#MechJeb_LandingGuidance_checkbox4")); //Use RCS for small adjustment
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label4"), Core.Landing.LimitGearsStage, "", 35); //"Stage Limit:"
+                Core.Landing.DeployChutes =
+                    GUILayout.Toggle(Core.Landing.DeployChutes, Localizer.Format("#MechJeb_LandingGuidance_checkbox3")); //Deploy Parachutes
+                _predictor.deployChutes = Core.Landing.DeployChutes;
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label5"), Core.Landing.LimitChutesStage, "", 35); //Stage Limit:
+                _predictor.limitChutesStage = Core.Landing.LimitChutesStage;
+                Core.Landing.RCSAdjustment =
+                    GUILayout.Toggle(Core.Landing.RCSAdjustment,
+                        Localizer.Format("#MechJeb_LandingGuidance_checkbox4")); //Use RCS for small adjustment
                 Core.Thrust.LimiterMinThrottleInfoItem(); //Toggle to prevent full engine shutdowns
 
                 if (Core.Landing.Enabled)
@@ -279,21 +171,6 @@ namespace MuMech
                     //    GUILayout.Label(parachuteInfo);
                     //}
                 }
-                
-                Landing.CTGIGLandingStep ctgig = Core.Landing.CurrentStep as Landing.CTGIGLandingStep;
-
-                //<--- CTGIG Live Debug--->
-                if (ctgig != null)
-                {
-                    GUILayout.Space(5);
-                    GUILayout.Label("CTGIG Live");
-                    GUILayout.Label($"TGO: {ctgig.TimeToGo:F1}s");
-                    GUILayout.Label($"Throttle: {ctgig.CurrentThrottle * 100.0f:F3}%");
-                    GUILayout.Label($"Pred X: {ctgig.PredDownrange:F0}m");
-                    GUILayout.Label($"Err X: {ctgig.DownrangeError:F3}m");
-                    GUILayout.Label($"TWR: {ctgig.CurrentTWR:F2}/{ctgig.AvailableTWR:F2}");
-                }
-
             }
 
             GUILayout.EndVertical();
@@ -315,90 +192,90 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_LandingPredictions", InfoItem.Category.Misc)] //Landing predictions
-        // private void DrawGUITogglePredictions()
-        // {
-        //     GUILayout.BeginVertical();
+        private void DrawGUITogglePredictions()
+        {
+            GUILayout.BeginVertical();
 
-        //     bool active = GUILayout.Toggle(_predictor.Enabled, Localizer.Format("#MechJeb_LandingGuidance_checkbox5")); //Show landing predictions
-        //     if (_predictor.Enabled != active)
-        //     {
-        //         if (active)
-        //         {
-        //             _predictor.Users.Add(this);
-        //         }
-        //         else
-        //         {
-        //             _predictor.Users.Remove(this);
-        //         }
-        //     }
+            bool active = GUILayout.Toggle(_predictor.Enabled, Localizer.Format("#MechJeb_LandingGuidance_checkbox5")); //Show landing predictions
+            if (_predictor.Enabled != active)
+            {
+                if (active)
+                {
+                    _predictor.Users.Add(this);
+                }
+                else
+                {
+                    _predictor.Users.Remove(this);
+                }
+            }
 
-        //     if (_predictor.Enabled)
-        //     {
-        //         _predictor.makeAerobrakeNodes =
-        //             GUILayout.Toggle(_predictor.makeAerobrakeNodes, Localizer.Format("#MechJeb_LandingGuidance_checkbox6")); //"Show aerobrake nodes"
-        //         _predictor.showTrajectory =
-        //             GUILayout.Toggle(_predictor.showTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox7")); //Show trajectory
-        //         _predictor.worldTrajectory =
-        //             GUILayout.Toggle(_predictor.worldTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox8")); //World trajectory
-        //         _predictor.camTrajectory =
-        //             GUILayout.Toggle(_predictor.camTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox9")); //Camera trajectory (WIP)
-        //         DrawGUIPrediction();
-        //     }
+            if (_predictor.Enabled)
+            {
+                _predictor.makeAerobrakeNodes =
+                    GUILayout.Toggle(_predictor.makeAerobrakeNodes, Localizer.Format("#MechJeb_LandingGuidance_checkbox6")); //"Show aerobrake nodes"
+                _predictor.showTrajectory =
+                    GUILayout.Toggle(_predictor.showTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox7")); //Show trajectory
+                _predictor.worldTrajectory =
+                    GUILayout.Toggle(_predictor.worldTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox8")); //World trajectory
+                _predictor.camTrajectory =
+                    GUILayout.Toggle(_predictor.camTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox9")); //Camera trajectory (WIP)
+                DrawGUIPrediction();
+            }
 
-        //     GUILayout.EndVertical();
-        // }
+            GUILayout.EndVertical();
+        }
 
-        // private void DrawGUIPrediction()
-        // {
-        //     ReentrySimulation.Result result = _predictor.Result;
-        //     if (result != null)
-        //     {
-        //         switch (result.Outcome)
-        //         {
-        //             case ReentrySimulation.Outcome.LANDED:
-        //                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label9")); //Landing Predictions:
-        //                 GUILayout.Label(Coordinates.ToStringDMS(result.EndPosition.Latitude, result.EndPosition.Longitude) + "\nASL:" +
-        //                                 result.EndASL.ToSI() + "m");
-        //                 GUILayout.Label(result.Body.GetExperimentBiomeSafe(result.EndPosition.Latitude, result.EndPosition.Longitude));
-        //                 double error = Vector3d.Distance(
-        //                     MainBody.GetWorldSurfacePosition(result.EndPosition.Latitude, result.EndPosition.Longitude, 0) - MainBody.position,
-        //                     MainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - MainBody.position);
-        //                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label10") + error.ToSI() + "m"
-        //                                 + Localizer.Format("#MechJeb_LandingGuidance_Label11") + result.MaxDragGees.ToString("F1") + "g"
-        //                                 + Localizer.Format("#MechJeb_LandingGuidance_Label12") + result.DeltaVExpended.ToString("F1") + "m/s"
-        //                                 + Localizer.Format("#MechJeb_LandingGuidance_Label13") + (Vessel.Landed
-        //                                     ? "0.0s"
-        //                                     : GuiUtils.TimeToDHMS(result.EndUT - Planetarium.GetUniversalTime(),
-        //                                         1))); //Target difference = \nMax drag: \nDelta-v needed: \nTime to land:
-        //                 break;
+        private void DrawGUIPrediction()
+        {
+            ReentrySimulation.Result result = _predictor.Result;
+            if (result != null)
+            {
+                switch (result.Outcome)
+                {
+                    case ReentrySimulation.Outcome.LANDED:
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label9")); //Landing Predictions:
+                        GUILayout.Label(Coordinates.ToStringDMS(result.EndPosition.Latitude, result.EndPosition.Longitude) + "\nASL:" +
+                                        result.EndASL.ToSI() + "m");
+                        GUILayout.Label(result.Body.GetExperimentBiomeSafe(result.EndPosition.Latitude, result.EndPosition.Longitude));
+                        double error = Vector3d.Distance(
+                            MainBody.GetWorldSurfacePosition(result.EndPosition.Latitude, result.EndPosition.Longitude, 0) - MainBody.position,
+                            MainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - MainBody.position);
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label10") + error.ToSI() + "m"
+                                        + Localizer.Format("#MechJeb_LandingGuidance_Label11") + result.MaxDragGees.ToString("F1") + "g"
+                                        + Localizer.Format("#MechJeb_LandingGuidance_Label12") + result.DeltaVExpended.ToString("F1") + "m/s"
+                                        + Localizer.Format("#MechJeb_LandingGuidance_Label13") + (Vessel.Landed
+                                            ? "0.0s"
+                                            : GuiUtils.TimeToDHMS(result.EndUT - Planetarium.GetUniversalTime(),
+                                                1))); //Target difference = \nMax drag: \nDelta-v needed: \nTime to land:
+                        break;
 
-        //             case ReentrySimulation.Outcome.AEROBRAKED:
-        //                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label14")); //Predicted orbit after aerobraking:
-        //                 Orbit o = result.AeroBrakeOrbit();
-        //                 if (o.eccentricity > 1)
-        //                     GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label15") +
-        //                                     o.eccentricity.ToString("F2")); //Hyperbolic, eccentricity =
-        //                 else GUILayout.Label(o.PeA.ToSI(3) + "m x " + o.ApA.ToSI(3) + "m");
-        //                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label16", result.MaxDragGees.ToString("F1")) +
-        //                                 Localizer.Format("#MechJeb_LandingGuidance_Label17",
-        //                                     GuiUtils.TimeToDHMS(result.AeroBrakeUT - Planetarium.GetUniversalTime(),
-        //                                         1))); //Max drag:<<1>>g  \nExit atmosphere in:
-        //                 break;
+                    case ReentrySimulation.Outcome.AEROBRAKED:
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label14")); //Predicted orbit after aerobraking:
+                        Orbit o = result.AeroBrakeOrbit();
+                        if (o.eccentricity > 1)
+                            GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label15") +
+                                            o.eccentricity.ToString("F2")); //Hyperbolic, eccentricity =
+                        else GUILayout.Label(o.PeA.ToSI(3) + "m x " + o.ApA.ToSI(3) + "m");
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label16", result.MaxDragGees.ToString("F1")) +
+                                        Localizer.Format("#MechJeb_LandingGuidance_Label17",
+                                            GuiUtils.TimeToDHMS(result.AeroBrakeUT - Planetarium.GetUniversalTime(),
+                                                1))); //Max drag:<<1>>g  \nExit atmosphere in:
+                        break;
 
-        //             case ReentrySimulation.Outcome.NO_REENTRY:
-        //                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label18_1")
-        //                                 + Orbit.PeA.ToSI(3) + "m Pe > " + MainBody.RealMaxAtmosphereAltitude().ToSI(3) + (MainBody.atmosphere
-        //                                     ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2")
-        //                                     : Localizer.Format(
-        //                                         "#MechJeb_LandingGuidance_Label18_3"))); //"Orbit does not reenter:\n""m atmosphere height""m ground"
-        //                 break;
+                    case ReentrySimulation.Outcome.NO_REENTRY:
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label18_1")
+                                        + Orbit.PeA.ToSI(3) + "m Pe > " + MainBody.RealMaxAtmosphereAltitude().ToSI(3) + (MainBody.atmosphere
+                                            ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2")
+                                            : Localizer.Format(
+                                                "#MechJeb_LandingGuidance_Label18_3"))); //"Orbit does not reenter:\n""m atmosphere height""m ground"
+                        break;
 
-        //             case ReentrySimulation.Outcome.TIMED_OUT:
-        //                 GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label19")); //Reentry simulation timed out.
-        //                 break;
-        //         }
-        //     }
-        // }
+                    case ReentrySimulation.Outcome.TIMED_OUT:
+                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label19")); //Reentry simulation timed out.
+                        break;
+                }
+            }
+        }
 
         private void InitLandingSitesList()
         {
