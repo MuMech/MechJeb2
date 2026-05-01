@@ -56,6 +56,13 @@ namespace MuMech.Landing
         private double _landAnywhereLon = double.NaN;
         bool _terminalClearanceZeroed = false;
 
+        // PWM Test
+        public bool PulseThrottleMode = false;
+        public double PulsePeriod = 1.0;       // seconds
+        public double PulseMinOnTime = 0.10;   // seconds
+        public double PulseMinOffTime = 0.10;  // seconds
+        private double _pulseTimer = 0.0;
+
         // -----------------------------------------------------------------------
         // Public telemetry — read by MechJebModuleLandingGuidance window
         // -----------------------------------------------------------------------
@@ -362,8 +369,8 @@ namespace MuMech.Landing
                     {
                         ApolloGuidanceOutput ap = ComputeApolloZeroJerkCommand(
                             pos, vel, targetPos, x_hat, y_hat, z_hat, mu, _mass, _availableThrust,
-                            vfWorldOpt:    -0.5 * y_hat,
-                            aFinalWorldOpt: 0.5 * y_hat,
+                            vfWorldOpt:    -0.1 * y_hat,
+                            aFinalWorldOpt: 0.2 * y_hat,
                             jFinalWorldOpt: Vector3d.zero,
                             tgoGuess: 10.0, tgoAxis: 1);
 
@@ -448,13 +455,60 @@ namespace MuMech.Landing
         /// </summary>
         public override AutopilotStep Drive(FlightCtrlState s)
         {
-            Core.Thrust.RequestActiveThrottle(_targetThrottle, allowZero: true);
+            float rawThrottle = _targetThrottle;
+            float throttleCmd = rawThrottle;
+
+            if (PulseThrottleMode)
+                throttleCmd = PulseThrottleCommand(rawThrottle);
+
+            Core.Thrust.RequestActiveThrottle(throttleCmd, allowZero: true);
+
+            CurrentThrottle = throttleCmd;
+            // Status = // debug only
+            //     $"PWM={PulseThrottleMode} raw={rawThrottle:F2} cmd={throttleCmd:F2} " +
+            //     $"period={PulsePeriod:F2} timer={_pulseTimer:F2}";
+
             return this;
         }
+
+
 
         // -----------------------------------------------------------------------
         // Public helpers — called by LandingGuidance or LandingAutopilot
         // -----------------------------------------------------------------------
+
+        private float PulseThrottleCommand(float commandedThrottle)
+        {
+            commandedThrottle = Mathf.Clamp01(commandedThrottle);
+
+            if (commandedThrottle <= 0.0f)
+            {
+                _pulseTimer = 0.0;
+                return 0.0f;
+            }
+
+            if (commandedThrottle >= 0.999f)
+            {
+                _pulseTimer = 0.0;
+                return 1.0f;
+            }
+
+            double period = Math.Max(0.2, PulsePeriod);
+
+            _pulseTimer += TimeWarp.fixedDeltaTime;
+            while (_pulseTimer >= period)
+                _pulseTimer -= period;
+
+            double onTime = commandedThrottle * period;
+
+            if (onTime < 0.05)
+                return 0.0f;
+
+            if ((period - onTime) < 0.05)
+                return 1.0f;
+
+            return _pulseTimer < onTime ? 1.0f : 0.0f;
+        }
 
         /// <summary>
         /// Override target in LandAnywhere mode using velocity-aligned frame.

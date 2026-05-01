@@ -53,6 +53,12 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
         public double CtgigTerminalGlideConstraint = 15.0;
 
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
+        public bool CtgigPulseThrottleMode = false;
+
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.LOCAL))]
+        public double CtgigPulsePeriod = 1.0;
+
         // This is used to adjust the height at which the parachutes semi deploy as a means of
         // targeting the landing in an atmosphere where it is not possible to control atitude
         // to perform course correction burns.
@@ -150,7 +156,9 @@ namespace MuMech
                 PlanThrottle = CtgigPlanThrottle,
                 MinThrottle = CtgigMinThrottle,
                 TerminalHandoverDownrange = CtgigTerminalHandoverDownrange,
-                TerminalGlideConstraint = CtgigTerminalGlideConstraint
+                TerminalGlideConstraint = CtgigTerminalGlideConstraint,
+                PulseThrottleMode = CtgigPulseThrottleMode,
+                PulsePeriod = CtgigPulsePeriod
             });
 
         }
@@ -173,7 +181,9 @@ namespace MuMech
                 PlanThrottle = CtgigPlanThrottle,
                 MinThrottle = CtgigMinThrottle,
                 TerminalHandoverDownrange = CtgigTerminalHandoverDownrange,
-                TerminalGlideConstraint = CtgigTerminalGlideConstraint
+                TerminalGlideConstraint = CtgigTerminalGlideConstraint,
+                PulseThrottleMode = CtgigPulseThrottleMode,
+                PulsePeriod = CtgigPulsePeriod
             });
         }
 

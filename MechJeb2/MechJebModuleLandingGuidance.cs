@@ -22,6 +22,8 @@ namespace MuMech
         private string _ctgigClearanceText = "";
         private string _ctgigTerminalHandoverText = "";
         private string _ctgigTerminalGlideConstraintText = "";
+        private string _ctgigPulsePeriodText = "";
+
 
         public struct LandingSite
         {
@@ -143,6 +145,20 @@ namespace MuMech
                 GUILayout.Space(5);
                 GUILayout.Label("CTGIG Settings");
 
+                Core.Landing.CtgigPulseThrottleMode =
+                GUILayout.Toggle(Core.Landing.CtgigPulseThrottleMode, "Pulse throttle mode");
+
+                GUI.enabled = Core.Landing.CtgigPulseThrottleMode;
+                DrawDoubleField(
+                    "Pulse period",
+                    ref _ctgigPulsePeriodText,
+                    ref Core.Landing.CtgigPulsePeriod,
+                    "s",
+                    0.1,
+                    10.0
+                );
+                GUI.enabled = true;
+                
                 DrawDoubleField(
                     "Plan throttle",
                     ref _ctgigPlanThrottleText,
@@ -240,9 +256,9 @@ namespace MuMech
                 //_predictor.deployChutes = Core.Landing.DeployChutes;
                 //GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_LandingGuidance_label5"), Core.Landing.LimitChutesStage, "", 35); //Stage Limit:
                 //_predictor.limitChutesStage = Core.Landing.LimitChutesStage;
-                Core.Landing.RCSAdjustment =
-                    GUILayout.Toggle(Core.Landing.RCSAdjustment,
-                        Localizer.Format("#MechJeb_LandingGuidance_checkbox4")); //Use RCS for small adjustment
+                // Core.Landing.RCSAdjustment =
+                //     GUILayout.Toggle(Core.Landing.RCSAdjustment,
+                //         Localizer.Format("#MechJeb_LandingGuidance_checkbox4")); //Use RCS for small adjustment
                 Core.Thrust.LimiterMinThrottleInfoItem(); //Toggle to prevent full engine shutdowns
 
                 if (Core.Landing.Enabled)
@@ -272,9 +288,9 @@ namespace MuMech
                     GUILayout.Space(5);
                     GUILayout.Label("CTGIG Live");
                     GUILayout.Label($"TGO: {ctgig.TimeToGo:F1}s");
-                    GUILayout.Label($"Throttle: {ctgig.CurrentThrottle * 100.0f:F0}%");
+                    GUILayout.Label($"Throttle: {ctgig.CurrentThrottle * 100.0f:F3}%");
                     GUILayout.Label($"Pred X: {ctgig.PredDownrange:F0}m");
-                    GUILayout.Label($"Err X: {ctgig.DownrangeError:F0}m");
+                    GUILayout.Label($"Err X: {ctgig.DownrangeError:F3}m");
                     GUILayout.Label($"TWR: {ctgig.CurrentTWR:F2}/{ctgig.AvailableTWR:F2}");
                 }
 
