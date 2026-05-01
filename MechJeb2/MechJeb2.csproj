@@ -120,6 +120,7 @@
     <Compile Include="MechJebModuleLandingAutopilot.cs" />
     <Compile Include="MechJebModuleLandingGuidance.cs" />
     <Compile Include="MechJebModulePoweredDescentGuidance.cs" />
+    <Compile Include="MechJebModulePoweredDescentGuidanceWindow.cs" />
     <Compile Include="MechJebModuleLandingPredictions.cs" />
     <Compile Include="MechJebModuleManeuverPlanner.cs" />
     <Compile Include="MechJebModuleMenu.cs" />

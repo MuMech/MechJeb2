@@ -1,4 +1,4 @@
-$repo = "C:\Users\shaun\Documents\02 Coding\KSP\MJLanding\MechJeb2"
+$repo = $PSScriptRoot
 
 $pluginDirs = @(
     "C:\KSP 1.12.5 MJ2 Test\Kerbal Space Program\GameData\MechJeb2\Plugins",
