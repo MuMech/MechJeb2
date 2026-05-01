@@ -79,6 +79,7 @@
     <Compile Include="PoweredDescentGuidance\PDGPoweredDescent.cs" />
     <Compile Include="PoweredDescentGuidance\PDGTargeting.cs" />
     <Compile Include="PoweredDescentGuidance\PDGThrottle.cs" />
+    <Compile Include="PoweredDescentGuidance\PDGTelemetry.cs" />
     <Compile Include="Maneuver\Operation.cs" />
     <Compile Include="Maneuver\OperationAdvancedTransfer.cs" />
     <Compile Include="Maneuver\OperationApoapsis.cs" />
