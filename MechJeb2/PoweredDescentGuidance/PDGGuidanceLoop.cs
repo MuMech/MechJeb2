@@ -25,8 +25,9 @@ namespace MuMech.Landing
         // State machine
         // -----------------------------------------------------------------------
 
-        private enum CTGIGState { Coasting, PoweredDescent, TerminalDescent }
-        private CTGIGState _ctgState = CTGIGState.Coasting;
+        private enum GuidanceState { Coasting, PoweredDescent, TerminalDescent }
+        private GuidanceState _ctgState = GuidanceState.Coasting;
+        private readonly object _controller;
 
         // -----------------------------------------------------------------------
         // Mode flags — set by MechJebModuleLandingAutopilot before handing off
@@ -54,7 +55,7 @@ namespace MuMech.Landing
         private bool _landAnywhereTargetSet = false;
         private double _landAnywhereLat = double.NaN;
         private double _landAnywhereLon = double.NaN;
-        bool _terminalClearanceZeroed = false;
+        //bool _terminalClearanceZeroed = false;
 
         // PWM Test
         public bool PulseThrottleMode = false;
@@ -124,8 +125,9 @@ namespace MuMech.Landing
         // Constructor
         // -----------------------------------------------------------------------
 
-        public PDGGuidanceLoop(MechJebCore core) : base(core)
+        public PDGGuidanceLoop(MechJebCore core, object controller) : base(core)
         {
+            _controller = controller;
             Status = "PDG: initialized";
         }
 
@@ -149,7 +151,6 @@ namespace MuMech.Landing
             {
                 _targetThrottle = 0f;
                 Core.Thrust.ThrustOff();
-                Core.Landing.StopLanding();
                 Status = "Touchdown. Guidance complete.";
                 return null;
             }
@@ -238,7 +239,7 @@ namespace MuMech.Landing
                 // ================================================================
                 // COASTING — probe solver; ignite when x_loc closes to target
                 // ================================================================
-                if (_ctgState == CTGIGState.Coasting)
+                if (_ctgState == GuidanceState.Coasting)
                 {
                     _targetThrottle = 0f;
                     if (vel.sqrMagnitude > 1e-6) _targetPointing = -vel.normalized;
@@ -269,7 +270,7 @@ namespace MuMech.Landing
                                 // after that, immediately continue into powered guidance on the next tick.
                                 if (_guidanceStartMass < 0.0) _guidanceStartMass = _mass;
                                 _guidancePeriod = GuidancePeriodDescent;
-                                _ctgState = CTGIGState.PoweredDescent;
+                                _ctgState = GuidanceState.PoweredDescent;
                                 _nextGuidanceUpdateUT = ut;
                                 Status = $"Land Anywhere target set. PDI initiated. x={PredDownrange:F0}m";
                                 return this;
@@ -284,7 +285,7 @@ namespace MuMech.Landing
                         {
                             if (_guidanceStartMass < 0.0) _guidanceStartMass = _mass;
                             _guidancePeriod = GuidancePeriodDescent;
-                            _ctgState = CTGIGState.PoweredDescent;
+                            _ctgState = GuidanceState.PoweredDescent;
                             Status = "PDI initiated.";
                         }
                         else
@@ -305,7 +306,7 @@ namespace MuMech.Landing
                 // ================================================================
                 // POWERED DESCENT — DCTGIG solver
                 // ================================================================
-                else if (_ctgState == CTGIGState.PoweredDescent)
+                else if (_ctgState == GuidanceState.PoweredDescent)
                 {
                     CTGResult res = SolveDCTGIG_Outer(r_loc, v_loc, vf_loc, target_x_loc, _mass, _current_T, _Ve, mu, R_target, 3);
 
@@ -335,7 +336,7 @@ namespace MuMech.Landing
                             TargetClearance = 0.0;
 
                             _guidancePeriod = GuidancePeriodTerminal;
-                            _ctgState = CTGIGState.TerminalDescent;
+                            _ctgState = GuidanceState.TerminalDescent;
                             Status = "Terminal descent initiated.";
                         }
                     }
@@ -348,7 +349,7 @@ namespace MuMech.Landing
                 // ================================================================
                 // TERMINAL DESCENT — GT or Apollo law
                 // ================================================================
-                else if (_ctgState == CTGIGState.TerminalDescent)
+                else if (_ctgState == GuidanceState.TerminalDescent)
                 {
                     if (vessel.LandedOrSplashed)
                     {
@@ -360,7 +361,6 @@ namespace MuMech.Landing
                     {
                         _targetThrottle = 0f;
                         Core.Thrust.ThrustOff();
-                        Core.Landing.StopLanding();
                         Status = "Contact. Disengaging.";
                         return null;
                     }
@@ -431,7 +431,7 @@ namespace MuMech.Landing
             } // end runSolver gate
 
             // --- Coasting attitude: point retrograde every tick ---
-            if (_ctgState == CTGIGState.Coasting && vel.sqrMagnitude > 1e-6)
+            if (_ctgState == GuidanceState.Coasting && vel.sqrMagnitude > 1e-6)
                 _targetPointing = -vel.normalized;
 
             TimeToGo       = _current_tf;
@@ -443,38 +443,11 @@ namespace MuMech.Landing
                 Core.Attitude.attitudeTo(
                     _targetPointing.normalized,
                     AttitudeReference.INERTIAL,
-                    Core.Landing,
+                    _controller,
                     killRollRotation: true);
 
             return this;
         }
-
-        /// <summary>
-        /// Drive is called every physics tick after OnFixedUpdate.
-        /// Sets throttle. Attitude is driven by Core.Attitude.
-        /// </summary>
-        
-
-
-
-        // -----------------------------------------------------------------------
-        // Public helpers — called by LandingGuidance or LandingAutopilot
-        // -----------------------------------------------------------------------
-
-        
-
-        /// <summary>
-        /// Override target in LandAnywhere mode using velocity-aligned frame.
-        /// Call from MechJebModuleLandingAutopilot after LandUntargeted() is invoked.
-        /// </summary>
-        
-
-
-
-        /// <summary>
-        /// Nudge the landing target downrange (+) / uprange (-) and left (-) / right (+) of LOS.
-        /// Uses a fresh LOS from vessel to target so buttons are always frame-correct.
-        /// </summary>
         
 
         // -----------------------------------------------------------------------
@@ -490,21 +463,7 @@ namespace MuMech.Landing
         {
             return PDGMathUtils.IsFinite(v);
         }
-
-        /// <summary>
-        /// Returns the current guidance target in body-relative space.
-        /// In LandAtTarget mode reads Core.Target; otherwise uses worldTargetPos.
-        /// </summary>
         
-
-        
-
-        
-
-        /// <summary>
-        /// Reads engine stats directly from KSP part modules.
-        /// Returns false if no active engines.
-        /// </summary>
         private bool UpdateShipStats()
         {
             PDGEngineState engineState = PDGEngine.ReadEngineState(Vessel);
@@ -519,21 +478,6 @@ namespace MuMech.Landing
 
             return true;
         }
-
-        
-
-        // -----------------------------------------------------------------------
-        // Ground marker (flight view and map view)
-        // Uses MechJeb's GLUtils so we don't need the custom material setup.
-        // Call from OnRenderObject of the parent MechJebModuleLandingAutopilot
-        // by exposing TargetLatLon as public properties.
-        // -----------------------------------------------------------------------
-
-
-
-        // -----------------------------------------------------------------------
-        // SOLVERS (verbatim from CTGIGPlugin.cs — no changes)
-        // -----------------------------------------------------------------------
 
     }
 }

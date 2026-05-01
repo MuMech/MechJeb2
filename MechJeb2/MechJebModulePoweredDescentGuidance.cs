@@ -77,9 +77,13 @@ namespace MuMech
             StopGuidanceInternal(false);
 
             Users.Add(controller);
+
+            Core.Attitude.Users.Add(this);
+            Core.Thrust.Users.Add(this);
+
             Vessel.RemoveAllManeuverNodes();
 
-            _guidanceStep = new PDGGuidanceLoop(Core)
+            _guidanceStep = new PDGGuidanceLoop(Core, this)
             {
                 LandAtTarget = landAtTarget,
                 UseApolloTerminal = UseApolloTerminal,
@@ -113,7 +117,6 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (!Active) return;
             if (_guidanceStep == null) return;
 
             AutopilotStep nextStep = _guidanceStep.OnFixedUpdate();
@@ -124,7 +127,6 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            if (!Active) return;
             if (_guidanceStep == null) return;
 
             _guidanceStep.Drive(s);
