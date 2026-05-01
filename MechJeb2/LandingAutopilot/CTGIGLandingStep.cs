@@ -644,8 +644,15 @@ namespace MuMech.Landing
         // Internal helpers
         // -----------------------------------------------------------------------
 
-        private static string Fmt(Vector3d v) { return $"[{v.x:F3},{v.y:F3},{v.z:F3}]"; }
-        private static bool IsFinite(double v) { return !double.IsNaN(v) && !double.IsInfinity(v); }
+       private static string Fmt(Vector3d v)
+        {
+            return PDGMathUtils.FormatVector(v);
+        }
+
+        private static bool IsFinite(double v)
+        {
+            return PDGMathUtils.IsFinite(v);
+        }
 
         /// <summary>
         /// Returns the current guidance target in body-relative space.
@@ -750,33 +757,17 @@ namespace MuMech.Landing
         /// </summary>
         private bool UpdateShipStats()
         {
-            Vessel vessel = Vessel;
-            if (vessel == null) return false;
+            PDGEngineState engineState = PDGEngine.ReadEngineState(Vessel);
 
-            _mass = vessel.totalMass * 1000.0;  // tonnes → kg
-            _rawMaxThrust    = 0.0;
-            _availableThrust = 0.0;
-            _Ve              = 0.0;
+            if (!engineState.Valid)
+                return false;
 
-            double massFlow = 0.0;
-            foreach (Part p in vessel.parts)
-            {
-                foreach (ModuleEngines eng in p.FindModulesImplementing<ModuleEngines>())
-                {
-                    if (!(eng.EngineIgnited && eng.isOperational && eng.maxThrust > 0)) continue;
-                    double rawN      = eng.maxThrust * 1000.0;
-                    double limitFrac = Math.Max(0.0, Math.Min(1.0, eng.thrustPercentage * 0.01));
-                    double thrustN   = rawN * limitFrac;
-                    double isp       = eng.realIsp > 0 ? eng.realIsp : eng.atmosphereCurve.Evaluate(0);
-                    if (!IsFinite(isp) || isp <= 1e-6 || thrustN <= 1e-6) continue;
-                    _rawMaxThrust    += rawN;
-                    _availableThrust += thrustN;
-                    massFlow         += thrustN / (isp * 9.80665);
-                }
-            }
-            if (_availableThrust <= 0 || massFlow <= 0) return false;
-            _Ve = _availableThrust / massFlow;
-            return IsFinite(_Ve) && _mass > 0;
+            _mass = engineState.Mass;
+            _rawMaxThrust = engineState.RawMaxThrust;
+            _availableThrust = engineState.AvailableThrust;
+            _Ve = engineState.EffectiveExhaustVelocity;
+
+            return true;
         }
 
         private void UpdatePerformanceStats(Vector3d pos, double mass, double availThrust, double ve)
@@ -831,18 +822,6 @@ namespace MuMech.Landing
 
         #region CTGResult struct
 
-        private class CTGResult
-        {
-            public double   tf, T_mag, x_f, dx_dT;
-            public double[] rho;
-            public Vector3d[] g_coeffs;
-            public double   lam2, lam3, C2, C3;
-            public bool     converged;
-            public int      iterations;
-            public double   tf_initial, last_f_tf, last_df_dtf, last_det;
-            public double   y_f_nominal, y_f_used, R_effective;
-            public string   stage, null_reason, iteration_log;
-        }
 
         #endregion
 
@@ -1162,14 +1141,6 @@ namespace MuMech.Landing
 
         #region Apollo zero-jerk terminal law
 
-        private struct ApolloGuidanceOutput
-        {
-            public bool     valid; public string reason;
-            public double   tgo, requiredThrust;
-            public Vector3d accelCmdWorld, thrustAccelWorld, thrustDirWorld;
-            public float    throttle;
-        }
-
         private ApolloGuidanceOutput ComputeApolloZeroJerkCommand(
             Vector3d pos, Vector3d vel, Vector3d targetPos,
             Vector3d x_hat, Vector3d y_hat, Vector3d z_hat,
@@ -1246,14 +1217,6 @@ namespace MuMech.Landing
 
         #region Gravity-turn terminal law (Han, Jo & Ho arXiv:2409.01465)
 
-        private struct GTGuidanceOutput
-        {
-            public bool     valid; public string reason;
-            public double   tgo, beta, gammaStar;
-            public Vector3d thrustDirWorld;
-            public double   requiredThrust;
-            public float    throttle;
-        }
 
         private static double GT_Sigma(double x, double lo, double hi)
         {

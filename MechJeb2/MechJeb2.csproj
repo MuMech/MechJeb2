@@ -72,6 +72,9 @@
     <Compile Include="LandingAutopilot\PlaneChange.cs" />
     <Compile Include="LandingAutopilot\UntargetedDeorbit.cs" />
     <Compile Include="LandingAutopilot\CTGIGLandingStep.cs" />
+    <Compile Include="PoweredDescentGuidance\PDGTypes.cs" />
+    <Compile Include="PoweredDescentGuidance\PDGMathUtils.cs" />
+    <Compile Include="PoweredDescentGuidance\PDGEngine.cs" />
     <Compile Include="Maneuver\Operation.cs" />
     <Compile Include="Maneuver\OperationAdvancedTransfer.cs" />
     <Compile Include="Maneuver\OperationApoapsis.cs" />

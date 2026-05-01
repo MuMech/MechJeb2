@@ -41,7 +41,7 @@ namespace MuMech
             get { return _guidanceStep != null; }
         }
 
-        public string Status
+        public string PdgStatus
         {
             get
             {
@@ -87,7 +87,9 @@ namespace MuMech
                 PlanThrottle = PlanThrottle,
                 MinThrottle = MinThrottle,
                 TerminalHandoverDownrange = TerminalHandoverDownrange,
-                TerminalGlideConstraint = TerminalGlideConstraint
+                TerminalGlideConstraint = TerminalGlideConstraint,
+                PulseThrottleMode = PulseThrottleMode,
+                PulsePeriod = PulsePeriod
             };
         }
 

@@ -234,7 +234,7 @@ namespace MuMech
         {
             GUILayout.Space(5);
 
-            GUILayout.Label("Status: " + pdg.Status);
+            GUILayout.Label("Status: " + pdg.PdgStatus);
 
             CTGIGLandingStep step = pdg.CurrentGuidanceStep;
             if (step == null)
