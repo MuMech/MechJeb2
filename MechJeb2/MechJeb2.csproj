@@ -76,6 +76,7 @@
     <Compile Include="PoweredDescentGuidance\PDGMathUtils.cs" />
     <Compile Include="PoweredDescentGuidance\PDGEngine.cs" />
     <Compile Include="PoweredDescentGuidance\PDGTerminal.cs" />
+    <Compile Include="PoweredDescentGuidance\PDGPoweredDescent.cs" />
     <Compile Include="Maneuver\Operation.cs" />
     <Compile Include="Maneuver\OperationAdvancedTransfer.cs" />
     <Compile Include="Maneuver\OperationApoapsis.cs" />
