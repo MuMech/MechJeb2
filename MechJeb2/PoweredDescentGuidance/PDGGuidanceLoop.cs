@@ -68,7 +68,7 @@ namespace MuMech.Landing
         public bool PulseThrottleMode = false;
 
         /// <summary>PWM period [s]. Only used when <see cref="PulseThrottleMode"/> is true.</summary>
-        public double PulsePeriod = 1.0;
+        public double PulsePeriod = 0.5;
 
         // -------------------------------------------------------------------------
         // Public telemetry — read by the GUI window
@@ -385,8 +385,11 @@ namespace MuMech.Landing
             double targetXLoc, double rTarget, double mu, double altRadar)
         {
             PdgSolverResult res = PdgSolver.Solve(
-                rLoc, vLoc, vfLoc, targetXLoc, _mass, _currentTf, _ve,
-                _availableThrust, PlanThrottle, mu, rTarget, 3);
+                rLoc, vLoc, vfLoc,
+                targetXLoc, _mass, _currentTf,
+                _currentT,
+                _ve, _availableThrust, PlanThrottle,
+                mu, rTarget, 3);
 
             ApplyDbgFromResult(res);
 

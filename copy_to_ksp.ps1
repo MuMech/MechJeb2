@@ -13,13 +13,15 @@ $files = @(
     "$repo\packages\JetBrains.Annotations.2024.3.0\lib\net20\JetBrains.Annotations.dll"
 )
 
+$localizationSource = "$repo\Localization"
+
 foreach ($pluginDir in $pluginDirs) {
     if (!(Test-Path $pluginDir)) {
         Write-Warning "Missing plugin folder: $pluginDir"
         continue
     }
 
-    Write-Host "`nCopying to: $pluginDir"
+    Write-Host "`nCopying DLLs to: $pluginDir"
 
     foreach ($file in $files) {
         if (Test-Path $file) {
@@ -29,6 +31,24 @@ foreach ($pluginDir in $pluginDirs) {
             Write-Warning "Missing: $file"
         }
     }
+
+    # pluginDir = ...\GameData\MechJeb2\Plugins
+    # mechJebDir = ...\GameData\MechJeb2
+    $mechJebDir = Split-Path $pluginDir -Parent
+    $localizationDest = Join-Path $mechJebDir "Localization"
+
+    if (Test-Path $localizationSource) {
+        if (!(Test-Path $localizationDest)) {
+            New-Item -ItemType Directory -Path $localizationDest | Out-Null
+            Write-Host "Created localization folder: $localizationDest"
+        }
+
+        Write-Host "Copying localization files to: $localizationDest"
+        Copy-Item "$localizationSource\*.cfg" $localizationDest -Force
+        Write-Host "Copied localization .cfg files"
+    } else {
+        Write-Warning "Missing localization source folder: $localizationSource"
+    }
 }
 
-Write-Host "`nDone copying MechJeb runtime DLLs."
+Write-Host "`nDone copying MechJeb runtime DLLs and localization files."

@@ -61,12 +61,16 @@ namespace MuMech.Landing
         /// </returns>
         public static PdgSolverResult Solve(
             Vector3d r0, Vector3d v0, Vector3d vf,
-            double targetX, double m0, double currentTf, double ve,
-            double availableThrust, double planThrottle,
+            double targetX, double m0, double currentTf,
+            double thrustGuess,
+            double ve, double availableThrust, double planThrottle,
             double mu, double R, int polyOrder)
         {
-            double tMag = Math.Max(availableThrust * 0.1,
-                          Math.Min(availableThrust, availableThrust * planThrottle));
+            double tSeed = thrustGuess > 0.0 && IsFinite(thrustGuess)
+                ? thrustGuess
+                : availableThrust * planThrottle;
+
+            double tMag = Math.Max(availableThrust * 0.1, Math.Min(availableThrust, tSeed));
 
             double   tf   = currentTf > 0 ? currentTf : 1.0;
             PdgSolverResult best = null;
