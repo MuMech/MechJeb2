@@ -1,3 +1,18 @@
+// Experimental standalone Powered Descent Guidance (PDG) module.
+//
+// Scope and limitations:
+//   - Intended for airless bodies only.
+//   - Does not replace MechJeb's existing Landing Guidance module.
+//   - Uses a DCTGIG powered-descent phase followed by Apollo zero-jerk or
+//     gravity-turn terminal guidance.
+//   - Assumes powered descent dominates the trajectory (ie: descent from orbit); 
+//          atmospheric drag, parachutes, lift, and aerobraking are not modelled.
+//   - RCS fore-by-throttle support only tested with dedicated 'forward RCS', ie:
+//     may not be valid for > 1-way thrusters that are configured for attitude or translation.
+//   - Not yet added detailed messaging or checking for infeasible cases (ie: insuffient thrust/dv,
+//     bad setup trajectory, etc). Relies on the user to set a reasonable target and initial 
+//     conditions, and to interpret the status messages.
+
 using MuMech.Landing;
 using UnityEngine;
 

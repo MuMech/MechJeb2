@@ -12,6 +12,13 @@
 //   PdgTerminalSolver  — 
 //          Apollo (zero-jerk solve for t_go)
 //          Near-Optimal Gravity-turn terminal law - arXiv:2409.01465
+//
+// Limitations:
+//   - Airless bodies only.
+//   - No atmospheric drag, lift, parachute, or aerobraking model.
+//   - Guidance may abort or hold zero throttle when thrust authority is
+//     insufficient or the solver fails to converge.
+//   - RCS thrust accounting is approximate when using fore-by-throttle RCS.
 
 
 using System;
@@ -411,7 +418,7 @@ namespace MuMech.Landing
             }
             else
             {
-                Status = $"Solver null. x_tgt={targetXLoc:F0}m";
+                Status = $"DCTGIG failed. xTgt={targetXLoc:F0}m tf0={_currentTf:F1}s T={_currentT / 1000.0:F2}kN";
             }
         }
 
@@ -465,7 +472,7 @@ namespace MuMech.Landing
             if (badResult || badKin || _availableThrust <= 1e-3)
             {
                 _targetThrottle = 0f;
-                Status = $"Apollo aborted. v={ap.valid} tgo={ap.tgo:F1} alt={altRadar:F1}";
+                Status = $"Apollo aborted: {ap.reason} tgo={ap.tgo:F1}s";
                 return;
             }
 
@@ -500,7 +507,7 @@ namespace MuMech.Landing
             if (badResult || _availableThrust <= 1e-3)
             {
                 _targetThrottle = 0f;
-                Status = $"GT aborted: {gt.reason}";
+                Status = $"GT aborted: {gt.reason} tgo={gt.tgo:F1}s";
                 return;
             }
 
@@ -510,8 +517,6 @@ namespace MuMech.Landing
             _currentT       = gt.requiredThrust;
             Status          = $"GT TGO={gt.tgo:F1}s {gt.reason}";
         }
-
-        
 
         // =========================================================================
         // Propulsion state
