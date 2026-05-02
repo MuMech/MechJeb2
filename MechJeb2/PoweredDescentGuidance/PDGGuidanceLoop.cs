@@ -151,10 +151,12 @@ namespace MuMech.Landing
 
             if (vessel == null || cb == null) return this;
 
-            if (MainBody.atmosphere)
+            if (cb.atmosphere)
             {
+                _targetThrottle = 0f;
+                Core.Thrust.ThrustOff();
                 Status = "PDG is intended for airless bodies.";
-                return this;
+                return null;
             }
 
             if (vessel.LandedOrSplashed)

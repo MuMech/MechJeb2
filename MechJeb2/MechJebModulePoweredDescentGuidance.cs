@@ -55,10 +55,33 @@ namespace MuMech
             get { return _guidanceStep; }
         }
 
+        public bool CanRunOnCurrentBody
+        {
+            get
+            {
+                return Vessel != null &&
+                    Vessel.mainBody != null &&
+                    !Vessel.mainBody.atmosphere;
+            }
+        }
+
+        public string StartBlockedReason
+        {
+            get
+            {
+                if (Vessel == null) return "No vessel.";
+                if (Vessel.LandedOrSplashed) return "Vessel is already landed.";
+                if (Vessel.mainBody != null && Vessel.mainBody.atmosphere)
+                    return "PDG is intended for airless bodies.";
+                return "";
+            }
+        }
+
         public void StartTargetedLanding(object controller)
         {
             if (Vessel == null) return;
             if (Vessel.LandedOrSplashed) return;
+            if (Vessel.mainBody != null && Vessel.mainBody.atmosphere) return;
             if (!Core.Target.PositionTargetExists) return;
 
             StartGuidance(controller, true);
@@ -68,6 +91,7 @@ namespace MuMech
         {
             if (Vessel == null) return;
             if (Vessel.LandedOrSplashed) return;
+            if (Vessel.mainBody != null && Vessel.mainBody.atmosphere) return;
 
             StartGuidance(controller, false);
         }

@@ -94,15 +94,21 @@ namespace MuMech
             }
             else
             {
+                if (!pdg.CanRunOnCurrentBody)
+                {
+                    GUILayout.Label(pdg.StartBlockedReason);
+                }
+
                 GUILayout.BeginHorizontal();
 
-                if (!Core.Target.PositionTargetExists || Vessel.LandedOrSplashed)
-                    GUI.enabled = false;
+                bool canRun = pdg.CanRunOnCurrentBody && !Vessel.LandedOrSplashed;
+
+                GUI.enabled = canRun && Core.Target.PositionTargetExists;
 
                 if (GUILayout.Button("Land at target"))
                     pdg.StartTargetedLanding(this);
 
-                GUI.enabled = !Vessel.LandedOrSplashed;
+                GUI.enabled = canRun;
 
                 if (GUILayout.Button("Land somewhere"))
                     pdg.StartUntargetedLanding(this);
