@@ -51,6 +51,7 @@ namespace MuMech
             {
                 GUILayout.Label("Powered Descent Guidance unavailable.");
                 GUILayout.EndVertical();
+                _lastFocusedControl = GUI.GetNameOfFocusedControl();
                 base.WindowGUI(windowID);
                 return;
             }
@@ -66,61 +67,18 @@ namespace MuMech
                 GUILayout.Toggle(pdg.PulseThrottleMode, "Pulse throttle mode");
 
             GUI.enabled = pdg.PulseThrottleMode;
-            DrawDoubleField(
-                "Pulse period",
-                ref _pulsePeriodText,
-                ref pdg.PulsePeriod,
-                "s",
-                0.1,
-                10.0
-            );
+            DrawDoubleField("pdg_pulse_period", "Pulse period", ref _pulsePeriodText, ref pdg.PulsePeriod, "s", 0.1, 10.0);
             GUI.enabled = true;
 
-            DrawDoubleField(
-                "Plan throttle",
-                ref _planThrottleText,
-                ref pdg.PlanThrottle,
-                "",
-                0.01,
-                1.0
-            );
+            DrawDoubleField("pdg_plan_throttle", "Plan throttle", ref _planThrottleText, ref pdg.PlanThrottle, "", 0.01, 1.0);
 
-            DrawDoubleField(
-                "Min throttle",
-                ref _minThrottleText,
-                ref pdg.MinThrottle,
-                "",
-                0.0,
-                1.0
-            );
+            DrawDoubleField("pdg_min_throttle", "Min throttle", ref _minThrottleText, ref pdg.MinThrottle, "", 0.0, 1.0);
+            DrawDoubleField("pdg_clearance", "Clearance", ref _clearanceText, ref pdg.TargetClearance, "m", 0.0, 10000.0);
+            DrawDoubleField("pdg_terminal_handover", "Terminal handover", ref _terminalHandoverText, ref pdg.TerminalHandoverDownrange, "m", 0.0, 100000.0);
 
-            DrawDoubleField(
-                "Clearance",
-                ref _clearanceText,
-                ref pdg.TargetClearance,
-                "m",
-                0.0,
-                10000.0
-            );
-
-            DrawDoubleField(
-                "Terminal handover",
-                ref _terminalHandoverText,
-                ref pdg.TerminalHandoverDownrange,
-                "m",
-                0.0,
-                100000.0
-            );
 
             GUI.enabled = !pdg.UseApolloTerminal;
-            DrawDoubleField(
-                "GT Cone limit",
-                ref _terminalGlideText,
-                ref pdg.TerminalGlideConstraint,
-                "deg",
-                0.0,
-                60.0
-            );
+            DrawDoubleField("pdg_gt_cone", "GT Cone limit", ref _terminalGlideText, ref pdg.TerminalGlideConstraint, "deg", 0.0, 60.0);
             GUI.enabled = true;
 
             DrawTerminalModeButton(pdg);
@@ -254,7 +212,14 @@ namespace MuMech
             angle += angularDelta;
         }
 
-        private void DrawDoubleField(string label, ref string text, ref double value, string units, double min, double max)
+       private void DrawDoubleField(
+            string controlName,
+            string label,
+            ref string text,
+            ref double value,
+            string units,
+            double min,
+            double max)
         {
             if (string.IsNullOrEmpty(text))
                 text = value.ToString("F3");
@@ -262,6 +227,8 @@ namespace MuMech
             GUILayout.BeginHorizontal();
 
             GUILayout.Label(label, GUILayout.Width(120));
+
+            GUI.SetNextControlName(controlName);
             text = GUILayout.TextField(text, GUILayout.Width(55));
 
             if (!string.IsNullOrEmpty(units))
@@ -269,9 +236,41 @@ namespace MuMech
 
             GUILayout.EndHorizontal();
 
+            bool enterPressed =
+                Event.current.type == EventType.KeyDown &&
+                (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) &&
+                GUI.GetNameOfFocusedControl() == controlName;
+
+            bool focusLost =
+                _lastFocusedControl == controlName &&
+                GUI.GetNameOfFocusedControl() != controlName;
+
+            if (enterPressed || focusLost)
+            {
+                CommitDoubleField(ref text, ref value, min, max);
+
+                if (enterPressed)
+                {
+                    GUI.FocusControl(null);
+                    Event.current.Use();
+                }
+            }
+        }
+
+        private string _lastFocusedControl = "";
+
+        private void CommitDoubleField(ref string text, ref double value, double min, double max)
+        {
             double parsed;
             if (double.TryParse(text, out parsed))
+            {
                 value = Math.Max(min, Math.Min(max, parsed));
+                text = value.ToString("F3");
+            }
+            else
+            {
+                text = value.ToString("F3");
+            }
         }
     }
 }

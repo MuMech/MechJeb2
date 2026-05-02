@@ -74,8 +74,8 @@
     <Compile Include="PoweredDescentGuidance\PDGTypes.cs" />
     <Compile Include="PoweredDescentGuidance\PDGMathUtils.cs" />
     <Compile Include="PoweredDescentGuidance\PDGEngine.cs" />
-    <Compile Include="PoweredDescentGuidance\PDGTerminal.cs" />
-    <Compile Include="PoweredDescentGuidance\PDGPoweredDescent.cs" />
+    <Compile Include="PoweredDescentGuidance\PDGTerminalSolver.cs" />
+    <Compile Include="PoweredDescentGuidance\PDGSolver.cs" />
     <Compile Include="PoweredDescentGuidance\PDGTargeting.cs" />
     <Compile Include="PoweredDescentGuidance\PDGThrottle.cs" />
     <Compile Include="PoweredDescentGuidance\PDGTelemetry.cs" />

@@ -1,20 +1,18 @@
-using System;
+// PDGMathUtils.cs
+// Lightweight math helpers shared across all PDG components.
+
 using UnityEngine;
 
 namespace MuMech.Landing
 {
     internal static class PDGMathUtils
     {
+        /// <summary>Returns true when <paramref name="value"/> is neither NaN nor infinite.</summary>
         public static bool IsFinite(double value)
-        {
-            return !double.IsNaN(value) && !double.IsInfinity(value);
-        }
+            => !double.IsNaN(value) && !double.IsInfinity(value);
 
+        /// <summary>Formats a <see cref="Vector3d"/> as a bracketed, three-decimal string for logging.</summary>
         public static string FormatVector(Vector3d value)
-        {
-            return "[" + value.x.ToString("F3") + "," +
-                         value.y.ToString("F3") + "," +
-                         value.z.ToString("F3") + "]";
-        }
+            => $"[{value.x:F3},{value.y:F3},{value.z:F3}]";
     }
 }
