@@ -23,8 +23,8 @@ namespace MuMech.Landing
                 : 0.0;
         }
 
-        /// <summary>Copies solver diagnostic fields from a <see cref="CTGResult"/> into the public Dbg* properties.</summary>
-        private void ApplyDbgFromResult(CTGResult res)
+        /// <summary>Copies solver diagnostic fields from a <see cref="PdgSolverResult"/> into the public Dbg* properties.</summary>
+        private void ApplyDbgFromResult(PdgSolverResult res)
         {
             if (res == null) return;
             DbgInnerIter  = res.iterations;

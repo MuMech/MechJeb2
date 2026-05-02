@@ -56,10 +56,10 @@ namespace MuMech.Landing
         /// <param name="R">Target radial distance from the body centre [m].</param>
         /// <param name="polyOrder">Polynomial order for gravity / rho approximations (2–4 recommended).</param>
         /// <returns>
-        /// Converged <see cref="CTGResult"/> on success, or <c>null</c> if the solver
+        /// Converged <see cref="PdgSolverResult"/> on success, or <c>null</c> if the solver
         /// failed to converge within the outer iteration budget.
         /// </returns>
-        public static CTGResult Solve(
+        public static PdgSolverResult Solve(
             Vector3d r0, Vector3d v0, Vector3d vf,
             double targetX, double m0, double currentTf, double ve,
             double availableThrust, double planThrottle,
@@ -69,12 +69,12 @@ namespace MuMech.Landing
                           Math.Min(availableThrust, availableThrust * planThrottle));
 
             double   tf   = currentTf > 0 ? currentTf : 1.0;
-            CTGResult best = null;
+            PdgSolverResult best = null;
 
             for (int k = 0; k < 10; k++)
             {
                 double alpha  = (m0 * ve) / Math.Max(1.0, tMag);
-                CTGResult res = IterateCore(tf, r0, v0, vf, ve, alpha, tMag, mu, R, polyOrder);
+                PdgSolverResult res = IterateCore(tf, r0, v0, vf, ve, alpha, tMag, mu, R, polyOrder);
 
                 if (res == null || !res.converged || !IsFinite(res.x_f) || !IsFinite(res.dx_dT))
                     break;
@@ -114,7 +114,7 @@ namespace MuMech.Landing
         /// <param name="mu">Gravitational parameter [m³/s²].</param>
         /// <param name="R">Target radial distance [m].</param>
         /// <param name="polyOrder">Polynomial order for approximations.</param>
-        public static CTGResult Iterate(
+        public static PdgSolverResult Iterate(
             double tf0, Vector3d r0, Vector3d v0, Vector3d vf,
             double ve, double alpha, double thrust,
             double mu, double R, int polyOrder)
@@ -124,14 +124,14 @@ namespace MuMech.Landing
         // Inner Newton loop
         // -------------------------------------------------------------------------
 
-        private static CTGResult IterateCore(
+        private static PdgSolverResult IterateCore(
             double tf0, Vector3d r0, Vector3d v0, Vector3d vf,
             double ve, double alpha, double T, double mu, double R, int polyOrder)
         {
             // Local helper — builds a failed result without allocating multiple times.
-            CTGResult Fail(string stage, string reason, int iters, double tfC,
+            PdgSolverResult Fail(string stage, string reason, int iters, double tfC,
                            double fTf, double dfDtf, double det, double yNom, double yUsed,
-                           string log) => new CTGResult
+                           string log) => new PdgSolverResult
             {
                 converged     = false, tf          = tfC,  tf_initial    = tf0,
                 iterations    = iters, last_f_tf   = fTf,  last_df_dtf   = dfDtf,
@@ -152,7 +152,7 @@ namespace MuMech.Landing
             Vector3d[] gCoeffs = new Vector3d[polyOrder + 1];
             double     lam2 = 0, lam3 = 0, C2 = 0, C3 = 0;
 
-            // Debug scratch — final values are reported in the CTGResult.
+            // Debug scratch — final values are reported in the PdgSolverResult.
             double detDbg = 0, yNomDbg = 0, yUsedDbg = 0, fTfDbg = 0, dfDtfDbg = 0;
             var iterSb = new StringBuilder();
 
@@ -297,7 +297,7 @@ namespace MuMech.Landing
                     double dtfDT  = -sv / dfDtf;
                     double dxDT   = sr + vf.x * dtfDT;
 
-                    return new CTGResult
+                    return new PdgSolverResult
                     {
                         converged     = true,
                         tf            = tf,

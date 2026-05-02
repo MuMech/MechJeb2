@@ -14,7 +14,7 @@ namespace MuMech.Landing
     /// Output from <see cref="PdgSolver.Solve"/> or <see cref="PdgSolver.Iterate"/>.
     /// Contains both the trajectory solution and full diagnostic state for telemetry.
     /// </summary>
-    internal class CTGResult
+    internal class PdgSolverResult
     {
         // --- Solution ---
 

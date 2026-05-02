@@ -316,7 +316,7 @@ namespace MuMech.Landing
                 _currentTf     = alpha * (1.0 - Math.Exp(-safeVel / _ve));
             }
 
-            CTGResult coast = PdgSolver.Iterate(
+            PdgSolverResult coast = PdgSolver.Iterate(
                 _currentTf, rLoc, vLoc, vfLoc, _ve, alpha, testThrust, mu, rTarget, 3);
 
             if (coast != null && coast.converged && IsFinite(coast.x_f) && IsFinite(coast.tf) && coast.tf > 0.0)
@@ -375,7 +375,7 @@ namespace MuMech.Landing
             Vector3d xHat, Vector3d yHat, Vector3d zHat,
             double targetXLoc, double rTarget, double mu, double altRadar)
         {
-            CTGResult res = PdgSolver.Solve(
+            PdgSolverResult res = PdgSolver.Solve(
                 rLoc, vLoc, vfLoc, targetXLoc, _mass, _currentTf, _ve,
                 _availableThrust, PlanThrottle, mu, rTarget, 3);
 
