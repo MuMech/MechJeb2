@@ -219,3 +219,4 @@ http-client.private.env.json
 
 # Nix
 .direnv/
+copy_to_ksp.ps1
