@@ -16,6 +16,13 @@ namespace MuMech
         private string _terminalGlideText = "";
         private string _pulsePeriodText = "";
 
+        private string _lastFocusedControl = "";
+
+        private static string L(string key)
+        {
+            return Localizer.Format("#MechJeb_PDG_" + key);
+        }
+
         public MechJebModulePoweredDescentGuidanceWindow(MechJebCore core)
             : base(core)
         {
@@ -23,7 +30,7 @@ namespace MuMech
 
         public override string GetName()
         {
-            return "Powered Descent Guidance";
+            return L("title");
         }
 
         public override string IconName()
@@ -50,7 +57,7 @@ namespace MuMech
 
             if (pdg == null)
             {
-                GUILayout.Label("Powered Descent Guidance unavailable.");
+                GUILayout.Label(L("unavailable"));
                 GUILayout.EndVertical();
                 _lastFocusedControl = GUI.GetNameOfFocusedControl();
                 base.WindowGUI(windowID);
@@ -59,27 +66,27 @@ namespace MuMech
 
             DrawTargetUI();
 
-            GUILayout.Label("Autopilot:");
+            GUILayout.Label(L("autopilot"));
 
             GUILayout.Space(5);
-            GUILayout.Label("PDG Settings");
+            GUILayout.Label(L("settings"));
 
             pdg.PulseThrottleMode =
-                GUILayout.Toggle(pdg.PulseThrottleMode, "Pulse throttle mode");
+                GUILayout.Toggle(pdg.PulseThrottleMode, L("pulseThrottle"));
 
             GUI.enabled = pdg.PulseThrottleMode;
-            DrawDoubleField("pdg_pulse_period", "Pulse period", ref _pulsePeriodText, ref pdg.PulsePeriod, "s", 0.1, 10.0);
+            DrawDoubleField("pdg_pulse_period", L("pulsePeriod"), ref _pulsePeriodText, ref pdg.PulsePeriod, "s", 0.1, 10.0);
             GUI.enabled = true;
 
-            DrawDoubleField("pdg_plan_throttle", "Plan throttle", ref _planThrottleText, ref pdg.PlanThrottle, "", 0.01, 1.0);
+            DrawDoubleField("pdg_plan_throttle", L("planThrottle"), ref _planThrottleText, ref pdg.PlanThrottle, "", 0.01, 1.0);
 
-            DrawDoubleField("pdg_min_throttle", "Min throttle", ref _minThrottleText, ref pdg.MinThrottle, "", 0.0, 1.0);
-            DrawDoubleField("pdg_clearance", "Clearance", ref _clearanceText, ref pdg.TargetClearance, "m", 0.0, 10000.0);
-            DrawDoubleField("pdg_terminal_handover", "Terminal handover", ref _terminalHandoverText, ref pdg.TerminalHandoverDownrange, "m", 0.0, 100000.0);
+            DrawDoubleField("pdg_min_throttle", L("minThrottle"), ref _minThrottleText, ref pdg.MinThrottle, "", 0.0, 1.0);
+            DrawDoubleField("pdg_clearance", L("clearance"), ref _clearanceText, ref pdg.TargetClearance, "m", 0.0, 10000.0);
+            DrawDoubleField("pdg_terminal_handover", L("terminalHandover"), ref _terminalHandoverText, ref pdg.TerminalHandoverDownrange, "m", 0.0, 100000.0);
 
 
             GUI.enabled = !pdg.UseApolloTerminal;
-            DrawDoubleField("pdg_gt_cone", "GT Cone limit", ref _terminalGlideText, ref pdg.TerminalGlideConstraint, "deg", 0.0, 60.0);
+            DrawDoubleField("pdg_gt_cone", L("gtConeLimit"), ref _terminalGlideText, ref pdg.TerminalGlideConstraint, "deg", 0.0, 60.0);
             GUI.enabled = true;
 
             DrawTerminalModeButton(pdg);
@@ -88,7 +95,7 @@ namespace MuMech
 
             if (pdg.Running)
             {
-                if (GUILayout.Button("Abort PDG"))
+                if (GUILayout.Button(L("abort")))
                     pdg.StopGuidance();
 
                 DrawLiveTelemetry(pdg);
@@ -106,12 +113,12 @@ namespace MuMech
 
                 GUI.enabled = canRun && Core.Target.PositionTargetExists;
 
-                if (GUILayout.Button("Land at target"))
+                if (GUILayout.Button(L("landAtTarget")))
                     pdg.StartTargetedLanding(this);
 
                 GUI.enabled = canRun;
 
-                if (GUILayout.Button("Land somewhere"))
+                if (GUILayout.Button(L("landSomewhere")))
                     pdg.StartUntargetedLanding(this);
 
                 GUI.enabled = true;
@@ -120,7 +127,7 @@ namespace MuMech
             }
 
             GUILayout.EndVertical();
-
+            _lastFocusedControl = GUI.GetNameOfFocusedControl();
             base.WindowGUI(windowID);
         }
 
@@ -183,11 +190,11 @@ namespace MuMech
         {
             GUILayout.BeginHorizontal();
 
-            GUILayout.Label("Terminal mode", GUILayout.Width(120));
+            GUILayout.Label(L("terminalMode"), GUILayout.Width(120));
 
             string terminalModeLabel = pdg.UseApolloTerminal
-                ? "Apollo"
-                : "Gravity Turn";
+                ? L("apollo")
+                : L("gravityTurn");
 
             if (GUILayout.Button(terminalModeLabel, GUILayout.Width(95)))
                 pdg.UseApolloTerminal = !pdg.UseApolloTerminal;
@@ -199,18 +206,18 @@ namespace MuMech
         {
             GUILayout.Space(5);
 
-            GUILayout.Label("Status: " + pdg.PdgStatus);
+            GUILayout.Label(L("status") + " " + pdg.PdgStatus);
 
             PDGGuidanceLoop step = pdg.CurrentGuidanceStep;
             if (step == null)
                 return;
 
-            GUILayout.Label("PDG Live");
-            GUILayout.Label("TGO: " + step.TimeToGo.ToString("F1") + "s");
-            GUILayout.Label("Throttle: " + (step.CurrentThrottle * 100.0f).ToString("F3") + "%");
-            GUILayout.Label("Pred X: " + step.PredDownrange.ToString("F0") + "m");
-            GUILayout.Label("Err X: " + step.DownrangeError.ToString("F3") + "m");
-            GUILayout.Label("TWR: " + step.CurrentTWR.ToString("F2") + "/" + step.AvailableTWR.ToString("F2"));
+            GUILayout.Label(L("live"));
+            GUILayout.Label(L("tgo") + ": " + step.TimeToGo.ToString("F1") + "s");
+            GUILayout.Label(L("throttle") + ": " + (step.CurrentThrottle * 100.0f).ToString("F3") + "%");
+            GUILayout.Label(L("predX") + ": " + step.PredDownrange.ToString("F0") + "m");
+            GUILayout.Label(L("errX") + ": " + step.DownrangeError.ToString("F3") + "m");
+            GUILayout.Label(L("twr") + ": " + step.CurrentTWR.ToString("F2") + "/" + step.AvailableTWR.ToString("F2"));
         }
 
         private void MoveByMeter(ref EditableAngle angle, double distance, double alt)
@@ -219,7 +226,7 @@ namespace MuMech
             angle += angularDelta;
         }
 
-       private void DrawDoubleField(
+        private void DrawDoubleField(
             string controlName,
             string label,
             ref string text,
@@ -263,8 +270,6 @@ namespace MuMech
                 }
             }
         }
-
-        private string _lastFocusedControl = "";
 
         private void CommitDoubleField(ref string text, ref double value, double min, double max)
         {
