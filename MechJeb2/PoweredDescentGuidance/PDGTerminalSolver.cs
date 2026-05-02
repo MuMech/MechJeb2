@@ -50,7 +50,7 @@ namespace MuMech.Landing
             double tgoGuess = 10.0, int tgoAxis = 1,
             int maxIter = 15, double tol = 1e-3)
         {
-            var outp = new ApolloGuidanceOutput
+            ApolloGuidanceOutput outp = new ApolloGuidanceOutput
             {
                 valid         = false, reason        = "Unknown", tgo = double.NaN,
                 accelCmdWorld = Vector3d.zero, thrustAccelWorld = Vector3d.zero,
@@ -163,7 +163,7 @@ namespace MuMech.Landing
             double delta     = 5.0,  double cColLower   = 0.75,
             double cColUpper = 0.95)
         {
-            var outp = new GTGuidanceOutput
+            GTGuidanceOutput outp = new GTGuidanceOutput
             {
                 valid = false, reason = "Unknown", tgo = double.NaN,
                 beta  = double.NaN, gammaStar = double.NaN,

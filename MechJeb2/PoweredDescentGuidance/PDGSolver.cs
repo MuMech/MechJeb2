@@ -154,7 +154,7 @@ namespace MuMech.Landing
 
             // Debug scratch — final values are reported in the PdgSolverResult.
             double detDbg = 0, yNomDbg = 0, yUsedDbg = 0, fTfDbg = 0, dfDtfDbg = 0;
-            var iterSb = new StringBuilder();
+            StringBuilder iterSb = new StringBuilder();
 
             for (int j = 0; j < 50; j++)
             {

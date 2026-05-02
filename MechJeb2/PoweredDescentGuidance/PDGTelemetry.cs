@@ -38,19 +38,5 @@ namespace MuMech.Landing
             DbgIterLog    = res.iteration_log ?? "";
         }
 
-        // private void ResetInnerDebug(double tf0)
-        // {
-        //     DbgInnerIter = 0;
-        //     DbgTfInitial = tf0;
-        //     DbgTfLast = tf0;
-        //     DbgFTf = 0;
-        //     DbgDfDtf = 0;
-        //     _dbgDet = 0;
-        //     _dbgYfNominal = 0;
-        //     _dbgYfUsed = 0;
-        //     DbgNullReason = "";
-        //     DbgStage = "running";
-        //     DbgIterLog = "";
-        // }
     }
 }

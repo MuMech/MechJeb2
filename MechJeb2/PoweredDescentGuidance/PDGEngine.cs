@@ -17,7 +17,7 @@ namespace MuMech.Landing
         /// </summary>
         public static PDGEngineState ReadEngineState(Vessel vessel)
         {
-            var state = new PDGEngineState();
+            PDGEngineState state = new PDGEngineState();
 
             if (vessel == null)
             {
