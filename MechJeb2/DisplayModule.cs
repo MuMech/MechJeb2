@@ -167,6 +167,7 @@ namespace MuMech
         {
             Profiler.BeginSample(GetType().Name);
             WindowGUI(windowID);
+            GuiUtils.RecordTooltip(windowID);
             Profiler.EndSample();
         }
 
@@ -180,6 +181,7 @@ namespace MuMech
             _windowOptions ??= WindowOptions();
 
             WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, IsOverlayConfig ? "" : GetName(), _windowOptions);
+            GuiUtils.ShowTooltip(_id);
 
             //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
             //
