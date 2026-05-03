@@ -62,6 +62,7 @@
         <Compile Include="Control\MultiVariableInterpolator.cs"/>
         <Compile Include="Control\PIDLoop.cs"/>
         <Compile Include="Control\PIDLoop2.cs"/>
+        <Compile Include="Control\DeltaSigmaThrottleModulator.cs" />
         <Compile Include="FuelFlowSimulation\DecouplingAnalyzer.cs"/>
         <Compile Include="FuelFlowSimulation\FuelFlowSimulation.cs"/>
         <Compile Include="FuelFlowSimulation\FuelStats.cs"/>

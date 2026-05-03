@@ -1,5 +1,6 @@
 #nullable enable
 
+using MechJebLib.Control;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
@@ -37,6 +38,11 @@ namespace MuMech
 
         [ValueInfoItem("#MechJeb_HoverslamState", InfoItem.Category.Hoverslam)] //Hoverslam state
         public string HoverslamState => !Enabled ? "Disabled" : _state.ToString();
+
+        private const double DEFAULT_MIN_ON_TIME = 0.50;
+        [EditableInfoItem("#MechJeb_HoverslamPWMTimeWidth", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true)]
+        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //PWM time width
+        public readonly EditableDouble PWMTimeWidth = new EditableDouble(DEFAULT_MIN_ON_TIME);
 
         protected override void OnModuleEnabled()
         {
@@ -163,7 +169,13 @@ namespace MuMech
 
         private void TickBurn() => Core.Attitude.attitudeTo(-_adjV, AttitudeReference.INERTIAL, this);
 
-        private void OnEnterFinalDescent() => Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, this);
+        private void OnEnterFinalDescent()
+        {
+            _pwm.Reset();
+            Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, this);
+        }
+
+        private readonly DeltaSigmaThrottleModulator _pwm = new DeltaSigmaThrottleModulator(0.02, DEFAULT_MIN_ON_TIME);
 
         private void TickFinalDescent()
         {
@@ -175,10 +187,11 @@ namespace MuMech
             double h  = VesselState.altitudeBottom;
             double vf = TouchdownSpeed;
 
-            double accel    = g + 0.5 * (v2 - vf * vf) / h;
-            double throttle = (accel - VesselState.minThrustAccel) / (VesselState.maxThrustAccel - VesselState.minThrustAccel);
+            double accel = g + 0.5 * (v2 - vf * vf) / h;
 
-            Core.Thrust.TargetThrottle = (float)Clamp(throttle, 0.0001, 1.0);
+            _pwm.MinOnTime = PWMTimeWidth;
+            _pwm.MinOffTime = TimeWarp.fixedDeltaTime;
+            Core.Thrust.TargetThrottle = _pwm.ThrottleCommand(accel, VesselState.minThrustAccel, VesselState.maxThrustAccel, TimeWarp.fixedDeltaTime);
         }
 
         private void OnEnterFinished()

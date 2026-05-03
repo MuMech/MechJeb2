@@ -1300,6 +1300,7 @@ Toggle:HoverslamSimulation.MapLandingPrediction
 Editable:HoverslamSimulation.VerticalAltitude
 Editable:HoverslamSimulation.VerticalAuthority
 Editable:HoverslamAutopilot.TouchdownSpeed
+Editable:HoverslamAutopilot.PWMTimeWidth
 Editable:HoverslamAutopilot.IgnitionLead
 Editable:HoverslamSimulation.SimRecalcInterval
 Toggle:HoverslamAutopilot.AutoWarp
