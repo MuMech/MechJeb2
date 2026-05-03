@@ -139,7 +139,11 @@ namespace MuMech
             Core.Thrust.ThrustOff();
         }
 
-        private void TickAligning() { }
+        private void TickAligning()
+        {
+            if (!MuUtils.PhysicsRunning() && VesselState.time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
+                Core.Warp.MinimumWarp(true);
+        }
 
         private void OnEnterCoast()
         {
@@ -151,6 +155,8 @@ namespace MuMech
         {
             if (AutoWarp)
                 Core.Warp.WarpToUT(Core.Hoverslam.IgnitionUT);
+            else if (!MuUtils.PhysicsRunning() && VesselState.time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
+                Core.Warp.MinimumWarp(true);
         }
 
         private void OnEnterBurn() => Core.Thrust.TargetThrottle = 1.0f;
