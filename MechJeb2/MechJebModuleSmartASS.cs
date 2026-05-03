@@ -152,7 +152,22 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoDisableSmartASS = true;
+        [Persistent(pass = (int)Pass.LOCAL)]
+        public bool smoothControl = false;
 
+        [Persistent(pass = (int)Pass.LOCAL)]
+        public EditableDouble degreesPerSecond = new EditableDouble(10);
+
+        // Target attitude/direction (what we want to achieve)
+        private Vector3d targetDirection = Vector3d.zero;
+        private Quaternion targetAttitude = Quaternion.identity;
+        private AttitudeReference targetReference = AttitudeReference.ORBIT;
+
+        private static readonly double LARGE_INCREMENT = 10.0;
+
+        // Current attitude/direction (for smooth interpolation)
+        private Vector3d curDirection = Vector3d.zero;
+        private Quaternion curAttitude = Quaternion.identity;
         [GeneralInfoItem("#MechJeb_DisableSmartACSAutomatically", InfoItem.Category.Misc)] //Disable SmartACS automatically
         public void AutoDisableSmartASS() =>
             autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS,
@@ -211,6 +226,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
+            bool hasSmoothControl = false;  // Local variable for current frame
             if (btNormal == null)
             {
                 btNormal                    = new GUIStyle(GUI.skin.button);
@@ -304,27 +320,40 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("HDG", srfHdg, "°", 37);
+
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfHdg -= LARGE_INCREMENT;
+                                changed = true;
+                            }
+
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
-                                srfHdg  -= val;
-                                changed =  true;
+                                srfHdg -= val;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
-                                srfHdg  += val;
-                                changed =  true;
+                                srfHdg += val;
+                                changed = true;
+                            }
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfHdg += LARGE_INCREMENT;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
                             {
-                                srfHdg  = 0;
+                                srfHdg = 0;
                                 changed = true;
                             }
 
                             if (GUILayout.Button("90", GUILayout.Width(35)))
                             {
-                                srfHdg  = 90;
+                                srfHdg = 90;
                                 changed = true;
                             }
 
@@ -332,27 +361,40 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forcePitch = GUILayout.Toggle(forcePitch, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("PIT", srfPit, "°", 37);
+
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfPit -= LARGE_INCREMENT;
+                                changed = true;
+                            }
+
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
-                                srfPit  -= val;
-                                changed =  true;
+                                srfPit -= val;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
-                                srfPit  += val;
-                                changed =  true;
+                                srfPit += val;
+                                changed = true;
+                            }
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfPit += LARGE_INCREMENT;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
                             {
-                                srfPit  = 0;
+                                srfPit = 0;
                                 changed = true;
                             }
 
                             if (GUILayout.Button("90", GUILayout.Width(35)))
                             {
-                                srfPit  = 90;
+                                srfPit = 90;
                                 changed = true;
                             }
 
@@ -360,31 +402,48 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("ROL", srfRol, "°", 37);
+
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfRol -= LARGE_INCREMENT;
+                                changed = true;
+                            }
+
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
-                                srfRol  -= val;
-                                changed =  true;
+                                srfRol -= val;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
-                                srfRol  += val;
-                                changed =  true;
+                                srfRol += val;
+                                changed = true;
+                            }
+
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfRol += LARGE_INCREMENT;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
                             {
-                                srfRol  = 0;
+                                srfRol = 0;
                                 changed = true;
                             }
 
                             if (GUILayout.Button("180", GUILayout.Width(35)))
                             {
-                                srfRol  = 180;
+                                srfRol = 180;
                                 changed = true;
                             }
 
                             GUILayout.EndHorizontal();
+
+                            DisplaySmoothControlUI(ref hasSmoothControl);
+
                             if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58")))
                             {
                                 // "EXECUTE"
@@ -404,87 +463,128 @@ namespace MuMech
                             GUILayout.BeginHorizontal();
                             forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("ROL", srfVelRol, "°", 37);
+
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelRol -= LARGE_INCREMENT;
+                                changed = true;
+                            }
+
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelRol -= val;
-                                changed   =  true;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelRol += val;
-                                changed   =  true;
+                                changed = true;
+                            }
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelRol += LARGE_INCREMENT;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelRol = -VesselState.vesselRoll.Value;
-                                changed   = true;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelRol = 0;
-                                changed   = true;
+                                changed = true;
                             }
 
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
                             forcePitch = GUILayout.Toggle(forcePitch, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 37);
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelPit -= LARGE_INCREMENT;
+                                changed = true;
+                            }
+
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelPit -= val;
-                                changed   =  true;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelPit += val;
-                                changed   =  true;
+                                changed = true;
+                            }
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelPit += LARGE_INCREMENT;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelPit = VesselState.AoA.Value;
-                                changed   = true;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelPit = 0;
-                                changed   = true;
+                                changed = true;
                             }
 
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
                             forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
                             GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 37);
+
+                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelYaw -= LARGE_INCREMENT;
+                                changed = true;
+                            }
                             if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelYaw -= val;
-                                changed   =  true;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelYaw += val;
-                                changed   =  true;
+                                changed = true;
+                            }
+
+
+                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            {
+                                srfVelYaw += LARGE_INCREMENT;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelYaw = -VesselState.AoS.Value;
-                                changed   = true;
+                                changed = true;
                             }
 
                             if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
                             {
                                 srfVelYaw = 0;
-                                changed   = true;
+                                changed = true;
                             }
 
                             GUILayout.EndHorizontal();
+
+                            DisplaySmoothControlUI(ref hasSmoothControl);
+
                             if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58"))) //"EXECUTE"
                             {
                                 Engage();
@@ -494,6 +594,7 @@ namespace MuMech
                             {
                                 Engage(false);
                             }
+
 
                             Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         }
@@ -540,11 +641,26 @@ namespace MuMech
                     case Mode.AUTO:
                         break;
                 }
+                
+                // Disable smooth control for modes that don't have it
+                if (!hasSmoothControl)
+                {
+                    smoothControl = false;
+                }
 
                 GUILayout.EndVertical();
             }
 
             base.WindowGUI(windowID);
+        }
+
+        private void DisplaySmoothControlUI(ref bool hasSmoothControl)
+        {
+            GUILayout.BeginHorizontal();
+            hasSmoothControl = true;
+            smoothControl = GUILayout.Toggle(smoothControl, "Smooth Control:", GUILayout.ExpandWidth(false));
+            GuiUtils.SimpleTextBox("", degreesPerSecond, "°/s", 40);
+            GUILayout.EndHorizontal();
         }
 
         public void Engage(bool resetPID = true)
@@ -658,12 +774,98 @@ namespace MuMech
                 direction = Vector3d.zero;
             }
 
-            if (direction != Vector3d.zero)
-                Core.Attitude.attitudeTo(direction, reference, this);
+            // Store target values
+            targetDirection = direction;
+            targetAttitude = attitude;
+            targetReference = reference;
+
+            // If smooth control is enabled, initialize current values with actual vessel orientation
+            if (smoothControl)
+            {
+                // Get the reference rotation for the current mode
+                QuaternionD refRotation = Core.Attitude.attitudeGetReferenceRotation(reference);
+                QuaternionD vesselRotation = QuaternionD.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
+                
+                // Get the vessel's current attitude in the reference frame
+                QuaternionD vesselAttitudeInRef = QuaternionD.Inverse(refRotation) * vesselRotation;
+
+                if (direction != Vector3d.zero)
+                {
+                    // For direction-based targets, the vessel's current direction is forward in its reference frame
+                    curDirection = Vector3d.forward;
+                    curAttitude = Quaternion.identity;
+                }
+                else
+                {
+                    // For attitude-based targets, use the actual vessel attitude in this reference frame
+                    curDirection = Vector3d.zero;
+                    curAttitude = (Quaternion)vesselAttitudeInRef;
+                }
+
+                // Call attitudeTo with current values, smooth transition will take over in OnFixedUpdate
+                if (curDirection != Vector3d.zero)
+                    Core.Attitude.attitudeTo(curDirection, targetReference, this);
+                else
+                    Core.Attitude.attitudeTo(curAttitude, targetReference, this);
+            }
             else
-                Core.Attitude.attitudeTo(attitude, reference, this);
+            {
+                // Without smooth control, apply attitude immediately
+                if (direction != Vector3d.zero)
+                    Core.Attitude.attitudeTo(direction, reference, this);
+                else
+                    Core.Attitude.attitudeTo(attitude, reference, this);
+            }
 
             if (resetPID) { Core.Attitude.Controller.Reset(); }
+        }
+
+        public override void OnFixedUpdate()
+        {
+            base.OnFixedUpdate();
+
+            if (!smoothControl || target == Target.OFF || !Core.Attitude.Users.Contains(this)) {
+                // Just make sure that if we randomly turn on smooth control, it won't cause weird behavior
+                // by jumping to some random attitude because the current values are out of date
+                curDirection = targetDirection;
+                curAttitude = targetAttitude;
+            } 
+            // Handle smooth transitions if enabled and SmartASS is still controlling
+            else
+            {
+                float degreesThisFrame = (float)degreesPerSecond * Time.fixedDeltaTime;
+
+                if (targetDirection != Vector3d.zero && curDirection != Vector3d.zero)
+                {
+                    // Smooth interpolation of direction vectors
+                    float angularDistance = (float)Vector3d.Angle(curDirection, targetDirection);
+                    if (degreesThisFrame < angularDistance && angularDistance > 0.01f)
+                    {
+                        float stepSize = Mathf.Clamp01(degreesThisFrame / angularDistance);
+                        curDirection = Vector3d.Slerp(curDirection, targetDirection, stepSize);
+                    }
+                    else
+                    {
+                        curDirection = targetDirection;
+                    }
+                    Core.Attitude.attitudeTo(curDirection, targetReference, this);
+                }
+                else
+                {
+                    // Smooth interpolation of quaternions
+                    float angularDistance = Quaternion.Angle(curAttitude, targetAttitude);
+                    if (degreesThisFrame < angularDistance && angularDistance > 0.01f)
+                    {
+                        float stepSize = Mathf.Clamp01(degreesThisFrame / angularDistance);
+                        curAttitude = Quaternion.Slerp(curAttitude, targetAttitude, stepSize);
+                    }
+                    else
+                    {
+                        curAttitude = targetAttitude;
+                    }
+                    Core.Attitude.attitudeTo(curAttitude, targetReference, this);
+                }
+            }
         }
 
         protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
