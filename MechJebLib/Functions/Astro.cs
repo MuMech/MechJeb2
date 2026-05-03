@@ -508,7 +508,7 @@ namespace MechJebLib.Functions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double TimetoNextTrueAnomaly(double mu, double sma, double ecc, double nu1, double nu2)
+        public static double TimeToNextTrueAnomaly(double mu, double sma, double ecc, double nu1, double nu2)
         {
             double meanMotion = MeanMotion(mu, sma);
 
@@ -526,7 +526,7 @@ namespace MechJebLib.Functions
         {
             (double sma, double ecc, _, _, _, double nu1, _) = KeplerianFromStateVectors(mu, r, v);
 
-            return TimetoNextTrueAnomaly(mu, sma, ecc, nu1, nu2);
+            return TimeToNextTrueAnomaly(mu, sma, ecc, nu1, nu2);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -541,6 +541,42 @@ namespace MechJebLib.Functions
             if (time1 < 0 && time2 < 0)
                 return Max(time1, time2);
             return time1 >= 0 ? time1 : time2;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double TimeToPrevTrueAnomaly(double mu, double sma, double ecc, double nu1, double nu2)
+        {
+            double meanMotion = MeanMotion(mu, sma);
+
+            double manom1 = Angles.MFromNu(nu1, ecc);
+            double manom2 = Angles.MFromNu(nu2, ecc);
+
+            if (ecc < 1)
+                return -Clamp2Pi(manom1 - manom2) / meanMotion;
+
+            return (manom2 - manom1) / meanMotion;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double TimeToPrevTrueAnomaly(double mu, V3 r, V3 v, double nu2)
+        {
+            (double sma, double ecc, _, _, _, double nu1, _) = KeplerianFromStateVectors(mu, r, v);
+
+            return TimeToPrevTrueAnomaly(mu, sma, ecc, nu1, nu2);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double TimeToLastRadius(double mu, V3 r, V3 v, double radius)
+        {
+            double nu1   = TrueAnomalyFromRadius(mu, r, v, radius);
+            double nu2   = -nu1;
+            double time1 = TimeToPrevTrueAnomaly(mu, r, v, nu1);
+            double time2 = TimeToPrevTrueAnomaly(mu, r, v, nu2);
+            if (time1 <= 0 && time2 <= 0)
+                return Max(time1, time2);
+            if (time1 > 0 && time2 > 0)
+                return Min(time1, time2);
+            return time1 <= 0 ? time1 : time2;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

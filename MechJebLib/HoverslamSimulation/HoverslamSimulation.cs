@@ -128,15 +128,30 @@ namespace MechJebLib.HoverslamSimulation
 
         public override void Run(object? o = null)
         {
-            double maxt = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
-            double mint = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
-            if (mint > maxt)
-                mint -= Astro.PeriodFromStateVectors(_mu, _r0, _v0);
+            // ignition point should be before we hit the ground
+            double maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
+            double minT;
+
+            if (Astro.EccFromStateVectors(_mu, _r0, _v0) < 1.0)
+            {
+                // if we're not yet at the apoapsis we should start at the next apoapsis
+                minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
+                if (minT > maxT)
+                    // if we're ahead of the apoapsis, we should rewind to the last apoapsis
+                    minT -= Astro.PeriodFromStateVectors(_mu, _r0, _v0);
+            }
+            else
+            {
+                // heuristically, try to capture a range that includes the ignition point.  i'd rather not
+                // use the mainBody SOI radius here, but that would certainly do it.
+                minT = Astro.TimeToLastRadius(_mu, _r0, _v0, _r0.magnitude * 2.0);
+            }
+
             double t1;
 
             try
             {
-                t1 = BrentRoot.Solve(AltitudeResidual, mint, maxt, null, rtol: 1e-8);
+                t1 = BrentRoot.Solve(AltitudeResidual, minT, maxT, null, rtol: 1e-8);
             }
             catch (Exception)
             {
