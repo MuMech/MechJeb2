@@ -164,7 +164,7 @@ namespace MuMech
         private AttitudeReference targetReference = AttitudeReference.ORBIT;
 
         private static readonly double LARGE_INCREMENT = 10.0;
-
+        private int lastNodeCount = 0;
         // Current attitude/direction (for smooth interpolation)
         private Vector3d curDirection = Vector3d.zero;
         private Quaternion curAttitude = Quaternion.identity;
@@ -222,6 +222,24 @@ namespace MuMech
             base.OnLoad(local, type, global);
             if (target != Target.OFF)
                 Engage(false);
+        }
+
+        public override void Drive(FlightCtrlState s)
+        {
+            base.Drive(s);
+
+            int currentNodeCount = Part.vessel.patchedConicSolver.maneuverNodes.Count;
+
+            if (target == Target.NODE)
+            {
+                if (lastNodeCount > 0 && currentNodeCount == 0)
+                {
+                    target = Target.KILLROT;
+                    Engage();
+                }
+            }
+
+            lastNodeCount = currentNodeCount;
         }
 
         protected override void WindowGUI(int windowID)
