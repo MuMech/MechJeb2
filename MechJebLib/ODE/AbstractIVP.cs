@@ -16,14 +16,15 @@ namespace MechJebLib.ODE
     using IVPFunc = Action<IList<double>, double, IList<double>>;
 
     // TODO:
-    //  - Needs better MinStep based on next floating point number
-    //  - Configurable to throw or just continue at MinStep
     //  - Needs working event API
     public abstract class AbstractIVP
     {
+        public enum IVPStatus { Initialized, Success, EventTerminated, MaxStepsExceeded, Failed }
+
         private readonly List<Event> _activeEvents = new List<Event>();
 
         private   Func<IList<double>, double, AbstractIVP, double> _eventFunc = null!;
+
         private   double                                           _habsNext;
         protected int                                              Direction;
         protected double[]                                         Dy    = new double[1];
@@ -33,7 +34,8 @@ namespace MechJebLib.ODE
         protected double                                           MinStep;
 
         protected int    N;
-        protected double T, Tnew;
+        public double T;
+        protected double Tnew;
 
         protected double[] Y    = new double[1];
         protected double[] Ynew = new double[1];
@@ -83,6 +85,8 @@ namespace MechJebLib.ODE
         /// </summary>
         public bool ThrowOnMinStep { get; set; } = true;
 
+        public IVPStatus Status { get; set; } = IVPStatus.Success;
+
         public CancellationToken CancellationToken { get; }
 
         private Func<double, object?, double> _eventFunctionDelegate => EventFuncWrapper;
@@ -113,7 +117,12 @@ namespace MechJebLib.ODE
                 Init();
                 _Solve(f, y0, yf, t0, tf, interpolant, events);
             }
-
+            catch (Exception)
+            {
+                if (Status == IVPStatus.Initialized)
+                    Status = IVPStatus.Failed;
+                throw;
+            }
             finally
             {
                 Cleanup();
@@ -131,6 +140,8 @@ namespace MechJebLib.ODE
             Hn? interpolant,
             IReadOnlyList<Event>? events)
         {
+            Status = IVPStatus.Initialized;
+
             Direction = t0 != tf ? Math.Sign(tf - t0) : 1;
             MaxStep   = Hmax;
             MinStep   = Hmin;
@@ -224,11 +235,16 @@ namespace MechJebLib.ODE
                 Habs = _habsNext;
 
                 if (terminate)
+                {
+                    Status = IVPStatus.EventTerminated;
                     break;
+                }
 
                 // handle max iterations
                 if (Maxiter > 0 && niter++ > Maxiter)
                 {
+                    Status = IVPStatus.MaxStepsExceeded;
+
                     if (ThrowOnMaxIter)
                         throw new InvalidOperationException("maximum iterations exceeded");
 
@@ -239,6 +255,10 @@ namespace MechJebLib.ODE
             interpolant?.Add(T, Y, Dy);
 
             Y.CopyTo(yf);
+
+            // nothing else overwrote our status with a reason
+            if (Status == IVPStatus.Initialized)
+                Status = IVPStatus.Success;
         }
 
         private bool IsActiveEvent(Event e)

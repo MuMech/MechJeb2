@@ -9,9 +9,9 @@ namespace MuMech
 {
     public class MechJebModuleWarpHelper : DisplayModule
     {
-        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
+        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, HoverslamBurn, AtmosphericEntry }
 
-        private static readonly string[] warpTargetStrings = { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") }; //"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
+        private static readonly string[] warpTargetStrings = { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") }; //"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""hoverslam burn""atmospheric entry"
 
         [Persistent(pass = (int)Pass.GLOBAL)] public WarpTarget warpTarget = WarpTarget.Periapsis;
 
@@ -126,10 +126,10 @@ namespace MuMech
 
                             break;
 
-                        case WarpTarget.SuicideBurn:
+                        case WarpTarget.HoverslamBurn:
                             try
                             {
-                                targetUT = OrbitExtensions.SuicideBurnCountdown(Orbit, VesselState) + VesselState.time;
+                                targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
                             }
                             catch
                             {
@@ -164,11 +164,11 @@ namespace MuMech
         {
             if (!warping) return;
 
-            if (warpTarget == WarpTarget.SuicideBurn)
+            if (warpTarget == WarpTarget.HoverslamBurn)
             {
                 try
                 {
-                    targetUT = OrbitExtensions.SuicideBurnCountdown(Orbit, VesselState) + VesselState.time;
+                    targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
                 }
                 catch
                 {

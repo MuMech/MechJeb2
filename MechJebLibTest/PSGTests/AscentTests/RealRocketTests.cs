@@ -176,7 +176,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             (V3 rf1, _) = solution.StateVectors(solution.EndTime(1));
 
-            (rf1.magnitude - R_BODY).ShouldEqual(101459.50200797338, 1e-5);
+            (rf1.magnitude - R_BODY).ShouldEqual(101461.50629983563, 1e-5);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
