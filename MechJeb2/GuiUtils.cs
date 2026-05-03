@@ -784,6 +784,65 @@ namespace MuMech
             return null;
         }
 
+        private static readonly Dictionary<int, string> _tooltipTexts = new Dictionary<int, string>();
+        private static GUIStyle _tooltipStyle;
+        private static Rect _tooltipRect;
+        private static DateTime _tooltipBeginDt;
+        private static bool _tooltipChanged;
+        private const float TooltipMaxWidth = 200f;
+        private const double TooltipShowDelay = 1000;
+        private static readonly int _tooltipWindowId = "MechJebTooltip".GetHashCode();
+
+        public static void RecordTooltip(int windowId)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+
+            _tooltipTexts.TryGetValue(windowId, out string current);
+            current ??= string.Empty;
+
+            if (GUI.tooltip == current) return;
+
+            _tooltipChanged  = true;
+            _tooltipBeginDt  = DateTime.UtcNow;
+            _tooltipTexts[windowId] = GUI.tooltip;
+        }
+
+        public static void ShowTooltip(int windowId)
+        {
+            if (!_tooltipTexts.TryGetValue(windowId, out string text) || string.IsNullOrEmpty(text))
+                return;
+            if ((DateTime.UtcNow - _tooltipBeginDt).TotalMilliseconds <= TooltipShowDelay)
+                return;
+
+            if (_tooltipStyle == null)
+            {
+                _tooltipStyle = new GUIStyle(GUI.skin.box)
+                {
+                    padding  = new RectOffset(3, 3, 3, 3),
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap  = true
+                };
+            }
+
+            if (_tooltipChanged)
+            {
+                var c = new GUIContent(text);
+                _tooltipStyle.CalcMinMaxWidth(c, out _, out float width);
+                width        = Math.Min(width, TooltipMaxWidth);
+                float height = _tooltipStyle.CalcHeight(c, TooltipMaxWidth);
+                float mx     = Input.mousePosition.x / Scale;
+                float my     = (Screen.height - Input.mousePosition.y) / Scale;
+                _tooltipRect    = new Rect(
+                    Math.Min(ScaledScreenWidth - width, mx + 15),
+                    Math.Min(ScaledScreenHeight - height, my + 10),
+                    width, height);
+                _tooltipChanged = false;
+            }
+
+            GUI.Window(_tooltipWindowId, _tooltipRect, _ => { }, text, _tooltipStyle);
+            GUI.BringWindowToFront(_tooltipWindowId);
+        }
+
         [UsedImplicitly]
         public class ComboBox
         {
