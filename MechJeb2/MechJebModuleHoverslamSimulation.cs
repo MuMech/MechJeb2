@@ -88,6 +88,11 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Vertical phase altitude
         public readonly EditableDouble VerticalAltitude = new EditableDouble(100);
 
+        // TODO: VerticalAuthority needs better integration with the prediction.
+        // TODO: what does VerticalAuthority mean?  for stock it is just halfway between hover and max.  for a unthrottleable
+        //       engine it should just be the same to give 50% duty cycle.  for a throttleable engine, it should probably be
+        //       halfway between min and max throttle, even though we can PWM if we have to.
+        // TODO: should we be able to disable PWM for throttleable engines to avoid consuming ignitions?
         // TODO: somehow wire up DisengageAutopilot to the ToggleInfoItem
         // TODO: staging delays for multistage fed into simulation
         // TODO: add aero model for landing on Kerbin/Earth
