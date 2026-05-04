@@ -18,7 +18,7 @@ namespace MuMech
     {
         // TODO: have the integrator produce this value in the background thread
         // (this isn't as expensive as an ODE integrator but there is multiple kepler solves every tick)
-        [ValueInfoItem("#MechJeb_HoverslamImpact", InfoItem.Category.Hoverslam)] //Impact
+        [ValueInfoItem("#MechJeb_HoverslamImpact", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamImpact_tooltip")] //Impact
         public string Impact()
         {
             if (Orbit.PeA > 0 || Vessel.Landed) return "N/A";
@@ -46,44 +46,45 @@ namespace MuMech
         }
 
         // TODO: this shows numbers like e.g. -1.2s in flight if the cycles/second is 1.0s -- not sure how to fix
-        [ValueInfoItem("#MechJeb_HoverslamIgnition", InfoItem.Category.Hoverslam)] //Ignition
+        [ValueInfoItem("#MechJeb_HoverslamIgnition", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamIgnition_tooltip")] //Ignition
         public string Ignition() =>
             Orbit.PeA > 0 || Vessel.Landed ? "N/A" : GuiUtils.TimeToDHMS(IgnitionCountdown, 1);
 
-        [ValueInfoItem("#MechJeb_HoverslamTouchdown", InfoItem.Category.Hoverslam)] //Touchdown
+        [ValueInfoItem("#MechJeb_HoverslamTouchdown", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamTouchdown_tooltip")] //Touchdown
         public string Touchdown() =>
             Orbit.PeA > 0 || Vessel.Landed ? "N/A" : GuiUtils.TimeToDHMS(LandingCountdown, 1);
 
         // TODO: This counts down even if you don't ignite and i'm not entirely certain what to do about it
-        [ValueInfoItem("#MechJeb_HoverslamDeltaV", InfoItem.Category.Hoverslam)] //Hoverslam Δv
+        // TODO: this doesn't account for planned vertical descent deltaV
+        [ValueInfoItem("#MechJeb_HoverslamDeltaV", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamDeltaV_tooltip")] //Hoverslam Δv
         public string HoverslamDeltaV() =>
             IsFinite(LandingUT) ? DeltaV(LandingCountdown - (IgnitionUT < VesselState.time ? 0 : IgnitionCountdown)).ToSI() + "m/s" : "N/A";
 
-        [ValueInfoItem("#MechJeb_HoverslamCoordinates", InfoItem.Category.Hoverslam, width = 90)] //Coordinates
+        [ValueInfoItem("#MechJeb_HoverslamCoordinates", InfoItem.Category.Hoverslam, width = 90, tooltip = "#MechJeb_HoverslamCoordinates_tooltip")] //Coordinates
         public string HoverslamCoordinates() => Coordinates.ToStringDMS(Lat, Lng, true);
 
-        [ValueInfoItem("#MechJeb_HoverslamBiome", InfoItem.Category.Hoverslam)] //Biome
+        [ValueInfoItem("#MechJeb_HoverslamBiome", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamBiome_tooltip")] //Biome
         public string Biome() => IsFinite(LandingUT) ? MainBody.GetExperimentBiomeSafe(Lat, Lng) : "N/A";
 
-        [ValueInfoItem("#MechJeb_HoverslamSlope", InfoItem.Category.Hoverslam, format = "F2", units = "º")] //Slope
+        [ValueInfoItem("#MechJeb_HoverslamSlope", InfoItem.Category.Hoverslam, format = "F2", units = "º", tooltip = "#MechJeb_HoverslamSlope_tooltip")] //Slope
         public double Slope;
 
-        [ValueInfoItem("#MechJeb_HoverslamTerrainAltitude", InfoItem.Category.Hoverslam, format = "F1", units = "m")] //Terrain altitude
+        [ValueInfoItem("#MechJeb_HoverslamTerrainAltitude", InfoItem.Category.Hoverslam, format = "F1", units = "m", tooltip = "#MechJeb_HoverslamTerrainAltitude_tooltip")] //Terrain altitude
         public double TerrainAltitude;
 
-        [ToggleInfoItem("#MechJeb_HoverslamMapLandingPrediction", InfoItem.Category.Hoverslam)]
+        [ToggleInfoItem("#MechJeb_HoverslamMapLandingPrediction", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamMapLandingPrediction_tooltip")]
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Map landing prediction
         public bool MapLandingPrediction = true;
 
-        [EditableInfoItem("#MechJeb_HoverslamSimRecalcInterval", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true)]
+        [EditableInfoItem("#MechJeb_HoverslamSimRecalcInterval", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamSimRecalcInterval_tooltip")]
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Simulation recalc interval
         public readonly EditableDouble SimRecalcInterval = new EditableDouble(1.0);
 
-        [EditableInfoItem("#MechJeb_HoverslamVerticalAuthority", InfoItem.Category.Hoverslam, width = 50, rightLabel = "%", expandWidth = true)]
+        [EditableInfoItem("#MechJeb_HoverslamVerticalAuthority", InfoItem.Category.Hoverslam, width = 50, rightLabel = "%", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAuthority_tooltip")]
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Vertical phase authority
         public readonly EditableDoubleMult VerticalAuthority = new EditableDoubleMult(0.5, 0.01);
 
-        [EditableInfoItem("#MechJeb_HoverslamVerticalAltitude", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m", expandWidth = true)]
+        [EditableInfoItem("#MechJeb_HoverslamVerticalAltitude", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAltitude_tooltip")]
         [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Vertical phase altitude
         public readonly EditableDouble VerticalAltitude = new EditableDouble(100);
 
