@@ -95,7 +95,7 @@ namespace MechJebLib.PSG
             var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent)
             {
                 MinT = allowShutdown ? 0 : bt,
-                MaxT = bt,
+                MaxT = bt / minThrottle,
                 Unguided = unguided,
                 MassContinuity = massContinuity,
                 MinThrottle = minThrottle
