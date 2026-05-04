@@ -21,8 +21,8 @@ namespace MechJebLib.Primitives
         public void Add(double time, double[] value, double[] inTangent, double[] outTangent)
         {
             _list[time] = new HFrame<Vn>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
-            MinTime     = Min(MinTime, time);
-            MaxTime     = Max(MaxTime, time);
+            MinTime = Min(MinTime, time);
+            MaxTime = Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
             LastLo = -1;
         }
@@ -32,9 +32,9 @@ namespace MechJebLib.Primitives
             if (_list.ContainsKey(time))
             {
                 HFrame<Vn> temp = _list.Values[_list.IndexOfKey(time)];
-                temp.Value      = Allocate(value);
+                temp.Value = Allocate(value);
                 temp.OutTangent = Allocate(tangent);
-                _list[time]     = temp;
+                _list[time] = temp;
             }
             else
             {
@@ -123,7 +123,7 @@ namespace MechJebLib.Primitives
 
             MinTime = double.MaxValue;
             MaxTime = double.MinValue;
-            LastLo  = -1;
+            LastLo = -1;
             _list.Clear();
         }
     }

@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using MechJebLib.Primitives;
+
+using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -18,7 +19,7 @@ namespace MechJebLib.Control
         public double UMin  { get; set; } = -1;
         public double UMax  { get; set; } = 1;
         public double Kb    => 1 / Tt;
-        public V3     X̂ = V3.nan;
+        public V3 X̂ = V3.nan;
 
         public V3 Kstate => new V3(
             _k1.Interpolate(Grr, Ts, M),
@@ -132,10 +133,10 @@ namespace MechJebLib.Control
 
         public void Reset()
         {
-            _ei    = 0;
+            _ei = 0;
             _uDiff = 0;
-            _uSat  = 0;
-            X̂     = V3.nan;
+            _uSat = 0;
+            X̂ = V3.nan;
         }
     }
 }

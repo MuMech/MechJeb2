@@ -24,8 +24,8 @@ namespace MechJebLib.Primitives
 
         public Scale(double lengthScale, double velocityScale, double massScale)
         {
-            LengthScale   = lengthScale;
-            MassScale     = massScale;
+            LengthScale = lengthScale;
+            MassScale = massScale;
             VelocityScale = velocityScale;
         }
 

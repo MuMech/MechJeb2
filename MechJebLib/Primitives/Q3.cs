@@ -346,13 +346,13 @@ namespace MechJebLib.Primitives
 
         public static Q3 AngleAxis(double angle, V3 axis)
         {
-            V3  a = axis.normalized;
-            return new  Q3(
+            V3 a = axis.normalized;
+            return new Q3(
                 a.x * Sin(angle / 2.0),
                 a.y * Sin(angle / 2.0),
                 a.z * Sin(angle / 2.0),
                 Cos(angle / 2.0)
-                );
+            );
         }
 
         public static Q3 Inverse(Q3 q)

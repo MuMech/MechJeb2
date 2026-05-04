@@ -894,13 +894,13 @@ namespace MechJebLib.Primitives
                 if (Abs(m20) < 1.0 - EPS)
                 {
                     roll = Atan2(m21, m22);
-                    yaw  = Atan2(m10, m00);
+                    yaw = Atan2(m10, m00);
                 }
                 else
                 {
                     // Gimbal lock: pitch is ±90°
                     roll = Atan2(-m12, m11);
-                    yaw  = 0;
+                    yaw = 0;
                 }
 
                 return new V3(roll, pitch, yaw);
@@ -960,13 +960,13 @@ namespace MechJebLib.Primitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(double[,] other, int x, int y)
         {
-            other[x, y]         = m00;
-            other[x, y + 1]     = m01;
-            other[x, y + 2]     = m02;
-            other[x + 1, y]     = m10;
+            other[x, y] = m00;
+            other[x, y + 1] = m01;
+            other[x, y + 2] = m02;
+            other[x + 1, y] = m10;
             other[x + 1, y + 1] = m11;
             other[x + 1, y + 2] = m12;
-            other[x + 2, y]     = m20;
+            other[x + 2, y] = m20;
             other[x + 2, y + 1] = m21;
             other[x + 2, y + 2] = m22;
         }
@@ -979,7 +979,7 @@ namespace MechJebLib.Primitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(IList<double> other, int offset)
         {
-            other[offset]     = m00;
+            other[offset] = m00;
             other[offset + 1] = m01;
             other[offset + 2] = m02;
             other[offset + 3] = m10;

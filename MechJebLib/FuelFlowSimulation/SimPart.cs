@@ -14,25 +14,25 @@ namespace MechJebLib.FuelFlowSimulation
     {
         private static readonly ObjectPool<SimPart> _pool = new ObjectPool<SimPart>(New, Clear);
 
-        public readonly  List<SimPartModule>          Modules          = new List<SimPartModule>();
-        public readonly  List<SimPart>                CrossFeedPartSet = new List<SimPart>();
-        public readonly  List<SimPart>                SymmetryCounterParts = new List<SimPart>();
-        public readonly  List<SimPart>                Links           = new List<SimPart>();
-        public readonly  Dictionary<int, SimResource> Resources       = new Dictionary<int, SimResource>();
-        private readonly Dictionary<int, double>      _resourceDrains = new Dictionary<int, double>();
-        private readonly Dictionary<int, double>      _rcsDrains      = new Dictionary<int, double>();
+        public readonly List<SimPartModule> Modules = new List<SimPartModule>();
+        public readonly List<SimPart> CrossFeedPartSet = new List<SimPart>();
+        public readonly List<SimPart> SymmetryCounterParts = new List<SimPart>();
+        public readonly List<SimPart> Links = new List<SimPart>();
+        public readonly Dictionary<int, SimResource> Resources = new Dictionary<int, SimResource>();
+        private readonly Dictionary<int, double> _resourceDrains = new Dictionary<int, double>();
+        private readonly Dictionary<int, double> _rcsDrains = new Dictionary<int, double>();
 
-        public int       DecoupledInStage;
-        public bool      StagingOn;
-        public int       InverseStage;
+        public int DecoupledInStage;
+        public bool StagingOn;
+        public int InverseStage;
         public SimVessel Vessel;
-        public string    Name;
+        public string Name;
 
-        public bool   ActivatesEvenIfDisconnected;
-        public bool   IsThrottleLocked;
-        public int    ResourcePriority;
+        public bool ActivatesEvenIfDisconnected;
+        public bool IsThrottleLocked;
+        public int ResourcePriority;
         public double ResourceRequestRemainingThreshold;
-        public bool   IsEnabled;
+        public bool IsEnabled;
 
         public double Mass;
         public double DryMass;
@@ -51,7 +51,7 @@ namespace MechJebLib.FuelFlowSimulation
         {
             // Always set in Borrow()
             Vessel = null!;
-            Name   = null!;
+            Name = null!;
         }
 
         public void UpdateMass()
@@ -62,7 +62,7 @@ namespace MechJebLib.FuelFlowSimulation
                 return;
             }
 
-            Mass =  DryMass + CrewMass + DisabledResourcesMass;
+            Mass = DryMass + CrewMass + DisabledResourcesMass;
             Mass += Vessel.CurrentStage <= InverseStage ? ModulesStagedMass : ModulesUnstagedMass;
             //ModulesCurrentMass =  Mass;
             foreach (SimResource resource in Resources.Values)
@@ -80,7 +80,7 @@ namespace MechJebLib.FuelFlowSimulation
         {
             SimPart part = _pool.Borrow();
             part.Vessel = vessel;
-            part.Name   = name;
+            part.Name = name;
             return part;
         }
 
@@ -96,9 +96,9 @@ namespace MechJebLib.FuelFlowSimulation
             p._resourceDrains.Clear();
             p._rcsDrains.Clear();
 
-            p.Vessel           = null!;
-            p.IsLaunchClamp    = false;
-            p.IsEngine         = false;
+            p.Vessel = null!;
+            p.IsLaunchClamp = false;
+            p.IsEngine = false;
             p.IsThrottleLocked = false;
         }
 
@@ -133,7 +133,7 @@ namespace MechJebLib.FuelFlowSimulation
             if (!Resources.TryGetValue(resourceId, out SimResource resource))
                 return;
 
-            resource.Residual     = Max(resource.Residual, residual);
+            resource.Residual = Max(resource.Residual, residual);
             Resources[resourceId] = resource;
         }
 
@@ -147,7 +147,7 @@ namespace MechJebLib.FuelFlowSimulation
             {
                 SimResource resource = Resources[id];
                 resource.Residual = 0;
-                Resources[id]     = resource;
+                Resources[id] = resource;
             }
         }
 

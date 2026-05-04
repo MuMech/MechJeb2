@@ -23,21 +23,21 @@ namespace MechJebLib.ODE
 
         private readonly List<Event> _activeEvents = new List<Event>();
 
-        private   Func<IList<double>, double, AbstractIVP, double> _eventFunc = null!;
+        private Func<IList<double>, double, AbstractIVP, double> _eventFunc = null!;
 
-        private   double                                           _habsNext;
-        protected int                                              Direction;
-        protected double[]                                         Dy    = new double[1];
-        protected double[]                                         Dynew = new double[1];
-        protected double                                           Habs;
-        protected double                                           MaxStep;
-        protected double                                           MinStep;
+        private double _habsNext;
+        protected int Direction;
+        protected double[] Dy = new double[1];
+        protected double[] Dynew = new double[1];
+        protected double Habs;
+        protected double MaxStep;
+        protected double MinStep;
 
-        protected int    N;
+        protected int N;
         public double T;
         protected double Tnew;
 
-        protected double[] Y    = new double[1];
+        protected double[] Y = new double[1];
         protected double[] Ynew = new double[1];
 
         /// <summary>
@@ -108,10 +108,10 @@ namespace MechJebLib.ODE
         {
             try
             {
-                N     = y0.Count;
-                Y     = Y.Expand(N);
-                Dy    = Dy.Expand(N);
-                Ynew  = Ynew.Expand(N);
+                N = y0.Count;
+                Y = Y.Expand(N);
+                Dy = Dy.Expand(N);
+                Ynew = Ynew.Expand(N);
                 Dynew = Dynew.Expand(N);
 
                 Init();
@@ -143,8 +143,8 @@ namespace MechJebLib.ODE
             Status = IVPStatus.Initialized;
 
             Direction = t0 != tf ? Math.Sign(tf - t0) : 1;
-            MaxStep   = Hmax;
-            MinStep   = Hmin;
+            MaxStep = Hmax;
+            MinStep = Hmin;
 
             T = t0;
             Y.CopyFrom(y0);
@@ -199,8 +199,8 @@ namespace MechJebLib.ODE
 
                         for (int i = 0; i < _activeEvents.Count; i++)
                         {
-                            _eventFunc            = _activeEvents[i].F;
-                            (double tevent, _)    = Bisection.Solve(_eventFunctionDelegate, T, Tnew, null, EPS);
+                            _eventFunc = _activeEvents[i].F;
+                            (double tevent, _) = Bisection.Solve(_eventFunctionDelegate, T, Tnew, null, EPS);
                             _activeEvents[i].Time = tevent;
                         }
 
@@ -231,7 +231,7 @@ namespace MechJebLib.ODE
                 // take a step
                 Y.CopyFrom(Ynew);
                 Dy.CopyFrom(Dynew);
-                T    = Tnew;
+                T = Tnew;
                 Habs = _habsNext;
 
                 if (terminate)

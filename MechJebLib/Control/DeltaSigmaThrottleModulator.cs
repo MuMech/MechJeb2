@@ -8,7 +8,7 @@ namespace MechJebLib.Control
         public double MinOffTime;
 
         private double _accumulator; // impulse debt in m/s (positive = owed)
-        private bool   _outputOn;
+        private bool _outputOn;
         private double _stateTimer;
 
         // Smallest non-zero throttle we'll emit in the continuous regime.
@@ -41,9 +41,9 @@ namespace MechJebLib.Control
         ///     commanded profile.
         /// </summary>
         public float ThrottleCommand(double commandedAccel,
-                                     double minThrustAccel,
-                                     double maxThrustAccel,
-                                     double dt)
+            double minThrustAccel,
+            double maxThrustAccel,
+            double dt)
         {
             // Hard rails.
             if (commandedAccel <= 0.0)

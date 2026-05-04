@@ -10,10 +10,10 @@ namespace MechJebLib.HoverslamSimulation
 {
     public struct HoverslamLayout
     {
-        public const int R_INDEX              = 0;
-        public const int V_INDEX              = 3;
-        public const int M_INDEX              = 6;
-        public const int DV_INDEX             = 7;
+        public const int R_INDEX = 0;
+        public const int V_INDEX = 3;
+        public const int M_INDEX = 6;
+        public const int DV_INDEX = 7;
         public const int HOVERSLAM_LAYOUT_LEN = 8;
 
         public V3 R;

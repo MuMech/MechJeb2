@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
@@ -17,10 +18,10 @@ namespace MechJebLib.Maneuvers
     {
         private struct Args
         {
-            public V3   R1;
-            public V3   V1;
-            public V3   R2;
-            public V3   V2;
+            public V3 R1;
+            public V3 V1;
+            public V3 R2;
+            public V3 V2;
             public bool Capture;
         }
 
@@ -32,8 +33,8 @@ namespace MechJebLib.Maneuvers
             V3 v2 = args.V2;
 
             (V3 rburn, V3 vburn) = Shepperd.Solve(1.0, dt, r1, v1);
-            (V3 rf2, V3 vf2)     = Shepperd.Solve(1.0, dt + tt + offset, r2, v2);
-            (V3 vi, V3 vf)       = Gooding.Solve(1.0, rburn, vburn, rf2, tt, 0);
+            (V3 rf2, V3 vf2) = Shepperd.Solve(1.0, dt + tt + offset, r2, v2);
+            (V3 vi, V3 vf) = Gooding.Solve(1.0, rburn, vburn, rf2, tt, 0);
 
             return (vi - vburn, vf2 - vf);
         }
@@ -66,7 +67,7 @@ namespace MechJebLib.Maneuvers
             double ttmin = double.NegativeInfinity, double ttmax = double.PositiveInfinity, double offsetMin = double.NegativeInfinity,
             double offsetMax = double.PositiveInfinity, bool optguard = false)
         {
-            if (!Statics.IsFinite(mu))
+            if (!IsFinite(mu))
                 throw new ArgumentException("bad mu in ChangeOrbitalElement");
             if (!r1.IsFinite())
                 throw new ArgumentException("bad r1 in ChangeOrbitalElement");
@@ -98,18 +99,18 @@ namespace MechJebLib.Maneuvers
                 v2 = toCoplanar * v2;
             }
 
-            r1          /= scale.LengthScale;
-            v1          /= scale.VelocityScale;
-            r2          /= scale.LengthScale;
-            v2          /= scale.VelocityScale;
-            dtguess     /= scale.TimeScale;
+            r1 /= scale.LengthScale;
+            v1 /= scale.VelocityScale;
+            r2 /= scale.LengthScale;
+            v2 /= scale.VelocityScale;
+            dtguess /= scale.TimeScale;
             offsetGuess /= scale.TimeScale;
-            dtmin       /= scale.TimeScale;
-            dtmax       /= scale.TimeScale;
-            ttmin       /= scale.TimeScale;
-            ttmax       /= scale.TimeScale;
-            offsetMin   /= scale.TimeScale;
-            offsetMax   /= scale.TimeScale;
+            dtmin /= scale.TimeScale;
+            dtmax /= scale.TimeScale;
+            ttmin /= scale.TimeScale;
+            ttmax /= scale.TimeScale;
+            offsetMin /= scale.TimeScale;
+            offsetMax /= scale.TimeScale;
 
             (_, _, double ttguess, _) = Astro.HohmannTransferParameters(1.0, r1, r2);
 
@@ -119,10 +120,10 @@ namespace MechJebLib.Maneuvers
 
             var args = new Args
             {
-                R1      = r1,
-                V1      = v1,
-                R2      = r2,
-                V2      = v2,
+                R1 = r1,
+                V1 = v1,
+                R2 = r2,
+                V2 = v2,
                 Capture = capture
             };
 
@@ -184,10 +185,10 @@ namespace MechJebLib.Maneuvers
                 double offsetGuess = 0;
                 double offsetMin   = 0;
                 double offsetMax   = 0;
-                if (Statics.IsFinite(lagTime))
+                if (IsFinite(lagTime))
                 {
-                    offsetMin   = -lagTime;
-                    offsetMax   = -lagTime;
+                    offsetMin = -lagTime;
+                    offsetMax = -lagTime;
                     offsetGuess = -lagTime;
                 }
 
@@ -243,7 +244,7 @@ namespace MechJebLib.Maneuvers
                 dtguess += synodicPeriod * 0.10;
             }
 
-            throw new MechJebLibException($"[MechJebLib] Maneuvers.NextManeuver.TwoImpulseTransfer(): too many iterations");
+            throw new MechJebLibException("[MechJebLib] Maneuvers.NextManeuver.TwoImpulseTransfer(): too many iterations");
         }
     }
 }

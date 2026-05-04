@@ -17,10 +17,10 @@ namespace MechJebLib.Maneuvers
 
         private struct Args
         {
-            public V3     P;
-            public V3     Q;
+            public V3 P;
+            public V3 Q;
             public double Value;
-            public Type   Type;
+            public Type Type;
         }
 
         private static void NLPFunction2(double[] x, double[] fi, double[,] jac, object obj)
@@ -37,7 +37,7 @@ namespace MechJebLib.Maneuvers
             Dual sqM0 = dv0.sqrMagnitude;
             Dual sqM1 = dv1.sqrMagnitude;
 
-            fi[0]     = sqM0.M;
+            fi[0] = sqM0.M;
             jac[0, 0] = sqM0.D;
             jac[0, 1] = sqM1.D;
 
@@ -46,28 +46,28 @@ namespace MechJebLib.Maneuvers
                 case Type.PERIAPSIS:
                     Dual peR0 = Astro.PeriapsisFromStateVectors(1.0, p, q + dv0) - value;
                     Dual peR1 = Astro.PeriapsisFromStateVectors(1.0, p, q + dv1) - value;
-                    fi[1]     = peR0.M;
+                    fi[1] = peR0.M;
                     jac[1, 0] = peR0.D;
                     jac[1, 1] = peR1.D;
                     break;
                 case Type.APOAPSIS:
                     Dual apR0 = 1.0 / Astro.ApoapsisFromStateVectors(1.0, p, q + dv0) - 1.0 / value;
                     Dual apR1 = 1.0 / Astro.ApoapsisFromStateVectors(1.0, p, q + dv1) - 1.0 / value;
-                    fi[1]     = apR0.M;
+                    fi[1] = apR0.M;
                     jac[1, 0] = apR0.D;
                     jac[1, 1] = apR1.D;
                     break;
                 case Type.SMA:
                     Dual sma0 = 1.0 / Astro.SmaFromStateVectors(1.0, p, q + dv0) - 1.0 / value;
                     Dual sma1 = 1.0 / Astro.SmaFromStateVectors(1.0, p, q + dv1) - 1.0 / value;
-                    fi[1]     = sma0.M;
+                    fi[1] = sma0.M;
                     jac[1, 0] = sma0.D;
                     jac[1, 1] = sma1.D;
                     break;
                 case Type.ECC:
                     Dual ecc0 = Astro.EccFromStateVectors(1.0, p, q + dv0) - value;
                     Dual ecc1 = Astro.EccFromStateVectors(1.0, p, q + dv1) - value;
-                    fi[1]     = ecc0.M;
+                    fi[1] = ecc0.M;
                     jac[1, 0] = ecc0.D;
                     jac[1, 1] = ecc1.D;
                     break;

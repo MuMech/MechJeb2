@@ -39,10 +39,10 @@ namespace MechJebLib.Control
         public double Ts { get; set; } = 0.02;
 
         // parallel form parameters
-        public double Kp { set => K = value;      get => K; } // TODO: rescale Ti and Td to keep Ki and Kd constant
-        public double Ki { set => Ti = K / value; get => K / Ti; }
-        public double Kd { set => Td = value / K; get => Td * K; }
-        public double Tf { set => N = Td / value; get => Td / N; }
+        public double Kp { get => K;      set => K = value; } // TODO: rescale Ti and Td to keep Ki and Kd constant
+        public double Ki { get => K / Ti; set => Ti = K / value; }
+        public double Kd { get => Td * K; set => Td = value / K; }
+        public double Tf { get => Td / N; set => N = Td / value; }
 
         // 2DOF PIDF parameters
         public double B { get; set; } = 1;
@@ -100,7 +100,7 @@ namespace MechJebLib.Control
             // low-pass filter the output
             _u1 = IsFinite(_u1) ? _u1 + SmoothOut * (u - _u1) : u;
 
-            _y1  = y;
+            _y1 = y;
             _ei1 = ei;
             _ed1 = ed;
 
@@ -117,7 +117,7 @@ namespace MechJebLib.Control
         public void Reset()
         {
             ITerm = DTerm = _ei1 = _ed1 = 0;
-            _y1   = _u1   = double.NaN;
+            _y1 = _u1 = double.NaN;
         }
     }
 }

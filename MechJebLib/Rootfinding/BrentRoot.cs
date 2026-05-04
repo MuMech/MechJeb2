@@ -50,7 +50,7 @@ namespace MechJebLib.Rootfinding
 
             if (Abs(fa) < Abs(fb))
             {
-                (a, b)   = (b, a);
+                (a, b) = (b, a);
                 (fa, fb) = (fb, fa);
             }
 
@@ -94,8 +94,8 @@ namespace MechJebLib.Rootfinding
             while (fa > 0 == fb > 0)
             {
                 dx *= sqrt2;
-                a  =  x - dx;
-                fa =  f(a, o);
+                a = x - dx;
+                fa = f(a, o);
 
                 Check.Finite(a);
                 Check.Finite(fa);
@@ -106,7 +106,7 @@ namespace MechJebLib.Rootfinding
                 if (fa > 0 != fb > 0)
                     break;
 
-                b  = x + dx;
+                b = x + dx;
                 fb = f(b, o);
 
                 Check.Finite(b);
@@ -138,17 +138,17 @@ namespace MechJebLib.Rootfinding
             {
                 if (fb > 0 == fc > 0)
                 {
-                    c  = a;
+                    c = a;
                     fc = fa;
-                    d  = b - a;
-                    e  = d;
+                    d = b - a;
+                    e = d;
                 }
 
                 if (Abs(fc) < Abs(fb))
                 {
-                    a  = b;
-                    b  = c;
-                    c  = a;
+                    a = b;
+                    b = c;
+                    c = a;
                     fa = fb;
                     fb = fc;
                     fc = fa;
@@ -211,7 +211,7 @@ namespace MechJebLib.Rootfinding
                     }
                 }
 
-                a  = b;
+                a = b;
                 fa = fb;
 
                 if (Abs(d) > toler)

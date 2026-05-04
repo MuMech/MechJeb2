@@ -381,7 +381,7 @@ namespace MechJebLib.Functions
             double horizMag = new V3(v0.x, v0.y).magnitude;
             V3     vf       = ENUHeadingForInclination(newInc, r) * horizMag;
             vf.z = v0.z;
-            vf   = ENUToECI(r, vf);
+            vf = ENUToECI(r, vf);
             return vf;
         }
 
@@ -399,7 +399,7 @@ namespace MechJebLib.Functions
             double vmag = v0.magnitude;
             V3     vf   = new V3(v0.x, v0.y).normalized * Cos(newFPA) * vmag;
             vf.z = Sin(newFPA) * vmag;
-            vf   = ENUToECI(r, vf);
+            vf = ENUToECI(r, vf);
             return vf;
         }
 
@@ -443,10 +443,10 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double lan, double inc)
         {
-            latitude           = Deg2Rad(latitude);
+            latitude = Deg2Rad(latitude);
             celestialLongitude = Deg2Rad(celestialLongitude);
-            lan                = Deg2Rad(lan);
-            inc                = Deg2Rad(inc);
+            lan = Deg2Rad(lan);
+            inc = Deg2Rad(inc);
 
             // handle singularities at the poles where tan(lat) is infinite
             if (Abs(Abs(latitude) - PI / 2) < EPS)
@@ -723,21 +723,21 @@ namespace MechJebLib.Functions
                 if (ecc < 1)
                 {
                     // elliptic orbit
-                    s    = ecc * Sin(eanom);
-                    c    = ecc * Cos(eanom);
-                    f    = eanom - s - xma;
-                    fp   = 1 - c;
-                    fpp  = s;
+                    s = ecc * Sin(eanom);
+                    c = ecc * Cos(eanom);
+                    f = eanom - s - xma;
+                    fp = 1 - c;
+                    fpp = s;
                     fppp = c;
                 }
                 else
                 {
                     // hyperbolic orbit
-                    s    = ecc * Sinh(eanom);
-                    c    = ecc * Cosh(eanom);
-                    f    = s - eanom - xma;
-                    fp   = c - 1;
-                    fpp  = s;
+                    s = ecc * Sinh(eanom);
+                    c = ecc * Cosh(eanom);
+                    f = s - eanom - xma;
+                    fp = c - 1;
+                    fpp = s;
                     fppp = c;
                 }
 

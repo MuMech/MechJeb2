@@ -16,22 +16,22 @@ namespace MechJebLib.PSG
     {
         public enum ObjectiveType { MAX_MASS, MAX_ENERGY, MIN_THRUST_ACCEL, MIN_TIME }
 
-        public readonly  Problem         Problem;
-        public readonly  PhaseCollection Phases;
-        public readonly  ITerminal       Terminal;
-        public readonly  ObjectiveType   Objective;
-        private readonly VariableProxy   _vars;
+        public readonly Problem Problem;
+        public readonly PhaseCollection Phases;
+        public readonly ITerminal Terminal;
+        public readonly ObjectiveType Objective;
+        private readonly VariableProxy _vars;
 
-        private readonly alglib.minnlcreport      _rep = new alglib.minnlcreport();
+        private readonly alglib.minnlcreport _rep = new alglib.minnlcreport();
         private readonly alglib.ndimensional_sjac _constraintHandle;
-        private          alglib.minnlcstate       _state = new alglib.minnlcstate();
+        private alglib.minnlcstate _state = new alglib.minnlcstate();
 
         public CancellationToken TimeoutToken;
 
-        public int       Iterations;
-        public int       TerminationType;
-        public double    PrimalFeasibility;
-        public double    Cost;
+        public int Iterations;
+        public int TerminationType;
+        public double PrimalFeasibility;
+        public double Cost;
         public Solution? Solution;
 
         public int    K                   => 2 * N - 1;
@@ -45,21 +45,21 @@ namespace MechJebLib.PSG
 
         public Optimizer(Problem problem, PhaseCollection phases, ITerminal terminal, ObjectiveType objective)
         {
-            Phases            = phases.DeepCopy();
-            Terminal          = terminal;
-            Objective         = objective;
-            _vars             = new VariableProxy(problem, Phases, Terminal, N);
-            Problem           = problem;
-            _ascentProblem    = new AscentProblem(this);
+            Phases = phases.DeepCopy();
+            Terminal = terminal;
+            Objective = objective;
+            _vars = new VariableProxy(problem, Phases, Terminal, N);
+            Problem = problem;
+            _ascentProblem = new AscentProblem(this);
             _constraintHandle = (x, f, j, o) => _ascentProblem.ConstraintFunction(f, j, x, o);
-            _xGuess           = Array.Empty<double>();
-            _nu               = Array.Empty<double>();
-            _nl               = Array.Empty<double>();
+            _xGuess = Array.Empty<double>();
+            _nu = Array.Empty<double>();
+            _nl = Array.Empty<double>();
         }
 
         private void CalculatePrimalFeasibility(double[] f, bool debug = false)
         {
-            Cost              = f[0];
+            Cost = f[0];
             PrimalFeasibility = 0;
             for (int i = 1; i < f.Length; i++)
             {
@@ -156,7 +156,7 @@ namespace MechJebLib.PSG
 
                 thisPhase.Bt() = tf - t0;
 
-                t0    =  tf;
+                t0 = tf;
                 oldt0 += oldbt;
             }
 
@@ -283,14 +283,14 @@ namespace MechJebLib.PSG
 
                 thisPhase.Bt() = tf - t0;
 
-                t0    = tf;
+                t0 = tf;
                 oldt0 = oldtf;
             }
         }
 
-        private          double[]      _xGuess;
-        private          double[]      _nu;
-        private          double[]      _nl;
+        private double[] _xGuess;
+        private double[] _nu;
+        private double[] _nl;
         private readonly AscentProblem _ascentProblem;
 
         private Solution UnSafeRun()
@@ -464,7 +464,7 @@ namespace MechJebLib.PSG
             alglib.minnlcresultsbuf(_state, ref x, _rep);
 
             TerminationType = _rep.terminationtype;
-            Iterations      = _rep.iterationscount;
+            Iterations = _rep.iterationscount;
 
             DebugPrint("terminationtype: " + TerminationType);
             DebugPrint("iterations: " + Iterations);
@@ -507,7 +507,7 @@ namespace MechJebLib.PSG
                 var tokenSource = new CancellationTokenSource();
                 tokenSource.CancelAfter(OptimizerTimeout);
                 TimeoutToken = tokenSource.Token;
-                Solution     = UnSafeRun();
+                Solution = UnSafeRun();
                 return Solution;
             }
             catch (OperationCanceledException)

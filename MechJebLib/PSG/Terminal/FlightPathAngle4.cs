@@ -5,7 +5,6 @@
 
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
 using static System.Math;
 
@@ -26,10 +25,10 @@ namespace MechJebLib.PSG.Terminal
             Check.Finite(incT);
 
             NumConstraints = 4;
-            _gammaT        = gammaT;
-            _rT            = rT;
-            _vT            = vT;
-            _incT          = incT;
+            _gammaT = gammaT;
+            _rT = rT;
+            _vT = vT;
+            _incT = incT;
         }
 
         public ITerminal Rescale(Scale scale)  => new FlightPathAngle4(_gammaT, _rT / scale.LengthScale, _vT / scale.VelocityScale, _incT);
@@ -55,25 +54,13 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual FlightPathAngleConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[1]) - Sin(gammaT);
-            }
+            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) - Sin(gammaT);
 
-            Dual RadiusConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[0]) - rT * rT;
-            }
+            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - rT * rT;
 
-            Dual InclinationConstraint(DualV3[] p)
-            {
-                return DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
-            }
+            Dual InclinationConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
 
-            Dual VelocityConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[0]) - vT * vT;
-            }
+            Dual VelocityConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - vT * vT;
         }
 
         public ITerminal GetFPA() => this;

@@ -17,19 +17,19 @@ namespace MechJebLib.HoverslamSimulation
     public partial class HoverslamSimulation : AsyncJob
     {
         private double _height;
-        private V3     _r0;
-        private V3     _v0;
+        private V3 _r0;
+        private V3 _v0;
         private double _t0;
         private double _mu;
-        private V3     _w;
+        private V3 _w;
         private double _vfm;
 
         private List<Phase> _phases = new List<Phase>();
 
-        public V3     Rf;
-        public V3     Vf;
+        public V3 Rf;
+        public V3 Vf;
         public double IgnitionUT;
-        public V3     IgnitionAttitude;
+        public V3 IgnitionAttitude;
         public double FinalThrustAccel;
         public double LandingUT;
         public double Dv;
@@ -50,9 +50,9 @@ namespace MechJebLib.HoverslamSimulation
         private struct TrajectoryResult
         {
             public HoverslamLayout X;
-            public double          Tf;
-            public V3              UBurn;
-            public double          Af;
+            public double Tf;
+            public V3 UBurn;
+            public double Af;
         }
 
         private bool PropagatePhase(ref HoverslamLayout x, double t0, ref double tf, Phase phase)
@@ -174,9 +174,9 @@ namespace MechJebLib.HoverslamSimulation
         {
             public static int N => HoverslamLayout.HOVERSLAM_LAYOUT_LEN;
 
-            private readonly Phase  _phase;
+            private readonly Phase _phase;
             private readonly double _mu;
-            private readonly V3     _w;
+            private readonly V3 _w;
             private readonly double _vfm; // final vertical speed, should be negative or zero
 
             public HoverslamODE(double mu, V3 w, double vfm, Phase phase)

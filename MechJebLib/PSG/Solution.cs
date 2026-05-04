@@ -15,16 +15,16 @@ namespace MechJebLib.PSG
 {
     public class Solution : IDisposable
     {
-        public           double       T0;
-        public           double       Tf => T0 + Tmax * _timeScale;
-        private readonly Scale        _scale;
-        private readonly List<double> _tmin         = new List<double>();
-        private readonly List<double> _tmax         = new List<double>();
-        private readonly List<Hn>     _interpolants = new List<Hn>();
-        public readonly  List<Phase>  Phases        = new List<Phase>();
-        private readonly double       _mu;
-        private readonly double       _rbody;
-        public readonly  Problem      Problem;
+        public double T0;
+        public double Tf => T0 + Tmax * _timeScale;
+        private readonly Scale _scale;
+        private readonly List<double> _tmin = new List<double>();
+        private readonly List<double> _tmax = new List<double>();
+        private readonly List<Hn> _interpolants = new List<Hn>();
+        public readonly List<Phase> Phases = new List<Phase>();
+        private readonly double _mu;
+        private readonly double _rbody;
+        public readonly Problem Problem;
 
         public  int    Segments       => Phases.Count;
         private double _timeScale     => _scale.TimeScale;
@@ -38,9 +38,9 @@ namespace MechJebLib.PSG
         public Solution(Problem problem)
         {
             Problem = problem;
-            _scale  = problem.Scale;
-            _mu     = problem.Mu;
-            _rbody  = problem.RBody * _scale.LengthScale;
+            _scale = problem.Scale;
+            _mu = problem.Mu;
+            _rbody = problem.RBody * _scale.LengthScale;
             // t0 is a public API that can be updated while we're landed waiting for takeoff.
             T0 = problem.T0;
         }

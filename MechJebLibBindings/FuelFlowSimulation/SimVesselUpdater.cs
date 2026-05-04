@@ -100,12 +100,12 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                     var resource = new SimResource
                     {
-                        Amount    = kspResource.amount,
+                        Amount = kspResource.amount,
                         MaxAmount = kspResource.maxAmount,
-                        Id        = kspResource.info.id,
-                        Free      = kspResource.info.density == 0,
-                        Density   = kspResource.info.density,
-                        Residual  = 0
+                        Id = kspResource.info.id,
+                        Free = kspResource.info.density == 0,
+                        Density = kspResource.info.density,
+                        Residual = 0
                     };
 
                     part.Resources[resource.Id] = resource;
@@ -127,7 +127,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 PartModule kspModule = _inversePartModuleMapping[m];
 
                 m.ModuleIsEnabled = kspModule.moduleIsEnabled;
-                m.StagingEnabled  = kspModule.stagingEnabled;
+                m.StagingEnabled = kspModule.stagingEnabled;
 
                 switch (m)
                 {
@@ -164,14 +164,14 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 // we need to check for launch clamps since non-airlightable engines have zero restarts but magically start
                 // when the vessel has a launch clamp
                 engine.IsUnrestartableDeadEngine = kspEngine.IsUnrestartableDeadEngine() && !_vessel.HasLaunchClamp;
-                engine.IsEnabled                 = kspEngine.isEnabled;
-                engine.IsOperational             = kspEngine.isOperational;
-                engine.ThrottleLimiter           = kspEngine.thrustPercentage;
-                engine.MultIsp                   = kspEngine.multIsp;
-                engine.FlowMultiplier            = kspEngine.flowMultiplier;
-                engine.MultFlow                  = kspEngine.multFlow;
-                engine.NoPropellants             = kspEngine is { flameout: true, statusL2: "No propellants" };
-                engine.ModuleResiduals           = 0;
+                engine.IsEnabled = kspEngine.isEnabled;
+                engine.IsOperational = kspEngine.isOperational;
+                engine.ThrottleLimiter = kspEngine.thrustPercentage;
+                engine.MultIsp = kspEngine.multIsp;
+                engine.FlowMultiplier = kspEngine.flowMultiplier;
+                engine.MultFlow = kspEngine.multFlow;
+                engine.NoPropellants = kspEngine is { flameout: true, statusL2: "No propellants" };
+                engine.ModuleResiduals = 0;
 
                 if (engine.IsModuleEnginesRf && _rfPredictedMaximumResiduals!.GetValue(kspEngine) is double doubleVal)
                     engine.ModuleResiduals = doubleVal;
@@ -204,7 +204,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 }
 
                 decoupler.IsDecoupled = kspModuleDecouple.isDecoupled;
-                decoupler.Staged      = kspModuleDecouple.staged;
+                decoupler.Staged = kspModuleDecouple.staged;
 
                 Part kspPart = kspModuleDecouple.part;
 
@@ -233,9 +233,9 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     return;
                 }
 
-                rcs.IsEnabled  = kspModuleRCS.isEnabled;
-                rcs.Isp        = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
-                rcs.Thrust     = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
+                rcs.IsEnabled = kspModuleRCS.isEnabled;
+                rcs.Isp = kspModuleRCS.atmosphereCurve.Evaluate(0) * kspModuleRCS.ispMult;
+                rcs.Thrust = kspModuleRCS.flowMult * kspModuleRCS.maxFuelFlow * rcs.Isp * rcs.G;
                 rcs.RcsEnabled = kspModuleRCS.rcsEnabled;
             }
 
