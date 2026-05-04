@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -484,7 +484,7 @@ namespace MuMech
             return $"burn: {kspStage} {solution.Tgo(t, psgPhase):F1}s {solution.DV(t, psgPhase):F1}m/s ({excessDV:F1}m/s)";
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(275), GUILayout.Height(30) };
 
         public override string GetName() => CachedLocalizer.Instance.MechJebAscentTitle; //"Ascent Guidance"
 

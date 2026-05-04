@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace MuMech
@@ -68,7 +68,7 @@ namespace MuMech
 
         public void DoGUI()
         {
-            GUILayout.Box(_texture, GUIStyle.none, GUILayout.Width(_texture.width), GUILayout.Height(_texture.height));
+            GUILayout.Box(_texture, GUIStyle.none, GuiUtils.LayoutWidth(_texture.width), GUILayout.Height(_texture.height));
             if (Event.current.type == EventType.Repaint)
             {
                 HoveredPoint = null;

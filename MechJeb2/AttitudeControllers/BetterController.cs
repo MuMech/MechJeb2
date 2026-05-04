@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using MechJebLib.Control;
@@ -345,14 +345,14 @@ namespace MuMech.AttitudeControllers
         public override void GUI()
         {
             GUILayout.BeginHorizontal();
-            UseStoppingTime = GUILayout.Toggle(UseStoppingTime, "Maximum Stopping Time", GUILayout.ExpandWidth(false));
+            UseStoppingTime = GUILayout.Toggle(UseStoppingTime, "Maximum Stopping Time", GuiUtils.LayoutNoExpandWidth);
             MaxStoppingTime.Text =
-                GUILayout.TextField(MaxStoppingTime.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                GUILayout.TextField(MaxStoppingTime.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            UseFlipTime      = GUILayout.Toggle(UseFlipTime, "Minimum Flip Time", GUILayout.ExpandWidth(false));
-            MinFlipTime.Text = GUILayout.TextField(MinFlipTime.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+            UseFlipTime      = GUILayout.Toggle(UseFlipTime, "Minimum Flip Time", GuiUtils.LayoutNoExpandWidth);
+            MinFlipTime.Text = GUILayout.TextField(MinFlipTime.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
             GUILayout.EndHorizontal();
 
             if (!UseStoppingTime)
@@ -360,9 +360,9 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             UseControlRange = GUILayout.Toggle(UseControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"),
-                GUILayout.ExpandWidth(false)); //"RollControlRange"
+                GuiUtils.LayoutNoExpandWidth); //"RollControlRange"
             RollControlRange.Text =
-                GUILayout.TextField(RollControlRange.Text, GUILayout.ExpandWidth(true), GUILayout.Width(60));
+                GUILayout.TextField(RollControlRange.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
             GUILayout.EndHorizontal();
 
             const int COL1_WIDTH = 100;
@@ -370,109 +370,109 @@ namespace MuMech.AttitudeControllers
             const int COL3_WIDTH = 50;
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            GUILayout.Label("Velocity", GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            GUILayout.Label("Position", GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            GUILayout.Label("Velocity", GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            GUILayout.Label("Position", GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Kp", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelKp.Text = GUILayout.TextField(VelKp.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosKp.Text = GUILayout.TextField(PosKp.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("Kp", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelKp.Text = GUILayout.TextField(VelKp.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosKp.Text = GUILayout.TextField(PosKp.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Ti", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelTi.Text = GUILayout.TextField(VelTi.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosTi.Text = GUILayout.TextField(PosTi.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("Ti", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelTi.Text = GUILayout.TextField(VelTi.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosTi.Text = GUILayout.TextField(PosTi.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Td", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelTd.Text = GUILayout.TextField(VelTd.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosTd.Text = GUILayout.TextField(PosTd.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("Td", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelTd.Text = GUILayout.TextField(VelTd.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosTd.Text = GUILayout.TextField(PosTd.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("N", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelN.Text = GUILayout.TextField(VelN.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosN.Text = GUILayout.TextField(PosN.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("N", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelN.Text = GUILayout.TextField(VelN.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosN.Text = GUILayout.TextField(PosN.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("B", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelB.Text = GUILayout.TextField(VelB.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosB.Text = GUILayout.TextField(PosB.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("B", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelB.Text = GUILayout.TextField(VelB.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosB.Text = GUILayout.TextField(PosB.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("C", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelC.Text = GUILayout.TextField(VelC.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosC.Text = GUILayout.TextField(PosC.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("C", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelC.Text = GUILayout.TextField(VelC.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosC.Text = GUILayout.TextField(PosC.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Deadband", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelDeadband.Text = GUILayout.TextField(VelDeadband.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosDeadband.Text = GUILayout.TextField(PosDeadband.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("Deadband", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelDeadband.Text = GUILayout.TextField(VelDeadband.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosDeadband.Text = GUILayout.TextField(PosDeadband.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("SmoothIn", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelSmoothIn.Text = GUILayout.TextField(VelSmoothIn.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("SmoothIn", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelSmoothIn.Text = GUILayout.TextField(VelSmoothIn.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosSmoothIn.Text = GUILayout.TextField(PosSmoothIn.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("SmoothOut", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelSmoothOut.Text = GUILayout.TextField(VelSmoothOut.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosSmoothOut.Text = GUILayout.TextField(PosSmoothOut.Text, GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("SmoothOut", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelSmoothOut.Text = GUILayout.TextField(VelSmoothOut.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosSmoothOut.Text = GUILayout.TextField(PosSmoothOut.Text, GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("", GUILayout.ExpandWidth(true), GUILayout.Width(COL1_WIDTH));
-            VelClegg = GUILayout.Toggle(VelClegg, Localizer.Format("Clegg"), GUILayout.ExpandWidth(false), GUILayout.Width(COL2_WIDTH));
-            PosClegg = GUILayout.Toggle(PosClegg, Localizer.Format("Clegg"), GUILayout.ExpandWidth(false), GUILayout.Width(COL3_WIDTH));
+            GUILayout.Label("", GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(COL1_WIDTH));
+            VelClegg = GUILayout.Toggle(VelClegg, Localizer.Format("Clegg"), GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL2_WIDTH));
+            PosClegg = GUILayout.Toggle(PosClegg, Localizer.Format("Clegg"), GuiUtils.LayoutNoExpandWidth, GuiUtils.LayoutWidth(COL3_WIDTH));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos PTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].PTerm, _posPID[1].PTerm, _posPID[2].PTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Pos PTerm", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].PTerm, _posPID[1].PTerm, _posPID[2].PTerm)), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos ITerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].ITerm, _posPID[1].ITerm, _posPID[2].ITerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Pos ITerm", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].ITerm, _posPID[1].ITerm, _posPID[2].ITerm)), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos DTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].DTerm, _posPID[1].DTerm, _posPID[2].DTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Pos DTerm", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_posPID[0].DTerm, _posPID[1].DTerm, _posPID[2].DTerm)), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel PTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].PTerm, _velPID[1].PTerm, _velPID[2].PTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Vel PTerm", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].PTerm, _velPID[1].PTerm, _velPID[2].PTerm)), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel ITerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].ITerm, _velPID[1].ITerm, _velPID[2].ITerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Vel ITerm", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].ITerm, _velPID[1].ITerm, _velPID[2].ITerm)), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Vel DTerm", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].DTerm, _velPID[1].DTerm, _velPID[2].DTerm)), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Vel DTerm", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrintSci(new Vector3d(_velPID[0].DTerm, _velPID[1].DTerm, _velPID[2].DTerm)), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Smooth Torque", GUILayout.ExpandWidth(false));
-            SmoothTorque.Text = GUILayout.TextField(SmoothTorque.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Smooth Torque", GuiUtils.LayoutNoExpandWidth);
+            SmoothTorque.Text = GUILayout.TextField(SmoothTorque.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Soften", GUILayout.ExpandWidth(false));
-            Soften.Text = GUILayout.TextField(Soften.Text, GUILayout.ExpandWidth(true), GUILayout.Width(50));
+            GUILayout.Label("Soften", GuiUtils.LayoutNoExpandWidth);
+            Soften.Text = GUILayout.TextField(Soften.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(50));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -481,66 +481,66 @@ namespace MuMech.AttitudeControllers
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Current", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_current), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Current", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(_current), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Desired", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_desired), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Desired", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(_desired), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Error", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_error), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Error", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(_error), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("TargetOmega", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_targetOmega), GUILayout.ExpandWidth(false));
+            GUILayout.Label("TargetOmega", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(_targetOmega), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Omega", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_vessel.angularVelocityD), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Omega", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(_vessel.angularVelocityD), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label2"),
-                GUILayout.ExpandWidth(true)); //"Actuation"
-            GUILayout.Label(MuUtils.PrettyPrint(_actuation), GUILayout.ExpandWidth(false));
+                GuiUtils.LayoutExpandWidth); //"Actuation"
+            GUILayout.Label(MuUtils.PrettyPrint(_actuation), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label4"),
-                GUILayout.ExpandWidth(true)); //"TargetTorque"
-            GUILayout.Label(MuUtils.PrettyPrint(_targetTorque), GUILayout.ExpandWidth(false));
+                GuiUtils.LayoutExpandWidth); //"TargetTorque"
+            GUILayout.Label(MuUtils.PrettyPrint(_targetTorque), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label5"),
-                GUILayout.ExpandWidth(true)); //"ControlTorque"
-            GUILayout.Label(MuUtils.PrettyPrint(_controlTorque), GUILayout.ExpandWidth(false));
+                GuiUtils.LayoutExpandWidth); //"ControlTorque"
+            GUILayout.Label(MuUtils.PrettyPrint(_controlTorque), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("TargetAlpha", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_targetAlpha), GUILayout.ExpandWidth(false));
+            GUILayout.Label("TargetAlpha", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(_targetAlpha), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("MaxAlpha", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_maxAlpha), GUILayout.ExpandWidth(false));
+            GUILayout.Label("MaxAlpha", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(_maxAlpha), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("MOI", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(_vessel.MOI), GUILayout.ExpandWidth(false));
+            GUILayout.Label("MOI", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(_vessel.MOI), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Response Speed", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(Ac.VesselState.torqueResponseSpeed), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Response Speed", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(Ac.VesselState.torqueResponseSpeed), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
         }
     }

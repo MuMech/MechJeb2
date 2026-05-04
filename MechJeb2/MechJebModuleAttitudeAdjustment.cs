@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using KSP.Localization;
 using UnityEngine;
 
@@ -60,52 +60,52 @@ namespace MuMech
             if (showInfos)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label1"), GUILayout.ExpandWidth(true)); //Axis Control
-                GUILayout.Label(MuUtils.PrettyPrint(Core.Attitude.AxisControl, "F0"), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label1"), GuiUtils.LayoutExpandWidth); //Axis Control
+                GUILayout.Label(MuUtils.PrettyPrint(Core.Attitude.AxisControl, "F0"), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label2"), GUILayout.ExpandWidth(true)); //Torque
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label2"), GuiUtils.LayoutExpandWidth); //Torque
                 GUILayout.Label("|" + Core.Attitude.torque.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Core.Attitude.torque),
-                    GUILayout.ExpandWidth(false));
+                    GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label3"), GUILayout.ExpandWidth(true)); //torqueReactionSpeed
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label3"), GuiUtils.LayoutExpandWidth); //torqueReactionSpeed
                 GUILayout.Label(
                     "|" + VesselState.torqueReactionSpeed.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(VesselState.torqueReactionSpeed),
-                    GUILayout.ExpandWidth(false));
+                    GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 var ratio = Vector3d.Scale(VesselState.MoI, Core.Attitude.torque.InvertNoNaN());
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label4"), GUILayout.ExpandWidth(true)); //MOI / torque
-                GUILayout.Label("|" + ratio.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(ratio), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label4"), GuiUtils.LayoutExpandWidth); //MOI / torque
+                GUILayout.Label("|" + ratio.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(ratio), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label5"), GUILayout.ExpandWidth(true)); //MOI
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label5"), GuiUtils.LayoutExpandWidth); //MOI
                 GUILayout.Label("|" + VesselState.MoI.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(VesselState.MoI),
-                    GUILayout.ExpandWidth(false));
+                    GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label6"), GUILayout.ExpandWidth(true)); //Angular Velocity
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label6"), GuiUtils.LayoutExpandWidth); //Angular Velocity
                 GUILayout.Label("|" + Vessel.angularVelocity.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Vessel.angularVelocity),
-                    GUILayout.ExpandWidth(false));
+                    GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label7"), GUILayout.ExpandWidth(true)); //"Angular M"
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label7"), GuiUtils.LayoutExpandWidth); //"Angular M"
                 GUILayout.Label(
                     "|" + VesselState.angularMomentum.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(VesselState.angularMomentum),
-                    GUILayout.ExpandWidth(false));
+                    GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label8"), GUILayout.ExpandWidth(true)); //fixedDeltaTime
-                GUILayout.Label(TimeWarp.fixedDeltaTime.ToString("F3"), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label8"), GuiUtils.LayoutExpandWidth); //fixedDeltaTime
+                GUILayout.Label(TimeWarp.fixedDeltaTime.ToString("F3"), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
             }
 
@@ -117,14 +117,14 @@ namespace MuMech
             arrows.seeThrough = GUILayout.Toggle(arrows.seeThrough, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox6")); //Visible through object
 
             arrows.comSphereActive = GUILayout.Toggle(arrows.comSphereActive, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox7"),
-                GUILayout.ExpandWidth(false)); //Display the CoM
+                GuiUtils.LayoutNoExpandWidth); //Display the CoM
             arrows.colSphereActive = GUILayout.Toggle(arrows.colSphereActive, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox8"),
-                GUILayout.ExpandWidth(false)); //Display the CoL
+                GuiUtils.LayoutNoExpandWidth); //Display the CoL
             arrows.cotSphereActive = GUILayout.Toggle(arrows.cotSphereActive, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox9"),
-                GUILayout.ExpandWidth(false)); //Display the CoT
+                GuiUtils.LayoutNoExpandWidth); //Display the CoT
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label10"), GUILayout.ExpandWidth(true)); //Radius of Sphere
-            arrows.comSphereRadius.Text = GUILayout.TextField(arrows.comSphereRadius.Text, GUILayout.Width(40));
+            GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label10"), GuiUtils.LayoutExpandWidth); //Radius of Sphere
+            arrows.comSphereRadius.Text = GUILayout.TextField(arrows.comSphereRadius.Text, GuiUtils.LayoutWidth(40));
             GUILayout.EndHorizontal();
             arrows.displayAtCoM =
                 GUILayout.Toggle(arrows.displayAtCoM, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox10")); //Arrows origins at the CoM
@@ -157,7 +157,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(350), GUILayout.Height(150) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(350), GUILayout.Height(150) };
 
         public override string GetName() => Localizer.Format("#MechJeb_AttitudeAdjust_title"); //Attitude Adjustment
 

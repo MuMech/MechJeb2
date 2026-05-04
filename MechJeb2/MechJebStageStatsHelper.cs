@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSP.Localization;
 using UnityEngine;
@@ -219,7 +219,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GUILayout.Label(CachedLocalizer.Instance.MechJebInfoItemsLabel1); //"Stage stats"
 
-            if (GUILayout.Button(timeSeconds ? "s" : "dhms", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(timeSeconds ? "s" : "dhms", GuiUtils.LayoutNoExpandWidth))
             {
                 timeSeconds           = !timeSeconds;
                 infoItems.timeSeconds = timeSeconds;
@@ -227,19 +227,19 @@ namespace MuMech
 
             if (GUILayout.Button(
                     showEmpty ? CachedLocalizer.Instance.MechJebInfoItemsShowEmpty : CachedLocalizer.Instance.MechJebInfoItemsHideEmpty,
-                    GUILayout.ExpandWidth(false)))
+                    GuiUtils.LayoutNoExpandWidth))
             {
                 showEmpty           = !showEmpty;
                 infoItems.showEmpty = showEmpty;
             }
 
-            if (GUILayout.Button(StageDisplayStates[StageDisplayState], GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(StageDisplayStates[StageDisplayState], GuiUtils.LayoutNoExpandWidth))
             {
                 StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
                 SetVisibility(StageDisplayState);
             }
 
-            if (GUILayout.Button(showRcs ? "RCS" : "Engine", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(showRcs ? "RCS" : "Engine", GuiUtils.LayoutNoExpandWidth))
             {
                 showRcs           = !showRcs;
                 infoItems.showRcs = showRcs;
@@ -250,7 +250,7 @@ namespace MuMech
             {
                 if (GUILayout.Button(
                         liveSLT ? CachedLocalizer.Instance.MechJebInfoItemsButton5 : CachedLocalizer.Instance.MechJebInfoItemsButton6,
-                        GUILayout.ExpandWidth(false))) //"Live SLT" "0Alt SLT"
+                        GuiUtils.LayoutNoExpandWidth)) //"Live SLT" "0Alt SLT"
                 {
                     liveSLT           = !liveSLT;
                     infoItems.liveSLT = liveSLT;
@@ -272,17 +272,17 @@ namespace MuMech
                 GUILayout.BeginVertical();
 
                 GUILayout.BeginHorizontal();
-                altSLTScale           = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GUILayout.ExpandWidth(true));
+                altSLTScale           = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GuiUtils.LayoutExpandWidth);
                 infoItems.altSLTScale = altSLTScale;
                 stats.AltSLT          = Math.Pow(altSLTScale, 2) * stats.EditorBody.atmosphereDepth;
-                GUILayout.Label(stats.AltSLT.ToSI() + "m", GUILayout.Width(80));
+                GUILayout.Label(stats.AltSLT.ToSI() + "m", GuiUtils.LayoutWidth(80));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                machScale           = GUILayout.HorizontalSlider(machScale, 0, 1, GUILayout.ExpandWidth(true));
+                machScale           = GUILayout.HorizontalSlider(machScale, 0, 1, GuiUtils.LayoutExpandWidth);
                 infoItems.machScale = machScale;
                 stats.Mach          = Math.Pow(machScale * 2, 3);
-                GUILayout.Label(stats.Mach.ToString("F1") + " M", GUILayout.Width(80));
+                GUILayout.Label(stats.Mach.ToString("F1") + " M", GuiUtils.LayoutWidth(80));
                 GUILayout.EndHorizontal();
 
                 GUILayout.EndVertical();

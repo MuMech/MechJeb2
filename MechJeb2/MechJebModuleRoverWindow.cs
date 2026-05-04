@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System.Collections;
 using KSP.Localization;
 using UnityEngine;
@@ -17,7 +17,7 @@ namespace MuMech
 
         public override string IconName() => "Rover Autopilot";
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(50) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(200), GUILayout.Height(50) };
 
         protected override void WindowGUI(int windowID)
         {
@@ -34,18 +34,18 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
             GUILayout.BeginHorizontal();
             ed.registry.Find(i => i.id == "Editable:RoverController.heading").DrawItem();
-            if (GUILayout.Button("-", GUILayout.Width(18))) { autopilot.heading.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
+            if (GUILayout.Button("-", GuiUtils.LayoutWidth(18))) { autopilot.heading.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
 
-            if (GUILayout.Button("+", GUILayout.Width(18))) { autopilot.heading.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
+            if (GUILayout.Button("+", GuiUtils.LayoutWidth(18))) { autopilot.heading.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
 
             GUILayout.EndHorizontal();
             ed.registry.Find(i => i.id == "Value:RoverController.headingErr").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlSpeed").DrawItem();
             GUILayout.BeginHorizontal();
             ed.registry.Find(i => i.id == "Editable:RoverController.speed").DrawItem();
-            if (GUILayout.Button("-", GUILayout.Width(18))) { autopilot.speed.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
+            if (GUILayout.Button("-", GuiUtils.LayoutWidth(18))) { autopilot.speed.Val -= GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
 
-            if (GUILayout.Button("+", GUILayout.Width(18))) { autopilot.speed.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
+            if (GUILayout.Button("+", GuiUtils.LayoutWidth(18))) { autopilot.speed.Val += GameSettings.MODIFIER_KEY.GetKey() ? 5 : 1; }
 
             GUILayout.EndHorizontal();
             ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
@@ -65,13 +65,13 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_Rover_label1"), GUILayout.ExpandWidth(true)); // "Target Speed"
-            GUILayout.Label(autopilot.tgtSpeed.ToString("F1"), GUILayout.ExpandWidth(false));
+            GUILayout.Label(Localizer.Format("#MechJeb_Rover_label1"), GuiUtils.LayoutExpandWidth); // "Target Speed"
+            GUILayout.Label(autopilot.tgtSpeed.ToString("F1"), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_Rover_label2"), GUILayout.ExpandWidth(true)); // "Waypoints"
-            GUILayout.Label("Index " + (autopilot.WaypointIndex + 1) + " of " + autopilot.Waypoints.Count, GUILayout.ExpandWidth(false));
+            GUILayout.Label(Localizer.Format("#MechJeb_Rover_label2"), GuiUtils.LayoutExpandWidth); // "Waypoints"
+            GUILayout.Label("Index " + (autopilot.WaypointIndex + 1) + " of " + autopilot.Waypoints.Count, GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
 //			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));

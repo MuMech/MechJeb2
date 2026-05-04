@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
@@ -30,15 +30,15 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label1"), GUILayout.ExpandWidth(false)); //"Warp to: "
+            GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label1"), GuiUtils.LayoutNoExpandWidth); //"Warp to: "
             warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
             GUILayout.EndHorizontal();
 
             if (warpTarget == WarpTarget.Time)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GUILayout.ExpandWidth(true)); //"Warp for: "
-                timeOffset.Text = GUILayout.TextField(timeOffset.Text, GUILayout.Width(100));
+                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GuiUtils.LayoutExpandWidth); //"Warp for: "
+                timeOffset.Text = GUILayout.TextField(timeOffset.Text, GuiUtils.LayoutWidth(100));
                 GUILayout.EndHorizontal();
             }
             else if (warpTarget == WarpTarget.PhaseAngleT)
@@ -189,7 +189,7 @@ namespace MuMech
             }
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(50) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(240), GUILayout.Height(50) };
 
         public override bool IsActive() => warping;
 
