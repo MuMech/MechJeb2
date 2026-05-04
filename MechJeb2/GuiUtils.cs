@@ -540,17 +540,28 @@ namespace MuMech
 
 #nullable enable
         public static void SimpleTextBox(string? leftLabel, IEditable ed, string? rightLabel = null, float width = 100,
+                                         GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false,
+                                         string? leftLabelTooltip = null)
+        {
+            GUIContent? content = string.IsNullOrEmpty(leftLabel)
+                ? null
+                : string.IsNullOrEmpty(leftLabelTooltip) ? new GUIContent(leftLabel) : new GUIContent(leftLabel, leftLabelTooltip);
+            SimpleTextBox(content, ed, rightLabel, width, leftLabelStyle, horizontalFraming, expandWidth);
+        }
+
+        // GUIContent overload for callers that already cache a content object (avoids per-frame allocations).
+        public static void SimpleTextBox(GUIContent? leftLabelContent, IEditable ed, string? rightLabel = null, float width = 100,
                                          GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false)
         {
             Profiler.BeginSample("SimpleTextBox");
             if (horizontalFraming) GUILayout.BeginHorizontal();
-            if (!string.IsNullOrEmpty(leftLabel))
+            if (leftLabelContent != null && !string.IsNullOrEmpty(leftLabelContent.text))
             {
                 leftLabelStyle ??= GUI.skin.label;
                 if (expandWidth)
-                    GUILayout.Label(leftLabel, leftLabelStyle, ExpandWidth(true));
+                    GUILayout.Label(leftLabelContent, leftLabelStyle, ExpandWidth(true));
                 else
-                    GUILayout.Label(leftLabel, leftLabelStyle);
+                    GUILayout.Label(leftLabelContent, leftLabelStyle);
             }
 
             SimpleTextField(ed, width, !expandWidth);
@@ -816,12 +827,16 @@ namespace MuMech
 
             if (_tooltipStyle == null)
             {
+                var bg = new Texture2D(1, 1, TextureFormat.ARGB32, false) { hideFlags = HideFlags.HideAndDontSave };
+                bg.SetPixel(0, 0, new Color(0.1f, 0.1f, 0.1f, 1f));
+                bg.Apply();
                 _tooltipStyle = new GUIStyle(GUI.skin.box)
                 {
-                    padding  = new RectOffset(3, 3, 3, 3),
+                    padding   = new RectOffset(3, 3, 3, 3),
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap  = true
                 };
+                _tooltipStyle.normal.background = bg;
             }
 
             if (_tooltipChanged)

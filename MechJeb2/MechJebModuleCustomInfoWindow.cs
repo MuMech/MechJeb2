@@ -703,6 +703,7 @@ namespace MuMech
     {
         public readonly string name;
         public readonly string localizedName;
+        public readonly string localizedTooltip;
         public readonly string description;
         public readonly bool   showInEditor;
         public readonly bool   showInFlight;
@@ -731,6 +732,7 @@ namespace MuMech
         {
             name = attribute.name;
             localizedName = Localizer.Format(name);
+            localizedTooltip = string.IsNullOrEmpty(attribute.tooltip) ? "" : Localizer.Format(attribute.tooltip);
             category = attribute.category;
             description = attribute.description;
             showInEditor = attribute.showInEditor;
@@ -765,6 +767,7 @@ namespace MuMech
         public  bool   externalRefresh;
 
         private readonly GUILayoutOption[] _widthOption;
+        private readonly GUIContent _labelContent;
 
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
@@ -779,6 +782,8 @@ namespace MuMech
             siMaxPrecision = attribute.siMaxPrecision;
             timeDecimalPlaces = attribute.timeDecimalPlaces;
             width = attribute.width;
+
+            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             _obj = obj;
 
@@ -890,7 +895,7 @@ namespace MuMech
         {
             if (!externalRefresh) UpdateItemCache();
             GUILayout.BeginHorizontal();
-            GUILayout.Label(localizedName); //
+            GUILayout.Label(_labelContent);
             GUILayout.Label(stringValue, _widthOption);
             GUILayout.EndHorizontal();
         }
@@ -898,7 +903,8 @@ namespace MuMech
 
     public class ActionInfoItem : InfoItem
     {
-        private readonly Action action;
+        private readonly Action     action;
+        private readonly GUIContent _labelContent;
 
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
@@ -909,12 +915,14 @@ namespace MuMech
 
             action = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
 
+            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
+
             Profiler.EndSample();
         }
 
         public override void DrawItem()
         {
-            if (GUILayout.Button(localizedName)) action(); //
+            if (GUILayout.Button(_labelContent)) action();
         }
     }
 
@@ -922,6 +930,7 @@ namespace MuMech
     {
         private readonly object     obj;
         private readonly MemberInfo member;
+        private readonly GUIContent _labelContent;
 
         public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
             : base(attribute)
@@ -933,6 +942,8 @@ namespace MuMech
             this.obj = obj;
             this.member = member;
 
+            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
+
             Profiler.EndSample();
         }
 
@@ -942,7 +953,7 @@ namespace MuMech
             if (member is FieldInfo) currentValue = (bool)((FieldInfo)member).GetValue(obj);
             else if (member is PropertyInfo) currentValue = (bool)((PropertyInfo)member).GetValue(obj, new object[] { });
 
-            bool newValue = GUILayout.Toggle(currentValue, localizedName); //
+            bool newValue = GUILayout.Toggle(currentValue, _labelContent);
 
             if (newValue != currentValue)
             {
@@ -981,10 +992,11 @@ namespace MuMech
 
     public class EditableInfoItem : InfoItem
     {
-        public readonly  string    rightLabel;
-        public readonly  float     width;
-        public readonly  bool      expandWidth;
-        private readonly IEditable val;
+        public readonly  string     rightLabel;
+        public readonly  float      width;
+        public readonly  bool       expandWidth;
+        private readonly IEditable  val;
+        private readonly GUIContent _labelContent;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
@@ -997,6 +1009,8 @@ namespace MuMech
             width = attribute.width;
             expandWidth = attribute.expandWidth;
 
+            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
+
             if (member is FieldInfo) val = (IEditable)((FieldInfo)member).GetValue(obj);
             else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
 
@@ -1007,7 +1021,7 @@ namespace MuMech
         {
             if (val != null)
             {
-                GuiUtils.SimpleTextBox(localizedName, val, rightLabel, width, expandWidth: expandWidth);
+                GuiUtils.SimpleTextBox(_labelContent, val, rightLabel, width, expandWidth: expandWidth);
             }
         }
     }
@@ -1018,6 +1032,7 @@ namespace MuMech
         public readonly string            name; //the name displayed in the info window
         public          InfoItem.Category category;
         public          string            description  = ""; //the description shown in the window editor list
+        public          string            tooltip      = ""; //localization key for the hover tooltip on the live item (empty = no tooltip)
         public          bool              showInEditor = false;
         public          bool              showInFlight = true;
 
@@ -1304,7 +1319,7 @@ Toggle:HoverslamSimulation.MapLandingPrediction
 Editable:HoverslamSimulation.VerticalAltitude
 Editable:HoverslamSimulation.VerticalAuthority
 Editable:HoverslamAutopilot.TouchdownSpeed
-Editable:HoverslamAutopilot.PWMTimeWidth
+Editable:HoverslamAutopilot.PWMPulseWidth
 Editable:HoverslamAutopilot.IgnitionLead
 Editable:HoverslamSimulation.SimRecalcInterval
 Toggle:HoverslamAutopilot.AutoWarp
