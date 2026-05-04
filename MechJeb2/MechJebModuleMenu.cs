@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -159,14 +159,14 @@ namespace MuMech
                 }
             }
 
-            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
             {
                 columns--;
             }
 
-            GUILayout.Label(columns.ToString(), GUILayout.ExpandWidth(false));
+            GUILayout.Label(columns.ToString(), GuiUtils.LayoutNoExpandWidth);
 
-            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
             {
                 columns++;
             }
@@ -569,7 +569,7 @@ namespace MuMech
             if (windowStat != WindowStat.HIDDEN)
             {
                 WindowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + Core.version,
-                    GUILayout.Width(colWidth), GUILayout.Height(20));
+                    GuiUtils.LayoutWidth(colWidth), GUILayout.Height(20));
             }
             else
             {

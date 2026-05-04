@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Linq;
 using KSP.Localization;
@@ -179,7 +179,7 @@ namespace MuMech
 
         protected void ModeButton(Mode bt)
         {
-            if (GUILayout.Button(ModeTexts[(int)bt], mode == bt ? btActive : btNormal, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
+            if (GUILayout.Button(ModeTexts[(int)bt], mode == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
             {
                 mode = bt;
             }
@@ -187,7 +187,7 @@ namespace MuMech
 
         protected void TargetButton(Target bt)
         {
-            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
+            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
             {
                 target = bt;
                 Engage();
@@ -196,7 +196,7 @@ namespace MuMech
 
         protected void TargetButtonNoEngage(Target bt)
         {
-            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
+            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
             {
                 target = bt;
             }
@@ -206,14 +206,14 @@ namespace MuMech
         {
             GUILayout.BeginHorizontal();
             bool _forceRol = forceRol;
-            forceRol = GUILayout.Toggle(forceRol, Localizer.Format("#MechJeb_SmartASS_checkbox3"), GUILayout.ExpandWidth(false)); //"Force Roll :"
+            forceRol = GUILayout.Toggle(forceRol, Localizer.Format("#MechJeb_SmartASS_checkbox3"), GuiUtils.LayoutNoExpandWidth); //"Force Roll :"
             if (_forceRol != forceRol)
             {
                 Engage();
             }
 
-            rol.Text = GUILayout.TextField(rol.Text, GUILayout.Width(30));
-            GUILayout.Label("°", GUILayout.ExpandWidth(false));
+            rol.Text = GUILayout.TextField(rol.Text, GuiUtils.LayoutWidth(30));
+            GUILayout.Label("°", GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
         }
 
@@ -256,7 +256,7 @@ namespace MuMech
                         Core.Attitude.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
 
-                GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button57"), btAuto, GUILayout.ExpandWidth(true)); //"AUTO"
+                GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button57"), btAuto, GuiUtils.LayoutExpandWidth); //"AUTO"
             }
             else
             {
@@ -271,7 +271,7 @@ namespace MuMech
                 }
                 else
                 {
-                    GUILayout.Button("-", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                    GUILayout.Button("-", GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true));
                 }
 
                 GUILayout.EndHorizontal();
@@ -318,40 +318,40 @@ namespace MuMech
                         {
                             bool changed = false;
                             GUILayout.BeginHorizontal();
-                            forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
+                            forceYaw = GUILayout.Toggle(forceYaw, "", GuiUtils.LayoutNoExpandWidth);
                             GuiUtils.SimpleTextBox("HDG", srfHdg, "°", 37);
 
-                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("--", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfHdg -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfHdg -= val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfHdg += val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("++", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfHdg += LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("0", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfHdg = 0;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("90", GUILayout.Width(35)))
+                            if (GUILayout.Button("90", GuiUtils.LayoutWidth(35)))
                             {
                                 srfHdg = 90;
                                 changed = true;
@@ -359,40 +359,40 @@ namespace MuMech
 
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
-                            forcePitch = GUILayout.Toggle(forcePitch, "", GUILayout.ExpandWidth(false));
+                            forcePitch = GUILayout.Toggle(forcePitch, "", GuiUtils.LayoutNoExpandWidth);
                             GuiUtils.SimpleTextBox("PIT", srfPit, "°", 37);
 
-                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("--", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfPit -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfPit -= val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfPit += val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("++", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfPit += LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("0", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfPit = 0;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("90", GUILayout.Width(35)))
+                            if (GUILayout.Button("90", GuiUtils.LayoutWidth(35)))
                             {
                                 srfPit = 90;
                                 changed = true;
@@ -400,41 +400,41 @@ namespace MuMech
 
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
-                            forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
+                            forceRol = GUILayout.Toggle(forceRol, "", GuiUtils.LayoutNoExpandWidth);
                             GuiUtils.SimpleTextBox("ROL", srfRol, "°", 37);
 
-                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("--", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfRol -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfRol -= val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfRol += val;
                                 changed = true;
                             }
 
 
-                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("++", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfRol += LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("0", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfRol = 0;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("180", GUILayout.Width(35)))
+                            if (GUILayout.Button("180", GuiUtils.LayoutWidth(35)))
                             {
                                 srfRol = 180;
                                 changed = true;
@@ -461,40 +461,40 @@ namespace MuMech
                         {
                             bool changed = false;
                             GUILayout.BeginHorizontal();
-                            forceRol = GUILayout.Toggle(forceRol, "", GUILayout.ExpandWidth(false));
+                            forceRol = GUILayout.Toggle(forceRol, "", GuiUtils.LayoutNoExpandWidth);
                             GuiUtils.SimpleTextBox("ROL", srfVelRol, "°", 37);
 
-                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("--", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelRol -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelRol -= val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelRol += val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("++", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelRol += LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelRol = -VesselState.vesselRoll.Value;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("0", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelRol = 0;
                                 changed = true;
@@ -502,39 +502,39 @@ namespace MuMech
 
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
-                            forcePitch = GUILayout.Toggle(forcePitch, "", GUILayout.ExpandWidth(false));
+                            forcePitch = GUILayout.Toggle(forcePitch, "", GuiUtils.LayoutNoExpandWidth);
                             GuiUtils.SimpleTextBox("PIT", srfVelPit, "°", 37);
-                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("--", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelPit -= LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelPit -= val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelPit += val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("++", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelPit += LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelPit = VesselState.AoA.Value;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("0", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelPit = 0;
                                 changed = true;
@@ -542,40 +542,40 @@ namespace MuMech
 
                             GUILayout.EndHorizontal();
                             GUILayout.BeginHorizontal();
-                            forceYaw = GUILayout.Toggle(forceYaw, "", GUILayout.ExpandWidth(false));
+                            forceYaw = GUILayout.Toggle(forceYaw, "", GuiUtils.LayoutNoExpandWidth);
                             GuiUtils.SimpleTextBox("YAW", srfVelYaw, "°", 37);
 
-                            if (GUILayout.Button("--", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("--", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelYaw -= LARGE_INCREMENT;
                                 changed = true;
                             }
-                            if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelYaw -= val;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelYaw += val;
                                 changed = true;
                             }
 
 
-                            if (GUILayout.Button("++", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("++", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelYaw += LARGE_INCREMENT;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("CUR", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelYaw = -VesselState.AoS.Value;
                                 changed = true;
                             }
 
-                            if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("0", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelYaw = 0;
                                 changed = true;
@@ -631,7 +631,7 @@ namespace MuMech
 
                         ForceRoll();
 
-                        if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58"), btNormal, GUILayout.ExpandWidth(true))) //"EXECUTE"
+                        if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58"), btNormal, GuiUtils.LayoutExpandWidth)) //"EXECUTE"
                         {
                             target = Target.ADVANCED;
                             Engage();
@@ -658,7 +658,7 @@ namespace MuMech
         {
             GUILayout.BeginHorizontal();
             hasSmoothControl = true;
-            smoothControl = GUILayout.Toggle(smoothControl, "Smooth Control:", GUILayout.ExpandWidth(false));
+            smoothControl = GUILayout.Toggle(smoothControl, "Smooth Control:", GuiUtils.LayoutNoExpandWidth);
             GuiUtils.SimpleTextBox("", degreesPerSecond, "°/s", 40);
             GUILayout.EndHorizontal();
         }
@@ -868,7 +868,7 @@ namespace MuMech
             }
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(180), GUILayout.Height(100) };
 
         public override string GetName() =>
             Core.eduMode

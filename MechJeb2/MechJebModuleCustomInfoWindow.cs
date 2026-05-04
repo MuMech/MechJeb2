@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -142,7 +142,7 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(250), GUILayout.Height(30) };
 
         public override void DrawGUI(bool inEditor)
         {
@@ -525,11 +525,11 @@ namespace MuMech
                 List<ComputerModule> allWindows = Core.GetComputerModules<MechJebModuleCustomInfoWindow>();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_Edtitle"), GUILayout.ExpandWidth(false)); //Title:
+                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_Edtitle"), GuiUtils.LayoutNoExpandWidth); //Title:
                 int editedWindowIndex = allWindows.IndexOf(editedWindow);
                 editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
                 {
-                    string newTitle = GUILayout.TextField(editedWindow.title, GUILayout.Width(120), GUILayout.ExpandWidth(false));
+                    string newTitle = GUILayout.TextField(editedWindow.title, GuiUtils.LayoutWidth(120), GuiUtils.LayoutNoExpandWidth);
 
                     if (editedWindow.title != newTitle)
                     {
@@ -543,7 +543,7 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label1")); //Show in:
                 editedWindow.ShowInFlight =
-                    GUILayout.Toggle(editedWindow.ShowInFlight, Localizer.Format("#MechJeb_WindowEd_checkbox1"), GUILayout.Width(60));    //Flight
+                    GUILayout.Toggle(editedWindow.ShowInFlight, Localizer.Format("#MechJeb_WindowEd_checkbox1"), GuiUtils.LayoutWidth(60));    //Flight
                 editedWindow.ShowInEditor = GUILayout.Toggle(editedWindow.ShowInEditor, Localizer.Format("#MechJeb_WindowEd_checkbox2")); //Editor
                 GUILayout.EndHorizontal();
 
@@ -648,7 +648,7 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(540) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(200), GUILayout.Height(540) };
 
         public override string GetName() => CachedLocalizer.Instance.MechJebWindowEdTitle; //Custom Window Editor
 
@@ -764,6 +764,8 @@ namespace MuMech
         private int    cacheValidity = -1;
         public  bool   externalRefresh;
 
+        private readonly GUILayoutOption[] _widthOption;
+
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {
@@ -784,6 +786,8 @@ namespace MuMech
                 _getterCache.Add(member, CompileAccessor(obj, member));
 
             getValue = _getterCache[member];
+
+            _widthOption = new[] { width > 0 ? GuiUtils.LayoutWidth(width) : GuiUtils.LayoutNoExpandWidth };
 
             Profiler.EndSample();
         }
@@ -887,7 +891,7 @@ namespace MuMech
             if (!externalRefresh) UpdateItemCache();
             GUILayout.BeginHorizontal();
             GUILayout.Label(localizedName); //
-            GUILayout.Label(stringValue, width > 0 ? GUILayout.Width(width) : GUILayout.ExpandWidth(false));
+            GUILayout.Label(stringValue, _widthOption);
             GUILayout.EndHorizontal();
         }
     }

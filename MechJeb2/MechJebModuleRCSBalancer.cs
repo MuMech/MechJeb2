@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using System.Linq;
 using KSP.Localization;
@@ -68,7 +68,7 @@ namespace MuMech
             string error = solverThread.ErrorString;
             if (!string.IsNullOrEmpty(error))
             {
-                GUILayout.Label(error, GUILayout.ExpandWidth(true));
+                GUILayout.Label(error, GuiUtils.LayoutExpandWidth);
             }
 
             GUILayout.EndVertical();

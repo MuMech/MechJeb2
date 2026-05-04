@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -248,13 +248,13 @@ namespace MuMech.AttitudeControllers
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label1")); //"Larger ship do better with a larger Tf"
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label2"), GUILayout.ExpandWidth(true));  //"Tf (s)"
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label3"), GUILayout.ExpandWidth(false)); //"P"
-                _uiTfX.Text = GUILayout.TextField(_uiTfX.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label4"), GUILayout.ExpandWidth(false)); //"Y"
-                _uiTfY.Text = GUILayout.TextField(_uiTfY.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label5"), GUILayout.ExpandWidth(false)); //"R"
-                _uiTfZ.Text = GUILayout.TextField(_uiTfZ.Text, GUILayout.ExpandWidth(true), GUILayout.Width(40));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label2"), GuiUtils.LayoutExpandWidth);  //"Tf (s)"
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label3"), GuiUtils.LayoutNoExpandWidth); //"P"
+                _uiTfX.Text = GUILayout.TextField(_uiTfX.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(40));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label4"), GuiUtils.LayoutNoExpandWidth); //"Y"
+                _uiTfY.Text = GUILayout.TextField(_uiTfY.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(40));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label5"), GuiUtils.LayoutNoExpandWidth); //"R"
+                _uiTfZ.Text = GUILayout.TextField(_uiTfZ.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(40));
                 GUILayout.EndHorizontal();
 
                 _uiTfX = Math.Max(0.01, _uiTfX);
@@ -264,12 +264,12 @@ namespace MuMech.AttitudeControllers
             else
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label6"), GUILayout.ExpandWidth(true)); //"Tf"
-                GUILayout.Label(MuUtils.PrettyPrint(_tfV), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label6"), GuiUtils.LayoutExpandWidth); //"Tf"
+                GUILayout.Label(MuUtils.PrettyPrint(_tfV), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label7"), GUILayout.ExpandWidth(true)); //"Tf range"
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label7"), GuiUtils.LayoutExpandWidth); //"Tf range"
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label8"), _uiTfMin, "", 50);     //"min"
                 _uiTfMin = Math.Max(_uiTfMin, 0.01);
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label9"), _uiTfMax, "", 50); //"max"
@@ -312,49 +312,49 @@ namespace MuMech.AttitudeControllers
             //if (showInfos)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label12"), GUILayout.ExpandWidth(true)); //"Kp"
-                GUILayout.Label(MuUtils.PrettyPrint(_pid.Kp), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label12"), GuiUtils.LayoutExpandWidth); //"Kp"
+                GUILayout.Label(MuUtils.PrettyPrint(_pid.Kp), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label13"), GUILayout.ExpandWidth(true)); //"Ki"
-                GUILayout.Label(MuUtils.PrettyPrint(_pid.Ki), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label13"), GuiUtils.LayoutExpandWidth); //"Ki"
+                GUILayout.Label(MuUtils.PrettyPrint(_pid.Ki), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label14"), GUILayout.ExpandWidth(true)); //"Kd"
-                GUILayout.Label(MuUtils.PrettyPrint(_pid.Kd), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label14"), GuiUtils.LayoutExpandWidth); //"Kd"
+                GUILayout.Label(MuUtils.PrettyPrint(_pid.Kd), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label15"), GUILayout.ExpandWidth(true)); //"Error"
-                GUILayout.Label(MuUtils.PrettyPrint(_error * Mathf.Rad2Deg), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label15"), GuiUtils.LayoutExpandWidth); //"Error"
+                GUILayout.Label(MuUtils.PrettyPrint(_error * Mathf.Rad2Deg), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label16"), GUILayout.ExpandWidth(true)); //"prop. action."
-                GUILayout.Label(MuUtils.PrettyPrint(_pid.PropAct), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label16"), GuiUtils.LayoutExpandWidth); //"prop. action."
+                GUILayout.Label(MuUtils.PrettyPrint(_pid.PropAct), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label17"), GUILayout.ExpandWidth(true)); //"deriv. action"
-                GUILayout.Label(MuUtils.PrettyPrint(_pid.DerivativeAct), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label17"), GuiUtils.LayoutExpandWidth); //"deriv. action"
+                GUILayout.Label(MuUtils.PrettyPrint(_pid.DerivativeAct), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label18"), GUILayout.ExpandWidth(true)); //"integral action."
-                GUILayout.Label(MuUtils.PrettyPrint(_pid.INTAccum), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label18"), GuiUtils.LayoutExpandWidth); //"integral action."
+                GUILayout.Label(MuUtils.PrettyPrint(_pid.INTAccum), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label19"), GUILayout.ExpandWidth(true)); //"PID Action"
-                GUILayout.Label(MuUtils.PrettyPrint(_pidAction), GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label19"), GuiUtils.LayoutExpandWidth); //"PID Action"
+                GUILayout.Label(MuUtils.PrettyPrint(_pidAction), GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label20"), GUILayout.ExpandWidth(true)); //"Inertia"
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label20"), GuiUtils.LayoutExpandWidth); //"Inertia"
                 GUILayout.Label("|" + Ac.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Ac.inertia),
-                    GUILayout.ExpandWidth(false));
+                    GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
             }
 

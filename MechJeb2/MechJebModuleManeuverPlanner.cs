@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -153,23 +153,23 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 Core.Node.Autowarp =
-                    GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GUILayout.ExpandWidth(true)); //"Auto-warp"
-                Core.Node.RCSOnly = GUILayout.Toggle(Core.Node.RCSOnly, "RCS Burn", GUILayout.ExpandWidth(true));
-                Core.Node.KillRollRotation = GUILayout.Toggle(Core.Node.KillRollRotation, "Kill Rotation", GUILayout.ExpandWidth(true));
+                    GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_Maneu_Autowarp"), GuiUtils.LayoutExpandWidth); //"Auto-warp"
+                Core.Node.RCSOnly = GUILayout.Toggle(Core.Node.RCSOnly, "RCS Burn", GuiUtils.LayoutExpandWidth);
+                Core.Node.KillRollRotation = GUILayout.Toggle(Core.Node.KillRollRotation, "Kill Rotation", GuiUtils.LayoutExpandWidth);
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Lead_time"), GUILayout.ExpandWidth(false)); //Lead time:
-                Core.Node.LeadTime.Text = GUILayout.TextField(Core.Node.LeadTime.Text, GUILayout.Width(35), GUILayout.ExpandWidth(false));
-                GUILayout.Label("s", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Localizer.Format("#MechJeb_Maneu_Lead_time"), GuiUtils.LayoutNoExpandWidth); //Lead time:
+                Core.Node.LeadTime.Text = GUILayout.TextField(Core.Node.LeadTime.Text, GuiUtils.LayoutWidth(35), GuiUtils.LayoutNoExpandWidth);
+                GUILayout.Label("s", GuiUtils.LayoutNoExpandWidth);
 
-                if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                     Core.Node.LeadTime.Val += 1;
 
-                if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                     Core.Node.LeadTime.Val -= 1;
 
-                if (GUILayout.Button("R", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button("R", GuiUtils.LayoutNoExpandWidth))
                     Core.Node.LeadTime.Val = 3;
 
                 GUILayout.EndHorizontal();
@@ -187,7 +187,7 @@ namespace MuMech
             return Vessel.patchedConicSolver.maneuverNodes.Where(n => n != predictor.aerobrakeNode).ToList();
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(150) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(300), GUILayout.Height(150) };
 
         public override string GetName() => Localizer.Format("#MechJeb_Maneuver_Planner_title"); //Maneuver Planner
 

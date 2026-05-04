@@ -1,4 +1,4 @@
-﻿using KSP.IO;
+using KSP.IO;
 using KSP.Localization;
 using UnityEngine;
 
@@ -96,8 +96,8 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GUILayout.ExpandWidth(true)); //"UI Scale:"
-            UIScale.Text = GUILayout.TextField(UIScale.Text, GUILayout.Width(60));
+            GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GuiUtils.LayoutExpandWidth); //"UI Scale:"
+            UIScale.Text = GUILayout.TextField(UIScale.Text, GuiUtils.LayoutWidth(60));
             GUILayout.EndHorizontal();
 
             GuiUtils.SetGUIScale(UIScale.Val);
@@ -134,6 +134,6 @@ namespace MuMech
 
         public override string IconName() => "Settings";
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(200), GUILayout.Height(100) };
     }
 }

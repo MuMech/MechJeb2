@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -956,8 +956,8 @@ namespace MuMech
                 }
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
-                GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                GUILayout.Label(body.bodyName, GuiUtils.LayoutExpandWidth);
+                GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
             }
 
@@ -984,8 +984,8 @@ namespace MuMech
                     }
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
-                    GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                    GUILayout.Label(body.bodyName, GuiUtils.LayoutExpandWidth);
+                    GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GuiUtils.LayoutNoExpandWidth);
                     GUILayout.EndHorizontal();
                 }
             }
@@ -1102,6 +1102,6 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_Separator", InfoItem.Category.Misc, showInEditor = true)] //Separator
-        public void HorizontalSeparator() => GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
+        public void HorizontalSeparator() => GUILayout.Label("", separatorStyle, GuiUtils.LayoutExpandWidth, GUILayout.Height(2));
     }
 }

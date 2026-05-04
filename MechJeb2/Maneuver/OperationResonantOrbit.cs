@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -28,10 +28,10 @@ namespace MuMech
             GUILayout.Label(Localizer.Format("#MechJeb_resonant_label1",
                 ResonanceNumerator.Val + "/" + ResonanceDenominator.Val)); //"Change your orbital period to <<1>> of your current orbital period"
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label2"), GUILayout.ExpandWidth(true)); //New orbital period ratio :
-            ResonanceNumerator.Text = GUILayout.TextField(ResonanceNumerator.Text, GUILayout.Width(30));
-            GUILayout.Label("/", GUILayout.ExpandWidth(false));
-            ResonanceDenominator.Text = GUILayout.TextField(ResonanceDenominator.Text, GUILayout.Width(30));
+            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label2"), GuiUtils.LayoutExpandWidth); //New orbital period ratio :
+            ResonanceNumerator.Text = GUILayout.TextField(ResonanceNumerator.Text, GuiUtils.LayoutWidth(30));
+            GUILayout.Label("/", GuiUtils.LayoutNoExpandWidth);
+            ResonanceDenominator.Text = GUILayout.TextField(ResonanceDenominator.Text, GuiUtils.LayoutWidth(30));
             GUILayout.EndHorizontal();
             _timeSelector.DoChooseTimeGUI();
         }

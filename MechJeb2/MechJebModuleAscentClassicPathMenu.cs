@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
 using UnityEngine;
@@ -27,7 +27,7 @@ namespace MuMech
             _path           = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(300), GUILayout.Height(100) };
 
         protected override void WindowGUI(int windowID)
         {
@@ -44,16 +44,16 @@ namespace MuMech
             double oldTurnShapeExponent = _ascentSettings.TurnShapeExponent;
 
             _ascentSettings.AutoPath = GUILayout.Toggle(_ascentSettings.AutoPath, Localizer.Format("#MechJeb_AscentPathEd_auto"),
-                GUILayout.ExpandWidth(false)); //"Automatic Altitude Turn"
+                GuiUtils.LayoutNoExpandWidth); //"Automatic Altitude Turn"
             if (_ascentSettings.AutoPath)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label1"), GUILayout.Width(60)); //"Altitude: "
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label1"), GuiUtils.LayoutWidth(60)); //"Altitude: "
                 // 1 to 200 / 200 = 0.5% to 105%, without this mess would the slider cause lots of garbage floats like 0.9999864
                 _ascentSettings.AutoTurnPerc = Mathf.Floor(GUILayout.HorizontalSlider(_ascentSettings.AutoTurnPerc * 200f, 1f, 210.5f)) / 200f;
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label2"), GUILayout.Width(60)); //"Velocity: "
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label2"), GuiUtils.LayoutWidth(60)); //"Velocity: "
                 _ascentSettings.AutoTurnSpdFactor = Mathf.Floor(GUILayout.HorizontalSlider(_ascentSettings.AutoTurnSpdFactor * 2f, 8f, 160f)) / 2f;
                 GUILayout.EndHorizontal();
             }
@@ -61,15 +61,15 @@ namespace MuMech
             if (_ascentSettings.AutoPath)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label3"), GUILayout.ExpandWidth(false)); //"Turn start when Altitude is "
-                GUILayout.Label(_ascentSettings.AutoTurnStartAltitude.ToSI(2) + "m ", GUILayout.ExpandWidth(false));
-                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GUILayout.ExpandWidth(false));      //"or Velocity reach "
-                GUILayout.Label(_ascentSettings.AutoTurnStartVelocity.ToSI(3) + "m/s", GUILayout.ExpandWidth(false)); //
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label3"), GuiUtils.LayoutNoExpandWidth); //"Turn start when Altitude is "
+                GUILayout.Label(_ascentSettings.AutoTurnStartAltitude.ToSI(2) + "m ", GuiUtils.LayoutNoExpandWidth);
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GuiUtils.LayoutNoExpandWidth);      //"or Velocity reach "
+                GUILayout.Label(_ascentSettings.AutoTurnStartVelocity.ToSI(3) + "m/s", GuiUtils.LayoutNoExpandWidth); //
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label5")); //"Turn end altitude: "
                 GUILayout.Label(_ascentSettings.AutoTurnEndAltitude.ToSI(2) + "m", GuiUtils.MiddleRightLabel,
-                    GUILayout.ExpandWidth(true));
+                    GuiUtils.LayoutExpandWidth);
                 GUILayout.EndHorizontal();
             }
             else
