@@ -16,21 +16,21 @@ namespace MechJebLib.Control
 
         // internal state for last measured and last output for low pass filters
         private double _y1 = double.NaN;
-        public  double Kp                   { get; set; } = 1.0;
-        public  double Ki                   { get; set; }
-        public  double Kd                   { get; set; }
-        public  double Ts                   { get; set; } = 0.02;
-        public  double N                    { get; set; } = 50;
-        public  double B                    { get; set; } = 1;
-        public  double C                    { get; set; } = 1;
-        public  double SmoothIn             { get; set; } = 1.0;
-        public  double SmoothOut            { get; set; } = 1.0;
-        public  double ProportionalDeadband { get; set; }
-        public  double IntegralDeadband     { get; set; }
-        public  double DerivativeDeadband   { get; set; }
-        public  double OutputDeadband       { get; set; }
-        public  double MinOutput            { get; set; } = double.MinValue;
-        public  double MaxOutput            { get; set; } = double.MaxValue;
+        public double Kp                   { get; set; } = 1.0;
+        public double Ki                   { get; set; }
+        public double Kd                   { get; set; }
+        public double Ts                   { get; set; } = 0.02;
+        public double N                    { get; set; } = 50;
+        public double B                    { get; set; } = 1;
+        public double C                    { get; set; } = 1;
+        public double SmoothIn             { get; set; } = 1.0;
+        public double SmoothOut            { get; set; } = 1.0;
+        public double ProportionalDeadband { get; set; }
+        public double IntegralDeadband     { get; set; }
+        public double DerivativeDeadband   { get; set; }
+        public double OutputDeadband       { get; set; }
+        public double MinOutput            { get; set; } = double.MinValue;
+        public double MaxOutput            { get; set; } = double.MaxValue;
 
         /// <summary>
         /// </summary>

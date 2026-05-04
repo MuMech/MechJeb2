@@ -101,14 +101,14 @@ namespace MechJebLib.ODE
         private const double A1614 = 2.9475147891527724;
         private const double A1615 = -9.15095847217987;
 
-        private const double C2  = 0.526001519587677318785587544488e-01;
-        private const double C3  = 0.789002279381515978178381316732e-01;
-        private const double C4  = 0.118350341907227396726757197510;
-        private const double C5  = 0.281649658092772603273242802490;
-        private const double C6  = 0.333333333333333333333333333333;
-        private const double C7  = 0.25;
-        private const double C8  = 0.307692307692307692307692307692;
-        private const double C9  = 0.651282051282051282051282051282;
+        private const double C2 = 0.526001519587677318785587544488e-01;
+        private const double C3 = 0.789002279381515978178381316732e-01;
+        private const double C4 = 0.118350341907227396726757197510;
+        private const double C5 = 0.281649658092772603273242802490;
+        private const double C6 = 0.333333333333333333333333333333;
+        private const double C7 = 0.25;
+        private const double C8 = 0.307692307692307692307692307692;
+        private const double C9 = 0.651282051282051282051282051282;
         private const double C10 = 0.6;
         private const double C11 = 0.857142857142857142857142857142;
 

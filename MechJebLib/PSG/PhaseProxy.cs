@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using MechJebLib.Primitives;
+
+using MechJebLib.Primitives;
 
 namespace MechJebLib.PSG
 {
@@ -12,14 +13,14 @@ namespace MechJebLib.PSG
         {
             // reference to the array of decision variables
             // ReSharper disable once NullableWarningSuppressionIsUsed (late initialized in WrapVars())
-            private          double[] _vars = null!;
-            private readonly int      _offset;
+            private double[] _vars = null!;
+            private readonly int _offset;
 
             public int Length { get; }
 
             public DoubleArrayProxy(int k, int offset)
             {
-                Length  = k;
+                Length = k;
                 _offset = offset;
             }
 
@@ -61,7 +62,7 @@ namespace MechJebLib.PSG
 
             public V3ArrayProxy(int k, int xOffset, int yOffset, int zOffset)
             {
-                Length   = k;
+                Length = k;
                 _xOffset = xOffset;
                 _yOffset = yOffset;
                 _zOffset = zOffset;
@@ -97,8 +98,8 @@ namespace MechJebLib.PSG
 
         // reference to the array of decision variables
         // ReSharper disable once NullableWarningSuppressionIsUsed (late initialized in WrapVars())
-        private          double[] _vars = null!;
-        private readonly int      _btOffset;
+        private double[] _vars = null!;
+        private readonly int _btOffset;
 
         public PhaseProxy(Problem problem, int n, int idx, int p, Phase phase)
         {
@@ -106,57 +107,57 @@ namespace MechJebLib.PSG
             int start = idx;
 
             // position grid points
-            Rx  =  new DoubleArrayProxy(k, idx);
-            Ry  =  new DoubleArrayProxy(k, idx + k);
-            Rz  =  new DoubleArrayProxy(k, idx + 2 * k);
-            R   =  new V3ArrayProxy(k, idx, idx + k, idx + 2 * k);
+            Rx = new DoubleArrayProxy(k, idx);
+            Ry = new DoubleArrayProxy(k, idx + k);
+            Rz = new DoubleArrayProxy(k, idx + 2 * k);
+            R = new V3ArrayProxy(k, idx, idx + k, idx + 2 * k);
             idx += 3 * k;
 
             // velocity grid points
-            Vx  =  new DoubleArrayProxy(k, idx);
-            Vy  =  new DoubleArrayProxy(k, idx + k);
-            Vz  =  new DoubleArrayProxy(k, idx + 2 * k);
-            V   =  new V3ArrayProxy(k, idx, idx + k, idx + 2 * k);
+            Vx = new DoubleArrayProxy(k, idx);
+            Vy = new DoubleArrayProxy(k, idx + k);
+            Vz = new DoubleArrayProxy(k, idx + 2 * k);
+            V = new V3ArrayProxy(k, idx, idx + k, idx + 2 * k);
             idx += 3 * k;
 
             if (phase.Coast)
             {
                 // coast phases only have one M decision variable
-                M   =  new DoubleArrayProxy(1, idx);
+                M = new DoubleArrayProxy(1, idx);
                 idx += 1;
             }
             else
             {
                 // mass grid points
-                M   =  new DoubleArrayProxy(k, idx);
+                M = new DoubleArrayProxy(k, idx);
                 idx += k;
             }
 
             if (phase.Unguided)
             {
                 // unguided phases (including coasts) only have one set of control decision variables
-                Ux  =  new DoubleArrayProxy(1, idx);
-                Uy  =  new DoubleArrayProxy(1, idx + 1);
-                Uz  =  new DoubleArrayProxy(1, idx + 2);
-                U   =  new V3ArrayProxy(1, idx, idx + 1, idx + 2);
+                Ux = new DoubleArrayProxy(1, idx);
+                Uy = new DoubleArrayProxy(1, idx + 1);
+                Uz = new DoubleArrayProxy(1, idx + 2);
+                U = new V3ArrayProxy(1, idx, idx + 1, idx + 2);
                 idx += 3;
             }
             else if (phase.GuidedCoast)
             {
                 // guided coasts have initial and terminal controls (unconstrained other than linkages)
-                Ux  =  new DoubleArrayProxy(2, idx);
-                Uy  =  new DoubleArrayProxy(2, idx + 2);
-                Uz  =  new DoubleArrayProxy(2, idx + 4);
-                U   =  new V3ArrayProxy(2, idx, idx + 2, idx + 4);
+                Ux = new DoubleArrayProxy(2, idx);
+                Uy = new DoubleArrayProxy(2, idx + 2);
+                Uz = new DoubleArrayProxy(2, idx + 4);
+                U = new V3ArrayProxy(2, idx, idx + 2, idx + 4);
                 idx += 6;
             }
             else
             {
                 // control grid points
-                Ux  =  new DoubleArrayProxy(k, idx);
-                Uy  =  new DoubleArrayProxy(k, idx + k);
-                Uz  =  new DoubleArrayProxy(k, idx + 2 * k);
-                U   =  new V3ArrayProxy(k, idx, idx + k, idx + 2 * k);
+                Ux = new DoubleArrayProxy(k, idx);
+                Uy = new DoubleArrayProxy(k, idx + k);
+                Uz = new DoubleArrayProxy(k, idx + 2 * k);
+                U = new V3ArrayProxy(k, idx, idx + k, idx + 2 * k);
                 idx += 3 * k;
             }
 

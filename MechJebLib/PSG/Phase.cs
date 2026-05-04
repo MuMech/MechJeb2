@@ -24,7 +24,7 @@ namespace MechJebLib.PSG
         public double MinThrottle;
 
         public bool PreciseShutdown = false;
-        public bool TerminalStage   = false;
+        public bool TerminalStage = false;
         public bool MassContinuity;
         public bool Unguided;
         public bool Normalized;
@@ -48,14 +48,14 @@ namespace MechJebLib.PSG
 
         private Phase(double m0, double vacThrust, double ispVacuum, double mf, double bt, int kspStage, int mjPhase, double ispCurrent = -1)
         {
-            KSPStage   = kspStage;
-            MJPhase    = mjPhase;
-            M0         = m0;
-            Mf         = mf;
-            Bt         = bt;
-            VexVacuum  = ispVacuum * G0;
+            KSPStage = kspStage;
+            MJPhase = mjPhase;
+            M0 = m0;
+            Mf = mf;
+            Bt = bt;
+            VexVacuum = ispVacuum * G0;
             VexCurrent = ispCurrent >= 0 ? ispCurrent * G0 : VexVacuum;
-            Mdot       = VexVacuum == 0 ? 0 : vacThrust / VexVacuum;
+            Mdot = VexVacuum == 0 ? 0 : vacThrust / VexVacuum;
         }
 
         public Phase Rescale(Scale scale)
@@ -64,14 +64,14 @@ namespace MechJebLib.PSG
 
             var phase = (Phase)MemberwiseClone();
 
-            phase.VexVacuum  = VexVacuum / scale.VelocityScale;
+            phase.VexVacuum = VexVacuum / scale.VelocityScale;
             phase.VexCurrent = VexCurrent / scale.VelocityScale;
-            phase.Mdot       = Mdot / scale.MdotScale;
-            phase.Bt         = Bt / scale.TimeScale;
-            phase.MinT       = MinT / scale.TimeScale;
-            phase.MaxT       = MaxT / scale.TimeScale;
-            phase.M0         = M0 / scale.MassScale;
-            phase.Mf         = Mf / scale.MassScale;
+            phase.Mdot = Mdot / scale.MdotScale;
+            phase.Bt = Bt / scale.TimeScale;
+            phase.MinT = MinT / scale.TimeScale;
+            phase.MaxT = MaxT / scale.TimeScale;
+            phase.M0 = M0 / scale.MassScale;
+            phase.Mf = Mf / scale.MassScale;
             phase.Normalized = true;
 
             return phase;
@@ -94,11 +94,11 @@ namespace MechJebLib.PSG
 
             var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent)
             {
-                MinT           = allowShutdown ? 0 : bt,
-                MaxT           = bt,
-                Unguided       = unguided,
+                MinT = allowShutdown ? 0 : bt,
+                MaxT = bt,
+                Unguided = unguided,
                 MassContinuity = massContinuity,
-                MinThrottle    = minThrottle
+                MinThrottle = minThrottle
             };
 
             return phase;

@@ -71,11 +71,11 @@ namespace MechJebLib.PSG
             public AscentBuilder AerodynamicConstants(double cd, double aRef, double rho0, double qAlphaMax, double qMax, double h0, V3 w)
             {
                 DebugPrint($"AerodynamicConstants({cd},  {aRef}, {rho0}, {qAlphaMax}, {qMax}, {h0}, new V3({w}))");
-                _h0               = h0;
-                _rho0CdAref       = cd * aRef * rho0;
+                _h0 = h0;
+                _rho0CdAref = cd * aRef * rho0;
                 _rho0QAlphaMaxInv = qAlphaMax > 0 ? rho0 / qAlphaMax : 0;
-                _rho0QMaxInv      = qMax > 0 ? rho0 / qMax : 0;
-                _w                = w;
+                _rho0QMaxInv = qMax > 0 ? rho0 / qMax : 0;
+                _w = w;
                 return this;
             }
 
@@ -104,11 +104,11 @@ namespace MechJebLib.PSG
                 Check.PositiveFinite(rbody);
 
                 DebugPrint($"[MechJebLib.AscentBuilder] Initial(new V3({r0}), new V3({v0}), new V3({u0}), {t0}, {mu}, {rbody})");
-                _r0    = r0;
-                _v0    = v0;
-                _u0    = u0.normalized;
-                _t0    = t0;
-                _mu    = mu;
+                _r0 = r0;
+                _v0 = v0;
+                _u0 = u0.normalized;
+                _t0 = t0;
+                _mu = mu;
                 _rbody = rbody;
                 return this;
             }
@@ -138,7 +138,7 @@ namespace MechJebLib.PSG
                     if (!_attachAltFlag && eccT < 1e-4)
                     {
                         _attachAltFlag = true;
-                        _attR          = _peR;
+                        _attR = _peR;
                     }
 
                     (double vT, double gammaT) = Astro.FPATargetFromApsides(_peR, _apR, _attR, _mu);
@@ -180,16 +180,16 @@ namespace MechJebLib.PSG
             {
                 DebugPrint(
                     $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {argp}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")}, {(argpflag ? "true" : "false")})");
-                _peR           = peR;
-                _apR           = apR;
-                _attR          = attR;
-                _incT          = inclination;
-                _lanT          = lan;
-                _argpT         = argp;
-                _fpaT          = fpa;
+                _peR = peR;
+                _apR = apR;
+                _attR = attR;
+                _incT = inclination;
+                _lanT = lan;
+                _argpT = argp;
+                _fpaT = fpa;
                 _attachAltFlag = attachAltFlag;
-                _lanflag       = lanflag;
-                _argpflag      = argpflag;
+                _lanflag = lanflag;
+                _argpflag = argpflag;
 
                 return this;
             }

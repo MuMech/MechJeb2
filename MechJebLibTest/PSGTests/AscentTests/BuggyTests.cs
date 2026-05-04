@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
@@ -44,14 +45,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust4 = Astro.ThrustFromMassesIspBurntime(41.1652332654921, 19.558262410276, 220.00004748658, 5.82703000157093);
 
             Ascent ascent = Ascent.Builder()
-                .Initial(r0, v0, u0, t0, mu, rbody)
-                .SetTarget(attR, attR, attR, 0.498274048151861, 0, 0, 0, true, false, false)
-                .AddStage(23796.5132378765, 3243.62653856172, thrust1, 241.889217870454, 4, 4)
-                .AddCoast(438.273627540912, 0, 450, 3, 3)
-                .AddStage(438.273627540912, 200.596948133534, thrust2, 220.000025355962,  2, 2, true, false)
-                .AddStage(124.617032384849, 59.7961198192007, thrust3, 220.000054043093,  1, 1, true, false)
-                .AddStage(41.1652332654921, 19.558262410276, thrust4, 220.00004748658,  0, 0, true, false)
-                .Build();
+               .Initial(r0, v0, u0, t0, mu, rbody)
+               .SetTarget(attR, attR, attR, 0.498274048151861, 0, 0, 0, true, false, false)
+               .AddStage(23796.5132378765, 3243.62653856172, thrust1, 241.889217870454, 4, 4)
+               .AddCoast(438.273627540912, 0, 450, 3, 3)
+               .AddStage(438.273627540912, 200.596948133534, thrust2, 220.000025355962, 2, 2, true, false)
+               .AddStage(124.617032384849, 59.7961198192007, thrust3, 220.000054043093, 1, 1, true, false)
+               .AddStage(41.1652332654921, 19.558262410276, thrust4, 220.00004748658, 0, 0, true, false)
+               .Build();
 
             ascent.Run();
 
@@ -88,12 +89,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust3 = Astro.ThrustFromMassesIspBurntime(81.5125042572618, 74.8691843417473, 250.000044703484, 0.678632409425986);
 
             Ascent ascent = Ascent.Builder()
-                .Initial(r0, v0, u0, t0, mu, rbody)
-                .SetTarget(6556000, 6557000, 6556000, 0.499303792410538, 0, 0, 0, true, false, false)
-                .AddStage(52831.1138786043, 6373.37509359599, thrust1, 287.450291861922,  3, 3, allowShutdown: false)
-                .AddStage(2517.01227921406, 738.314292468521, thrust2, 270.157637827755,  1, 1, allowShutdown: false)
-                .AddStage(81.5125042572618, 74.8691843417473, thrust3, 250.000044703484,  0, 0, true, false)
-                .Build();
+               .Initial(r0, v0, u0, t0, mu, rbody)
+               .SetTarget(6556000, 6557000, 6556000, 0.499303792410538, 0, 0, 0, true, false, false)
+               .AddStage(52831.1138786043, 6373.37509359599, thrust1, 287.450291861922, 3, 3, allowShutdown: false)
+               .AddStage(2517.01227921406, 738.314292468521, thrust2, 270.157637827755, 1, 1, allowShutdown: false)
+               .AddStage(81.5125042572618, 74.8691843417473, thrust3, 250.000044703484, 0, 0, true, false)
+               .Build();
 
             ascent.Run();
 
@@ -143,12 +144,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust3 = Astro.ThrustFromMassesIspBurntime(40763.8839289468 - decmass, 13796.4420050909 - decmass, 465.500076480742, 1118.13132581707);
 
             Ascent ascent = Ascent.Builder()
-                .Initial(r0, v0, u0, t0, mu, rbody)
-                .SetTarget(6571000, 6571000, 6571000, 0.558505360638185, 0, 0, 0.349065850398866, true, false, false)
-                .AddStage(731995.326793174 - decmass, 328918.196876464 - decmass, thrust1, 408.091742854086, 4, 4)
-                .AddStage(268744.821741949 - decmass, 168530.570801559 - decmass, thrust2,408.091702159863, 2, 2)
-                .AddStage(40763.8839289468 - decmass, 13796.4420050909 - decmass, thrust3,465.500076480742,  1, 1)
-                .Build();
+               .Initial(r0, v0, u0, t0, mu, rbody)
+               .SetTarget(6571000, 6571000, 6571000, 0.558505360638185, 0, 0, 0.349065850398866, true, false, false)
+               .AddStage(731995.326793174 - decmass, 328918.196876464 - decmass, thrust1, 408.091742854086, 4, 4)
+               .AddStage(268744.821741949 - decmass, 168530.570801559 - decmass, thrust2, 408.091702159863, 2, 2)
+               .AddStage(40763.8839289468 - decmass, 13796.4420050909 - decmass, thrust3, 465.500076480742, 1, 1)
+               .Build();
 
             ascent.Run();
 
@@ -175,11 +176,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust2 = Astro.ThrustFromMassesIspBurntime(9232.92402212159, 887.216491554419, 252.019434034823, 529.378964006269);
 
             Ascent ascent = Ascent.Builder()
-                .Initial(r0, v0, u0, t0, mu, rbody)
-                .SetTarget(6621000, 6623000, 6621000, 0.558505360638185, 0, 0, 0.349065850398866, false, false, false)
-                .AddStage(51814.6957082437, 12381.5182945184, thrust1, 277.252333393375,  2, 2)
-                .AddStage(9232.92402212159, 887.216491554419, thrust2, 252.019434034823,  1, 1)
-                .Build();
+               .Initial(r0, v0, u0, t0, mu, rbody)
+               .SetTarget(6621000, 6623000, 6621000, 0.558505360638185, 0, 0, 0.349065850398866, false, false, false)
+               .AddStage(51814.6957082437, 12381.5182945184, thrust1, 277.252333393375, 2, 2)
+               .AddStage(9232.92402212159, 887.216491554419, thrust2, 252.019434034823, 1, 1)
+               .Build();
 
             ascent.Run();
 
@@ -203,14 +204,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust4 = Astro.ThrustFromMassesIspBurntime(529.255624515231, 306.288652498034, 279.000062751027, 17.4300000004006);
 
             Ascent ascent = Ascent.Builder()
-                .Initial(new V3(-2750001.81262551, -4870536.29021665, 3050610.57762817), new V3(355.169076284135, -200.527924207868, -0.00280072807318912), new V3(-0.431553114381181, -0.764704888551875, 0.478527367115021), 139051.267268641, 398600435436096, 6371000)
-                .SetTarget(6551000, 6551000, 6551000, 0.499303792410538, 0, 0, 0, false, false, false)
+               .Initial(new V3(-2750001.81262551, -4870536.29021665, 3050610.57762817), new V3(355.169076284135, -200.527924207868, -0.00280072807318912), new V3(-0.431553114381181, -0.764704888551875, 0.478527367115021), 139051.267268641, 398600435436096, 6371000)
+               .SetTarget(6551000, 6551000, 6551000, 0.499303792410538, 0, 0, 0, false, false, false)
                 //.SetTarget(8051000, 8051000, 8051000, 0.499303792410538, 0, 0, false, false)
-                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100105371403,  7, 7)
-                .AddStage(22640.1444759873, 7657.9646078915, thrust2,427.000116464637,  4, 4)
-                .AddStage(5155.6086446711, 1421.59054825615, thrust3,427.000111546093,  2, 2)
-                .AddStage(529.255624515231, 306.288652498034, thrust4,279.000062751027,  0, 0)
-                .Build();
+               .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100105371403, 7, 7)
+               .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000116464637, 4, 4)
+               .AddStage(5155.6086446711, 1421.59054825615, thrust3, 427.000111546093, 2, 2)
+               .AddStage(529.255624515231, 306.288652498034, thrust4, 279.000062751027, 0, 0)
+               .Build();
 
             ascent.Run();
 
@@ -242,13 +243,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust3 = Astro.ThrustFromMassesIspBurntime(529.255624515231, 306.288652498034, 279.000106442456, 17.4300000004006);
 
             Ascent ascent = Ascent.Builder()
-                .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 309907.485302214, 398600435436096, 6371000)
-                .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
-                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295,  7, 7)
-                .AddStage(22640.1444759873, 7657.9646078915, thrust2,427.000108671115,  4, 4)
-                .AddCoast(529.255624515231, 200, 2000, 1, 0)
-                .AddStage(529.255624515231, 306.288652498034, thrust3,279.000106442456, 0, 0, false, false)
-                .Build();
+               .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 309907.485302214, 398600435436096, 6371000)
+               .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
+               .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295, 7, 7)
+               .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000108671115, 4, 4)
+               .AddCoast(529.255624515231, 200, 2000, 1, 0)
+               .AddStage(529.255624515231, 306.288652498034, thrust3, 279.000106442456, 0, 0, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -258,14 +259,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
             Ascent ascent2 = Ascent.Builder()
-                .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 309907.485302214, 398600435436096, 6371000)
-                .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
-                .AddStage(176568.069166482, 33739.9978121645, thrust1,294.100108674295,  7, 7)
-                .AddStage(22640.1444759873, 7657.9646078915, thrust2,427.000108671115,  4, 4)
-                .AddCoast(529.255624515231, 200, 2000, 1, 0)
-                .AddStage(529.255624515231, 306.288652498034, thrust3,279.000106442456, 0, 0, true, false)
-                .OldSolution(solution)
-                .Build();
+               .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 309907.485302214, 398600435436096, 6371000)
+               .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
+               .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295, 7, 7)
+               .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000108671115, 4, 4)
+               .AddCoast(529.255624515231, 200, 2000, 1, 0)
+               .AddStage(529.255624515231, 306.288652498034, thrust3, 279.000106442456, 0, 0, true, false)
+               .OldSolution(solution)
+               .Build();
 
             ascent2.Run();
 

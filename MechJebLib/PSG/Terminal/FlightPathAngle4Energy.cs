@@ -5,7 +5,6 @@
 
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
-using static MechJebLib.Utils.Statics;
 using static System.Math;
 using static MechJebLib.Utils.AutoDiff;
 
@@ -23,11 +22,11 @@ namespace MechJebLib.PSG.Terminal
         public FlightPathAngle4Energy(double gammaT, double rT, double incT, double lanT)
         {
             NumConstraints = 4;
-            _rT            = rT;
-            _incT          = incT;
-            _lanT          = lanT;
-            _gammaT        = gammaT;
-            _iHT           = Astro.HunitFromKeplerian(_incT, _lanT);
+            _rT = rT;
+            _incT = incT;
+            _lanT = lanT;
+            _gammaT = gammaT;
+            _iHT = Astro.HunitFromKeplerian(_incT, _lanT);
         }
 
         public ITerminal Rescale(Scale scale)  => new FlightPathAngle4Energy(_gammaT, _rT / scale.LengthScale, _incT, _lanT);
@@ -52,25 +51,13 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual FlightPathAngleConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[1]) - Sin(gammaT);
-            }
+            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) - Sin(gammaT);
 
-            Dual RadiusConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[0]) - rT * rT;
-            }
+            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - rT * rT;
 
-            Dual RadiusOrthogonalityConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], iHT);
-            }
+            Dual RadiusOrthogonalityConstraint(DualV3[] p) => DualV3.Dot(p[0], iHT);
 
-            Dual VelocityOrthogonalityConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], iHT);
-            }
+            Dual VelocityOrthogonalityConstraint(DualV3[] p) => DualV3.Dot(p[0], iHT);
         }
 
         public ITerminal GetFPA() => this;

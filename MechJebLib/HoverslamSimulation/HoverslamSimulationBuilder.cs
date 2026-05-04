@@ -17,9 +17,9 @@ namespace MechJebLib.HoverslamSimulation
         public class HoverslamSimulationBuilder
         {
             private double _height;
-            private V3     _r0;
-            private V3     _v0;
-            private V3     _w;
+            private V3 _r0;
+            private V3 _v0;
+            private V3 _w;
             private double _t0;
             private double _mu;
             private double _vfm;

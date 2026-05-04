@@ -18,8 +18,8 @@ namespace MechJebLib.Primitives
     {
         private int _n;
 
-        private static readonly ObjectPool<Vn> _pool   = new ObjectPool<Vn>(New, Clear);
-        private readonly        List<double>   _values = new List<double>();
+        private static readonly ObjectPool<Vn> _pool = new ObjectPool<Vn>(New, Clear);
+        private readonly List<double> _values = new List<double>();
 
         public Vn Abs()
         {
@@ -150,7 +150,7 @@ namespace MechJebLib.Primitives
 
         public void Set(int index, V3 v)
         {
-            this[index]     = v.x;
+            this[index] = v.x;
             this[index + 1] = v.y;
             this[index + 2] = v.z;
         }

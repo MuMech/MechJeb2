@@ -58,26 +58,26 @@ namespace MechJebLib.TwoBody
 
                 q /= 1.0 + q;
 
-                n   = 0;
-                r   = 1;
-                l   = 1;
-                s   = 1;
-                d   = 3;
+                n = 0;
+                r = 1;
+                l = 1;
+                s = 1;
+                d = 3;
                 gcf = 1;
-                k   = -5;
+                k = -5;
 
                 gold = 0;
 
                 while (gcf != gold)
                 {
-                    k    =  -k;
-                    l    += 2;
-                    d    += 4 * l;
-                    n    += (1 + k) * l;
-                    r    =  d / (d - n * r * q);
-                    s    =  (r - 1) * s;
-                    gold =  gcf;
-                    gcf  =  gold + s;
+                    k = -k;
+                    l += 2;
+                    d += 4 * l;
+                    n += (1 + k) * l;
+                    r = d / (d - n * r * q);
+                    s = (r - 1) * s;
+                    gold = gcf;
+                    gcf = gold + s;
                 }
 
                 h0 = 1 - 2 * q;
@@ -92,8 +92,8 @@ namespace MechJebLib.TwoBody
                     u3 += 2 * Math.PI * orbits / (beta * Math.Sqrt(beta));
                 }
 
-                r1    = r0 * u0 + n0 * u1 + mu * u2;
-                dt    = r0 * u1 + n0 * u2 + mu * u3;
+                r1 = r0 * u0 + n0 * u1 + mu * u2;
+                dt = r0 * u1 + n0 * u2 + mu * u3;
                 slope = 4 * r1 / (1 + beta * u * u);
 
                 terror = tdesired - dt;
@@ -107,15 +107,15 @@ namespace MechJebLib.TwoBody
                 if (i > 1 && dt == dtold)
                     break;
 
-                uold  = u;
+                uold = u;
                 dtold = dt;
 
                 ustep = terror / slope;
 
                 if (ustep > 0)
                 {
-                    umin =  u;
-                    u    += ustep;
+                    umin = u;
+                    u += ustep;
 
                     if (u > umax)
                     {
@@ -124,8 +124,8 @@ namespace MechJebLib.TwoBody
                 }
                 else
                 {
-                    umax =  u;
-                    u    += ustep;
+                    umax = u;
+                    u += ustep;
 
                     if (u < umin)
                     {
@@ -207,7 +207,7 @@ namespace MechJebLib.TwoBody
             while (true)
             {
                 niter++;
-                q =  beta * u * u;
+                q = beta * u * u;
                 q /= 1.0 + q;
 
                 u0 = 1.0 - 2 * q;
@@ -215,37 +215,37 @@ namespace MechJebLib.TwoBody
 
                 // continued fraction iteration
 
-                n   = 0;
-                l   = 3;
-                d   = 15;
-                k   = -9;
-                a   = 1;
-                b   = 1;
+                n = 0;
+                l = 3;
+                d = 15;
+                k = -9;
+                a = 1;
+                b = 1;
                 gcf = 1;
 
                 while (true)
                 {
                     gsav = gcf;
 
-                    k   =  -k;
-                    l   += 2;
-                    d   += 4 * l;
-                    n   += (1 + k) * l;
-                    a   =  d / (d - n * a * q);
-                    b   =  (a - 1) * b;
+                    k = -k;
+                    l += 2;
+                    d += 4 * l;
+                    n += (1 + k) * l;
+                    a = d / (d - n * a * q);
+                    b = (a - 1) * b;
                     gcf += b;
 
                     if (Math.Abs(gcf - gsav) < tol)
                         break;
                 }
 
-                uu   = 16.0 / 15.0 * u1 * u1 * u1 * u1 * u1 * gcf + delu;
-                u2   = 2.0 * u1 * u1;
-                u1   = 2.0 * u0 * u1;
-                u0   = 2.0 * u0 * u0 - 1.0;
-                u3   = beta * uu + u1 * u2 / 3.0;
-                r1   = r0 * u0 + n0 * u1 + mu * u2;
-                t    = r0 * u1 + n0 * u2 + mu * u3;
+                uu = 16.0 / 15.0 * u1 * u1 * u1 * u1 * u1 * gcf + delu;
+                u2 = 2.0 * u1 * u1;
+                u1 = 2.0 * u0 * u1;
+                u0 = 2.0 * u0 * u0 - 1.0;
+                u3 = beta * uu + u1 * u2 / 3.0;
+                r1 = r0 * u0 + n0 * u1 + mu * u2;
+                t = r0 * u1 + n0 * u2 + mu * u3;
                 dtdu = 4.0 * r1 * (1.0 - q);
 
                 // check for time convergence
@@ -263,16 +263,16 @@ namespace MechJebLib.TwoBody
                 du = terr / dtdu;
                 if (du < 0.0)
                 {
-                    umax =  u;
-                    u    += du;
+                    umax = u;
+                    u += du;
 
                     if (u < umin)
                         u = 0.5 * (umin + umax);
                 }
                 else
                 {
-                    umin =  u;
-                    u    += du;
+                    umin = u;
+                    u += du;
 
                     if (u > umax)
                         u = 0.5 * (umin + umax);

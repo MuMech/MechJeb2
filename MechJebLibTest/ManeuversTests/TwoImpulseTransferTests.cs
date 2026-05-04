@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
@@ -63,7 +64,7 @@ namespace MechJebLibTest.ManeuversTests
 
                 (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
                 (V3 rburn2, V3 vburn2) = Shepperd.Solve(mu, dt2 - dt1, rburn1, vburn1 + dv1);
-                (V3 rf, V3 vf)         = Shepperd.Solve(mu, dt2, r2, v2);
+                (V3 rf, V3 vf) = Shepperd.Solve(mu, dt2, r2, v2);
 
                 rf.ShouldEqual(rburn2, 1e-6);
                 vf.ShouldEqual(vburn2 + dv2, 1e-6);
@@ -81,9 +82,9 @@ namespace MechJebLibTest.ManeuversTests
             (V3 r2, V3 v2) = Astro.StateVectorsFromKeplerian(mu, 42164000, 0, 0, 0, 0, nu);
 
             (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2, coplanar: false);
-            (V3 rburn1, V3 vburn1)                   = Shepperd.Solve(mu, dt1, r1, v1);
-            (V3 _, V3 _)                             = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
-            (V3 _, V3 _)                             = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
+            (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
+            (V3 _, V3 _) = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
+            (V3 _, V3 _) = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
             double inc = Astro.IncFromStateVectors(rburn1, vburn1 + dv1);
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);
@@ -103,9 +104,9 @@ namespace MechJebLibTest.ManeuversTests
             (V3 r2, V3 v2) = Astro.StateVectorsFromKeplerian(mu, 42164000, 0, 0, 0, 0, 0);
 
             (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2, coplanar: false, rendezvous: false);
-            (V3 rburn1, V3 vburn1)                   = Shepperd.Solve(mu, dt1, r1, v1);
-            (V3 _, V3 _)                             = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
-            (V3 _, V3 _)                             = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
+            (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
+            (V3 _, V3 _) = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
+            (V3 _, V3 _) = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
             double inc = Astro.IncFromStateVectors(rburn1, vburn1 + dv1);
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);

@@ -11,19 +11,19 @@ namespace MechJebLib.PSG
 {
     public partial class Ascent : AsyncJob
     {
-        private readonly Problem         _problem;
-        private          Optimizer?      _optimizer;
+        private readonly Problem _problem;
+        private Optimizer? _optimizer;
         private readonly PhaseCollection _phases;
-        private readonly bool            _fixedBurnTime;
-        private readonly AscentGuesser   _guesser;
+        private readonly bool _fixedBurnTime;
+        private readonly AscentGuesser _guesser;
 
         private Ascent(Problem problem, PhaseCollection phases, Solution? oldSolution, bool fixedBurnTime)
         {
-            _problem       = problem;
-            _phases        = phases;
-            _solution      = oldSolution;
+            _problem = problem;
+            _phases = phases;
+            _solution = oldSolution;
             _fixedBurnTime = fixedBurnTime;
-            _guesser       = new AscentGuesser(_problem);
+            _guesser = new AscentGuesser(_problem);
         }
 
         private readonly Solution? _solution;
@@ -118,7 +118,7 @@ namespace MechJebLib.PSG
                 if (bootPhases[p].Unguided)
                 {
                     bootPhases[p].Unguided = false;
-                    bootPhases[p].Tagged   = true;
+                    bootPhases[p].Tagged = true;
                 }
             }
 
@@ -141,7 +141,7 @@ namespace MechJebLib.PSG
 
                 reConverge = true;
                 p.Unguided = true;
-                p.Tagged   = false;
+                p.Tagged = false;
             }
 
             if (reConverge)

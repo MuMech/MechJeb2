@@ -54,9 +54,9 @@ namespace MechJebLibTest.Primitives.V3Tests
             v.pitch.ShouldEqual(2.2);
             v.yaw.ShouldEqual(3.3);
 
-            v.roll  = 4.4;
+            v.roll = 4.4;
             v.pitch = 5.5;
-            v.yaw   = 6.6;
+            v.yaw = 6.6;
 
             v.x.ShouldEqual(4.4);
             v.y.ShouldEqual(5.5);
@@ -99,7 +99,7 @@ namespace MechJebLibTest.Primitives.V3Tests
             {
                 double _ = v[-1];
             });
-            Assert.Throws<IndexOutOfRangeException>(() => { v[3]  = 42; });
+            Assert.Throws<IndexOutOfRangeException>(() => { v[3] = 42; });
             Assert.Throws<IndexOutOfRangeException>(() => { v[-1] = 42; });
         }
 

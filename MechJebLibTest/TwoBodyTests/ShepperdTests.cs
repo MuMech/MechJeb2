@@ -259,11 +259,11 @@ namespace MechJebLibTest.TwoBodyTests
         {
             var solver = new DP8
             {
-                Atol           = 1e-6,
-                Rtol           = 1e-4,
-                Hmin           = EPS,
+                Atol = 1e-6,
+                Rtol = 1e-4,
+                Hmin = EPS,
                 ThrowOnMaxIter = true,
-                Maxiter        = 2000000
+                Maxiter = 2000000
             };
 
             const int NTRIALS = 500;

@@ -194,59 +194,59 @@ namespace MechJebLib.TwoBody
 
             if (ecc < 1 - delta)
             {
-                n  = Math.Sqrt(k * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
-                M  = n * delta_t;
-                E  = Angles.EFromM((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
+                n = Math.Sqrt(k * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
+                M = n * delta_t;
+                E = Angles.EFromM((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
                 nu = Angles.NuFromE(E, ecc);
             }
             else if (1 - delta <= ecc && ecc < 1)
             {
                 E_delta = Math.Acos((1 - delta) / ecc);
-                n       = Math.Sqrt(k * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
-                M       = n * delta_t;
+                n = Math.Sqrt(k * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
+                M = n * delta_t;
                 if (Angles.MFromE(E_delta, ecc) <= Math.Abs(M))
                 {
-                    E  = Angles.EFromM((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
+                    E = Angles.EFromM((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
                     nu = Angles.NuFromE(E, ecc);
                 }
                 else
                 {
-                    n  = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
-                    M  = n * delta_t;
-                    D  = MToDNearParabolic(M, ecc);
+                    n = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
+                    M = n * delta_t;
+                    D = MToDNearParabolic(M, ecc);
                     nu = Angles.NuFromD(D);
                 }
             }
             else if (ecc == 1)
             {
-                n  = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
-                M  = n * delta_t;
-                D  = Angles.DFromM(M);
+                n = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
+                M = n * delta_t;
+                D = Angles.DFromM(M);
                 nu = Angles.NuFromD(D);
             }
             else if (1 < ecc && ecc <= 1 + delta)
             {
                 F_delta = Acosh((1 + delta) / ecc);
-                n       = Math.Sqrt(k * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
-                M       = n * delta_t;
+                n = Math.Sqrt(k * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
+                M = n * delta_t;
                 if (Angles.MFromF(F_delta, ecc) <= Math.Abs(M))
                 {
-                    F  = Angles.FFromM(M, ecc);
+                    F = Angles.FFromM(M, ecc);
                     nu = Angles.NuFromF(F, ecc);
                 }
                 else
                 {
-                    n  = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
-                    M  = n * delta_t;
-                    D  = MToDNearParabolic(M, ecc);
+                    n = Math.Sqrt(k / (2 * Math.Pow(q, 3)));
+                    M = n * delta_t;
+                    D = MToDNearParabolic(M, ecc);
                     nu = Angles.NuFromD(D);
                 }
             }
             else
             {
-                n  = Math.Sqrt(k * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
-                M  = n * delta_t;
-                F  = Angles.FFromM(M, ecc);
+                n = Math.Sqrt(k * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
+                M = n * delta_t;
+                F = Angles.FFromM(M, ecc);
                 nu = Angles.NuFromF(F, ecc);
             }
 

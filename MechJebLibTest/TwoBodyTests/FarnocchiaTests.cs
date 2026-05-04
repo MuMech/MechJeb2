@@ -78,10 +78,10 @@ namespace MechJebLibTest.TwoBodyTests
         {
             var solver = new DP5();
 
-            solver.Rtol           = 1e-9;
-            solver.Hmin           = 1e-9;
+            solver.Rtol = 1e-9;
+            solver.Hmin = 1e-9;
             solver.ThrowOnMaxIter = true;
-            solver.Maxiter        = 2000;
+            solver.Maxiter = 2000;
 
             const int NTRIALS = 50;
 

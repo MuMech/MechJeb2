@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System.Collections.Generic;
+
+using System.Collections.Generic;
 
 namespace MechJebLib.PSG
 {
@@ -34,7 +35,7 @@ namespace MechJebLib.PSG
                 return;
 
             Phase phase = this[lastShutdownStage];
-            phase.MaxT              = 0.999 * phase.Tau;
+            phase.MaxT = 0.999 * phase.Tau;
             this[lastShutdownStage] = phase;
         }
     }

@@ -5,9 +5,7 @@
 
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
-using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
-using static System.Math;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -18,17 +16,17 @@ namespace MechJebLib.PSG.Terminal
         private readonly double _incT;
         private readonly double _lanT;
         private readonly double _argpT;
-        private readonly V3     _hT;
-        private readonly V3     _eT;
+        private readonly V3 _hT;
+        private readonly V3 _eT;
 
         public Kepler5(double smaT, double eccT, double incT, double lanT, double argpT)
         {
             NumConstraints = 6;
-            _smaT          = smaT;
-            _eccT          = eccT;
-            _incT          = incT;
-            _lanT          = lanT;
-            _argpT         = argpT;
+            _smaT = smaT;
+            _eccT = eccT;
+            _incT = incT;
+            _lanT = lanT;
+            _argpT = argpT;
 
             _hT = Astro.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
             _eT = Astro.EvecFromKeplerian(_eccT, _incT, _lanT, _argpT);
@@ -53,15 +51,9 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            DualV3 AngularMomentumConstraint(DualV3[] p)
-            {
-                return DualV3.Cross(p[0], p[1]) - hT;
-            }
+            DualV3 AngularMomentumConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]) - hT;
 
-            DualV3 EccVecConstraint(DualV3[] p)
-            {
-                return DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized - eT;
-            }
+            DualV3 EccVecConstraint(DualV3[] p) => DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized - eT;
         }
 
         /* doing FPA attachment on Kepler5 doesn't work since you wind up with a very different argp */

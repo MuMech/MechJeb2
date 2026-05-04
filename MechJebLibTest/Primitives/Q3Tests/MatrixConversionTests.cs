@@ -61,7 +61,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
             (q * V3.forward).ShouldEqual(V3.xaxis, 1e-14);
 
             forward = new V3(3, 4, 0);
-            q       = Q3.LookRotation(forward);
+            q = Q3.LookRotation(forward);
             (q * V3.forward).ShouldEqual(forward.normalized, 1e-14);
         }
 

@@ -23,7 +23,7 @@ namespace MechJebLibTest.MathsTests
     {
         private const double PERIOD = 86164.0905;
 
-        private const double ACC  = EPS * 16;
+        private const double ACC = EPS * 16;
         private const double ACC2 = 1e-7; // due west launches have some mathematical irregularities
 
         private readonly ITestOutputHelper _testOutputHelper;

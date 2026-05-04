@@ -43,11 +43,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
-                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, false, false)
-                .Build();
+               .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
+               .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -90,11 +90,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
-                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, false, false)
-                .Build();
+               .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
+               .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -136,11 +136,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
-                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, true, false)
-                .Build();
+               .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
+               .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, true, false)
+               .Build();
 
             ascent.Run();
 
@@ -182,11 +182,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
-                .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, true, false)
-                .Build();
+               .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
+               .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, true, false)
+               .Build();
 
             ascent.Run();
 
@@ -228,11 +228,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -274,11 +274,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, true, false)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, true, false)
+               .Build();
 
             ascent.Run();
 
@@ -320,11 +320,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 1.6625138637074874, 0, false, true, true)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 1.6625138637074874, 0, false, true, true)
+               .Build();
 
             ascent.Run();
 
@@ -424,11 +424,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -460,12 +460,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
 
             Ascent ascent2 = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .OldSolution(solution)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .OldSolution(solution)
+               .Build();
 
             ascent2.Run();
 
@@ -487,11 +487,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, allowShutdown: false)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, allowShutdown: false)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -537,12 +537,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddCoast(32758.6353093992, 0, 450, 3, 3)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddCoast(32758.6353093992, 0, 450, 3, 3)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -578,13 +578,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
 
             Ascent ascent2 = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddCoast(32758.6353093992, 0, 450, 3, 3)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .OldSolution(solution)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddCoast(32758.6353093992, 0, 450, 3, 3)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .OldSolution(solution)
+               .Build();
 
             ascent2.Run();
 
@@ -606,12 +606,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddCoast(32758.6353093992, 0, 450, 3, 3)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, allowShutdown: false)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddCoast(32758.6353093992, 0, 450, 3, 3)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, allowShutdown: false)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -661,13 +661,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double mu    = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .AddCoast(32758.6353093992, 0, 450, 3, 3, massContinuity: true)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .AddCoast(32758.6353093992, 0, 450, 3, 3, massContinuity: true)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
 
             ascent.Run();
 
@@ -704,14 +704,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
 
             Ascent ascent2 = Ascent.Builder()
-                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4, allowShutdown: false)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
-                .AddCoast(32758.6353093992, 0, 450, 3, 3, massContinuity: true)
-                .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
-                .OldSolution(solution)
-                .Build();
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4, allowShutdown: false)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .AddCoast(32758.6353093992, 0, 450, 3, 3, massContinuity: true)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .OldSolution(solution)
+               .Build();
 
             ascent2.Run();
 
