@@ -336,23 +336,7 @@ namespace MechJebLib.PSG
                 int        idx       = thisPhase.BtIdx();
 
                 bndl[idx] = Phases[p].MinT;
-                bndu[idx] = Phases[p].MaxT / Phases[p].MinThrottle;
-
-                /*
-                if (Phases[p].Coast)
-                {
-                    bndl[idx] = Phases[p].mint;
-                    bndu[idx] = Phases[p].maxt;
-                }
-                else
-                {
-                    bndl[idx] = Phases[p].AllowShutdown ? 0 : Phases[p].bt;
-                    if (Phases[p].AllowInfiniteBurntime)
-                        bndu[idx] = Phases[p].Infinite ? double.PositiveInfinity : 0.999 * Phases[p].tau;
-                    else
-                        bndu[idx] = Phases[p].bt;
-                }
-                */
+                bndu[idx] = Phases[p].MaxT;
 
                 if (bndu[idx] <= bndl[idx])
                     boxConstrained[idx] = true;
