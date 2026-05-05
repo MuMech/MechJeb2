@@ -22,7 +22,7 @@ namespace MuMech
         public readonly EditableDouble AutostagePreDelay = 0.0;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble AutostagePostDelay = 0.5;
+        public readonly EditableDouble AutostagePostDelay = PhysicsGlobals.StagingCooldownTimer;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableInt AutostageLimit = 0;
