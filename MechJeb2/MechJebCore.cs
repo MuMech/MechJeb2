@@ -567,6 +567,9 @@ namespace MuMech
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
+                // Staging runs explicitly after the loop so it sees every other module's writes this tick.
+                if (module == Staging) continue;
+
                 Profiler.BeginSample(module.ProfilerName);
                 try
                 {
@@ -578,6 +581,21 @@ namespace MuMech
                 catch (Exception e)
                 {
                     Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnFixedUpdate: " + e);
+                }
+
+                Profiler.EndSample();
+            }
+
+            if (Staging != null && Staging.Enabled)
+            {
+                Profiler.BeginSample(Staging.ProfilerName);
+                try
+                {
+                    Staging.OnFixedUpdate();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb module " + Staging.GetType().Name + " threw an exception in OnFixedUpdate: " + e);
                 }
 
                 Profiler.EndSample();
