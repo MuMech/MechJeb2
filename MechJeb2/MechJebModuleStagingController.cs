@@ -250,7 +250,7 @@ namespace MuMech
         private Vessel _currentActiveVessel;
         private bool   _initializedOnce;
 
-        public override void OnUpdate()
+        public override void OnFixedUpdate()
         {
             if (!_initializedOnce)
             {
