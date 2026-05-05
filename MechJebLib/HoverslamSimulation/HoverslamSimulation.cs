@@ -126,7 +126,7 @@ namespace MechJebLib.HoverslamSimulation
 
         private double AltitudeResidual(double t, object? o) => PropagateTrajectory(t).X.R.magnitude - _height;
 
-        public override void Run(object? o = null)
+        private (double maxT, double minT) GenerateBracketGuess()
         {
             // ignition point should be before we hit the ground
             double maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
@@ -147,17 +147,27 @@ namespace MechJebLib.HoverslamSimulation
                 minT = Astro.TimeToLastRadius(_mu, _r0, _v0, _r0.magnitude * 2.0);
             }
 
-            double t1;
+            return (maxT, minT);
+        }
 
+        private double SafeRootSolve(double minT, double maxT)
+        {
             try
             {
-                t1 = BrentRoot.Solve(AltitudeResidual, minT, maxT, null, rtol: 1e-8);
+                return BrentRoot.Solve(AltitudeResidual, minT, maxT, null, rtol: 1e-8);
             }
             catch (Exception)
             {
                 Reset();
                 throw;
             }
+        }
+
+        public override void Run(object? o = null)
+        {
+            (double maxT, double minT) = GenerateBracketGuess();
+
+            double t1 = SafeRootSolve(minT, maxT);
 
             TrajectoryResult result = PropagateTrajectory(t1);
 

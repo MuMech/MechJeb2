@@ -230,6 +230,7 @@ namespace MuMech
             HoverslamSimulation.HoverslamSimulationBuilder builder = HoverslamSimulation.Builder();
 
             bool noBurnableStages = true;
+            int  lastKSPStage     = -1;
 
             for (int mjPhase = _vacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
@@ -238,8 +239,16 @@ namespace MuMech
                 if (fuelStats.DeltaV <= 0)
                     continue;
 
+                int nunExcessStages = lastKSPStage - fuelStats.KSPStage - 1;
+
+                // for every extra stage, we need to include a StagingCooldownTimer coast.
+                if (nunExcessStages > 0)
+                    builder.AddCoast(fuelStats.StartMass * 1000, PhysicsGlobals.StagingCooldownTimer*nunExcessStages, fuelStats.KSPStage, mjPhase);
+
                 builder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
                     fuelStats.KSPStage, mjPhase);
+
+                lastKSPStage = fuelStats.KSPStage;
 
                 noBurnableStages = false;
             }

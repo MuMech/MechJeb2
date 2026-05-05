@@ -1,4 +1,5 @@
-﻿using MechJebLib.HoverslamSimulation;
+﻿using MechJebLib.Functions;
+using MechJebLib.HoverslamSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using Xunit;
@@ -91,6 +92,70 @@ namespace MechJebLibTest
             (hoverslam.IgnitionUT - t0).ShouldEqual(6295.6858380440681, 1e-6);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-6);
             hoverslam.Dv.ShouldEqual(887.5077419925741, 1e-6);
+        }
+
+        [Fact]
+        private void MunLanderTwoStage()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var    r0           = new V3(276714.567061612, 53069.6146485938, 0.00770833757526462);
+            var    v0           = new V3(-116.600502880196, 177.393895536045, 7.72615181983542E-05);
+            double t0           = 104033.944130376;
+            double mu           = 65138397520.7807;
+            var    w            = new V3(0, 0, 4.52078533000628E-05);
+            double height       = 203079.078627833;
+            double descentSpeed = 111.496373594304;
+
+            HoverslamSimulation hoverslam = HoverslamSimulation.Builder()
+               .Initial(r0, v0, t0, mu, w)
+               .TargetConditions(height, descentSpeed)
+               .AddStage(1631.71526258703, 1478.0574232488, 64000.011946753, 290.00005572948, 2, 2)
+               .AddStage(1041.14351191796, 733.827833241511, 64000.0112782489, 290.000052700321, 0, 0)
+               .Build();
+
+            hoverslam.Run();
+
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(352.36724527248589, 1e-6);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized , 1e-6);
+            hoverslam.Dv.ShouldEqual(384.35206383554907, 1e-6);
+        }
+
+        /*
+
+        [LOG 17:59:21.512] [MechJeb2] [MechJebLib.HoverslamSimulationBuilder] Initial(
+        new V3([277354.901930395, 52073.8040485903, 0.00727448590091598]),
+         new V3([-112.093343687681, 178.249208847387, 7.73831475858213E-05]), 104028.344130375, 65138397520.7807, new V3([0, 0, 4.52078533000628E-05]))
+        */
+
+        [Fact]
+        private void MunLanderTwoStageWithCoast()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var    r0           = new V3(277354.901930395, 52073.8040485903, 0.00727448590091598);
+            var    v0           = new V3(-112.093343687681, 178.249208847387, 7.73831475858213E-05);
+            double t0           = 104028.344130375;
+            double mu           = 65138397520.7807;
+            var    w            = new V3(0, 0, 4.52078533000628E-05);
+            double height       = 203079.452561372;
+            double descentSpeed = 111.503169115681;
+
+            HoverslamSimulation hoverslam = HoverslamSimulation.Builder()
+               .Initial(r0, v0, t0, mu, w)
+               .TargetConditions(height, descentSpeed)
+               .AddStage(1631.71526258703, 1478.0574232488, 64000.0164757482, 290.000076251489, 2, 2)
+               .AddCoast(1041.14351191796, 0.5625, 0, 0)
+               .AddStage(1041.14351191796, 733.827833241511, 64000.0092904123, 290.000043692936, 0, 0)
+               .Build();
+
+            hoverslam.Run();
+
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(357.69288233217958, 1e-6);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized , 1e-6);
+            hoverslam.Dv.ShouldEqual(384.68994637708414, 1e-6);
         }
     }
 }

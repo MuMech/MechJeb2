@@ -74,6 +74,18 @@ namespace MechJebLib.HoverslamSimulation
                 return this;
             }
 
+            public HoverslamSimulationBuilder AddCoast(double m0, double ct, int kspStage, int mjPhase)
+            {
+                var sb = new StringBuilder();
+                sb.Append($"[MechJebLib.HoverslamSimulationBuilder] AddCoast({m0}, {ct}, {kspStage}, {mjPhase}");
+                sb.Append(")");
+                DebugPrint(sb.ToString());
+
+                _phases.Add(Phase.NewCoast(m0, ct, ct, kspStage, mjPhase));
+
+                return this;
+            }
+
             public HoverslamSimulationBuilder TargetConditions(double height, double descentSpeed)
             {
                 DebugPrint($"[MechJebLib.HoverslamSimulationBuilder] TargetConditions({height}, {descentSpeed})");
