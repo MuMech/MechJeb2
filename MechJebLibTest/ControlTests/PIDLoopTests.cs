@@ -2,6 +2,7 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
+
 using MechJebLib.Control;
 using Xunit;
 using static System.Math;
@@ -62,7 +63,7 @@ namespace MechJebLibTest.ControlTests
                 Kp = 2.10612233627086,
                 Ti = 58.8041302675465,
                 Td = 0.807330894982224,
-                N  = 3.37809448105627,
+                N = 3.37809448105627,
                 Ts = 0.02
             };
 
@@ -106,7 +107,7 @@ namespace MechJebLibTest.ControlTests
                 if (y > peakValue)
                 {
                     peakValue = y;
-                    peakTime  = t;
+                    peakTime = t;
                 }
 
                 if (riseTimeStart < 0 && y >= 0.1 * SETPOINT)
@@ -181,7 +182,7 @@ namespace MechJebLibTest.ControlTests
                 if (y > peakValue)
                 {
                     peakValue = y;
-                    peakTime  = t;
+                    peakTime = t;
                 }
 
                 if (riseTimeStart < 0 && y >= 0.1 * SETPOINT)

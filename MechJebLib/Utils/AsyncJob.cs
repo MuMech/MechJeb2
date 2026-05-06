@@ -31,9 +31,9 @@ namespace MechJebLib.Utils
         public bool IsCancelled => State == JobState.Cancelled;
         public bool IsStopped   => State >= JobState.Completed;
 
-        private Task?                    _task;
+        private Task? _task;
         private CancellationTokenSource? _cts;
-        private int                      _state = (int)JobState.Ready;
+        private int _state = (int)JobState.Ready;
 
         public JobState State            => (JobState)Volatile.Read(ref _state);
         public string?  ExceptionMessage { get; private set; }
@@ -58,8 +58,8 @@ namespace MechJebLib.Utils
                 return false;
 
             ExceptionMessage = null;
-            _cts             = new CancellationTokenSource();
-            CancelToken      = _cts.Token;
+            _cts = new CancellationTokenSource();
+            CancelToken = _cts.Token;
             _task = Task.Factory.StartNew(
                 _runWrapped,
                 o,

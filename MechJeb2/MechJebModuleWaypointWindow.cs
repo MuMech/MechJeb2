@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -597,7 +597,7 @@ namespace MuMech
             set => SelIndex = value;
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(500), GUILayout.Height(400) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(500), GUILayout.Height(400) };
 
         private void DrawPageWaypoints()
         {
@@ -673,32 +673,32 @@ namespace MuMech
                     {
                         GUILayout.BeginHorizontal();
 
-                        GUILayout.Label("  Radius: ", GUILayout.ExpandWidth(false));
-                        _tmpRadius = GUILayout.TextField(_tmpRadius, GUILayout.Width(50));
+                        GUILayout.Label("  Radius: ", GuiUtils.LayoutNoExpandWidth);
+                        _tmpRadius = GUILayout.TextField(_tmpRadius, GuiUtils.LayoutWidth(50));
                         float.TryParse(_tmpRadius, out wp.Radius);
-                        if (GUILayout.Button("A", GUILayout.ExpandWidth(false)))
+                        if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
                         {
                             _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.Radius = wp.Radius);
                         }
 
-                        GUILayout.Label("- Speed: ", GUILayout.ExpandWidth(false));
-                        _tmpMinSpeed = GUILayout.TextField(_tmpMinSpeed, GUILayout.Width(40));
+                        GUILayout.Label("- Speed: ", GuiUtils.LayoutNoExpandWidth);
+                        _tmpMinSpeed = GUILayout.TextField(_tmpMinSpeed, GuiUtils.LayoutWidth(40));
                         float.TryParse(_tmpMinSpeed, out wp.MinSpeed);
-                        if (GUILayout.Button("A", GUILayout.ExpandWidth(false)))
+                        if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
                         {
                             _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.MinSpeed = wp.MinSpeed);
                         }
 
-                        GUILayout.Label(" - ", GUILayout.ExpandWidth(false));
-                        _tmpMaxSpeed = GUILayout.TextField(_tmpMaxSpeed, GUILayout.Width(40));
+                        GUILayout.Label(" - ", GuiUtils.LayoutNoExpandWidth);
+                        _tmpMaxSpeed = GUILayout.TextField(_tmpMaxSpeed, GuiUtils.LayoutWidth(40));
                         float.TryParse(_tmpMaxSpeed, out wp.MaxSpeed);
-                        if (GUILayout.Button("A", GUILayout.ExpandWidth(false)))
+                        if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
                         {
                             _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed);
                         }
 
                         GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("QS", wp.Quicksave ? _styleQuicksave : _styleInactive, GUILayout.ExpandWidth(false)))
+                        if (GUILayout.Button("QS", wp.Quicksave ? _styleQuicksave : _styleInactive, GuiUtils.LayoutNoExpandWidth))
                         {
                             if (alt)
                             {
@@ -715,12 +715,12 @@ namespace MuMech
 
                         GUILayout.BeginHorizontal();
 
-                        GUILayout.Label("Lat ", GUILayout.ExpandWidth(false));
-                        _tmpLat     = GUILayout.TextField(_tmpLat, GUILayout.Width(125));
+                        GUILayout.Label("Lat ", GuiUtils.LayoutNoExpandWidth);
+                        _tmpLat     = GUILayout.TextField(_tmpLat, GuiUtils.LayoutWidth(125));
                         wp.Latitude = ParseCoord(_tmpLat);
 
-                        GUILayout.Label(" -  Lon ", GUILayout.ExpandWidth(false));
-                        _tmpLon      = GUILayout.TextField(_tmpLon, GUILayout.Width(125));
+                        GUILayout.Label(" -  Lon ", GuiUtils.LayoutNoExpandWidth);
+                        _tmpLon      = GUILayout.TextField(_tmpLon, GuiUtils.LayoutWidth(125));
                         wp.Longitude = ParseCoord(_tmpLon, true);
 
                         GUILayout.EndHorizontal();
@@ -738,7 +738,7 @@ namespace MuMech
             GUILayout.EndScrollView();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(alt ? "Reverse" : !_waitingForPick ? "Add Waypoint" : "Abort Adding", GUILayout.Width(110)))
+            if (GUILayout.Button(alt ? "Reverse" : !_waitingForPick ? "Add Waypoint" : "Abort Adding", GuiUtils.LayoutWidth(110)))
             {
                 if (alt)
                 {
@@ -765,7 +765,7 @@ namespace MuMech
                 }
             }
 
-            if (GUILayout.Button(alt ? "Clear" : "Remove", GUILayout.Width(65)) && _ap.Waypoints.Count > 0)
+            if (GUILayout.Button(alt ? "Clear" : "Remove", GuiUtils.LayoutWidth(65)) && _ap.Waypoints.Count > 0)
             {
                 if (alt)
                 {
@@ -783,7 +783,7 @@ namespace MuMech
                 SelIndex = -1;
             }
 
-            if (GUILayout.Button(alt ? "Top" : "Up", GUILayout.Width(57)) && SelIndex > 0 && SelIndex < _ap.Waypoints.Count &&
+            if (GUILayout.Button(alt ? "Top" : "Up", GuiUtils.LayoutWidth(57)) && SelIndex > 0 && SelIndex < _ap.Waypoints.Count &&
                 _ap.Waypoints.Count >= 2)
             {
                 if (alt)
@@ -799,7 +799,7 @@ namespace MuMech
                 }
             }
 
-            if (GUILayout.Button(alt ? "Bottom" : "Down", GUILayout.Width(57)) && SelIndex >= 0 && SelIndex < _ap.Waypoints.Count - 1 &&
+            if (GUILayout.Button(alt ? "Bottom" : "Down", GuiUtils.LayoutWidth(57)) && SelIndex >= 0 && SelIndex < _ap.Waypoints.Count - 1 &&
                 _ap.Waypoints.Count >= 2)
             {
                 if (alt)
@@ -947,7 +947,7 @@ namespace MuMech
 
                 if (i == _saveIndex)
                 {
-                    if (GUILayout.Button("Delete", GUILayout.Width(70)))
+                    if (GUILayout.Button("Delete", GuiUtils.LayoutWidth(70)))
                     {
                         _routes.RemoveAll(r => r.Name == bodyWPs[i].Name && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
                         SaveRoutes();
@@ -961,8 +961,8 @@ namespace MuMech
             GUILayout.EndScrollView();
 
             GUILayout.BeginHorizontal();
-            _saveName = GUILayout.TextField(_saveName, GUILayout.Width(150));
-            if (GUILayout.Button("Save", GUILayout.Width(50)))
+            _saveName = GUILayout.TextField(_saveName, GuiUtils.LayoutWidth(150));
+            if (GUILayout.Button("Save", GuiUtils.LayoutWidth(50)))
             {
                 if (_saveName != "" && _ap.Waypoints.Count > 0)
                 {
@@ -983,7 +983,7 @@ namespace MuMech
                 }
             }
 
-            if (GUILayout.Button(alt ? "Add" : "Load", GUILayout.Width(50)))
+            if (GUILayout.Button(alt ? "Add" : "Load", GuiUtils.LayoutWidth(50)))
             {
                 if (_saveIndex > -1)
                 {

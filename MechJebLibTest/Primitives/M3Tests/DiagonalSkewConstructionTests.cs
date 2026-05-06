@@ -5,7 +5,6 @@
 
 using MechJebLib.Primitives;
 using Xunit;
-using static System.Math;
 
 namespace MechJebLibTest.Primitives.M3Tests
 {
@@ -130,8 +129,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void DiagonalMatrixInverse()
         {
-            var m = M3.Diagonal(2, 4, 8);
-            var inv = m.inverse;
+            var m   = M3.Diagonal(2, 4, 8);
+            M3  inv = m.inverse;
 
             inv.ShouldEqual(M3.Diagonal(0.5, 0.25, 0.125), 1e-14);
         }
@@ -299,9 +298,9 @@ namespace MechJebLibTest.Primitives.M3Tests
             var a = new V3(1, 2, 3);
             var b = new V3(4, 5, 6);
 
-            var skewA = M3.Skew(a);
-            V3 crossProduct = V3.Cross(a, b);
-            V3 matrixProduct = skewA * b;
+            var skewA         = M3.Skew(a);
+            var crossProduct  = V3.Cross(a, b);
+            V3  matrixProduct = skewA * b;
 
             matrixProduct.ShouldEqual(crossProduct);
         }
@@ -312,9 +311,9 @@ namespace MechJebLibTest.Primitives.M3Tests
             var a = new V3(3.5, -2.7, 8.1);
             var b = new V3(-1.2, 4.6, -0.9);
 
-            var skewA = M3.Skew(a);
-            V3 crossProduct = V3.Cross(a, b);
-            V3 matrixProduct = skewA * b;
+            var skewA         = M3.Skew(a);
+            var crossProduct  = V3.Cross(a, b);
+            V3  matrixProduct = skewA * b;
 
             matrixProduct.ShouldEqual(crossProduct, 1e-14);
         }
@@ -322,7 +321,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void SkewNegativeVector()
         {
-            var v = new V3(1, 2, 3);
+            var v  = new V3(1, 2, 3);
             var m1 = M3.Skew(v);
             var m2 = M3.Skew(-v);
 
@@ -332,11 +331,11 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void SkewScaledVector()
         {
-            var v = new V3(1, 2, 3);
+            var    v = new V3(1, 2, 3);
             double k = 2.5;
 
             var m1 = M3.Skew(v * k);
-            var m2 = M3.Skew(v) * k;
+            M3  m2 = M3.Skew(v) * k;
 
             m1.ShouldEqual(m2);
         }
@@ -348,7 +347,7 @@ namespace MechJebLibTest.Primitives.M3Tests
             var b = new V3(4, 5, 6);
 
             var skewSum = M3.Skew(a + b);
-            var sumSkew = M3.Skew(a) + M3.Skew(b);
+            M3  sumSkew = M3.Skew(a) + M3.Skew(b);
 
             skewSum.ShouldEqual(sumSkew);
         }

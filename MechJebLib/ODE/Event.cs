@@ -14,18 +14,18 @@ namespace MechJebLib.ODE
     public class Event : IComparable<Event>
     {
         public readonly ConditionFunc F;
-        public readonly AssertFunc?   Assert;
-        public          bool          SaveBefore = true;
-        public          bool          SaveAfter  = true;
-        public readonly bool          Terminal   = true;
-        public readonly int           Direction  = 0;
-        public          double        LastValue;
-        public          double        NewValue;
-        public          double        Time;
+        public readonly AssertFunc? Assert;
+        public bool SaveBefore = true;
+        public bool SaveAfter = true;
+        public readonly bool Terminal = true;
+        public readonly int Direction = 0;
+        public double LastValue;
+        public double NewValue;
+        public double Time;
 
         public Event(ConditionFunc f, AssertFunc? assert = null)
         {
-            F      = f;
+            F = f;
             Assert = assert;
         }
 

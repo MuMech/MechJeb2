@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation;
 using UnityEngine;
@@ -18,7 +18,7 @@ namespace MuMech
         private static GUIStyle _btNormal;
         private static GUIStyle _btActive;
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(300), GUILayout.Height(100) };
 
         private void SetupButtonStyles()
         {

@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using JetBrainsAnnotations::JetBrains.Annotations;
@@ -235,7 +235,7 @@ namespace MuMech
                         fontStyle = GuiUtils.Skin.label.fontStyle,
                         normal    = { textColor = GuiUtils.Skin.label.normal.textColor }
                     };
-                GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GUILayout.Width(windowWidth),
+                GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GuiUtils.LayoutWidth(windowWidth),
                     GUILayout.Height(porkchop_Height)); //"Computing:"
             }
 

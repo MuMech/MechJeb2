@@ -53,7 +53,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void ToStringWithSpecialValues()
         {
             new V3(double.PositiveInfinity, double.NegativeInfinity, double.NaN)
-                .ToString().ShouldEqual("[Infinity, -Infinity, NaN]");
+               .ToString().ShouldEqual("[Infinity, -Infinity, NaN]");
         }
 
         [Fact]

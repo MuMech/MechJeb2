@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
@@ -14,15 +13,17 @@ namespace MechJebLibBindings.FuelFlowSimulation
     // need to link against KSP GameObjects (MechJebLibBindings.dll or something like that)
     public partial class SimVesselManager
     {
-        private readonly SimVesselBuilder                                 _builder;
-        private readonly SimVesselUpdater                                 _updater;
-        private          SimVessel                                        _vessel;
-        private          IShipconstruct                                   _kspVessel;
-        public readonly  MechJebLib.FuelFlowSimulation.FuelFlowSimulation FuelFlowSimulation = new MechJebLib.FuelFlowSimulation.FuelFlowSimulation();
-        public           bool                                             DVLinearThrust     = true; // include cos losses
+        public List<FuelStats> Segments => FuelFlowSimulation.Segments;
 
-        private readonly Dictionary<Part, SimPart>             _partMapping              = new Dictionary<Part, SimPart>();
-        private readonly Dictionary<SimPart, Part>             _inversePartMapping       = new Dictionary<SimPart, Part>();
+        private readonly SimVesselBuilder _builder;
+        private readonly SimVesselUpdater _updater;
+        private SimVessel _vessel;
+        private IShipconstruct _kspVessel;
+        public readonly MechJebLib.FuelFlowSimulation.FuelFlowSimulation FuelFlowSimulation = new MechJebLib.FuelFlowSimulation.FuelFlowSimulation();
+        public bool DVLinearThrust = true; // include cos losses
+
+        private readonly Dictionary<Part, SimPart> _partMapping = new Dictionary<Part, SimPart>();
+        private readonly Dictionary<SimPart, Part> _inversePartMapping = new Dictionary<SimPart, Part>();
         private readonly Dictionary<SimPartModule, PartModule> _inversePartModuleMapping = new Dictionary<SimPartModule, PartModule>();
 
         public double T => _vessel.T;
@@ -34,9 +35,9 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
         public SimVesselManager()
         {
-            _builder   = new SimVesselBuilder(this);
-            _updater   = new SimVesselUpdater(this);
-            _vessel    = SimVessel.Borrow();
+            _builder = new SimVesselBuilder(this);
+            _updater = new SimVesselUpdater(this);
+            _vessel = SimVessel.Borrow();
             _kspVessel = null!;
         }
 

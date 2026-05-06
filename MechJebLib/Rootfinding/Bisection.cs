@@ -33,7 +33,7 @@ namespace MechJebLib.Rootfinding
 
             if (a > b)
             {
-                (a, b)     = (b, a);
+                (a, b) = (b, a);
                 preferLeft = !preferLeft;
             }
 
@@ -63,12 +63,12 @@ namespace MechJebLib.Rootfinding
 
                 if (fc * fa < 0)
                 {
-                    b  = c;
+                    b = c;
                     fb = fc;
                 }
                 else
                 {
-                    a  = c;
+                    a = c;
                     fa = fc;
                 }
             }

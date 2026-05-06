@@ -2,18 +2,19 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 
 namespace MechJebLib.Control
 {
     public class MultiVariableInterpolator
     {
         private readonly MultiVariableGrid _grid;
-        private readonly double[,,]        _kValues; // Known K values at grid points
+        private readonly double[,,] _kValues; // Known K values at grid points
 
         public MultiVariableInterpolator(MultiVariableGrid grid, double[,,] kValues)
         {
-            _grid    = grid;
+            _grid = grid;
             _kValues = kValues;
 
             (int Grr, int Ts, int M) dims = grid.GetDimensions();
@@ -26,7 +27,7 @@ namespace MechJebLib.Control
         public double Interpolate(double grr, double ts, double m)
         {
             grr = Math.Log(grr);
-            m   = Math.Log(m);
+            m = Math.Log(m);
 
             // Find surrounding indices for each dimension
             int i1 = FindLowerIndex(_grid.GrrValues, grr);

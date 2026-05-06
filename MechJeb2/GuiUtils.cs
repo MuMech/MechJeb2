@@ -31,7 +31,7 @@ namespace MuMech
             get => ValConfig;
             set
             {
-                ValConfig  = value;
+                ValConfig = value;
                 TextConfig = (ValConfig / _multiplier).ToString();
             }
         }
@@ -51,7 +51,7 @@ namespace MuMech
             {
                 TextConfig = value;
                 TextConfig = Regex.Replace(TextConfig, @"[^\d+-.]", ""); //throw away junk characters
-                Parsed     = double.TryParse(TextConfig, out double parsedValue);
+                Parsed = double.TryParse(TextConfig, out double parsedValue);
                 if (Parsed) ValConfig = parsedValue * _multiplier;
             }
         }
@@ -60,9 +60,9 @@ namespace MuMech
 
         public EditableDoubleMult(double val, double multiplier = 1)
         {
-            Val         = val;
+            Val = val;
             _multiplier = multiplier;
-            TextConfig  = (val / multiplier).ToString();
+            TextConfig = (val / multiplier).ToString();
         }
 
         public static implicit operator double(EditableDoubleMult x) => x.Val;
@@ -94,7 +94,7 @@ namespace MuMech
             get => ValConfig;
             set
             {
-                ValConfig  = value;
+                ValConfig = value;
                 TextConfig = GuiUtils.TimeToDHMS(ValConfig);
             }
         }
@@ -146,13 +146,13 @@ namespace MuMech
         {
             angle = MuUtils.ClampDegrees180(angle);
 
-            Negative =  angle < 0;
-            angle    =  Math.Abs(angle);
-            Degrees  =  new EditableDouble((int)angle);
-            angle    -= Degrees.Val;
-            Minutes  =  new EditableDouble((int)(60 * angle));
-            angle    -= Minutes.Val / 60;
-            Seconds  =  new EditableDouble(Math.Round(3600 * angle));
+            Negative = angle < 0;
+            angle = Math.Abs(angle);
+            Degrees = new EditableDouble((int)angle);
+            angle -= Degrees.Val;
+            Minutes = new EditableDouble((int)(60 * angle));
+            angle -= Minutes.Val / 60;
+            Seconds = new EditableDouble(Math.Round(3600 * angle));
         }
 
         public static implicit operator double(EditableAngle x) => (x.Negative ? -1 : 1) * (x.Degrees + x.Minutes / 60.0 + x.Seconds / 3600.0);
@@ -187,7 +187,7 @@ namespace MuMech
             get => ValConfig;
             set
             {
-                ValConfig  = value;
+                ValConfig = value;
                 TextConfig = value.ToString();
             }
         }
@@ -205,14 +205,14 @@ namespace MuMech
             {
                 TextConfig = value;
                 TextConfig = Regex.Replace(TextConfig, @"[^\d+-]", ""); //throw away junk characters
-                _parsed    = int.TryParse(TextConfig, out int parsedValue);
+                _parsed = int.TryParse(TextConfig, out int parsedValue);
                 if (_parsed) Val = parsedValue;
             }
         }
 
         public EditableInt(int val)
         {
-            Val        = val;
+            Val = val;
             TextConfig = val.ToString();
         }
 
@@ -433,56 +433,56 @@ namespace MuMech
 
         public static void SetGUIScale(double s)
         {
-            Scale              = Mathf.Clamp((float)s, 0.2f, 5f);
+            Scale = Mathf.Clamp((float)s, 0.2f, 5f);
             ScaledScreenHeight = Mathf.RoundToInt(Screen.height / Scale);
-            ScaledScreenWidth  = Mathf.RoundToInt(Screen.width / Scale);
+            ScaledScreenWidth = Mathf.RoundToInt(Screen.width / Scale);
         }
 
         public static void CopyDefaultSkin()
         {
-            GUI.skin    = null;
+            GUI.skin = null;
             DefaultSkin = Object.Instantiate(GUI.skin);
         }
 
         [UsedImplicitly]
         public static void CopyCompactSkin()
         {
-            GUI.skin    = null;
+            GUI.skin = null;
             CompactSkin = Object.Instantiate(GUI.skin);
 
             Skin.name = "KSP Compact";
 
-            CompactSkin.label.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.label.margin = new RectOffset(1, 1, 1, 1);
             CompactSkin.label.padding = new RectOffset(0, 0, 2, 2);
 
-            CompactSkin.button.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.button.margin = new RectOffset(1, 1, 1, 1);
             CompactSkin.button.padding = new RectOffset(4, 4, 2, 2);
 
-            CompactSkin.toggle.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.toggle.margin = new RectOffset(1, 1, 1, 1);
             CompactSkin.toggle.padding = new RectOffset(15, 0, 2, 0);
 
-            CompactSkin.textField.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.textField.margin = new RectOffset(1, 1, 1, 1);
             CompactSkin.textField.padding = new RectOffset(2, 2, 2, 2);
 
-            CompactSkin.textArea.margin  = new RectOffset(1, 1, 1, 1);
+            CompactSkin.textArea.margin = new RectOffset(1, 1, 1, 1);
             CompactSkin.textArea.padding = new RectOffset(2, 2, 2, 2);
 
-            CompactSkin.window.margin  = new RectOffset(0, 0, 0, 0);
+            CompactSkin.window.margin = new RectOffset(0, 0, 0, 0);
             CompactSkin.window.padding = new RectOffset(5, 5, 20, 5);
         }
 
         private static void CopyTransparentSkin()
         {
-            GUI.skin        = null;
+            GUI.skin = null;
             TransparentSkin = Object.Instantiate(GUI.skin);
 
             var t = new Texture2D(1, 1);
             t.SetPixel(0, 0, new Color(0, 0, 0, 0));
             t.Apply();
 
-            TransparentSkin.window.normal.background   = t;
+            TransparentSkin.window.normal.background = t;
             TransparentSkin.window.onNormal.background = t;
-            TransparentSkin.window.padding             = new RectOffset(5, 5, 5, 5);
+            TransparentSkin.window.padding = new RectOffset(5, 5, 5, 5);
         }
 
         public static void LoadSkin(SkinType skinType)
@@ -540,24 +540,45 @@ namespace MuMech
 
 #nullable enable
         public static void SimpleTextBox(string? leftLabel, IEditable ed, string? rightLabel = null, float width = 100,
-            GUIStyle? leftLabelStyle = null, bool horizontalFraming = true)
+                                         GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false,
+                                         string? leftLabelTooltip = null)
+        {
+            GUIContent? content = string.IsNullOrEmpty(leftLabel)
+                ? null
+                : string.IsNullOrEmpty(leftLabelTooltip) ? new GUIContent(leftLabel) : new GUIContent(leftLabel, leftLabelTooltip);
+            SimpleTextBox(content, ed, rightLabel, width, leftLabelStyle, horizontalFraming, expandWidth);
+        }
+
+        // GUIContent overload for callers that already cache a content object (avoids per-frame allocations).
+        public static void SimpleTextBox(GUIContent? leftLabelContent, IEditable ed, string? rightLabel = null, float width = 100,
+                                         GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false)
         {
             Profiler.BeginSample("SimpleTextBox");
             if (horizontalFraming) GUILayout.BeginHorizontal();
-            if (!string.IsNullOrEmpty(leftLabel))
+            if (leftLabelContent != null && !string.IsNullOrEmpty(leftLabelContent.text))
             {
                 leftLabelStyle ??= GUI.skin.label;
-                GUILayout.Label(leftLabel, leftLabelStyle);
+                if (expandWidth)
+                    GUILayout.Label(leftLabelContent, leftLabelStyle, ExpandWidth(true));
+                else
+                    GUILayout.Label(leftLabelContent, leftLabelStyle);
             }
 
-            SimpleTextField(ed, width, true);
-            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel);
+            SimpleTextField(ed, width, !expandWidth);
+            if (!string.IsNullOrEmpty(rightLabel))
+            {
+                if (expandWidth)
+                    GUILayout.Label(rightLabel, ExpandWidth(false));
+                else
+                    GUILayout.Label(rightLabel);
+            }
+
             if (horizontalFraming) GUILayout.EndHorizontal();
             Profiler.EndSample();
         }
 
         public static void ToggledTextBox(ref bool toggle, string toggleText, IEditable ed, string? rightLabel = null, GUIStyle? toggleStyle = null,
-            float width = 100)
+                                          float width = 100)
         {
             Profiler.BeginSample("ToggledTextField");
             GUILayout.BeginHorizontal();
@@ -624,10 +645,7 @@ namespace MuMech
         {
             return ArrowSelector(index, modulo, DrawLabel);
 
-            void DrawLabel()
-            {
-                GUILayout.Label(label, expandWidth ? ArrowSelectorStyeGuiStyleExpand : ArrowSelectorStyeGuiStyleNoExpand);
-            }
+            void DrawLabel() => GUILayout.Label(label, expandWidth ? ArrowSelectorStyeGuiStyleExpand : ArrowSelectorStyeGuiStyleNoExpand);
         }
 
         public static int HoursPerDay => GameSettings.KERBIN_TIME ? 6 : 24;
@@ -637,32 +655,32 @@ namespace MuMech
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
-            string ret = "";
-            bool showSecondsDecimals = decimalPlaces > 0;
+            string ret                 = "";
+            bool   showSecondsDecimals = decimalPlaces > 0;
 
             try
             {
-                string[] units = { "y", "d", "h", "m", "s" };
-                long[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
+                string[] units     = { "y", "d", "h", "m", "s" };
+                long[]   intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
 
                 if (seconds < 0)
                 {
-                    ret     += "-";
+                    ret += "-";
                     seconds *= -1;
                 }
 
                 for (int i = 0; i < units.Length; i++)
                 {
-                    long n = (long)(seconds / intervals[i]);
+                    long n     = (long)(seconds / intervals[i]);
                     bool first = ret.Length < 2;
                     if (!first || n != 0 || (i == units.Length - 1 && ret == ""))
                     {
                         if (!first) ret += " ";
 
                         if (showSecondsDecimals && seconds < 60 && i == units.Length - 1)
-                            ret             += seconds.ToString("00." + new string('0', decimalPlaces));
+                            ret += seconds.ToString("00." + new string('0', decimalPlaces));
                         else if (first) ret += n.ToString();
-                        else ret            += n.ToString(i == 1 ? "000" : "00");
+                        else ret += n.ToString(i == 1 ? "000" : "00");
 
                         ret += units[i];
                     }
@@ -680,8 +698,8 @@ namespace MuMech
 
         public static bool TryParseDHMS(string s, out double seconds)
         {
-            string[] units = { "y", "d", "h", "m", "s" };
-            int[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
+            string[] units     = { "y", "d", "h", "m", "s" };
+            int[]    intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
 
             s = s.Trim(' ');
             bool minus = s.StartsWith("-");
@@ -695,9 +713,9 @@ namespace MuMech
                 if (unitPos == -1) continue;
 
                 if (!double.TryParse(s.Substring(0, unitPos), out double value)) return false;
-                seconds         += value * intervals[i];
-                s               =  s.Substring(unitPos + 1);
-                parsedSomething =  true;
+                seconds += value * intervals[i];
+                s = s.Substring(unitPos + 1);
+                parsedSomething = true;
             }
 
             if (minus) seconds = -seconds;
@@ -708,10 +726,10 @@ namespace MuMech
         private static double ArcDistance(Vector3 from, Vector3 to)
         {
             Vector3 position = FlightGlobals.ActiveVessel.mainBody.transform.position;
-            double a = (position - from).magnitude;
-            double b = (position - to).magnitude;
-            double c = Vector3d.Distance(from, to);
-            double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
+            double  a        = (position - from).magnitude;
+            double  b        = (position - to).magnitude;
+            double  c        = Vector3d.Distance(from, to);
+            double  ang      = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
             return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
 
@@ -739,18 +757,18 @@ namespace MuMech
         {
             Ray mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
-            Vector3d relOrigin = mouseRay.origin - body.position;
-            double curRadius = body.pqsController.radiusMax;
-            double lastRadius = 0;
-            int loops = 0;
+            Vector3d relOrigin  = mouseRay.origin - body.position;
+            double   curRadius  = body.pqsController.radiusMax;
+            double   lastRadius = 0;
+            int      loops      = 0;
             while (loops < 50)
             {
                 if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out Vector3d relSurfacePosition))
                 {
                     Vector3d surfacePoint = body.position + relSurfacePosition;
                     double alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) *
-                                                                     QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) *
-                                                                     Vector3d.right);
+                        QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) *
+                        Vector3d.right);
                     double error = Math.Abs(curRadius - alt);
                     if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
                     {
@@ -758,7 +776,7 @@ namespace MuMech
                     }
 
                     lastRadius = curRadius;
-                    curRadius  = alt;
+                    curRadius = alt;
                     loops++;
                 }
                 else
@@ -775,6 +793,69 @@ namespace MuMech
             }
 
             return null;
+        }
+
+        private static readonly Dictionary<int, string> _tooltipTexts = new Dictionary<int, string>();
+        private static GUIStyle _tooltipStyle;
+        private static Rect _tooltipRect;
+        private static DateTime _tooltipBeginDt;
+        private static bool _tooltipChanged;
+        private const float TooltipMaxWidth = 200f;
+        private const double TooltipShowDelay = 1000;
+        private static readonly int _tooltipWindowId = "MechJebTooltip".GetHashCode();
+
+        public static void RecordTooltip(int windowId)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+
+            _tooltipTexts.TryGetValue(windowId, out string current);
+            current ??= string.Empty;
+
+            if (GUI.tooltip == current) return;
+
+            _tooltipChanged  = true;
+            _tooltipBeginDt  = DateTime.UtcNow;
+            _tooltipTexts[windowId] = GUI.tooltip;
+        }
+
+        public static void ShowTooltip(int windowId)
+        {
+            if (!_tooltipTexts.TryGetValue(windowId, out string text) || string.IsNullOrEmpty(text))
+                return;
+            if ((DateTime.UtcNow - _tooltipBeginDt).TotalMilliseconds <= TooltipShowDelay)
+                return;
+
+            if (_tooltipStyle == null)
+            {
+                var bg = new Texture2D(1, 1, TextureFormat.ARGB32, false) { hideFlags = HideFlags.HideAndDontSave };
+                bg.SetPixel(0, 0, new Color(0.1f, 0.1f, 0.1f, 1f));
+                bg.Apply();
+                _tooltipStyle = new GUIStyle(GUI.skin.box)
+                {
+                    padding   = new RectOffset(3, 3, 3, 3),
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap  = true
+                };
+                _tooltipStyle.normal.background = bg;
+            }
+
+            if (_tooltipChanged)
+            {
+                var c = new GUIContent(text);
+                _tooltipStyle.CalcMinMaxWidth(c, out _, out float width);
+                width        = Math.Min(width, TooltipMaxWidth);
+                float height = _tooltipStyle.CalcHeight(c, TooltipMaxWidth);
+                float mx     = Input.mousePosition.x / Scale;
+                float my     = (Screen.height - Input.mousePosition.y) / Scale;
+                _tooltipRect    = new Rect(
+                    Math.Min(ScaledScreenWidth - width, mx + 15),
+                    Math.Min(ScaledScreenHeight - height, my + 10),
+                    width, height);
+                _tooltipChanged = false;
+            }
+
+            GUI.Window(_tooltipWindowId, _tooltipRect, _ => { }, text, _tooltipStyle);
+            GUI.BringWindowToFront(_tooltipWindowId);
         }
 
         [UsedImplicitly]
@@ -806,12 +887,12 @@ namespace MuMech
             private static readonly GUIStyle _style;
 
             public static bool IsPopupActive => _popupOwner != null && _rect.height > 0 && _popupActive;
-            public static Rect PopupRect => _rect;
+            public static Rect PopupRect     => _rect;
 
             static ComboBox()
             {
-                _style             = new GUIStyle(GUI.skin.window) { normal = { background = null }, onNormal = { background = null } };
-                _style.border.top  = _style.border.bottom;
+                _style = new GUIStyle(GUI.skin.window) { normal = { background = null }, onNormal = { background = null } };
+                _style.border.top = _style.border.bottom;
                 _style.padding.top = _style.padding.bottom;
             }
 
@@ -822,7 +903,7 @@ namespace MuMech
 
                 if (_style.normal.background == null)
                 {
-                    _style.normal.background   = MechJebBundlesManager.comboBoxBackground;
+                    _style.normal.background = MechJebBundlesManager.comboBoxBackground;
                     _style.onNormal.background = MechJebBundlesManager.comboBoxBackground;
                 }
 
@@ -862,9 +943,9 @@ namespace MuMech
                 // A choice has been made, update the return value
                 if (_popupOwner == caller && !_popupActive)
                 {
-                    _popupOwner  = null;
+                    _popupOwner = null;
                     selectedItem = _selectedItem;
-                    GUI.changed  = true;
+                    GUI.changed = true;
                 }
 
                 bool guiChanged = GUI.changed;
@@ -873,9 +954,9 @@ namespace MuMech
                     // We will set the changed status when we return from the menu instead
                     GUI.changed = guiChanged;
                     // Update the global state with the new items
-                    _popupOwner  = caller;
+                    _popupOwner = caller;
                     _popupActive = true;
-                    _entries     = entries;
+                    _entries = entries;
                     // Magic value to force position update during repaint event
                     _rect = new Rect(0, 0, 0, 0);
                 }
@@ -904,7 +985,7 @@ namespace MuMech
 
         public Coordinates(double latitude, double longitude)
         {
-            Latitude  = latitude;
+            Latitude = latitude;
             Longitude = longitude;
         }
 
@@ -912,10 +993,10 @@ namespace MuMech
         public static string ToStringDecimal(double latitude, double longitude, bool newline = false, int precision = 3)
         {
             double clampedLongitude = MuUtils.ClampDegrees180(longitude);
-            double latitudeAbs = Math.Abs(latitude);
-            double longitudeAbs = Math.Abs(clampedLongitude);
+            double latitudeAbs      = Math.Abs(latitude);
+            double longitudeAbs     = Math.Abs(clampedLongitude);
             return latitudeAbs.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
-                   + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
+                + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
         }
 
         public string ToStringDecimal(bool newline = false, int precision = 3) => ToStringDecimal(Latitude, Longitude, newline, precision);
@@ -924,7 +1005,7 @@ namespace MuMech
         {
             double clampedLongitude = MuUtils.ClampDegrees180(longitude);
             return AngleToDMS(latitude) + (latitude > 0 ? " N" : " S") + (newline ? "\n" : ", ")
-                   + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
+                + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
         }
 
         public string ToStringDMS(bool newline = false) => ToStringDMS(Latitude, Longitude, newline);
@@ -968,7 +1049,7 @@ namespace MuMech
 
             _displayPicker.Apply();
 
-            float v = 0.0F;
+            float v    = 0.0F;
             float diff = 1.0f / TEXTURE_HEIGHT;
             _saturationTexture = new Texture2D(20, TEXTURE_HEIGHT);
             for (int i = 0; i < _saturationTexture.width; i++)
@@ -997,7 +1078,7 @@ namespace MuMech
                 int a = (int)Input.mousePosition.x;
                 int b = Screen.height - (int)Input.mousePosition.y;
 
-                SetColor      = _displayPicker.GetPixel(a - positionLeft, -(b - positionTop));
+                SetColor = _displayPicker.GetPixel(a - positionLeft, -(b - positionTop));
                 _lastSetColor = SetColor;
             }
 

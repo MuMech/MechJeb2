@@ -4,7 +4,6 @@
  */
 
 using MechJebLib.Primitives;
-using static MechJebLib.Utils.Statics;
 using static System.Math;
 using static MechJebLib.Utils.AutoDiff;
 
@@ -19,9 +18,9 @@ namespace MechJebLib.PSG.Terminal
         public FlightPathAngle3Energy(double gammaT, double rT, double incT)
         {
             NumConstraints = 3;
-            _gammaT        = gammaT;
-            _rT            = rT;
-            _incT          = incT;
+            _gammaT = gammaT;
+            _rT = rT;
+            _incT = incT;
         }
 
         public ITerminal Rescale(Scale scale)  => new FlightPathAngle3Energy(_gammaT, _rT / scale.LengthScale, _incT);
@@ -45,20 +44,11 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual FlightPathAngleConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[1]) - Sin(gammaT);
-            }
+            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) - Sin(gammaT);
 
-            Dual RadiusConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[0]) - rT * rT;
-            }
+            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - rT * rT;
 
-            Dual InclinationConstraint(DualV3[] p)
-            {
-                return DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
-            }
+            Dual InclinationConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
         }
 
         public ITerminal GetFPA() => this;

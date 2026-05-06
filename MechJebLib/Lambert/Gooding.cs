@@ -61,13 +61,13 @@ namespace MechJebLib.Lambert
                 if (angle_to_on > 0.5 * PI && tof > 0.0)
                 {
                     theta = TAU - theta;
-                    uz1   = -uz1;
+                    uz1 = -uz1;
                 }
 
                 if (angle_to_on < 0.5 * PI && tof < 0.0)
                 {
                     theta = TAU - theta;
-                    uz1   = -uz1;
+                    uz1 = -uz1;
                 }
             }
 
@@ -245,7 +245,7 @@ namespace MechJebLib.Lambert
                     W = X + C0 * Sqrt(2.0 * (1.0 - THR2));
                     if (W < 0.0)
                         X -= Sqrt(Pow(-W, 1.0 / 8.0)) * (X + Sqrt(TDIFF / (TDIFF + 1.5 * T0)));
-                    W =  4.0 / (4.0 + TDIFF);
+                    W = 4.0 / (4.0 + TDIFF);
                     X *= 1.0 + X * (C1 * W - C2 * X * Sqrt(W));
                 }
             }
@@ -294,10 +294,10 @@ namespace MechJebLib.Lambert
                 N = 3;
                 if (D2T == 0.0)
                     D2T = 6.0 * M * PI;
-                X    = Sqrt(TDIFFM / (D2T / 2.0 + TDIFFM / Pow(1.0 - XM, 2.0)));
-                W    = XM + X;
-                W    = W * 4.0 / (4.0 + TDIFFM) + Pow(1.0 - W, 2.0);
-                X    = X * (1.0 - (1.0 + M + C41 * (THR2 - 0.5)) / (1.0 + C3 * M) * X * (C1 * W + C2 * X * Sqrt(W))) + XM;
+                X = Sqrt(TDIFFM / (D2T / 2.0 + TDIFFM / Pow(1.0 - XM, 2.0)));
+                W = XM + X;
+                W = W * 4.0 / (4.0 + TDIFFM) + Pow(1.0 - W, 2.0);
+                X = X * (1.0 - (1.0 + M + C41 * (THR2 - 0.5)) / (1.0 + C3 * M) * X * (C1 * W + C2 * X * Sqrt(W))) + XM;
                 D2T2 = D2T / 2.0;
                 if (X >= 1.0)
                 {
@@ -322,7 +322,7 @@ namespace MechJebLib.Lambert
                 return (N, X, XPL);
             /* "(EXIT IF ONLY ONE SOLUTION, NORMALLY WHEN M = 0)" */
 
-            N   = 2;
+            N = 2;
             XPL = X;
         Three:
             /* "(SECOND MULTI-REV STARTER)" */
@@ -340,7 +340,7 @@ namespace MechJebLib.Lambert
                 W = X + C0 * Sqrt(2.0 * (1.0 - THR2));
                 if (W < 0.0)
                     X -= Sqrt(Pow(-W, 1.0 / 8.0)) * (X + Sqrt(TDIFF / (TDIFF + 1.5 * T0)));
-                W =  4.0 / (4.0 + TDIFF);
+                W = 4.0 / (4.0 + TDIFF);
                 X *= 1.0 + (1.0 + M + C42 * (THR2 - 0.5)) / (1.0 + C3 * M) * X * (C1 * W - C2 * X * Sqrt(W));
                 if (X <= -1.0)
                 {
@@ -380,7 +380,7 @@ namespace MechJebLib.Lambert
             if (!LM1)
             {
                 /* "NEEDED IF SERIES AND OTHERWISE USEFUL WHEN Z = 0" -- Gooding */
-                DT  = 0.0;
+                DT = 0.0;
                 D2T = 0.0;
                 D3T = 0.0;
             }
@@ -455,9 +455,9 @@ namespace MechJebLib.Lambert
                             do
                             {
                                 TWOI1 += 2.0;
-                                TERM  *= FG1SQ;
-                                TOLD  =  T;
-                                T     += TERM / TWOI1;
+                                TERM *= FG1SQ;
+                                TOLD = T;
+                                T += TERM / TWOI1;
                             } while (T != TOLD); /* "CONTINUE LOOPING FOR THE INVERSE TANH" -- Gooding */
                         }
                     }
@@ -468,7 +468,7 @@ namespace MechJebLib.Lambert
                         double QZ  = Q / Z;
                         double QZ2 = QZ * QZ;
                         QZ *= QZ2;
-                        DT =  (3.0 * X * T - 4.0 * (A + QX * QSQFM1) / Z) / U;
+                        DT = (3.0 * X * T - 4.0 * (A + QX * QSQFM1) / Z) / U;
                         if (L2)
                         {
                             D2T = (3.0 * T + 5.0 * X * DT + 4.0 * QZ * QSQFM1) / U;
@@ -482,7 +482,7 @@ namespace MechJebLib.Lambert
                 }
                 else
                 {
-                    DT  = B;
+                    DT = B;
                     D2T = BB;
                     D3T = AA;
                 }
@@ -523,14 +523,14 @@ namespace MechJebLib.Lambert
                         U2I *= U;
                     if (L3 && I > 3)
                         U3I *= U;
-                    TERM  =  TERM * (P - 0.5) / P;
-                    TQ    *= QSQ;
+                    TERM = TERM * (P - 0.5) / P;
+                    TQ *= QSQ;
                     TQSUM += TQ;
-                    TOLD  =  T;
+                    TOLD = T;
                     double TTERM  = TERM / (2.0 * P + 3.0);
                     double TQTERM = TTERM * TQSUM;
-                    T      -= U0I * ((1.5 * P + 0.25) * TQTERM / (P * P - 0.25) - TTMOLD * TQ);
-                    TTMOLD =  TTERM;
+                    T -= U0I * ((1.5 * P + 0.25) * TQTERM / (P * P - 0.25) - TTMOLD * TQ);
+                    TTMOLD = TTERM;
                     TQTERM *= P;
                     if (L1)
                         DT += TQTERM * U1I;

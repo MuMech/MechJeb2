@@ -17,34 +17,34 @@ namespace MechJebLib.FuelFlowSimulation
     {
         private static readonly ObjectPool<SimVessel> _pool = new ObjectPool<SimVessel>(New, Clear);
 
-        public readonly List<SimPart>                      Parts                   = new List<SimPart>(30);
-        public readonly DictOfLists<int, SimPart>          PartsRemainingInStage   = new DictOfLists<int, SimPart>(10);
-        public readonly DictOfLists<int, SimModuleEngines> EnginesDroppedInStage   = new DictOfLists<int, SimModuleEngines>(10);
+        public readonly List<SimPart> Parts = new List<SimPart>(30);
+        public readonly DictOfLists<int, SimPart> PartsRemainingInStage = new DictOfLists<int, SimPart>(10);
+        public readonly DictOfLists<int, SimModuleEngines> EnginesDroppedInStage = new DictOfLists<int, SimModuleEngines>(10);
         public readonly DictOfLists<int, SimModuleEngines> EnginesActivatedInStage = new DictOfLists<int, SimModuleEngines>(10);
-        public readonly DictOfLists<int, SimModuleRCS>     RCSActivatedInStage     = new DictOfLists<int, SimModuleRCS>(10);
-        public readonly DictOfLists<int, SimModuleRCS>     RCSDroppedInStage       = new DictOfLists<int, SimModuleRCS>(10);
-        public readonly List<SimModuleEngines>             ActiveEngines           = new List<SimModuleEngines>(10);
-        public readonly List<SimModuleRCS>                 ActiveRcs               = new List<SimModuleRCS>(10);
+        public readonly DictOfLists<int, SimModuleRCS> RCSActivatedInStage = new DictOfLists<int, SimModuleRCS>(10);
+        public readonly DictOfLists<int, SimModuleRCS> RCSDroppedInStage = new DictOfLists<int, SimModuleRCS>(10);
+        public readonly List<SimModuleEngines> ActiveEngines = new List<SimModuleEngines>(10);
+        public readonly List<SimModuleRCS> ActiveRcs = new List<SimModuleRCS>(10);
 
-        public  bool   HasLaunchClamp;
-        public  int    CurrentStage;
-        private int    _savedStage;
-        public  double MainThrottle = 1.0;
-        public  double Mass;
-        public  V3     ThrustCurrent;
-        public  V3     ThrustMax;
-        public  V3     ThrustMin;
-        public  double RcsThrust;
-        public  double ThrustMagnitude;
-        public  double ThrustMinMagnitude;
-        public  double ThrustMaxMagnitude;
-        public  double ThrustNoCosLoss;
-        public  double SpoolupCurrent;
-        public  double ATMPressure;
-        public  double ATMDensity;
-        public  double MachNumber;
-        public  double T;
-        public  V3     R, V, U;
+        public bool HasLaunchClamp;
+        public int CurrentStage;
+        private int _savedStage;
+        public double MainThrottle = 1.0;
+        public double Mass;
+        public V3 ThrustCurrent;
+        public V3 ThrustMax;
+        public V3 ThrustMin;
+        public double RcsThrust;
+        public double ThrustMagnitude;
+        public double ThrustMinMagnitude;
+        public double ThrustMaxMagnitude;
+        public double ThrustNoCosLoss;
+        public double SpoolupCurrent;
+        public double ATMPressure;
+        public double ATMDensity;
+        public double MachNumber;
+        public double T;
+        public V3 R, V, U;
 
         public int HalfStageIndex = -1;
         public double HalfStageEndMass = 0;
@@ -55,7 +55,7 @@ namespace MechJebLib.FuelFlowSimulation
         public void SetCurrentStage(int stage)
         {
             CurrentStage = stage;
-            _savedStage  = stage;
+            _savedStage = stage;
         }
 
         public void ResetCurrentStage(int stage)
@@ -69,9 +69,9 @@ namespace MechJebLib.FuelFlowSimulation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetConditions(double atmDensity, double atmPressure, double machNumber)
         {
-            ATMDensity  = atmDensity;
+            ATMDensity = atmDensity;
             ATMPressure = atmPressure;
-            MachNumber  = machNumber;
+            MachNumber = machNumber;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,14 +197,14 @@ namespace MechJebLib.FuelFlowSimulation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ComputeThrustAndSpoolup()
         {
-            ThrustCurrent      = V3.zero;
-            ThrustMax          = V3.zero;
-            ThrustMin          = V3.zero;
-            ThrustMagnitude    = 0;
+            ThrustCurrent = V3.zero;
+            ThrustMax = V3.zero;
+            ThrustMin = V3.zero;
+            ThrustMagnitude = 0;
             ThrustMinMagnitude = 0;
             ThrustMaxMagnitude = 0;
-            ThrustNoCosLoss    = 0;
-            SpoolupCurrent     = 0;
+            ThrustNoCosLoss = 0;
+            SpoolupCurrent = 0;
 
             for (int i = 0; i < ActiveEngines.Count; i++)
             {
@@ -216,16 +216,16 @@ namespace MechJebLib.FuelFlowSimulation
                 SpoolupCurrent += e.ThrustCurrent.magnitude * e.ModuleSpoolupTime;
 
                 e.Update();
-                ThrustCurrent   += e.ThrustCurrent;
-                ThrustMin       += e.ThrustMin;
-                ThrustMax       += e.ThrustMax;
+                ThrustCurrent += e.ThrustCurrent;
+                ThrustMin += e.ThrustMin;
+                ThrustMax += e.ThrustMax;
                 ThrustNoCosLoss += e.ThrustCurrent.magnitude;
             }
 
-            ThrustMagnitude    =  ThrustCurrent.magnitude;
-            ThrustMinMagnitude =  ThrustMin.magnitude;
-            ThrustMaxMagnitude =  ThrustMax.magnitude;
-            SpoolupCurrent     /= ThrustCurrent.magnitude;
+            ThrustMagnitude = ThrustCurrent.magnitude;
+            ThrustMinMagnitude = ThrustMin.magnitude;
+            ThrustMaxMagnitude = ThrustMax.magnitude;
+            SpoolupCurrent /= ThrustCurrent.magnitude;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

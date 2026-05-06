@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -122,7 +122,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(275), GUILayout.Height(30) };
 
         public override string GetName() => "Ascent Settings";
 

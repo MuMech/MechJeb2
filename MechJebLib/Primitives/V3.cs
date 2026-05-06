@@ -91,7 +91,7 @@ namespace MechJebLib.Primitives
         {
             this.x = x;
             this.y = y;
-            z      = 0.0;
+            z = 0.0;
         }
 
         public void Set(double nx, double ny, double nz)
@@ -420,14 +420,14 @@ namespace MechJebLib.Primitives
 
         public void CopyTo(IList<double> other, int index = 0)
         {
-            other[index]     = this[0];
+            other[index] = this[0];
             other[index + 1] = this[1];
             other[index + 2] = this[2];
         }
 
         public void CopyTo(double[,] other, int i, int j)
         {
-            other[i, j]     = this[0];
+            other[i, j] = this[0];
             other[i + 1, j] = this[1];
             other[i + 2, j] = this[2];
         }

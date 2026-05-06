@@ -17,11 +17,11 @@ namespace MechJebLib.ODE
     {
         private const double MAX_FACTOR = 10;
         private const double MIN_FACTOR = 0.2;
-        private const double SAFETY     = 0.9;
+        private const double SAFETY = 0.9;
 
         protected readonly List<Vn> K = new List<Vn>();
 
-        private double _beta          = 0.2;
+        private double _beta = 0.2;
         private double _lastErrorNorm = 1e-4;
 
         protected abstract int Order               { get; }

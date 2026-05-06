@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
@@ -9,9 +9,9 @@ namespace MuMech
 {
     public class MechJebModuleWarpHelper : DisplayModule
     {
-        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, SuicideBurn, AtmosphericEntry }
+        public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, HoverslamBurn, AtmosphericEntry }
 
-        private static readonly string[] warpTargetStrings = { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") }; //"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""suicide burn""atmospheric entry"
+        private static readonly string[] warpTargetStrings = { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") }; //"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""hoverslam burn""atmospheric entry"
 
         [Persistent(pass = (int)Pass.GLOBAL)] public WarpTarget warpTarget = WarpTarget.Periapsis;
 
@@ -30,15 +30,15 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label1"), GUILayout.ExpandWidth(false)); //"Warp to: "
+            GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label1"), GuiUtils.LayoutNoExpandWidth); //"Warp to: "
             warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
             GUILayout.EndHorizontal();
 
             if (warpTarget == WarpTarget.Time)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GUILayout.ExpandWidth(true)); //"Warp for: "
-                timeOffset.Text = GUILayout.TextField(timeOffset.Text, GUILayout.Width(100));
+                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GuiUtils.LayoutExpandWidth); //"Warp for: "
+                timeOffset.Text = GUILayout.TextField(timeOffset.Text, GuiUtils.LayoutWidth(100));
                 GUILayout.EndHorizontal();
             }
             else if (warpTarget == WarpTarget.PhaseAngleT)
@@ -126,10 +126,10 @@ namespace MuMech
 
                             break;
 
-                        case WarpTarget.SuicideBurn:
+                        case WarpTarget.HoverslamBurn:
                             try
                             {
-                                targetUT = OrbitExtensions.SuicideBurnCountdown(Orbit, VesselState) + VesselState.time;
+                                targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
                             }
                             catch
                             {
@@ -164,11 +164,11 @@ namespace MuMech
         {
             if (!warping) return;
 
-            if (warpTarget == WarpTarget.SuicideBurn)
+            if (warpTarget == WarpTarget.HoverslamBurn)
             {
                 try
                 {
-                    targetUT = OrbitExtensions.SuicideBurnCountdown(Orbit, VesselState) + VesselState.time;
+                    targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
                 }
                 catch
                 {
@@ -189,7 +189,7 @@ namespace MuMech
             }
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(50) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(240), GUILayout.Height(50) };
 
         public override bool IsActive() => warping;
 

@@ -5,7 +5,6 @@
 
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
-using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
 using static System.Math;
 
@@ -22,11 +21,11 @@ namespace MechJebLib.PSG.Terminal
         public Kepler3(double smaT, double eccT, double incT)
         {
             NumConstraints = 3;
-            _smaT          = smaT;
-            _eccT          = eccT;
-            _incT          = incT;
-            _hTm           = Astro.HmagFromKeplerian(1.0, _smaT, _eccT);
-            _energyT       = -1.0 / (2.0 * _smaT);
+            _smaT = smaT;
+            _eccT = eccT;
+            _incT = incT;
+            _hTm = Astro.HmagFromKeplerian(1.0, _smaT, _eccT);
+            _energyT = -1.0 / (2.0 * _smaT);
         }
 
         public ITerminal Rescale(Scale scale)  => new Kepler3(_smaT / scale.LengthScale, _eccT, _incT);
@@ -55,20 +54,11 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual AngularVelocityMagnitudeConstraint(DualV3[] p)
-            {
-                return 0.5 * DualV3.Cross(p[0], p[1]).sqrMagnitude - 0.5 * hTm * hTm;
-            }
+            Dual AngularVelocityMagnitudeConstraint(DualV3[] p) => 0.5 * DualV3.Cross(p[0], p[1]).sqrMagnitude - 0.5 * hTm * hTm;
 
-            Dual OrbitalEnergyConstraint(DualV3[] p)
-            {
-                return 0.5 * DualV3.Dot(p[1], p[1]) - 1.0 / p[0].magnitude - energyT;
-            }
+            Dual OrbitalEnergyConstraint(DualV3[] p) => 0.5 * DualV3.Dot(p[1], p[1]) - 1.0 / p[0].magnitude - energyT;
 
-            Dual InclinationConstraint(DualV3[] p)
-            {
-                return DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
-            }
+            Dual InclinationConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
         }
 
         public ITerminal GetFPA()

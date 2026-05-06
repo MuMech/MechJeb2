@@ -367,9 +367,9 @@ namespace MuMech
             MechJebModuleInfoItems infoItems = Core.GetComputerModule<MechJebModuleInfoItems>();
             infoItems.StageDisplayState = 1;
 
-            // turn on Q-limiter with reasonable limit
-            Core.Thrust.MaxDynamicPressure.Val = 35000;
-            Core.Thrust.LimitDynamicPressure   = true;
+            // Set a less restrictive initial limit on maxQ and turn it off by default
+            Core.Thrust.MaxDynamicPressure.Val = 50000;
+            Core.Thrust.LimitDynamicPressure   = false;
 
             // Disable 'kill roll' toggle
             Core.Node.KillRollRotation = false;

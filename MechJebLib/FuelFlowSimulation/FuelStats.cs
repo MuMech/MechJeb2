@@ -11,7 +11,7 @@ namespace MechJebLib.FuelFlowSimulation
         public double DeltaV;
         public double EndMass;
         public double Isp;
-        public int    KSPStage;
+        public int KSPStage;
         public double StagedMass;
         public double StartMass;
         public double StartTime;

@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System.Linq;
 using KSP.Localization;
 using UnityEngine;
@@ -102,8 +102,8 @@ namespace MuMech
                 }
             }
 
-            phasingOrbitAltitude.Text = GUILayout.TextField(phasingOrbitAltitude.Text, GUILayout.Width(70));
-            GUILayout.Label("km", GUILayout.ExpandWidth(false));
+            phasingOrbitAltitude.Text = GUILayout.TextField(phasingOrbitAltitude.Text, GuiUtils.LayoutWidth(70));
+            GUILayout.Label("km", GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button3"))) //"Intercept with Hohmann transfer"
@@ -162,7 +162,7 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 Core.Node.Autowarp =
-                    GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_RZplan_checkbox"), GUILayout.ExpandWidth(true)); //"Auto-warp"
+                    GUILayout.Toggle(Core.Node.Autowarp, Localizer.Format("#MechJeb_RZplan_checkbox"), GuiUtils.LayoutExpandWidth); //"Auto-warp"
                 GUILayout.EndHorizontal();
             }
 
@@ -171,7 +171,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(150) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(300), GUILayout.Height(150) };
 
         public override string GetName() => Localizer.Format("#MechJeb_RZplan_title"); //"Rendezvous Planner"
 

@@ -52,7 +52,7 @@ namespace MechJebLib.Maneuvers
             V3     rsoi = new V3(moonSOI, x[2], x[3]).sph2cart;
 
             (V3 rburn, V3 vneg) = Shepperd.Solve(1.0, dt, r0, v0);
-            (V3 vpos, V3 vsoi)  = Gooding.Solve(1.0, rburn, vneg, rsoi, tt1, 0, true);
+            (V3 vpos, V3 vsoi) = Gooding.Solve(1.0, rburn, vneg, rsoi, tt1, 0, true);
             V3 dv = vpos - vneg;
             Print($"dot(rsoi,vsoi): {V3.Dot(rsoi, vsoi)}");
 
@@ -83,7 +83,7 @@ namespace MechJebLib.Maneuvers
             V3     reei = new V3(peR, x[5], x[6]).sph2cart;
 
             (V3 rburn, V3 vneg) = Shepperd.Solve(1.0, dt, r0, v0);
-            (V3 vpos, V3 vsoi)  = Gooding.Solve(1.0, rburn, vneg, rsoi, tt1, 0, true);
+            (V3 vpos, V3 vsoi) = Gooding.Solve(1.0, rburn, vneg, rsoi, tt1, 0, true);
             V3 dv = vpos - vneg;
 
             (V3 moonRsoi, V3 moonVsoi) = Shepperd.Solve(1.0, (dt + tt1) / moonToPlanetScale.TimeScale, moonR0, moonV0);
@@ -145,7 +145,7 @@ namespace MechJebLib.Maneuvers
                 if (full)
                 {
                     // get the final periapsis position on the return ellipse for actual initial guess
-                    tt2     = Astro.TimeToNextTrueAnomaly(1.0, rsoiPlanet, vsoiPlanet, 0);
+                    tt2 = Astro.TimeToNextTrueAnomaly(1.0, rsoiPlanet, vsoiPlanet, 0);
                     (rf, _) = Astro.StateVectorsFromKeplerian(1.0, l, ecc, inc, lan, argp, 0);
 
                     (double sma3, double ecc3, double inc3, double lan3, double argp3, double tanom3, double l3) =
@@ -186,33 +186,33 @@ namespace MechJebLib.Maneuvers
             (f, fx) = BrentMin.Solve((x, o) => Guess(x, false, periodOffset).Item1.magnitude, -PI, 0, rtol: 1e-2);
             if (fx < imincost)
             {
-                imin     = f;
+                imin = f;
                 imincost = fx;
-                type2    = false;
+                type2 = false;
             }
 
             (f, fx) = BrentMin.Solve((x, o) => Guess(x, false, periodOffset).Item1.magnitude, 0, PI, rtol: 1e-2);
             if (fx < imincost)
             {
-                imin     = f;
+                imin = f;
                 imincost = fx;
-                type2    = false;
+                type2 = false;
             }
 
             (f, fx) = BrentMin.Solve((x, o) => Guess(x, true, periodOffset).Item1.magnitude, -PI, 0, rtol: 1e-2);
             if (fx < imincost)
             {
-                imin     = f;
+                imin = f;
                 imincost = fx;
-                type2    = true;
+                type2 = true;
             }
 
             (f, fx) = BrentMin.Solve((x, o) => Guess(x, true, periodOffset).Item1.magnitude, 0, PI, rtol: 1e-2);
             if (fx < imincost)
             {
-                imin     = f;
+                imin = f;
                 imincost = fx;
-                type2    = true;
+                type2 = true;
             }
 
             Scale moonScale = _args.MoonScale;
@@ -236,7 +236,7 @@ namespace MechJebLib.Maneuvers
 
             if (Astro.EccFromStateVectors(1.0, r0, v0) < 1 && Astro.ApoapsisFromStateVectors(1.0, r0, v0) < moonSOI)
             {
-                (double imin, bool type2)   = GuessOptimizer(periodOffset);
+                (double imin, bool type2) = GuessOptimizer(periodOffset);
                 (_, dt, tt1, rsoi, tt2, rf) = Guess(imin, type2, periodOffset, true);
             }
             else
@@ -273,7 +273,7 @@ namespace MechJebLib.Maneuvers
             Scale  moonToPlanetScale = _args.MoonToPlanetScale;
 
             double tt1 = Astro.TimeToNextRadius(1.0, r0, v0, moonSOI);
-            (V3 rsoi, V3 vsoi)     = Shepperd.Solve(1.0, tt1, r0, v0);
+            (V3 rsoi, V3 vsoi) = Shepperd.Solve(1.0, tt1, r0, v0);
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, tt1 / moonToPlanetScale.TimeScale, moonR0, moonV0);
             V3 r3 = rsoi / moonToPlanetScale.LengthScale + moonR2;
             V3 v3 = vsoi / moonToPlanetScale.VelocityScale + moonV2;
@@ -286,12 +286,12 @@ namespace MechJebLib.Maneuvers
         }
 
         private const double DIFFSTEP = 1e-9;
-        private const double EPSX     = 1e-6;
-        private const double STPMAX   = 1e-4;
-        private const int    MAXITS   = 10000;
+        private const double EPSX = 1e-6;
+        private const double STPMAX = 1e-4;
+        private const int MAXITS = 10000;
 
-        private const int NVARIABLES             = 7;
-        private const int NEQUALITYCONSTRAINTS   = 4;
+        private const int NVARIABLES = 7;
+        private const int NEQUALITYCONSTRAINTS = 4;
         private const int NINEQUALITYCONSTRAINTS = 0;
 
         private (V3 V, double dt, V3 vinf) ManeuverScaled(double dtmin = double.NegativeInfinity, double dtmax = double.PositiveInfinity,
@@ -392,15 +392,15 @@ namespace MechJebLib.Maneuvers
 
             _args = new Args
             {
-                MoonSOI           = moonSOI / moonScale.LengthScale,
-                PeR               = peR / planetScale.LengthScale,
-                R0                = r0 / moonScale.LengthScale,
-                V0                = v0 / moonScale.VelocityScale,
-                MoonR0            = moonR0 / planetScale.LengthScale,
-                MoonV0            = moonV0 / planetScale.VelocityScale,
+                MoonSOI = moonSOI / moonScale.LengthScale,
+                PeR = peR / planetScale.LengthScale,
+                R0 = r0 / moonScale.LengthScale,
+                V0 = v0 / moonScale.VelocityScale,
+                MoonR0 = moonR0 / planetScale.LengthScale,
+                MoonV0 = moonV0 / planetScale.VelocityScale,
                 MoonToPlanetScale = moonToPlanetScale,
-                MoonScale         = moonScale,
-                PlanetScale       = planetScale
+                MoonScale = moonScale,
+                PlanetScale = planetScale
             };
 
             LogStuff1(moonScale);
@@ -465,7 +465,7 @@ namespace MechJebLib.Maneuvers
 
             (V3 r1, V3 v1) = Shepperd.Solve(1.0, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(1.0, r1, v1 + dv, moonSOI);
-            (V3 r2, V3 v2)         = Shepperd.Solve(1.0, tt1, r1, v1 + dv);
+            (V3 r2, V3 v2) = Shepperd.Solve(1.0, tt1, r1, v1 + dv);
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(1.0, (dt + tt1) / moonToPlanetScale.TimeScale, moonR0, moonV0);
             V3 r3 = r2 / moonToPlanetScale.LengthScale + moonR2;
             V3 v3 = v2 / moonToPlanetScale.VelocityScale + moonV2;
@@ -525,7 +525,7 @@ namespace MechJebLib.Maneuvers
                     if (dt <= 1e-4)
                     {
                         periodOffset += 1;
-                        dtmax        += period;
+                        dtmax += period;
                     }
                     else if (NearlyEqual(dt, dtmax, 1e-4) || dt >= dtmax)
                     {
@@ -544,7 +544,7 @@ namespace MechJebLib.Maneuvers
             // propagate burn forward to determine newPeR as a validation step
             (V3 r1, V3 v1) = Shepperd.Solve(moonMu, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(moonMu, r1, v1 + dv, moonSOI);
-            (V3 r2, V3 v2)         = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
+            (V3 r2, V3 v2) = Shepperd.Solve(moonMu, tt1, r1, v1 + dv);
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(centralMu, dt + tt1, moonR0, moonV0);
             double newPeR = Astro.PeriapsisFromStateVectors(centralMu, moonR2 + r2, moonV2 + v2);
 

@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System.Collections.Generic;
+
+using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
@@ -18,7 +19,7 @@ namespace MechJebLib.PSG
         public AscentGuesser(Problem problem)
         {
             _problem = problem;
-            _events  = new List<Event> { new Event(OrbitalEnergy) };
+            _events = new List<Event> { new Event(OrbitalEnergy) };
         }
 
         private class VacuumThrustKernel
@@ -42,10 +43,10 @@ namespace MechJebLib.PSG
                 double r  = Sqrt(r2);
                 double r3 = r2 * r;
 
-                dy.R  = y.V;
-                dy.V  = -y.R / r3 + at * y.U;
-                dy.M  = -Phase.Mdot;
-                dy.U  = V3.zero;
+                dy.R = y.V;
+                dy.V = -y.R / r3 + at * y.U;
+                dy.M = -Phase.Mdot;
+                dy.U = V3.zero;
                 dy.Dv = at;
 
                 dy.CopyTo(dyout);
@@ -63,18 +64,18 @@ namespace MechJebLib.PSG
             return e - _targetOrbitalEnergy;
         }
 
-        private          double             _targetOrbitalEnergy;
-        private readonly VacuumThrustKernel _ode    = new VacuumThrustKernel();
-        private readonly DP5                _solver = new DP5();
-        private readonly List<Event>        _events;
+        private double _targetOrbitalEnergy;
+        private readonly VacuumThrustKernel _ode = new VacuumThrustKernel();
+        private readonly DP5 _solver = new DP5();
+        private readonly List<Event> _events;
 
         private Hn Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf)
         {
             _solver.ThrowOnMaxIter = true;
-            _solver.Maxiter        = 2000;
-            _solver.Rtol           = 1e-6;
-            _solver.Atol           = 1e-6;
-            _ode.Phase             = phase;
+            _solver.Maxiter = 2000;
+            _solver.Rtol = 1e-6;
+            _solver.Atol = 1e-6;
+            _ode.Phase = phase;
             var interpolant = Hn.Get(VacuumThrustKernel.N);
             if (phase.Coast)
                 _solver.Solve(_ode.dydt, y0, yf, t0, tf, interpolant);
@@ -104,10 +105,10 @@ namespace MechJebLib.PSG
 
             double t0 = 0;
 
-            y0.R  = _problem.R0;
-            y0.V  = _problem.V0;
-            y0.M  = _problem.M0;
-            y0.U  = u0.normalized;
+            y0.R = _problem.R0;
+            y0.V = _problem.V0;
+            y0.M = _problem.M0;
+            y0.U = u0.normalized;
             y0.Dv = 0;
 
             for (int p = 0; p < phases.Count; p++)

@@ -22,7 +22,7 @@ namespace MuMech
         public readonly EditableDouble AutostagePreDelay = 0.0;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble AutostagePostDelay = 0.5;
+        public readonly EditableDouble AutostagePostDelay = PhysicsGlobals.StagingCooldownTimer;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableInt AutostageLimit = 0;
@@ -250,7 +250,7 @@ namespace MuMech
         private Vessel _currentActiveVessel;
         private bool   _initializedOnce;
 
-        public override void OnUpdate()
+        public override void OnFixedUpdate()
         {
             if (!_initializedOnce)
             {
@@ -299,7 +299,9 @@ namespace MuMech
             // don't decouple active or idle engines or tanks
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(Vessel.currentStage - 1, _burnedResources, _activeModuleEngines) &&
                 !InverseStageReleasesClamps(Vessel.currentStage - 1))
+            {
                 return;
+            }
 
             // prevent staging if we have unstable ullage and we have RCS
             if (InverseStageHasUnstableEngines(Vessel.currentStage - 1) && Core.Thrust.AutoRCSUllaging && Vessel.hasEnabledRCSModules() &&
@@ -321,11 +323,15 @@ namespace MuMech
             if (HotStaging && InverseStageHasEngines(Vessel.currentStage - 1) &&
                 !InverseStageFiresDecoupler(Vessel.currentStage - 1) && !InverseStageReleasesClamps(Vessel.currentStage - 1) &&
                 LastNonZeroDVStageBurnTime() > HotStagingLeadTime)
+            {
                 return;
+            }
 
             // Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
             if (HasStayingChutes(Vessel.currentStage - 1))
+            {
                 return;
+            }
 
             // Always drop deactivated engines or tanks
             if (InverseStageDecouplesDeactivatedEngineOrTank(Vessel.currentStage - 1))
@@ -336,7 +342,9 @@ namespace MuMech
 
             // only decouple fairings if the dynamic pressure, altitude, and aerothermal flux conditions are respected
             if (WaitingForFairing())
+            {
                 return;
+            }
 
             // only release launch clamps if we're at nearly full thrust and no failed engines
             if ((VesselState.thrustCurrent / VesselState.thrustAvailable < ClampAutoStageThrustPct || AnyFailedEngines(_allModuleEngines)) &&
@@ -353,16 +361,24 @@ namespace MuMech
         private bool WaitingForFairing()
         {
             if (!HasFairing(Vessel.currentStage - 1))
+            {
                 return false;
+            }
 
             if (Core.VesselState.dynamicPressure > FairingMaxDynamicPressure)
+            {
                 return true;
+            }
 
             if (Core.VesselState.altitudeASL < FairingMinAltitude)
+            {
                 return true;
+            }
 
             if (Core.VesselState.freeMolecularAerothermalFlux > FairingMaxAerothermalFlux)
+            {
                 return true;
+            }
 
             return false;
         }

@@ -7,8 +7,8 @@ namespace MechJebLib.FuelFlowSimulation
 {
     public struct SimResource
     {
-        public  bool   Free;
-        public  double MaxAmount;
+        public bool Free;
+        public double MaxAmount;
         private double _amount;
 
         public double Amount
@@ -18,9 +18,9 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         private double _rcsAmount;
-        public  int    Id;
-        public  double Density;
-        public  double Residual;
+        public int Id;
+        public double Density;
+        public double Residual;
 
         public double ResidualThreshold => Residual * MaxAmount;
 

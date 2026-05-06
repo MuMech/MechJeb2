@@ -18,15 +18,15 @@ namespace MechJebLib.FuelFlowSimulation
     {
         private const int MAXSTEPS = 100;
 
-        public readonly  List<FuelStats>  Segments = new List<FuelStats>();
-        private          FuelStats        _currentSegment;
-        private          double           _time;
-        public           bool             DVLinearThrust           = true; // include cos losses
+        public readonly List<FuelStats> Segments = new List<FuelStats>();
+        private FuelStats _currentSegment;
+        private double _time;
+        public bool DVLinearThrust = true; // include cos losses
         private readonly HashSet<SimPart> _partsWithResourceDrains = new HashSet<SimPart>();
-        private readonly HashSet<SimPart> _partsWithRCSDrains      = new HashSet<SimPart>();
-        private readonly HashSet<SimPart> _partsWithRCSDrains2     = new HashSet<SimPart>();
-        private          bool             _allocatedFirstSegment;
-        private          bool             _halfStageIsDetected;
+        private readonly HashSet<SimPart> _partsWithRCSDrains = new HashSet<SimPart>();
+        private readonly HashSet<SimPart> _partsWithRCSDrains2 = new HashSet<SimPart>();
+        private bool _allocatedFirstSegment;
+        private bool _halfStageIsDetected;
 
         public override void Run(object? o = null)
         {
@@ -38,7 +38,7 @@ namespace MechJebLib.FuelFlowSimulation
 
             _halfStageIsDetected   = false;
             _allocatedFirstSegment = false;
-            _time                  = 0;
+            _time = 0;
             Segments.Clear();
             vessel.MainThrottle = 1.0;
 
@@ -436,8 +436,8 @@ namespace MechJebLib.FuelFlowSimulation
             else
             {
                 _currentSegment.MinRcsDeltaV += rcsDeltaV;
-                _currentSegment.RcsEndTMR    =  _currentSegment.RcsThrust / endMass;
-                _currentSegment.RcsMass      += startMass - endMass;
+                _currentSegment.RcsEndTMR = _currentSegment.RcsThrust / endMass;
+                _currentSegment.RcsMass += startMass - endMass;
                 _currentSegment.RcsDeltaTime += deltaTime;
             }
         }
@@ -456,9 +456,9 @@ namespace MechJebLib.FuelFlowSimulation
             double isp       = startMass > endMass ? deltaV / (G0 * Log(startMass / endMass)) : 0;
 
             _currentSegment.DeltaTime = deltaTime;
-            _currentSegment.EndMass   = endMass;
-            _currentSegment.DeltaV    = deltaV;
-            _currentSegment.Isp       = isp;
+            _currentSegment.EndMass = endMass;
+            _currentSegment.DeltaV = deltaV;
+            _currentSegment.Isp = isp;
 
             Segments.Add(_currentSegment);
         }
@@ -474,14 +474,14 @@ namespace MechJebLib.FuelFlowSimulation
 
             _currentSegment = new FuelStats
             {
-                KSPStage    = vessel.CurrentStage,
-                Thrust      = DVLinearThrust ? vessel.ThrustMagnitude : vessel.ThrustNoCosLoss,
-                MaxThrust   = vessel.ThrustMaxMagnitude,
-                MinThrust   = vessel.ThrustMinMagnitude,
-                StartTime   = _time,
-                StartMass   = vessel.Mass,
+                KSPStage = vessel.CurrentStage,
+                Thrust = DVLinearThrust ? vessel.ThrustMagnitude : vessel.ThrustNoCosLoss,
+                MaxThrust = vessel.ThrustMaxMagnitude,
+                MinThrust = vessel.ThrustMinMagnitude,
+                StartTime = _time,
+                StartMass = vessel.Mass,
                 SpoolUpTime = vessel.SpoolupCurrent,
-                StagedMass  = stagedMass
+                StagedMass = stagedMass
             };
         }
 

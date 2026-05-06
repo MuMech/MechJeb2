@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
@@ -23,7 +24,7 @@ namespace MechJebLib.Utils
                 for (int j = 0; j < n; j++)
                     duals[j] = new Dual(point[j], i == j ? 1.0 : 0.0);
 
-                ans         = f(duals);
+                ans = f(duals);
                 partials[i] = ans.D;
             }
 
@@ -46,7 +47,7 @@ namespace MechJebLib.Utils
 
                     duals[i] = new DualV3(point[i], k switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis });
 
-                    ans                 = f(duals);
+                    ans = f(duals);
                     partials[i * 3 + k] = ans.D;
                 }
             }
@@ -70,7 +71,7 @@ namespace MechJebLib.Utils
 
                     duals[i] = new DualV3(point[i], k switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis });
 
-                    ans                 = f(duals);
+                    ans = f(duals);
                     partials[i * 3 + k] = ans.D;
                 }
             }
@@ -173,7 +174,7 @@ namespace MechJebLib.Utils
 
         public struct HermiteSimpsonSegment
         {
-            public V3     R0, R1, R2, V0, V1, V2, U0, U1, U2;
+            public V3 R0, R1, R2, V0, V1, V2, U0, U1, U2;
             public double M0, M1, M2;
             public double Bt;
         }
@@ -181,7 +182,7 @@ namespace MechJebLib.Utils
         public struct HermiteSimpsonDualPoint
         {
             public DualV3 R, V, U;
-            public Dual   M;
+            public Dual M;
 
             public void Seed(int k, double s)
             {
@@ -202,8 +203,8 @@ namespace MechJebLib.Utils
         public struct HermiteSimpsonIndexes
         {
             public (int, int, int) R0Idx, R1Idx, R2Idx, V0Idx, V1Idx, V2Idx, U0Idx, U1Idx, U2Idx;
-            public int             M0Idx, M1Idx, M2Idx;
-            public int             BtIdx;
+            public int M0Idx, M1Idx, M2Idx;
+            public int BtIdx;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int Index(int k)
@@ -388,7 +389,7 @@ namespace MechJebLib.Utils
 
             ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
 
-            jac[9].x  = ans.x.D;
+            jac[9].x = ans.x.D;
             jac[12].y = ans.y.D;
             jac[15].z = ans.z.D;
 
@@ -411,9 +412,9 @@ namespace MechJebLib.Utils
             jac[17].z = ans.z.D;
 
             d2.V = new DualV3(d2.V.M, V3.zero);
-            dbt  = new Dual(segment.Bt, 1);
+            dbt = new Dual(segment.Bt, 1);
 
-            H  = dbt / (n - 1);
+            H = dbt / (n - 1);
             H6 = H / 6.0;
 
             ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
@@ -481,7 +482,7 @@ namespace MechJebLib.Utils
 
             ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
 
-            jac[9].x  = ans.x.D;
+            jac[9].x = ans.x.D;
             jac[12].y = ans.y.D;
             jac[15].z = ans.z.D;
 
@@ -495,9 +496,9 @@ namespace MechJebLib.Utils
             jac[17].z = ans.z.D;
 
             d2.V = new DualV3(d2.V.M, V3.zero);
-            dbt  = new Dual(segment.Bt, 1);
+            dbt = new Dual(segment.Bt, 1);
 
-            H  = dbt / (n - 1);
+            H = dbt / (n - 1);
             H8 = H * 0.125;
 
             ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);

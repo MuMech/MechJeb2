@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -59,8 +60,8 @@ namespace MechJebLib.Rootfinding
                 {
                     // bisection
                     dxold = dx;
-                    dx    = 0.5 * (b - a);
-                    c     = a + dx;
+                    dx = 0.5 * (b - a);
+                    c = a + dx;
                     if (a == c)
                         return c;
                 }
@@ -68,7 +69,7 @@ namespace MechJebLib.Rootfinding
                 {
                     // newton
                     dxold = dx;
-                    dx    = fc / dfc;
+                    dx = fc / dfc;
                     double oldc = c;
                     c -= dx;
                     if (oldc == c)
@@ -78,7 +79,7 @@ namespace MechJebLib.Rootfinding
                 if (Abs(dx) < tol)
                     return c;
 
-                fc  = f(c, o);
+                fc = f(c, o);
                 dfc = df(c, o);
 
                 if (fc < 0.0)

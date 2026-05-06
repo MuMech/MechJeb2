@@ -24,11 +24,11 @@ namespace MechJebLib.PSG.Terminal
         public FlightPathAngle5(double gammaT, double rT, double vT, double incT, double lanT)
         {
             NumConstraints = 5;
-            _gammaT        = gammaT;
-            _rT            = rT;
-            _vT            = vT;
-            _lanT          = Clamp2Pi(lanT);
-            _incT          = incT;
+            _gammaT = gammaT;
+            _rT = rT;
+            _vT = vT;
+            _lanT = Clamp2Pi(lanT);
+            _incT = incT;
 
             _hT = Astro.HvecFromFlightPathAngle(_rT, _vT, _gammaT, _incT, _lanT);
         }
@@ -56,20 +56,11 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            DualV3 AngularMomentumConstraint(DualV3[] p)
-            {
-                return DualV3.Cross(p[0], p[1]) - hT;
-            }
+            DualV3 AngularMomentumConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]) - hT;
 
-            Dual FlightPathAngleConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[1]) - Sin(gammaT);
-            }
+            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) - Sin(gammaT);
 
-            Dual RadiusConstraint(DualV3[] p)
-            {
-                return DualV3.Dot(p[0], p[0]) - rT * rT;
-            }
+            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - rT * rT;
         }
 
         public ITerminal GetFPA() => this;

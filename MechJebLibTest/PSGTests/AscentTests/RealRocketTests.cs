@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
@@ -54,14 +55,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double isp4 = Astro.IspFromMassesThrustBurntime(23464.000000, 6644.000000, 110094.000000, 700.000000);
 
             Ascent ascent = Ascent.Builder()
-                .AerodynamicConstants(cd, aref, rho0, Q_ALPHA_MAX, Q_MAX, h0, w)
-                .AddStage(301454.000000, 171863.885057, 4854100.000000, isp1, 4, 4)
-                .AddStage(158183.885057, 79623.770115, 2968600.000000, isp2, 3, 3)
-                .AddStage(72783.770115, 32294.000000, 1083100.000000, isp3, 2, 2)
-                .AddStage(23464.000000, 6644.000000, 110094.000000, isp4, 1, 1)
-                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, lanT, argpT, 0, false, true, true)
-                .Build();
+               .AerodynamicConstants(cd, aref, rho0, Q_ALPHA_MAX, Q_MAX, h0, w)
+               .AddStage(301454.000000, 171863.885057, 4854100.000000, isp1, 4, 4)
+               .AddStage(158183.885057, 79623.770115, 2968600.000000, isp2, 3, 3)
+               .AddStage(72783.770115, 32294.000000, 1083100.000000, isp3, 2, 2)
+               .AddStage(23464.000000, 6644.000000, 110094.000000, isp4, 1, 1)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, lanT, argpT, 0, false, true, true)
+               .Build();
 
             ascent.Run();
 
@@ -143,14 +144,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             const double SECOND_BT   = (SECOND_STAGE_M0 - SECOND_STAGE_MF) / SECOND_MDOT;
 
             Ascent ascent = Ascent.Builder()
-                .AerodynamicConstants(CD, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
-                .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 2, 2, allowShutdown: false)
-                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1)
-                .AddCoast(SECOND_STAGE_M0, 0, 1300, 1, 1, massContinuity: true)
-                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1, massContinuity: true)
-                .Initial(r0, v0, r0.normalized, T0, MU, R_BODY)
-                .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, true)
-                .Build();
+               .AerodynamicConstants(CD, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
+               .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 2, 2, allowShutdown: false)
+               .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1)
+               .AddCoast(SECOND_STAGE_M0, 0, 1300, 1, 1, massContinuity: true)
+               .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1, massContinuity: true)
+               .Initial(r0, v0, r0.normalized, T0, MU, R_BODY)
+               .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, true)
+               .Build();
 
             ascent.Run();
 
@@ -176,7 +177,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             (V3 rf1, _) = solution.StateVectors(solution.EndTime(1));
 
-            (rf1.magnitude - R_BODY).ShouldEqual(101459.50200797338, 1e-5);
+            (rf1.magnitude - R_BODY).ShouldEqual(101461.50629983563, 1e-5);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 

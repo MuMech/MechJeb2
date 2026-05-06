@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
@@ -66,7 +67,7 @@ namespace MechJebLibTest.ManeuversTests
 
                 (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
                 double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
-                (V3 r2, V3 v2)         = Shepperd.Solve(MOON_MU, tt1, r1, v1 + dv);
+                (V3 r2, V3 v2) = Shepperd.Solve(MOON_MU, tt1, r1, v1 + dv);
                 (V3 moonR2, V3 moonV2) = Shepperd.Solve(CENTRAL_MU, dt + tt1, moonR0, moonV0);
                 V3 r3 = moonR2 + r2;
                 V3 v3 = moonV2 + v2;
@@ -104,7 +105,7 @@ namespace MechJebLibTest.ManeuversTests
 
             (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
-            (V3 r2, V3 v2)         = Shepperd.Solve(MOON_MU, tt1, r1, v1 + dv);
+            (V3 r2, V3 v2) = Shepperd.Solve(MOON_MU, tt1, r1, v1 + dv);
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(CENTRAL_MU, dt + tt1, moonR0, moonV0);
             V3 r3 = moonR2 + r2;
             V3 v3 = moonV2 + v2;
@@ -152,7 +153,7 @@ namespace MechJebLibTest.ManeuversTests
 
             (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
-            (V3 r2, V3 v2)         = Shepperd.Solve(MOON_MU, tt1, r1, v1 + dv);
+            (V3 r2, V3 v2) = Shepperd.Solve(MOON_MU, tt1, r1, v1 + dv);
             (V3 moonR2, V3 moonV2) = Shepperd.Solve(CENTRAL_MU, dt + tt1, moonR0, moonV0);
             V3 r3 = moonR2 + r2;
             V3 v3 = moonV2 + v2;

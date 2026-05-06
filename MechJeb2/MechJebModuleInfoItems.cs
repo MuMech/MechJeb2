@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -110,47 +110,6 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_KineticEnergy", InfoItem.Category.Orbit, description = "#MechJeb_KineticEnergy_desc", format = ValueInfoItem.SI,
             units = "J/kg")] //Kinetic energy||Specific kinetic energy
         public double KineticEnergy() => Orbit.orbitalEnergy + Orbit.referenceBody.gravParameter / Orbit.radius;
-
-        //TODO: consider turning this into a binary search
-        [ValueInfoItem("#MechJeb_TimeToImpact", InfoItem.Category.Misc)] //Time to impact
-        public string TimeToImpact()
-        {
-            if (Orbit.PeA > 0 || Vessel.Landed) return "N/A";
-
-            double impactTime = VesselState.time;
-            try
-            {
-                for (int iter = 0; iter < 10; iter++)
-                {
-                    Vector3d impactPosition = Orbit.WorldPositionAtUT(impactTime);
-                    double   terrainRadius  = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
-                    impactTime = Orbit.NextTimeOfRadius(VesselState.time, terrainRadius);
-                }
-            }
-            catch (ArgumentException)
-            {
-                return GuiUtils.TimeToDHMS(0);
-            }
-            catch (ArithmeticException)
-            {
-                return GuiUtils.TimeToDHMS(0);
-            }
-
-            return GuiUtils.TimeToDHMS(impactTime - VesselState.time);
-        }
-
-        [ValueInfoItem("#MechJeb_SuicideBurnCountdown", InfoItem.Category.Misc)] //Suicide burn countdown
-        public string SuicideBurnCountdown()
-        {
-            try
-            {
-                return GuiUtils.TimeToDHMS(OrbitExtensions.SuicideBurnCountdown(Orbit, VesselState), 1);
-            }
-            catch
-            {
-                return "N/A";
-            }
-        }
 
         private readonly MovingAverage rcsThrustAvg = new MovingAverage();
 
@@ -997,8 +956,8 @@ namespace MuMech
                 }
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
-                GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                GUILayout.Label(body.bodyName, GuiUtils.LayoutExpandWidth);
+                GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
             }
 
@@ -1025,8 +984,8 @@ namespace MuMech
                     }
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label(body.bodyName, GUILayout.ExpandWidth(true));
-                    GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GUILayout.ExpandWidth(false));
+                    GUILayout.Label(body.bodyName, GuiUtils.LayoutExpandWidth);
+                    GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.time).ToString("F2") + "º", GuiUtils.LayoutNoExpandWidth);
                     GUILayout.EndHorizontal();
                 }
             }
@@ -1143,6 +1102,6 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_Separator", InfoItem.Category.Misc, showInEditor = true)] //Separator
-        public void HorizontalSeparator() => GUILayout.Label("", separatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(2));
+        public void HorizontalSeparator() => GUILayout.Label("", separatorStyle, GuiUtils.LayoutExpandWidth, GUILayout.Height(2));
     }
 }

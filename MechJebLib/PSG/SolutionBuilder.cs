@@ -2,25 +2,26 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using MechJebLib.Primitives;
+
+using MechJebLib.Primitives;
 
 namespace MechJebLib.PSG
 {
     public class SolutionBuilder
     {
-        private readonly int             _n;
-        private readonly VariableProxy   _vars;
-        private readonly Problem         _problem;
+        private readonly int _n;
+        private readonly VariableProxy _vars;
+        private readonly Problem _problem;
         private readonly PhaseCollection _phases;
 
         private int _k => 2 * _n - 1;
 
         public SolutionBuilder(int n, VariableProxy vars, Problem problem, PhaseCollection phases)
         {
-            _n       = n;
-            _vars    = vars;
+            _n = n;
+            _vars = vars;
             _problem = problem;
-            _phases  = phases.DeepCopy();
+            _phases = phases.DeepCopy();
             AnalyzeStages();
         }
 

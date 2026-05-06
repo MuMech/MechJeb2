@@ -5,9 +5,7 @@
 
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
-using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
-using static System.Math;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -17,16 +15,16 @@ namespace MechJebLib.PSG.Terminal
         private readonly double _eccT;
         private readonly double _incT;
         private readonly double _lanT;
-        private readonly V3     _hT;
+        private readonly V3 _hT;
 
         public Kepler4(double smaT, double eccT, double incT, double lanT)
         {
             NumConstraints = 4;
-            _smaT          = smaT;
-            _eccT          = eccT;
-            _incT          = incT;
-            _lanT          = lanT;
-            _hT            = Astro.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
+            _smaT = smaT;
+            _eccT = eccT;
+            _incT = incT;
+            _lanT = lanT;
+            _hT = Astro.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
         }
 
         public ITerminal Rescale(Scale scale)  => new Kepler4(_smaT / scale.LengthScale, _eccT, _incT, _lanT);
@@ -48,15 +46,9 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual EccVecMagnitudeConstraint(DualV3[] p)
-            {
-                return (DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized).sqrMagnitude - eccT * eccT;
-            }
+            Dual EccVecMagnitudeConstraint(DualV3[] p) => (DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized).sqrMagnitude - eccT * eccT;
 
-            DualV3 AngularMomentumConstraint(DualV3[] p)
-            {
-                return DualV3.Cross(p[0], p[1]) - hT;
-            }
+            DualV3 AngularMomentumConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]) - hT;
         }
 
         public ITerminal GetFPA()

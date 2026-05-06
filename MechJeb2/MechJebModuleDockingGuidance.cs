@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System.Linq;
 using KSP.Localization;
 using UnityEngine;
@@ -89,9 +89,9 @@ namespace MuMech
 
 
             GUILayout.Label(Localizer.Format("#MechJeb_Docking_label7", autopilot.safeDistance.ToString("F2")),
-                GUILayout.ExpandWidth(false)); //"safeDistance "
+                GuiUtils.LayoutNoExpandWidth); //"safeDistance "
             GUILayout.Label(Localizer.Format("#MechJeb_Docking_label8", autopilot.targetSize.ToString("F2")),
-                GUILayout.ExpandWidth(false)); //"targetSize   "
+                GuiUtils.LayoutNoExpandWidth); //"targetSize   "
 
             if (autopilot.speedLimit < 0)
                 autopilot.speedLimit = 0;
@@ -99,10 +99,10 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             autopilot.forceRol =
-                GUILayout.Toggle(autopilot.forceRol, Localizer.Format("#MechJeb_Docking_checkbox6"), GUILayout.ExpandWidth(false)); //"Force Roll :"
+                GUILayout.Toggle(autopilot.forceRol, Localizer.Format("#MechJeb_Docking_checkbox6"), GuiUtils.LayoutNoExpandWidth); //"Force Roll :"
 
-            autopilot.rol.Text = GUILayout.TextField(autopilot.rol.Text, GUILayout.Width(30));
-            GUILayout.Label("°", GUILayout.ExpandWidth(false));
+            autopilot.rol.Text = GUILayout.TextField(autopilot.rol.Text, GuiUtils.LayoutWidth(30));
+            GUILayout.Label("°", GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
             if (autopilot.Enabled != active)
@@ -138,7 +138,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(50) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(300), GUILayout.Height(50) };
 
         protected override void OnModuleDisabled()
         {

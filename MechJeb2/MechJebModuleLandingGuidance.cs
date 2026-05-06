@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +34,7 @@ namespace MuMech
                 InitLandingSitesList();
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(200), GUILayout.Height(150) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(200), GUILayout.Height(150) };
 
         private void MoveByMeter(ref EditableAngle angle, double distance, double alt)
         {
@@ -100,7 +100,7 @@ namespace MuMech
             {
                 GUILayout.BeginHorizontal();
                 _landingSiteIdx = GuiUtils.ComboBox.Box(_landingSiteIdx, availableLandingSites.Select(p => p.Name).ToArray(), this);
-                if (GUILayout.Button("Set", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button("Set", GuiUtils.LayoutNoExpandWidth))
                 {
                     Core.Target.SetPositionTarget(MainBody, availableLandingSites[_landingSiteIdx].Latitude,
                         availableLandingSites[_landingSiteIdx].Longitude);

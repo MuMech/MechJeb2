@@ -33,8 +33,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private IShipconstruct _kspVessel => _manager._kspVessel;
 
-            private readonly        SimVesselManager _manager;
-            private static readonly Type?            _rfType;
+            private readonly SimVesselManager _manager;
+            private static readonly Type? _rfType;
 
             static SimVesselBuilder()
             {
@@ -49,7 +49,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                     _rfType = Type.GetType("RealFuels.ModuleEnginesRF, RealFuels");
 
-                    _rfAutoCutoff = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF",  "autoCutoff");
+                    _rfAutoCutoff = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "autoCutoff");
                     if (_rfAutoCutoff == null)
                         Debug.Log(
                             "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no autoCutoff field, disabling symmetric flameout");
@@ -141,18 +141,18 @@ namespace MechJebLibBindings.FuelFlowSimulation
             {
                 var part = SimPart.Borrow(_vessel, kspPart.partName);
 
-                part.InverseStage                      = kspPart.inverseStage;
-                part.ActivatesEvenIfDisconnected       = kspPart.ActivatesEvenIfDisconnected;
-                part.StagingOn                         = kspPart.stagingOn;
-                part.ResourcePriority                  = kspPart.GetResourcePriority();
+                part.InverseStage = kspPart.inverseStage;
+                part.ActivatesEvenIfDisconnected = kspPart.ActivatesEvenIfDisconnected;
+                part.StagingOn = kspPart.stagingOn;
+                part.ResourcePriority = kspPart.GetResourcePriority();
                 part.ResourceRequestRemainingThreshold = kspPart.resourceRequestRemainingThreshold;
-                part.Mass                              = kspPart.mass;
-                part.Name                              = kspPart.name;
-                part.DryMass                           = kspPart.prefabMass;
-                part.IsRoot                            = kspPart.parent is null;
-                part.ModulesStagedMass                 = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.STAGED);
-                part.ModulesUnstagedMass               = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.UNSTAGED);
-                part.DecoupledInStage                  = int.MinValue;
+                part.Mass = kspPart.mass;
+                part.Name = kspPart.name;
+                part.DryMass = kspPart.prefabMass;
+                part.IsRoot = kspPart.parent is null;
+                part.ModulesStagedMass = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.STAGED);
+                part.ModulesUnstagedMass = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.UNSTAGED);
+                part.DecoupledInStage = int.MinValue;
 
                 HandleCrewMass(part, kspPart);
 
@@ -211,7 +211,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private SimLaunchClamp BuildLaunchClamp(SimPart part)
             {
-                part.IsLaunchClamp     = true;
+                part.IsLaunchClamp = true;
                 _vessel.HasLaunchClamp = true;
                 return SimLaunchClamp.Borrow(part);
             }
@@ -220,22 +220,22 @@ namespace MechJebLibBindings.FuelFlowSimulation
             {
                 var engine = SimModuleEngines.Borrow(part);
 
-                engine.ThrottleLocked       = kspEngine.throttleLocked;
-                engine.MaxFuelFlow          = kspEngine.maxFuelFlow;
-                engine.MinFuelFlow          = kspEngine.minFuelFlow;
-                engine.G                    = kspEngine.g;
-                engine.MaxThrust            = kspEngine.maxThrust;
-                engine.MinThrust            = kspEngine.minThrust;
-                engine.Clamp                = kspEngine.CLAMP;
-                engine.FlowMultCap          = kspEngine.flowMultCap;
+                engine.ThrottleLocked = kspEngine.throttleLocked;
+                engine.MaxFuelFlow = kspEngine.maxFuelFlow;
+                engine.MinFuelFlow = kspEngine.minFuelFlow;
+                engine.G = kspEngine.g;
+                engine.MaxThrust = kspEngine.maxThrust;
+                engine.MinThrust = kspEngine.minThrust;
+                engine.Clamp = kspEngine.CLAMP;
+                engine.FlowMultCap = kspEngine.flowMultCap;
                 engine.FlowMultCapSharpness = kspEngine.flowMultCapSharpness;
-                engine.AtmChangeFlow        = kspEngine.atmChangeFlow;
-                engine.UseAtmCurve          = kspEngine.useAtmCurve;
-                engine.UseAtmCurveIsp       = kspEngine.useAtmCurveIsp;
-                engine.UseThrottleIspCurve  = kspEngine.useThrottleIspCurve;
-                engine.UseThrustCurve       = kspEngine.useThrustCurve;
-                engine.UseVelCurve          = kspEngine.useVelCurve;
-                engine.UseVelCurveIsp       = kspEngine.useVelCurveIsp;
+                engine.AtmChangeFlow = kspEngine.atmChangeFlow;
+                engine.UseAtmCurve = kspEngine.useAtmCurve;
+                engine.UseAtmCurveIsp = kspEngine.useAtmCurveIsp;
+                engine.UseThrottleIspCurve = kspEngine.useThrottleIspCurve;
+                engine.UseThrustCurve = kspEngine.useThrustCurve;
+                engine.UseVelCurve = kspEngine.useVelCurve;
+                engine.UseVelCurveIsp = kspEngine.useVelCurveIsp;
                 engine.ThrustCurve.LoadH1(kspEngine.thrustCurve);
                 engine.ThrottleIspCurve.LoadH1(kspEngine.throttleIspCurve);
                 engine.ThrottleIspCurveAtmStrength.LoadH1(kspEngine.throttleIspCurveAtmStrength);
@@ -262,7 +262,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 _vessel.EnginesActivatedInStage[kspEngine.part.inverseStage].Add(engine);
 
                 part.IsThrottleLocked = kspEngine.throttleLocked;
-                part.IsEngine         = true;
+                part.IsEngine = true;
 
                 engine.ModuleSpoolupTime = 0;
                 engine.IsModuleEnginesRf = false;
@@ -285,10 +285,10 @@ namespace MechJebLibBindings.FuelFlowSimulation
             {
                 var rcs = SimModuleRCS.Borrow(part);
 
-                rcs.G                = kspModuleRCS.G;
-                rcs.ISPMult          = kspModuleRCS.ispMult;
+                rcs.G = kspModuleRCS.G;
+                rcs.ISPMult = kspModuleRCS.ispMult;
                 rcs.ThrustPercentage = kspModuleRCS.thrustPercentage;
-                rcs.MaxFuelFlow      = kspModuleRCS.maxFuelFlow;
+                rcs.MaxFuelFlow = kspModuleRCS.maxFuelFlow;
 
                 rcs.AtmosphereCurve.LoadH1(kspModuleRCS.atmosphereCurve);
 

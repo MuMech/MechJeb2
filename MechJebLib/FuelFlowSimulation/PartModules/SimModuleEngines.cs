@@ -28,53 +28,53 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
     {
         private static readonly ObjectPool<SimModuleEngines> _pool = new ObjectPool<SimModuleEngines>(New, Clear);
 
-        public readonly List<SimPropellant>          Propellants                = new List<SimPropellant>();
-        public readonly Dictionary<int, SimFlowMode> PropellantFlowModes        = new Dictionary<int, SimFlowMode>();
-        public readonly Dictionary<int, double>      ResourceConsumptions       = new Dictionary<int, double>();
-        public readonly List<double>                 ThrustTransformMultipliers = new List<double>();
-        public readonly List<V3>                     ThrustDirectionVectors     = new List<V3>();
+        public readonly List<SimPropellant> Propellants = new List<SimPropellant>();
+        public readonly Dictionary<int, SimFlowMode> PropellantFlowModes = new Dictionary<int, SimFlowMode>();
+        public readonly Dictionary<int, double> ResourceConsumptions = new Dictionary<int, double>();
+        public readonly List<double> ThrustTransformMultipliers = new List<double>();
+        public readonly List<V3> ThrustDirectionVectors = new List<V3>();
 
-        public bool   IsOperational;
+        public bool IsOperational;
         public double FlowMultiplier;
         public double MultFlow;
-        public V3     ThrustCurrent;
-        public V3     ThrustMax;
-        public V3     ThrustMin;
+        public V3 ThrustCurrent;
+        public V3 ThrustMax;
+        public V3 ThrustMin;
         public double MassFlowRate;
         public double ISP;
-        public float  G;
-        public float  MaxFuelFlow;
-        public float  MaxThrust;
-        public float  MinFuelFlow;
-        public float  MinThrust;
-        public float  MultIsp;
-        public float  Clamp;
-        public float  FlowMultCap;
-        public float  FlowMultCapSharpness;
-        public bool   ThrottleLocked;
-        public float  ThrottleLimiter;
-        public bool   AtmChangeFlow;
-        public bool   UseAtmCurve;
-        public bool   UseAtmCurveIsp;
-        public bool   UseThrottleIspCurve;
-        public bool   UseThrustCurve;
-        public bool   UseVelCurve;
-        public bool   UseVelCurveIsp;
+        public float G;
+        public float MaxFuelFlow;
+        public float MaxThrust;
+        public float MinFuelFlow;
+        public float MinThrust;
+        public float MultIsp;
+        public float Clamp;
+        public float FlowMultCap;
+        public float FlowMultCapSharpness;
+        public bool ThrottleLocked;
+        public float ThrottleLimiter;
+        public bool AtmChangeFlow;
+        public bool UseAtmCurve;
+        public bool UseAtmCurveIsp;
+        public bool UseThrottleIspCurve;
+        public bool UseThrustCurve;
+        public bool UseVelCurve;
+        public bool UseVelCurveIsp;
         public double ModuleResiduals;
         public double ModuleSpoolupTime;
-        public bool   AutoCutoff;
-        public bool   NoPropellants;
-        public bool   IsModuleEnginesRf;
-        public bool   IsUnrestartableDeadEngine;
+        public bool AutoCutoff;
+        public bool NoPropellants;
+        public bool IsModuleEnginesRf;
+        public bool IsUnrestartableDeadEngine;
 
-        public readonly H1 ThrustCurve                 = H1.Get(true);
-        public readonly H1 ThrottleIspCurve            = H1.Get(true);
+        public readonly H1 ThrustCurve = H1.Get(true);
+        public readonly H1 ThrottleIspCurve = H1.Get(true);
         public readonly H1 ThrottleIspCurveAtmStrength = H1.Get(true);
-        public readonly H1 VelCurve                    = H1.Get(true);
-        public readonly H1 VelCurveIsp                 = H1.Get(true);
-        public readonly H1 ATMCurve                    = H1.Get(true);
-        public readonly H1 ATMCurveIsp                 = H1.Get(true);
-        public readonly H1 AtmosphereCurve             = H1.Get(true);
+        public readonly H1 VelCurve = H1.Get(true);
+        public readonly H1 VelCurveIsp = H1.Get(true);
+        public readonly H1 ATMCurve = H1.Get(true);
+        public readonly H1 ATMCurveIsp = H1.Get(true);
+        public readonly H1 AtmosphereCurve = H1.Get(true);
 
         private double _throttle    => Part.Vessel.MainThrottle;
         private double _atmPressure => Part.Vessel.ATMPressure;
@@ -237,9 +237,9 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Update()
         {
-            ISP            = ISPAtConditions();
+            ISP = ISPAtConditions();
             FlowMultiplier = FlowMultiplierAtConditions();
-            MassFlowRate   = FlowRateAtConditions();
+            MassFlowRate = FlowRateAtConditions();
             RefreshThrust();
             SetConsumptionRates();
         }
@@ -260,8 +260,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         private void RefreshThrust()
         {
             ThrustCurrent = V3.zero;
-            ThrustMax     = V3.zero;
-            ThrustMin     = V3.zero;
+            ThrustMax = V3.zero;
+            ThrustMin = V3.zero;
 
             double thrustLimiter = ThrottleLimiter / 100f;
 
@@ -279,8 +279,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 double thrustTransformMultiplier = ThrustTransformMultipliers[i];
 
                 ThrustCurrent += eCurrentThrust * thrustDirectionVector * thrustTransformMultiplier;
-                ThrustMax     += eMaxThrust * thrustDirectionVector * thrustTransformMultiplier;
-                ThrustMin     += eMinThrust * thrustDirectionVector * thrustTransformMultiplier;
+                ThrustMax += eMaxThrust * thrustDirectionVector * thrustTransformMultiplier;
+                ThrustMin += eMinThrust * thrustDirectionVector * thrustTransformMultiplier;
             }
         }
 

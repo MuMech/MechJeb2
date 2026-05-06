@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
 using UnityEngine;
@@ -24,8 +24,8 @@ namespace MuMech
         private void SimpleTextInfo(string left, string right)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(left, GUILayout.ExpandWidth(true));
-            GUILayout.Label(right, GUILayout.ExpandWidth(false));
+            GUILayout.Label(left, GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(right, GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
         }
 
@@ -38,7 +38,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             balancer.smartTranslation =
                 GUILayout.Toggle(balancer.smartTranslation, Localizer.Format("#MechJeb_RCSBalancer_checkbox1"),
-                    GUILayout.Width(130)); //"Smart translation"
+                    GuiUtils.LayoutWidth(130)); //"Smart translation"
             GUILayout.EndHorizontal();
 
             if (wasEnabled != balancer.smartTranslation)
@@ -116,7 +116,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(240), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(240), GUILayout.Height(30) };
 
         public override string GetName() => Localizer.Format("#MechJeb_RCSBalancer_title"); //"RCS Balancer"
 
