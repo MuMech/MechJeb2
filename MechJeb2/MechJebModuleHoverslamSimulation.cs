@@ -94,7 +94,6 @@ namespace MuMech
         //       halfway between min and max throttle, even though we can PWM if we have to.
         // TODO: should we be able to disable PWM for throttleable engines to avoid consuming ignitions?
         // TODO: somehow wire up DisengageAutopilot to the ToggleInfoItem
-        // TODO: staging delays for multistage fed into simulation
         // TODO: add aero model for landing on Kerbin/Earth
         // TODO: going to need to have spoolup for RO/RF--on a long enough timeline someone will ask about nuclear landers
         // TODO: principia integration and gravitational harmonics
@@ -202,8 +201,6 @@ namespace MuMech
 
             if (VesselState.time < _lastCycleUT + SimRecalcInterval * TimeWarp.CurrentRate)
                 return;
-
-            // make sure our orbit at least dips into the atmosphere, or bodyRadius plus some maximum height of mountains
 
             Core.StageStats.RequestUpdate();
 
