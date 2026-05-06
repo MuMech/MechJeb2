@@ -245,12 +245,26 @@ namespace MuMech
                 if (fuelStats.DeltaV <= 0)
                     continue;
 
-                int nunExcessStages = lastKSPStage - fuelStats.KSPStage - 1;
+                int deltaStage      = lastKSPStage - fuelStats.KSPStage;
 
-                // for every extra stage, we need to include a StagingCooldownTimer coast.
-                if (nunExcessStages > 0)
-                    builder.AddCoast(fuelStats.StartMass * 1000, PhysicsGlobals.StagingCooldownTimer*nunExcessStages, fuelStats.KSPStage, mjPhase);
+                // for every stage, we need to include a coast for the correct staging delays.
+                if (deltaStage > 0)
+                {
+                    double stagingDelay = Core.Staging.AutostagePreDelay;
 
+                    if (deltaStage > 1)
+                    {
+                        // XXX: tiny bug, if the stage doesn't decouple the next stage doesn't get a post-delay,
+                        //      probably not worth the effort to fix.
+                        double nextDelay = Core.Staging.AutostagePreDelay + Core.Staging.AutostagePostDelay;
+                        if (nextDelay < PhysicsGlobals.StagingCooldownTimer)
+                            nextDelay = PhysicsGlobals.StagingCooldownTimer;
+
+                        stagingDelay += nextDelay * (deltaStage - 1);
+                    }
+
+                    builder.AddCoast(fuelStats.StartMass * 1000, stagingDelay, fuelStats.KSPStage, mjPhase);
+                }
                 builder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
                     fuelStats.KSPStage, mjPhase);
 
