@@ -322,6 +322,12 @@ namespace MechJebLib.PSG
             double vexCurrent = _optimizer.Phases[p].VexCurrent;
             double h          = thisPhase.Bt() / (_optimizer.N - 1);
 
+            double rho0CdAref = _optimizer.Problem.Rho0CdAref;
+            double rBody      = _optimizer.Problem.RBody;
+            double h0         = _optimizer.Problem.H0;
+            double r0         = _optimizer.Problem.R0.magnitude;
+            V3     w          = _optimizer.Problem.W;
+
             // dynamical constraints per phase
             for (int n = 0; n < _optimizer.N - 1; n += 1)
             {
@@ -413,30 +419,7 @@ namespace MechJebLib.PSG
                     BtIdx = thisPhase.BtIdx()
                 };
 
-                double rho0CdAref = _optimizer.Problem.Rho0CdAref;
-                double rBody      = _optimizer.Problem.RBody;
-                double h0         = _optimizer.Problem.H0;
-                double r0         = _optimizer.Problem.R0.magnitude;
-                V3     w          = _optimizer.Problem.W;
 
-                DualV3 VDot(ref HermiteSimpsonDualPoint d)
-                {
-                    Dual   r               = d.R.magnitude;
-                    Dual   r3              = d.R.sqrMagnitude * r;
-                    DualV3 vr              = d.V - DualV3.Cross(w, d.R);
-                    var    normAtmosphere  = Dual.Exp(-(r - rBody) / h0);
-                    var    normAtmosphere2 = Dual.Exp(-(r - r0) / h0);
-                    DualV3 drag            = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
-                    //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
-                    Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
-                    return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
-                }
-
-                DualV3 VDotVacuum(ref HermiteSimpsonDualPoint d)
-                {
-                    Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
-                    return -d.R / r3 + vacThrust / d.M * d.U;
-                }
 
                 if (h0 > 0 && rho0CdAref > 0)
                     ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
@@ -472,6 +455,25 @@ namespace MechJebLib.PSG
             }
 
             return ci;
+
+            DualV3 VDotVacuum(ref HermiteSimpsonDualPoint d)
+            {
+                Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
+                return -d.R / r3 + vacThrust / d.M * d.U;
+            }
+
+            DualV3 VDot(ref HermiteSimpsonDualPoint d)
+            {
+                Dual   r               = d.R.magnitude;
+                Dual   r3              = d.R.sqrMagnitude * r;
+                DualV3 vr              = d.V - DualV3.Cross(w, d.R);
+                var    normAtmosphere  = Dual.Exp(-(r - rBody) / h0);
+                var    normAtmosphere2 = Dual.Exp(-(r - r0) / h0);
+                DualV3 drag            = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
+                //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
+                Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
+                return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
+            }
         }
 
         private int ObjectiveFunction(double[] f, alglib.sparsematrix j, int ci)
