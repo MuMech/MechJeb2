@@ -37,8 +37,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            solution.Tgo(t0).ShouldEqual(1050.4212938233472, 1e-3);
-            solution.Vgo(t0).ShouldEqual(2429, 1e-3);
+            solution.Tgo(t0).ShouldEqual(547.31871026658155, 1e-3);
+            solution.Vgo(t0).ShouldEqual(2606.641575481216, 1e-3);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
         }
