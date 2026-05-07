@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <RootNamespace>MechJebLibTest</RootNamespace>
         <AssemblyName>MechJebLibTest</AssemblyName>
         <ProjectGuid>{D21C9231-4F36-494F-988A-8352CFE7CCCE}</ProjectGuid>
-        <LangVersion>default</LangVersion>
+        <LangVersion>8</LangVersion>
         <Nullable>enable</Nullable>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <IsPackable>false</IsPackable>
