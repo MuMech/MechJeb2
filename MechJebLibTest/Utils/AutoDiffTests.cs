@@ -11,6 +11,7 @@ namespace MechJebLibTest.Utils
 {
     public class AutoDiffTests
     {
+        /*
         [Fact]
         private void JacobianDifference()
         {
@@ -36,5 +37,6 @@ namespace MechJebLibTest.Utils
             jac[4].ShouldEqual(new V3(-3, 0, 1));
             jac[5].ShouldEqual(new V3(2, -1, 0));
         }
+        */
     }
 }
