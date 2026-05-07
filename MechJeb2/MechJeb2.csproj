@@ -194,7 +194,7 @@
             <Private>False</Private>
         </Reference>
         <Reference Include="JetBrains.Annotations">
-            <HintPath>..\packages\JetBrains.Annotations.2023.3.0\lib\net20\JetBrains.Annotations.dll</HintPath>
+            <HintPath>$(NuGetPackageRoot)jetbrains.annotations/2023.3.0/lib/net20/JetBrains.Annotations.dll</HintPath>
             <Aliases>JetBrainsAnnotations</Aliases>
         </Reference>
         <Reference Include="mscorlib">
