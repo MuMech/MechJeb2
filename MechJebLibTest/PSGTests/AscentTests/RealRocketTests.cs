@@ -155,7 +155,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             long start = GC.GetAllocatedBytesForCurrentThread();
             ascent.Run();
-            Logger.Print($"GC: {GC.GetAllocatedBytesForCurrentThread()}");
+            Logger.Print($"GC: {GC.GetAllocatedBytesForCurrentThread() - start}");
 
             Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
