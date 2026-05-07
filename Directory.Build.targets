@@ -1,25 +1,26 @@
 <Project>
 
     <!--
-        Provide .NET Framework 4.8 reference assemblies via NuGet so the projects
+        Provide .NET Framework 4.8 reference assemblies via NuGet so projects
         targeting net48 can build on macOS / Linux (and on Windows machines
         without the .NET Framework 4.8 Developer Pack installed).
-
-        The package is a no-op on non-net48 target frameworks. Applied via
-        Directory.Build.targets so that the legacy non-SDK csprojs
-        (MechJeb2, MechJebLibBindings) pick it up without csproj edits.
-
-        For non-SDK csprojs, RestoreProjectStyle=PackageReference is set so
-        that <PackageReference> works alongside their existing references.
     -->
-    <PropertyGroup Condition=" '$(TargetFrameworkVersion)' == 'v4.8' Or '$(TargetFramework)' == 'net48' ">
-        <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-    </PropertyGroup>
-
-    <ItemGroup Condition=" '$(TargetFrameworkVersion)' == 'v4.8' Or '$(TargetFramework)' == 'net48' ">
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
+
+    <!--
+        Honor the MSBuild ReferencePath property as an assembly search path.
+        Jenkins passes /p:ReferencePath=/home/ksp/KSP_Data/Managed so that
+        bare <Reference Include="Assembly-CSharp"/> etc. resolve to KSP's
+        Unity assemblies. SDK-style targets do not automatically append
+        ReferencePath to AssemblySearchPaths the way the legacy non-SDK
+        targets did, so we do it explicitly.
+    -->
+    <PropertyGroup Condition=" '$(ReferencePath)' != '' ">
+        <AssemblySearchPaths>$(AssemblySearchPaths);$(ReferencePath)</AssemblySearchPaths>
+    </PropertyGroup>
 
 </Project>
