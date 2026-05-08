@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net48;netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>net48</TargetFrameworks>
         <RootNamespace>MechJebLib</RootNamespace>
         <AssemblyName>MechJebLib</AssemblyName>
         <ProjectGuid>{BA86665B-A72E-41FB-858A-C0FF29E05768}</ProjectGuid>
@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\alglib\alglib.csproj" />
+        <ProjectReference Include="..\alglib\alglib.csproj"/>
     </ItemGroup>
 
 </Project>

@@ -93,7 +93,26 @@ namespace MechJebLib.Utils
             return (ans.M, partialX, partialY, partialZ);
         }
 
-        private static readonly ThreadLocal<SortedDictionary<int, double>> _elementDictionary = new ThreadLocal<SortedDictionary<int, double>>(() => new SortedDictionary<int, double>());
+        private static readonly ThreadLocal<Dictionary<int, double>> _elementDictionary = new ThreadLocal<Dictionary<int, double>>(() => new Dictionary<int, double>());
+        private static readonly ThreadLocal<List<int>> _elementKeys = new ThreadLocal<List<int>>(() => new List<int>());
+
+        private static void AppendSortedRow(alglib.sparsematrix j, Dictionary<int, double> elements)
+        {
+            List<int> keys = _elementKeys.Value;
+
+            keys.Clear();
+            foreach (KeyValuePair<int, double> kv in elements)
+                keys.Add(kv.Key);
+            keys.Sort();
+
+            alglib.sparseappendemptyrow(j);
+            for (int i = 0; i < keys.Count; i++)
+            {
+                double v = elements[keys[i]];
+                if (v != 0)
+                    alglib.sparseappendelement(j, keys[i], v);
+            }
+        }
 
         public static int ApplyScalarConstraint(double[] f, alglib.sparsematrix j, int ci, Func<Dual[], Dual> g, double[] p, int[] idx)
         {
@@ -101,17 +120,15 @@ namespace MechJebLib.Utils
 
             int n = p.Length;
 
-            SortedDictionary<int, double> elements = _elementDictionary.Value;
+            Dictionary<int, double> elements = _elementDictionary.Value;
+
             elements.Clear();
 
             for (int i = 0; i < n; i++)
                 elements[idx[i]] = partials[i];
 
             f[ci++] = value;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
 
             Vn.Return(partials);
 
@@ -124,8 +141,9 @@ namespace MechJebLib.Utils
 
             int n = p.Length;
 
-            SortedDictionary<int, double> elements = _elementDictionary.Value;
+            Dictionary<int, double> elements = _elementDictionary.Value;
             elements.Clear();
+
             for (int i = 0; i < n; i++)
             {
                 elements[idx[i].Item1] = partials[3 * i];
@@ -134,10 +152,7 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = value;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
 
             Vn.Return(partials);
 
@@ -150,8 +165,9 @@ namespace MechJebLib.Utils
 
             int n = p.Length;
 
-            SortedDictionary<int, double> elements = _elementDictionary.Value;
+            Dictionary<int, double> elements = _elementDictionary.Value;
             elements.Clear();
+
             for (int i = 0; i < n; i++)
             {
                 elements[idx[i].Item1] = partialX[3 * i];
@@ -160,12 +176,10 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = value.x;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
 
             elements.Clear();
+
             for (int i = 0; i < n; i++)
             {
                 elements[idx[i].Item1] = partialY[3 * i];
@@ -174,12 +188,10 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = value.y;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
 
             elements.Clear();
+
             for (int i = 0; i < n; i++)
             {
                 elements[idx[i].Item1] = partialZ[3 * i];
@@ -188,10 +200,7 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = value.z;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
 
             Vn.Return(partialX);
             Vn.Return(partialY);
