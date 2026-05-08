@@ -13,13 +13,38 @@ namespace MechJebLib.Utils
 {
     public static class AutoDiff
     {
+        private static readonly ThreadLocal<Dual[]> _dualBuffer = new ThreadLocal<Dual[]>(() => new Dual[16]);
+        private static readonly ThreadLocal<DualV3[]> _dualV3Buffer = new ThreadLocal<DualV3[]>(() => new DualV3[16]);
+
+        private static Dual[] RentDualArray(int n)
+        {
+            Dual[] buf = _dualBuffer.Value;
+            if (buf.Length < n)
+            {
+                buf = new Dual[n];
+                _dualBuffer.Value = buf;
+            }
+            return buf;
+        }
+
+        private static DualV3[] RentDualV3Array(int n)
+        {
+            DualV3[] buf = _dualV3Buffer.Value;
+            if (buf.Length < n)
+            {
+                buf = new DualV3[n];
+                _dualV3Buffer.Value = buf;
+            }
+            return buf;
+        }
+
         private static (double, Vn) Gradient(Func<Dual[], Dual> f, double[] point)
         {
             int n        = point.Length;
             var partials = Vn.Rent(n);
             var ans      = new Dual(0);
 
-            var duals = new Dual[n];
+            Dual[] duals = RentDualArray(n);
 
             for (int j = 0; j < n; j++)
                 duals[j] = new Dual(point[j]);
@@ -43,7 +68,7 @@ namespace MechJebLib.Utils
             var partials = Vn.Rent(3 * n);
             var ans      = new Dual(0);
 
-            var duals = new DualV3[n];
+            DualV3[] duals = RentDualV3Array(n);
             for (int j = 0; j < n; j++)
                 duals[j] = new DualV3(point[j], V3.zero);
 
@@ -71,7 +96,7 @@ namespace MechJebLib.Utils
             var partialZ = Vn.Rent(3 * n);
             var ans      = new DualV3(V3.zero, V3.zero);
 
-            var duals = new DualV3[n];
+            DualV3[] duals = RentDualV3Array(n);
             for (int j = 0; j < n; j++)
                 duals[j] = new DualV3(point[j], V3.zero);
 
