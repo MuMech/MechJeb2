@@ -954,6 +954,74 @@ namespace MechJebLibTest.Primitives
         // ---------- LinComb (2..9) ----------
 
         [Fact]
+        public void LinComb1_KnownValues()
+        {
+            double[] y0 = { 1.0, 2.0, 3.0 };
+            double[] x1 = { 10.0, 20.0, 30.0 };
+            double[] y  = new double[3];
+            VecOps.LinComb1(y, y0, 2.0, x1, 3);
+            // y[i] = y0[i] + 2·x1[i]
+            Assert.Equal(new[] { 21.0, 42.0, 63.0 }, y);
+        }
+
+        [Fact]
+        public void LinComb1_EquivalentToCopyAxpy()
+        {
+            double[] y0 = { 1.5, -2.5, 0.5, 3.0 };
+            double[] x1 = { 0.5, 1.0, -1.5, 2.0 };
+
+            double[] fused = new double[4];
+            VecOps.LinComb1(fused, y0, 0.7, x1, 4);
+
+            double[] chained = new double[4];
+            VecOps.Copy(y0, chained, 4);
+            VecOps.Axpy(0.7, x1, chained, 4);
+
+            for (int i = 0; i < 4; i++) Assert.Equal(chained[i], fused[i], 12);
+        }
+
+        [Fact]
+        public void LinComb1_AliasingInPlace_IsSafe()
+        {
+            // y = y + a1·x1  (passing same array as y and y0) — equivalent to Axpy.
+            double[] y  = { 1.0, 2.0, 3.0 };
+            double[] x1 = { 10.0, 20.0, 30.0 };
+            VecOps.LinComb1(y, y, 2.0, x1, 3);
+            Assert.Equal(new[] { 21.0, 42.0, 63.0 }, y);
+        }
+
+        [Fact]
+        public void LinComb1_AliasingYEqualsX1_IsSafe()
+        {
+            // Each element of x1 is read once before y is overwritten.
+            double[] y0       = { 1.0, 2.0, 3.0 };
+            double[] y_and_x1 = { 10.0, 20.0, 30.0 };
+            VecOps.LinComb1(y_and_x1, y0, 2.0, y_and_x1, 3);
+            // y[i] = y0[i] + 2·x1[i]
+            Assert.Equal(new[] { 21.0, 42.0, 63.0 }, y_and_x1);
+        }
+
+        [Fact]
+        public void LinComb1_StopsAtN()
+        {
+            double[] y0 = { 1.0, 2.0, 999.0 };
+            double[] x1 = { 1.0, 1.0, 999.0 };
+            double[] y  = { 0.0, 0.0, 42.0 };
+            VecOps.LinComb1(y, y0, 1.0, x1, 2);
+            Assert.Equal(new[] { 2.0, 3.0, 42.0 }, y);
+        }
+
+        [Fact]
+        public void LinComb1_NZero_LeavesYUnchanged()
+        {
+            double[] y0 = { 99.0 };
+            double[] x1 = { 1.0 };
+            double[] y  = { 7.0 };
+            VecOps.LinComb1(y, y0, 5.0, x1, 0);
+            Assert.Equal(7.0, y[0]);
+        }
+
+        [Fact]
         public void LinComb2_KnownValues()
         {
             double[] y0 = { 1.0, 2.0, 3.0 };

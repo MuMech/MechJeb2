@@ -4,7 +4,6 @@
  */
 
 using System.Collections.Generic;
-using MechJebLib.Functions;
 using MechJebLib.Utils;
 using static System.Math;
 
@@ -98,12 +97,8 @@ namespace MechJebLib.Primitives
                 result[i] = a[i] + b[i];
         }
 
-        protected override Vec Interpolant(double x1, Vec y1, Vec yp1, double x2, Vec y2, Vec yp2, double x)
-        {
-            var ret = Vec.Rent(N);
-            Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x, N, ret);
-            return ret;
-        }
+        protected override Vec Interpolant(double x1, Vec y1, Vec yp1, double x2, Vec y2, Vec yp2, double x) =>
+            Vec.Rent(N).CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
 
         private void DisposeKeyframe(HFrame<Vec> frame)
         {

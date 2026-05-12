@@ -108,7 +108,7 @@ namespace MechJebLib.ODE
             else
                 h0 = 0.01 * d0 / d1;
 
-            using Vec y1 = f0.Dup().Scal(h0*direction).Add(y0);
+            using Vec y1 = f0.Dup().Scal(h0 * direction).Add(y0);
 
             using var f1 = Vec.Rent(N);
             f(y1, t0 + h0 * direction, f1);
@@ -123,10 +123,7 @@ namespace MechJebLib.ODE
             return Min(100 * h0, h1);
         }
 
-        protected override void Init()
-        {
-            _lastErrorNorm = 1e-4;
-        }
+        protected override void Init() => _lastErrorNorm = 1e-4;
 
         protected abstract void RKStep(IVPFunc f);
 

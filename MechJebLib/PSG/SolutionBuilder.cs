@@ -86,25 +86,25 @@ namespace MechJebLib.PSG
 
                 for (int n = 0; n < _n - 1; n++)
                 {
-                    double   dt1    = n * h;
+                    double    dt1    = n * h;
                     using Vec array1 = InterpolantValues(thisPhase, 2 * n, phase, dv, m0, dt1);
 
-                    double   dt2    = (n + 0.5) * h;
+                    double    dt2    = (n + 0.5) * h;
                     using Vec array2 = InterpolantValues(thisPhase, 2 * n + 1, phase, dv, m0, dt2);
 
-                    double   dt3    = (n + 1.0) * h;
+                    double    dt3    = (n + 1.0) * h;
                     using Vec array3 = InterpolantValues(thisPhase, 2 * n + 2, phase, dv, m0, dt3);
 
-                    for (int i = 0; i < InterpolantLayout.INTERPOLANT_LAYOUT_LEN; i++)
-                        outTangent[i] = (-3 * array1[i] + 4 * array2[i] - array3[i]) / h;
+                    outTangent.CopyFrom(array1).Scal(-3.0 / h);
+                    outTangent.LinComb2(outTangent, 4.0 / h, array2, -1.0 / h, array3);
 
                     if (n == 0)
                         outTangent.CopyTo(inTangent);
 
                     interpolant.Add(ti + dt1, array1, inTangent, outTangent);
 
-                    for (int i = 0; i < InterpolantLayout.INTERPOLANT_LAYOUT_LEN; i++)
-                        inTangent[i] = (array1[i] - 4 * array2[i] + 3 * array3[i]) / h;
+                    inTangent.CopyFrom(array1).Scal(1.0 / h);
+                    inTangent.LinComb2(inTangent, -4.0 / h, array2, 3.0 / h, array3);
 
                     if (n < _n - 2) continue;
 

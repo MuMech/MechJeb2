@@ -257,7 +257,7 @@ namespace MechJebLibTest.Primitives
             src[2] = 3.0;
             src[3] = 4.0;
 
-            using var copy = src.Dup();
+            using Vec copy = src.Dup();
             Assert.Equal(src.Length, copy.Length);
             for (int i = 0; i < src.Length; i++) Assert.Equal(src[i], copy[i]);
 
@@ -270,7 +270,7 @@ namespace MechJebLibTest.Primitives
         public void Dup_AllocatesFreshBackingArray()
         {
             using var src  = Vec.Rent(4);
-            using var copy = src.Dup();
+            using Vec copy = src.Dup();
             Assert.NotSame(src.Data, copy.Data);
         }
 
@@ -286,7 +286,7 @@ namespace MechJebLibTest.Primitives
             using var src = Vec.Rent(5, true);
             for (int i = 0; i < 5; i++) src[i] = i + 1;
 
-            using var copy = src.Dup();
+            using Vec copy = src.Dup();
             Assert.Equal(5, copy.Length);
             for (int i = 0; i < 5; i++) Assert.Equal(i + 1, copy[i]);
         }
@@ -334,8 +334,8 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void Fill_ReturnsSelf_ForChaining()
         {
-            using var v = Vec.Rent(3);
-            Vec returned = v.Fill(2.0);
+            using var v        = Vec.Rent(3);
+            Vec       returned = v.Fill(2.0);
             Assert.Same(v, returned);
             Assert.Equal(new[] { 2.0, 2.0, 2.0 }, new[] { v[0], v[1], v[2] });
         }
@@ -526,6 +526,23 @@ namespace MechJebLibTest.Primitives
         }
 
         [Fact]
+        public void LinComb1_ReturnsSelf()
+        {
+            using var y  = Vec.Rent(2, true);
+            using var y0 = Vec.Rent(2);
+            using var x1 = Vec.Rent(2);
+            y0[0] = 1.0;
+            y0[1] = 2.0;
+            x1[0] = 10.0;
+            x1[1] = 20.0;
+            Vec returned = y.LinComb1(y0, 3.0, x1);
+            Assert.Same(y, returned);
+            // y = y0 + 3·x1 = (1+30, 2+60) = (31, 62)
+            Assert.Equal(31.0, y[0]);
+            Assert.Equal(62.0, y[1]);
+        }
+
+        [Fact]
         public void LinComb2_ReturnsSelf()
         {
             using var y  = Vec.Rent(2, true);
@@ -676,7 +693,7 @@ namespace MechJebLibTest.Primitives
             y[1] = -4.0;
             y[2] = 6.0;
 
-            using var scale = y.Dup().Abs().Scal(0.5).Shift(1.0);
+            using Vec scale = y.Dup().Abs().Scal(0.5).Shift(1.0);
 
             // |y| = (2, 4, 6) → ·0.5 → (1, 2, 3) → +1 → (2, 3, 4)
             Assert.Equal(new[] { 2.0, 3.0, 4.0 }, new[] { scale[0], scale[1], scale[2] });

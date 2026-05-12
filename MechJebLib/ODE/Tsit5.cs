@@ -74,31 +74,23 @@ namespace MechJebLib.ODE
 
             _k1.CopyFrom(Dy);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A21 * Dy[i]);
+            Ynew.LinComb1(Y, h * A21, Dy);
             f(Ynew, T + C2 * h, _k2);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A31 * _k1[i] + A32 * _k2[i]);
+            Ynew.LinComb2(Y, h * A31, _k1, h * A32, _k2);
             f(Ynew, T + C3 * h, _k3);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A41 * _k1[i] + A42 * _k2[i] + A43 * _k3[i]);
+            Ynew.LinComb3(Y, h * A41, _k1, h * A42, _k2, h * A43, _k3);
             f(Ynew, T + C4 * h, _k4);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A51 * _k1[i] + A52 * _k2[i] + A53 * _k3[i] + A54 * _k4[i]);
+            Ynew.LinComb4(Y, h * A51, _k1, h * A52, _k2, h * A53, _k3, h * A54, _k4);
             f(Ynew, T + C5 * h, _k5);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A61 * _k1[i] + A62 * _k2[i] + A63 * _k3[i] + A64 * _k4[i] + A65 * _k5[i]);
+            Ynew.LinComb5(Y, h * A61, _k1, h * A62, _k2, h * A63, _k3, h * A64, _k4, h * A65, _k5);
             f(Ynew, T + h, _k6);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A71 * _k1[i] + A72 * _k2[i] + A73 * _k3[i] + A74 * _k4[i] + A75 * _k5[i] + A76 * _k6[i]);
-
+            Ynew.LinComb6(Y, h * A71, _k1, h * A72, _k2, h * A73, _k3, h * A74, _k4, h * A75, _k5, h * A76, _k6);
             f(Ynew, T + h, _k7);
-
 
             _k7.CopyTo(Dynew);
         }
@@ -129,9 +121,8 @@ namespace MechJebLib.ODE
         protected override double ScaledErrorNorm()
         {
             using var err = Vec.Rent(N);
-
-            for (int i = 0; i < N; i++)
-                err[i] = _k1[i] * E1 + _k2[i] * E2 + _k3[i] * E3 + _k4[i] * E4 + _k5[i] * E5 + _k6[i] * E6 + _k7[i] * E7;
+            err.CopyFrom(_k1).Scal(E1);
+            err.LinComb6(err, E2, _k2, E3, _k3, E4, _k4, E5, _k5, E6, _k6, E7, _k7);
 
             double error = 0.0;
 

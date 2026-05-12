@@ -69,10 +69,7 @@ namespace MechJebLib.Primitives
             set => Data[i] = value;
         }
 
-        public Vec Dup()
-        {
-            return Rent(Length).CopyFrom(this);
-        }
+        public Vec Dup() => Rent(Length).CopyFrom(this);
 
         // ---- Convenience BLAS-1 wrappers (delegate to VecOps, length = this.Length) ----
         // All other vectors are assumed to have Length ≥ this.Length. No runtime check.
@@ -196,6 +193,15 @@ namespace MechJebLib.Primitives
         public int Iamax() => VecOps.Iamax(Data, Length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec LinComb1(Vec y0,
+            double a1, Vec x1)
+        {
+            VecOps.LinComb1(Data, y0.Data,
+                a1, x1.Data, Length);
+            return this;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vec LinComb2(Vec y0,
             double a1, Vec x1, double a2, Vec x2)
         {
@@ -280,6 +286,15 @@ namespace MechJebLib.Primitives
                 a1, x1.Data, a2, x2.Data, a3, x3.Data,
                 a4, x4.Data, a5, x5.Data, a6, x6.Data,
                 a7, x7.Data, a8, x8.Data, a9, x9.Data, Length);
+            return this;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec CubicHermiteInterpolant(double x1, Vec y1, Vec yp1,
+            double x2, Vec y2, Vec yp2, double x)
+        {
+            VecOps.CubicHermiteInterpolant(x1, y1.Data, yp1.Data, x2, y2.Data, yp2.Data,
+                x, Data, Length);
             return this;
         }
 
