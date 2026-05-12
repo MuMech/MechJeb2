@@ -4,7 +4,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -112,29 +111,22 @@ namespace MechJebLib.ODE
 
             _k1.CopyFrom(Dy);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A21 * Dy[i]);
+            Ynew.LinComb1(Y, h * A21, Dy);
             f(Ynew, T + C2 * h, _k2);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A31 * _k1[i] + A32 * _k2[i]);
+            Ynew.LinComb2(Y, h * A31, _k1, h * A32, _k2);
             f(Ynew, T + C3 * h, _k3);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A41 * _k1[i] + A42 * _k2[i] + A43 * _k3[i]);
+            Ynew.LinComb3(Y, h * A41, _k1, h * A42, _k2, h * A43, _k3);
             f(Ynew, T + C4 * h, _k4);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A51 * _k1[i] + A52 * _k2[i] + A53 * _k3[i] + A54 * _k4[i]);
+            Ynew.LinComb4(Y, h * A51, _k1, h * A52, _k2, h * A53, _k3, h * A54, _k4);
             f(Ynew, T + C5 * h, _k5);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A61 * _k1[i] + A62 * _k2[i] + A63 * _k3[i] + A64 * _k4[i] + A65 * _k5[i]);
+            Ynew.LinComb5(Y, h * A61, _k1, h * A62, _k2, h * A63, _k3, h * A64, _k4, h * A65, _k5);
             f(Ynew, T + h, _k6);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A71 * _k1[i] + A73 * _k3[i] + A74 * _k4[i] + A75 * _k5[i] + A76 * _k6[i]);
-
+            Ynew.LinComb5(Y, h * A71, _k1, h * A73, _k3, h * A74, _k4, h * A75, _k5, h * A76, _k6);
             f(Ynew, T + h, _k7);
 
             _k7.CopyTo(Dynew);
@@ -143,9 +135,8 @@ namespace MechJebLib.ODE
         protected override double ScaledErrorNorm()
         {
             using var err = Vec.Rent(N);
-
-            for (int i = 0; i < N; i++)
-                err[i] = _k1[i] * E1 + _k3[i] * E3 + _k4[i] * E4 + _k5[i] * E5 + _k6[i] * E6 + _k7[i] * E7;
+            err.CopyFrom(_k1).Scal(E1);
+            err.LinComb5(err, E3, _k3, E4, _k4, E5, _k5, E6, _k6, E7, _k7);
 
             double error = 0.0;
 
@@ -195,6 +186,7 @@ namespace MechJebLib.ODE
             double s3 = s * s2;
             double s4 = s2 * s2;
 
+            double hs  = h * s;
             double bs1 = B10 + B11 * s + B12 * s2 + B13 * s3 + B14 * s4;
             double bs3 = s * (B31 + B32 * s + B33 * s2 + B34 * s3);
             double bs4 = s * (B41 + B42 * s + B43 * s2 + B44 * s3);
@@ -202,8 +194,7 @@ namespace MechJebLib.ODE
             double bs6 = s * (B61 + B62 * s + B63 * s2 + B64 * s3);
             double bs7 = (1.0 - s) * s * (B71 + B72 * s + B73 * s2);
 
-            for (int i = 0; i < N; i++)
-                yout[i] = Y[i] + h * s * (bs1 * _k1[i] + bs3 * _k3[i] + bs4 * _k4[i] + bs5 * _k5[i] + bs6 * _k6[i] + bs7 * _k7[i]);
+            yout.LinComb6(Y, hs * bs1, _k1, hs * bs3, _k3, hs * bs4, _k4, hs * bs5, _k5, hs * bs6, _k6, hs * bs7, _k7);
         }
     }
 }

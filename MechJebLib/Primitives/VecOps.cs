@@ -210,6 +210,12 @@ namespace MechJebLib.Primitives
         //
         // Aliasing y = y0 (in-place update) and y = any xₖ are both safe — each
         // element is read once and written once per iteration.
+        public static void LinComb1(double[] y, double[] y0,
+            double a1, double[] x1, int n)
+        {
+            for (int i = 0; i < n; i++)
+                y[i] = y0[i] + a1 * x1[i];
+        }
 
         public static void LinComb2(double[] y, double[] y0,
             double a1, double[] x1, double a2, double[] x2, int n)
@@ -289,6 +295,25 @@ namespace MechJebLib.Primitives
                 y[i] = y0[i] + a1 * x1[i] + a2 * x2[i] + a3 * x3[i]
                     + a4 * x4[i] + a5 * x5[i] + a6 * x6[i]
                     + a7 * x7[i] + a8 * x8[i] + a9 * x9[i];
+        }
+
+        // Cubic Hermite interpolant. Evaluates the cubic polynomial through
+        // (x1, y1) with slope yp1 and (x2, y2) with slope yp2, at the point x.
+        //   y[i] ← h00·y1[i] + (h10·dx)·yp1[i] + h01·y2[i] + (h11·dx)·yp2[i]
+        // Aliasing y with any input is safe.
+        public static void CubicHermiteInterpolant(double x1, double[] y1, double[] yp1,
+            double x2, double[] y2, double[] yp2, double x, double[] y, int n)
+        {
+            double dx    = x2 - x1;
+            double t     = (x - x1) / dx;
+            double t2    = t * t;
+            double t3    = t2 * t;
+            double h00   = 2 * t3 - 3 * t2 + 1;
+            double h10dx = (t3 - 2 * t2 + t) * dx;
+            double h01   = -2 * t3 + 3 * t2;
+            double h11dx = (t3 - t2) * dx;
+            for (int i = 0; i < n; i++)
+                y[i] = h00 * y1[i] + h10dx * yp1[i] + h01 * y2[i] + h11dx * yp2[i];
         }
     }
 }

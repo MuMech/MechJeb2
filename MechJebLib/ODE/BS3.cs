@@ -4,7 +4,6 @@
  */
 
 using System;
-using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -36,16 +35,13 @@ namespace MechJebLib.ODE
 
             _k1.CopyFrom(Dy);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A21 * Dy[i]);
+            Ynew.LinComb1(Y, h * A21, Dy);
             f(Ynew, T + C2 * h, _k2);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A32 * _k2[i]);
+            Ynew.LinComb1(Y, h * A32, _k2);
             f(Ynew, T + C3 * h, _k3);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A41 * Dy[i] + A42 * _k2[i] + A43 * _k3[i]);
+            Ynew.LinComb3(Y, h * A41, Dy, h * A42, _k2, h * A43, _k3);
             f(Ynew, T + h, _k4);
 
             _k4.CopyTo(Dynew);
@@ -54,9 +50,8 @@ namespace MechJebLib.ODE
         protected override double ScaledErrorNorm()
         {
             using var err = Vec.Rent(N);
-
-            for (int i = 0; i < N; i++)
-                err[i] = Dy[i] * E1 + _k2[i] * E2 + _k3[i] * E3 + _k4[i] * E4;
+            err.CopyFrom(Dy).Scal(E1);
+            err.LinComb3(err, E2, _k2, E3, _k3, E4, _k4);
 
             double error = 0.0;
 
@@ -92,7 +87,7 @@ namespace MechJebLib.ODE
         }
 
         protected override void Interpolate(double x, Vec yout) =>
-            Interpolants.CubicHermiteInterpolant(T, Y, Dy, Tnew, Ynew, Dynew, x, N, yout);
+            yout.CubicHermiteInterpolant(T, Y, Dy, Tnew, Ynew, Dynew, x);
 
         #region IntegrationConstants
 
