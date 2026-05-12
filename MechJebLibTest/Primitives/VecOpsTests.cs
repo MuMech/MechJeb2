@@ -542,6 +542,257 @@ namespace MechJebLibTest.Primitives
             Assert.Equal(99.0, z[0]);
         }
 
+        // ---------- Add ----------
+
+        [Fact]
+        public void Add_ComputesElementwiseSum()
+        {
+            double[] x = { 1.0, 2.0, 3.0, 4.0 };
+            double[] y = { 10.0, 20.0, 30.0, 40.0 };
+            double[] z = new double[4];
+            VecOps.Add(x, y, z, 4);
+            Assert.Equal(new[] { 11.0, 22.0, 33.0, 44.0 }, z);
+        }
+
+        [Fact]
+        public void Add_WithZero_PreservesOperand()
+        {
+            double[] x = { 1.5, -2.5, 3.5 };
+            double[] y = { 0.0, 0.0, 0.0 };
+            double[] z = new double[3];
+            VecOps.Add(x, y, z, 3);
+            Assert.Equal(new[] { 1.5, -2.5, 3.5 }, z);
+        }
+
+        [Fact]
+        public void Add_Aliasing_ZEqualsX_OverwritesX()
+        {
+            double[] x = { 1.0, 2.0, 3.0 };
+            double[] y = { 10.0, 20.0, 30.0 };
+            VecOps.Add(x, y, x, 3);
+            Assert.Equal(new[] { 11.0, 22.0, 33.0 }, x);
+            Assert.Equal(new[] { 10.0, 20.0, 30.0 }, y);
+        }
+
+        [Fact]
+        public void Add_Aliasing_ZEqualsY_OverwritesY()
+        {
+            double[] x = { 1.0, 2.0, 3.0 };
+            double[] y = { 10.0, 20.0, 30.0 };
+            VecOps.Add(x, y, y, 3);
+            Assert.Equal(new[] { 1.0, 2.0, 3.0 }, x);
+            Assert.Equal(new[] { 11.0, 22.0, 33.0 }, y);
+        }
+
+        [Fact]
+        public void Add_Aliasing_AllSame_DoublesInPlace()
+        {
+            double[] x = { 1.0, -2.0, 3.0 };
+            VecOps.Add(x, x, x, 3);
+            Assert.Equal(new[] { 2.0, -4.0, 6.0 }, x);
+        }
+
+        [Fact]
+        public void Add_NZero_LeavesZUnchanged()
+        {
+            double[] x = { 1.0, 2.0 };
+            double[] y = { 3.0, 4.0 };
+            double[] z = { 99.0, 99.0 };
+            VecOps.Add(x, y, z, 0);
+            Assert.Equal(new[] { 99.0, 99.0 }, z);
+        }
+
+        [Fact]
+        public void Add_StopsAtN()
+        {
+            double[] x = { 1.0, 2.0, 3.0 };
+            double[] y = { 4.0, 5.0, 6.0 };
+            double[] z = { 99.0, 99.0, 99.0 };
+            VecOps.Add(x, y, z, 2);
+            Assert.Equal(new[] { 5.0, 7.0, 99.0 }, z);
+        }
+
+        // ---------- Sub ----------
+
+        [Fact]
+        public void Sub_ComputesElementwiseDifference()
+        {
+            double[] x = { 10.0, 20.0, 30.0, 40.0 };
+            double[] y = { 1.0, 2.0, 3.0, 4.0 };
+            double[] z = new double[4];
+            VecOps.Sub(x, y, z, 4);
+            Assert.Equal(new[] { 9.0, 18.0, 27.0, 36.0 }, z);
+        }
+
+        [Fact]
+        public void Sub_FromSelf_GivesZero()
+        {
+            double[] x = { 1.0, -2.0, 3.0 };
+            double[] z = new double[3];
+            VecOps.Sub(x, x, z, 3);
+            Assert.Equal(new[] { 0.0, 0.0, 0.0 }, z);
+        }
+
+        [Fact]
+        public void Sub_Aliasing_ZEqualsX_OverwritesX()
+        {
+            double[] x = { 10.0, 20.0, 30.0 };
+            double[] y = { 1.0, 2.0, 3.0 };
+            VecOps.Sub(x, y, x, 3);
+            Assert.Equal(new[] { 9.0, 18.0, 27.0 }, x);
+            Assert.Equal(new[] { 1.0, 2.0, 3.0 }, y);
+        }
+
+        [Fact]
+        public void Sub_Aliasing_ZEqualsY_OverwritesY()
+        {
+            double[] x = { 10.0, 20.0, 30.0 };
+            double[] y = { 1.0, 2.0, 3.0 };
+            VecOps.Sub(x, y, y, 3);
+            Assert.Equal(new[] { 10.0, 20.0, 30.0 }, x);
+            Assert.Equal(new[] { 9.0, 18.0, 27.0 }, y);
+        }
+
+        [Fact]
+        public void Sub_Aliasing_AllSame_ZeroesInPlace()
+        {
+            double[] x = { 1.0, -2.0, 3.0 };
+            VecOps.Sub(x, x, x, 3);
+            Assert.Equal(new[] { 0.0, 0.0, 0.0 }, x);
+        }
+
+        [Fact]
+        public void Sub_NZero_LeavesZUnchanged()
+        {
+            double[] x = { 1.0, 2.0 };
+            double[] y = { 3.0, 4.0 };
+            double[] z = { 99.0, 99.0 };
+            VecOps.Sub(x, y, z, 0);
+            Assert.Equal(new[] { 99.0, 99.0 }, z);
+        }
+
+        [Fact]
+        public void Sub_StopsAtN()
+        {
+            double[] x = { 10.0, 20.0, 30.0 };
+            double[] y = { 1.0, 2.0, 3.0 };
+            double[] z = { 99.0, 99.0, 99.0 };
+            VecOps.Sub(x, y, z, 2);
+            Assert.Equal(new[] { 9.0, 18.0, 99.0 }, z);
+        }
+
+        // ---------- Shift ----------
+
+        [Fact]
+        public void Shift_AddsScalarToEachElement()
+        {
+            double[] x = { 1.0, 2.0, 3.0, 4.0 };
+            double[] z = new double[4];
+            VecOps.Shift(x, 10.0, z, 4);
+            Assert.Equal(new[] { 11.0, 12.0, 13.0, 14.0 }, z);
+        }
+
+        [Fact]
+        public void Shift_ByZero_PreservesInput()
+        {
+            double[] x = { 1.5, -2.5, 3.5 };
+            double[] z = new double[3];
+            VecOps.Shift(x, 0.0, z, 3);
+            Assert.Equal(new[] { 1.5, -2.5, 3.5 }, z);
+        }
+
+        [Fact]
+        public void Shift_NegativeAlpha_Subtracts()
+        {
+            double[] x = { 1.0, 2.0, 3.0 };
+            double[] z = new double[3];
+            VecOps.Shift(x, -1.0, z, 3);
+            Assert.Equal(new[] { 0.0, 1.0, 2.0 }, z);
+        }
+
+        [Fact]
+        public void Shift_Aliasing_ZEqualsX_ShiftsInPlace()
+        {
+            double[] x = { 1.0, 2.0, 3.0 };
+            VecOps.Shift(x, 5.0, x, 3);
+            Assert.Equal(new[] { 6.0, 7.0, 8.0 }, x);
+        }
+
+        [Fact]
+        public void Shift_NZero_LeavesZUnchanged()
+        {
+            double[] x = { 1.0, 2.0 };
+            double[] z = { 99.0, 99.0 };
+            VecOps.Shift(x, 5.0, z, 0);
+            Assert.Equal(new[] { 99.0, 99.0 }, z);
+        }
+
+        [Fact]
+        public void Shift_StopsAtN()
+        {
+            double[] x = { 1.0, 2.0, 3.0 };
+            double[] z = { 99.0, 99.0, 99.0 };
+            VecOps.Shift(x, 10.0, z, 2);
+            Assert.Equal(new[] { 11.0, 12.0, 99.0 }, z);
+        }
+
+        // ---------- Abs ----------
+
+        [Fact]
+        public void Abs_TakesElementwiseAbsoluteValue()
+        {
+            double[] x = { 1.0, -2.0, 3.0, -4.0 };
+            double[] y = new double[4];
+            VecOps.Abs(x, y, 4);
+            Assert.Equal(new[] { 1.0, 2.0, 3.0, 4.0 }, y);
+        }
+
+        [Fact]
+        public void Abs_AllPositive_NoChange()
+        {
+            double[] x = { 1.0, 2.0, 3.0 };
+            double[] y = new double[3];
+            VecOps.Abs(x, y, 3);
+            Assert.Equal(new[] { 1.0, 2.0, 3.0 }, y);
+        }
+
+        [Fact]
+        public void Abs_NegativeZero_BecomesPositiveZero()
+        {
+            double[] x = { -0.0 };
+            double[] y = new double[1];
+            VecOps.Abs(x, y, 1);
+            // Math.Abs(-0.0) is +0.0; check the sign bit, not the numeric value.
+            Assert.Equal(0.0, y[0]);
+            Assert.Equal(0L, BitConverter.DoubleToInt64Bits(y[0]));
+        }
+
+        [Fact]
+        public void Abs_Aliasing_YEqualsX_InPlace()
+        {
+            double[] x = { 1.0, -2.0, 3.0, -4.0 };
+            VecOps.Abs(x, x, 4);
+            Assert.Equal(new[] { 1.0, 2.0, 3.0, 4.0 }, x);
+        }
+
+        [Fact]
+        public void Abs_NZero_LeavesYUnchanged()
+        {
+            double[] x = { -1.0, -2.0 };
+            double[] y = { 99.0, 99.0 };
+            VecOps.Abs(x, y, 0);
+            Assert.Equal(new[] { 99.0, 99.0 }, y);
+        }
+
+        [Fact]
+        public void Abs_StopsAtN()
+        {
+            double[] x = { -1.0, -2.0, -3.0 };
+            double[] y = { 99.0, 99.0, 99.0 };
+            VecOps.Abs(x, y, 2);
+            Assert.Equal(new[] { 1.0, 2.0, 99.0 }, y);
+        }
+
         // ---------- Rot ----------
 
         [Fact]

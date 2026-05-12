@@ -92,8 +92,11 @@ namespace MechJebLib.Primitives
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void MaxZero() =>
+        public Vec MaxZero()
+        {
             VecOps.MaxZero(Data, Length);
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(Vec destination) =>
@@ -108,17 +111,26 @@ namespace MechJebLib.Primitives
 
         // this ← a·x + this
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Axpy(double a, Vec x) =>
+        public Vec Axpy(double a, Vec x)
+        {
             VecOps.Axpy(a, x.Data, Data, Length);
+            return this;
+        }
 
         // this ← a·x + b·this
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Axpby(double a, Vec x, double b) =>
+        public Vec Axpby(double a, Vec x, double b)
+        {
             VecOps.Axpby(a, x.Data, b, Data, Length);
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Swap(Vec other) =>
+        public Vec Swap(Vec other)
+        {
             VecOps.Swap(Data, other.Data, Length);
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double Dot(Vec other) =>
@@ -184,68 +196,92 @@ namespace MechJebLib.Primitives
         public int Iamax() => VecOps.Iamax(Data, Length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LinComb2(Vec y0,
-            double a1, Vec x1, double a2, Vec x2) =>
+        public Vec LinComb2(Vec y0,
+            double a1, Vec x1, double a2, Vec x2)
+        {
             VecOps.LinComb2(Data, y0.Data,
                 a1, x1.Data, a2, x2.Data, Length);
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LinComb3(Vec y0,
-            double a1, Vec x1, double a2, Vec x2, double a3, Vec x3) =>
+        public Vec LinComb3(Vec y0,
+            double a1, Vec x1, double a2, Vec x2, double a3, Vec x3)
+        {
             VecOps.LinComb3(Data, y0.Data,
                 a1, x1.Data, a2, x2.Data, a3, x3.Data, Length);
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void LinComb4(Vec y0,
+        public Vec LinComb4(Vec y0,
             double a1, Vec x1, double a2, Vec x2,
-            double a3, Vec x3, double a4, Vec x4) =>
+            double a3, Vec x3, double a4, Vec x4)
+        {
             VecOps.LinComb4(Data, y0.Data,
                 a1, x1.Data, a2, x2.Data,
                 a3, x3.Data, a4, x4.Data, Length);
+            return this;
+        }
 
-        public void LinComb5(Vec y0,
+        public Vec LinComb5(Vec y0,
             double a1, Vec x1, double a2, Vec x2,
-            double a3, Vec x3, double a4, Vec x4, double a5, Vec x5) =>
+            double a3, Vec x3, double a4, Vec x4, double a5, Vec x5)
+        {
             VecOps.LinComb5(Data, y0.Data,
                 a1, x1.Data, a2, x2.Data, a3, x3.Data,
                 a4, x4.Data, a5, x5.Data, Length);
+            return this;
+        }
 
-        public void LinComb6(Vec y0,
+        public Vec LinComb6(Vec y0,
             double a1, Vec x1, double a2, Vec x2,
             double a3, Vec x3, double a4, Vec x4,
-            double a5, Vec x5, double a6, Vec x6) =>
+            double a5, Vec x5, double a6, Vec x6)
+        {
             VecOps.LinComb6(Data, y0.Data,
                 a1, x1.Data, a2, x2.Data, a3, x3.Data,
                 a4, x4.Data, a5, x5.Data, a6, x6.Data, Length);
+            return this;
+        }
 
-        public void LinComb7(Vec y0,
+        public Vec LinComb7(Vec y0,
             double a1, Vec x1, double a2, Vec x2,
             double a3, Vec x3, double a4, Vec x4,
-            double a5, Vec x5, double a6, Vec x6, double a7, Vec x7) =>
+            double a5, Vec x5, double a6, Vec x6, double a7, Vec x7)
+        {
             VecOps.LinComb7(Data, y0.Data,
                 a1, x1.Data, a2, x2.Data, a3, x3.Data,
                 a4, x4.Data, a5, x5.Data, a6, x6.Data,
                 a7, x7.Data, Length);
+            return this;
+        }
 
-        public void LinComb8(Vec y0,
+        public Vec LinComb8(Vec y0,
             double a1, Vec x1, double a2, Vec x2,
             double a3, Vec x3, double a4, Vec x4,
             double a5, Vec x5, double a6, Vec x6,
-            double a7, Vec x7, double a8, Vec x8) =>
+            double a7, Vec x7, double a8, Vec x8)
+        {
             VecOps.LinComb8(Data, y0.Data,
                 a1, x1.Data, a2, x2.Data, a3, x3.Data,
                 a4, x4.Data, a5, x5.Data, a6, x6.Data,
                 a7, x7.Data, a8, x8.Data, Length);
+            return this;
+        }
 
-        public void LinComb9(Vec y0,
+        public Vec LinComb9(Vec y0,
             double a1, Vec x1, double a2, Vec x2,
             double a3, Vec x3, double a4, Vec x4,
             double a5, Vec x5, double a6, Vec x6,
-            double a7, Vec x7, double a8, Vec x8, double a9, Vec x9) =>
+            double a7, Vec x7, double a8, Vec x8, double a9, Vec x9)
+        {
             VecOps.LinComb9(Data, y0.Data,
                 a1, x1.Data, a2, x2.Data, a3, x3.Data,
                 a4, x4.Data, a5, x5.Data, a6, x6.Data,
                 a7, x7.Data, a8, x8.Data, a9, x9.Data, Length);
+            return this;
+        }
 
         // ---- IList<double> (explicit so the class indexer is the fast path) ----
         double IList<double>.this[int i]
