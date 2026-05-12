@@ -81,19 +81,19 @@ namespace MechJebLib.PSG
                 double h  = bt / (_n - 1);
                 double m0 = thisPhase.M[0];
 
-                using var outTangent = Vn.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-                using var inTangent  = Vn.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+                using var outTangent = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+                using var inTangent  = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
                 for (int n = 0; n < _n - 1; n++)
                 {
                     double   dt1    = n * h;
-                    using Vn array1 = InterpolantValues(thisPhase, 2 * n, phase, dv, m0, dt1);
+                    using Vec array1 = InterpolantValues(thisPhase, 2 * n, phase, dv, m0, dt1);
 
                     double   dt2    = (n + 0.5) * h;
-                    using Vn array2 = InterpolantValues(thisPhase, 2 * n + 1, phase, dv, m0, dt2);
+                    using Vec array2 = InterpolantValues(thisPhase, 2 * n + 1, phase, dv, m0, dt2);
 
                     double   dt3    = (n + 1.0) * h;
-                    using Vn array3 = InterpolantValues(thisPhase, 2 * n + 2, phase, dv, m0, dt3);
+                    using Vec array3 = InterpolantValues(thisPhase, 2 * n + 2, phase, dv, m0, dt3);
 
                     for (int i = 0; i < InterpolantLayout.INTERPOLANT_LAYOUT_LEN; i++)
                         outTangent[i] = (-3 * array1[i] + 4 * array2[i] - array3[i]) / h;
@@ -122,7 +122,7 @@ namespace MechJebLib.PSG
             return solution;
         }
 
-        private Vn InterpolantValues(PhaseProxy thisPhase, int k, Phase phase, double dv, double m0, double dt)
+        private Vec InterpolantValues(PhaseProxy thisPhase, int k, Phase phase, double dv, double m0, double dt)
         {
             var layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k] };
 
@@ -140,7 +140,7 @@ namespace MechJebLib.PSG
 
             layout.Dv = dv + phase.DeltaVForTime(m0, dt);
 
-            var array = Vn.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            var array = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             layout.CopyTo(array);
             return array;
         }

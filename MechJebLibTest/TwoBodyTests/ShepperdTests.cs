@@ -150,8 +150,8 @@ namespace MechJebLibTest.TwoBodyTests
 
                 V3 rf2, vf2;
 
-                using (var y0 = Vn.Rent(6))
-                using (var yf = Vn.Rent(6))
+                using (var y0 = Vec.Rent(6))
+                using (var yf = Vec.Rent(6))
                 {
                     y0.Set(0, r0);
                     y0.Set(3, v0);
@@ -218,8 +218,8 @@ namespace MechJebLibTest.TwoBodyTests
 
                 V3 rf2, vf2;
 
-                using (var y0 = Vn.Rent(6))
-                using (var yf = Vn.Rent(6))
+                using (var y0 = Vec.Rent(6))
+                using (var yf = Vec.Rent(6))
                 {
                     y0.Set(0, r0);
                     y0.Set(3, v0);
@@ -295,8 +295,8 @@ namespace MechJebLibTest.TwoBodyTests
 
                 V3 rf2, vf2;
 
-                using (var y0 = Vn.Rent(6))
-                using (var yf = Vn.Rent(6))
+                using (var y0 = Vec.Rent(6))
+                using (var yf = Vec.Rent(6))
                 {
                     y0.Set(0, r0);
                     y0.Set(3, v0);

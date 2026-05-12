@@ -4,7 +4,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
@@ -12,7 +11,7 @@ using static System.Math;
 
 namespace MechJebLib.ODE
 {
-    using IVPFunc = Action<IList<double>, double, IList<double>>;
+    using IVPFunc = Action<Vec, double, Vec>;
 
     /*
      * BS3 requires a smaller Rtol+Atol of 1e-8 and higher MaxIterations of 20,000 (10x DP5) or so.
@@ -20,15 +19,15 @@ namespace MechJebLib.ODE
      */
     public class BS3 : AbstractRungeKutta
     {
-        protected override int Order               => 3;
-        protected override int Stages              => 3;
-        protected override int ErrorEstimatorOrder => 2;
+        public override int Order               => 3;
+        public override int Stages              => 3;
+        public override int ErrorEstimatorOrder => 2;
 
         // ReSharper disable NullableWarningSuppressionIsUsed
-        private Vn _k1 = null!;
-        private Vn _k2 = null!;
-        private Vn _k3 = null!;
-        private Vn _k4 = null!;
+        private Vec _k1 = null!;
+        private Vec _k2 = null!;
+        private Vec _k3 = null!;
+        private Vec _k4 = null!;
         // ReSharper restore NullableWarningSuppressionIsUsed
 
         protected override void RKStep(IVPFunc f)
@@ -54,7 +53,7 @@ namespace MechJebLib.ODE
 
         protected override double ScaledErrorNorm()
         {
-            using var err = Vn.Rent(N);
+            using var err = Vec.Rent(N);
 
             for (int i = 0; i < N; i++)
                 err[i] = Dy[i] * E1 + _k2[i] * E2 + _k3[i] * E3 + _k4[i] * E4;
@@ -78,10 +77,10 @@ namespace MechJebLib.ODE
         protected override void Init()
         {
             base.Init();
-            _k1 = Vn.Rent(N);
-            _k2 = Vn.Rent(N);
-            _k3 = Vn.Rent(N);
-            _k4 = Vn.Rent(N);
+            _k1 = Vec.Rent(N);
+            _k2 = Vec.Rent(N);
+            _k3 = Vec.Rent(N);
+            _k4 = Vec.Rent(N);
         }
 
         protected override void Cleanup()
@@ -92,7 +91,7 @@ namespace MechJebLib.ODE
             _k4.Dispose();
         }
 
-        protected override void Interpolate(double x, Vn yout) =>
+        protected override void Interpolate(double x, Vec yout) =>
             Interpolants.CubicHermiteInterpolant(T, Y, Dy, Tnew, Ynew, Dynew, x, N, yout);
 
         #region IntegrationConstants

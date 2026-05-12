@@ -42,6 +42,12 @@ namespace MechJebLib.Primitives
             get => Data.Length;
         }
 
+        public int Count
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Length;
+        }
+
         public static Vec Rent(int length, bool zero = false)
         {
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
@@ -63,16 +69,27 @@ namespace MechJebLib.Primitives
             set => Data[i] = value;
         }
 
+        public Vec Dup()
+        {
+            return Rent(Length).CopyFrom(this);
+        }
+
         // ---- Convenience BLAS-1 wrappers (delegate to VecOps, length = this.Length) ----
         // All other vectors are assumed to have Length ≥ this.Length. No runtime check.
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Fill(double value) =>
+        public Vec Fill(double value)
+        {
             VecOps.Fill(Data, value, Length);
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Scal(double a) =>
+        public Vec Scal(double a)
+        {
             VecOps.Scal(a, Data, Length);
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void MaxZero() =>
@@ -81,6 +98,13 @@ namespace MechJebLib.Primitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(Vec destination) =>
             VecOps.Copy(Data, destination.Data, Length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec CopyFrom(Vec source)
+        {
+            VecOps.Copy(source.Data, Data, Length);
+            return this;
+        }
 
         // this ← a·x + this
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -99,6 +123,48 @@ namespace MechJebLib.Primitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double Dot(Vec other) =>
             VecOps.Dot(Data, other.Data, Length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec Mul(Vec other)
+        {
+            VecOps.Mul(Data, other.Data, Data, Length);
+            return this;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec Div(Vec other)
+        {
+            VecOps.Div(Data, other.Data, Data, Length);
+            return this;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec Add(Vec other)
+        {
+            VecOps.Add(Data, other.Data, Data, Length);
+            return this;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec Sub(Vec other)
+        {
+            VecOps.Sub(Data, other.Data, Data, Length);
+            return this;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec Shift(double a)
+        {
+            VecOps.Shift(Data, a, Data, Length);
+            return this;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vec Abs()
+        {
+            VecOps.Abs(Data, Data, Length);
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double Nrm2() => VecOps.Nrm2(Data, Length);

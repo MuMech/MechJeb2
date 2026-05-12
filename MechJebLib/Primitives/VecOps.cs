@@ -128,6 +128,33 @@ namespace MechJebLib.Primitives
             for (int i = 0; i < n; i++) z[i] = x[i] / y[i];
         }
 
+        // z[i] ← x[i] + y[i]  (element-wise add).
+        // Aliasing z = x or z = y is safe.
+        public static void Add(double[] x, double[] y, double[] z, int n)
+        {
+            for (int i = 0; i < n; i++) z[i] = x[i] + y[i];
+        }
+
+        // z[i] ← x[i] - y[i]  (element-wise subtract).
+        // Aliasing z = x or z = y is safe.
+        public static void Sub(double[] x, double[] y, double[] z, int n)
+        {
+            for (int i = 0; i < n; i++) z[i] = x[i] - y[i];
+        }
+
+        // z[i] ← x[i] + a  (scalar add / shift).
+        // Aliasing z = x is safe.
+        public static void Shift(double[] x, double a, double[] z, int n)
+        {
+            for (int i = 0; i < n; i++) z[i] = x[i] + a;
+        }
+
+        // y[i] ← Abs(x[i]) (element-wise Abs)
+        public static void Abs(double[] x, double[] y, int n)
+        {
+            for (int i = 0; i < n; i++) y[i] = Math.Abs(x[i]);
+        }
+
         // Apply a Givens (plane) rotation to (x, y):
         //   x[i] ←  c·x[i] + s·y[i]
         //   y[i] ← -s·x[i] + c·y[i]
