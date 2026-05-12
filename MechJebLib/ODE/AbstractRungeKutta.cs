@@ -19,8 +19,6 @@ namespace MechJebLib.ODE
         private const double MIN_FACTOR = 0.2;
         private const double SAFETY = 0.9;
 
-        protected readonly List<Vn> K = new List<Vn>();
-
         private double _beta = 0.2;
         private double _lastErrorNorm = 1e-4;
 
@@ -94,6 +92,7 @@ namespace MechJebLib.ODE
         protected override double SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0,
             IReadOnlyList<double> dy, int direction)
         {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (MaxStep == MinStep)
                 return MinStep;
 
@@ -128,18 +127,6 @@ namespace MechJebLib.ODE
         protected override void Init()
         {
             _lastErrorNorm = 1e-4;
-
-            K.Clear();
-            // we create an extra K[0] which we do not use, because the literature uses 1-indexed K's
-            for (int i = 0; i <= Stages + 1; i++)
-                K.Add(Vn.Rent(N));
-        }
-
-        protected override void Cleanup()
-        {
-            for (int i = 0; i <= Stages + 1; i++)
-                K[i].Dispose();
-            K.Clear();
         }
 
         protected abstract void RKStep(IVPFunc f);

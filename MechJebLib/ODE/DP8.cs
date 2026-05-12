@@ -165,65 +165,113 @@ namespace MechJebLib.ODE
 
         #endregion
 
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vn _k1 = null!;
+        private Vn _k2 = null!;
+        private Vn _k3 = null!;
+        private Vn _k4 = null!;
+        private Vn _k5 = null!;
+        private Vn _k6 = null!;
+        private Vn _k7 = null!;
+        private Vn _k8 = null!;
+        private Vn _k9 = null!;
+        private Vn _k10 = null!;
+        private Vn _k11 = null!;
+        private Vn _k12 = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
         protected override void RKStep(IVPFunc f)
         {
             double h = Habs * Direction;
 
-            K[1].CopyFrom(Dy);
+            _k1.CopyFrom(Dy);
 
             for (int i = 0; i < N; i++)
                 Ynew[i] = Y[i] + h * (A0201 * Dy[i]);
-            f(Ynew, T + C2 * h, K[2]);
+            f(Ynew, T + C2 * h, _k2);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0301 * K[1][i] + A0302 * K[2][i]);
-            f(Ynew, T + C3 * h, K[3]);
+                Ynew[i] = Y[i] + h * (A0301 * _k1[i] + A0302 * _k2[i]);
+            f(Ynew, T + C3 * h, _k3);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0401 * K[1][i] + A0403 * K[3][i]);
-            f(Ynew, T + C4 * h, K[4]);
+                Ynew[i] = Y[i] + h * (A0401 * _k1[i] + A0403 * _k3[i]);
+            f(Ynew, T + C4 * h, _k4);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0501 * K[1][i] + A0503 * K[3][i] + A0504 * K[4][i]);
-            f(Ynew, T + C5 * h, K[5]);
+                Ynew[i] = Y[i] + h * (A0501 * _k1[i] + A0503 * _k3[i] + A0504 * _k4[i]);
+            f(Ynew, T + C5 * h, _k5);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0601 * K[1][i] + A0604 * K[4][i] + A0605 * K[5][i]);
-            f(Ynew, T + C6 * h, K[6]);
+                Ynew[i] = Y[i] + h * (A0601 * _k1[i] + A0604 * _k4[i] + A0605 * _k5[i]);
+            f(Ynew, T + C6 * h, _k6);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0701 * K[1][i] + A0704 * K[4][i] + A0705 * K[5][i] + A0706 * K[6][i]);
-            f(Ynew, T + C7 * h, K[7]);
+                Ynew[i] = Y[i] + h * (A0701 * _k1[i] + A0704 * _k4[i] + A0705 * _k5[i] + A0706 * _k6[i]);
+            f(Ynew, T + C7 * h, _k7);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0801 * K[1][i] + A0804 * K[4][i] + A0805 * K[5][i] + A0806 * K[6][i] + A0807 * K[7][i]);
-            f(Ynew, T + C8 * h, K[8]);
+                Ynew[i] = Y[i] + h * (A0801 * _k1[i] + A0804 * _k4[i] + A0805 * _k5[i] + A0806 * _k6[i] + A0807 * _k7[i]);
+            f(Ynew, T + C8 * h, _k8);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0901 * K[1][i] + A0904 * K[4][i] + A0905 * K[5][i] + A0906 * K[6][i] + A0907 * K[7][i] + A0908 * K[8][i]);
-            f(Ynew, T + C9 * h, K[9]);
+                Ynew[i] = Y[i] + h * (A0901 * _k1[i] + A0904 * _k4[i] + A0905 * _k5[i] + A0906 * _k6[i] + A0907 * _k7[i] + A0908 * _k8[i]);
+            f(Ynew, T + C9 * h, _k9);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A1001 * K[1][i] + A1004 * K[4][i] + A1005 * K[5][i] + A1006 * K[6][i] + A1007 * K[7][i] + A1008 * K[8][i] +
-                    A1009 * K[9][i]);
-            f(Ynew, T + C10 * h, K[10]);
+                Ynew[i] = Y[i] + h * (A1001 * _k1[i] + A1004 * _k4[i] + A1005 * _k5[i] + A1006 * _k6[i] + A1007 * _k7[i] + A1008 * _k8[i] +
+                    A1009 * _k9[i]);
+            f(Ynew, T + C10 * h, _k10);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A1101 * K[1][i] + A1104 * K[4][i] + A1105 * K[5][i] + A1106 * K[6][i] + A1107 * K[7][i] + A1108 * K[8][i] +
-                    A1109 * K[9][i] + A1110 * K[10][i]);
-            f(Ynew, T + C11 * h, K[11]);
+                Ynew[i] = Y[i] + h * (A1101 * _k1[i] + A1104 * _k4[i] + A1105 * _k5[i] + A1106 * _k6[i] + A1107 * _k7[i] + A1108 * _k8[i] +
+                    A1109 * _k9[i] + A1110 * _k10[i]);
+            f(Ynew, T + C11 * h, _k11);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A1201 * K[1][i] + A1204 * K[4][i] + A1205 * K[5][i] + A1206 * K[6][i] + A1207 * K[7][i] + A1208 * K[8][i] +
-                    A1209 * K[9][i] + A1210 * K[10][i] + A1211 * K[11][i]);
-            f(Ynew, T + h, K[12]);
+                Ynew[i] = Y[i] + h * (A1201 * _k1[i] + A1204 * _k4[i] + A1205 * _k5[i] + A1206 * _k6[i] + A1207 * _k7[i] + A1208 * _k8[i] +
+                    A1209 * _k9[i] + A1210 * _k10[i] + A1211 * _k11[i]);
+            f(Ynew, T + h, _k12);
 
-            K[12].CopyTo(Dynew);
+            _k12.CopyTo(Dynew);
         }
 
         protected override void InitInterpolant()
         {
             // intentionally left blank
+        }
+
+        protected override void Init()
+        {
+            base.Init();
+            _k1 = Vn.Rent(N);
+            _k2 = Vn.Rent(N);
+            _k3 = Vn.Rent(N);
+            _k4 = Vn.Rent(N);
+            _k5 = Vn.Rent(N);
+            _k6 = Vn.Rent(N);
+            _k7 = Vn.Rent(N);
+            _k8 = Vn.Rent(N);
+            _k9 = Vn.Rent(N);
+            _k10 = Vn.Rent(N);
+            _k11 = Vn.Rent(N);
+            _k12 = Vn.Rent(N);
+        }
+
+        protected override void Cleanup()
+        {
+            _k1.Dispose();
+            _k2.Dispose();
+            _k3.Dispose();
+            _k4.Dispose();
+            _k5.Dispose();
+            _k6.Dispose();
+            _k7.Dispose();
+            _k8.Dispose();
+            _k9.Dispose();
+            _k10.Dispose();
+            _k11.Dispose();
+            _k12.Dispose();
         }
 
         // https://doi.org/10.1016/0898-1221(86)90025-8
@@ -246,7 +294,7 @@ namespace MechJebLib.ODE
             double bs7 = (1.0 - s) * s * (B71 + B72 * s + B73 * s2);
 
             for (int i = 0; i < N; i++)
-                yout[i] = Y[i] + h * s * (bs1 * K[1][i] + bs3 * K[3][i] + bs4 * K[4][i] + bs5 * K[5][i] + bs6 * K[6][i] + bs7 * K[7][i]);
+                yout[i] = Y[i] + h * s * (bs1 * k1[i] + bs3 * k3[i] + bs4 * k4[i] + bs5 * k5[i] + bs6 * k6[i] + bs7 * k7[i]);
                 */
         }
 
@@ -269,9 +317,9 @@ namespace MechJebLib.ODE
 
             for (int i = 0; i < N; i++)
             {
-                err3[i] = K[4][i] - K[1][i] * E301 - K[3][i] * E303 - K[9][i] * E309;
-                err5[i] = K[1][i] * E501 + K[6][i] * E506 + K[7][i] * E507 + K[8][i] * E508 + K[9][i] * E509 + K[10][i] * E510 + K[2][i] * E511 +
-                    K[3][i] * E512;
+                err3[i] = _k4[i] - _k1[i] * E301 - _k3[i] * E303 - _k9[i] * E309;
+                err5[i] = _k1[i] * E501 + _k6[i] * E506 + _k7[i] * E507 + _k8[i] * E508 + _k9[i] * E509 + _k10[i] * E510 + _k2[i] * E511 +
+                    _k3[i] * E512;
             }
 
             double error5 = 0.0, error3 = 0.0;

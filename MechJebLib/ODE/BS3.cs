@@ -24,25 +24,32 @@ namespace MechJebLib.ODE
         protected override int Stages              => 3;
         protected override int ErrorEstimatorOrder => 2;
 
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vn _k1 = null!;
+        private Vn _k2 = null!;
+        private Vn _k3 = null!;
+        private Vn _k4 = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
         protected override void RKStep(IVPFunc f)
         {
             double h = Habs * Direction;
 
-            K[1].CopyFrom(Dy);
+            _k1.CopyFrom(Dy);
 
             for (int i = 0; i < N; i++)
                 Ynew[i] = Y[i] + h * (A21 * Dy[i]);
-            f(Ynew, T + C2 * h, K[2]);
+            f(Ynew, T + C2 * h, _k2);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A32 * K[2][i]);
-            f(Ynew, T + C3 * h, K[3]);
+                Ynew[i] = Y[i] + h * (A32 * _k2[i]);
+            f(Ynew, T + C3 * h, _k3);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A41 * Dy[i] + A42 * K[2][i] + A43 * K[3][i]);
-            f(Ynew, T + h, K[4]);
+                Ynew[i] = Y[i] + h * (A41 * Dy[i] + A42 * _k2[i] + A43 * _k3[i]);
+            f(Ynew, T + h, _k4);
 
-            K[4].CopyTo(Dynew);
+            _k4.CopyTo(Dynew);
         }
 
         protected override double ScaledErrorNorm()
@@ -50,7 +57,7 @@ namespace MechJebLib.ODE
             using var err = Vn.Rent(N);
 
             for (int i = 0; i < N; i++)
-                err[i] = Dy[i] * E1 + K[2][i] * E2 + K[3][i] * E3 + K[4][i] * E4;
+                err[i] = Dy[i] * E1 + _k2[i] * E2 + _k3[i] * E3 + _k4[i] * E4;
 
             double error = 0.0;
 
@@ -66,6 +73,23 @@ namespace MechJebLib.ODE
         protected override void InitInterpolant()
         {
             // intentionally left blank
+        }
+
+        protected override void Init()
+        {
+            base.Init();
+            _k1 = Vn.Rent(N);
+            _k2 = Vn.Rent(N);
+            _k3 = Vn.Rent(N);
+            _k4 = Vn.Rent(N);
+        }
+
+        protected override void Cleanup()
+        {
+            _k1.Dispose();
+            _k2.Dispose();
+            _k3.Dispose();
+            _k4.Dispose();
         }
 
         protected override void Interpolate(double x, Vn yout) =>
