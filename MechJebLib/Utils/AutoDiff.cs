@@ -24,6 +24,7 @@ namespace MechJebLib.Utils
                 buf = new Dual[n];
                 _dualBuffer.Value = buf;
             }
+
             return buf;
         }
 
@@ -35,13 +36,14 @@ namespace MechJebLib.Utils
                 buf = new DualV3[n];
                 _dualV3Buffer.Value = buf;
             }
+
             return buf;
         }
 
-        private static (double, Vn) Gradient(Func<Dual[], Dual> f, double[] point)
+        private static (double, Vec) Gradient(Func<Dual[], Dual> f, double[] point)
         {
             int n        = point.Length;
-            var partials = Vn.Rent(n);
+            var partials = Vec.Rent(n);
             var ans      = new Dual(0);
 
             Dual[] duals = RentDualArray(n);
@@ -62,10 +64,10 @@ namespace MechJebLib.Utils
             return (ans.M, partials);
         }
 
-        private static (double, Vn) GradientV3(Func<DualV3[], Dual> f, V3[] point)
+        private static (double, Vec) GradientV3(Func<DualV3[], Dual> f, V3[] point)
         {
             int n        = point.Length;
-            var partials = Vn.Rent(3 * n);
+            var partials = Vec.Rent(3 * n);
             var ans      = new Dual(0);
 
             DualV3[] duals = RentDualV3Array(n);
@@ -88,12 +90,12 @@ namespace MechJebLib.Utils
             return (ans.M, partials);
         }
 
-        public static (V3, Vn partialX, Vn partialY, Vn partialZ) JacobianV3(Func<DualV3[], DualV3> f, V3[] point)
+        public static (V3, Vec partialX, Vec partialY, Vec partialZ) JacobianV3(Func<DualV3[], DualV3> f, V3[] point)
         {
             int n        = point.Length;
-            var partialX = Vn.Rent(3 * n);
-            var partialY = Vn.Rent(3 * n);
-            var partialZ = Vn.Rent(3 * n);
+            var partialX = Vec.Rent(3 * n);
+            var partialY = Vec.Rent(3 * n);
+            var partialZ = Vec.Rent(3 * n);
             var ans      = new DualV3(V3.zero, V3.zero);
 
             DualV3[] duals = RentDualV3Array(n);
@@ -141,7 +143,7 @@ namespace MechJebLib.Utils
 
         public static int ApplyScalarConstraint(double[] f, alglib.sparsematrix j, int ci, Func<Dual[], Dual> g, double[] p, int[] idx)
         {
-            (double value, Vn partials) = Gradient(g, p);
+            (double value, Vec partials) = Gradient(g, p);
 
             int n = p.Length;
 
@@ -155,14 +157,14 @@ namespace MechJebLib.Utils
             f[ci++] = value;
             AppendSortedRow(j, elements);
 
-            Vn.Return(partials);
+            partials.Dispose();
 
             return ci;
         }
 
         public static int ApplyScalarConstraintV3(double[] f, alglib.sparsematrix j, int ci, Func<DualV3[], Dual> g, V3[] p, (int, int, int)[] idx)
         {
-            (double value, Vn partials) = GradientV3(g, p);
+            (double value, Vec partials) = GradientV3(g, p);
 
             int n = p.Length;
 
@@ -179,14 +181,14 @@ namespace MechJebLib.Utils
             f[ci++] = value;
             AppendSortedRow(j, elements);
 
-            Vn.Return(partials);
+            partials.Dispose();
 
             return ci;
         }
 
         public static int ApplyVectorConstraintV3(double[] f, alglib.sparsematrix j, int ci, Func<DualV3[], DualV3> g, V3[] p, (int, int, int)[] idx)
         {
-            (V3 value, Vn partialX, Vn partialY, Vn partialZ) = JacobianV3(g, p);
+            (V3 value, Vec partialX, Vec partialY, Vec partialZ) = JacobianV3(g, p);
 
             int n = p.Length;
 
@@ -227,9 +229,9 @@ namespace MechJebLib.Utils
             f[ci++] = value.z;
             AppendSortedRow(j, elements);
 
-            Vn.Return(partialX);
-            Vn.Return(partialY);
-            Vn.Return(partialZ);
+            partialX.Dispose();
+            partialY.Dispose();
+            partialZ.Dispose();
 
             return ci;
         }
@@ -415,9 +417,9 @@ namespace MechJebLib.Utils
         {
             const int NUM_VARS = 31;
             DualV3    ans;
-            var       jacX = Vn.Rent(NUM_VARS);
-            var       jacY = Vn.Rent(NUM_VARS);
-            var       jacZ = Vn.Rent(NUM_VARS);
+            var       jacX = Vec.Rent(NUM_VARS, true);
+            var       jacY = Vec.Rent(NUM_VARS, true);
+            var       jacZ = Vec.Rent(NUM_VARS, true);
 
             var d0  = new HermiteSimpsonDualPoint { R = segment.R0, V = segment.V0, U = segment.U0, M = segment.M0 };
             var d1  = new HermiteSimpsonDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, M = segment.M1 };
@@ -510,13 +512,13 @@ namespace MechJebLib.Utils
                 if (jacZ[k] != 0)
                     alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
 
-            Vn.Return(jacX);
-            Vn.Return(jacY);
-            Vn.Return(jacZ);
+            jacX.Dispose();
+            jacY.Dispose();
+            jacZ.Dispose();
 
-            jacX = Vn.Rent(NUM_VARS);
-            jacY = Vn.Rent(NUM_VARS);
-            jacZ = Vn.Rent(NUM_VARS);
+            jacX = Vec.Rent(NUM_VARS, true);
+            jacY = Vec.Rent(NUM_VARS, true);
+            jacZ = Vec.Rent(NUM_VARS, true);
 
             H = dbt / (n - 1);
             Dual H8 = H * 0.125;
@@ -606,13 +608,13 @@ namespace MechJebLib.Utils
 
             bool singleControlVariable = indexes.Index(21) == indexes.Index(22);
 
-            Vn.Return(jacX);
-            Vn.Return(jacY);
-            Vn.Return(jacZ);
+            jacX.Dispose();
+            jacY.Dispose();
+            jacZ.Dispose();
 
-            jacX = Vn.Rent(NUM_VARS);
-            jacY = Vn.Rent(NUM_VARS);
-            jacZ = Vn.Rent(NUM_VARS);
+            jacX = Vec.Rent(NUM_VARS, true);
+            jacY = Vec.Rent(NUM_VARS, true);
+            jacZ = Vec.Rent(NUM_VARS, true);
 
             for (int k = 0; k < NUM_VARS; k++)
             {
@@ -702,13 +704,13 @@ namespace MechJebLib.Utils
                     lastindex = index;
                 }
 
-            Vn.Return(jacX);
-            Vn.Return(jacY);
-            Vn.Return(jacZ);
+            jacX.Dispose();
+            jacY.Dispose();
+            jacZ.Dispose();
 
-            jacX = Vn.Rent(NUM_VARS);
-            jacY = Vn.Rent(NUM_VARS);
-            jacZ = Vn.Rent(NUM_VARS);
+            jacX = Vec.Rent(NUM_VARS, true);
+            jacY = Vec.Rent(NUM_VARS, true);
+            jacZ = Vec.Rent(NUM_VARS, true);
 
             for (int k = 0; k < NUM_VARS; k++)
             {
