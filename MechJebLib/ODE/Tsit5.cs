@@ -59,39 +59,72 @@ namespace MechJebLib.ODE
 
         #endregion
 
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vn _k1 = null!;
+        private Vn _k2 = null!;
+        private Vn _k3 = null!;
+        private Vn _k4 = null!;
+        private Vn _k5 = null!;
+        private Vn _k6 = null!;
+        private Vn _k7 = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
         protected override void RKStep(IVPFunc f)
         {
             double h = Habs * Direction;
 
-            K[1].CopyFrom(Dy);
+            _k1.CopyFrom(Dy);
 
             for (int i = 0; i < N; i++)
                 Ynew[i] = Y[i] + h * (A21 * Dy[i]);
-            f(Ynew, T + C2 * h, K[2]);
+            f(Ynew, T + C2 * h, _k2);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A31 * K[1][i] + A32 * K[2][i]);
-            f(Ynew, T + C3 * h, K[3]);
+                Ynew[i] = Y[i] + h * (A31 * _k1[i] + A32 * _k2[i]);
+            f(Ynew, T + C3 * h, _k3);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
-            f(Ynew, T + C4 * h, K[4]);
+                Ynew[i] = Y[i] + h * (A41 * _k1[i] + A42 * _k2[i] + A43 * _k3[i]);
+            f(Ynew, T + C4 * h, _k4);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A51 * K[1][i] + A52 * K[2][i] + A53 * K[3][i] + A54 * K[4][i]);
-            f(Ynew, T + C5 * h, K[5]);
+                Ynew[i] = Y[i] + h * (A51 * _k1[i] + A52 * _k2[i] + A53 * _k3[i] + A54 * _k4[i]);
+            f(Ynew, T + C5 * h, _k5);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A61 * K[1][i] + A62 * K[2][i] + A63 * K[3][i] + A64 * K[4][i] + A65 * K[5][i]);
-            f(Ynew, T + h, K[6]);
+                Ynew[i] = Y[i] + h * (A61 * _k1[i] + A62 * _k2[i] + A63 * _k3[i] + A64 * _k4[i] + A65 * _k5[i]);
+            f(Ynew, T + h, _k6);
 
             for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A71 * K[1][i] + A72 * K[2][i] + A73 * K[3][i] + A74 * K[4][i] + A75 * K[5][i] + A76 * K[6][i]);
+                Ynew[i] = Y[i] + h * (A71 * _k1[i] + A72 * _k2[i] + A73 * _k3[i] + A74 * _k4[i] + A75 * _k5[i] + A76 * _k6[i]);
 
-            f(Ynew, T + h, K[7]);
+            f(Ynew, T + h, _k7);
 
 
-            K[7].CopyTo(Dynew);
+            _k7.CopyTo(Dynew);
+        }
+
+        protected override void Init()
+        {
+            base.Init();
+            _k1 = Vn.Rent(N);
+            _k2 = Vn.Rent(N);
+            _k3 = Vn.Rent(N);
+            _k4 = Vn.Rent(N);
+            _k5 = Vn.Rent(N);
+            _k6 = Vn.Rent(N);
+            _k7 = Vn.Rent(N);
+        }
+
+        protected override void Cleanup()
+        {
+            _k1.Dispose();
+            _k2.Dispose();
+            _k3.Dispose();
+            _k4.Dispose();
+            _k5.Dispose();
+            _k6.Dispose();
+            _k7.Dispose();
         }
 
         protected override double ScaledErrorNorm()
@@ -99,7 +132,7 @@ namespace MechJebLib.ODE
             using var err = Vn.Rent(N);
 
             for (int i = 0; i < N; i++)
-                err[i] = K[1][i] * E1 + K[2][i] * E2 + K[3][i] * E3 + K[4][i] * E4 + K[5][i] * E5 + K[6][i] * E6 + K[7][i] * E7;
+                err[i] = _k1[i] * E1 + _k2[i] * E2 + _k3[i] * E3 + _k4[i] * E4 + _k5[i] * E5 + _k6[i] * E6 + _k7[i] * E7;
 
             double error = 0.0;
 
