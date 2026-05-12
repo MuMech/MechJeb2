@@ -15,11 +15,11 @@ using static System.Math;
 
 namespace MechJebLibTest.ODETests
 {
-    public class DP5Tests
+    public class Tsit5Tests
     {
         private readonly ITestOutputHelper _testOutputHelper;
 
-        public DP5Tests(ITestOutputHelper testOutputHelper)
+        public Tsit5Tests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
         }
@@ -64,7 +64,7 @@ namespace MechJebLibTest.ODETests
                 int count1 = random.Next(20, 40);
                 int count2 = random.Next(5, 40);
 
-                var solver = new DP5 { Interpnum = count1, Rtol = 1e-9, Atol = 0, Maxiter = 2000 };
+                var solver = new Tsit5 { Interpnum = count1, Rtol = 1e-9, Atol = 0, Maxiter = 2000 };
                 var ode    = new SimpleOscillator(k, m);
                 var f      = new Action<IList<double>, double, IList<double>>(ode.dydt);
 
@@ -106,7 +106,7 @@ namespace MechJebLibTest.ODETests
 
                     for (int i = 0; i <= count1; i++)
                     {
-                        double   t = t0 + dt * i;
+                        double    t = t0 + dt * i;
                         using Vec y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected[i], 4e-6);
@@ -114,7 +114,7 @@ namespace MechJebLibTest.ODETests
 
                     for (int i = 0; i <= count2; i++)
                     {
-                        double   t = t0 + dt2 * i;
+                        double    t = t0 + dt2 * i;
                         using Vec y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected2[i], 2e-2);
@@ -129,7 +129,7 @@ namespace MechJebLibTest.ODETests
 
                     for (int i = 0; i <= count1; i++)
                     {
-                        double   t = t0 + dt * i;
+                        double    t = t0 + dt * i;
                         using Vec y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected[i], 4e-6);
@@ -137,7 +137,7 @@ namespace MechJebLibTest.ODETests
 
                     for (int i = 0; i <= count2; i++)
                     {
-                        double   t = t0 + dt2 * i;
+                        double    t = t0 + dt2 * i;
                         using Vec y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected2[i], 2e-2);
@@ -174,7 +174,7 @@ namespace MechJebLibTest.ODETests
         [Fact]
         public void AltitudeEventTest()
         {
-            var solver = new DP5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 2000 };
+            var solver = new Tsit5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 2000 };
 
             var r0 = new V3(1, 0, 0);
             var v0 = new V3(0, 1.3, 0);
@@ -203,7 +203,7 @@ namespace MechJebLibTest.ODETests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var solver = new DP5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 0 };
+            var solver = new Tsit5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 0 };
 
             using var y0 = Vec.Rent(2);
             using var yf = Vec.Rent(2);

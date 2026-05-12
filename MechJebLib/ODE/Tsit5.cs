@@ -56,6 +56,35 @@ namespace MechJebLib.ODE
         private const double E6 = 0.45808210592918686;
         private const double E7 = -0.015151515151515152;
 
+        private const double R11 = 1.0;
+        private const double R12 = -2.763706197274826;
+        private const double R13 = 2.9132554618219126;
+        private const double R14 = -1.0530884977290216;
+
+        private const double R22 = 0.13169999999999998;
+        private const double R23 = -0.2234;
+        private const double R24 = 0.1017;
+
+        private const double R32 = 3.9302962368947516;
+        private const double R33 = -5.941033872131505;
+        private const double R34 = 2.490627285651253;
+
+        private const double R42 = -12.411077166933676;
+        private const double R43 = 30.33818863028232;
+        private const double R44 = -16.548102889244902;
+
+        private const double R52 = 37.50931341651104;
+        private const double R53 = -88.1789048947664;
+        private const double R54 = 47.37952196281928;
+
+        private const double R62 = -27.896526289197286;
+        private const double R63 = 65.09189467479366;
+        private const double R64 = -34.87065786149661;
+
+        private const double R72 = 1.5;
+        private const double R73 = -4;
+        private const double R74 = 2.5;
+
         #endregion
 
         // ReSharper disable NullableWarningSuppressionIsUsed
@@ -140,6 +169,28 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
-        protected override void Interpolate(double x, Vec yout) => throw new NotImplementedException();
+        protected override void Interpolate(double x, Vec yout)
+        {
+            double h  = Habs * Direction;
+            double s  = (x - T) / h;
+            double s2 = s * s;
+            double s3 = s * s2;
+
+            // Tsit5 dense output (SciML convention):
+            //   y(t_n + s·h) = y_n + h · Σᵢ b_iΘ(s) · k_i
+            // The θ factors are baked into b_iΘ, so the leading multiplier is
+            // h alone — not h·s.
+            double b1 = s * (R11 + R12 * s + R13 * s2 + R14 * s3);
+            double b2 = s2 * (R22 + R23 * s + R24 * s2);
+            double b3 = s2 * (R32 + R33 * s + R34 * s2);
+            double b4 = s2 * (R42 + R43 * s + R44 * s2);
+            double b5 = s2 * (R52 + R53 * s + R54 * s2);
+            double b6 = s2 * (R62 + R63 * s + R64 * s2);
+            double b7 = s2 * (R72 + R73 * s + R74 * s2);
+
+            yout.LinComb7(Y,
+                h * b1, _k1, h * b2, _k2, h * b3, _k3, h * b4, _k4,
+                h * b5, _k5, h * b6, _k6, h * b7, _k7);
+        }
     }
 }

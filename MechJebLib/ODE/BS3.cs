@@ -23,7 +23,6 @@ namespace MechJebLib.ODE
         public override int ErrorEstimatorOrder => 2;
 
         // ReSharper disable NullableWarningSuppressionIsUsed
-        private Vec _k1 = null!;
         private Vec _k2 = null!;
         private Vec _k3 = null!;
         private Vec _k4 = null!;
@@ -32,8 +31,6 @@ namespace MechJebLib.ODE
         protected override void RKStep(IVPFunc f)
         {
             double h = Habs * Direction;
-
-            _k1.CopyFrom(Dy);
 
             Ynew.LinComb1(Y, h * A21, Dy);
             f(Ynew, T + C2 * h, _k2);
@@ -72,7 +69,6 @@ namespace MechJebLib.ODE
         protected override void Init()
         {
             base.Init();
-            _k1 = Vec.Rent(N);
             _k2 = Vec.Rent(N);
             _k3 = Vec.Rent(N);
             _k4 = Vec.Rent(N);
@@ -80,7 +76,6 @@ namespace MechJebLib.ODE
 
         protected override void Cleanup()
         {
-            _k1.Dispose();
             _k2.Dispose();
             _k3.Dispose();
             _k4.Dispose();

@@ -182,7 +182,7 @@ namespace MechJebLib.ODE
                 if (Direction * (tnext - tf) > 0)
                     MaxStep = Habs = Math.Abs(tf - T);
                 else
-                    Habs = Math.Abs(tnext - T);
+                    Habs = Math.Abs(tnext - T); // deliberate for bit-stability
 
                 (Habs, _habsNext) = Step(f);
 
@@ -218,10 +218,19 @@ namespace MechJebLib.ODE
                             if (_activeEvents[i].Terminal)
                             {
                                 terminate = true;
+                                // Truncate the step to the event point. Evaluate the
+                                // interpolant FIRST against the full-step (T,Y,Dy)/
+                                // (Tnew,Ynew,Dynew) — interpolants that read Tnew/Ynew/
+                                // Dynew (e.g. the cubic Hermite in BS3) would degenerate
+                                // if we mutated those first. Then commit the new
+                                // endpoint and refresh Dynew so any downstream
+                                // Interpolate() over [T, Tnew] sees a consistent right
+                                // endpoint.
                                 using var yinterp = Vec.Rent(N);
                                 Interpolate(_activeEvents[i].Time, yinterp);
                                 Tnew = _activeEvents[i].Time;
                                 Ynew.CopyFrom(yinterp);
+                                f(Ynew, Tnew, Dynew);
                                 break;
                             }
                         }
