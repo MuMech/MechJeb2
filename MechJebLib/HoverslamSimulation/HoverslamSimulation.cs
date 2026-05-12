@@ -68,8 +68,8 @@ namespace MechJebLib.HoverslamSimulation
             var ode = new HoverslamODE(_mu, _w, _vfm, phase);
             var f   = new Action<IList<double>, double, IList<double>>(ode.dydt);
 
-            using var y0 = Vn.Rent(HoverslamODE.N);
-            using var yf = Vn.Rent(HoverslamODE.N);
+            using var y0 = Vec.Rent(HoverslamODE.N);
+            using var yf = Vec.Rent(HoverslamODE.N);
 
             x.CopyTo(y0);
             if (phase.Coast)

@@ -4,7 +4,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -12,13 +11,13 @@ using static System.Math;
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.ODE
 {
-    using IVPFunc = Action<IList<double>, double, IList<double>>;
+    using IVPFunc = Action<Vec, double, Vec>;
 
     public class Tsit5 : AbstractRungeKutta
     {
-        protected override int Order               => 5;
-        protected override int Stages              => 6;
-        protected override int ErrorEstimatorOrder => 4;
+        public override int Order               => 5;
+        public override int Stages              => 6;
+        public override int ErrorEstimatorOrder => 4;
 
         #region IntegrationConstants
 
@@ -60,13 +59,13 @@ namespace MechJebLib.ODE
         #endregion
 
         // ReSharper disable NullableWarningSuppressionIsUsed
-        private Vn _k1 = null!;
-        private Vn _k2 = null!;
-        private Vn _k3 = null!;
-        private Vn _k4 = null!;
-        private Vn _k5 = null!;
-        private Vn _k6 = null!;
-        private Vn _k7 = null!;
+        private Vec _k1 = null!;
+        private Vec _k2 = null!;
+        private Vec _k3 = null!;
+        private Vec _k4 = null!;
+        private Vec _k5 = null!;
+        private Vec _k6 = null!;
+        private Vec _k7 = null!;
         // ReSharper restore NullableWarningSuppressionIsUsed
 
         protected override void RKStep(IVPFunc f)
@@ -107,13 +106,13 @@ namespace MechJebLib.ODE
         protected override void Init()
         {
             base.Init();
-            _k1 = Vn.Rent(N);
-            _k2 = Vn.Rent(N);
-            _k3 = Vn.Rent(N);
-            _k4 = Vn.Rent(N);
-            _k5 = Vn.Rent(N);
-            _k6 = Vn.Rent(N);
-            _k7 = Vn.Rent(N);
+            _k1 = Vec.Rent(N);
+            _k2 = Vec.Rent(N);
+            _k3 = Vec.Rent(N);
+            _k4 = Vec.Rent(N);
+            _k5 = Vec.Rent(N);
+            _k6 = Vec.Rent(N);
+            _k7 = Vec.Rent(N);
         }
 
         protected override void Cleanup()
@@ -129,7 +128,7 @@ namespace MechJebLib.ODE
 
         protected override double ScaledErrorNorm()
         {
-            using var err = Vn.Rent(N);
+            using var err = Vec.Rent(N);
 
             for (int i = 0; i < N; i++)
                 err[i] = _k1[i] * E1 + _k2[i] * E2 + _k3[i] * E3 + _k4[i] * E4 + _k5[i] * E5 + _k6[i] * E6 + _k7[i] * E7;
@@ -150,6 +149,6 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
-        protected override void Interpolate(double x, Vn yout) => throw new NotImplementedException();
+        protected override void Interpolate(double x, Vec yout) => throw new NotImplementedException();
     }
 }

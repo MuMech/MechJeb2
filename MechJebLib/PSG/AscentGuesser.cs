@@ -69,7 +69,7 @@ namespace MechJebLib.PSG
         private readonly DP5 _solver = new DP5();
         private readonly List<Event> _events;
 
-        private Hn Integrate(Vn y0, Vn yf, Phase phase, double t0, double tf)
+        private Hn Integrate(Vec y0, Vec yf, Phase phase, double t0, double tf)
         {
             _solver.ThrowOnMaxIter = true;
             _solver.Maxiter = 2000;
@@ -98,8 +98,8 @@ namespace MechJebLib.PSG
 
         private void Shooting(Solution solution, PhaseCollection phases, V3 u0, double targetOrbitalEnergy)
         {
-            using var initial  = Vn.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-            using var terminal = Vn.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            using var initial  = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            using var terminal = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
             var y0 = new InterpolantLayout();
 

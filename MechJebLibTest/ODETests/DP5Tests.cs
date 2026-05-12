@@ -68,10 +68,10 @@ namespace MechJebLibTest.ODETests
                 var ode    = new SimpleOscillator(k, m);
                 var f      = new Action<IList<double>, double, IList<double>>(ode.dydt);
 
-                using var y0 = Vn.Rent(2);
+                using var y0 = Vec.Rent(2);
                 y0[0] = x0;
                 y0[1] = v0;
-                using var yf    = Vn.Rent(2);
+                using var yf    = Vec.Rent(2);
                 double    omega = Sqrt(k / m);
 
                 double dt  = (tf - t0) / count1;
@@ -107,7 +107,7 @@ namespace MechJebLibTest.ODETests
                     for (int i = 0; i <= count1; i++)
                     {
                         double   t = t0 + dt * i;
-                        using Vn y = interpolant.Evaluate(t);
+                        using Vec y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected[i], 4e-6);
                     }
@@ -115,7 +115,7 @@ namespace MechJebLibTest.ODETests
                     for (int i = 0; i <= count2; i++)
                     {
                         double   t = t0 + dt2 * i;
-                        using Vn y = interpolant.Evaluate(t);
+                        using Vec y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected2[i], 2e-2);
                     }
@@ -130,7 +130,7 @@ namespace MechJebLibTest.ODETests
                     for (int i = 0; i <= count1; i++)
                     {
                         double   t = t0 + dt * i;
-                        using Vn y = interpolant.Evaluate(t);
+                        using Vec y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected[i], 4e-6);
                     }
@@ -138,7 +138,7 @@ namespace MechJebLibTest.ODETests
                     for (int i = 0; i <= count2; i++)
                     {
                         double   t = t0 + dt2 * i;
-                        using Vn y = interpolant.Evaluate(t);
+                        using Vec y = interpolant.Evaluate(t);
 
                         y[0].ShouldEqual(expected2[i], 2e-2);
                     }
@@ -187,8 +187,8 @@ namespace MechJebLibTest.ODETests
 
             var e = new List<Event> { new Event(Func) };
 
-            double[] y0 = new double[6];
-            double[] yf = new double[6];
+            using var y0 = Vec.Rent(6);
+            using var yf = Vec.Rent(6);
 
             y0.Set(0, r0);
             y0.Set(3, v0);
@@ -217,8 +217,8 @@ namespace MechJebLibTest.ODETests
             var ode    = new Asymptotic();
             var solver = new DP5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 0 };
 
-            double[] y0 = new double[2];
-            double[] yf = new double[2];
+            using var y0 = Vec.Rent(2);
+            using var yf = Vec.Rent(2);
 
             y0[0] = 0;
             y0[1] = 1;

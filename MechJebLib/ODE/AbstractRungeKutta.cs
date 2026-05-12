@@ -4,14 +4,13 @@
  */
 
 using System;
-using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLib.ODE
 {
-    using IVPFunc = Action<IList<double>, double, IList<double>>;
+    using IVPFunc = Action<Vec, double, Vec>;
 
     public abstract class AbstractRungeKutta : AbstractIVP
     {
@@ -22,9 +21,9 @@ namespace MechJebLib.ODE
         private double _beta = 0.2;
         private double _lastErrorNorm = 1e-4;
 
-        protected abstract int Order               { get; }
-        protected abstract int Stages              { get; }
-        protected abstract int ErrorEstimatorOrder { get; }
+        public abstract int Order               { get; }
+        public abstract int Stages              { get; }
+        public abstract int ErrorEstimatorOrder { get; }
 
         public double Beta
         {
@@ -89,19 +88,19 @@ namespace MechJebLib.ODE
 
         // https://github.com/scipy/scipy/blob/c374ca7fdfa32dd3817cbec0f1863e01640279eb/scipy/integrate/_ivp/common.py#L66-L121
         // E. Hairer, S. P. Norsett G. Wanner, "Solving Ordinary Differential Equations I: Nonstiff Problems", Sec. II.4.
-        protected override double SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0,
-            IReadOnlyList<double> dy, int direction)
+        protected override double SelectInitialStep(IVPFunc f, double t0, Vec y0,
+            Vec dy, int direction)
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (MaxStep == MinStep)
                 return MinStep;
 
-            using Vn y     = Vn.Rent(N).CopyFrom(y0);
-            using Vn f0    = Vn.Rent(N).CopyFrom(dy);
-            using Vn scale = y.Abs().MutTimes(Rtol).MutAdd(Atol);
+            using Vec y     = Vec.Rent(N).CopyFrom(y0);
+            using Vec f0    = Vec.Rent(N).CopyFrom(dy);
+            using Vec scale = y.Dup().Abs().Scal(Rtol).Shift(Atol);
 
-            double d0 = y.magnitude / scale.magnitude;
-            double d1 = f0.magnitude / scale.magnitude;
+            double d0 = y.Nrm2() / scale.Nrm2();
+            double d1 = f0.Nrm2() / scale.Nrm2();
 
             double h0;
             if (d0 < 1e-5 || d1 < 1e-5)
@@ -109,11 +108,11 @@ namespace MechJebLib.ODE
             else
                 h0 = 0.01 * d0 / d1;
 
-            using Vn y1 = f0.Dup().MutTimes(h0).MutTimes(direction).MutAdd(y0);
+            using Vec y1 = f0.Dup().Scal(h0*direction).Add(y0);
 
-            using var f1 = Vn.Rent(N);
-            f(f1, t0 + h0 * direction, y1);
-            double d2 = f1.MutSub(f0).MutDiv(scale).magnitude / h0;
+            using var f1 = Vec.Rent(N);
+            f(y1, t0 + h0 * direction, f1);
+            double d2 = f1.Sub(f0).Div(scale).Nrm2() / h0;
 
             double h1;
             if (d1 <= 1e-15 && d2 <= 1e-15)

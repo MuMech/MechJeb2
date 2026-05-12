@@ -584,12 +584,6 @@ namespace MechJebLib.Utils
                 dest[i] = source[i];
         }
 
-        public static void CopyFrom(this IList<double> dest, IReadOnlyList<double> source)
-        {
-            for (int i = 0; i < source.Count && i < dest.Count; i++)
-                dest[i] = source[i];
-        }
-
         public static void CopyTo(this IReadOnlyList<double> source, IList<double> dest)
         {
             for (int i = 0; i < source.Count && i < dest.Count; i++)
