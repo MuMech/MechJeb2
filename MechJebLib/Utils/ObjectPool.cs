@@ -28,8 +28,8 @@ namespace MechJebLib.Utils
 
         public ObjectPool(Func<T> create, Action<T> reset)
         {
-            _create = create ?? throw new ArgumentNullException(nameof(create));
-            _reset = reset ?? throw new ArgumentNullException(nameof(reset));
+            _create = create;
+            _reset = reset;
         }
 
         public T Borrow()
