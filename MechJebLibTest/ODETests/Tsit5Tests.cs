@@ -35,7 +35,7 @@ namespace MechJebLibTest.ODETests
                 _m = m;
             }
 
-            public int N => 2;
+            public static int N => 2;
 
             public void dydt(IList<double> y, double x, IList<double> dy)
             {
@@ -44,108 +44,112 @@ namespace MechJebLibTest.ODETests
             }
         }
 
-        [Fact]
-        public void SimpleOscillatorTest()
+        public static IEnumerable<object[]> Seeds()
         {
-            var random = new Random();
+            for (int i = 0; i <= 500; i++)
+                yield return new object[] { i };
+        }
 
-            const int NTRIALS = 50;
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void RandomSimpleOscillatorTest(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            for (int n = 0; n < NTRIALS; n++)
+            var random = new Random(seed);
+
+            double k  = 2 * random.NextDouble() + 1;
+            double m  = 2 * random.NextDouble() + 1;
+            double x0 = 4 * random.NextDouble() - 2;
+            double v0 = 4 * random.NextDouble() - 2;
+
+            double t0 = 4 * random.NextDouble() - 2;
+            double tf = 4 * random.NextDouble() - 2;
+
+            int count1 = random.Next(20, 40);
+            int count2 = random.Next(5, 40);
+
+            var solver = new Tsit5 { Interpnum = count1, Rtol = 1e-9, Atol = 0, Maxiter = 2000 };
+            var ode    = new SimpleOscillator(k, m);
+            var f      = new Action<Vec, double, Vec>(ode.dydt);
+
+            using var y0 = Vec.Rent(SimpleOscillator.N);
+            y0[0] = x0;
+            y0[1] = v0;
+            using var yf    = Vec.Rent(SimpleOscillator.N);
+            double    omega = Sqrt(k / m);
+
+            double dt  = (tf - t0) / count1;
+            double dt2 = (tf - t0) / count2;
+
+            double[] expected = new double[count1 + 1];
+
+            for (int i = 0; i <= count1; i++)
             {
-                double k  = 2 * random.NextDouble() + 1;
-                double m  = 2 * random.NextDouble() + 1;
-                double x0 = 4 * random.NextDouble() - 2;
-                double v0 = 4 * random.NextDouble() - 2;
+                double t = t0 + dt * i;
+                expected[i] = x0 * Cos(omega * (t - t0)) + v0 * Sin(omega * (t - t0)) / omega;
+            }
 
-                double t0 = 4 * random.NextDouble() - 2;
-                double tf = 4 * random.NextDouble() - 2;
+            double[] expected2 = new double[count2 + 1];
 
-                int count1 = random.Next(20, 40);
-                int count2 = random.Next(5, 40);
+            for (int i = 0; i <= count2; i++)
+            {
+                double t = t0 + dt2 * i;
+                expected2[i] = x0 * Cos(omega * (t - t0)) + v0 * Sin(omega * (t - t0)) / omega;
+            }
 
-                var solver = new Tsit5 { Interpnum = count1, Rtol = 1e-9, Atol = 0, Maxiter = 2000 };
-                var ode    = new SimpleOscillator(k, m);
-                var f      = new Action<IList<double>, double, IList<double>>(ode.dydt);
+            for (int i = 0; i <= count1; i++)
+            {
+                double t = t0 + dt * i;
+                solver.Solve(f, y0, yf, t0, t);
+                yf[0].ShouldEqual(expected[i], 4e-6);
+            }
 
-                using var y0 = Vec.Rent(2);
-                y0[0] = x0;
-                y0[1] = v0;
-                using var yf    = Vec.Rent(2);
-                double    omega = Sqrt(k / m);
-
-                double dt  = (tf - t0) / count1;
-                double dt2 = (tf - t0) / count2;
-
-                double[] expected = new double[count1 + 1];
+            using (var interpolant = Hn.Get(SimpleOscillator.N))
+            {
+                solver.Solve(f, y0, yf, t0, tf, interpolant);
 
                 for (int i = 0; i <= count1; i++)
                 {
-                    double t = t0 + dt * i;
-                    expected[i] = x0 * Cos(omega * (t - t0)) + v0 * Sin(omega * (t - t0)) / omega;
-                }
+                    double    t = t0 + dt * i;
+                    using Vec y = interpolant.Evaluate(t);
 
-                double[] expected2 = new double[count2 + 1];
+                    y[0].ShouldEqual(expected[i], 4e-6);
+                }
 
                 for (int i = 0; i <= count2; i++)
                 {
-                    double t = t0 + dt2 * i;
-                    expected2[i] = x0 * Cos(omega * (t - t0)) + v0 * Sin(omega * (t - t0)) / omega;
+                    double    t = t0 + dt2 * i;
+                    using Vec y = interpolant.Evaluate(t);
+
+                    y[0].ShouldEqual(expected2[i], 2e-2);
                 }
+            }
+
+            long start = GC.GetAllocatedBytesForCurrentThread();
+
+            using (var interpolant = Hn.Get(SimpleOscillator.N))
+            {
+                solver.Solve(f, y0, yf, t0, tf, interpolant);
 
                 for (int i = 0; i <= count1; i++)
                 {
-                    double t = t0 + dt * i;
-                    solver.Solve(f, y0, yf, t0, t);
-                    yf[0].ShouldEqual(expected[i], 4e-6);
+                    double    t = t0 + dt * i;
+                    using Vec y = interpolant.Evaluate(t);
+
+                    y[0].ShouldEqual(expected[i], 4e-6);
                 }
 
-                using (var interpolant = Hn.Get(ode.N))
+                for (int i = 0; i <= count2; i++)
                 {
-                    solver.Solve(f, y0, yf, t0, tf, interpolant);
+                    double    t = t0 + dt2 * i;
+                    using Vec y = interpolant.Evaluate(t);
 
-                    for (int i = 0; i <= count1; i++)
-                    {
-                        double    t = t0 + dt * i;
-                        using Vec y = interpolant.Evaluate(t);
-
-                        y[0].ShouldEqual(expected[i], 4e-6);
-                    }
-
-                    for (int i = 0; i <= count2; i++)
-                    {
-                        double    t = t0 + dt2 * i;
-                        using Vec y = interpolant.Evaluate(t);
-
-                        y[0].ShouldEqual(expected2[i], 2e-2);
-                    }
+                    y[0].ShouldEqual(expected2[i], 2e-2);
                 }
-
-                long start = GC.GetAllocatedBytesForCurrentThread();
-
-                using (var interpolant = Hn.Get(ode.N))
-                {
-                    solver.Solve(f, y0, yf, t0, tf, interpolant);
-
-                    for (int i = 0; i <= count1; i++)
-                    {
-                        double    t = t0 + dt * i;
-                        using Vec y = interpolant.Evaluate(t);
-
-                        y[0].ShouldEqual(expected[i], 4e-6);
-                    }
-
-                    for (int i = 0; i <= count2; i++)
-                    {
-                        double    t = t0 + dt2 * i;
-                        using Vec y = interpolant.Evaluate(t);
-
-                        y[0].ShouldEqual(expected2[i], 2e-2);
-                    }
-                }
-
-                Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
             }
+
+            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
         }
 
         private static void Kepler(IList<double> yin, double x, IList<double> dyout)
@@ -174,6 +178,8 @@ namespace MechJebLibTest.ODETests
         [Fact]
         public void AltitudeEventTest()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             var solver = new Tsit5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 2000 };
 
             var r0 = new V3(1, 0, 0);

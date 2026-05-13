@@ -47,7 +47,11 @@ namespace MechJebLib.ODE
                 if (Habs > MaxStep)
                     Habs = MaxStep;
 
-                if (Habs < minStep)
+                // FIXME? the way we ignore minStep when we're snapping to tf might cause numerical issues in
+                // edge cases.  It might be better to let the solver take a full step and not actually enforce
+                // tf at all, and then backtrack with the interpolant in order to hit tf precisely.  I believe
+                // this is how DifferentialEquations.jl solves this problem a bit more robustly.
+                if (Habs < minStep && !Snapping)
                 {
                     if (ThrowOnMinStep)
                         throw new InvalidOperationException(
