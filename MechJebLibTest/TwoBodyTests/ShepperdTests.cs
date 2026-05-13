@@ -260,5 +260,106 @@ namespace MechJebLibTest.TwoBodyTests
             rf.ShouldEqual(rf2, 1e-5);
             vf.ShouldEqual(vf2, 1e-5);
         }
+
+        // Build the STM by central finite differences using Solve() as the propagator.
+        // Returns the four 3x3 blocks of the 6x6 state transition matrix:
+        //   [ 𝛿rf ] = [ stm00 stm01 ] [ 𝛿r0 ]
+        //   [ 𝛿vf ]   [ stm10 stm11 ] [ 𝛿v0 ]
+        private static (M3 stm00, M3 stm01, M3 stm10, M3 stm11) StmByFiniteDifference(
+            double mu, double dt, V3 r0, V3 v0, double h)
+        {
+            var rCols = new V3[3];
+            var vCols = new V3[3];
+            var rColsVel = new V3[3];
+            var vColsVel = new V3[3];
+
+            for (int j = 0; j < 3; j++)
+            {
+                V3 r0p = r0; r0p[j] += h;
+                V3 r0m = r0; r0m[j] -= h;
+                (V3 rfp, V3 vfp) = Shepperd.Solve(mu, dt, r0p, v0);
+                (V3 rfm, V3 vfm) = Shepperd.Solve(mu, dt, r0m, v0);
+                rCols[j] = (rfp - rfm) / (2 * h);
+                vCols[j] = (vfp - vfm) / (2 * h);
+
+                V3 v0p = v0; v0p[j] += h;
+                V3 v0m = v0; v0m[j] -= h;
+                (rfp, vfp) = Shepperd.Solve(mu, dt, r0, v0p);
+                (rfm, vfm) = Shepperd.Solve(mu, dt, r0, v0m);
+                rColsVel[j] = (rfp - rfm) / (2 * h);
+                vColsVel[j] = (vfp - vfm) / (2 * h);
+            }
+
+            var stm00 = new M3(rCols[0], rCols[1], rCols[2]);
+            var stm01 = new M3(rColsVel[0], rColsVel[1], rColsVel[2]);
+            var stm10 = new M3(vCols[0], vCols[1], vCols[2]);
+            var stm11 = new M3(vColsVel[0], vColsVel[1], vColsVel[2]);
+            return (stm00, stm01, stm10, stm11);
+        }
+
+        private void AssertStmMatchesFD(double mu, double dt, V3 r0, V3 v0, double tol = 1e-6, double h = 1e-6)
+        {
+            (V3 _, V3 _, M3 a00, M3 a01, M3 a10, M3 a11) = Shepperd.Solve2(mu, dt, r0, v0);
+            (M3 b00, M3 b01, M3 b10, M3 b11)             = StmByFiniteDifference(mu, dt, r0, v0, h);
+
+            if (!NearlyEqual(a00, b00, tol) || !NearlyEqual(a01, b01, tol) ||
+                !NearlyEqual(a10, b10, tol) || !NearlyEqual(a11, b11, tol))
+            {
+                _testOutputHelper.WriteLine($"r0:{r0} v0:{v0} dt:{dt}");
+                _testOutputHelper.WriteLine($"stm00 analytic:\n{a00}\nstm00 FD:\n{b00}");
+                _testOutputHelper.WriteLine($"stm01 analytic:\n{a01}\nstm01 FD:\n{b01}");
+                _testOutputHelper.WriteLine($"stm10 analytic:\n{a10}\nstm10 FD:\n{b10}");
+                _testOutputHelper.WriteLine($"stm11 analytic:\n{a11}\nstm11 FD:\n{b11}");
+            }
+
+            a00.ShouldEqual(b00, tol);
+            a01.ShouldEqual(b01, tol);
+            a10.ShouldEqual(b10, tol);
+            a11.ShouldEqual(b11, tol);
+        }
+
+        [Fact]
+        public void Stm_CircularEquatorialPrograde()
+        {
+            AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, 1, 0));
+        }
+
+        [Fact]
+        public void Stm_CircularEquatorialRetrograde()
+        {
+            AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, -1, 0));
+        }
+
+        [Fact]
+        public void Stm_CircularPolar()
+        {
+            AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, 0, 1));
+        }
+
+        [Fact]
+        public void Stm_EllipticalEquatorial()
+        {
+            // v = 1.2 at r = 1, mu = 1 -> e ≈ 0.44, a ≈ 1.79
+            AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 1.2, 0));
+        }
+
+        [Fact]
+        public void Stm_EllipticalInclined()
+        {
+            AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 0.9, 0.3));
+        }
+
+        [Fact]
+        public void Stm_HyperbolicEquatorial()
+        {
+            // v = 1.5 at r = 1, mu = 1 -> hyperbolic (specific energy > 0)
+            AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 1.5, 0));
+        }
+
+        [Fact]
+        public void Stm_HyperbolicInclined()
+        {
+            AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 1.4, 0.3));
+        }
     }
 }
