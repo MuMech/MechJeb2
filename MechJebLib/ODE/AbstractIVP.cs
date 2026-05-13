@@ -27,6 +27,7 @@ namespace MechJebLib.ODE
 
         private double _habsNext;
         protected int Direction;
+        protected bool Snapping;
         protected double Habs;
         protected double MaxStep;
         protected double MinStep;
@@ -180,13 +181,19 @@ namespace MechJebLib.ODE
                 double tnext = T + Habs * Direction;
 
                 if (Direction * (tnext - tf) > 0)
+                {
+                    Snapping = true;
                     MaxStep = Habs = Math.Abs(tf - T);
+                }
                 else
+                {
+                    Snapping = false;
                     Habs = Math.Abs(tnext - T); // deliberate for bit-stability
+                }
 
                 (Habs, _habsNext) = Step(f);
 
-                Tnew = T + Habs * Direction;
+                Tnew = Snapping && MaxStep == Habs ? tf : T + Habs * Direction;
 
                 // handle events, this assumes only one trigger per event per step
                 if (events != null)
