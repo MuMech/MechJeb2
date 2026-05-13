@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: MIT-0 OR LGPL-2.1+ OR CC0-1.0
  */
@@ -13,6 +13,7 @@ using Xunit;
 using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
+using Random = System.Random;
 
 namespace MechJebLibTest.TwoBodyTests
 {
@@ -25,74 +26,53 @@ namespace MechJebLibTest.TwoBodyTests
             _testOutputHelper = testOutputHelper;
         }
 
-        [Fact]
-        private void RandomForwardAndBack()
+        public static IEnumerable<object[]> Seeds()
         {
-            const int NTRIALS = 5000;
-
-            var random = new Random();
-
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double dt = 40 * random.NextDouble() - 20;
-
-                // XXX: this probably needs a test to reject random orbits that are near-parabolic.  See the
-                // Farnocchia paper.
-
-                (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
-                (V3 rp, V3 vp) = Shepperd.Solve(1.0, -dt, rf, vf);
-
-                if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
-                {
-                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rp + " vf2:" +
-                        vp + "\n");
-                }
-
-                if ((rp - r0).magnitude / r0.magnitude > 1e-8 || (vp - v0).magnitude / v0.magnitude > 1e-8)
-                {
-                    _testOutputHelper.WriteLine(r0 + " " + v0);
-                }
-
-                rp.ShouldEqual(r0, 1e-8);
-                vp.ShouldEqual(vp, 1e-8);
-            }
+            for (int i = 0; i <= 500; i++)
+                yield return new object[] { i };
         }
 
-        [Fact]
-        private void RandomForwardAndBack2()
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void RandomForwardAndBack(int seed)
         {
-            const int NTRIALS = 5;
+            var rng = new Random(seed);
 
-            var random = new Random();
+            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            double dt = 40 * rng.NextDouble() - 20;
 
-            for (int i = 0; i < NTRIALS; i++)
+            (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
+            (V3 rp, V3 vp) = Shepperd.Solve(1.0, -dt, rf, vf);
+
+            if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
             {
-                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double dt = 40 * random.NextDouble() - 20;
-
-                // XXX: this probably needs a test to reject random orbits that are near-parabolic.  See the
-                // Farnocchia paper.
-
-                (V3 rf, V3 vf, _, _, _, _) = Shepperd.Solve2(1.0, dt, r0, v0);
-                (V3 rp, V3 vp, _, _, _, _) = Shepperd.Solve2(1.0, -dt, rf, vf);
-
-                if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
-                {
-                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rp + " vf2:" +
-                        vp + "\n");
-                }
-
-                if ((rp - r0).magnitude / r0.magnitude > 1e-8 || (vp - v0).magnitude / v0.magnitude > 1e-8)
-                {
-                    _testOutputHelper.WriteLine(r0 + " " + v0);
-                }
-
-                rp.ShouldEqual(r0, 1e-8);
-                vp.ShouldEqual(vp, 1e-8);
+                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rp + " vf2:" +
+                    vp + "\n");
             }
+
+            rp.ShouldEqual(r0, 1e-8);
+            vp.ShouldEqual(v0, 1e-8);
+        }
+
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void RandomForwardAndBack2(int seed)
+        {
+            var rng = new Random(seed);
+
+            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            double dt = 40 * rng.NextDouble() - 20;
+
+            (V3 rf, V3 vf, M3 _, M3 _, M3 _, M3 _) = Shepperd.Solve2(1.0, dt, r0, v0);
+            (V3 rp, V3 vp, M3 _, M3 _, M3 _, M3 _) = Shepperd.Solve2(1.0, -dt, rf, vf);
+
+            if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
+                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrp:" + rp + " vp:" + vp);
+
+            rp.ShouldEqual(r0, 1e-8);
+            vp.ShouldEqual(v0, 1e-8);
         }
 
         private readonly VacuumKernel _ode = new VacuumKernel();
@@ -118,144 +98,113 @@ namespace MechJebLibTest.TwoBodyTests
             }
         }
 
-        [Fact]
-        private void RandomComparedToDP5()
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void RandomComparedToDP5(int seed)
         {
             var solver = new DP5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
+            var rng    = new Random(seed);
 
-            const int NTRIALS = 500;
+            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            double dt = 10 * rng.NextDouble() - 5;
 
-            var random = new Random();
+            (double _, double ecc, double _, double _, double _, double _, double l) =
+                Astro.KeplerianFromStateVectors(1.0, r0, v0);
 
-            int count = 0;
+            // RK methods have issue with small SLRs
+            if (l < 0.1)
+                return;
 
-            for (int i = 0; i < NTRIALS; i++)
+            (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
+
+            V3 rf2, vf2;
+
+            using (var y0 = Vec.Rent(6))
+            using (var yf = Vec.Rent(6))
             {
-                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double dt = 10 * random.NextDouble() - 5;
+                y0.Set(0, r0);
+                y0.Set(3, v0);
 
-                (double _, double ecc, double _, double _, double _, double _, double l) =
-                    Astro.KeplerianFromStateVectors(1.0, r0, v0);
-
-                // near-parabolic orbits are difficult for Shepperd, see the Farnocchia paper.
-                if (ecc < 1.01 && ecc > 0.99)
-                    continue;
-
-                // RK methods have issue with small SLRs
-                if (l < 0.1)
-                    continue;
-
-                (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
-
-                V3 rf2, vf2;
-
-                using (var y0 = Vec.Rent(6))
-                using (var yf = Vec.Rent(6))
+                try
                 {
-                    y0.Set(0, r0);
-                    y0.Set(3, v0);
-
-                    try
-                    {
-                        solver.Solve(_ode.dydt, y0, yf, 0, dt);
-                    }
-                    catch (ArgumentException) // sometimes RK method still throws
-                    {
-                        continue;
-                    }
-
-                    rf2 = yf.Get(0);
-                    vf2 = yf.Get(3);
+                    solver.Solve(_ode.dydt, y0, yf, 0, dt);
+                }
+                catch (ArgumentException) // sometimes RK method still throws
+                {
+                    return;
                 }
 
-                count++;
-
-                if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
-                {
-                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
-                        rf2 + " vf2:" +
-                        vf2 + "\n");
-                }
-
-                rf.ShouldEqual(rf2, 1e-5);
-                vf.ShouldEqual(vf2, 1e-5);
+                rf2 = yf.Get(0);
+                vf2 = yf.Get(3);
             }
 
-            _testOutputHelper.WriteLine($"Successful: {count}");
-            Assert.True(count > NTRIALS * 0.90);
+            if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
+            {
+                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                    rf2 + " vf2:" +
+                    vf2 + "\n");
+            }
+
+            rf.ShouldEqual(rf2, 1e-5);
+            vf.ShouldEqual(vf2, 1e-5);
         }
 
-        [Fact]
-        private void RandomComparedToTsit5()
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void RandomComparedToTsit5(int seed)
         {
             var solver = new Tsit5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
+            var rng    = new Random(seed);
 
-            const int NTRIALS = 500;
+            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            double dt = 10 * rng.NextDouble() - 5;
 
-            var random = new Random();
+            (double _, double ecc, double _, double _, double _, double _, double l) =
+                Astro.KeplerianFromStateVectors(1.0, r0, v0);
 
-            int count = 0;
+            // RK methods have issue with small SLRs
+            if (l < 0.1)
+                return;
 
-            for (int i = 0; i < NTRIALS; i++)
+            (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
+
+            V3 rf2, vf2;
+
+            using (var y0 = Vec.Rent(6))
+            using (var yf = Vec.Rent(6))
             {
-                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double dt = 10 * random.NextDouble() - 5;
+                y0.Set(0, r0);
+                y0.Set(3, v0);
 
-                (double _, double ecc, double _, double _, double _, double _, double l) =
-                    Astro.KeplerianFromStateVectors(1.0, r0, v0);
-
-                // near-parabolic orbits are difficult for Shepperd, see the Farnocchia paper.
-                if (ecc < 1.01 && ecc > 0.99)
-                    continue;
-
-                // RK methods have issue with small SLRs
-                if (l < 0.1)
-                    continue;
-
-                (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
-
-                V3 rf2, vf2;
-
-                using (var y0 = Vec.Rent(6))
-                using (var yf = Vec.Rent(6))
+                try
                 {
-                    y0.Set(0, r0);
-                    y0.Set(3, v0);
-
-                    try
-                    {
-                        solver.Solve(_ode.dydt, y0, yf, 0, dt);
-                    }
-                    catch (ArgumentException) // sometimes RK method still throws
-                    {
-                        continue;
-                    }
-
-                    rf2 = yf.Get(0);
-                    vf2 = yf.Get(3);
+                    solver.Solve(_ode.dydt, y0, yf, 0, dt);
+                }
+                catch (ArgumentException) // sometimes RK method still throws
+                {
+                    return;
                 }
 
-                count++;
-
-                if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
-                {
-                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
-                        rf2 + " vf2:" +
-                        vf2 + "\n");
-                }
-
-                rf.ShouldEqual(rf2, 1e-5);
-                vf.ShouldEqual(vf2, 1e-5);
+                rf2 = yf.Get(0);
+                vf2 = yf.Get(3);
             }
 
-            _testOutputHelper.WriteLine($"Successful: {count}");
-            Assert.True(count > NTRIALS * 0.90);
+            if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
+            {
+                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                    rf2 + " vf2:" +
+                    vf2 + "\n");
+            }
+
+            rf.ShouldEqual(rf2, 1e-5);
+            vf.ShouldEqual(vf2, 1e-5);
         }
 
-        [Fact]
-        private void RandomComparedToDP8()
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        public void RandomComparedToDP8(int seed)
         {
             var solver = new DP8
             {
@@ -265,71 +214,51 @@ namespace MechJebLibTest.TwoBodyTests
                 ThrowOnMaxIter = true,
                 Maxiter = 2000000
             };
+            var rng = new Random(seed);
 
-            const int NTRIALS = 500;
+            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            double dt = 10 * rng.NextDouble() - 5;
 
-            var random = new Random();
+            (double _, double ecc, double _, double _, double _, double _, double l) =
+                Astro.KeplerianFromStateVectors(1.0, r0, v0);
 
-            int count = 0;
+            // RK methods have issue with small SLRs
+            if (l < 0.1)
+                return;
 
-            for (int i = 0; i < NTRIALS; i++)
+            (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
+
+            V3 rf2, vf2;
+
+            using (var y0 = Vec.Rent(6))
+            using (var yf = Vec.Rent(6))
             {
-                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double dt = 10 * random.NextDouble() - 5;
+                y0.Set(0, r0);
+                y0.Set(3, v0);
 
-                (double sma, double ecc, double inc, double lan, double argp, double nu, double l) =
-                    Astro.KeplerianFromStateVectors(1.0, r0, v0);
-
-                //_testOutputHelper.WriteLine($"sma: {sma} ecc: {ecc} inc: {inc} lan: {lan} argp: {argp} nu: {nu} l: {l}");
-
-                // near-parabolic orbits are difficult for Shepperd, see the Farnocchia paper.
-                if (ecc < 1.01 && ecc > 0.99)
-                    continue;
-
-                // RK methods have issue with small SLRs
-                if (l < 0.1)
-                    continue;
-
-                (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
-
-                V3 rf2, vf2;
-
-                using (var y0 = Vec.Rent(6))
-                using (var yf = Vec.Rent(6))
+                try
                 {
-                    y0.Set(0, r0);
-                    y0.Set(3, v0);
-
-                    try
-                    {
-                        solver.Solve(_ode.dydt, y0, yf, 0, dt);
-                    }
-                    catch (ArgumentException) // sometimes RK method still throws
-                    {
-                        continue;
-                    }
-
-                    rf2 = yf.Get(0);
-                    vf2 = yf.Get(3);
+                    solver.Solve(_ode.dydt, y0, yf, 0, dt);
+                }
+                catch (ArgumentException) // sometimes RK method still throws
+                {
+                    return;
                 }
 
-                count++;
-
-                if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
-                {
-                    _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
-                        rf2 + " vf2:" +
-                        vf2 + "\n");
-                }
-
-                rf.ShouldEqual(rf2, 1e-5);
-                vf.ShouldEqual(vf2, 1e-5);
+                rf2 = yf.Get(0);
+                vf2 = yf.Get(3);
             }
 
-            _testOutputHelper.WriteLine($"Successful: {count}");
+            if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
+            {
+                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                    rf2 + " vf2:" +
+                    vf2 + "\n");
+            }
 
-            Assert.True(count > NTRIALS * 0.90);
+            rf.ShouldEqual(rf2, 1e-5);
+            vf.ShouldEqual(vf2, 1e-5);
         }
     }
 }
