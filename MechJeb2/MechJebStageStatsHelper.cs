@@ -384,8 +384,8 @@ namespace MuMech
             stageVisibility[StageData.VacDeltaV]            = showVacDeltaV;
             stageVisibility[StageData.Time]                 = showTime;
             stageVisibility[StageData.Isp]                  = showISP;
-            stageVisibility[StageData.AtmoCumulativeDeltaV] = showAtmoDeltaV && !showRcs;
-            stageVisibility[StageData.VacCumulativeDeltaV]  = showVacDeltaV && !showRcs;
+            stageVisibility[StageData.AtmoCumulativeDeltaV] = showAtmoDeltaV;
+            stageVisibility[StageData.VacCumulativeDeltaV]  = showVacDeltaV;
         }
 
         private void SaveStageVisibility()
