@@ -179,7 +179,7 @@ namespace MechJebLib.Utils
                 {
                     y *= x;
                     x *= x;
-                    n =  (n - 1) / 2;
+                    n = (n - 1) / 2;
                 }
             }
 
@@ -543,8 +543,8 @@ namespace MechJebLib.Utils
 
             int exponent = (int)Floor(Log10(Abs(d) + offset));
 
-            int index             = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
-            if (index > 10) index = 10;                                           // there's only 10 SI prefixes
+            int index = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
+            if (index > 10) index = 10;                               // there's only 10 SI prefixes
 
             int siExponent = Sign(exponent) * index * 3; // the SI prefix exponent
 
@@ -584,12 +584,6 @@ namespace MechJebLib.Utils
                 dest[i] = source[i];
         }
 
-        public static void CopyFrom(this IList<double> dest, IReadOnlyList<double> source)
-        {
-            for (int i = 0; i < source.Count && i < dest.Count; i++)
-                dest[i] = source[i];
-        }
-
         public static void CopyTo(this IReadOnlyList<double> source, IList<double> dest)
         {
             for (int i = 0; i < source.Count && i < dest.Count; i++)
@@ -598,7 +592,7 @@ namespace MechJebLib.Utils
 
         public static void Set(this IList<double> a, int index, V3 v)
         {
-            a[index]     = v.x;
+            a[index] = v.x;
             a[index + 1] = v.y;
             a[index + 2] = v.z;
         }
@@ -607,7 +601,7 @@ namespace MechJebLib.Utils
 
         public static void Set(this double[] a, int index, V3 v)
         {
-            a[index]     = v.x;
+            a[index] = v.x;
             a[index + 1] = v.y;
             a[index + 2] = v.z;
         }
@@ -633,9 +627,11 @@ namespace MechJebLib.Utils
         [StructLayout(LayoutKind.Explicit)]
         private struct DoubleLongUnion
         {
-            [FieldOffset(0)] public long i;
+            [FieldOffset(0)]
+            public long i;
 
-            [FieldOffset(0)] public double d;
+            [FieldOffset(0)]
+            public double d;
         }
     }
 }

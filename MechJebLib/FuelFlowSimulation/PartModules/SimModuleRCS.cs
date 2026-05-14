@@ -12,22 +12,22 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 {
     public class SimModuleRCS : SimPartModule
     {
-        private static readonly ObjectPool<SimModuleRCS>     _pool                = new ObjectPool<SimModuleRCS>(New, Clear);
-        public readonly         List<SimPropellant>          Propellants          = new List<SimPropellant>();
-        public readonly         Dictionary<int, SimFlowMode> PropellantFlowModes  = new Dictionary<int, SimFlowMode>();
-        public readonly         Dictionary<int, double>      ResourceConsumptions = new Dictionary<int, double>();
+        private static readonly ObjectPool<SimModuleRCS> _pool = new ObjectPool<SimModuleRCS>(New, Clear);
+        public readonly List<SimPropellant> Propellants = new List<SimPropellant>();
+        public readonly Dictionary<int, SimFlowMode> PropellantFlowModes = new Dictionary<int, SimFlowMode>();
+        public readonly Dictionary<int, double> ResourceConsumptions = new Dictionary<int, double>();
 
         public readonly H1 AtmosphereCurve = H1.Get(true);
 
-        public  double G;
-        public  double Isp;
-        public  double Thrust;
-        public  bool   RcsEnabled;
-        private bool   _savedRcsEnabled;
-        public  double ISPMult;
-        public  double ThrustPercentage;
-        public  double MaxFuelFlow;
-        public  double MassFlowRate;
+        public double G;
+        public double Isp;
+        public double Thrust;
+        public bool RcsEnabled;
+        private bool _savedRcsEnabled;
+        public double ISPMult;
+        public double ThrustPercentage;
+        public double MaxFuelFlow;
+        public double MassFlowRate;
 
         private double _atmPressure => Part.Vessel.ATMPressure;
 
@@ -115,7 +115,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             Isp = AtmosphereCurve.Evaluate(_atmPressure);
             double exhaustVel = Isp * G * ISPMult;
             MassFlowRate = MaxFuelFlow * (ThrustPercentage * 0.01);
-            Thrust       = exhaustVel * MassFlowRate;
+            Thrust = exhaustVel * MassFlowRate;
             SetConsumptionRates();
         }
 
@@ -147,7 +147,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 if (density <= 0)
                     continue;
 
-                PropellantFlowModes.TryAdd(p.id, p.FlowMode);
+                if (!PropellantFlowModes.ContainsKey(p.id))
+                    PropellantFlowModes.Add(p.id, p.FlowMode);
 
                 // ignoreForIsp fuels are not part of the total density
                 if (p.ignoreForIsp)

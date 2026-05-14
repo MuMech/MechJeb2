@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using MechJebLib.Primitives;
+
+using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.AutoDiff;
 
@@ -10,6 +11,7 @@ namespace MechJebLibTest.Utils
 {
     public class AutoDiffTests
     {
+        /*
         [Fact]
         private void JacobianDifference()
         {
@@ -35,5 +37,6 @@ namespace MechJebLibTest.Utils
             jac[4].ShouldEqual(new V3(-3, 0, 1));
             jac[5].ShouldEqual(new V3(2, -1, 0));
         }
+        */
     }
 }

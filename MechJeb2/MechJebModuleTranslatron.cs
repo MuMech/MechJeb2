@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using KSP.Localization;
@@ -43,7 +43,7 @@ namespace MuMech
 
         public override string IconName() => "Translatron";
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(130) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(130) };
 
         protected override void WindowGUI(int windowID)
         {
@@ -70,7 +70,7 @@ namespace MuMech
                 buttonStyle.normal.textColor = Color.red;
                 buttonStyle.onActive = buttonStyle.onFocused = buttonStyle.onHover =
                     buttonStyle.onNormal = buttonStyle.active = buttonStyle.focused = buttonStyle.hover = buttonStyle.normal;
-                GUILayout.Button(Localizer.Format("#MechJeb_Trans_auto"), buttonStyle, GUILayout.ExpandWidth(true));
+                GUILayout.Button(Localizer.Format("#MechJeb_Trans_auto"), buttonStyle, GuiUtils.LayoutExpandWidth);
             }
             else
             {
@@ -89,23 +89,23 @@ namespace MuMech
                         : 1; // change by 5 if the mod_key is held down, else by 1 -- would be better if it actually worked...
 
                 Core.Thrust.TransKillH = GUILayout.Toggle(Core.Thrust.TransKillH, Localizer.Format("#MechJeb_Trans_kill_h"),
-                    GUILayout.ExpandWidth(true));
-                GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+                    GuiUtils.LayoutExpandWidth);
+                GUILayout.BeginHorizontal(GuiUtils.LayoutExpandWidth);
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Trans_spd"), trans_spd, "", 37);
                 bool change = false;
-                if (GUILayout.Button("-", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                 {
                     trans_spd -= val;
                     change    =  true;
                 }
 
-                if (GUILayout.Button("0", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button("0", GuiUtils.LayoutNoExpandWidth))
                 {
                     trans_spd = 0;
                     change    = true;
                 }
 
-                if (GUILayout.Button("+", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                 {
                     trans_spd += val;
                     change    =  true;
@@ -113,7 +113,7 @@ namespace MuMech
 
                 GUILayout.EndHorizontal();
 
-                if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act") + ":", buttonStyle, GUILayout.ExpandWidth(true)) || change)
+                if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act") + ":", buttonStyle, GuiUtils.LayoutExpandWidth) || change)
                 {
                     Core.Thrust.TransSpdAct    = (float)trans_spd.Val;
                     GUIUtility.keyboardControl = 0;
@@ -123,19 +123,19 @@ namespace MuMech
             if (Core.Thrust.Tmode != MechJebModuleThrustController.TMode.OFF)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Trans_current_spd") + Core.Thrust.TransSpdAct.ToSI() + "m/s",
-                    GUILayout.ExpandWidth(true));
+                    GuiUtils.LayoutExpandWidth);
             }
 
             GUILayout.FlexibleSpace();
 
-            GUILayout.Label("Automation", GuiUtils.UpperCenterLabel, GUILayout.ExpandWidth(true));
+            GUILayout.Label("Automation", GuiUtils.UpperCenterLabel, GuiUtils.LayoutExpandWidth);
 
             buttonStyle.normal.textColor = buttonStyle.focused.textColor = buttonStyle.hover.textColor = buttonStyle.active.textColor =
                 buttonStyle.onNormal.textColor = buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor =
                     buttonStyle.onActive.textColor = abort != AbortStage.OFF ? Color.red : Color.green;
 
             if (GUILayout.Button(abort != AbortStage.OFF ? Localizer.Format("#MechJeb_Trans_NOPANIC") : Localizer.Format("#MechJeb_Trans_PANIC"),
-                    buttonStyle, GUILayout.ExpandWidth(true)))
+                    buttonStyle, GuiUtils.LayoutExpandWidth))
             {
                 PanicSwitch();
             }

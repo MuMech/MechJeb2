@@ -44,11 +44,11 @@ namespace MechJebLib.Lambert
             return (_v1[index], _v2[index]);
         }
 
-        private int      _nsol;
-        private V3[]     _v1    = new V3[5];
-        private V3[]     _v2    = new V3[5];
-        private int[]    _iters = new int[5];
-        private double[] _x     = new double[5];
+        private int _nsol;
+        private V3[] _v1 = new V3[5];
+        private V3[] _v2 = new V3[5];
+        private int[] _iters = new int[5];
+        private double[] _x = new double[5];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Solve2(double mu, V3 r1, V3 v1, V3 r2, double tof, int nrev)
@@ -88,8 +88,8 @@ namespace MechJebLib.Lambert
             if (flip)
             {
                 lambda = -lambda;
-                it1    = -it1;
-                it2    = -it2;
+                it1 = -it1;
+                it2 = -it2;
             }
 
             // compute nmax;
@@ -126,16 +126,16 @@ namespace MechJebLib.Lambert
             }
 
             // clip nmax to nrev
-            nmax  = Min(nrev, nmax);
+            nmax = Min(nrev, nmax);
             _nsol = nmax * 2 + 1;
 
             // extend memory if necessary
             if (_nsol > _x.Length)
             {
-                _v1    = new V3[nmax * 2 + 1];
-                _v2    = new V3[nmax * 2 + 1];
+                _v1 = new V3[nmax * 2 + 1];
+                _v2 = new V3[nmax * 2 + 1];
                 _iters = new int[nmax * 2 + 1];
-                _x     = new double[nmax * 2 + 1];
+                _x = new double[nmax * 2 + 1];
             }
 
             // initial guess
@@ -152,11 +152,11 @@ namespace MechJebLib.Lambert
             {
                 // left householder
                 double tmp = Pow((i * PI + PI) / (8.0 * t), 2.0 / 3.0);
-                _x[2 * i - 1]     = (tmp - 1) / (tmp + 1);
+                _x[2 * i - 1] = (tmp - 1) / (tmp + 1);
                 _iters[2 * i - 1] = Householder(lambda, t, ref _x[2 * i - 1], i, 1e-8, 15);
                 // right householder
-                tmp           = Pow(8.0 * t / (i * PI), 2.0 / 3.0);
-                _x[2 * i]     = (tmp - 1) / (tmp + 1);
+                tmp = Pow(8.0 * t / (i * PI), 2.0 / 3.0);
+                _x[2 * i] = (tmp - 1) / (tmp + 1);
                 _iters[2 * i] = Householder(lambda, t, ref _x[2 * i], i, 1e-8, 15);
             }
 
@@ -192,7 +192,7 @@ namespace MechJebLib.Lambert
                 double dt2   = dt * dt;
                 double xnew  = x0 - delta * (dt2 - delta * ddt / 2.0) / (dt * (dt2 - delta * ddt) + dddt * delta * delta / 6.0);
                 err = Abs(x0 - xnew);
-                x0  = xnew;
+                x0 = xnew;
                 it++;
             }
 
@@ -262,15 +262,15 @@ namespace MechJebLib.Lambert
             double a = 1.0 / (1.0 - x * x);
             if (a > 0) // ellipse
             {
-                double alfa            = 2.0 * Acos(x);
-                double beta            = 2.0 * Asin(Sqrt(lambda * lambda / a));
+                double alfa = 2.0 * Acos(x);
+                double beta = 2.0 * Asin(Sqrt(lambda * lambda / a));
                 if (lambda < 0.0) beta = -beta;
                 return a * Sqrt(a) * (alfa - Sin(alfa) - (beta - Sin(beta)) + 2.0 * PI * n) / 2.0;
             }
             else
             {
-                double alfa            = 2.0 * Acosh(x);
-                double beta            = 2.0 * Asinh(Sqrt(-lambda * lambda / a));
+                double alfa = 2.0 * Acosh(x);
+                double beta = 2.0 * Asinh(Sqrt(-lambda * lambda / a));
                 if (lambda < 0.0) beta = -beta;
                 return -a * Sqrt(-a) * (beta - Sinh(beta) - (alfa - Sinh(alfa))) / 2.0;
             }
@@ -287,10 +287,10 @@ namespace MechJebLib.Lambert
             {
                 double cj1 = cj * (3.0 + j) * (1.0 + j) / (2.5 + j) * z / (j + 1);
                 double sj1 = sj + cj1;
-                err =  Abs(cj1);
-                sj  =  sj1;
-                cj  =  cj1;
-                j   += 1;
+                err = Abs(cj1);
+                sj = sj1;
+                cj = cj1;
+                j += 1;
             }
 
             return sj;

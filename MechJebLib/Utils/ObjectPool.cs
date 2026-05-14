@@ -5,42 +5,55 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace MechJebLib.Utils
 {
     public class ObjectPoolBase
     {
-        // The object pool is global state, and global state is horrible for unit tests, so by setting
-        // UseGlobal = false the tests will use per-thread object pools, which keeps them from scribbling
-        // over each other's objectpools.  This lets me write tests to check for allocations to make sure
-        // that the use of the threadpool isn't leaking objects on successive invocations.
+        // Tests flip this to false (via [assembly: TestFramework]) so each thread
+        // gets its own pool — keeps allocation-counting tests from contaminating
+        // each other when xunit runs them in parallel.
         internal static bool UseGlobal = true;
     }
 
-    // TODO: min and max object levels
-    public class ObjectPool<T> : ObjectPoolBase
+    public class ObjectPool<T> : ObjectPoolBase where T : class
     {
-        private readonly Func<T>   _create;
+        private readonly Func<T> _create;
         private readonly Action<T> _reset;
 
-        private readonly        ConcurrentBag<T>              _globalPool = new ConcurrentBag<T>();
-        private static readonly ThreadLocal<ConcurrentBag<T>> _localPool  = new ThreadLocal<ConcurrentBag<T>>(() => new ConcurrentBag<T>());
-
-        private ConcurrentBag<T> _pool => UseGlobal ? _globalPool : _localPool.Value;
+        private readonly ConcurrentBag<T> _globalPool = new ConcurrentBag<T>();
+        private readonly ThreadLocal<Stack<T>> _localPool = new ThreadLocal<Stack<T>>(() => new Stack<T>());
 
         public ObjectPool(Func<T> create, Action<T> reset)
         {
-            _reset  = reset;
             _create = create;
+            _reset = reset;
         }
 
-        public T Borrow() => _pool.TryTake(out T item) ? item : _create();
+        public T Borrow()
+        {
+            if (UseGlobal)
+            {
+                if (_globalPool.TryTake(out T item)) return item;
+            }
+            else
+            {
+                Stack<T> stack = _localPool.Value;
+                if (stack.Count > 0) return stack.Pop();
+            }
+
+            return _create();
+        }
 
         public void Release(T item)
         {
             _reset(item);
-            _pool.Add(item);
+            if (UseGlobal)
+                _globalPool.Add(item);
+            else
+                _localPool.Value.Push(item);
         }
     }
 }

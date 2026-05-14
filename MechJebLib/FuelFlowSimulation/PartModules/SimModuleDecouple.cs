@@ -11,9 +11,9 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
     {
         private static readonly ObjectPool<SimModuleDecouple> _pool = new ObjectPool<SimModuleDecouple>(New, Clear);
 
-        public bool     IsDecoupled;
-        public bool     IsOmniDecoupler;
-        public bool     Staged;
+        public bool IsDecoupled;
+        public bool IsOmniDecoupler;
+        public bool Staged;
         public SimPart? AttachedPart;
 
         public override void Dispose() => _pool.Release(this);

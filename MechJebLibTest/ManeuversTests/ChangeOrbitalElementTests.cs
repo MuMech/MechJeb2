@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
@@ -27,8 +28,8 @@ namespace MechJebLibTest.ManeuversTests
 
                 double rscale = random.NextDouble() * 1.5e8 + 1;
                 double vscale = random.NextDouble() * 3e4 + 1;
-                r    *= rscale;
-                v    *= vscale;
+                r *= rscale;
+                v *= vscale;
                 newR *= rscale;
                 double mu = rscale * vscale * vscale;
 

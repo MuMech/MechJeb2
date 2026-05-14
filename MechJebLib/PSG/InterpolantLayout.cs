@@ -12,10 +12,10 @@ namespace MechJebLib.PSG
     {
         public const int INTERPOLANT_LAYOUT_LEN = 11;
 
-        public V3     R;
-        public V3     V;
+        public V3 R;
+        public V3 V;
         public double M;
-        public V3     U;
+        public V3 U;
         public double Dv;
 
         public void CopyTo(IList<double> other)

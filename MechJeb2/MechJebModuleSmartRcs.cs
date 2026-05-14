@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System.Linq;
 using KSP.Localization;
 using UnityEngine;
@@ -30,7 +30,7 @@ namespace MuMech
 
         protected void TargetButton(Target bt)
         {
-            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
+            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
             {
                 target = bt;
                 Engage();
@@ -74,7 +74,7 @@ namespace MuMech
                         Core.RCS.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
                 }
 
-                GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GUILayout.ExpandWidth(true)); //"AUTO"
+                GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GuiUtils.LayoutExpandWidth); //"AUTO"
             }
             else if (Core.Target.Target == null)
             {
@@ -112,7 +112,7 @@ namespace MuMech
             }
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(180), GUILayout.Height(100) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(180), GUILayout.Height(100) };
 
         public override string GetName() => Localizer.Format("#MechJeb_SmartRcs_title"); //"SmartRcs"
 

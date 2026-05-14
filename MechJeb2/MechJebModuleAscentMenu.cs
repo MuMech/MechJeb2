@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -151,7 +151,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.Skin.label,
                 false);                                                                                        //Orbit inc.
-            if (GUILayout.Button(CachedLocalizer.Instance.MechJebAscentButton13, GuiUtils.ExpandWidth(false))) //Current
+            if (GUILayout.Button(new GUIContent(CachedLocalizer.Instance.MechJebAscentButton13, "Sets inclination to launch site latitude (for due-east launch). Lower inclinations require a costly plane change."), GuiUtils.ExpandWidth(false))) //Current
                 _ascentSettings.DesiredInclination.Val = Math.Round(VesselState.latitude, 3);
             GUILayout.EndHorizontal();
 
@@ -484,7 +484,7 @@ namespace MuMech
             return $"burn: {kspStage} {solution.Tgo(t, psgPhase):F1}s {solution.DV(t, psgPhase):F1}m/s ({excessDV:F1}m/s)";
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(275), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(275), GUILayout.Height(30) };
 
         public override string GetName() => CachedLocalizer.Instance.MechJebAscentTitle; //"Ascent Guidance"
 

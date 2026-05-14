@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
@@ -45,13 +46,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust3 = Astro.ThrustFromMassesIspBurntime(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005);
 
             Ascent ascent = Ascent.Builder()
-                .Initial(r0, v0, u0, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
-                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275,  3, 3)
-                .AddStage(2848.62586760223, 1363.71123994759, thrust2,270.15767003304,  1, 1)
-                .AddCoast(678.290157913434, 0, 450, 1, 1)
-                .AddStage(678.290157913434, 177.582604389742, thrust3,230.039271734103,  0, 0, allowShutdown: false)
-                .Build();
+               .Initial(r0, v0, u0, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
+               .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
+               .AddStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1)
+               .AddCoast(678.290157913434, 0, 450, 1, 1)
+               .AddStage(678.290157913434, 177.582604389742, thrust3, 230.039271734103, 0, 0, allowShutdown: false)
+               .Build();
 
             ascent.Run();
 
@@ -110,13 +111,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             double thrust3 = Astro.ThrustFromMassesIspBurntime(678.290157913434, 177.582604389742, 230.039271734103, 53.0805126571005);
 
             Ascent ascent = Ascent.Builder()
-                .Initial(r0, v0, u0, t0, mu, rbody)
-                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, false, false, false)
-                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275,  3, 3)
-                .AddStage(2848.62586760223, 1363.71123994759, thrust2,270.15767003304,  1, 1)
-                .AddCoast(678.290157913434, 0, 450, 1, 1)
-                .AddStage(678.290157913434, 177.582604389742, thrust3,230.039271734103,  0, 0, allowShutdown: false)
-                .Build();
+               .Initial(r0, v0, u0, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, false, false, false)
+               .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
+               .AddStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1)
+               .AddCoast(678.290157913434, 0, 450, 1, 1)
+               .AddStage(678.290157913434, 177.582604389742, thrust3, 230.039271734103, 0, 0, allowShutdown: false)
+               .Build();
 
             ascent.Run();
 
@@ -181,14 +182,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             V3           w           = 7.29211585e-5 * V3.northpole;
 
             Ascent ascent = Ascent.Builder()
-                .Initial(r0, v0, u0, t0, mu, rbody)
-                .AerodynamicConstants(aref, CD, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
-                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
-                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275,  3, 3)
-                .AddStage(2848.62586760223, 1363.71123994759, thrust2,270.15767003304,  1, 1)
-                .AddCoast(678.290157913434, 0, 450, 1, 1)
-                .AddStage(678.290157913434, 177.582604389742, thrust3,230.039271734103,  0, 0, unguided: true, allowShutdown: false)
-                .Build();
+               .Initial(r0, v0, u0, t0, mu, rbody)
+               .AerodynamicConstants(aref, CD, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
+               .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
+               .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
+               .AddStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1)
+               .AddCoast(678.290157913434, 0, 450, 1, 1)
+               .AddStage(678.290157913434, 177.582604389742, thrust3, 230.039271734103, 0, 0, true, false)
+               .Build();
 
             ascent.Run();
 

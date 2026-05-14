@@ -11,7 +11,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
     {
         private static readonly ObjectPool<SimModuleDockingNode> _pool = new ObjectPool<SimModuleDockingNode>(New, Clear);
 
-        public bool     Staged;
+        public bool Staged;
         public SimPart? AttachedPart;
 
         public override void Dispose() => _pool.Release(this);

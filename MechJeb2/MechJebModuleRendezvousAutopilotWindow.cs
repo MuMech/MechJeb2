@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using KSP.Localization;
 using UnityEngine;
 
@@ -62,7 +62,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(300), GUILayout.Height(50) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(300), GUILayout.Height(50) };
 
         public override string GetName() => Localizer.Format("#MechJeb_RZauto_title"); //"Rendezvous Autopilot"
 

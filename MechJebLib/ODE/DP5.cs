@@ -4,7 +4,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -12,7 +11,7 @@ using static System.Math;
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.ODE
 {
-    using IVPFunc = Action<IList<double>, double, IList<double>>;
+    using IVPFunc = Action<Vec, double, Vec>;
 
     /// <summary>
     ///     https://doi.org/10.1016/0771-050X(80)90013-3
@@ -24,9 +23,9 @@ namespace MechJebLib.ODE
     /// </summary>
     public class DP5 : AbstractRungeKutta
     {
-        protected override int Order               => 5;
-        protected override int Stages              => 6;
-        protected override int ErrorEstimatorOrder => 4;
+        public override int Order               => 5;
+        public override int Stages              => 6;
+        public override int ErrorEstimatorOrder => 4;
 
         #region IntegrationConstants
 
@@ -96,47 +95,48 @@ namespace MechJebLib.ODE
 
         #endregion
 
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vec _k1 = null!;
+        private Vec _k2 = null!;
+        private Vec _k3 = null!;
+        private Vec _k4 = null!;
+        private Vec _k5 = null!;
+        private Vec _k6 = null!;
+        private Vec _k7 = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
         protected override void RKStep(IVPFunc f)
         {
             double h = Habs * Direction;
 
-            K[1].CopyFrom(Dy);
+            _k1.CopyFrom(Dy);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A21 * Dy[i]);
-            f(Ynew, T + C2 * h, K[2]);
+            Ynew.LinComb1(Y, h * A21, Dy);
+            f(Ynew, T + C2 * h, _k2);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A31 * K[1][i] + A32 * K[2][i]);
-            f(Ynew, T + C3 * h, K[3]);
+            Ynew.LinComb2(Y, h * A31, _k1, h * A32, _k2);
+            f(Ynew, T + C3 * h, _k3);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A41 * K[1][i] + A42 * K[2][i] + A43 * K[3][i]);
-            f(Ynew, T + C4 * h, K[4]);
+            Ynew.LinComb3(Y, h * A41, _k1, h * A42, _k2, h * A43, _k3);
+            f(Ynew, T + C4 * h, _k4);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A51 * K[1][i] + A52 * K[2][i] + A53 * K[3][i] + A54 * K[4][i]);
-            f(Ynew, T + C5 * h, K[5]);
+            Ynew.LinComb4(Y, h * A51, _k1, h * A52, _k2, h * A53, _k3, h * A54, _k4);
+            f(Ynew, T + C5 * h, _k5);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A61 * K[1][i] + A62 * K[2][i] + A63 * K[3][i] + A64 * K[4][i] + A65 * K[5][i]);
-            f(Ynew, T + h, K[6]);
+            Ynew.LinComb5(Y, h * A61, _k1, h * A62, _k2, h * A63, _k3, h * A64, _k4, h * A65, _k5);
+            f(Ynew, T + h, _k6);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A71 * K[1][i] + A73 * K[3][i] + A74 * K[4][i] + A75 * K[5][i] + A76 * K[6][i]);
+            Ynew.LinComb5(Y, h * A71, _k1, h * A73, _k3, h * A74, _k4, h * A75, _k5, h * A76, _k6);
+            f(Ynew, T + h, _k7);
 
-            f(Ynew, T + h, K[7]);
-
-
-            K[7].CopyTo(Dynew);
+            _k7.CopyTo(Dynew);
         }
 
         protected override double ScaledErrorNorm()
         {
-            using var err = Vn.Rent(N);
-
-            for (int i = 0; i < N; i++)
-                err[i] = K[1][i] * E1 + K[3][i] * E3 + K[4][i] * E4 + K[5][i] * E5 + K[6][i] * E6 + K[7][i] * E7;
+            using var err = Vec.Rent(N);
+            err.CopyFrom(_k1).Scal(E1);
+            err.LinComb5(err, E3, _k3, E4, _k4, E5, _k5, E6, _k6, E7, _k7);
 
             double error = 0.0;
 
@@ -154,8 +154,31 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
+        protected override void Init()
+        {
+            base.Init();
+            _k1 = Vec.Rent(N);
+            _k2 = Vec.Rent(N);
+            _k3 = Vec.Rent(N);
+            _k4 = Vec.Rent(N);
+            _k5 = Vec.Rent(N);
+            _k6 = Vec.Rent(N);
+            _k7 = Vec.Rent(N);
+        }
+
+        protected override void Cleanup()
+        {
+            _k1.Dispose();
+            _k2.Dispose();
+            _k3.Dispose();
+            _k4.Dispose();
+            _k5.Dispose();
+            _k6.Dispose();
+            _k7.Dispose();
+        }
+
         // https://doi.org/10.1016/0898-1221(86)90025-8
-        protected override void Interpolate(double x, Vn yout)
+        protected override void Interpolate(double x, Vec yout)
         {
             double h  = Habs * Direction;
             double s  = (x - T) / h;
@@ -163,6 +186,7 @@ namespace MechJebLib.ODE
             double s3 = s * s2;
             double s4 = s2 * s2;
 
+            double hs  = h * s;
             double bs1 = B10 + B11 * s + B12 * s2 + B13 * s3 + B14 * s4;
             double bs3 = s * (B31 + B32 * s + B33 * s2 + B34 * s3);
             double bs4 = s * (B41 + B42 * s + B43 * s2 + B44 * s3);
@@ -170,8 +194,7 @@ namespace MechJebLib.ODE
             double bs6 = s * (B61 + B62 * s + B63 * s2 + B64 * s3);
             double bs7 = (1.0 - s) * s * (B71 + B72 * s + B73 * s2);
 
-            for (int i = 0; i < N; i++)
-                yout[i] = Y[i] + h * s * (bs1 * K[1][i] + bs3 * K[3][i] + bs4 * K[4][i] + bs5 * K[5][i] + bs6 * K[6][i] + bs7 * K[7][i]);
+            yout.LinComb6(Y, hs * bs1, _k1, hs * bs3, _k3, hs * bs4, _k4, hs * bs5, _k5, hs * bs6, _k6, hs * bs7, _k7);
         }
     }
 }

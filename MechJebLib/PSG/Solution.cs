@@ -15,16 +15,16 @@ namespace MechJebLib.PSG
 {
     public class Solution : IDisposable
     {
-        public           double       T0;
-        public           double       Tf => T0 + Tmax * _timeScale;
-        private readonly Scale        _scale;
-        private readonly List<double> _tmin         = new List<double>();
-        private readonly List<double> _tmax         = new List<double>();
-        private readonly List<Hn>     _interpolants = new List<Hn>();
-        public readonly  List<Phase>  Phases        = new List<Phase>();
-        private readonly double       _mu;
-        private readonly double       _rbody;
-        public readonly  Problem      Problem;
+        public double T0;
+        public double Tf => T0 + Tmax * _timeScale;
+        private readonly Scale _scale;
+        private readonly List<double> _tmin = new List<double>();
+        private readonly List<double> _tmax = new List<double>();
+        private readonly List<Hn> _interpolants = new List<Hn>();
+        public readonly List<Phase> Phases = new List<Phase>();
+        private readonly double _mu;
+        private readonly double _rbody;
+        public readonly Problem Problem;
 
         public  int    Segments       => Phases.Count;
         private double _timeScale     => _scale.TimeScale;
@@ -38,9 +38,9 @@ namespace MechJebLib.PSG
         public Solution(Problem problem)
         {
             Problem = problem;
-            _scale  = problem.Scale;
-            _mu     = problem.Mu;
-            _rbody  = problem.RBody * _scale.LengthScale;
+            _scale = problem.Scale;
+            _mu = problem.Mu;
+            _rbody = problem.RBody * _scale.LengthScale;
             // t0 is a public API that can be updated while we're landed waiting for takeoff.
             T0 = problem.T0;
         }
@@ -78,14 +78,14 @@ namespace MechJebLib.PSG
 
         public V3 RBar(double tBar)
         {
-            using Vn xRaw = Interpolate(tBar);
+            using Vec xRaw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.R;
         }
 
         public V3 RBar(int segment, double tBar)
         {
-            using Vn xRaw = Interpolate(segment, tBar);
+            using Vec xRaw = Interpolate(segment, tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.R;
         }
@@ -98,14 +98,14 @@ namespace MechJebLib.PSG
 
         public V3 VBar(double tBar)
         {
-            using Vn xRaw = Interpolate(tBar);
+            using Vec xRaw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.V;
         }
 
         public V3 VBar(int segment, double tBar)
         {
-            using Vn xRaw = Interpolate(segment, tBar);
+            using Vec xRaw = Interpolate(segment, tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.V;
         }
@@ -118,14 +118,14 @@ namespace MechJebLib.PSG
 
         public V3 UBar(double tBar)
         {
-            using Vn xRaw = Interpolate(tBar);
+            using Vec xRaw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.U;
         }
 
         public V3 UBar(int segment, double tBar)
         {
-            using Vn xRaw = Interpolate(segment, tBar);
+            using Vec xRaw = Interpolate(segment, tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.U;
         }
@@ -141,14 +141,14 @@ namespace MechJebLib.PSG
         // XXX: maybe should throw if tBar is outside the range?
         public double MBar(int segment, double tBar)
         {
-            using Vn xRaw = Interpolate(segment, tBar);
+            using Vec xRaw = Interpolate(segment, tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.M;
         }
 
         public double MBar(double tBar)
         {
-            using Vn xRaw = Interpolate(tBar);
+            using Vec xRaw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.M;
         }
@@ -171,7 +171,7 @@ namespace MechJebLib.PSG
 
         public double DVBar(double tBar)
         {
-            using Vn xRaw = Interpolate(tBar);
+            using Vec xRaw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             return x.Dv;
         }
@@ -187,9 +187,9 @@ namespace MechJebLib.PSG
             double   tbar  = (t - T0) / _timeScale;
             double   min   = tbar > _tmin[n] ? tbar : _tmin[n];
             double   max   = _tmax[n];
-            using Vn ddmin = Interpolate(n, min);
+            using Vec ddmin = Interpolate(n, min);
             var      xmin  = InterpolantLayout.CreateFrom(ddmin);
-            using Vn ddmax = Interpolate(n, max);
+            using Vec ddmax = Interpolate(n, max);
             var      xmax  = InterpolantLayout.CreateFrom(ddmax);
             return Max(xmax.Dv - xmin.Dv, 0) * _velocityScale;
         }
@@ -298,7 +298,7 @@ namespace MechJebLib.PSG
         {
             double tBar = (t - T0) / _timeScale;
 
-            using Vn xRaw = Interpolate(tBar);
+            using Vec xRaw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xRaw);
             V3       u0   = x.U.normalized;
 
@@ -316,7 +316,7 @@ namespace MechJebLib.PSG
         {
             double tBar = (t - T0) / _timeScale;
 
-            using Vn xraw = Interpolate(tBar);
+            using Vec xraw = Interpolate(tBar);
             var      x    = InterpolantLayout.CreateFrom(xraw);
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
@@ -374,9 +374,9 @@ namespace MechJebLib.PSG
             return idx;
         }
 
-        private Vn Interpolate(double tbar) => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
+        private Vec Interpolate(double tbar) => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);
 
-        private Vn Interpolate(int segment, double tbar) => _interpolants[segment].Evaluate(tbar);
+        private Vec Interpolate(int segment, double tbar) => _interpolants[segment].Evaluate(tbar);
 
         /// <summary>
         ///     This handles the precise termination of a burn segment.  Our trajectory only supports one

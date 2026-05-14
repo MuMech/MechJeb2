@@ -2,7 +2,8 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿using System;
+
+using System;
 using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static System.Math;
@@ -12,15 +13,15 @@ namespace MechJebLib.PSG
 {
     public class AscentProblem
     {
-        private readonly Optimizer               _optimizer;
-        private readonly VariableProxy           _vars;
-        public readonly  Dictionary<int, string> ConstraintNames = new Dictionary<int, string>();
-        private          bool                    _firstPass;
+        private readonly Optimizer _optimizer;
+        private readonly VariableProxy _vars;
+        public readonly Dictionary<int, string> ConstraintNames = new Dictionary<int, string>();
+        private bool _firstPass;
 
         public AscentProblem(Optimizer optimizer)
         {
             _optimizer = optimizer;
-            _vars      = new VariableProxy(_optimizer.Problem, _optimizer.Phases, _optimizer.Terminal, _optimizer.N);
+            _vars = new VariableProxy(_optimizer.Problem, _optimizer.Phases, _optimizer.Terminal, _optimizer.N);
         }
 
         public readonly struct ConstraintArgs
@@ -108,7 +109,7 @@ namespace MechJebLib.PSG
 
             if (_firstPass)
             {
-                ConstraintNames[ci]     = $"Continuity constraint for phase {p} and phase {p - 1}: Rx";
+                ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: Rx";
                 ConstraintNames[ci + 1] = $"Continuity constraint for phase {p} and phase {p - 1}: Ry";
                 ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: Rz";
                 ConstraintNames[ci + 3] = $"Continuity constraint for phase {p} and phase {p - 1}: Vx";
@@ -135,15 +136,9 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            DualV3 VecDiff(DualV3[] x)
-            {
-                return x[0] - x[1];
-            }
+            DualV3 VecDiff(DualV3[] x) => x[0] - x[1];
 
-            Dual Diff(Dual[] x)
-            {
-                return x[0] - x[1];
-            }
+            Dual Diff(Dual[] x) => x[0] - x[1];
         }
 
         private int NextAdjustableBurn(int p)
@@ -327,21 +322,27 @@ namespace MechJebLib.PSG
             double vexCurrent = _optimizer.Phases[p].VexCurrent;
             double h          = thisPhase.Bt() / (_optimizer.N - 1);
 
+            double rho0CdAref = _optimizer.Problem.Rho0CdAref;
+            double rBody      = _optimizer.Problem.RBody;
+            double h0         = _optimizer.Problem.H0;
+            double r0         = _optimizer.Problem.R0.magnitude;
+            V3     w          = _optimizer.Problem.W;
+
             // dynamical constraints per phase
             for (int n = 0; n < _optimizer.N - 1; n += 1)
             {
                 if (_firstPass)
                 {
-                    ConstraintNames[ci]      = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX";
-                    ConstraintNames[ci + 1]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX midpoint";
-                    ConstraintNames[ci + 2]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY";
-                    ConstraintNames[ci + 3]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY midpoint";
-                    ConstraintNames[ci + 4]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ";
-                    ConstraintNames[ci + 5]  = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ midpoint";
-                    ConstraintNames[ci + 6]  = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX";
-                    ConstraintNames[ci + 7]  = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX midpoint";
-                    ConstraintNames[ci + 8]  = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY";
-                    ConstraintNames[ci + 9]  = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY midpoint";
+                    ConstraintNames[ci] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX";
+                    ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX midpoint";
+                    ConstraintNames[ci + 2] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY";
+                    ConstraintNames[ci + 3] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY midpoint";
+                    ConstraintNames[ci + 4] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ";
+                    ConstraintNames[ci + 5] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ midpoint";
+                    ConstraintNames[ci + 6] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX";
+                    ConstraintNames[ci + 7] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX midpoint";
+                    ConstraintNames[ci + 8] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY";
+                    ConstraintNames[ci + 9] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY midpoint";
                     ConstraintNames[ci + 10] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ";
                     ConstraintNames[ci + 11] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ midpoint";
                 }
@@ -353,14 +354,14 @@ namespace MechJebLib.PSG
 
                 if (_optimizer.Phases[p].Coast)
                 {
-                    m0    = m1    = m2    = thisPhase.M[0];
+                    m0 = m1 = m2 = thisPhase.M[0];
                     m0Idx = m1Idx = m2Idx = thisPhase.M.Idx(0);
                 }
                 else
                 {
-                    m0    = thisPhase.M[idx];
-                    m1    = thisPhase.M[idx + 1];
-                    m2    = thisPhase.M[idx + 2];
+                    m0 = thisPhase.M[idx];
+                    m1 = thisPhase.M[idx + 1];
+                    m2 = thisPhase.M[idx + 2];
                     m0Idx = thisPhase.M.Idx(idx);
                     m1Idx = thisPhase.M.Idx(idx + 1);
                     m2Idx = thisPhase.M.Idx(idx + 2);
@@ -371,14 +372,14 @@ namespace MechJebLib.PSG
 
                 if (_optimizer.Phases[p].Unguided || _optimizer.Phases[p].GuidedCoast)
                 {
-                    u0    = u1    = u2    = thisPhase.U[0];
+                    u0 = u1 = u2 = thisPhase.U[0];
                     u0Idx = u1Idx = u2Idx = thisPhase.U.Idx(0);
                 }
                 else
                 {
-                    u0    = thisPhase.U[idx];
-                    u1    = thisPhase.U[idx + 1];
-                    u2    = thisPhase.U[idx + 2];
+                    u0 = thisPhase.U[idx];
+                    u1 = thisPhase.U[idx + 1];
+                    u2 = thisPhase.U[idx + 2];
                     u0Idx = thisPhase.U.Idx(idx);
                     u1Idx = thisPhase.U.Idx(idx + 1);
                     u2Idx = thisPhase.U.Idx(idx + 2);
@@ -418,30 +419,7 @@ namespace MechJebLib.PSG
                     BtIdx = thisPhase.BtIdx()
                 };
 
-                double rho0CdAref = _optimizer.Problem.Rho0CdAref;
-                double rBody      = _optimizer.Problem.RBody;
-                double h0         = _optimizer.Problem.H0;
-                double r0         = _optimizer.Problem.R0.magnitude;
-                V3     w          = _optimizer.Problem.W;
 
-                DualV3 VDot(ref HermiteSimpsonDualPoint d)
-                {
-                    Dual   r               = d.R.magnitude;
-                    Dual   r3              = d.R.sqrMagnitude * r;
-                    DualV3 vr              = d.V - DualV3.Cross(w, d.R);
-                    var    normAtmosphere  = Dual.Exp(-(r - rBody) / h0);
-                    var    normAtmosphere2 = Dual.Exp(-(r - r0) / h0);
-                    DualV3 drag            = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
-                    //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
-                    Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
-                    return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
-                }
-
-                DualV3 VDotVacuum(ref HermiteSimpsonDualPoint d)
-                {
-                    Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
-                    return -d.R / r3 + vacThrust / d.M * d.U;
-                }
 
                 if (h0 > 0 && rho0CdAref > 0)
                     ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
@@ -454,7 +432,7 @@ namespace MechJebLib.PSG
                 {
                     if (_firstPass)
                     {
-                        ConstraintNames[ci]     = $"Dynamical Constraints for phase {p} {n}th constraint: MDot";
+                        ConstraintNames[ci] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot";
                         ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot midpoint";
                     }
 
@@ -477,6 +455,25 @@ namespace MechJebLib.PSG
             }
 
             return ci;
+
+            DualV3 VDotVacuum(ref HermiteSimpsonDualPoint d)
+            {
+                Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
+                return -d.R / r3 + vacThrust / d.M * d.U;
+            }
+
+            DualV3 VDot(ref HermiteSimpsonDualPoint d)
+            {
+                Dual   r               = d.R.magnitude;
+                Dual   r3              = d.R.sqrMagnitude * r;
+                DualV3 vr              = d.V - DualV3.Cross(w, d.R);
+                var    normAtmosphere  = Dual.Exp(-(r - rBody) / h0);
+                var    normAtmosphere2 = Dual.Exp(-(r - r0) / h0);
+                DualV3 drag            = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
+                //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
+                Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
+                return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
+            }
         }
 
         private int ObjectiveFunction(double[] f, alglib.sparsematrix j, int ci)
@@ -575,10 +572,7 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            Dual MaxOrbitalEnergyObjective(DualV3[] p)
-            {
-                return -(0.5 * DualV3.Dot(p[1], p[1]) - 1.0 / p[0].magnitude);
-            }
+            Dual MaxOrbitalEnergyObjective(DualV3[] p) => -(0.5 * DualV3.Dot(p[1], p[1]) - 1.0 / p[0].magnitude);
         }
     }
 }

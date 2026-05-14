@@ -1,5 +1,7 @@
 ﻿extern alias JetBrainsAnnotations;
+using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
+using UnityEngine;
 
 namespace MuMech
 {
@@ -7,6 +9,22 @@ namespace MuMech
     {
         public static double TerrainAltitude(this CelestialBody body, Vector3d worldPosition) =>
             body.TerrainAltitude(body.GetLatitude(worldPosition), body.GetLongitude(worldPosition));
+
+        public static void GetLatLngAltAtUT(this CelestialBody body, double ut, Vector3d localPosition, out double lat, out double lon, out double alt)
+        {
+            Vector3d derotated = body.GetCurrentSurfacePositionFromUT(ut, localPosition);
+            LatLon.GetLatLongAlt(body.BodyFrame, Vector3d.zero, body.Radius, derotated, out lat, out lon, out alt);
+        }
+
+        public static Vector3d GetCurrentSurfacePositionFromUT(this CelestialBody body, double ut, Vector3d localPosition)
+        {
+            double deltaT = ut - Planetarium.GetUniversalTime();
+            double theta  = 360.0 / body.rotationPeriod * deltaT;
+
+            var      derotation = QuaternionD.AngleAxis(-theta, new Vector3d(0, -1, 0));
+            Vector3d derotated  = derotation * localPosition;
+            return derotated;
+        }
 
         //The KSP drag law is dv/dt = -b * v^2 where b is proportional to the air density and
         //the ship's drag coefficient. In this equation b has units of inverse length. So 1/b
@@ -59,6 +77,25 @@ namespace MuMech
             if (body.BiomeMap == null || body.BiomeMap.Attributes.Length == 0)
                 return string.Empty;
             return ScienceUtil.GetExperimentBiomeLocalized(body, lat, lon);
+        }
+
+        public static float GetPQSSlopeDegrees(
+            this CelestialBody body,
+            double latitude, double longitude,
+            double sampleRadiusMeters = 50.0)
+        {
+            double epsilon = sampleRadiusMeters / (body.Radius * Math.PI / 180.0);
+
+            double hN = body.TerrainAltitude(latitude + epsilon, longitude, allowNegative: true);
+            double hS = body.TerrainAltitude(latitude - epsilon, longitude, allowNegative: true);
+            double hE = body.TerrainAltitude(latitude, longitude + epsilon, allowNegative: true);
+            double hW = body.TerrainAltitude(latitude, longitude - epsilon, allowNegative: true);
+
+            double metersPerDeg = body.Radius * Math.PI / 180.0;
+            double dhdx         = (hE - hW) / (2.0 * epsilon * metersPerDeg);
+            double dhdy         = (hN - hS) / (2.0 * epsilon * metersPerDeg);
+
+            return (float)(Math.Atan(Math.Sqrt(dhdx * dhdx + dhdy * dhdy)) * 180.0 / Math.PI);
         }
     }
 }

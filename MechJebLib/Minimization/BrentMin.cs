@@ -127,11 +127,11 @@ namespace MechJebLib.Minimization
                         sb = x;
                     else
                         sa = x;
-                    v  = w;
+                    v = w;
                     fv = fw;
-                    w  = x;
+                    w = x;
                     fw = fx;
-                    x  = u;
+                    x = u;
                     fx = fu;
                 }
                 else
@@ -143,15 +143,15 @@ namespace MechJebLib.Minimization
 
                     if (fu <= fw || w == x)
                     {
-                        v  = w;
+                        v = w;
                         fv = fw;
-                        w  = u;
+                        w = u;
                         fw = fu;
                     }
 
                     else if (fu <= fv || v == x || v == w)
                     {
-                        v  = u;
+                        v = u;
                         fv = fu;
                     }
                 }

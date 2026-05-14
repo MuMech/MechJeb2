@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -886,12 +886,12 @@ namespace MuMech
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_RCSTranslation")); //"RCS Translation"
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos", GUILayout.ExpandWidth(true)); //
-            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.Positive), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Pos", GuiUtils.LayoutExpandWidth); //
+            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.Positive), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Neg", GUILayout.ExpandWidth(true)); //
-            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.Negative), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Neg", GuiUtils.LayoutExpandWidth); //
+            GUILayout.Label(MuUtils.PrettyPrint(rcsThrustAvailable.Negative), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
@@ -902,14 +902,14 @@ namespace MuMech
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_RCSTorque")); //"RCS Torque"
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.Positive), GUILayout.ExpandWidth(false));
-            //GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.positive), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Pos", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.Positive), GuiUtils.LayoutNoExpandWidth);
+            //GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.positive), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Neg", GUILayout.ExpandWidth(true));
-            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.Negative), GUILayout.ExpandWidth(false));
-            //GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.negative), GUILayout.ExpandWidth(false));
+            GUILayout.Label("Neg", GuiUtils.LayoutExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueAvailable.Negative), GuiUtils.LayoutNoExpandWidth);
+            //GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.negative), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
@@ -1046,7 +1046,8 @@ namespace MuMech
                     {
                         var moduleEngines = pm as ModuleEngines;
 
-                        engines.TryAdd(moduleEngines, null);
+                        if (!engines.ContainsKey(moduleEngines))
+                            engines.Add(moduleEngines, null);
                     }
                     else if (pm is ModuleResourceIntake)
                     {
@@ -1301,15 +1302,15 @@ namespace MuMech
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
-            GUILayout.Label(MuUtils.PrettyPrint(reactionTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
-            //GUILayout.Label(MuUtils.PrettyPrint(rcsTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(reactionTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
+            //GUILayout.Label(MuUtils.PrettyPrint(rcsTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
 
-            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueMJ), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueMJ), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
 
-            GUILayout.Label(MuUtils.PrettyPrint(controlTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
-            GUILayout.Label(MuUtils.PrettyPrint(gimbalTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
-            GUILayout.Label(MuUtils.PrettyPrint(diffTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
-            GUILayout.Label(MuUtils.PrettyPrint(othersTorque), GuiUtils.LabelNoWrap, GUILayout.ExpandWidth(false));
+            GUILayout.Label(MuUtils.PrettyPrint(controlTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(gimbalTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(diffTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(othersTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();

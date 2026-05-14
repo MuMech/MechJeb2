@@ -7,6 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.FunctionImpls;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -165,6 +166,20 @@ namespace MechJebLib.Functions
             return (sma, Sqrt(Max(1 - h.sqrMagnitude / (sma * mu), 0)));
         }
 
+        public static double SlrFromStateVectors(double mu, V3 r, V3 v)
+        {
+            var h = V3.Cross(r, v);
+            return h.sqrMagnitude / mu;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (double l, double ecc) SlrEccFromStateVectors(double mu, V3 r, V3 v)
+        {
+            double l   = SlrFromStateVectors(mu, r, v);
+            double ecc = EccVecFromStateVectors(mu, r, v).magnitude;
+            return (l, ecc);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (Dual sma, Dual ecc) SmaEccFromStateVectors(Dual mu, DualV3 r, DualV3 v)
         {
@@ -202,24 +217,21 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double RadiusFromTrueAnomaly(double mu, V3 r, V3 v, double nu)
         {
+            // FIXME: buggy at ecc = 1.0
             (double sma, double ecc) = SmaEccFromStateVectors(mu, r, v);
 
             return RadiusFromTrueAnomaly(sma, ecc, nu);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double TrueAnomalyFromRadius(double sma, double ecc, double radius)
-        {
-            double l = sma * (1 - ecc * ecc);
-            return SafeAcos((l / radius - 1) / ecc);
-        }
+        public static double TrueAnomalyFromRadius(double l, double ecc, double radius) => SafeAcos((l / radius - 1) / ecc);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TrueAnomalyFromRadius(double mu, V3 r, V3 v, double radius)
         {
-            (double sma, double ecc) = SmaEccFromStateVectors(mu, r, v);
+            (double l, double ecc) = SlrEccFromStateVectors(mu, r, v);
 
-            return TrueAnomalyFromRadius(sma, ecc, radius);
+            return TrueAnomalyFromRadius(l, ecc, radius);
         }
 
         /// <summary>
@@ -369,7 +381,7 @@ namespace MechJebLib.Functions
             double horizMag = new V3(v0.x, v0.y).magnitude;
             V3     vf       = ENUHeadingForInclination(newInc, r) * horizMag;
             vf.z = v0.z;
-            vf   = ENUToECI(r, vf);
+            vf = ENUToECI(r, vf);
             return vf;
         }
 
@@ -387,7 +399,7 @@ namespace MechJebLib.Functions
             double vmag = v0.magnitude;
             V3     vf   = new V3(v0.x, v0.y).normalized * Cos(newFPA) * vmag;
             vf.z = Sin(newFPA) * vmag;
-            vf   = ENUToECI(r, vf);
+            vf = ENUToECI(r, vf);
             return vf;
         }
 
@@ -431,10 +443,10 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeToPlane(double rotationPeriod, double latitude, double celestialLongitude, double lan, double inc)
         {
-            latitude           = Deg2Rad(latitude);
+            latitude = Deg2Rad(latitude);
             celestialLongitude = Deg2Rad(celestialLongitude);
-            lan                = Deg2Rad(lan);
-            inc                = Deg2Rad(inc);
+            lan = Deg2Rad(lan);
+            inc = Deg2Rad(inc);
 
             // handle singularities at the poles where tan(lat) is infinite
             if (Abs(Abs(latitude) - PI / 2) < EPS)
@@ -496,7 +508,7 @@ namespace MechJebLib.Functions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double TimetoNextTrueAnomaly(double mu, double sma, double ecc, double nu1, double nu2)
+        public static double TimeToNextTrueAnomaly(double mu, double sma, double ecc, double nu1, double nu2)
         {
             double meanMotion = MeanMotion(mu, sma);
 
@@ -514,7 +526,7 @@ namespace MechJebLib.Functions
         {
             (double sma, double ecc, _, _, _, double nu1, _) = KeplerianFromStateVectors(mu, r, v);
 
-            return TimetoNextTrueAnomaly(mu, sma, ecc, nu1, nu2);
+            return TimeToNextTrueAnomaly(mu, sma, ecc, nu1, nu2);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -529,6 +541,42 @@ namespace MechJebLib.Functions
             if (time1 < 0 && time2 < 0)
                 return Max(time1, time2);
             return time1 >= 0 ? time1 : time2;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double TimeToPrevTrueAnomaly(double mu, double sma, double ecc, double nu1, double nu2)
+        {
+            double meanMotion = MeanMotion(mu, sma);
+
+            double manom1 = Angles.MFromNu(nu1, ecc);
+            double manom2 = Angles.MFromNu(nu2, ecc);
+
+            if (ecc < 1)
+                return -Clamp2Pi(manom1 - manom2) / meanMotion;
+
+            return (manom2 - manom1) / meanMotion;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double TimeToPrevTrueAnomaly(double mu, V3 r, V3 v, double nu2)
+        {
+            (double sma, double ecc, _, _, _, double nu1, _) = KeplerianFromStateVectors(mu, r, v);
+
+            return TimeToPrevTrueAnomaly(mu, sma, ecc, nu1, nu2);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double TimeToLastRadius(double mu, V3 r, V3 v, double radius)
+        {
+            double nu1   = TrueAnomalyFromRadius(mu, r, v, radius);
+            double nu2   = -nu1;
+            double time1 = TimeToPrevTrueAnomaly(mu, r, v, nu1);
+            double time2 = TimeToPrevTrueAnomaly(mu, r, v, nu2);
+            if (time1 <= 0 && time2 <= 0)
+                return Max(time1, time2);
+            if (time1 > 0 && time2 > 0)
+                return Min(time1, time2);
+            return time1 <= 0 ? time1 : time2;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -675,21 +723,21 @@ namespace MechJebLib.Functions
                 if (ecc < 1)
                 {
                     // elliptic orbit
-                    s    = ecc * Sin(eanom);
-                    c    = ecc * Cos(eanom);
-                    f    = eanom - s - xma;
-                    fp   = 1 - c;
-                    fpp  = s;
+                    s = ecc * Sin(eanom);
+                    c = ecc * Cos(eanom);
+                    f = eanom - s - xma;
+                    fp = 1 - c;
+                    fpp = s;
                     fppp = c;
                 }
                 else
                 {
                     // hyperbolic orbit
-                    s    = ecc * Sinh(eanom);
-                    c    = ecc * Cosh(eanom);
-                    f    = s - eanom - xma;
-                    fp   = c - 1;
-                    fpp  = s;
+                    s = ecc * Sinh(eanom);
+                    c = ecc * Cosh(eanom);
+                    f = s - eanom - xma;
+                    fp = c - 1;
+                    fpp = s;
                     fppp = c;
                 }
 
@@ -743,9 +791,6 @@ namespace MechJebLib.Functions
             return (dv1, dv2, tt, alpha);
         }
 
-        public static (double dt, V3 rland) SuicideBurnCalc(double mu, V3 r0, V3 v0, double beta, double radius, double dtGuess = double.NaN) =>
-            RealSuicideBurnCalc.Run(mu, r0, v0, beta, radius, dtGuess);
-
         public static double IspFromMassesThrustBurntime(double m0, double mf, double thrust, double bt)
         {
             double mdot = (m0 - mf) / bt;
@@ -756,6 +801,18 @@ namespace MechJebLib.Functions
         {
             double mdot = (m0 - mf) / bt;
             return mdot * isp * G0;
+        }
+
+        public static double DeltaVFromMassThrustIspBurntime(double m0, double thrust, double isp, double bt)
+        {
+            Check.PositiveFinite(m0);
+            Check.PositiveFinite(thrust);
+            Check.PositiveFinite(isp);
+            Check.Finite(bt);
+            double mdot = thrust / (isp * G0);
+            double mf   = m0 - mdot * bt;
+            Check.PositiveFinite(mf);
+            return isp * G0 * Log(m0 / mf);
         }
     }
 }

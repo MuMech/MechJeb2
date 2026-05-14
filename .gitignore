@@ -219,3 +219,6 @@ http-client.private.env.json
 
 # Nix
 .direnv/
+
+# Claude settings
+.claude/settings.local.json

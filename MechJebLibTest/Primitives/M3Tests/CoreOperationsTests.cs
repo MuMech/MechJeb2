@@ -2,6 +2,7 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
+
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
@@ -88,9 +89,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void WithColumnTest()
         {
             M3 one = M3.zero
-                .WithColumn(0, new V3(1, 4, 7))
-                .WithColumn(1, new V3(2, 5, 8))
-                .WithColumn(2, new V3(3, 6, 9));
+               .WithColumn(0, new V3(1, 4, 7))
+               .WithColumn(1, new V3(2, 5, 8))
+               .WithColumn(2, new V3(3, 6, 9));
             var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
             one.ShouldEqual(two);
@@ -100,9 +101,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void WithRowTest()
         {
             M3 one = M3.zero
-                .WithRow(0, new V3(1, 2, 3))
-                .WithRow(1, new V3(4, 5, 6))
-                .WithRow(2, new V3(7, 8, 9));
+               .WithRow(0, new V3(1, 2, 3))
+               .WithRow(1, new V3(4, 5, 6))
+               .WithRow(2, new V3(7, 8, 9));
             var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
             one.ShouldEqual(two);

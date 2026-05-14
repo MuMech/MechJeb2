@@ -16,21 +16,21 @@ namespace MechJebLib.FunctionImpls
         private class Args
         {
             public double Mu;
-            public V3     R;
-            public V3     V;
+            public V3 R;
+            public V3 V;
             public double NewApR;
 
             public void Set(double mu, V3 r, V3 v, double newApR)
             {
-                Mu     = mu;
-                R      = r;
-                V      = v;
+                Mu = mu;
+                R = r;
+                V = v;
                 NewApR = newApR;
             }
         }
 
-        private static readonly ThreadLocal<Args>             _threadArgs = new ThreadLocal<Args>(() => new Args());
-        private static readonly Func<double, object?, double> _f          = F;
+        private static readonly ThreadLocal<Args> _threadArgs = new ThreadLocal<Args>(() => new Args());
+        private static readonly Func<double, object?, double> _f = F;
 
         private static double F(double x, object? o)
         {

@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using KSP.Localization;
 using MechJebLibBindings;
 using UnityEngine;
@@ -72,7 +72,7 @@ namespace MuMech
                 GUILayout.Toggle(Core.Thrust.SmoothThrottle, Localizer.Format("#MechJeb_Utilities_checkbox2")); //"Smooth throttle"
             Core.Thrust.ManageIntakes =
                 GUILayout.Toggle(Core.Thrust.ManageIntakes, Localizer.Format("#MechJeb_Utilities_checkbox3")); //"Manage air intakes"
-            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+            GUILayout.BeginHorizontal(GuiUtils.LayoutExpandWidth);
             try
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label2")); //"Jet safety margin"
@@ -124,7 +124,7 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        protected override GUILayoutOption[] WindowOptions() => new[] { GUILayout.Width(250), GUILayout.Height(30) };
+        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(250), GUILayout.Height(30) };
 
         public override bool IsActive() => Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
 
