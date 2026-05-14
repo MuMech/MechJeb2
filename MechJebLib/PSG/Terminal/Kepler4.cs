@@ -6,6 +6,7 @@
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.AutoDiff;
+using static System.Math;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -24,7 +25,7 @@ namespace MechJebLib.PSG.Terminal
             _eccT = eccT;
             _incT = incT;
             _lanT = lanT;
-            _hT = Astro.HvecFromKeplerian(1.0, _smaT, _eccT, _incT, _lanT);
+            _hT = Astro.HvecFromKeplerian(1.0, _smaT, _eccT, Abs(_incT), _lanT);
         }
 
         public ITerminal Rescale(Scale scale)  => new Kepler4(_smaT / scale.LengthScale, _eccT, _incT, _lanT);
