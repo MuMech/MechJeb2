@@ -75,11 +75,6 @@ namespace MechJebLib.ODE
         public double Hstart { get; set; } = 0.0;
 
         /// <summary>
-        ///     Interpolants are pulled on an evenly spaced grid
-        /// </summary>
-        public int Interpnum { get; set; } = 20;
-
-        /// <summary>
         ///     Throw exception when MaxIter is hit (old PVG optimizer worked better with this set to false).
         /// </summary>
         public bool ThrowOnMaxIter { get; set; } = true;
@@ -107,7 +102,7 @@ namespace MechJebLib.ODE
         /// <param name="events"></param>
         /// <exception cref="ArgumentException"></exception>
         public void Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
-            Hn? interpolant = null,
+            DenseOutput? interpolant = null,
             IReadOnlyList<Event>? events = null)
         {
             try
@@ -145,7 +140,7 @@ namespace MechJebLib.ODE
         }
 
         private void _Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
-            Hn? interpolant,
+            DenseOutput? interpolant,
             IReadOnlyList<Event>? events)
         {
             Status = IVPStatus.Initialized;
@@ -156,15 +151,12 @@ namespace MechJebLib.ODE
 
             T = t0;
             Y.CopyFrom(y0);
-            double niter       = 0;
-            int    interpCount = 1;
+            double niter = 0;
 
             f(Y, T, Dy);
 
             Habs = Hstart > 0 ? Hstart : SelectInitialStep(f, T, Y, Dy, Direction);
             Habs = Clamp(Habs, MinStep, MaxStep);
-
-            interpolant?.Add(T, Y, Dy);
 
             if (events != null)
             {
@@ -247,9 +239,9 @@ namespace MechJebLib.ODE
                         events[i].LastValue = events[i].NewValue;
                 }
 
-                // extract a low fidelity interpolant
-                if (interpolant != null)
-                    interpCount = FillInterpolant(f, t0, tf, interpolant, interpCount);
+                // TODO: look carefully at what we need when an Event fires and terminates a step.
+                // BS3 is almost certainly buggy in the final interpolant step after a terminating event.
+                interpolant?.Append(SnapshotStep());
 
                 // take a step
                 Y.CopyFrom(Ynew);
@@ -275,7 +267,8 @@ namespace MechJebLib.ODE
                 }
             }
 
-            interpolant?.Add(T, Y, Dy);
+            if (t0 == tf)
+                interpolant?.Append(new ConstantNode(T, Y));
 
             Y.CopyTo(yf);
 
@@ -292,36 +285,15 @@ namespace MechJebLib.ODE
             return (up && e.Direction > 0) || (down && e.Direction < 0) || (either && e.Direction == 0);
         }
 
-        private int FillInterpolant(IVPFunc f, double t0, double tf, Hn interpolant, int interpCount)
-        {
-            while (interpCount < Interpnum)
-            {
-                double tinterp = t0 + (tf - t0) * interpCount / Interpnum;
-
-                if (!tinterp.IsWithin(T, Tnew))
-                    break;
-
-                using var yinterp = Vec.Rent(N);
-                using var finterp = Vec.Rent(N);
-
-                InitInterpolant();
-                Interpolate(tinterp, yinterp);
-                f(yinterp, tinterp, finterp);
-                interpolant?.Add(tinterp, yinterp, finterp);
-                interpCount++;
-            }
-
-            return interpCount;
-        }
-
         protected abstract (double, double) Step(IVPFunc f);
 
         protected abstract double SelectInitialStep(IVPFunc f, double t0, Vec y0,
             Vec f0, int direction);
 
-        protected abstract void InitInterpolant();
-        protected abstract void Interpolate(double x, Vec yout);
-        protected abstract void Init();
-        protected abstract void Cleanup();
+        protected abstract void      InitInterpolant();
+        protected abstract DenseNode SnapshotStep();
+        protected abstract void      Interpolate(double x, Vec yout);
+        protected abstract void      Init();
+        protected abstract void      Cleanup();
     }
 }

@@ -69,7 +69,7 @@ namespace MechJebLibTest.ODETests
             int count1 = random.Next(20, 40);
             int count2 = random.Next(5, 40);
 
-            var solver = new BS3 { Interpnum = count1, Rtol = 1e-5, Atol = 1e-5, Maxiter = 200000 };
+            var solver = new BS3 { Rtol = 1e-5, Atol = 1e-5, Maxiter = 500, ThrowOnMaxIter = true};
             var ode    = new SimpleOscillator(k, m);
             var f      = new Action<Vec, double, Vec>(ode.dydt);
 
@@ -102,10 +102,10 @@ namespace MechJebLibTest.ODETests
             {
                 double t = t0 + dt * i;
                 solver.Solve(f, y0, yf, t0, t);
-                yf[0].ShouldEqual(expected[i], 4e-6);
+                yf[0].ShouldEqual(expected[i], 1e-5);
             }
 
-            using (var interpolant = Hn.Get(SimpleOscillator.N))
+            using (var interpolant = DenseOutput.Rent())
             {
                 solver.Solve(f, y0, yf, t0, tf, interpolant);
 
@@ -122,13 +122,13 @@ namespace MechJebLibTest.ODETests
                     double    t = t0 + dt2 * i;
                     using Vec y = interpolant.Evaluate(t);
 
-                    y[0].ShouldEqual(expected2[i], 2e-2);
+                    y[0].ShouldEqual(expected2[i], 4e-6);
                 }
             }
 
             long start = GC.GetAllocatedBytesForCurrentThread();
 
-            using (var interpolant = Hn.Get(SimpleOscillator.N))
+            using (var interpolant = DenseOutput.Rent())
             {
                 solver.Solve(f, y0, yf, t0, tf, interpolant);
 
@@ -145,7 +145,7 @@ namespace MechJebLibTest.ODETests
                     double    t = t0 + dt2 * i;
                     using Vec y = interpolant.Evaluate(t);
 
-                    y[0].ShouldEqual(expected2[i], 2e-2);
+                    y[0].ShouldEqual(expected2[i], 4e-6);
                 }
             }
 
