@@ -30,7 +30,7 @@ namespace MechJebLib.PSG.Terminal
             _lanT = Clamp2Pi(lanT);
             _incT = incT;
 
-            _hT = Astro.HvecFromFlightPathAngle(_rT, _vT, _gammaT, _incT, _lanT);
+            _hT = Astro.HvecFromFlightPathAngle(_rT, _vT, _gammaT, Abs(_incT), _lanT);
         }
 
         public ITerminal Rescale(Scale scale) =>

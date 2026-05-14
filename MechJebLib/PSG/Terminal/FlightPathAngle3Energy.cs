@@ -33,7 +33,7 @@ namespace MechJebLib.PSG.Terminal
         {
             double gammaT = _gammaT;
             double rT     = _rT;
-            double incT   = _incT;
+            double incT   = Abs(_incT);
 
             var rf = V3.CopyFromIndices(x, ri);
             var vf = V3.CopyFromIndices(x, vi);
