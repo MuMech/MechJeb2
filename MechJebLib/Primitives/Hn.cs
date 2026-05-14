@@ -4,13 +4,12 @@
  */
 
 using System.Collections.Generic;
-using MechJebLib.Functions;
 using MechJebLib.Utils;
 using static System.Math;
 
 namespace MechJebLib.Primitives
 {
-    public class Hn : HBase<Vn>
+    public class Hn : HBase<Vec>
     {
         public int N;
 
@@ -20,7 +19,7 @@ namespace MechJebLib.Primitives
 
         public void Add(double time, double[] value, double[] inTangent, double[] outTangent)
         {
-            _list[time] = new HFrame<Vn>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
+            _list[time] = new HFrame<Vec>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
             MinTime = Min(MinTime, time);
             MaxTime = Max(MaxTime, time);
             RecomputeTangents(_list.IndexOfKey(time));
@@ -31,7 +30,7 @@ namespace MechJebLib.Primitives
         {
             if (_list.ContainsKey(time))
             {
-                HFrame<Vn> temp = _list.Values[_list.IndexOfKey(time)];
+                HFrame<Vec> temp = _list.Values[_list.IndexOfKey(time)];
                 temp.Value = Allocate(value);
                 temp.OutTangent = Allocate(tangent);
                 _list[time] = temp;
@@ -56,60 +55,56 @@ namespace MechJebLib.Primitives
             _pool.Release(this);
         }
 
-        protected override Vn Allocate() => Vn.Rent(N);
+        protected override Vec Allocate() => Vec.Rent(N, true);
 
-        private Vn Allocate(IReadOnlyList<double> value)
+        private Vec Allocate(IReadOnlyList<double> value)
         {
-            var list = Vn.Rent(N);
+            var list = Vec.Rent(N);
             for (int i = 0; i < N; i++)
                 list[i] = value[i];
             return list;
         }
 
-        protected override Vn Allocate(Vn value)
+        protected override Vec Allocate(Vec value)
         {
-            var list = Vn.Rent(N);
+            var list = Vec.Rent(N);
             for (int i = 0; i < N; i++)
                 list[i] = value[i];
             return list;
         }
 
-        protected override void Subtract(Vn a, Vn b, ref Vn result)
+        protected override void Subtract(Vec a, Vec b, ref Vec result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] - b[i];
         }
 
-        protected override void Divide(Vn a, double b, ref Vn result)
+        protected override void Divide(Vec a, double b, ref Vec result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] / b;
         }
 
-        protected override void Multiply(Vn a, double b, ref Vn result)
+        protected override void Multiply(Vec a, double b, ref Vec result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] * b;
         }
 
-        protected override void Addition(Vn a, Vn b, ref Vn result)
+        protected override void Addition(Vec a, Vec b, ref Vec result)
         {
             for (int i = 0; i < N; i++)
                 result[i] = a[i] + b[i];
         }
 
-        protected override Vn Interpolant(double x1, Vn y1, Vn yp1, double x2, Vn y2, Vn yp2, double x)
-        {
-            var ret = Vn.Rent(N);
-            Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x, N, ret);
-            return ret;
-        }
+        protected override Vec Interpolant(double x1, Vec y1, Vec yp1, double x2, Vec y2, Vec yp2, double x) =>
+            Vec.Rent(N).CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
 
-        private void DisposeKeyframe(HFrame<Vn> frame)
+        private void DisposeKeyframe(HFrame<Vec> frame)
         {
-            Vn.Return(frame.Value);
-            Vn.Return(frame.InTangent);
-            Vn.Return(frame.OutTangent);
+            frame.Value.Dispose();
+            frame.InTangent.Dispose();
+            frame.OutTangent.Dispose();
         }
 
         private static void Clear(Hn h) => h.Clear();

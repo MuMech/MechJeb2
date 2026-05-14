@@ -13,7 +13,7 @@ using static MechJebLib.Utils.Statics;
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.ODE
 {
-    using IVPFunc = Action<IList<double>, double, IList<double>>;
+    using IVPFunc = Action<Vec, double, Vec>;
 
     // TODO:
     //  - Needs working event API
@@ -23,12 +23,11 @@ namespace MechJebLib.ODE
 
         private readonly List<Event> _activeEvents = new List<Event>();
 
-        private Func<IList<double>, double, AbstractIVP, double> _eventFunc = null!;
+        private Func<Vec, double, AbstractIVP, double> _eventFunc = null!;
 
         private double _habsNext;
         protected int Direction;
-        protected double[] Dy = new double[1];
-        protected double[] Dynew = new double[1];
+        protected bool Snapping;
         protected double Habs;
         protected double MaxStep;
         protected double MinStep;
@@ -37,8 +36,13 @@ namespace MechJebLib.ODE
         public double T;
         protected double Tnew;
 
-        protected double[] Y = new double[1];
-        protected double[] Ynew = new double[1];
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        protected Vec Y = null!;
+        protected Vec Ynew = null!;
+        protected Vec Dy = null!;
+        protected Vec Dynew = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
 
         /// <summary>
         ///     Minimum h step (may be violated on the last step or before an event).
@@ -102,17 +106,17 @@ namespace MechJebLib.ODE
         /// <param name="interpolant"></param>
         /// <param name="events"></param>
         /// <exception cref="ArgumentException"></exception>
-        public void Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf,
+        public void Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
             Hn? interpolant = null,
             IReadOnlyList<Event>? events = null)
         {
             try
             {
                 N = y0.Count;
-                Y = Y.Expand(N);
-                Dy = Dy.Expand(N);
-                Ynew = Ynew.Expand(N);
-                Dynew = Dynew.Expand(N);
+                Y = Vec.Rent(N);
+                Dy = Vec.Rent(N);
+                Ynew = Vec.Rent(N);
+                Dynew = Vec.Rent(N);
 
                 Init();
                 _Solve(f, y0, yf, t0, tf, interpolant, events);
@@ -125,18 +129,22 @@ namespace MechJebLib.ODE
             }
             finally
             {
+                Y.Dispose();
+                Dy.Dispose();
+                Dynew.Dispose();
+                Ynew.Dispose();
                 Cleanup();
             }
         }
 
         private double EventFuncWrapper(double x, object? o)
         {
-            using var yinterp = Vn.Rent(N);
+            using var yinterp = Vec.Rent(N);
             Interpolate(x, yinterp);
             return _eventFunc(yinterp, x, this);
         }
 
-        private void _Solve(IVPFunc f, IReadOnlyList<double> y0, IList<double> yf, double t0, double tf,
+        private void _Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
             Hn? interpolant,
             IReadOnlyList<Event>? events)
         {
@@ -173,13 +181,19 @@ namespace MechJebLib.ODE
                 double tnext = T + Habs * Direction;
 
                 if (Direction * (tnext - tf) > 0)
+                {
+                    Snapping = true;
                     MaxStep = Habs = Math.Abs(tf - T);
+                }
                 else
-                    Habs = Math.Abs(tnext - T);
+                {
+                    Snapping = false;
+                    Habs = Math.Abs(tnext - T); // deliberate for bit-stability
+                }
 
                 (Habs, _habsNext) = Step(f);
 
-                Tnew = T + Habs * Direction;
+                Tnew = Snapping && MaxStep == Habs ? tf : T + Habs * Direction;
 
                 // handle events, this assumes only one trigger per event per step
                 if (events != null)
@@ -211,10 +225,19 @@ namespace MechJebLib.ODE
                             if (_activeEvents[i].Terminal)
                             {
                                 terminate = true;
-                                using var yinterp = Vn.Rent(N);
+                                // Truncate the step to the event point. Evaluate the
+                                // interpolant FIRST against the full-step (T,Y,Dy)/
+                                // (Tnew,Ynew,Dynew) — interpolants that read Tnew/Ynew/
+                                // Dynew (e.g. the cubic Hermite in BS3) would degenerate
+                                // if we mutated those first. Then commit the new
+                                // endpoint and refresh Dynew so any downstream
+                                // Interpolate() over [T, Tnew] sees a consistent right
+                                // endpoint.
+                                using var yinterp = Vec.Rent(N);
                                 Interpolate(_activeEvents[i].Time, yinterp);
                                 Tnew = _activeEvents[i].Time;
                                 Ynew.CopyFrom(yinterp);
+                                f(Ynew, Tnew, Dynew);
                                 break;
                             }
                         }
@@ -278,8 +301,8 @@ namespace MechJebLib.ODE
                 if (!tinterp.IsWithin(T, Tnew))
                     break;
 
-                using var yinterp = Vn.Rent(N);
-                using var finterp = Vn.Rent(N);
+                using var yinterp = Vec.Rent(N);
+                using var finterp = Vec.Rent(N);
 
                 InitInterpolant();
                 Interpolate(tinterp, yinterp);
@@ -293,11 +316,11 @@ namespace MechJebLib.ODE
 
         protected abstract (double, double) Step(IVPFunc f);
 
-        protected abstract double SelectInitialStep(IVPFunc f, double t0, IReadOnlyList<double> y0,
-            IReadOnlyList<double> f0, int direction);
+        protected abstract double SelectInitialStep(IVPFunc f, double t0, Vec y0,
+            Vec f0, int direction);
 
         protected abstract void InitInterpolant();
-        protected abstract void Interpolate(double x, Vn yout);
+        protected abstract void Interpolate(double x, Vec yout);
         protected abstract void Init();
         protected abstract void Cleanup();
     }

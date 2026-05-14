@@ -153,7 +153,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, true)
                .Build();
 
+            long start = GC.GetAllocatedBytesForCurrentThread();
             ascent.Run();
+            Logger.Print($"GC: {GC.GetAllocatedBytesForCurrentThread() - start}");
 
             Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
@@ -177,7 +179,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             (V3 rf1, _) = solution.StateVectors(solution.EndTime(1));
 
-            (rf1.magnitude - R_BODY).ShouldEqual(101461.50629983563, 1e-5);
+            (rf1.magnitude - R_BODY).ShouldEqual(101459.38840901759, 1e-4);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 

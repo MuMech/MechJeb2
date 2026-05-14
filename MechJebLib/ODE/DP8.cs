@@ -4,7 +4,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
@@ -12,15 +11,15 @@ using static MechJebLib.Utils.Statics;
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace MechJebLib.ODE
 {
-    using IVPFunc = Action<IList<double>, double, IList<double>>;
+    using IVPFunc = Action<Vec, double, Vec>;
 
     /// <summary>
     /// </summary>
     public class DP8 : AbstractRungeKutta
     {
-        protected override int Order               => 8;
-        protected override int Stages              => 12;
-        protected override int ErrorEstimatorOrder => 7;
+        public override int Order               => 8;
+        public override int Stages              => 12;
+        public override int ErrorEstimatorOrder => 7;
 
         #region IntegrationConstants
 
@@ -165,60 +164,64 @@ namespace MechJebLib.ODE
 
         #endregion
 
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vec _k1 = null!;
+        private Vec _k2 = null!;
+        private Vec _k3 = null!;
+        private Vec _k4 = null!;
+        private Vec _k5 = null!;
+        private Vec _k6 = null!;
+        private Vec _k7 = null!;
+        private Vec _k8 = null!;
+        private Vec _k9 = null!;
+        private Vec _k10 = null!;
+        private Vec _k11 = null!;
+        private Vec _k12 = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
         protected override void RKStep(IVPFunc f)
         {
             double h = Habs * Direction;
 
-            K[1].CopyFrom(Dy);
+            _k1.CopyFrom(Dy);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0201 * Dy[i]);
-            f(Ynew, T + C2 * h, K[2]);
+            Ynew.LinComb1(Y, h * A0201, Dy);
+            f(Ynew, T + C2 * h, _k2);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0301 * K[1][i] + A0302 * K[2][i]);
-            f(Ynew, T + C3 * h, K[3]);
+            Ynew.LinComb2(Y, h * A0301, _k1, h * A0302, _k2);
+            f(Ynew, T + C3 * h, _k3);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0401 * K[1][i] + A0403 * K[3][i]);
-            f(Ynew, T + C4 * h, K[4]);
+            Ynew.LinComb2(Y, h * A0401, _k1, h * A0403, _k3);
+            f(Ynew, T + C4 * h, _k4);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0501 * K[1][i] + A0503 * K[3][i] + A0504 * K[4][i]);
-            f(Ynew, T + C5 * h, K[5]);
+            Ynew.LinComb3(Y, h * A0501, _k1, h * A0503, _k3, h * A0504, _k4);
+            f(Ynew, T + C5 * h, _k5);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0601 * K[1][i] + A0604 * K[4][i] + A0605 * K[5][i]);
-            f(Ynew, T + C6 * h, K[6]);
+            Ynew.LinComb3(Y, h * A0601, _k1, h * A0604, _k4, h * A0605, _k5);
+            f(Ynew, T + C6 * h, _k6);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0701 * K[1][i] + A0704 * K[4][i] + A0705 * K[5][i] + A0706 * K[6][i]);
-            f(Ynew, T + C7 * h, K[7]);
+            Ynew.LinComb4(Y, h * A0701, _k1, h * A0704, _k4, h * A0705, _k5, h * A0706, _k6);
+            f(Ynew, T + C7 * h, _k7);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0801 * K[1][i] + A0804 * K[4][i] + A0805 * K[5][i] + A0806 * K[6][i] + A0807 * K[7][i]);
-            f(Ynew, T + C8 * h, K[8]);
+            Ynew.LinComb5(Y, h * A0801, _k1, h * A0804, _k4, h * A0805, _k5, h * A0806, _k6, h * A0807, _k7);
+            f(Ynew, T + C8 * h, _k8);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A0901 * K[1][i] + A0904 * K[4][i] + A0905 * K[5][i] + A0906 * K[6][i] + A0907 * K[7][i] + A0908 * K[8][i]);
-            f(Ynew, T + C9 * h, K[9]);
+            Ynew.LinComb6(Y, h * A0901, _k1, h * A0904, _k4, h * A0905, _k5, h * A0906, _k6, h * A0907, _k7, h * A0908, _k8);
+            f(Ynew, T + C9 * h, _k9);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A1001 * K[1][i] + A1004 * K[4][i] + A1005 * K[5][i] + A1006 * K[6][i] + A1007 * K[7][i] + A1008 * K[8][i] +
-                    A1009 * K[9][i]);
-            f(Ynew, T + C10 * h, K[10]);
+            Ynew.LinComb7(Y, h * A1001, _k1, h * A1004, _k4, h * A1005, _k5, h * A1006, _k6, h * A1007, _k7, h * A1008, _k8,
+                h * A1009, _k9);
+            f(Ynew, T + C10 * h, _k10);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A1101 * K[1][i] + A1104 * K[4][i] + A1105 * K[5][i] + A1106 * K[6][i] + A1107 * K[7][i] + A1108 * K[8][i] +
-                    A1109 * K[9][i] + A1110 * K[10][i]);
-            f(Ynew, T + C11 * h, K[11]);
+            Ynew.LinComb8(Y, h * A1101, _k1, h * A1104, _k4, h * A1105, _k5, h * A1106, _k6, h * A1107, _k7, h * A1108, _k8,
+                h * A1109, _k9, h * A1110, _k10);
+            f(Ynew, T + C11 * h, _k11);
 
-            for (int i = 0; i < N; i++)
-                Ynew[i] = Y[i] + h * (A1201 * K[1][i] + A1204 * K[4][i] + A1205 * K[5][i] + A1206 * K[6][i] + A1207 * K[7][i] + A1208 * K[8][i] +
-                    A1209 * K[9][i] + A1210 * K[10][i] + A1211 * K[11][i]);
-            f(Ynew, T + h, K[12]);
+            Ynew.LinComb9(Y, h * A1201, _k1, h * A1204, _k4, h * A1205, _k5, h * A1206, _k6, h * A1207, _k7, h * A1208, _k8,
+                h * A1209, _k9, h * A1210, _k10, h * A1211, _k11);
+            f(Ynew, T + h, _k12);
 
-            K[12].CopyTo(Dynew);
+            _k12.CopyTo(Dynew);
         }
 
         protected override void InitInterpolant()
@@ -226,8 +229,41 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
+        protected override void Init()
+        {
+            base.Init();
+            _k1 = Vec.Rent(N);
+            _k2 = Vec.Rent(N);
+            _k3 = Vec.Rent(N);
+            _k4 = Vec.Rent(N);
+            _k5 = Vec.Rent(N);
+            _k6 = Vec.Rent(N);
+            _k7 = Vec.Rent(N);
+            _k8 = Vec.Rent(N);
+            _k9 = Vec.Rent(N);
+            _k10 = Vec.Rent(N);
+            _k11 = Vec.Rent(N);
+            _k12 = Vec.Rent(N);
+        }
+
+        protected override void Cleanup()
+        {
+            _k1.Dispose();
+            _k2.Dispose();
+            _k3.Dispose();
+            _k4.Dispose();
+            _k5.Dispose();
+            _k6.Dispose();
+            _k7.Dispose();
+            _k8.Dispose();
+            _k9.Dispose();
+            _k10.Dispose();
+            _k11.Dispose();
+            _k12.Dispose();
+        }
+
         // https://doi.org/10.1016/0898-1221(86)90025-8
-        protected override void Interpolate(double x, Vn yout)
+        protected override void Interpolate(double x, Vec yout)
         {
             throw new NotImplementedException();
 
@@ -246,7 +282,7 @@ namespace MechJebLib.ODE
             double bs7 = (1.0 - s) * s * (B71 + B72 * s + B73 * s2);
 
             for (int i = 0; i < N; i++)
-                yout[i] = Y[i] + h * s * (bs1 * K[1][i] + bs3 * K[3][i] + bs4 * K[4][i] + bs5 * K[5][i] + bs6 * K[6][i] + bs7 * K[7][i]);
+                yout[i] = Y[i] + h * s * (bs1 * k1[i] + bs3 * k3[i] + bs4 * k4[i] + bs5 * k5[i] + bs6 * k6[i] + bs7 * k7[i]);
                 */
         }
 
@@ -264,15 +300,13 @@ namespace MechJebLib.ODE
 
         protected override double ScaledErrorNorm()
         {
-            var err3 = Vn.Rent(N);
-            var err5 = Vn.Rent(N);
+            using var err3 = Vec.Rent(N);
+            using var err5 = Vec.Rent(N);
 
-            for (int i = 0; i < N; i++)
-            {
-                err3[i] = K[4][i] - K[1][i] * E301 - K[3][i] * E303 - K[9][i] * E309;
-                err5[i] = K[1][i] * E501 + K[6][i] * E506 + K[7][i] * E507 + K[8][i] * E508 + K[9][i] * E509 + K[10][i] * E510 + K[2][i] * E511 +
-                    K[3][i] * E512;
-            }
+            err3.LinComb3(_k4, -E301, _k1, -E303, _k3, -E309, _k9);
+
+            err5.CopyFrom(_k1).Scal(E501);
+            err5.LinComb7(err5, E506, _k6, E507, _k7, E508, _k8, E509, _k9, E510, _k10, E511, _k2, E512, _k3);
 
             double error5 = 0.0, error3 = 0.0;
             for (int i = 0; i < N; i++)

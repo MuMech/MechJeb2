@@ -351,7 +351,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 if (density <= 0)
                     continue;
 
-                PropellantFlowModes.TryAdd(p.id, p.FlowMode);
+                if (!PropellantFlowModes.ContainsKey(p.id))
+                    PropellantFlowModes.Add(p.id, p.FlowMode);
 
                 // ignoreForIsp fuels are not part of the total density
                 if (p.ignoreForIsp)

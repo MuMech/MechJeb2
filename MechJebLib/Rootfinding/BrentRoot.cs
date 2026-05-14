@@ -4,7 +4,6 @@
  */
 
 using System;
-using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -31,13 +30,14 @@ namespace MechJebLib.Rootfinding
         public static double Solve(Func<double, object?, double> f, double a, double b, object? o, int maxiter = 100, double rtol = EPS,
             int sign = 0)
         {
+            if (!IsFinite(a) || !IsFinite(b))
+                throw new ArgumentException("Brent's rootfinding method: bounds must be finite");
+
             double fa = f(a, o);
             double fb = f(b, o);
 
-            Check.Finite(a);
-            Check.Finite(fa);
-            Check.Finite(b);
-            Check.Finite(fb);
+            if (!IsFinite(fa) || !IsFinite(fb))
+                throw new ArgumentException("Brent's rootfinding method: function returned a non-finite value");
 
             if (fa == 0)
                 return a;
@@ -69,13 +69,16 @@ namespace MechJebLib.Rootfinding
         /// <returns>value for which the function evaluates to zero</returns>
         public static double Solve(Func<double, object?, double> f, double x, object? o, int maxiter = 100, double rtol = EPS, int sign = 0)
         {
+            if (!IsFinite(x))
+                throw new ArgumentException("Brent's rootfinding method: initial guess must be finite");
+
             double a  = x;
             double b  = x;
             double fa = f(x, o);
             double fb = fa;
 
-            Check.Finite(x);
-            Check.Finite(fa);
+            if (!IsFinite(fa))
+                throw new ArgumentException("Brent's rootfinding method: function returned a non-finite value");
 
             if (fa == 0)
                 return a;
@@ -97,8 +100,8 @@ namespace MechJebLib.Rootfinding
                 a = x - dx;
                 fa = f(a, o);
 
-                Check.Finite(a);
-                Check.Finite(fa);
+                if (!IsFinite(a) || !IsFinite(fa))
+                    throw new ArgumentException("Brent's rootfinding method: failed to bracket the root");
 
                 if (fa == 0)
                     return a;
@@ -109,8 +112,8 @@ namespace MechJebLib.Rootfinding
                 b = x + dx;
                 fb = f(b, o);
 
-                Check.Finite(b);
-                Check.Finite(fb);
+                if (!IsFinite(b) || !IsFinite(fb))
+                    throw new ArgumentException("Brent's rootfinding method: failed to bracket the root");
 
                 if (fb == 0)
                     return b;
@@ -223,8 +226,8 @@ namespace MechJebLib.Rootfinding
 
                 fb = f(b, o);
 
-                Check.Finite(a);
-                Check.Finite(fa);
+                if (!IsFinite(a) || !IsFinite(fa) || !IsFinite(fb))
+                    throw new ArgumentException("Brent's rootfinding method: function returned a non-finite value");
 
                 if (i++ >= maxiter && maxiter > 0)
                     throw new InvalidOperationException("Brent's rootfinding method: maximum iterations exceeded: " + Abs(a - c));

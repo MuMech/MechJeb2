@@ -6,105 +6,171 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using MechJebLib.Primitives;
 
 namespace MechJebLib.Utils
 {
     public static class AutoDiff
     {
-        private static (double, double[]) Gradient(Func<Dual[], Dual> f, double[] point)
+        private static readonly ThreadLocal<Dual[]> _dualBuffer = new ThreadLocal<Dual[]>(() => new Dual[16]);
+        private static readonly ThreadLocal<DualV3[]> _dualV3Buffer = new ThreadLocal<DualV3[]>(() => new DualV3[16]);
+
+        private static Dual[] RentDualArray(int n)
         {
-            int      n        = point.Length;
-            double[] partials = new double[n];
-            var      ans      = new Dual(0);
+            Dual[] buf = _dualBuffer.Value;
+            if (buf.Length < n)
+            {
+                buf = new Dual[n];
+                _dualBuffer.Value = buf;
+            }
+
+            return buf;
+        }
+
+        private static DualV3[] RentDualV3Array(int n)
+        {
+            DualV3[] buf = _dualV3Buffer.Value;
+            if (buf.Length < n)
+            {
+                buf = new DualV3[n];
+                _dualV3Buffer.Value = buf;
+            }
+
+            return buf;
+        }
+
+        private static (double, Vec) Gradient(Func<Dual[], Dual> f, double[] point)
+        {
+            int n        = point.Length;
+            var partials = Vec.Rent(n);
+            var ans      = new Dual(0);
+
+            Dual[] duals = RentDualArray(n);
+
+            for (int j = 0; j < n; j++)
+                duals[j] = new Dual(point[j]);
 
             for (int i = 0; i < n; i++)
             {
-                var duals = new Dual[n];
-                for (int j = 0; j < n; j++)
-                    duals[j] = new Dual(point[j], i == j ? 1.0 : 0.0);
+                duals[i] = new Dual(point[i], 1.0);
 
                 ans = f(duals);
                 partials[i] = ans.D;
+
+                duals[i] = new Dual(point[i]);
             }
 
             return (ans.M, partials);
         }
 
-        private static (double, double[]) GradientV3(Func<DualV3[], Dual> f, V3[] point)
-        {
-            int      n        = point.Length;
-            double[] partials = new double[3 * n];
-            var      ans      = new Dual(0);
-
-            for (int i = 0; i < n; i++)
-            {
-                for (int k = 0; k < 3; k++)
-                {
-                    var duals = new DualV3[n];
-                    for (int j = 0; j < n; j++)
-                        duals[j] = new DualV3(point[j], V3.zero);
-
-                    duals[i] = new DualV3(point[i], k switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis });
-
-                    ans = f(duals);
-                    partials[i * 3 + k] = ans.D;
-                }
-            }
-
-            return (ans.M, partials);
-        }
-
-        public static (V3, V3[]) JacobianV3(Func<DualV3[], DualV3> f, V3[] point)
+        private static (double, Vec) GradientV3(Func<DualV3[], Dual> f, V3[] point)
         {
             int n        = point.Length;
-            var partials = new V3[3 * n];
-            var ans      = new DualV3(V3.zero, V3.zero);
+            var partials = Vec.Rent(3 * n);
+            var ans      = new Dual(0);
+
+            DualV3[] duals = RentDualV3Array(n);
+            for (int j = 0; j < n; j++)
+                duals[j] = new DualV3(point[j], V3.zero);
 
             for (int i = 0; i < n; i++)
             {
                 for (int k = 0; k < 3; k++)
                 {
-                    var duals = new DualV3[n];
-                    for (int j = 0; j < n; j++)
-                        duals[j] = new DualV3(point[j], V3.zero);
-
                     duals[i] = new DualV3(point[i], k switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis });
 
                     ans = f(duals);
                     partials[i * 3 + k] = ans.D;
+
+                    duals[i] = new DualV3(point[i], V3.zero);
                 }
             }
 
             return (ans.M, partials);
+        }
+
+        public static (V3, Vec partialX, Vec partialY, Vec partialZ) JacobianV3(Func<DualV3[], DualV3> f, V3[] point)
+        {
+            int n        = point.Length;
+            var partialX = Vec.Rent(3 * n);
+            var partialY = Vec.Rent(3 * n);
+            var partialZ = Vec.Rent(3 * n);
+            var ans      = new DualV3(V3.zero, V3.zero);
+
+            DualV3[] duals = RentDualV3Array(n);
+            for (int j = 0; j < n; j++)
+                duals[j] = new DualV3(point[j], V3.zero);
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    duals[i] = new DualV3(point[i], k switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis });
+
+                    ans = f(duals);
+                    partialX[i * 3 + k] = ans.D.x;
+                    partialY[i * 3 + k] = ans.D.y;
+                    partialZ[i * 3 + k] = ans.D.z;
+
+                    duals[i] = new DualV3(point[i], V3.zero);
+                }
+            }
+
+            return (ans.M, partialX, partialY, partialZ);
+        }
+
+        private static readonly ThreadLocal<Dictionary<int, double>> _elementDictionary = new ThreadLocal<Dictionary<int, double>>(() => new Dictionary<int, double>());
+        private static readonly ThreadLocal<List<int>> _elementKeys = new ThreadLocal<List<int>>(() => new List<int>());
+
+        private static void AppendSortedRow(alglib.sparsematrix j, Dictionary<int, double> elements)
+        {
+            List<int> keys = _elementKeys.Value;
+
+            keys.Clear();
+            foreach (KeyValuePair<int, double> kv in elements)
+                keys.Add(kv.Key);
+            keys.Sort();
+
+            alglib.sparseappendemptyrow(j);
+            for (int i = 0; i < keys.Count; i++)
+            {
+                double v = elements[keys[i]];
+                if (v != 0)
+                    alglib.sparseappendelement(j, keys[i], v);
+            }
         }
 
         public static int ApplyScalarConstraint(double[] f, alglib.sparsematrix j, int ci, Func<Dual[], Dual> g, double[] p, int[] idx)
         {
-            (double value, double[] partials) = Gradient(g, p);
+            (double value, Vec partials) = Gradient(g, p);
 
             int n = p.Length;
 
-            var elements = new SortedDictionary<int, double>();
+            Dictionary<int, double> elements = _elementDictionary.Value;
+
+            elements.Clear();
+
             for (int i = 0; i < n; i++)
                 elements[idx[i]] = partials[i];
 
             f[ci++] = value;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
+
+            partials.Dispose();
 
             return ci;
         }
 
         public static int ApplyScalarConstraintV3(double[] f, alglib.sparsematrix j, int ci, Func<DualV3[], Dual> g, V3[] p, (int, int, int)[] idx)
         {
-            (double value, double[] partials) = GradientV3(g, p);
+            (double value, Vec partials) = GradientV3(g, p);
 
             int n = p.Length;
 
-            var elements = new SortedDictionary<int, double>();
+            Dictionary<int, double> elements = _elementDictionary.Value;
+            elements.Clear();
+
             for (int i = 0; i < n; i++)
             {
                 elements[idx[i].Item1] = partials[3 * i];
@@ -113,61 +179,59 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = value;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
+
+            partials.Dispose();
 
             return ci;
         }
 
         public static int ApplyVectorConstraintV3(double[] f, alglib.sparsematrix j, int ci, Func<DualV3[], DualV3> g, V3[] p, (int, int, int)[] idx)
         {
-            (V3 value, V3[] partials) = JacobianV3(g, p);
+            (V3 value, Vec partialX, Vec partialY, Vec partialZ) = JacobianV3(g, p);
 
             int n = p.Length;
 
-            var elements = new SortedDictionary<int, double>();
+            Dictionary<int, double> elements = _elementDictionary.Value;
+            elements.Clear();
+
             for (int i = 0; i < n; i++)
             {
-                elements[idx[i].Item1] = partials[3 * i].x;
-                elements[idx[i].Item2] = partials[3 * i + 1].x;
-                elements[idx[i].Item3] = partials[3 * i + 2].x;
+                elements[idx[i].Item1] = partialX[3 * i];
+                elements[idx[i].Item2] = partialX[3 * i + 1];
+                elements[idx[i].Item3] = partialX[3 * i + 2];
             }
 
             f[ci++] = value.x;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
 
             elements.Clear();
+
             for (int i = 0; i < n; i++)
             {
-                elements[idx[i].Item1] = partials[3 * i].y;
-                elements[idx[i].Item2] = partials[3 * i + 1].y;
-                elements[idx[i].Item3] = partials[3 * i + 2].y;
+                elements[idx[i].Item1] = partialY[3 * i];
+                elements[idx[i].Item2] = partialY[3 * i + 1];
+                elements[idx[i].Item3] = partialY[3 * i + 2];
             }
 
             f[ci++] = value.y;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
 
             elements.Clear();
+
             for (int i = 0; i < n; i++)
             {
-                elements[idx[i].Item1] = partials[3 * i].z;
-                elements[idx[i].Item2] = partials[3 * i + 1].z;
-                elements[idx[i].Item3] = partials[3 * i + 2].z;
+                elements[idx[i].Item1] = partialZ[3 * i];
+                elements[idx[i].Item2] = partialZ[3 * i + 1];
+                elements[idx[i].Item3] = partialZ[3 * i + 2];
             }
 
             f[ci++] = value.z;
-            alglib.sparseappendemptyrow(j);
-            foreach (KeyValuePair<int, double> kv in elements)
-                if (kv.Value != 0)
-                    alglib.sparseappendelement(j, kv.Key, kv.Value);
+            AppendSortedRow(j, elements);
+
+            partialX.Dispose();
+            partialY.Dispose();
+            partialZ.Dispose();
 
             return ci;
         }
@@ -353,7 +417,9 @@ namespace MechJebLib.Utils
         {
             const int NUM_VARS = 31;
             DualV3    ans;
-            var       jac = new V3[NUM_VARS];
+            var       jacX = Vec.Rent(NUM_VARS, true);
+            var       jacY = Vec.Rent(NUM_VARS, true);
+            var       jacZ = Vec.Rent(NUM_VARS, true);
 
             var d0  = new HermiteSimpsonDualPoint { R = segment.R0, V = segment.V0, U = segment.U0, M = segment.M0 };
             var d1  = new HermiteSimpsonDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, M = segment.M1 };
@@ -371,45 +437,45 @@ namespace MechJebLib.Utils
 
             ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
 
-            jac[0].x = ans.x.D;
-            jac[3].y = ans.y.D;
-            jac[6].z = ans.z.D;
+            jacX[0] = ans.x.D;
+            jacY[3] = ans.y.D;
+            jacZ[6] = ans.z.D;
 
             d0.R = new DualV3(d0.R.M, V3.zero);
             d2.R = new DualV3(d2.R.M, V3.one);
 
             ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
 
-            jac[2].x = ans.x.D;
-            jac[5].y = ans.y.D;
-            jac[8].z = ans.z.D;
+            jacX[2] = ans.x.D;
+            jacY[5] = ans.y.D;
+            jacZ[8] = ans.z.D;
 
             d2.R = new DualV3(d2.R.M, V3.zero);
             d0.V = new DualV3(d0.V.M, V3.one);
 
             ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
 
-            jac[9].x = ans.x.D;
-            jac[12].y = ans.y.D;
-            jac[15].z = ans.z.D;
+            jacX[9] = ans.x.D;
+            jacY[12] = ans.y.D;
+            jacZ[15] = ans.z.D;
 
             d0.V = new DualV3(d0.V.M, V3.zero);
             d1.V = new DualV3(d1.V.M, V3.one);
 
             ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
 
-            jac[10].x = ans.x.D;
-            jac[13].y = ans.y.D;
-            jac[16].z = ans.z.D;
+            jacX[10] = ans.x.D;
+            jacY[13] = ans.y.D;
+            jacZ[16] = ans.z.D;
 
             d1.V = new DualV3(d1.V.M, V3.zero);
             d2.V = new DualV3(d2.V.M, V3.one);
 
             ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
 
-            jac[11].x = ans.x.D;
-            jac[14].y = ans.y.D;
-            jac[17].z = ans.z.D;
+            jacX[11] = ans.x.D;
+            jacY[14] = ans.y.D;
+            jacZ[17] = ans.z.D;
 
             d2.V = new DualV3(d2.V.M, V3.zero);
             dbt = new Dual(segment.Bt, 1);
@@ -419,9 +485,9 @@ namespace MechJebLib.Utils
 
             ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
 
-            jac[30].x = ans.x.D;
-            jac[30].y = ans.y.D;
-            jac[30].z = ans.z.D;
+            jacX[30] = ans.x.D;
+            jacY[30] = ans.y.D;
+            jacZ[30] = ans.z.D;
 
             dbt = new Dual(segment.Bt);
 
@@ -429,24 +495,30 @@ namespace MechJebLib.Utils
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].x != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].x);
+                if (jacX[k] != 0)
+                    alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
 
             f[ci++] = ans.M.y;
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].y != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].y);
+                if (jacY[k] != 0)
+                    alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
 
             f[ci++] = ans.M.z;
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].z != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].z);
+                if (jacZ[k] != 0)
+                    alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
 
-            jac = new V3[NUM_VARS];
+            jacX.Dispose();
+            jacY.Dispose();
+            jacZ.Dispose();
+
+            jacX = Vec.Rent(NUM_VARS, true);
+            jacY = Vec.Rent(NUM_VARS, true);
+            jacZ = Vec.Rent(NUM_VARS, true);
 
             H = dbt / (n - 1);
             Dual H8 = H * 0.125;
@@ -455,45 +527,45 @@ namespace MechJebLib.Utils
 
             ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
 
-            jac[0].x = ans.x.D;
-            jac[3].y = ans.y.D;
-            jac[6].z = ans.z.D;
+            jacX[0] = ans.x.D;
+            jacY[3] = ans.y.D;
+            jacZ[6] = ans.z.D;
 
             d0.R = new DualV3(d0.R.M, V3.zero);
             d1.R = new DualV3(d1.R.M, V3.one);
 
             ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
 
-            jac[1].x = ans.x.D;
-            jac[4].y = ans.y.D;
-            jac[7].z = ans.z.D;
+            jacX[1] = ans.x.D;
+            jacY[4] = ans.y.D;
+            jacZ[7] = ans.z.D;
 
             d1.R = new DualV3(d1.R.M, V3.zero);
             d2.R = new DualV3(d2.R.M, V3.one);
 
             ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
 
-            jac[2].x = ans.x.D;
-            jac[5].y = ans.y.D;
-            jac[8].z = ans.z.D;
+            jacX[2] = ans.x.D;
+            jacY[5] = ans.y.D;
+            jacZ[8] = ans.z.D;
 
             d2.R = new DualV3(d2.R.M, V3.zero);
             d0.V = new DualV3(d0.V.M, V3.one);
 
             ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
 
-            jac[9].x = ans.x.D;
-            jac[12].y = ans.y.D;
-            jac[15].z = ans.z.D;
+            jacX[9] = ans.x.D;
+            jacY[12] = ans.y.D;
+            jacZ[15] = ans.z.D;
 
             d0.V = new DualV3(d0.V.M, V3.zero);
             d2.V = new DualV3(d2.V.M, V3.one);
 
             ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
 
-            jac[11].x = ans.x.D;
-            jac[14].y = ans.y.D;
-            jac[17].z = ans.z.D;
+            jacX[11] = ans.x.D;
+            jacY[14] = ans.y.D;
+            jacZ[17] = ans.z.D;
 
             d2.V = new DualV3(d2.V.M, V3.zero);
             dbt = new Dual(segment.Bt, 1);
@@ -503,9 +575,9 @@ namespace MechJebLib.Utils
 
             ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
 
-            jac[30].x = ans.x.D;
-            jac[30].y = ans.y.D;
-            jac[30].z = ans.z.D;
+            jacX[30] = ans.x.D;
+            jacY[30] = ans.y.D;
+            jacZ[30] = ans.z.D;
 
             dbt = new Dual(segment.Bt);
 
@@ -513,22 +585,22 @@ namespace MechJebLib.Utils
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].x != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].x);
+                if (jacX[k] != 0)
+                    alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
 
             f[ci++] = ans.M.y;
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].y != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].y);
+                if (jacY[k] != 0)
+                    alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
 
             f[ci++] = ans.M.z;
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].z != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].z);
+                if (jacZ[k] != 0)
+                    alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
 
             /*
              * VDOT
@@ -536,7 +608,13 @@ namespace MechJebLib.Utils
 
             bool singleControlVariable = indexes.Index(21) == indexes.Index(22);
 
-            jac = new V3[NUM_VARS];
+            jacX.Dispose();
+            jacY.Dispose();
+            jacZ.Dispose();
+
+            jacX = Vec.Rent(NUM_VARS, true);
+            jacY = Vec.Rent(NUM_VARS, true);
+            jacZ = Vec.Rent(NUM_VARS, true);
 
             for (int k = 0; k < NUM_VARS; k++)
             {
@@ -552,19 +630,27 @@ namespace MechJebLib.Utils
 
                 if (singleControlVariable && k >= 21 && k <= 23)
                 {
-                    jac[21] += ans.D;
+                    jacX[21] += ans.D.x;
+                    jacY[21] += ans.D.y;
+                    jacZ[21] += ans.D.z;
                 }
                 else if (singleControlVariable && k >= 24 && k <= 26)
                 {
-                    jac[24] += ans.D;
+                    jacX[24] += ans.D.x;
+                    jacY[24] += ans.D.y;
+                    jacZ[24] += ans.D.z;
                 }
                 else if (singleControlVariable && k >= 27 && k <= 29)
                 {
-                    jac[27] += ans.D;
+                    jacX[27] += ans.D.x;
+                    jacY[27] += ans.D.y;
+                    jacZ[27] += ans.D.z;
                 }
                 else
                 {
-                    jac[k] = ans.D;
+                    jacX[k] = ans.D.x;
+                    jacY[k] = ans.D.y;
+                    jacZ[k] = ans.D.z;
                 }
 
                 if (k < 30)
@@ -579,12 +665,12 @@ namespace MechJebLib.Utils
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].x != 0)
+                if (jacX[k] != 0)
                 {
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].x);
+                    alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
                     lastindex = index;
                 }
 
@@ -594,12 +680,12 @@ namespace MechJebLib.Utils
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].y != 0)
+                if (jacY[k] != 0)
                 {
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].y);
+                    alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
                     lastindex = index;
                 }
 
@@ -609,16 +695,22 @@ namespace MechJebLib.Utils
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].z != 0)
+                if (jacZ[k] != 0)
                 {
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].z);
+                    alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
                     lastindex = index;
                 }
 
-            jac = new V3[NUM_VARS];
+            jacX.Dispose();
+            jacY.Dispose();
+            jacZ.Dispose();
+
+            jacX = Vec.Rent(NUM_VARS, true);
+            jacY = Vec.Rent(NUM_VARS, true);
+            jacZ = Vec.Rent(NUM_VARS, true);
 
             for (int k = 0; k < NUM_VARS; k++)
             {
@@ -634,19 +726,27 @@ namespace MechJebLib.Utils
 
                 if (singleControlVariable && k >= 21 && k <= 23)
                 {
-                    jac[21] += ans.D;
+                    jacX[21] += ans.D.x;
+                    jacY[21] += ans.D.y;
+                    jacZ[21] += ans.D.z;
                 }
                 else if (singleControlVariable && k >= 24 && k <= 26)
                 {
-                    jac[24] += ans.D;
+                    jacX[24] += ans.D.x;
+                    jacY[24] += ans.D.y;
+                    jacZ[24] += ans.D.z;
                 }
                 else if (singleControlVariable && k >= 27 && k <= 29)
                 {
-                    jac[27] += ans.D;
+                    jacX[27] += ans.D.x;
+                    jacY[27] += ans.D.y;
+                    jacZ[27] += ans.D.z;
                 }
                 else
                 {
-                    jac[k] = ans.D;
+                    jacX[k] = ans.D.x;
+                    jacY[k] = ans.D.y;
+                    jacZ[k] = ans.D.z;
                 }
 
                 if (k < 30)
@@ -661,12 +761,12 @@ namespace MechJebLib.Utils
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].x != 0)
+                if (jacX[k] != 0)
                 {
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, index, jac[k].x);
+                    alglib.sparseappendelement(j, index, jacX[k]);
                     lastindex = index;
                 }
 
@@ -677,12 +777,12 @@ namespace MechJebLib.Utils
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].y != 0)
+                if (jacY[k] != 0)
                 {
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].y);
+                    alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
                     lastindex = index;
                 }
 
@@ -692,12 +792,12 @@ namespace MechJebLib.Utils
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
-                if (jac[k].z != 0)
+                if (jacZ[k] != 0)
                 {
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jac[k].z);
+                    alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
                     lastindex = index;
                 }
 

@@ -5,7 +5,6 @@
 
 using System;
 using MechJebLib.Rootfinding;
-using MechJebLib.Utils;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -63,22 +62,22 @@ namespace MechJebLibTest.RootfindingTests
             ans.ShouldEqual(PI, EPS2);
 
             // this throws due to not being able to precisely find the root
-            Exception ex = Assert.Throws<Check.FailedCheck>(() =>
+            Exception ex = Assert.Throws<ArgumentException>(() =>
                 BrentRoot.Solve((t, o) => t * t, 1, null)
             );
-            Assert.Contains("check failed", ex.Message);
+            Assert.Contains("failed to bracket the root", ex.Message);
 
             // no root at all
-            ex = Assert.Throws<Check.FailedCheck>(() =>
+            ex = Assert.Throws<ArgumentException>(() =>
                 BrentRoot.Solve((t, o) => Abs(t) + 1, 1, null)
             );
-            Assert.Contains("check failed", ex.Message);
+            Assert.Contains("failed to bracket the root", ex.Message);
 
             // expansion of region fails to bracket the root
-            ex = Assert.Throws<Check.FailedCheck>(() =>
+            ex = Assert.Throws<ArgumentException>(() =>
                 BrentRoot.Solve((t, o) => t * t - 0.01, 2, null)
             );
-            Assert.Contains("check failed", ex.Message);
+            Assert.Contains("failed to bracket the root", ex.Message);
 
             // finds a root even though it shouldn't
             ans = BrentRoot.Solve((t, o) => Tan(t), 2, null);
