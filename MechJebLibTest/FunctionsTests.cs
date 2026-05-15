@@ -197,62 +197,62 @@ namespace MechJebLibTest.MathsTests
         public void VelocityForHeadingTest1()
         {
             V3 vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), 0);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], 10, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(10, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), PI / 2);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), PI);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], -10, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(-10, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), 3 * PI / 2);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], -10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(-10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), 0);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], 10, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(10, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), PI / 2);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], 10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), PI);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], -10, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(-10, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), 3 * PI / 2);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], -10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(-10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
         }
 
         [Fact]
         public void VelocityForInclinationTest1()
         {
             V3 vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), 0);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), PI / 2);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], 10, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(10, vf[2], 9);
             vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), PI);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], -10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(-10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), -PI / 2);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], -10, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(-10, vf[2], 9);
             vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(10, 10, 0), 0);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], 10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
         }
 
         [Fact]
