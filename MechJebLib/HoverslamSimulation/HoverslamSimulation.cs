@@ -10,7 +10,9 @@ using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using MechJebLib.Rootfinding;
+using MechJebLib.TwoBody;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.HoverslamSimulation
 {
@@ -128,23 +130,32 @@ namespace MechJebLib.HoverslamSimulation
 
         private (double maxT, double minT) GenerateBracketGuess()
         {
-            // ignition point should be before we hit the ground
-            double maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
+            double maxT;
             double minT;
 
             if (Astro.EccFromStateVectors(_mu, _r0, _v0) < 1.0)
             {
-                // if we're not yet at the apoapsis we should start at the next apoapsis
-                minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
-                if (minT > maxT)
-                    // if we're ahead of the apoapsis, we should rewind to the last apoapsis
-                    minT -= Astro.PeriodFromStateVectors(_mu, _r0, _v0);
+                double tanom = Astro.TrueAnomalyFromStateVectors(_mu, _r0, _v0);
+                if (ClampPi(tanom) > 0)
+                {
+                    // still rising, advance to the apoapsis
+                    minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
+                    (V3 rApr, V3 vApr) = Shepperd.Solve(_mu, minT, _r0, _v0);
+                    maxT = minT + Astro.TimeToNextRadius(_mu, rApr, vApr, _height);
+                }
+                else
+                {
+                    // falling
+                    minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0) - Astro.PeriodFromStateVectors(_mu, _r0, _v0);
+                    maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
+                }
             }
             else
             {
                 // heuristically, try to capture a range that includes the ignition point.  i'd rather not
                 // use the mainBody SOI radius here, but that would certainly do it.
                 minT = Astro.TimeToLastRadius(_mu, _r0, _v0, _r0.magnitude * 2.0);
+                maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
             }
 
             return (maxT, minT);

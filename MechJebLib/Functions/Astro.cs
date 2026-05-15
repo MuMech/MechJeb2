@@ -234,6 +234,14 @@ namespace MechJebLib.Functions
             return TrueAnomalyFromRadius(l, ecc, radius);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double TrueAnomalyFromStateVectors(double mu, V3 r, V3 v)
+        {
+            // a custom routine handling edge cases (circular, equatorial) would cost almost as much
+            ( _,  _, _, _, _, double nu, _) = KeplerianFromStateVectors(mu, r, v);
+            return nu;
+        }
+
         /// <summary>
         ///     True Anomaly from the Eccentric Anomaly.
         /// </summary>

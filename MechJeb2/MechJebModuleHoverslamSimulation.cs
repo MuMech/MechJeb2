@@ -193,7 +193,9 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (VesselState.mainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0)
+            double r = GetGroundRadius();
+
+            if (VesselState.mainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
             {
                 Reset();
                 return;
@@ -273,7 +275,6 @@ namespace MuMech
             if (noBurnableStages)
                 return;
 
-            double r = GetGroundRadius();
             double g = MainBody.gravParameter / (r * r);
             double a = g + Clamp01(VerticalAuthority) * (FinalThrustAccel - g);
             FinalDescentSpeed = FinalThrustAccel < 0 ? 0 : Sqrt(Max(2.0 * (a - g) * VerticalAltitude, 0));
