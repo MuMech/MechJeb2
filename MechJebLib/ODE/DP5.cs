@@ -5,6 +5,7 @@
 
 using System;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -62,36 +63,6 @@ namespace MechJebLib.ODE
         private const double E5 = -17253.0 / 339200.0;
         private const double E6 = 22.0 / 525.0;
         private const double E7 = -1.0 / 40.0;
-
-        private const double B10 = 11282082432.0 / 11282082432.0;
-        private const double B11 = -32272833064.0 / 11282082432.0;
-        private const double B12 = 34969693132.0 / 11282082432.0;
-        private const double B13 = -13107642775.0 / 11282082432.0;
-        private const double B14 = 157015080.0 / 11282082432.0;
-
-        private const double B31 = -100 * -1323431896.0 / 32700410799.0;
-        private const double B32 = -100 * 2074956840.0 / 32700410799.0;
-        private const double B33 = -100 * -914128567.0 / 32700410799.0;
-        private const double B34 = -100 * 15701508.0 / 32700410799.0;
-
-        private const double B41 = 25.0 * -889289856.0 / 5641041216.0;
-        private const double B42 = 25.0 * 2460397220.0 / 5641041216.0;
-        private const double B43 = 25.0 * -1518414297.0 / 5641041216.0;
-        private const double B44 = 25.0 * 94209048.0 / 5641041216.0;
-
-        private const double B51 = -2187.0 * -259006536.0 / 199316789632.0;
-        private const double B52 = -2187.0 * 687873124.0 / 199316789632.0;
-        private const double B53 = -2187.0 * -451824525.0 / 199316789632.0;
-        private const double B54 = -2187.0 * 52338360.0 / 199316789632.0;
-
-        private const double B61 = 11.0 * -361440756.0 / 2467955532.0;
-        private const double B62 = 11.0 * 946554244.0 / 2467955532.0;
-        private const double B63 = 11.0 * -661884105.0 / 2467955532.0;
-        private const double B64 = 11.0 * 106151040.0 / 2467955532.0;
-
-        private const double B71 = 44764047.0 / 29380423.0;
-        private const double B72 = -82437520.0 / 29380423.0;
-        private const double B73 = 8293050.0 / 29380423.0;
 
         #endregion
 
@@ -154,6 +125,8 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
+        protected override DenseNode SnapshotStep() => DP5Node.Rent(T, Habs * Direction, Y, _k1, _k3, _k4, _k5, _k6, _k7);
+
         protected override void Init()
         {
             base.Init();
@@ -178,10 +151,45 @@ namespace MechJebLib.ODE
         }
 
         // https://doi.org/10.1016/0898-1221(86)90025-8
-        protected override void Interpolate(double x, Vec yout)
+        protected override void Interpolate(double x, Vec yout) =>
+            DP5Math.Interpolate(x, T, Habs * Direction, Y, _k1, _k3, _k4, _k5, _k6, _k7, yout);
+    }
+
+    internal static class DP5Math
+    {
+        private const double B10 = 11282082432.0 / 11282082432.0;
+        private const double B11 = -32272833064.0 / 11282082432.0;
+        private const double B12 = 34969693132.0 / 11282082432.0;
+        private const double B13 = -13107642775.0 / 11282082432.0;
+        private const double B14 = 157015080.0 / 11282082432.0;
+
+        private const double B31 = -100 * -1323431896.0 / 32700410799.0;
+        private const double B32 = -100 * 2074956840.0 / 32700410799.0;
+        private const double B33 = -100 * -914128567.0 / 32700410799.0;
+        private const double B34 = -100 * 15701508.0 / 32700410799.0;
+
+        private const double B41 = 25.0 * -889289856.0 / 5641041216.0;
+        private const double B42 = 25.0 * 2460397220.0 / 5641041216.0;
+        private const double B43 = 25.0 * -1518414297.0 / 5641041216.0;
+        private const double B44 = 25.0 * 94209048.0 / 5641041216.0;
+
+        private const double B51 = -2187.0 * -259006536.0 / 199316789632.0;
+        private const double B52 = -2187.0 * 687873124.0 / 199316789632.0;
+        private const double B53 = -2187.0 * -451824525.0 / 199316789632.0;
+        private const double B54 = -2187.0 * 52338360.0 / 199316789632.0;
+
+        private const double B61 = 11.0 * -361440756.0 / 2467955532.0;
+        private const double B62 = 11.0 * 946554244.0 / 2467955532.0;
+        private const double B63 = 11.0 * -661884105.0 / 2467955532.0;
+        private const double B64 = 11.0 * 106151040.0 / 2467955532.0;
+
+        private const double B71 = 44764047.0 / 29380423.0;
+        private const double B72 = -82437520.0 / 29380423.0;
+        private const double B73 = 8293050.0 / 29380423.0;
+
+        public static void Interpolate(double x, double t, double h, Vec y, Vec k1, Vec k3, Vec k4, Vec k5, Vec k6, Vec k7, Vec yout)
         {
-            double h  = Habs * Direction;
-            double s  = (x - T) / h;
+            double s  = (x - t) / h;
             double s2 = s * s;
             double s3 = s * s2;
             double s4 = s2 * s2;
@@ -194,7 +202,65 @@ namespace MechJebLib.ODE
             double bs6 = s * (B61 + B62 * s + B63 * s2 + B64 * s3);
             double bs7 = (1.0 - s) * s * (B71 + B72 * s + B73 * s2);
 
-            yout.LinComb6(Y, hs * bs1, _k1, hs * bs3, _k3, hs * bs4, _k4, hs * bs5, _k5, hs * bs6, _k6, hs * bs7, _k7);
+            yout.LinComb6(y, hs * bs1, k1, hs * bs3, k3, hs * bs4, k4, hs * bs5, k5, hs * bs6, k6, hs * bs7, k7);
+        }
+    }
+
+    internal class DP5Node : DenseNode
+    {
+        private static readonly ObjectPool<DP5Node> _pool = new ObjectPool<DP5Node>(New, Clear);
+
+        public static DP5Node Rent(double t, double h, Vec y, Vec k1, Vec k3, Vec k4, Vec k5, Vec k6, Vec k7)
+        {
+            DP5Node node = _pool.Borrow();
+            node.T = t;
+            node.H = h;
+            node.Y = y.Dup();
+            node.N = y.Length;
+            node._k1 = k1.Dup();
+            node._k3 = k3.Dup();
+            node._k4 = k4.Dup();
+            node._k5 = k5.Dup();
+            node._k6 = k6.Dup();
+            node._k7 = k7.Dup();
+            return node;
+        }
+
+        private DP5Node() { }
+
+        private static DP5Node New() => new DP5Node();
+
+        private static void Clear(DP5Node o)
+        {
+            // ReSharper disable once NullableWarningSuppressionIsUsed
+            o.Y = o._k1 = o._k3 = o._k4 = o._k5 = o._k6 = o._k7 = null!;
+            o.N = -1;
+            o.T = 0;
+            o.H = 0;
+        }
+
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vec _k1 = null!;
+        private Vec _k3 = null!;
+        private Vec _k4 = null!;
+        private Vec _k5 = null!;
+        private Vec _k6 = null!;
+        private Vec _k7 = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
+        public override void Evaluate(double x, Vec yout) =>
+            DP5Math.Interpolate(x, T, H, Y, _k1, _k3, _k4, _k5, _k6, _k7, yout);
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            _k1.Dispose();
+            _k3.Dispose();
+            _k4.Dispose();
+            _k5.Dispose();
+            _k6.Dispose();
+            _k7.Dispose();
+            _pool.Release(this);
         }
     }
 }

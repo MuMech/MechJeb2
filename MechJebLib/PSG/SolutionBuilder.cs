@@ -113,7 +113,7 @@ namespace MechJebLib.PSG
                 }
 
                 double tf = ti + bt;
-                solution.AddSegment(ti, tf, interpolant, _phases[p]);
+                solution.AddSegment(interpolant, _phases[p]);
                 ti = tf;
 
                 dv = solution.DVBar(solution.Tmax);

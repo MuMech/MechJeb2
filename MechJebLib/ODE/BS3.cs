@@ -5,6 +5,7 @@
 
 using System;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -66,6 +67,8 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
+        protected override DenseNode SnapshotStep() => BS3Node.Rent(T, Habs * Direction, Y, Dy, Ynew, Dynew);
+
         protected override void Init()
         {
             base.Init();
@@ -101,5 +104,54 @@ namespace MechJebLib.ODE
         private const double E4 = -0.125;
 
         #endregion
+    }
+
+    internal class BS3Node : DenseNode
+    {
+        private static readonly ObjectPool<BS3Node> _pool = new ObjectPool<BS3Node>(New, Clear);
+
+        public static BS3Node Rent(double t, double h, Vec y, Vec dy, Vec ynew, Vec dynew)
+        {
+            BS3Node node = _pool.Borrow();
+            node.T = t;
+            node.H = h;
+            node.Y = y.Dup();
+            node.N = y.Length;
+            node._dy = dy.Dup();
+            node._ynew = ynew.Dup();
+            node._dynew = dynew.Dup();
+            return node;
+        }
+
+        private BS3Node() { }
+
+        private static BS3Node New() => new BS3Node();
+
+        private static void Clear(BS3Node o)
+        {
+            // ReSharper disable once NullableWarningSuppressionIsUsed
+            o.Y = o._dy = o._ynew = o._dynew = null!;
+            o.N = -1;
+            o.T = 0;
+            o.H = 0;
+        }
+
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vec _dy = null!;
+        private Vec _ynew = null!;
+        private Vec _dynew = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
+        public override void Evaluate(double x, Vec yout) =>
+            yout.CubicHermiteInterpolant(T, Y, _dy, T + H, _ynew, _dynew, x);
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            _dy.Dispose();
+            _ynew.Dispose();
+            _dynew.Dispose();
+            _pool.Release(this);
+        }
     }
 }
