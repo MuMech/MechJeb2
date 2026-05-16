@@ -232,10 +232,7 @@ namespace MechJebLib.ODE
             _k12.Dispose();
         }
 
-        protected override void Interpolate(double x, Vec yout)
-        {
-            throw new NotImplementedException();
-        }
+        protected override void Interpolate(double x, Vec yout) => throw new NotImplementedException();
 
         protected override double ScaledErrorNorm()
         {
