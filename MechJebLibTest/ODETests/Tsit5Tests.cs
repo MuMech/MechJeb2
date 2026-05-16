@@ -180,7 +180,7 @@ namespace MechJebLibTest.ODETests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var solver = new Tsit5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 2000 };
+            var solver = new Tsit5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 200 };
 
             var r0 = new V3(1, 0, 0);
             var v0 = new V3(0, 1.3, 0);
@@ -193,9 +193,20 @@ namespace MechJebLibTest.ODETests
             y0.Set(0, r0);
             y0.Set(3, v0);
 
-            solver.Solve(Kepler, y0, yf, 0, 10, events: e);
+            using var interpolant = DenseOutput.Rent();
 
-            e[0].Time.ShouldEqual(Astro.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-9);
+            solver.Solve(Kepler, y0, yf, 0, 10, interpolant, e);
+
+            new V3(yf[0], yf[1], yf[2]).magnitude.ShouldEqual(1.5, 1e-12);
+
+            // this tests that MaxT is highly accurate
+            e[0].Time.ShouldEqual(interpolant.MaxT);
+            using Vec yf2 = interpolant.Evaluate(interpolant.MaxT);
+
+            // this tests that the interpolant at MaxT is highly accurate
+            new V3(yf2[0], yf2[1], yf2[2]).magnitude.ShouldEqual(1.5, 1e-12);
+
+            e[0].Time.ShouldEqual(Astro.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-10);
         }
 
         private static void Asymptotic(IList<double> yin, double x, IList<double> dyout)

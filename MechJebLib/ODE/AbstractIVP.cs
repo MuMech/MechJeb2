@@ -217,18 +217,13 @@ namespace MechJebLib.ODE
                             if (_activeEvents[i].Terminal)
                             {
                                 terminate = true;
-                                // Truncate the step to the event point. Evaluate the
-                                // interpolant FIRST against the full-step (T,Y,Dy)/
-                                // (Tnew,Ynew,Dynew) — interpolants that read Tnew/Ynew/
-                                // Dynew (e.g. the cubic Hermite in BS3) would degenerate
-                                // if we mutated those first. Then commit the new
-                                // endpoint and refresh Dynew so any downstream
-                                // Interpolate() over [T, Tnew] sees a consistent right
-                                // endpoint.
+                                // take a snapshot of the full interpolant with all values
+                                interpolant?.Append(SnapshotStep(), _activeEvents[i].Time);
+                                // evaluate the interpolant and update Ynew, Tnew, Dynew for next step
                                 using var yinterp = Vec.Rent(N);
                                 Interpolate(_activeEvents[i].Time, yinterp);
-                                Tnew = _activeEvents[i].Time;
                                 Ynew.CopyFrom(yinterp);
+                                Tnew = _activeEvents[i].Time;
                                 f(Ynew, Tnew, Dynew);
                                 break;
                             }
@@ -239,9 +234,8 @@ namespace MechJebLib.ODE
                         events[i].LastValue = events[i].NewValue;
                 }
 
-                // TODO: look carefully at what we need when an Event fires and terminates a step.
-                // BS3 is almost certainly buggy in the final interpolant step after a terminating event.
-                interpolant?.Append(SnapshotStep());
+                if (!terminate)
+                    interpolant?.Append(SnapshotStep(), Tnew);
 
                 // take a step
                 Y.CopyFrom(Ynew);
@@ -268,7 +262,7 @@ namespace MechJebLib.ODE
             }
 
             if (t0 == tf)
-                interpolant?.Append(new ConstantNode(T, Y));
+                interpolant?.Append(new ConstantNode(T, Y), T);
 
             Y.CopyTo(yf);
 

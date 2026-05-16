@@ -37,7 +37,7 @@ namespace MechJebLib.ODE
             o._lastIndex = -1;
         }
 
-        public void Append(DenseNode n)
+        public void Append(DenseNode n, double maxT)
         {
             _nodes.Add(n);
             if (N < 1)
@@ -50,10 +50,10 @@ namespace MechJebLib.ODE
             if (Direction * n.T > Direction * _maxT || !IsFinite(_maxT))
                 _maxT = n.T;
 
-            double min = Direction < 0 ? n.T + n.H : n.T;
+            double min = Direction < 0 ? maxT : n.T;
             if (min < MinT)
                 MinT = min;
-            double max = Direction > 0 ? n.T + n.H : n.T;
+            double max = Direction > 0 ? maxT : n.T;
             if (max > MaxT)
                 MaxT = max;
         }
