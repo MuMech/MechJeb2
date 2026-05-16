@@ -69,7 +69,7 @@ namespace MechJebLibTest.ODETests
             int count1 = random.Next(20, 40);
             int count2 = random.Next(5, 40);
 
-            var solver = new BS3 { Rtol = 1e-5, Atol = 1e-5, Maxiter = 500, ThrowOnMaxIter = true};
+            var solver = new BS3 { Rtol = 1e-5, Atol = 1e-5, Maxiter = 500, ThrowOnMaxIter = true };
             var ode    = new SimpleOscillator(k, m);
             var f      = new Action<Vec, double, Vec>(ode.dydt);
 

@@ -13,18 +13,25 @@ namespace MechJebLib.ODE
 
         // list of interpolant frames
         private readonly List<DenseNode> _nodes = new List<DenseNode>();
+
         // tracking of last index from FindIndex() for march-order access acceleration
         private int _lastIndex = -1;
+
         // nodes[0].T (in march order)
         private double _firstT = double.NaN;
+
         // nodes[^1].T (in march order)
         private double _lastT = double.NaN;
+
         // actual MaxT (for Direction=+1 this is _lastT plus a delta, for Direction=-1 this is _firstT)
         public double MaxT { get; private set; } = double.NegativeInfinity;
+
         // actual MinT (for Direction=-1 this is _lastT minus a delta, for Direction=+1 this is _firstT)
         public double MinT { get; private set; } = double.PositiveInfinity;
+
         // size of the Vec being interpolated
         public int N = -1;
+
         // direction is +1 or -1 and for -1 nodes[].T will be in reverse order
         public int Direction;
 
