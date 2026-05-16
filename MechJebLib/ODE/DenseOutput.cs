@@ -7,17 +7,25 @@ using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.ODE
 {
-    public class DenseOutput : IDisposable, IInterpolant
+    public class DenseOutput : IInterpolant
     {
         private static readonly ObjectPool<DenseOutput> _pool = new ObjectPool<DenseOutput>(New, Clear);
 
+        // list of interpolant frames
         private readonly List<DenseNode> _nodes = new List<DenseNode>();
+        // tracking of last index from FindIndex() for march-order access acceleration
         private int _lastIndex = -1;
-        private double _minT = double.NaN;
-        private double _maxT = double.NaN;
+        // nodes[0].T (in march order)
+        private double _firstT = double.NaN;
+        // nodes[^1].T (in march order)
+        private double _lastT = double.NaN;
+        // actual MaxT (for Direction=+1 this is _lastT plus a delta, for Direction=-1 this is _firstT)
         public double MaxT { get; private set; } = double.NegativeInfinity;
+        // actual MinT (for Direction=-1 this is _lastT minus a delta, for Direction=+1 this is _firstT)
         public double MinT { get; private set; } = double.PositiveInfinity;
+        // size of the Vec being interpolated
         public int N = -1;
+        // direction is +1 or -1 and for -1 nodes[].T will be in reverse order
         public int Direction;
 
         public static DenseOutput Rent() => _pool.Borrow();
@@ -29,8 +37,8 @@ namespace MechJebLib.ODE
         private static void Clear(DenseOutput o)
         {
             o.N = -1;
-            o._minT = double.NaN;
-            o._maxT = double.NaN;
+            o._firstT = double.NaN;
+            o._lastT = double.NaN;
             o.MinT = double.PositiveInfinity;
             o.MaxT = double.NegativeInfinity;
             o.Direction = 0;
@@ -45,10 +53,10 @@ namespace MechJebLib.ODE
             else if (N != n.N)
                 throw new ArgumentException($"[MechJeb2] DenseOutput.Add(): node lengths do not match {N} != {n.N}");
             Direction = Math.Sign(n.H);
-            if (Direction * n.T < Direction * _minT || !IsFinite(_minT))
-                _minT = n.T;
-            if (Direction * n.T > Direction * _maxT || !IsFinite(_maxT))
-                _maxT = n.T;
+            if (Direction * n.T < Direction * _firstT || !IsFinite(_firstT))
+                _firstT = n.T;
+            if (Direction * n.T > Direction * _lastT || !IsFinite(_lastT))
+                _lastT = n.T;
 
             double min = Direction < 0 ? maxT : n.T;
             if (min < MinT)
@@ -60,9 +68,9 @@ namespace MechJebLib.ODE
 
         private int FindIndex(double x)
         {
-            if (Direction * x < Direction * _minT)
+            if (Direction * x < Direction * _firstT)
                 return 0;
-            if (Direction * x > Direction * _maxT)
+            if (Direction * x > Direction * _lastT)
                 return _nodes.Count - 1;
 
             if (_lastIndex > 0 && Direction * x > Direction * _nodes[_lastIndex].T)
