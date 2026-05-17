@@ -100,23 +100,26 @@ namespace MuMech
         // TODO: could we check for the presence of the old suicide burn countdown timer in a user's config and then
         //       delete that, and add the new hoverslam info item menu automagically?
 
-        private List<FuelStats>      _vacStats => Core.StageStats.VacStats;
+        private List<FuelStats> _vacStats => Core.StageStats.VacStats;
         private HoverslamSimulation? _hoverslam;
 
         // ReSharper disable MemberCanBePrivate.Global
         public Vector3d LandingPosition;
-        public double   IgnitionUT;
-        public double   LandingUT;
-        public double   FinalThrustAccel;
-        public double   Lat;
-        public double   Lng;
-        public double   IgnitionCountdown => IgnitionUT - VesselState.time;
-        public double   LandingCountdown  => LandingUT - VesselState.time;
-        public double   FinalDescentSpeed; // should be positive
+        public double IgnitionUT;
+        public double LandingUT;
+        public double FinalThrustAccel;
+        public double Lat;
+        public double Lng;
+        public double IgnitionCountdown => IgnitionUT - VesselState.time;
+        public double LandingCountdown  => LandingUT - VesselState.time;
+        public double FinalDescentSpeed; // should be positive
         public Vector3d IgnitionAttitude;
         // ReSharper restore MemberCanBePrivate.Global
 
         private double _lastCycleUT;
+
+        private readonly HoverslamSimulation.HoverslamSimulationManager _manager = new HoverslamSimulation.HoverslamSimulationManager();
+        private readonly HoverslamSimulation _simulation = new HoverslamSimulation();
 
         public MechJebModuleHoverslamSimulation(MechJebCore core) : base(core)
         {
@@ -230,9 +233,9 @@ namespace MuMech
                     Print($"[MechJebModuleHoverslamSimulation] {_hoverslam.ExceptionMessage}");
             }
 
-            V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
+            _manager.Reset();
 
-            HoverslamSimulation.HoverslamSimulationBuilder builder = HoverslamSimulation.Builder();
+            V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
             bool noBurnableStages = true;
             int  lastKSPStage     = -1;
@@ -244,7 +247,7 @@ namespace MuMech
                 if (fuelStats.DeltaV <= 0)
                     continue;
 
-                int deltaStage      = lastKSPStage - fuelStats.KSPStage;
+                int deltaStage = lastKSPStage - fuelStats.KSPStage;
 
                 // for every stage, we need to include a coast for the correct staging delays.
                 if (deltaStage > 0)
@@ -262,9 +265,10 @@ namespace MuMech
                         stagingDelay += nextDelay * (deltaStage - 1);
                     }
 
-                    builder.AddCoast(fuelStats.StartMass * 1000, stagingDelay, fuelStats.KSPStage, mjPhase);
+                    _manager.AddCoast(fuelStats.StartMass * 1000, stagingDelay, fuelStats.KSPStage, mjPhase);
                 }
-                builder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
+
+                _manager.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
                     fuelStats.KSPStage, mjPhase);
 
                 lastKSPStage = fuelStats.KSPStage;
@@ -279,10 +283,10 @@ namespace MuMech
             double a = g + Clamp01(VerticalAuthority) * (FinalThrustAccel - g);
             FinalDescentSpeed = FinalThrustAccel < 0 ? 0 : Sqrt(Max(2.0 * (a - g) * VerticalAltitude, 0));
 
-            builder.Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacT, MainBody.gravParameter, w);
-            builder.TargetConditions(r + VerticalAltitude, FinalDescentSpeed);
+            _manager.Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacT, MainBody.gravParameter, w);
+            _manager.TargetConditions(r + VerticalAltitude, FinalDescentSpeed);
 
-            _hoverslam = builder.Build();
+            _manager.Reconfigure(_hoverslam);
             if (!_hoverslam.TryStartJob())
                 throw new Exception("[MechJebModuleHoverslamSimulation] could not start job");
 

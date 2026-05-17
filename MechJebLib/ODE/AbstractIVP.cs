@@ -45,7 +45,7 @@ namespace MechJebLib.ODE
 
 
         /// <summary>
-        ///     Minimum h step (may be violated on the last step or before an event).
+        ///     Minimum h step (might be violated on the last step or before an event).
         /// </summary>
         public double Hmin { get; set; } = 0;
 
@@ -88,7 +88,12 @@ namespace MechJebLib.ODE
 
         public CancellationToken CancellationToken { get; }
 
-        private Func<double, object?, double> _eventFunctionDelegate => EventFuncWrapper;
+        protected AbstractIVP()
+        {
+            _eventFunctionDelegate = EventFuncWrapper;
+        }
+
+        private readonly Func<double, object?, double> _eventFunctionDelegate;
 
         /// <summary>
         ///     Dormand Prince 5(4)7FM ODE integrator (aka DOPRI5 aka ODE45)

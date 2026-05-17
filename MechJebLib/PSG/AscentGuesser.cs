@@ -29,7 +29,7 @@ namespace MechJebLib.PSG
             // ReSharper disable once NullableWarningSuppressionIsUsed
             public Phase Phase = null!;
 
-            public void dydt(IList<double> yin, double x, IList<double> dyout)
+            public void Rhs(Vec yin, double x, Vec dyout)
             {
                 Check.True(Phase.Normalized);
 
@@ -78,9 +78,9 @@ namespace MechJebLib.PSG
             _ode.Phase = phase;
             var interpolant = DenseOutput.Rent();
             if (phase.Coast)
-                _solver.Solve(_ode.dydt, y0, yf, t0, tf, interpolant);
+                _solver.Solve(_ode.Rhs, y0, yf, t0, tf, interpolant);
             else
-                _solver.Solve(_ode.dydt, y0, yf, t0, tf, interpolant, _events);
+                _solver.Solve(_ode.Rhs, y0, yf, t0, tf, interpolant, _events);
 
             return interpolant;
         }
@@ -132,7 +132,7 @@ namespace MechJebLib.PSG
 
                 if (WillIntraPhaseCoast(phases, p))
                 {
-                    double      btActual     = interpolant.MaxT - interpolant.MinT;
+                    double btActual = interpolant.MaxT - interpolant.MinT;
                     interpolant.Dispose();
                     DenseOutput interpolant2 = Integrate(initial, terminal, phase, t0, t0 + btActual * 0.75);
                     solution.AddSegment(interpolant2, phase);
@@ -141,6 +141,7 @@ namespace MechJebLib.PSG
                 {
                     solution.AddSegment(interpolant, phase);
                 }
+
                 y0.CopyFrom(terminal);
 
                 t0 = solution.Tmax;

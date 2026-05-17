@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
@@ -11,7 +12,7 @@ using static System.Math;
 
 namespace MechJebLib.PSG
 {
-    public class Phase
+    public class Phase : IDisposable
     {
         public double M0;
         public double Mf;
@@ -30,14 +31,28 @@ namespace MechJebLib.PSG
         public bool Normalized;
         public bool Tagged;
 
-        public readonly int KSPStage;
-        public readonly int MJPhase;
+        public int KSPStage;
+        public int MJPhase;
 
         public bool   AllowShutdown => MinT < MaxT;
         public double VacThrust     => Mdot * VexVacuum;
         public double Tau           => Coast ? double.PositiveInfinity : VexVacuum / VacThrust * M0;
         public bool   Coast         => Mdot == 0;
         public bool   GuidedCoast   => Coast && !Unguided;
+
+        private static readonly ObjectPool<Phase> _pool = new ObjectPool<Phase>(New, Clear);
+
+        private Phase()
+        {
+        }
+
+        private static Phase New() => new Phase();
+
+        private static void Clear(Phase phase)
+        {
+        }
+
+        public static Phase Rent() => _pool.Borrow();
 
         public Phase DeepCopy()
         {
@@ -46,7 +61,7 @@ namespace MechJebLib.PSG
             return newPhase;
         }
 
-        private Phase(double m0, double vacThrust, double ispVacuum, double mf, double bt, int kspStage, int mjPhase, double ispCurrent = -1)
+        private void Set(double m0, double vacThrust, double ispVacuum, double mf, double bt, int kspStage, int mjPhase, double ispCurrent = -1)
         {
             KSPStage = kspStage;
             MJPhase = mjPhase;
@@ -92,21 +107,27 @@ namespace MechJebLib.PSG
             Check.PositiveFinite(mdot);
             Check.PositiveFinite(isp);
 
-            var phase = new Phase(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent)
-            {
-                MinT = allowShutdown ? 0 : bt,
-                MaxT = bt / minThrottle,
-                Unguided = unguided,
-                MassContinuity = massContinuity,
-                MinThrottle = minThrottle
-            };
+            Phase phase = Rent();
+            phase.Set(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent);
+
+            phase.MinT = allowShutdown ? 0 : bt;
+            phase.MaxT = bt / minThrottle;
+            phase.Unguided = unguided;
+            phase.MassContinuity = massContinuity;
+            phase.MinThrottle = minThrottle;
 
             return phase;
         }
 
         public static Phase NewCoast(double m0, double minT, double maxT, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
         {
-            var phase = new Phase(m0, 0, 0, m0, minT, kspStage, mjPhase) { MinT = minT, MaxT = maxT, Unguided = unguided, MassContinuity = massContinuity };
+            Phase phase = Rent();
+            phase.Set(m0, 0, 0, m0, minT, kspStage, mjPhase);
+
+            phase.MinT = minT;
+            phase.MaxT = maxT;
+            phase.Unguided = unguided;
+            phase.MassContinuity = massContinuity;
             return phase;
         }
 
@@ -125,5 +146,7 @@ namespace MechJebLib.PSG
         public double DeltaVForTime(double m, double t) => Coast ? 0 : -VexVacuum * Log(1 - t * VacThrust / (VexVacuum * m));
         public double BurnTimeFromMass(double m)        => Coast ? double.PositiveInfinity : (m - Mf) / Mdot;
         public double TauFromMass(double m)             => Coast ? double.PositiveInfinity : m / Mdot;
+
+        public void Dispose() => _pool.Release(this);
     }
 }

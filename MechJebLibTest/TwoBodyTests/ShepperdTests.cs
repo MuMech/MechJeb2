@@ -75,13 +75,13 @@ namespace MechJebLibTest.TwoBodyTests
             vp.ShouldEqual(v0, 1e-8);
         }
 
-        private readonly VacuumKernel _ode = new VacuumKernel();
+        private readonly KeplerODE _ode = new KeplerODE();
 
-        private class VacuumKernel
+        private class KeplerODE
         {
-            public int N => 6;
+            public static int N => 6;
 
-            public void dydt(IList<double> yin, double x, IList<double> dyout)
+            public void Rhs(Vec yin, double x, Vec dyout)
             {
                 var r = new V3(yin[0], yin[1], yin[2]);
                 var v = new V3(yin[3], yin[4], yin[5]);
@@ -120,15 +120,15 @@ namespace MechJebLibTest.TwoBodyTests
 
             V3 rf2, vf2;
 
-            using (var y0 = Vec.Rent(6))
-            using (var yf = Vec.Rent(6))
+            using (var y0 = Vec.Rent(KeplerODE.N))
+            using (var yf = Vec.Rent(KeplerODE.N))
             {
                 y0.Set(0, r0);
                 y0.Set(3, v0);
 
                 try
                 {
-                    solver.Solve(_ode.dydt, y0, yf, 0, dt);
+                    solver.Solve(_ode.Rhs, y0, yf, 0, dt);
                 }
                 catch (ArgumentException) // sometimes RK method still throws
                 {
@@ -180,7 +180,7 @@ namespace MechJebLibTest.TwoBodyTests
 
                 try
                 {
-                    solver.Solve(_ode.dydt, y0, yf, 0, dt);
+                    solver.Solve(_ode.Rhs, y0, yf, 0, dt);
                 }
                 catch (ArgumentException) // sometimes RK method still throws
                 {
@@ -239,7 +239,7 @@ namespace MechJebLibTest.TwoBodyTests
 
                 try
                 {
-                    solver.Solve(_ode.dydt, y0, yf, 0, dt);
+                    solver.Solve(_ode.Rhs, y0, yf, 0, dt);
                 }
                 catch (ArgumentException) // sometimes RK method still throws
                 {
@@ -268,22 +268,26 @@ namespace MechJebLibTest.TwoBodyTests
         private static (M3 stm00, M3 stm01, M3 stm10, M3 stm11) StmByFiniteDifference(
             double mu, double dt, V3 r0, V3 v0, double h)
         {
-            var rCols = new V3[3];
-            var vCols = new V3[3];
+            var rCols    = new V3[3];
+            var vCols    = new V3[3];
             var rColsVel = new V3[3];
             var vColsVel = new V3[3];
 
             for (int j = 0; j < 3; j++)
             {
-                V3 r0p = r0; r0p[j] += h;
-                V3 r0m = r0; r0m[j] -= h;
+                V3 r0p = r0;
+                r0p[j] += h;
+                V3 r0m = r0;
+                r0m[j] -= h;
                 (V3 rfp, V3 vfp) = Shepperd.Solve(mu, dt, r0p, v0);
                 (V3 rfm, V3 vfm) = Shepperd.Solve(mu, dt, r0m, v0);
                 rCols[j] = (rfp - rfm) / (2 * h);
                 vCols[j] = (vfp - vfm) / (2 * h);
 
-                V3 v0p = v0; v0p[j] += h;
-                V3 v0m = v0; v0m[j] -= h;
+                V3 v0p = v0;
+                v0p[j] += h;
+                V3 v0m = v0;
+                v0m[j] -= h;
                 (rfp, vfp) = Shepperd.Solve(mu, dt, r0, v0p);
                 (rfm, vfm) = Shepperd.Solve(mu, dt, r0, v0m);
                 rColsVel[j] = (rfp - rfm) / (2 * h);
@@ -300,7 +304,7 @@ namespace MechJebLibTest.TwoBodyTests
         private void AssertStmMatchesFD(double mu, double dt, V3 r0, V3 v0, double tol = 1e-6, double h = 1e-6)
         {
             (V3 _, V3 _, M3 a00, M3 a01, M3 a10, M3 a11) = Shepperd.Solve2(mu, dt, r0, v0);
-            (M3 b00, M3 b01, M3 b10, M3 b11)             = StmByFiniteDifference(mu, dt, r0, v0, h);
+            (M3 b00, M3 b01, M3 b10, M3 b11) = StmByFiniteDifference(mu, dt, r0, v0, h);
 
             if (!NearlyEqual(a00, b00, tol) || !NearlyEqual(a01, b01, tol) ||
                 !NearlyEqual(a10, b10, tol) || !NearlyEqual(a11, b11, tol))
@@ -319,22 +323,13 @@ namespace MechJebLibTest.TwoBodyTests
         }
 
         [Fact]
-        public void Stm_CircularEquatorialPrograde()
-        {
-            AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, 1, 0));
-        }
+        public void Stm_CircularEquatorialPrograde() => AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, 1, 0));
 
         [Fact]
-        public void Stm_CircularEquatorialRetrograde()
-        {
-            AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, -1, 0));
-        }
+        public void Stm_CircularEquatorialRetrograde() => AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, -1, 0));
 
         [Fact]
-        public void Stm_CircularPolar()
-        {
-            AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, 0, 1));
-        }
+        public void Stm_CircularPolar() => AssertStmMatchesFD(1.0, 3 * PI / 4, new V3(1, 0, 0), new V3(0, 0, 1));
 
         [Fact]
         public void Stm_EllipticalEquatorial()
@@ -344,10 +339,7 @@ namespace MechJebLibTest.TwoBodyTests
         }
 
         [Fact]
-        public void Stm_EllipticalInclined()
-        {
-            AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 0.9, 0.3));
-        }
+        public void Stm_EllipticalInclined() => AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 0.9, 0.3));
 
         [Fact]
         public void Stm_HyperbolicEquatorial()
@@ -357,9 +349,6 @@ namespace MechJebLibTest.TwoBodyTests
         }
 
         [Fact]
-        public void Stm_HyperbolicInclined()
-        {
-            AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 1.4, 0.3));
-        }
+        public void Stm_HyperbolicInclined() => AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 1.4, 0.3));
     }
 }

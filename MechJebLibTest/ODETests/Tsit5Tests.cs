@@ -37,7 +37,7 @@ namespace MechJebLibTest.ODETests
 
             public static int N => 2;
 
-            public void dydt(IList<double> y, double x, IList<double> dy)
+            public void Rhs(Vec y, double x, Vec dy)
             {
                 dy[0] = y[1];
                 dy[1] = -_k / _m * y[0];
@@ -71,7 +71,7 @@ namespace MechJebLibTest.ODETests
 
             var solver = new Tsit5 { Rtol = 1e-9, Atol = 0, Maxiter = 400, ThrowOnMaxIter = true };
             var ode    = new SimpleOscillator(k, m);
-            var f      = new Action<Vec, double, Vec>(ode.dydt);
+            var f      = new Action<Vec, double, Vec>(ode.Rhs);
 
             using var y0 = Vec.Rent(SimpleOscillator.N);
             y0[0] = x0;
@@ -152,7 +152,7 @@ namespace MechJebLibTest.ODETests
             Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
         }
 
-        private static void Kepler(IList<double> yin, double x, IList<double> dyout)
+        private static void Kepler(Vec yin, double x, Vec dyout)
         {
             var r = new V3(yin[0], yin[1], yin[2]);
             var v = new V3(yin[3], yin[4], yin[5]);
@@ -168,12 +168,14 @@ namespace MechJebLibTest.ODETests
             dyout.Set(3, dv);
         }
 
-        private static double AltitudeCrossing(IList<double> y, double t, AbstractIVP i)
+        private static double AltitudeCrossing(Vec y, double t, AbstractIVP i)
         {
             var r = new V3(y[0], y[1], y[2]);
 
             return r.magnitude - 1.5;
         }
+
+        private readonly Action<Vec, double, Vec> _keplerRHS = Kepler;
 
         [Fact]
         public void AltitudeEventTest()
@@ -193,20 +195,27 @@ namespace MechJebLibTest.ODETests
             y0.Set(0, r0);
             y0.Set(3, v0);
 
-            using var interpolant = DenseOutput.Rent();
+            using (var interpolant = DenseOutput.Rent())
+            {
+                solver.Solve(_keplerRHS, y0, yf, 0, 10, interpolant, e);
 
-            solver.Solve(Kepler, y0, yf, 0, 10, interpolant, e);
+                new V3(yf[0], yf[1], yf[2]).magnitude.ShouldEqual(1.5, 1e-12);
 
-            new V3(yf[0], yf[1], yf[2]).magnitude.ShouldEqual(1.5, 1e-12);
+                // this tests that MaxT is highly accurate
+                e[0].Time.ShouldEqual(interpolant.MaxT);
+                using Vec yf2 = interpolant.Evaluate(interpolant.MaxT);
 
-            // this tests that MaxT is highly accurate
-            e[0].Time.ShouldEqual(interpolant.MaxT);
-            using Vec yf2 = interpolant.Evaluate(interpolant.MaxT);
+                // this tests that the interpolant at MaxT is highly accurate
+                new V3(yf2[0], yf2[1], yf2[2]).magnitude.ShouldEqual(1.5, 1e-12);
 
-            // this tests that the interpolant at MaxT is highly accurate
-            new V3(yf2[0], yf2[1], yf2[2]).magnitude.ShouldEqual(1.5, 1e-12);
+                e[0].Time.ShouldEqual(Astro.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-10);
+            }
 
-            e[0].Time.ShouldEqual(Astro.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-10);
+            using var interpolant2 = DenseOutput.Rent();
+
+            long start = GC.GetAllocatedBytesForCurrentThread();
+            solver.Solve(_keplerRHS, y0, yf, 0, e[0].Time, interpolant2);
+            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
         }
 
         private static void Asymptotic(IList<double> yin, double x, IList<double> dyout)
