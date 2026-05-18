@@ -101,7 +101,6 @@ namespace MuMech
         //       delete that, and add the new hoverslam info item menu automagically?
 
         private List<FuelStats> _vacStats => Core.StageStats.VacStats;
-        private HoverslamSimulation? _hoverslam;
 
         // ReSharper disable MemberCanBePrivate.Global
         public Vector3d LandingPosition;
@@ -119,7 +118,7 @@ namespace MuMech
         private double _lastCycleUT;
 
         private readonly HoverslamSimulation.HoverslamSimulationManager _manager = new HoverslamSimulation.HoverslamSimulationManager();
-        private readonly HoverslamSimulation _simulation = new HoverslamSimulation();
+        private readonly HoverslamSimulation _hoverslam = new HoverslamSimulation();
 
         public MechJebModuleHoverslamSimulation(MechJebCore core) : base(core)
         {
@@ -154,8 +153,7 @@ namespace MuMech
             Lat = 0;
             Lng = 0;
             FinalThrustAccel = -1;
-            _hoverslam?.Cancel();
-            _hoverslam = null;
+            _hoverslam.Cancel();
             _lastCycleUT = 0;
         }
 
@@ -212,26 +210,26 @@ namespace MuMech
             if (_vacStats.Count <= 0)
                 return;
 
-            if (_hoverslam != null)
+            if (_hoverslam.IsRunning)
+                return;
+
+            if (_hoverslam.IsCompleted)
             {
-                if (_hoverslam.IsRunning)
-                    return;
-
-                if (_hoverslam.IsCompleted)
-                {
-                    LandingPosition = _hoverslam.Rf.V3ToWorldRotated();
-                    IgnitionUT = _hoverslam.IgnitionUT;
-                    IgnitionAttitude = _hoverslam.IgnitionAttitude.V3ToWorldRotated();
-                    LandingUT = _hoverslam.LandingUT;
-                    FinalThrustAccel = _hoverslam.FinalThrustAccel;
-                    MainBody.GetLatLngAltAtUT(LandingUT, LandingPosition, out Lat, out Lng, out _);
-                    TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, true);
-                    Slope = MainBody.GetPQSSlopeDegrees(Lat, Lng);
-                }
-
-                if (_hoverslam.IsFaulted && _hoverslam.ExceptionMessage != null)
-                    Print($"[MechJebModuleHoverslamSimulation] {_hoverslam.ExceptionMessage}");
+                LandingPosition = _hoverslam.Rf.V3ToWorldRotated();
+                IgnitionUT = _hoverslam.IgnitionUT;
+                IgnitionAttitude = _hoverslam.IgnitionAttitude.V3ToWorldRotated();
+                LandingUT = _hoverslam.LandingUT;
+                FinalThrustAccel = _hoverslam.FinalThrustAccel;
+                MainBody.GetLatLngAltAtUT(LandingUT, LandingPosition, out Lat, out Lng, out _);
+                TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, true);
+                Slope = MainBody.GetPQSSlopeDegrees(Lat, Lng);
             }
+
+            if (_hoverslam.IsFaulted && _hoverslam.ExceptionMessage != null)
+                Print($"[MechJebModuleHoverslamSimulation] {_hoverslam.ExceptionMessage}");
+
+            if (!_hoverslam.TryMarkReady())
+                return;
 
             _manager.Reset();
 
