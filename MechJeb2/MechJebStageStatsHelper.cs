@@ -128,8 +128,8 @@ namespace MuMech
             stageHeaderData.Add(StageData.AtmoInitialTWR, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn7 + SPACING);
             stageHeaderData.Add(StageData.AtmoMaxTWR, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn8 + SPACING);
             stageHeaderData.Add(StageData.Isp, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn9 + SPACING);
-            stageHeaderData.Add(StageData.AtmoDeltaV, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn10 + SPACING);
-            stageHeaderData.Add(StageData.VacDeltaV, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn11 + SPACING);
+            stageHeaderData.Add(StageData.AtmoDeltaV, (showRcs ? "RCS ∆Vmin" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn10) + SPACING);
+            stageHeaderData.Add(StageData.VacDeltaV, (showRcs ? "RCS ∆Vmax" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn11) + SPACING);
             stageHeaderData.Add(StageData.AtmoCumulativeDeltaV, "Σ ∆V Atmo" + SPACING);
             stageHeaderData.Add(StageData.VacCumulativeDeltaV, "Σ ∆V Vac" + SPACING);
             stageHeaderData.Add(StageData.Time, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn12 + SPACING);
