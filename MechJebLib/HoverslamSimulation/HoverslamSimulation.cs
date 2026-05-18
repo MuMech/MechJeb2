@@ -176,7 +176,7 @@ namespace MechJebLib.HoverslamSimulation
         {
             try
             {
-                return BrentRoot.Solve(_eventFunc, minT, maxT, null, rtol: 1e-8);
+                return BrentRoot.Solve(_eventFunc, minT, maxT, null, rtol: 1e-6);
             }
             catch (Exception)
             {

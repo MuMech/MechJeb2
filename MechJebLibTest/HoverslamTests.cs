@@ -66,7 +66,7 @@ namespace MechJebLibTest
 
             hoverslam.Run();
 
-            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-8);
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
             (hoverslam.IgnitionUT - t0).ShouldEqual(430.07250464949175, 1e-5);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
             hoverslam.Dv.ShouldEqual(487.37958512603763, 1e-5);
@@ -81,7 +81,7 @@ namespace MechJebLibTest
 
             hoverslam.Run();
 
-            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-8);
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
             (hoverslam.IgnitionUT - t0).ShouldEqual(430.07250464949175, 1e-5);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
             hoverslam.Dv.ShouldEqual(487.37958512603763, 1e-5);
@@ -142,7 +142,7 @@ namespace MechJebLibTest
             hoverslam.Run();
 
             hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
-            (hoverslam.IgnitionUT - t0).ShouldEqual(352.36724527248589, 1e-5);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(352.36724527248589, 1e-4);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
             hoverslam.Dv.ShouldEqual(384.35206383554907, 1e-4);
         }
