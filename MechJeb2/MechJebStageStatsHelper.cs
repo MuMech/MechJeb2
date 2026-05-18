@@ -423,6 +423,7 @@ namespace MuMech
                     break;
                 case 1:
                     SetAllStageVisibility(true);
+                    stageVisibility[StageData.AtmoCumulativeDeltaV] = false;
                     stageVisibility[StageData.AtmoMaxTWR] = false;
                     stageVisibility[StageData.Thrust] = false;
                     stageVisibility[StageData.StagedMass] = false;
