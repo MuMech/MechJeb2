@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -143,7 +144,6 @@ namespace MechJebLib.Primitives
 
         public static M3 Outer(V3 v1, V3 v2) => new M3(v1 * v2.x, v1 * v2.y, v1 * v2.z);
 
-        // FIXME: precision
         public static V3 Project(V3 vector, V3 onNormal)
         {
             double invC = 1.0 / Math.Max(vector.max_magnitude, onNormal.max_magnitude);
@@ -153,6 +153,7 @@ namespace MechJebLib.Primitives
             V3 onNormalC = onNormal * invC;
 
             double invSqrMag = 1.0 / Dot(onNormalC, onNormalC);
+            if (double.IsPositiveInfinity(invSqrMag)) return zero;
 
             double dot = Dot(vectorC, onNormalC);
             return onNormal * dot * invSqrMag;
@@ -209,12 +210,12 @@ namespace MechJebLib.Primitives
             V3 from_scaled = from / c;
             V3 to_scaled   = to / c;
 
-            double denominator = from_scaled._internal_magnitude * to_scaled._internal_magnitude;
+            double denominator = from_scaled.magnitude * to_scaled.magnitude;
             if (denominator <= 0) return 0;
 
             V3 cross_scaled = Cross(from_scaled, to_scaled);
 
-            double sinAngle = cross_scaled._internal_magnitude / denominator;
+            double sinAngle = cross_scaled.magnitude / denominator;
             double cosAngle = Dot(from_scaled, to_scaled) / denominator;
 
             return Atan2(sinAngle, cosAngle);
@@ -265,25 +266,28 @@ namespace MechJebLib.Primitives
             }
         }
 
-        private double _internal_magnitude => Math.Sqrt(x * x + y * y + z * z);
-
-        private V3 _internal_normalize => this / _internal_magnitude;
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Magnitude(V3 vector) => vector.magnitude;
 
-        public static V3 Normalize(V3 value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static V3 Normalize(V3 v)
         {
-            double c = value.max_magnitude;
-            return c > 0 ? (value / c)._internal_normalize : zero;
+            double norm = v.magnitude;
+            return norm > 0 ? v / norm : zero;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Normalize()
         {
-            double c = max_magnitude;
-            this = c > 0 ? (this / c)._internal_normalize : zero;
+            double norm = Math.Sqrt(x * x + y * y + z * z);
+            this = norm > 0 ? this / norm : zero;
         }
 
-        public V3 normalized => Normalize(this);
+        public V3 normalized
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Normalize(this);
+        }
 
         public static void OrthoNormalize(ref V3 normal, ref V3 tangent)
         {
@@ -297,16 +301,18 @@ namespace MechJebLib.Primitives
 
         public double magnitude
         {
-            get
-            {
-                double c = max_magnitude;
-                return c > 0 ? Math.Max(c, c * (this / c)._internal_magnitude) : 0;
-            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Math.Sqrt(x * x + y * y + z * z);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double SqrMagnitude(V3 vector) => vector.sqrMagnitude;
 
-        public double sqrMagnitude => x * x + y * y + z * z;
+        public double sqrMagnitude
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => x * x + y * y + z * z;
+        }
 
         public static V3 zero { get; } = new V3(0.0, 0.0, 0.0);
 
