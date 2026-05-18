@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using KSP.Localization;
+using MechJebLibBindings;
 using UnityEngine;
 using UnityEngine.Profiling;
 using static MechJebLib.Utils.Statics;
@@ -15,6 +16,13 @@ namespace MuMech
     // Eventually, we should figure out how to not need that store at all.
     public class MechJebStageStatsHelper
     {
+        private static readonly bool _isLoadedRP0;
+
+        static MechJebStageStatsHelper()
+        {
+            _isLoadedRP0 = ReflectionUtils.IsAssemblyLoaded("RP0");
+        }
+
         private bool showStagedMass, showBurnedMass, showInitialMass, showFinalMass, showThrust, showVacInitialTWR, showAtmoInitialTWR;
         private bool showAtmoMaxTWR, showVacMaxTWR, showAtmoDeltaV, showVacDeltaV, showTime, showISP, showEmpty, showRcs, timeSeconds, liveSLT;
         private bool showAtmoCumulativeDeltaV, showVacCumulativeDeltaV, showControllableMass;
@@ -415,14 +423,17 @@ namespace MuMech
             {
                 case 0:
                     SetAllStageVisibility(false);
+                    stageVisibility[StageData.ControllableMass] = _isLoadedRP0;
                     stageVisibility[StageData.VacInitialTWR] = true;
                     stageVisibility[StageData.AtmoInitialTWR] = true;
+                    stageVisibility[StageData.VacCumulativeDeltaV] = true;
                     stageVisibility[StageData.VacDeltaV] = true;
                     stageVisibility[StageData.AtmoDeltaV] = true;
                     stageVisibility[StageData.Time] = true;
                     break;
                 case 1:
                     SetAllStageVisibility(true);
+                    stageVisibility[StageData.ControllableMass] = _isLoadedRP0;
                     stageVisibility[StageData.AtmoCumulativeDeltaV] = false;
                     stageVisibility[StageData.AtmoMaxTWR] = false;
                     stageVisibility[StageData.Thrust] = false;
@@ -432,6 +443,7 @@ namespace MuMech
                     break;
                 case 2:
                     SetAllStageVisibility(true);
+                    stageVisibility[StageData.ControllableMass] = _isLoadedRP0;
                     break;
                 case 3:
                     LoadStageVisibility();
