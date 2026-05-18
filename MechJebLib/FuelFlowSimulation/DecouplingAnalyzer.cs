@@ -174,6 +174,15 @@ namespace MechJebLib.FuelFlowSimulation
 
             for (int i = stage + 1; i <= v.CurrentStage; i++)
                 v.PartsRemainingInStage[i].Add(part);
+
+            foreach (SimPartModule module in part.Modules)
+            {
+                if (module is SimModuleAvionics avionics)
+                {
+                    for (int i = stage + 1; i <= v.CurrentStage; i++)
+                        v.AvionicsRemainingInStage[i].Add(avionics);
+                }
+            }
         }
     }
 }
