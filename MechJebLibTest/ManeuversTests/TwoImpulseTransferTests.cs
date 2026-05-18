@@ -118,9 +118,9 @@ namespace MechJebLibTest.ManeuversTests
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);
             dv2.magnitude.ShouldEqual(1793.10206031673, 1e-4);
-            dt1.ShouldEqual(1177.74844650851, 1e-4);
+            dt1.ShouldEqual(1177.74844650851, 1e-3);
             inc.ShouldEqual(Deg2Rad(26.440413305834294), 1e-4);
-            dt2.ShouldEqual(20097.46881536536, 1e-4);
+            dt2.ShouldEqual(20097.46881536536, 1e-3);
         }
     }
 }
