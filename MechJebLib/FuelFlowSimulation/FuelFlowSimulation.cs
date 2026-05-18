@@ -420,12 +420,22 @@ namespace MechJebLib.FuelFlowSimulation
             double deltaV    = startMass > endMass ? thrust * deltaTime / (startMass - endMass) * Log(startMass / endMass) : 0;
             double isp       = startMass > endMass ? deltaV / (G0 * Log(startMass / endMass)) : 0;
 
+            _currentSegment.ControllableMass = ComputeControllableMass(vessel);
             _currentSegment.DeltaTime = deltaTime;
             _currentSegment.EndMass = endMass;
             _currentSegment.DeltaV = deltaV;
             _currentSegment.Isp = isp;
 
             Segments.Add(_currentSegment);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double ComputeControllableMass(SimVessel vessel)
+        {
+            double max = 0;
+            foreach (SimModuleAvionics avionics in vessel.AvionicsRemainingInStage[vessel.CurrentStage])
+                max = Max(avionics.ControllableMass, max);
+            return max;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

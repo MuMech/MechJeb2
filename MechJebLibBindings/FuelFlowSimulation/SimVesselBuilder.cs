@@ -24,6 +24,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private static readonly FieldInfo? _rfSpoolUpTime;
             private static readonly FieldInfo? _rfAutoCutoff;
+            private static readonly FieldInfo? _rp0ControllableMass;
+            private static readonly FieldInfo? _rp0MassLimit;
 
             private delegate double CrewMass(ProtoCrewMember crew);
 
@@ -53,14 +55,26 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     _rfSpoolUpTime = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
                     if (_rfSpoolUpTime == null)
                         Debug.Log(
-                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup");
+                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup.");
 
                     _rfType = Type.GetType("RealFuels.ModuleEnginesRF, RealFuels");
 
                     _rfAutoCutoff = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "autoCutoff");
                     if (_rfAutoCutoff == null)
                         Debug.Log(
-                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no autoCutoff field, disabling symmetric flameout");
+                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no autoCutoff field, disabling symmetric flameout.");
+                }
+
+                if (ReflectionUtils.IsAssemblyLoaded("RP0"))
+                {
+                    _rp0ControllableMass = ReflectionUtils.GetFieldByReflection("RP0", "RP0.ProceduralAvionics.ModuleProceduralAvionics", "controllableMass");
+                    if (_rp0ControllableMass == null)
+                        Debug.Log(
+                            "MechJeb BUG: RP0 loaded, but RP0.ProceduralAvionics.ModuleProceduralAvionics has no controllableMass field, disabling proc avionics support.");
+                    _rp0MassLimit = ReflectionUtils.GetFieldByReflection("RP0", "RP0.ModuleAvionics", "massLimit");
+                    if (_rp0MassLimit == null)
+                        Debug.Log(
+                            "MechJeb BUG: RP0 loaded, but RP0.ModuleAvionics has no massLimit field, disabling proc avionics support.");
                 }
             }
 
@@ -197,6 +211,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 } ?? kspModule.moduleName switch
                 {
                     "ProceduralFairingDecoupler" => BuildProceduralFairingDecoupler(part),
+                    "ModuleProceduralAvionics"   => BuildProceduralAvionics(part, kspModule),
+                    "ModuleAvionics"             => BuildModuleAvionics(part, kspModule),
                     _                            => null
                 };
 
@@ -279,12 +295,12 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
                 if (ReflectionUtils.IsAssemblyLoaded("RealFuels"))
                 {
-                    engine.IsModuleEnginesRf = _rfType!.IsInstanceOfType(kspEngine);
+                    engine.IsModuleEnginesRf = _rfType != null && _rfType.IsInstanceOfType(kspEngine);
 
-                    if (engine.IsModuleEnginesRf && _rfSpoolUpTime!.GetValue(kspEngine) is float floatVal)
+                    if (engine.IsModuleEnginesRf && _rfSpoolUpTime?.GetValue(kspEngine) is float floatVal)
                         engine.ModuleSpoolupTime = floatVal;
 
-                    if (engine.IsModuleEnginesRf && _rfAutoCutoff!.GetValue(kspEngine) is bool boolVal)
+                    if (engine.IsModuleEnginesRf && _rfAutoCutoff?.GetValue(kspEngine) is bool boolVal)
                         engine.AutoCutoff = boolVal;
                 }
 
@@ -314,6 +330,26 @@ namespace MechJebLibBindings.FuelFlowSimulation
             }
 
             private SimProceduralFairingDecoupler BuildProceduralFairingDecoupler(SimPart part) => SimProceduralFairingDecoupler.Borrow(part);
+
+            private SimModuleAvionics BuildProceduralAvionics(SimPart part, PartModule kspModule)
+            {
+                var avionics = SimModuleAvionics.Borrow(part);
+
+                if (_rp0ControllableMass?.GetValue(kspModule) is float floatVal)
+                    avionics.ControllableMass = floatVal;
+
+                return avionics;
+            }
+
+            private SimModuleAvionics BuildModuleAvionics(SimPart part, PartModule kspModule)
+            {
+                var avionics = SimModuleAvionics.Borrow(part);
+
+                if (_rp0MassLimit?.GetValue(kspModule) is float floatVal)
+                    avionics.ControllableMass = floatVal;
+
+                return avionics;
+            }
 
             private static double GetModuleMass(Part kspPart, float defaultMass, ModifierStagingSituation sit)
             {

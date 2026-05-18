@@ -27,6 +27,7 @@ namespace MechJebLib.FuelFlowSimulation
         public double RcsMass;
         public double RcsStartTMR;
         public double RcsEndTMR;
+        public double ControllableMass;
 
         public double MaxAccel     => EndMass > 0 ? Thrust / EndMass : 0;
         public double ResourceMass => StartMass - EndMass;
