@@ -132,8 +132,8 @@ namespace MuMech
             stageHeaderData.Add(StageData.ControllableMass, "Avionics" + SPACING);
             stageHeaderData.Add(StageData.AtmoDeltaV, (showRcs ? "RCS ∆Vmin" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn10) + SPACING);
             stageHeaderData.Add(StageData.VacDeltaV, (showRcs ? "RCS ∆Vmax" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn11) + SPACING);
-            stageHeaderData.Add(StageData.AtmoCumulativeDeltaV, "Σ ∆V Atmo" + SPACING);
-            stageHeaderData.Add(StageData.VacCumulativeDeltaV, "Σ ∆V Vac" + SPACING);
+            stageHeaderData.Add(StageData.AtmoCumulativeDeltaV, "Σ Atmo ∆V" + SPACING);
+            stageHeaderData.Add(StageData.VacCumulativeDeltaV, "Σ Vac ∆V" + SPACING);
             stageHeaderData.Add(StageData.Time, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn12 + SPACING);
         }
 
