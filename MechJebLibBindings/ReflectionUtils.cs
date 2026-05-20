@@ -16,6 +16,7 @@ namespace MechJebLibBindings
         public static readonly bool IsLoadedRealismOverhaul;
         public static readonly bool IsLoadedPrincipia;
         public static readonly bool IsLoadedFAR;
+        public static readonly bool IsLoadedRP0;
 
         static ReflectionUtils()
         {
@@ -24,6 +25,7 @@ namespace MechJebLibBindings
             IsLoadedPrincipia = IsAssemblyLoaded("principia.ksp_plugin_adapter");
             IsLoadedFAR = IsAssemblyLoaded("FerramAerospaceResearch");
             IsLoadedRealismOverhaul = IsAssemblyLoaded("RealismOverhaul");
+            IsLoadedRP0 = IsAssemblyLoaded("RP0");
         }
 
         public static bool IsAssemblyLoaded(string assemblyName)

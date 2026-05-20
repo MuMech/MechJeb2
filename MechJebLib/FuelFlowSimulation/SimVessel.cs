@@ -218,6 +218,18 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ActiveEngineNeedsUllage()
+        {
+            foreach (SimModuleEngines e in ActiveEngines)
+            {
+                if (e.Ullage)
+                    return true;
+            }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             foreach (SimPart p in Parts)

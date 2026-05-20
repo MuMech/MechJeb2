@@ -548,7 +548,7 @@ namespace MuMech
             /* prevent unstable ignitions */
             if (LimitToPreventUnstableIgnition && s.mainThrottle > 0.0F && ThrottleLimit > 0.0F)
             {
-                if (VesselState.lowestUllage < 0.95) // needs to match 'unstable' value in RF
+                if (VesselState.lowestUllage < 0.996) // prevent ignition if there is any chance of failure
                 {
                     ScreenMessages.PostScreenMessage(_preventingUnstableIgnitionsMessage);
                     Debug.Log("MechJeb Unstable Ignitions: preventing ignition in state: " + VesselState.lowestUllage);
@@ -903,7 +903,7 @@ namespace MuMech
             if (!Vessel.hasEnabledRCSModules())
                 return;
 
-            bool stableUllage = VesselState.lowestUllage >= 1.0;
+            bool stableUllage = VesselState.lowestUllage >= 0.996;
 
             // ullage may dramatically drop below stable (by as much as to 0.76 in a single tick) so
             // we cannot "detect" low ullage and compensate, but must apply RCS until thrust has come
