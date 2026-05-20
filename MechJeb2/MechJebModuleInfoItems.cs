@@ -755,6 +755,9 @@ namespace MuMech
         public bool showControllableMass = false;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showRcsUllageTime = false;
+
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool showTime = true;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
