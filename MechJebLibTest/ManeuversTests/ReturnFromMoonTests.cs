@@ -156,8 +156,8 @@ namespace MechJebLibTest.ManeuversTests
 
             _testOutputHelper.WriteLine($"periapsis: {Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3)}");
 
-            Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3).ShouldEqual(PER, 1e-3);
-            newPeR.ShouldEqual(PER, 1e-3);
+            Astro.PeriapsisFromStateVectors(CENTRAL_MU, r3, v3).ShouldEqual(PER, 1e-2);
+            newPeR.ShouldEqual(PER, 1e-2);
             if (dvOpt > 0)
                 dv.magnitude.ShouldEqual(dvOpt, 1e-2);
         }

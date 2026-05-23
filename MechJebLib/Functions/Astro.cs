@@ -238,7 +238,7 @@ namespace MechJebLib.Functions
         public static double TrueAnomalyFromStateVectors(double mu, V3 r, V3 v)
         {
             // a custom routine handling edge cases (circular, equatorial) would cost almost as much
-            ( _,  _, _, _, _, double nu, _) = KeplerianFromStateVectors(mu, r, v);
+            (_, _, _, _, _, double nu, _) = KeplerianFromStateVectors(mu, r, v);
             return nu;
         }
 
@@ -658,8 +658,7 @@ namespace MechJebLib.Functions
             return (rot * p, rot * q);
         }
 
-        public static (double sma, double ecc, double inc, double lan, double argp, double nu, double l) KeplerianFromStateVectors(double mu,
-            V3 r, V3 v)
+        public static (double sma, double ecc, double inc, double lan, double argp, double nu, double l) KeplerianFromStateVectors(double mu, V3 r, V3 v)
         {
             double rmag   = r.magnitude;
             double vmag   = v.magnitude;
@@ -672,22 +671,27 @@ namespace MechJebLib.Functions
             double sma = 1.0 / (2.0 / rmag - vmag * vmag / mu);
             double l   = hv.sqrMagnitude / mu;
 
-            double d = 1.0 + hhat[2];
-            double p = d == 0 ? 0 : hhat[0] / d;
-            double q = d == 0 ? 0 : -hhat[1] / d;
+            int i = hhat[2] >= 0.0 ? +1 : -1;
 
-            double const1 = 1.0 / (1.0 + p * p + q * q);
+            double d = 1.0 + i * hhat[2];
+            if (d == 0.0)
+                throw new ArgumentException("[MechJebLib] KeplerianFromStateVectors(): orbit is at the retrograde singularity somehow");
+
+            double p = hhat[0] / d;
+            double q = -hhat[1] / d;
+
+            double a = 1.0 / (1.0 + p * p + q * q);
 
             var fhat = new V3(
-                const1 * (1.0 - p * p + q * q),
-                const1 * 2.0 * p * q,
-                -const1 * 2.0 * p
+                a * (1.0 - p * p + q * q),
+                a * 2.0 * p * q,
+                -a * 2.0 * i * p
             );
 
             var ghat = new V3(
-                const1 * 2.0 * p * q,
-                const1 * (1.0 + p * p - q * q),
-                const1 * 2.0 * q
+                a * 2.0 * i * p * q,
+                a * i * (1.0 + p * p - q * q),
+                a * 2.0 * q
             );
 
             double h        = V3.Dot(eccvec, ghat);
@@ -696,11 +700,15 @@ namespace MechJebLib.Functions
             double y1       = V3.Dot(r, ghat);
             double xlambdot = Atan2(y1, x1);
 
-            double ecc  = Sqrt(h * h + xk * xk);
-            double inc  = 2.0 * Atan(Sqrt(p * p + q * q));
-            double lan  = Clamp2Pi(inc > EPS ? Atan2(p, q) : 0.0);
-            double argp = Clamp2Pi(ecc > EPS ? Atan2(h, xk) - lan : 0.0);
-            double nu   = Clamp2Pi(xlambdot - lan - argp);
+            double s   = Sqrt(p * p + q * q);
+            double ecc = Sqrt(h * h + xk * xk);
+            double inc = i == 1 ? 2.0 * Atan(s) : PI - 2.0 * Atan(s);
+
+            double lan = Clamp2Pi(s > EPS ? Atan2(p, q) : 0.0);
+
+            double sum  = ecc > EPS ? Atan2(h, xk) : i * lan;
+            double argp = Clamp2Pi(ecc > EPS ? sum - i * lan : 0.0);
+            double nu   = Clamp2Pi(xlambdot - sum);
 
             return (sma, ecc, inc, lan, argp, nu, l);
         }
