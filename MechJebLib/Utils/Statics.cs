@@ -25,7 +25,7 @@ namespace MechJebLib.Utils
         /// <summary>
         ///     Normal machine epsilon.  The Double.Epsilon in C# is one ULP above zero which is somewhat useless.
         /// </summary>
-        public const double EPS = 2.2204e-16;
+        public const double EPS = 2.2204460492503131e-16;
 
         /// <summary>
         ///     Twice machine epsilon.
@@ -195,7 +195,8 @@ namespace MechJebLib.Utils
         public static double Clamp2Pi(double x)
         {
             x %= TAU;
-            return x < 0 ? x + TAU : x;
+            x = x < 0 ? x + TAU : x;
+            return x >= TAU ? 0 : x;
         }
 
         /// <summary>
