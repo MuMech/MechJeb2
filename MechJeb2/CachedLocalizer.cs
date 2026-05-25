@@ -22,7 +22,6 @@ namespace MuMech
             MechJebAscentButton11,
             MechJebAscentButton12,
             MechJebAscentButton13,
-            MechJebAscentButton14,
             MechJebAscentButton15,
             MechJebAscentButton17;
 
@@ -83,7 +82,7 @@ namespace MuMech
             MechJebAscentLaunchingToManualLAN;
 
         [NonSerialized]
-        public string MechJebAscentMsg2, MechJebAscentMsg3;
+        public string MechJebAscentMsg2;
 
         [NonSerialized]
         public string MechJebAscentHotStaging, MechJebAscentDropSolids, MechJebAscentLeadTime;
@@ -180,7 +179,6 @@ namespace MuMech
             MechJebAscentButton11 = Localizer.Format("#MechJeb_Ascent_button11");
             MechJebAscentButton12 = Localizer.Format("#MechJeb_Ascent_button12");
             MechJebAscentButton13 = Localizer.Format("#MechJeb_Ascent_button13");
-            MechJebAscentButton14 = Localizer.Format("#MechJeb_Ascent_button14");
             MechJebAscentButton15 = Localizer.Format("#MechJeb_Ascent_button15");
             MechJebAscentButton17 = Localizer.Format("#MechJeb_Ascent_button17");
 
@@ -264,7 +262,6 @@ namespace MuMech
             MechJebAscentLaunchingToManualLAN = Localizer.Format("#MechJeb_Ascent_LaunchingToManualLAN");
 
             MechJebAscentMsg2       = Localizer.Format("#MechJeb_Ascent_msg2");
-            MechJebAscentMsg3       = Localizer.Format("#MechJeb_Ascent_msg3");
             MechJebAscentHotStaging = Localizer.Format("#MechJeb_Ascent_hotStaging");
             MechJebAscentDropSolids = Localizer.Format("#MechJeb_Ascent_dropSolids");
             MechJebAscentLeadTime   = Localizer.Format("#MechJeb_Ascent_leadTime");
