@@ -410,7 +410,7 @@ namespace MechJebLib.Primitives
         public string ToString(string? format, IFormatProvider formatProvider)
         {
             if (string.IsNullOrEmpty(format))
-                format = "G";
+                format = "G17";
             return
                 $"[{x.ToString(format, formatProvider)}, {y.ToString(format, formatProvider)}, {z.ToString(format, formatProvider)}]";
         }
