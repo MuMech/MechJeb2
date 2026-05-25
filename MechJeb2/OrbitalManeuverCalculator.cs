@@ -7,6 +7,7 @@ using MechJebLibBindings;
 using Smooth.Pools;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MuMech
 {
@@ -220,34 +221,26 @@ namespace MuMech
             return dV;
         }
 
-        // This is the entry point for the course-correction to a target orbit which is a celestial
-        public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, CelestialBody targetBody, double finalPeR,
-            out double burnUT)
+        public static (Vector3d dv, double dt1, double dt2) DeltaVAndTimeForCourseCorrectionToCelestial(Orbit o, double ut, CelestialBody targetBody, double per, double inc=double.NaN)
         {
-            Vector3d collisionDV = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
-            Orbit collisionOrbit = o.PerturbedOrbit(burnUT, collisionDV);
-            double collisionUT = collisionOrbit.NextClosestApproachTime(target, burnUT);
-            Vector3d collisionPosition = target.WorldPositionAtUT(collisionUT);
-            Vector3d collisionRelVel = collisionOrbit.WorldOrbitalVelocityAtUT(collisionUT) - target.WorldOrbitalVelocityAtUT(collisionUT);
+            Orbit  target = targetBody.orbit;
+            double mu0    = o.referenceBody.gravParameter;
+            double mu1    = targetBody.gravParameter;
+            double soi    = targetBody.sphereOfInfluence;
+            double tsoi   = o.EndUT - ut;
 
-            double soiEnterUT = collisionUT - targetBody.sphereOfInfluence / collisionRelVel.magnitude;
-            Vector3d soiEnterRelVel = collisionOrbit.WorldOrbitalVelocityAtUT(soiEnterUT) - target.WorldOrbitalVelocityAtUT(soiEnterUT);
+            V3 r0 = o.RightHandedBCIPositionAtUT(ut);
+            V3 v0 = o.RightHandedOrbitalVelocityAtUT(ut);
+            V3 r1 = target.RightHandedBCIPositionAtUT(ut);
+            V3 v1 = target.RightHandedOrbitalVelocityAtUT(ut);
 
-            double E = 0.5 * soiEnterRelVel.sqrMagnitude -
-                       targetBody.gravParameter / targetBody.sphereOfInfluence; //total orbital energy on SoI enter
-            double finalPeSpeed =
-                Math.Sqrt(2 * (E + targetBody.gravParameter / finalPeR)); //conservation of energy gives the orbital speed at finalPeR.
-            double desiredImpactParameter =
-                finalPeR * finalPeSpeed / soiEnterRelVel.magnitude; //conservation of angular momentum gives the required impact parameter
+            //(V3 r0, V3 v0) = o.RightHandedStateVectorsAtUT(ut);
+            //(V3 r1, V3 v1) = target.RightHandedStateVectorsAtUT(ut);
 
-            Vector3d displacementDir = Vector3d.Cross(collisionRelVel, o.OrbitNormal()).normalized;
-            Vector3d interceptTarget = collisionPosition + desiredImpactParameter * displacementDir;
+            var maneuver = new FineTuneClosestApproachToCelestial();
+            (V3 dv, double dt1, double dt2) = maneuver.Maneuver(mu0, r0, v0, mu1, r1, v1, soi, tsoi, Max(per, 0), Deg2Rad(inc));
 
-            (V3 velAfterBurn, _) = Gooding.Solve(o.referenceBody.gravParameter, o.WorldBCIPositionAtUT(burnUT).ToV3(),
-                o.WorldOrbitalVelocityAtUT(burnUT).ToV3(), (interceptTarget - o.referenceBody.position).ToV3(), collisionUT - burnUT, 0);
-
-            Vector3d deltaV = velAfterBurn.ToVector3d() - o.WorldOrbitalVelocityAtUT(burnUT);
-            return deltaV;
+            return (dv.V3ToWorld(), dt1, dt2);
         }
 
         // This is the entry point for the course-correction to a target orbit which is not a celestial
