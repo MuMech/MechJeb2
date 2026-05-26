@@ -72,7 +72,7 @@ namespace MechJebLib.Maneuvers
             Check.Finite(r1);
             Check.Finite(v1);
             Check.PositiveFinite(soi);
-            Check.PositiveFinite(peR);
+            Check.NonNegativeFinite(peR);
 
             _planetScale = Scale.Create(mu0, Sqrt(r0.magnitude * r1.magnitude));
             _moonScale = Scale.Create(mu1, peR);
@@ -127,16 +127,15 @@ namespace MechJebLib.Maneuvers
             bndl[1] = EPS;
             bndu[1] = tsoi / _planetScale.TimeScale;
 
-            _onlyFeasible = true;
+            // was added for debugging, does not seem necessary.
+            _onlyFeasible = false;
+
             _direction = TransferGeometry.ShortWay;
             alglib.minnlccreatef(x0, DIFFSTEP, out alglib.minnlcstate state);
             alglib.minnlcsetbc(state, bndl, bndu);
             alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, 0, MAXITS);
             alglib.minnlcsetnlc(state, NUM_EQUALITY_CONSTRAINTS, NUM_INEQUALITY_CONSTRAINTS);
-            alglib.minnlcoptimize(state, NLPFunction, null, null);
-            alglib.minnlcresults(state, out double[] _, out alglib.minnlcreport _);
-            _onlyFeasible = false;
             alglib.minnlcoptimize(state, NLPFunction, null, null);
             alglib.minnlcresults(state, out double[] x1, out alglib.minnlcreport rep1);
 
@@ -158,16 +157,12 @@ namespace MechJebLib.Maneuvers
             Print($"fi[5] = {fi[5]}");
             Print($"fi[6] = {fi[6]}");
 
-            _onlyFeasible = true;
             _direction = TransferGeometry.LongWay;
             alglib.minnlccreatef(x0, DIFFSTEP, out alglib.minnlcstate state2);
             alglib.minnlcsetbc(state2, bndl, bndu);
             alglib.minnlcsetalgosqp(state2);
             alglib.minnlcsetcond(state2, 0, MAXITS);
             alglib.minnlcsetnlc(state2, NUM_EQUALITY_CONSTRAINTS, NUM_INEQUALITY_CONSTRAINTS);
-            alglib.minnlcoptimize(state2, NLPFunction, null, null);
-            alglib.minnlcresults(state2, out double[] _, out alglib.minnlcreport _);
-            _onlyFeasible = false;
             alglib.minnlcoptimize(state2, NLPFunction, null, null);
             alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
 
