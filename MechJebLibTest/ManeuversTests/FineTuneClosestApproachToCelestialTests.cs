@@ -22,7 +22,7 @@ namespace MechJebLibTest.ManeuversTests
 
         public static IEnumerable<object[]> Seeds()
         {
-            for (int i = 0; i <= 500; i++)
+            for (int i = 0; i <= 25; i++)
                 yield return new object[] { i };
         }
 

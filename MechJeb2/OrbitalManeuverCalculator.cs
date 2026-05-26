@@ -175,22 +175,24 @@ namespace MuMech
         // course to intercept a target at a specific interceptUT.
         //
         // offsetDistance: this is used by the Rendezvous Autopilot and is only going to be valid over very short distances
-        // shortway: the shortway parameter to feed into the Lambert solver
+        // prograde: select the prograde or retrograde transfer arc to feed into the Lambert solver
         //
         public static (Vector3d v1, Vector3d v2) DeltaVToInterceptAtTime(Orbit o, double t0, Orbit target, double dt,
-            double offsetDistance = 0, bool shortway = true)
+            double offsetDistance = 0, bool prograde = true)
         {
             (V3 ri, V3 vi) = o.RightHandedStateVectorsAtUT(t0);
             (V3 rf, V3 vf) = target.RightHandedStateVectorsAtUT(t0 + dt);
 
+            TransferGeometry direction = prograde ? TransferGeometry.Prograde : TransferGeometry.Retrograde;
+
             (V3 transferVi, V3 transferVf) =
-                Gooding.Solve(o.referenceBody.gravParameter, ri, vi, rf, shortway ? dt : -dt, 0);
+                Gooding.Solve(o.referenceBody.gravParameter, ri, vi, rf, dt, 0, direction);
 
             if (offsetDistance != 0)
             {
                 rf -= offsetDistance * V3.Cross(vf, rf).normalized;
                 (transferVi, transferVf) = Gooding.Solve(o.referenceBody.gravParameter, ri, vi, rf,
-                    shortway ? dt : -dt, 0);
+                    dt, 0, direction);
             }
 
             return ((transferVi - vi).V3ToWorld(), (vf - transferVf).V3ToWorld());
