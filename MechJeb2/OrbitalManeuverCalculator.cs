@@ -30,7 +30,7 @@ namespace MuMech
 
             //sanitize inputs
             newPeR = MuUtils.Clamp(newPeR, 0 + 1, radius - 1);
-            newApR = Math.Max(newApR, radius + 1);
+            newApR = Max(newApR, radius + 1);
 
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
@@ -62,7 +62,7 @@ namespace MuMech
             double radius = o.Radius(ut);
 
             //sanitize input
-            if (newApR > 0) newApR = Math.Max(newApR, radius + 1);
+            if (newApR > 0) newApR = Max(newApR, radius + 1);
 
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
@@ -108,7 +108,7 @@ namespace MuMech
             double rotFreq = TAU / o.referenceBody.rotationPeriod;
 
             return Rad2Deg(Simple.HeadingForLaunchInclination(o.referenceBody.gravParameter, r, v, Deg2Rad(inclinationDegrees), rotFreq, o.referenceBody.Radius
-            + desiredApoapsis));
+                + desiredApoapsis));
         }
 
         //Computes the delta-V of the burn required to change an orbit's inclination to a given value
@@ -134,8 +134,8 @@ namespace MuMech
         public static Vector3d DeltaVAndTimeToMatchPlanesAscending(Orbit o, Orbit target, double UT, out double burnUT)
         {
             burnUT = o.TimeOfAscendingNode(target, UT);
-            var desiredHorizontal = Vector3d.Cross(target.OrbitNormal(), o.Up(burnUT));
-            var actualHorizontalVelocity = Vector3d.Exclude(o.Up(burnUT), o.WorldOrbitalVelocityAtUT(burnUT));
+            var      desiredHorizontal         = Vector3d.Cross(target.OrbitNormal(), o.Up(burnUT));
+            var      actualHorizontalVelocity  = Vector3d.Exclude(o.Up(burnUT), o.WorldOrbitalVelocityAtUT(burnUT));
             Vector3d desiredHorizontalVelocity = actualHorizontalVelocity.magnitude * desiredHorizontal;
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
@@ -146,8 +146,8 @@ namespace MuMech
         public static Vector3d DeltaVAndTimeToMatchPlanesDescending(Orbit o, Orbit target, double UT, out double burnUT)
         {
             burnUT = o.TimeOfDescendingNode(target, UT);
-            var desiredHorizontal = Vector3d.Cross(target.OrbitNormal(), o.Up(burnUT));
-            var actualHorizontalVelocity = Vector3d.Exclude(o.Up(burnUT), o.WorldOrbitalVelocityAtUT(burnUT));
+            var      desiredHorizontal         = Vector3d.Cross(target.OrbitNormal(), o.Up(burnUT));
+            var      actualHorizontalVelocity  = Vector3d.Exclude(o.Up(burnUT), o.WorldOrbitalVelocityAtUT(burnUT));
             Vector3d desiredHorizontalVelocity = actualHorizontalVelocity.magnitude * desiredHorizontal;
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
@@ -203,7 +203,7 @@ namespace MuMech
         {
             double closestApproachTime = o.NextClosestApproachTime(target, UT + 2); //+2 so that closestApproachTime is definitely > UT
 
-            burnUT           = UT;
+            burnUT = UT;
             (Vector3d dV, _) = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime - burnUT);
 
             // FIXME: replace with BrentRoot's 1-d minimization algorithm
@@ -215,7 +215,7 @@ namespace MuMech
 
                 if (testDV.magnitude < dV.magnitude)
                 {
-                    dV     = testDV;
+                    dV = testDV;
                     burnUT = testUT;
                 }
             }
@@ -223,7 +223,7 @@ namespace MuMech
             return dV;
         }
 
-        public static (Vector3d dv, double dt1, double dt2) DeltaVAndTimeForCourseCorrectionToCelestial(Orbit o, double ut, CelestialBody targetBody, double per, double inc=double.NaN)
+        public static (Vector3d dv, double dt1, double dt2) DeltaVAndTimeForCourseCorrectionToCelestial(Orbit o, double ut, CelestialBody targetBody, double per, double dt = double.NaN, double inc = double.NaN)
         {
             Orbit  target = targetBody.orbit;
             double mu0    = o.referenceBody.gravParameter;
@@ -231,16 +231,11 @@ namespace MuMech
             double soi    = targetBody.sphereOfInfluence;
             double tsoi   = o.EndUT - ut;
 
-            V3 r0 = o.RightHandedBCIPositionAtUT(ut);
-            V3 v0 = o.RightHandedOrbitalVelocityAtUT(ut);
-            V3 r1 = target.RightHandedBCIPositionAtUT(ut);
-            V3 v1 = target.RightHandedOrbitalVelocityAtUT(ut);
-
-            //(V3 r0, V3 v0) = o.RightHandedStateVectorsAtUT(ut);
-            //(V3 r1, V3 v1) = target.RightHandedStateVectorsAtUT(ut);
+            (V3 r0, V3 v0) = o.RightHandedStateVectorsAtUT(ut);
+            (V3 r1, V3 v1) = target.RightHandedStateVectorsAtUT(ut);
 
             var maneuver = new FineTuneClosestApproachToCelestial();
-            (V3 dv, double dt1, double dt2) = maneuver.Maneuver(mu0, r0, v0, mu1, r1, v1, soi, tsoi, Max(per, 0), Deg2Rad(inc));
+            (V3 dv, double dt1, double dt2) = maneuver.Maneuver(mu0, r0, v0, mu1, r1, v1, soi, tsoi, Clamp(per, 0, soi), dt, Deg2Rad(inc));
 
             return (dv.V3ToWorld(), dt1, dt2);
         }
@@ -248,10 +243,10 @@ namespace MuMech
         // This is the entry point for the course-correction to a target orbit which is not a celestial
         public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, double caDistance, out double burnUT)
         {
-            Vector3d collisionDV = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
-            Orbit collisionOrbit = o.PerturbedOrbit(burnUT, collisionDV);
-            double collisionUT = collisionOrbit.NextClosestApproachTime(target, burnUT);
-            Vector3d targetPos = target.WorldPositionAtUT(collisionUT);
+            Vector3d collisionDV    = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
+            Orbit    collisionOrbit = o.PerturbedOrbit(burnUT, collisionDV);
+            double   collisionUT    = collisionOrbit.NextClosestApproachTime(target, burnUT);
+            Vector3d targetPos      = target.WorldPositionAtUT(collisionUT);
 
             Vector3d interceptTarget = targetPos + target.NormalPlus(collisionUT) * caDistance;
 
@@ -277,7 +272,7 @@ namespace MuMech
             //Compute the time and dV for a Hohmann transfer where we pretend that we are the planet we are orbiting.
             //This gives us the "ideal" deltaV and UT of the ejection burn, if we didn't have to worry about waiting for the right
             //ejection angle and if we didn't have to worry about the planet's gravity dragging us back and increasing the required dV.
-            double idealBurnUT;
+            double   idealBurnUT;
             Vector3d idealDeltaV;
 
             if (syncPhaseAngle)
@@ -290,7 +285,7 @@ namespace MuMech
                 //don't time the ejection burn to intercept the target; we just care about the final peri/apoapsis
                 idealBurnUT = UT;
                 if (target.semiMajorAxis < planetOrbit.semiMajorAxis)
-                    idealDeltaV  = DeltaVToChangePeriapsis(planetOrbit, idealBurnUT, target.semiMajorAxis);
+                    idealDeltaV = DeltaVToChangePeriapsis(planetOrbit, idealBurnUT, target.semiMajorAxis);
                 else idealDeltaV = DeltaVToChangeApoapsis(planetOrbit, idealBurnUT, target.semiMajorAxis);
             }
 
@@ -311,26 +306,26 @@ namespace MuMech
 
             //compute the angle by which the trajectory turns between periapsis (where we do the ejection burn)
             //and SOI exit (approximated as radius = infinity)
-            double soiExitEnergy = 0.5 * soiExitVelocity.sqrMagnitude - o.referenceBody.gravParameter / o.referenceBody.sphereOfInfluence;
+            double soiExitEnergy  = 0.5 * soiExitVelocity.sqrMagnitude - o.referenceBody.gravParameter / o.referenceBody.sphereOfInfluence;
             double ejectionRadius = o.semiMajorAxis; //a guess, good for nearly circular orbits
 
             double ejectionKineticEnergy = soiExitEnergy + o.referenceBody.gravParameter / ejectionRadius;
-            double ejectionSpeed = Math.Sqrt(2 * ejectionKineticEnergy);
+            double ejectionSpeed         = Sqrt(2 * ejectionKineticEnergy);
 
             //construct a sample ejection orbit
             Vector3d ejectionOrbitInitialVelocity = ejectionSpeed * (Vector3d)o.referenceBody.transform.right;
             Vector3d ejectionOrbitInitialPosition = o.referenceBody.position + ejectionRadius * (Vector3d)o.referenceBody.transform.up;
-            Orbit sampleEjectionOrbit = MuUtils.OrbitFromStateVectors(ejectionOrbitInitialPosition, ejectionOrbitInitialVelocity, o.referenceBody, 0);
-            double ejectionOrbitDuration = sampleEjectionOrbit.NextTimeOfRadius(0, o.referenceBody.sphereOfInfluence);
-            Vector3d ejectionOrbitFinalVelocity = sampleEjectionOrbit.WorldOrbitalVelocityAtUT(ejectionOrbitDuration);
+            Orbit    sampleEjectionOrbit          = MuUtils.OrbitFromStateVectors(ejectionOrbitInitialPosition, ejectionOrbitInitialVelocity, o.referenceBody, 0);
+            double   ejectionOrbitDuration        = sampleEjectionOrbit.NextTimeOfRadius(0, o.referenceBody.sphereOfInfluence);
+            Vector3d ejectionOrbitFinalVelocity   = sampleEjectionOrbit.WorldOrbitalVelocityAtUT(ejectionOrbitDuration);
 
-            double turningAngle = Math.Abs(Vector3d.Angle(ejectionOrbitInitialVelocity, ejectionOrbitFinalVelocity));
+            double turningAngle = Abs(Vector3d.Angle(ejectionOrbitInitialVelocity, ejectionOrbitFinalVelocity));
 
             //rotate the exit direction by 90 + the turning angle to get a vector pointing to the spot in our orbit
             //where we should do the ejection burn. Then convert this to a true anomaly and compute the time closest
             //to planetUT at which we will pass through that true anomaly.
             Vector3d ejectionPointDirection = Quaternion.AngleAxis(-(float)(90 + turningAngle), o.OrbitNormal()) * inPlaneSoiExitDirection;
-            double ejectionTrueAnomaly = o.TrueAnomalyFromVector(ejectionPointDirection);
+            double   ejectionTrueAnomaly    = o.TrueAnomalyFromVector(ejectionPointDirection);
             burnUT = o.TimeOfTrueAnomaly(ejectionTrueAnomaly, idealBurnUT - o.period);
 
             if (idealBurnUT - burnUT > o.period / 2 || burnUT < UT)
@@ -341,7 +336,7 @@ namespace MuMech
             //rotate the exit direction by the turning angle to get a vector pointing to the spot in our orbit
             //where we should do the ejection burn
             Vector3d ejectionBurnDirection = Quaternion.AngleAxis(-(float)turningAngle, o.OrbitNormal()) * inPlaneSoiExitDirection;
-            Vector3d ejectionVelocity = ejectionSpeed * ejectionBurnDirection;
+            Vector3d ejectionVelocity      = ejectionSpeed * ejectionBurnDirection;
 
             Vector3d preEjectionVelocity = o.WorldOrbitalVelocityAtUT(burnUT);
 
@@ -352,7 +347,7 @@ namespace MuMech
         {
             var solver = new ReturnFromMoon();
 
-            CelestialBody moon = o.referenceBody;
+            CelestialBody moon    = o.referenceBody;
             CelestialBody primary = moon.referenceBody;
             (V3 moonR0, V3 moonV0) = moon.orbit.RightHandedStateVectorsAtUT(ut);
             double moonSOI = moon.sphereOfInfluence;
@@ -379,9 +374,9 @@ namespace MuMech
 
             // Thanks wolframAlpha for the Math
             // x = (a^3 f^2 + 3 a^2 f^2 p + 3 a f^2 p^2 + f^2 p^3)^(1/3)-a
-            double x = Math.Pow(
-                Math.Pow(a, 3) * Math.Pow(f, 2) + 3 * Math.Pow(a, 2) * Math.Pow(f, 2) * p + 3 * a * Math.Pow(f, 2) * Math.Pow(p, 2) +
-                Math.Pow(f, 2) * Math.Pow(p, 3), 1d / 3) - a;
+            double x = Pow(
+                Pow(a, 3) * Pow(f, 2) + 3 * Pow(a, 2) * Pow(f, 2) * p + 3 * a * Pow(f, 2) * Pow(p, 2) +
+                Pow(f, 2) * Pow(p, 3), 1d / 3) - a;
 
             if (x < 0)
                 return Vector3d.zero;
@@ -396,15 +391,15 @@ namespace MuMech
         {
             // Using Great-Circle Distance 2nd computational formula from http://en.wikipedia.org/wiki/Great-circle_distance
             // Note the switch from degrees to radians and back
-            double lat_a_rad = UtilMath.Deg2Rad * lat_a;
-            double lat_b_rad = UtilMath.Deg2Rad * lat_b;
+            double lat_a_rad     = UtilMath.Deg2Rad * lat_a;
+            double lat_b_rad     = UtilMath.Deg2Rad * lat_b;
             double long_diff_rad = UtilMath.Deg2Rad * (long_b - long_a);
 
-            return UtilMath.Rad2Deg * Math.Atan2(Math.Sqrt(Math.Pow(Math.Cos(lat_b_rad) * Math.Sin(long_diff_rad), 2) +
-                                                           Math.Pow(
-                                                               Math.Cos(lat_a_rad) * Math.Sin(lat_b_rad) - Math.Sin(lat_a_rad) * Math.Cos(lat_b_rad) *
-                                                               Math.Cos(long_diff_rad), 2)),
-                Math.Sin(lat_a_rad) * Math.Sin(lat_b_rad) + Math.Cos(lat_a_rad) * Math.Cos(lat_b_rad) * Math.Cos(long_diff_rad));
+            return UtilMath.Rad2Deg * Atan2(Sqrt(Pow(Cos(lat_b_rad) * Sin(long_diff_rad), 2) +
+                    Pow(
+                        Cos(lat_a_rad) * Sin(lat_b_rad) - Sin(lat_a_rad) * Cos(lat_b_rad) *
+                        Cos(long_diff_rad), 2)),
+                Sin(lat_a_rad) * Sin(lat_b_rad) + Cos(lat_a_rad) * Cos(lat_b_rad) * Cos(long_diff_rad));
         }
 
         // Compute an angular heading from point a to point b on a unit sphere
@@ -413,13 +408,13 @@ namespace MuMech
             // Using Great-Circle Navigation formula for initial heading from http://en.wikipedia.org/wiki/Great-circle_navigation
             // Note the switch from degrees to radians and back
             // Original equation returns 0 for due south, increasing clockwise. We add 180 and clamp to 0-360 degrees to map to compass-type headings
-            double lat_a_rad = UtilMath.Deg2Rad * lat_a;
-            double lat_b_rad = UtilMath.Deg2Rad * lat_b;
+            double lat_a_rad     = UtilMath.Deg2Rad * lat_a;
+            double lat_b_rad     = UtilMath.Deg2Rad * lat_b;
             double long_diff_rad = UtilMath.Deg2Rad * (long_b - long_a);
 
-            return MuUtils.ClampDegrees360(180.0 / Math.PI * Math.Atan2(
-                Math.Sin(long_diff_rad),
-                Math.Cos(lat_a_rad) * Math.Tan(lat_b_rad) - Math.Sin(lat_a_rad) * Math.Cos(long_diff_rad)));
+            return MuUtils.ClampDegrees360(180.0 / PI * Atan2(
+                Sin(long_diff_rad),
+                Cos(lat_a_rad) * Tan(lat_b_rad) - Sin(lat_a_rad) * Cos(long_diff_rad)));
         }
 
         //Computes the deltaV of the burn needed to set a given LAN at a given UT.
@@ -427,11 +422,11 @@ namespace MuMech
         {
             Vector3d pos = o.WorldPositionAtUT(UT);
             // Burn position in the same reference frame as LAN
-            double burn_latitude = o.referenceBody.GetLatitude(pos);
+            double burn_latitude  = o.referenceBody.GetLatitude(pos);
             double burn_longitude = o.referenceBody.GetLongitude(pos) + o.referenceBody.rotationAngle;
 
-            const double target_latitude = 0; // Equator
-            double target_longitude = 0;      // Prime Meridian
+            const double target_latitude  = 0; // Equator
+            double       target_longitude = 0; // Prime Meridian
 
             // Select the location of either the descending or ascending node.
             // If the descending node is closer than the ascending node, or there is no ascending node, target the reverse of the newLAN
@@ -466,10 +461,10 @@ namespace MuMech
                 throw new ArgumentException("OrbitalManeuverCalculator.DeltaVToShiftLAN: No Equatorial Nodes");
             }
 
-            double desiredHeading = MuUtils.ClampDegrees360(Heading(burn_latitude, burn_longitude, target_latitude, target_longitude));
-            var actualHorizontalVelocity = Vector3d.Exclude(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT));
-            Vector3d eastComponent = actualHorizontalVelocity.magnitude * Math.Sin(UtilMath.Deg2Rad * desiredHeading) * o.East(UT);
-            Vector3d northComponent = actualHorizontalVelocity.magnitude * Math.Cos(UtilMath.Deg2Rad * desiredHeading) * o.North(UT);
+            double   desiredHeading            = MuUtils.ClampDegrees360(Heading(burn_latitude, burn_longitude, target_latitude, target_longitude));
+            var      actualHorizontalVelocity  = Vector3d.Exclude(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT));
+            Vector3d eastComponent             = actualHorizontalVelocity.magnitude * Sin(UtilMath.Deg2Rad * desiredHeading) * o.East(UT);
+            Vector3d northComponent            = actualHorizontalVelocity.magnitude * Cos(UtilMath.Deg2Rad * desiredHeading) * o.North(UT);
             Vector3d desiredHorizontalVelocity = eastComponent + northComponent;
             return desiredHorizontalVelocity - actualHorizontalVelocity;
         }
@@ -479,13 +474,13 @@ namespace MuMech
             // Get the location underneath the burn location at the current moment.
             // Note that this does NOT account for the rotation of the body that will happen between now
             // and when the vessel reaches the apoapsis.
-            Vector3d pos = o.WorldPositionAtUT(UT);
-            double burnRadius = o.Radius(UT);
-            double oppositeRadius = 0;
+            Vector3d pos            = o.WorldPositionAtUT(UT);
+            double   burnRadius     = o.Radius(UT);
+            double   oppositeRadius = 0;
 
             // Back out the rotation of the body to calculate the longitude of the apoapsis when the vessel reaches the node
             double degreeRotationToNode = (UT - Planetarium.GetUniversalTime()) * 360 / o.referenceBody.rotationPeriod;
-            double NodeLongitude = o.referenceBody.GetLongitude(pos) - degreeRotationToNode;
+            double NodeLongitude        = o.referenceBody.GetLongitude(pos) - degreeRotationToNode;
 
             double LongitudeOffset = NodeLongitude - newNodeLong; // Amount we need to shift the Ap's longitude
 
@@ -498,14 +493,14 @@ namespace MuMech
             // As long as the resulting SMA is below the 5x limit, we keep increasing N until we find a viable solution.
             // This may place the apside out the sphere of influence, however.
             // TODO: find the cheapest SMA, instead of the smallest
-            int N = -1;
+            int    N          = -1;
             double target_sma = 0;
 
             while (oppositeRadius - o.referenceBody.Radius < o.referenceBody.timeWarpAltitudeLimits[4] && N < 20)
             {
                 N++;
                 double target_period = o.referenceBody.rotationPeriod * (LongitudeOffset / 360 + N);
-                target_sma = Math.Pow(o.referenceBody.gravParameter * target_period * target_period / (4 * Math.PI * Math.PI), 1.0 / 3.0); // cube roo
+                target_sma = Pow(o.referenceBody.gravParameter * target_period * target_period / (4 * PI * PI), 1.0 / 3.0); // cube roo
                 oppositeRadius = 2 * target_sma - burnRadius;
             }
 
@@ -517,8 +512,8 @@ namespace MuMech
         //
 
         public static readonly Pool<Orbit> OrbitPool = new Pool<Orbit>(createOrbit, resetOrbit);
-        private static         Orbit       createOrbit()       => new Orbit();
-        private static         void        resetOrbit(Orbit o) { }
+        private static Orbit createOrbit()       => new Orbit();
+        private static void  resetOrbit(Orbit o) { }
 
         private static readonly PatchedConics.SolverParameters solverParameters = new PatchedConics.SolverParameters();
 
@@ -542,14 +537,14 @@ namespace MuMech
             orbit.UpdateFromStateVectors(initial.getRelativePositionAtUT(burnUT), initial.getOrbitalVelocityAtUT(burnUT) + dV.xzy,
                 initial.referenceBody, burnUT);
             orbit.StartUT = burnUT;
-            orbit.EndUT   = orbit.eccentricity >= 1.0 ? orbit.period : burnUT + orbit.period;
+            orbit.EndUT = orbit.eccentricity >= 1.0 ? orbit.period : burnUT + orbit.period;
             Orbit next_orbit = OrbitPool.Borrow();
 
             bool ok = PatchedConics.CalculatePatch(orbit, next_orbit, burnUT, solverParameters, null);
             while (ok && orbit.referenceBody != target && orbit.EndUT < arrivalUT)
             {
                 OrbitPool.Release(orbit);
-                orbit      = next_orbit;
+                orbit = next_orbit;
                 next_orbit = OrbitPool.Borrow();
 
                 ok = PatchedConics.CalculatePatch(orbit, next_orbit, orbit.StartUT, solverParameters, null);

@@ -1,5 +1,4 @@
-﻿using System;
-using MechJebLib.Functions;
+﻿using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
@@ -17,21 +16,21 @@ namespace MechJebLib.Maneuvers
         private V3 _v1;
         private double _soi;
         private double _peR;
+        private double _mu1;
         private double _cosInc;
-        private bool _onlyFeasible;
         private TransferGeometry _direction;
 
-        private Scale _planetToMoonScale;
-        private Scale _moonScale;
         private Scale _planetScale;
 
         private void NLPFunction(double[] x, double[] fi, object? obj)
         {
             (V3 rsoi, V3 vsoi, V3 dv1, V3 dv2) = DeriveValues(x);
 
-            fi[0] = _onlyFeasible ? 0 : 0.5 * dv1.sqrMagnitude;
-            fi[1] = Astro.PeriapsisFromStateVectors(1.0, rsoi/ _planetToMoonScale.LengthScale , vsoi/ _planetToMoonScale.VelocityScale ) - _peR;
-            fi[2] = IsFinite(_cosInc) ? V3.Cross(rsoi, vsoi).normalized.z - _cosInc : 0;
+            fi[0] = 0.5 * dv1.sqrMagnitude;
+            double periapsis = Astro.PeriapsisFromStateVectors(_mu1, rsoi, vsoi);
+            // when _peR is zero, drive the periapsis to zero directly rather than normalizing (which would be NaN/Inf)
+            fi[1] = _peR > 0 ? periapsis / _peR - 1.0 : periapsis;
+            fi[2] = IsFinite(_cosInc) && _peR > 0 ? V3.Cross(rsoi, vsoi).normalized.z - _cosInc : 0;
             fi[3] = dv2.x;
             fi[4] = dv2.y;
             fi[5] = dv2.z;
@@ -62,9 +61,9 @@ namespace MechJebLib.Maneuvers
             return (rsoi, vsoi, vi - v0Burn, vsoi2 - vf);
         }
 
-        public (V3 dv, double dt1, double dt2) Maneuver(double mu0, V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi, double tsoi, double peR, double inc = double.NaN)
+        public (V3 dv, double dt1, double dt2) Maneuver(double mu0, V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi, double tsoi, double peR, double dt = double.NaN, double inc = double.NaN)
         {
-            Print($"FineTuneClosestApproachToCelestial.Maneuver({mu0:G17}, {r0}, {v0}, {mu1:G17}, {r1}, {v1}, {soi:G17}, {tsoi:G17}, {peR:G17}, {inc:G17})");
+            Print($"FineTuneClosestApproachToCelestial.Maneuver({mu0:G17}, {r0}, {v0}, {mu1:G17}, {r1}, {v1}, {soi:G17}, {tsoi:G17}, {peR:G17}, {dt:G17}, {inc:G17})");
             Check.PositiveFinite(mu0);
             Check.Finite(r0);
             Check.Finite(v0);
@@ -75,15 +74,15 @@ namespace MechJebLib.Maneuvers
             Check.NonNegativeFinite(peR);
 
             _planetScale = Scale.Create(mu0, Sqrt(r0.magnitude * r1.magnitude));
-            _moonScale = Scale.Create(mu1, peR);
-            _planetToMoonScale = _planetScale.ConvertTo(_moonScale);
 
             _soi = soi / _planetScale.LengthScale;
-            _peR = peR / _moonScale.LengthScale;
+            _peR = peR / _planetScale.LengthScale;
+            _mu1 = mu1 / mu0; // moon's GM in planet-normalized units (mu0 -> 1)
             _r0 = r0 / _planetScale.LengthScale;
             _v0 = v0 / _planetScale.VelocityScale;
             _r1 = r1 / _planetScale.LengthScale;
             _v1 = v1 / _planetScale.VelocityScale;
+            dt = dt / _planetScale.TimeScale;
             _cosInc = Cos(inc);
 
             const int    NUM_EQUALITY_CONSTRAINTS   = 5;
@@ -123,12 +122,9 @@ namespace MechJebLib.Maneuvers
             }
 
             bndl[0] = 0;
-            bndu[0] = tsoi / _planetScale.TimeScale;
+            bndu[0] = IsFinite(dt) ? dt : tsoi / _planetScale.TimeScale;
             bndl[1] = EPS;
             bndu[1] = tsoi / _planetScale.TimeScale;
-
-            // was added for debugging, does not seem necessary.
-            _onlyFeasible = false;
 
             _direction = TransferGeometry.ShortWay;
             alglib.minnlccreatef(x0, DIFFSTEP, out alglib.minnlcstate state);
@@ -187,7 +183,9 @@ namespace MechJebLib.Maneuvers
 
             bool decideOnError = longError > 1e-10 || shortError > 1e-10;
 
-            if ((decideOnError && shortError < longError) || shortCost < longCost)
+            bool pickShort = decideOnError ? shortError < longError : shortCost < longCost;
+
+            if (pickShort)
             {
                 _direction = TransferGeometry.ShortWay;
                 (V3 _, V3 _, V3 dv, V3 _) = DeriveValues(x1);

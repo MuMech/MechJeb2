@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
-using static System.Math;
 
 namespace MuMech
 {
@@ -11,7 +10,7 @@ namespace MuMech
     public class OperationCourseCorrection : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_approach_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -29,18 +28,26 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult InterceptDistance = new EditableDoubleMult(200);
 
+        private static readonly TimeReference[] _timeReferences = { TimeReference.COMPUTED, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING };
+
+        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (target.Target is CelestialBody)
             {
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_approach_label1"), Periapsis, "km"); //Approximate final periapsis
-                GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°"); //Inclination
+                GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°");         //Inclination
             }
             else
             {
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_approach_label2"), InterceptDistance, "m"); //Closest approach distance
             }
-            GUILayout.Label(Localizer.Format("#MechJeb_approach_label3"));                       //Schedule the burn to minimize the required ΔV.
+
+            if (target.Target is CelestialBody)
+                _timeSelector.DoChooseTimeGUI();
+            else
+                GUILayout.Label(Localizer.Format("#MechJeb_approach_label3")); //Schedule the burn to minimize the required ΔV.
         }
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double ut, MechJebModuleTargetController target)
@@ -59,7 +66,7 @@ namespace MuMech
             {
                 if (correctionPatch.referenceBody == target.TargetOrbit.referenceBody)
                 {
-                    o  = correctionPatch;
+                    o = correctionPatch;
                     ut = correctionPatch.StartUT;
                     break;
                 }
@@ -84,17 +91,36 @@ namespace MuMech
 
             Vector3d dV;
             double   dt1 = 0;
-            double   dt2 = 0;
 
             if (targetBody is null)
                 dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, ut, target.TargetOrbit, InterceptDistance, out ut);
             else
             {
+                if (_timeSelector.TimeReference != TimeReference.COMPUTED)
+                {
+                    bool anExists = o.AscendingNodeExists(target.TargetOrbit);
+                    bool dnExists = o.DescendingNodeExists(target.TargetOrbit);
+
+                    if (_timeSelector.TimeReference == TimeReference.REL_ASCENDING && !anExists)
+                        throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception3")); //ascending node with target doesn't exist.
+
+                    if (_timeSelector.TimeReference == TimeReference.REL_DESCENDING && !dnExists)
+                        throw new OperationException(Localizer.Format("#MechJeb_Hohm_Exception4")); //descending node with target doesn't exist.
+
+                    if (_timeSelector.TimeReference == TimeReference.REL_NEAREST_AD && !(anExists || dnExists))
+                        throw new OperationException(
+                            Localizer.Format("#MechJeb_Hohm_Exception5")); //neither ascending nor descending node with target exists.
+
+                    ut = _timeSelector.ComputeManeuverTime(o, ut, target);
+                }
+
+                double dt  = _timeSelector.TimeReference == TimeReference.COMPUTED ? double.NaN : 0;
                 double inc = InclinationFlag ? Inclination.Val : double.NaN;
-                (dV, dt1, dt2) = OrbitalManeuverCalculator.DeltaVAndTimeForCourseCorrectionToCelestial(o, ut, targetBody, targetBody.Radius + Periapsis, inc);
+
+                (dV, dt1, _) = OrbitalManeuverCalculator.DeltaVAndTimeForCourseCorrectionToCelestial(o, ut, targetBody, targetBody.Radius + Periapsis, dt, inc);
             }
 
-            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut+dt1) };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV, ut + dt1) };
         }
     }
 }
