@@ -42,7 +42,7 @@ namespace MechJebLibTest.ManeuversTests
             double mu1   = 4902800066163.8;
             var    r1    = new V3(4781917.4840911, -344412903.013029, -122488006.928327);
             var    v1    = new V3(996.891435624119, 120.171877824752, -367.753988404139);
-            double peR   = 0.80 * soi * rng.NextDouble() + rmoon / 10;
+            double peR   = 0.85 * soi * rng.NextDouble() + rmoon / 10;
             double inc   = Deg2Rad(120 * rng.NextDouble() + 30); // inclinations <= 30 && >= 150 degrees are not accssible for this test.
             double tsoi  = 403785.23845505138;                   // time on initial coast to SOI
 
