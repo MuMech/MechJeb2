@@ -149,7 +149,7 @@ namespace MuMech
         public void LimitThrottleInfoItem()
         {
             GUIStyle s = Limiter == LimitMode.THROTTLE ? MaxThrottle > 0d ? GuiUtils.GreenToggle : GuiUtils.RedToggle : null;
-            GuiUtils.ToggledTextBox(ref LimitThrottle, CachedLocalizer.Instance.MechJebAscentCheckbox17, MaxAcceleration, "%", s,
+            GuiUtils.ToggledTextBox(ref LimitThrottle, CachedLocalizer.Instance.MechJebAscentCheckbox17, MaxThrottle, "%", s,
                 30); //"Limit throttle to"
         }
 
