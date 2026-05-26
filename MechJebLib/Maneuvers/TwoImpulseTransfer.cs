@@ -47,7 +47,8 @@ namespace MechJebLib.Maneuvers
             double tt     = x[1];
             double offset = x[2];
 
-            if (tt == 0)
+            // transfer time must be positive; the Lambert solver has no solution for tt <= 0
+            if (tt <= 0)
             {
                 func = 1e+300;
                 return;

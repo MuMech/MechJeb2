@@ -56,7 +56,7 @@ namespace MechJebLib.Maneuvers
             V3 rsoi2 = rf1 + rsoi;
             V3 vsoi2 = vf1 + vsoi;
 
-            (V3 vi, V3 vf) = Gooding.Solve(1.0, r0Burn, v0Burn, rsoi2, -dt2, 0, true);
+            (V3 vi, V3 vf) = Gooding.Solve(1.0, r0Burn, v0Burn, rsoi2, dt2, 0, TransferGeometry.ShortWay);
             return (rsoi, vsoi, vi - v0Burn, vsoi2 - vf);
         }
 
