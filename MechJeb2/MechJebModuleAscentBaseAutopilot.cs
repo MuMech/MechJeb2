@@ -268,9 +268,11 @@ namespace MuMech
                 // TWR launches from equatorial launch sites -- should probably be made optional (or clip it if the correction is too large).
                 Vector3d inclinationCorrection =
                     OrbitalManeuverCalculator.DeltaVToChangeInclination(Orbit, ut, AscentSettings.DesiredInclination);
-                Vector3d smaCorrection = OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(Orbit.PerturbedOrbit(ut, inclinationCorrection), ut,
-                    AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
-                Vector3d dV = inclinationCorrection + smaCorrection;
+                // Circularize on the perturbed orbit rather than fixing the SMA to the desired altitude.  This
+                // avoids errors that creep in when the orbit at this point is inaccurate while still circularizing.
+                Vector3d circularizeCorrection =
+                    OrbitalManeuverCalculator.DeltaVToCircularize(Orbit.PerturbedOrbit(ut, inclinationCorrection), ut);
+                Vector3d dV = inclinationCorrection + circularizeCorrection;
                 Vessel.PlaceManeuverNode(Orbit, dV, ut);
                 _placedCircularizeNode = true;
 
