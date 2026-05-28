@@ -23,18 +23,21 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("a903d9fe-4604-47b8-b9d9-95728538f769")]
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.5.1.0")] // We should not change it anymore. It break mods that links MJ ( cf http://support.microsoft.com/kb/556041 )
-[assembly: AssemblyFileVersion("2.15.1.0")] // this one we can change all we want
+// We use a 2.[Major].[Minor/Patch].0 naming convention (2.x is always fixed)
+// - Dev versions should always be one major ver ahead of the master branch.
+// - To release dev to master, just use the ver that was on master.
+// - After releasing dev to master, bump the major ver in dev.
+// - For patch releases to master, bump the minor version.
+// To merge dev to master, this should work:
+//   % git checkout master
+//   % git merge -X theirs dev
+// In the unlikely event that doesn't work: merge master to dev, but keep dev's tree, then merge dev into master:
+//   % git checkout dev
+//   % git merge -s ours master
+//   % git checkout master
+//   % git merge dev
+[assembly: AssemblyVersion("2.16.0.0")] // This should be bumped for major versions/breaking changes when the 2nd number changes
+[assembly: AssemblyFileVersion("2.16.0.0")] // this one is bumped every single time for both minor/patch
 [assembly: AssemblyInformationalVersion("")] // Displayed in the window title if not empty (used to display dev #)
 
-[assembly: KSPAssembly("MechJeb2", 2, 5)]
+[assembly: KSPAssembly("MechJeb2", 2, 16, 0)] // this one is bumped every single time for both minor/patch
