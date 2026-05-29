@@ -283,6 +283,17 @@ namespace MechJebLib.Primitives
             this = norm > 0 ? this / norm : zero;
         }
 
+        public V3 orthogonal
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                V3 vunit = zero;
+                vunit[min_magnitude_index] = 1.0;
+                return Cross(this, vunit);
+            }
+        }
+
         public V3 normalized
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

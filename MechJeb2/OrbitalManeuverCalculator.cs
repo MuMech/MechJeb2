@@ -343,7 +343,7 @@ namespace MuMech
             return ejectionVelocity - preEjectionVelocity;
         }
 
-        public static (Vector3d dv, double dt) DeltaVAndTimeForMoonReturnEjection(Orbit o, double ut, double targetPrimaryRadius)
+        public static (Vector3d dv, double dt) DeltaVAndTimeForMoonReturnEjection(Orbit o, double ut, double peR, double inc = double.NaN)
         {
             var solver = new ReturnFromMoon();
 
@@ -352,11 +352,10 @@ namespace MuMech
             (V3 moonR0, V3 moonV0) = moon.orbit.RightHandedStateVectorsAtUT(ut);
             double moonSOI = moon.sphereOfInfluence;
             (V3 r0, V3 v0) = o.RightHandedStateVectorsAtUT(ut);
+            double planetSOI = primary.sphereOfInfluence;
 
-            (V3 dv, double dt, double newPeR) = solver.NextManeuver(primary.gravParameter, moon.gravParameter, moonR0,
-                moonV0, moonSOI, r0, v0, targetPrimaryRadius, 0);
-
-            Debug.Log($"Solved PeR from calcluator: {newPeR}");
+            (V3 dv, double dt) = solver.NextManeuver(primary.gravParameter, moon.gravParameter, moonR0,
+                moonV0, moonSOI, r0, v0, Clamp(peR,0, planetSOI), Deg2Rad(inc));
 
             return (dv.V3ToWorld(), ut + dt);
         }

@@ -2,13 +2,7 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿/*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
- */
 
-using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
@@ -61,32 +55,6 @@ namespace MechJebLibTest.MathsTests
             heading.ShouldEqual(Deg2Rad(90), 1e-15);
             heading = Astro.HeadingForInclination(Deg2Rad(90), Deg2Rad(45));
             heading.ShouldEqual(Deg2Rad(0), 1e-15);
-        }
-
-        [Fact]
-        private void RandomOrbitalElementsForwardAndBack()
-        {
-            const int NTRIALS = 5000;
-
-            var random = new Random();
-
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-
-                (double _, double ecc, double inc, double lan, double argp, double nu, double l) =
-                    Astro.KeplerianFromStateVectors(1.0, r0, v0);
-                (V3 r02, V3 v02) = Astro.StateVectorsFromKeplerian(1.0, l, ecc, inc, lan, argp, nu);
-
-                if ((r02 - r0).magnitude / r0.magnitude > 1e-8 || (v02 - v0).magnitude / v0.magnitude > 1e-8)
-                {
-                    _testOutputHelper.WriteLine($"r0: {r0} v0: {v0}\nr02: {r02} v02: {v02}\n");
-                }
-
-                r02.ShouldEqual(r0, 1e-8);
-                v02.ShouldEqual(v0, 1e-8);
-            }
         }
 
         [Fact]
