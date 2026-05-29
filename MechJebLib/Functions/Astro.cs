@@ -5,7 +5,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using MechJebLib.FunctionImpls;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
@@ -401,6 +400,12 @@ namespace MechJebLib.Functions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double VelocityFromRadiusSMA(double mu, double rmag, double sma) => Sqrt(mu * (2.0 / rmag - 1 / sma));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double VelocityFromRadiusSMA(double mu, V3 r, double sma) => Sqrt(mu * (2.0 / r.magnitude - 1 / sma));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static V3 VelocityForFPA(V3 r, V3 v, double newFPA)
         {
             V3     v0   = ECIToENU(r, v);
@@ -789,7 +794,7 @@ namespace MechJebLib.Functions
         }
 
         public static (V3 vNeg, V3 vPos, V3 r, double dt) SingleImpulseHyperbolicBurn(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false) =>
-            RealSingleImpulseHyperbolicBurn.Run(mu, r0, v0, vInf, debug);
+            Functions.SingleImpulseHyperbolicBurn.Solve(mu, r0, v0, vInf, debug);
 
         public static (double dv1, double dv2, double tt, double alpha) HohmannTransferParameters(double mu, V3 r1, V3 r2)
         {

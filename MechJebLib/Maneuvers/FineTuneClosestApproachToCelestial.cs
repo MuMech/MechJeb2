@@ -146,12 +146,8 @@ namespace MechJebLib.Maneuvers
             Print($"num function evals: {rep1.nfev}");
             Print($"cost = {shortCost}");
             Print($"maxerr = {shortError}");
-            Print($"fi[1] = {fi[1]}");
-            Print($"fi[2] = {fi[2]}");
-            Print($"fi[3] = {fi[3]}");
-            Print($"fi[4] = {fi[4]}");
-            Print($"fi[5] = {fi[5]}");
-            Print($"fi[6] = {fi[6]}");
+            for (int i = 0; i < fi.Length; i++)
+                Print($"fi[{i}]: {fi[i]}");
 
             _direction = TransferGeometry.LongWay;
             alglib.minnlccreatef(x0, DIFFSTEP, out alglib.minnlcstate state2);
@@ -171,12 +167,8 @@ namespace MechJebLib.Maneuvers
             Print($"num function evals: {rep2.nfev}");
             Print($"cost = {longCost}");
             Print($"maxerr = {longError}");
-            Print($"fi[1] = {fi[1]}");
-            Print($"fi[2] = {fi[2]}");
-            Print($"fi[3] = {fi[3]}");
-            Print($"fi[4] = {fi[4]}");
-            Print($"fi[5] = {fi[5]}");
-            Print($"fi[6] = {fi[6]}");
+            for (int i = 0; i < fi.Length; i++)
+                Print($"fi[{i}]: {fi[i]}");
 
             // if they're both less than 1e-10, decide based on cost
             // if either are larger than 1e-10, decide based on error
