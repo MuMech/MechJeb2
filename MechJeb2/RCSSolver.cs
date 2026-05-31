@@ -110,7 +110,7 @@ namespace MuMech
 
             int count = thrusters.Count;
 
-            if (count == 0) return null;
+            if (count == 0) return new double[fullCount]; // array of zeros
 
             // We want to minimize torque (3 values), translation error (3 values),
             // and any thrust that's wasted due to not being toward 'direction' (1
@@ -157,20 +157,18 @@ namespace MuMech
 
                 if (waste < _wasteThreshold) waste = 0;
 
-                _a[0, tIdx] = torqueErr.x * _factorTorque;
-                _a[1, tIdx] = torqueErr.y * _factorTorque;
-                _a[2, tIdx] = torqueErr.z * _factorTorque;
-                _a[3, tIdx] = transErr.x * _factorTranslate;
-                _a[4, tIdx] = transErr.y * _factorTranslate;
-                _a[5, tIdx] = transErr.z * _factorTranslate;
-                _a[6, tIdx] = waste * _factorWaste;
-                _a[7, tIdx] = 0.001;
+                _a[(int)Params.TORQUE_X, tIdx] = torqueErr.x * _factorTorque;
+                _a[(int)Params.TORQUE_Y, tIdx] = torqueErr.y * _factorTorque;
+                _a[(int)Params.TORQUE_Z, tIdx] = torqueErr.z * _factorTorque;
+                _a[(int)Params.TRANS_X, tIdx] = transErr.x * _factorTranslate;
+                _a[(int)Params.TRANS_Y, tIdx] = transErr.y * _factorTranslate;
+                _a[(int)Params.TRANS_Z, tIdx] = transErr.z * _factorTranslate;
+                _a[(int)Params.WASTE, tIdx] = waste * _factorWaste;
+                _a[(int)Params.FUDGE, tIdx] = 0.001;
                 x[tIdx]     = 1;
                 bndl[tIdx]  = 0;
                 bndu[tIdx]  = 1;
             }
-
-            alglib.minbleicreport rep;
 
             const double EPSG = 0.01;
             const double EPSF = 0;
@@ -182,7 +180,7 @@ namespace MuMech
             alglib.minbleicsetbc(state, bndl, bndu);
             alglib.minbleicsetcond(state, EPSG, EPSF, EPSX, MAXITS);
             alglib.minbleicoptimize(state, cost_func, null, null);
-            alglib.minbleicresults(state, out double[] throttles, out rep);
+            alglib.minbleicresults(state, out double[] throttles, out alglib.minbleicreport _);
 
             double m = throttles.Max();
 
@@ -405,11 +403,8 @@ namespace MuMech
 
         public void ResetThrusterForces()
         {
-            for (int i = 0; i < _thrusters.Count; i++)
-            {
-                RCSSolver.Thruster t = _thrusters[i];
+            foreach (RCSSolver.Thruster t in _thrusters)
                 t.RestoreOriginalForce();
-            }
         }
 
         private static Vector3 WorldToVessel(Vessel vessel, Vector3 pos) =>
@@ -437,9 +432,9 @@ namespace MuMech
 
             // Make sure all thrusters are still enabled, because if they're not,
             // our calculations will be wrong.
-            for (int i = 0; i < _thrusters.Count; i++)
+            foreach (RCSSolver.Thruster t in _thrusters)
             {
-                if (!_thrusters[i].PartModule.isEnabled)
+                if (!t.PartModule.isEnabled)
                 {
                     changed = true;
                     break;
@@ -448,9 +443,8 @@ namespace MuMech
 
             // Likewise, make sure any previously-disabled RCS modules are still
             // disabled.
-            for (int i = 0; i < _lastDisabled.Count; i++)
+            foreach (ModuleRCS pm in _lastDisabled)
             {
-                ModuleRCS pm = _lastDisabled[i];
                 if (pm.isEnabled)
                 {
                     changed = true;
@@ -473,7 +467,7 @@ namespace MuMech
                 //
                 // Using a few actual KSP ships, I burned RCS fuel (or moved fuel
                 // from one tank to another) to see how far the CoM could shift
-                // before the the rotation error on translation became annoying.
+                // before the rotation error on translation became annoying.
                 // I came up with roughly:
                 //
                 //      d         moi
@@ -519,9 +513,8 @@ namespace MuMech
 
             // Rebuild the list of thrusters.
             var ts = new List<RCSSolver.Thruster>();
-            for (int index = 0; index < vessel.parts.Count; index++)
+            foreach (Part p in vessel.parts)
             {
-                Part p = vessel.parts[index];
                 foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
                 {
                     if (!pm.isEnabled)
@@ -537,7 +530,7 @@ namespace MuMech
                         // requires some assumptions about how the game's RCS code will
                         // drive the individual thrusters (which we can't control).
 
-                        var thrustDirs = new Vector3[pm.thrusterTransforms.Count];
+                        var thrustDirs   = new Vector3[pm.thrusterTransforms.Count];
                         var rotationQuat = Quaternion.Inverse(vessel.GetTransform().rotation);
                         for (int i = 0; i < pm.thrusterTransforms.Count; i++)
                         {
