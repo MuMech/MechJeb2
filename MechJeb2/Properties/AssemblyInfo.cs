@@ -23,18 +23,9 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("a903d9fe-4604-47b8-b9d9-95728538f769")]
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.5.1.0")] // We should not change it anymore. It break mods that links MJ ( cf http://support.microsoft.com/kb/556041 )
-[assembly: AssemblyFileVersion("2.15.2.0")] // this one we can change all we want
+// We use a 2.[Major].[Minor/Patch].0 naming convention
+[assembly: AssemblyVersion("2.15.0.0")] // This should be bumped for major versions/breaking changes when the 2nd number changes
+[assembly: AssemblyFileVersion("2.15.3.0")] // this one is bumped every single time for both minor/patch
 [assembly: AssemblyInformationalVersion("")] // Displayed in the window title if not empty (used to display dev #)
 
-[assembly: KSPAssembly("MechJeb2", 2, 5)]
+[assembly: KSPAssembly("MechJeb2", 2, 15, 3)] // this one is bumped every single time for both minor/patch

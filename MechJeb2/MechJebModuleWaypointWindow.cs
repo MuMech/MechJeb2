@@ -366,7 +366,7 @@ namespace MuMech
             if (!FlightGlobals.ready) return; // bodies not loaded yet
 
             var wps = new ConfigNode("Routes");
-            if (File.Exists<MechJebCore>("mechjeb_routes.cfg"))
+            if (MuUtils.FileExistsCreateDirectory(MuUtils.GetCfgPath("mechjeb_routes.cfg")))
             {
                 try
                 {

@@ -11,6 +11,15 @@ namespace MuMech
 
         public static string GetCfgPath(string file) => Path.Combine(_cfgPath, file);
 
+        // Duplicates the KSP.IO.File.Exist style API where it creates the directory if it doesn't exist
+        public static bool FileExistsCreateDirectory(string path)
+        {
+            string directoryName = Path.GetDirectoryName(path);
+            if (directoryName != null && !Directory.Exists(directoryName))
+                Directory.CreateDirectory(directoryName);
+            return File.Exists(path);
+        }
+
         public static string PadPositive(double x, string format = "F3")
         {
             string s = x.ToString(format);
