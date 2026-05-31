@@ -72,10 +72,9 @@ namespace MechJebLib.Maneuvers
             double tBurn, tCoast;
             V3     rSoi,  vSoi;
 
-            const int MAXITERATON = 50;
 
-            double    tSoi        = 0, lastTSoi = 0;
-            int       i           = 0;
+            double tSoi = 0;
+            int    i    = 0;
             while (true)
             {
                 Print($"{tSoi}");
@@ -85,7 +84,7 @@ namespace MechJebLib.Maneuvers
                 double sma = Astro.SmaFromApsides(_peR, moonRsoi.magnitude);
                 // calcuate the earth interface state vectors
                 V3 rEei = -moonRsoi.normalized * _peR;
-                V3 vEei = Astro.VelocityFromRadiusSMA(1.0, _peR, sma) * moonRsoi.orthogonal;
+                V3 vEei = Astro.VelocityFromRadiusSMA(1.0, _peR, sma) * moonRsoi.orthonormal;
                 vEei = Astro.VelocityForInclination(rEei, vEei, IsFinite(_inc) ? _inc : Deg2Rad(-90));
                 // fictitious apoapsis velocity of the transfer orbit
                 V3 vApo = -vEei.normalized * Astro.VelocityFromRadiusSMA(1.0, moonRsoi.magnitude, sma);
@@ -113,17 +112,7 @@ namespace MechJebLib.Maneuvers
                 // find the coast time on the hyperbolic trajectory to the radius
                 tCoast = Astro.TimeToNextRadius(1.0, rBurn, vPos, _soi);
 
-                tSoi = (tBurn + tCoast) / _moonToPlanetScale.TimeScale;
-
-                // applies increasing inertia to break out of limit cycles
-                if (lastTSoi != 0)
-                    tSoi = lastTSoi + Powi(0.4, i-2) * (tSoi - lastTSoi);
-
-                if (Abs(tSoi - lastTSoi) < lastTSoi * 1e-4) break;
-
-                if (i > MAXITERATON) {  throw new Exception("maximum number of iterations exceeded"); }
-
-                lastTSoi = tSoi;
+                break;
             }
 
             rSoi = (rSoi * _moonToPlanetScale.LengthScale).cart2sph;
@@ -141,7 +130,7 @@ namespace MechJebLib.Maneuvers
 
         private const double DIFFSTEP = 1e-6;
         private const double EPSX = 1e-6;
-        private const int MAXITS = 1000;
+        private const int MAXITS = 2500;
         private const int NVARIABLES = 7;
         private const int NEQUALITYCONSTRAINTS = 5;
         private const int NINEQUALITYCONSTRAINTS = 1;

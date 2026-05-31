@@ -71,7 +71,7 @@ namespace MechJebLibTest.ManeuversTests
             (V3 r0, V3 v0) = Astro.StateVectorsFromKeplerian(MOON_MU, l, ecc, inc, lan, argp, nu);
 
             (V3 dv, double dt) =
-                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, inc);
+                solver.NextManeuver(398600435436096, 4902800066163.8, moonR0, moonV0, 66167158.6569544, r0, v0, PER, incT);
 
             (V3 r1, V3 v1) = Shepperd.Solve(MOON_MU, dt, r0, v0);
             double tt1 = Astro.TimeToNextRadius(MOON_MU, r1, v1 + dv, MOON_SOI);
