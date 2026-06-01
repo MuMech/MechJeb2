@@ -22,10 +22,10 @@ namespace MechJebLib.Lambert
     /// </summary>
     public enum TransferGeometry
     {
-        ShortWay,   // absolute: transfer angle in [0, pi]
-        LongWay,    // absolute: transfer angle in [pi, 2pi]
-        Prograde,   // relative to v1: arc that goes with v1's angular momentum
-        Retrograde, // relative to v1: arc that opposes v1's angular momentum
+        ShortWay,  // absolute: transfer angle in [0, pi]
+        LongWay,   // absolute: transfer angle in [pi, 2pi]
+        Prograde,  // relative to v1: arc that goes with v1's angular momentum
+        Retrograde // relative to v1: arc that opposes v1's angular momentum
     }
 
     public static class Gooding
@@ -42,8 +42,8 @@ namespace MechJebLib.Lambert
         /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
         /// <returns>Initial and Final velocity vector of transfer orbit</returns>
         /// <exception cref="Exception"></exception>
-        public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 v1, V3 r2, double tof, int nrev,
-            TransferGeometry direction = TransferGeometry.Prograde)
+        public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 r2, double tof,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3 h = default)
         {
             /* most of this function lifted from https://www.mathworks.com/matlabcentral/fileexchange/39530-lambert-s-problem/content/glambert.m */
 
@@ -67,30 +67,14 @@ namespace MechJebLib.Lambert
 
             double theta = SafeAcos(V3.Dot(ux1, ux2));
 
-            // a single boolean ultimately decides everything: flip to the long way (theta -> TAU - theta, uz1 -> -uz1) or not
-            bool flip;
-            switch (direction)
-            {
-                case TransferGeometry.ShortWay:
-                    flip = false;
-                    break;
-                case TransferGeometry.LongWay:
-                    flip = true;
-                    break;
-                default:
-                    /* angle between the orbit normal of the initial orbit and the short-way transfer normal */
-                    V3     ur1xv1          = V3.Cross(r1, v1).normalized;
-                    double angle_to_on     = SafeAcos(V3.Dot(ur1xv1, uz1));
-                    bool   shortIsPrograde = angle_to_on < 0.5 * PI;
-                    bool   wantPrograde    = direction == TransferGeometry.Prograde;
-                    flip = wantPrograde ^ shortIsPrograde;
-                    break;
-            }
+            bool flip = direction == TransferGeometry.LongWay || direction == TransferGeometry.Retrograde;
+            if (direction == TransferGeometry.Prograde || direction == TransferGeometry.Retrograde)
+                flip ^= V3.Dot(uz1, h) < 0;
 
             if (flip)
             {
                 theta = TAU - theta;
-                uz1   = -uz1;
+                uz1 = -uz1;
             }
 
             V3 uz2 = uz1;

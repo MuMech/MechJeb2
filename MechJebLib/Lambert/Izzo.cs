@@ -5,6 +5,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using MechJebLib.Lambert;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static System.Math;
@@ -36,7 +37,7 @@ namespace MechJebLib.Maths
         /// <param name="r1">Initial position vector</param>
         /// <param name="r2">Final position vector</param>
         /// <param name="tof">Time of flight between both positions</param>
-        /// <param name="m">Number of revolutions</param>
+        /// <param name="nrev">Number of revolutions</param>
         /// <param name="prograde">Controls the desired inclination of the transfer orbit</param>
         /// <param name="lowpath">
         ///     If true or false, gets the transfer orbit whose vacant focus is below or above the
@@ -45,8 +46,9 @@ namespace MechJebLib.Maths
         /// <param name="numiter">Maximum number of iterations</param>
         /// <param name="rtol">Error tolerance</param>
         /// <returns>The initial (v1) and final (v2) velocity vectors</returns>
-        public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof, int m = 0, bool prograde = true,
-            bool lowpath = true, int numiter = 35, double rtol = 1e-8)
+        public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3 h = default,
+            int numiter = 35, double rtol = 1e-8)
         {
             // Check preconditions
             Check.PositiveFinite(tof);
@@ -55,6 +57,10 @@ namespace MechJebLib.Maths
             // Check collinearity of r1 and r2
             if (V3.Cross(r1, r2) == V3.zero)
                 throw new ArgumentException("Lambert solution cannot be computed for collinear vectors");
+
+            // negative directions flip the path of the multi-revolution case
+            bool lowpath = nrev >= 0;
+            nrev = Abs(nrev);
 
             // Chord
             V3     c      = r2 - r1;
@@ -73,9 +79,13 @@ namespace MechJebLib.Maths
             // Geometry of the problem
             double ll = Sqrt(1 - Min(1.0, cNorm / s));
 
+            bool flip = direction == TransferGeometry.LongWay || direction == TransferGeometry.Retrograde;
+            if (direction == TransferGeometry.Prograde || direction == TransferGeometry.Retrograde)
+                flip ^= V3.Dot(iH, h) < 0;
+
             // Compute the fundamental tangential directions
             V3 iT1, iT2;
-            if (iH.z < 0)
+            if (flip)
             {
                 ll = -ll;
                 iT1 = V3.Cross(iR1, iH);
@@ -87,19 +97,11 @@ namespace MechJebLib.Maths
                 iT2 = V3.Cross(iH, iR2);
             }
 
-            // Correct transfer angle parameter and tangential vectors if required
-            if (!prograde)
-            {
-                ll = -ll;
-                iT1 = -iT1;
-                iT2 = -iT2;
-            }
-
             // Non-dimensional time of flight
             double t = Sqrt(2 * mu / (s * s * s)) * tof;
 
             // Find solutions
-            (double x, double y) = FindXY(ll, t, m, numiter, lowpath, rtol);
+            (double x, double y) = FindXY(ll, t, nrev, numiter, lowpath, rtol);
 
             // Reconstruct
             double gamma = Sqrt(mu * s / 2);

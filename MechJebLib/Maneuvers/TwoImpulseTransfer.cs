@@ -6,6 +6,7 @@
 using System;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
+using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
@@ -34,7 +35,7 @@ namespace MechJebLib.Maneuvers
 
             (V3 rburn, V3 vburn) = Shepperd.Solve(1.0, dt, r1, v1);
             (V3 rf2, V3 vf2) = Shepperd.Solve(1.0, dt + tt + offset, r2, v2);
-            (V3 vi, V3 vf) = Gooding.Solve(1.0, rburn, vburn, rf2, tt, 0);
+            (V3 vi, V3 vf) = Izzo.Solve(1.0, rburn, rf2, tt, TransferGeometry.Prograde, 0, V3.Cross(rburn, vburn));
 
             return (vi - vburn, vf2 - vf);
         }

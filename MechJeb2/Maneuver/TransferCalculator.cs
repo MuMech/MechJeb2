@@ -16,8 +16,8 @@ namespace MuMech
 {
     public class TransferCalculator
     {
-        public int  BestDate;
-        public int  BestDuration;
+        public int BestDate;
+        public int BestDuration;
         public bool Stop = false;
 
         private int _pendingJobs;
@@ -29,21 +29,21 @@ namespace MuMech
         private readonly Orbit _origin;
         private readonly Orbit _destination;
 
-        protected          int    NextDateIndex;
-        protected readonly int    DateSamples;
-        public readonly    double MinDepartureTime;
-        public readonly    double MaxDepartureTime;
-        public readonly    double MinTransferTime;
-        public readonly    double MaxTransferTime;
-        protected readonly int    MaxDurationSamples;
+        protected int NextDateIndex;
+        protected readonly int DateSamples;
+        public readonly double MinDepartureTime;
+        public readonly double MaxDepartureTime;
+        public readonly double MinTransferTime;
+        public readonly double MaxTransferTime;
+        protected readonly int MaxDurationSamples;
 
         public readonly double[,] Computed;
 #if DEBUG
         private readonly string[,] _log;
 #endif
 
-        public           double ArrivalDate = -1;
-        private readonly bool   _includeCaptureBurn;
+        public double ArrivalDate = -1;
+        private readonly bool _includeCaptureBurn;
 
         public TransferCalculator(
             Orbit o, Orbit target,
@@ -67,23 +67,23 @@ namespace MuMech
             int height,
             bool includeCaptureBurn)
         {
-            OriginOrbit      = o;
+            OriginOrbit = o;
             DestinationOrbit = target;
 
             _origin = new Orbit();
             _origin.UpdateFromOrbitAtUT(o, minDepartureTime, o.referenceBody);
             _destination = new Orbit();
             _destination.UpdateFromOrbitAtUT(target, minDepartureTime, target.referenceBody);
-            MaxDurationSamples  = height;
-            DateSamples         = width;
-            NextDateIndex       = DateSamples;
-            MinDepartureTime    = minDepartureTime;
-            MaxDepartureTime    = maxDepartureTime;
-            MinTransferTime     = minTransferTime;
-            MaxTransferTime     = maxTransferTime;
+            MaxDurationSamples = height;
+            DateSamples = width;
+            NextDateIndex = DateSamples;
+            MinDepartureTime = minDepartureTime;
+            MaxDepartureTime = maxDepartureTime;
+            MinTransferTime = minTransferTime;
+            MaxTransferTime = maxTransferTime;
             _includeCaptureBurn = includeCaptureBurn;
-            Computed            = new double[DateSamples, MaxDurationSamples];
-            _pendingJobs        = 0;
+            Computed = new double[DateSamples, MaxDurationSamples];
+            _pendingJobs = 0;
 
 #if DEBUG
             _log = new string[DateSamples, MaxDurationSamples];
@@ -108,20 +108,20 @@ namespace MuMech
 
         private void CalcLambertDVs(double t0, double dt, out Vector3d exitDV, out Vector3d captureDV)
         {
-            double t1 = t0 + dt;
+            double        t1           = t0 + dt;
             CelestialBody originPlanet = _origin.referenceBody;
 
             var v10 = originPlanet.orbit.getOrbitalVelocityAtUT(t0).ToV3();
-            var r1 = originPlanet.orbit.getRelativePositionAtUT(t0).ToV3();
+            var r1  = originPlanet.orbit.getRelativePositionAtUT(t0).ToV3();
 
-            var r2 = _destination.getRelativePositionAtUT(t1).ToV3();
+            var r2  = _destination.getRelativePositionAtUT(t1).ToV3();
             var v21 = _destination.getOrbitalVelocityAtUT(t1).ToV3();
 
             V3 v1;
             V3 v2;
             try
             {
-                (v1, v2) = Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, v10, r2, dt, 0);
+                (v1, v2) = Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, r2, dt, TransferGeometry.Prograde, 0, V3.Cross(r1, v10));
             }
             catch
             {
@@ -130,7 +130,7 @@ namespace MuMech
                 // ignored
             }
 
-            exitDV    = (v1 - v10).ToVector3d();
+            exitDV = (v1 - v10).ToVector3d();
             captureDV = (v21 - v2).ToVector3d();
         }
 
@@ -178,7 +178,7 @@ namespace MuMech
                     for (int durationIndex = 0; durationIndex < n; durationIndex++)
                         if (IsBetter(BestDate, BestDuration, dateIndex, durationIndex))
                         {
-                            BestDate     = dateIndex;
+                            BestDate = dateIndex;
                             BestDuration = durationIndex;
                         }
                 }
@@ -188,8 +188,8 @@ namespace MuMech
                 _pendingJobs = -1;
 
 #if DEBUG
-                string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                StreamWriter f = File.CreateText(dir + "/DeltaVWorking.csv");
+                string       dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                StreamWriter f   = File.CreateText(dir + "/DeltaVWorking.csv");
                 f.WriteLine(OriginOrbit.referenceBody.referenceBody.gravParameter);
                 for (int dateIndex = 0; dateIndex < DateSamples; dateIndex++)
                 {
@@ -235,19 +235,19 @@ namespace MuMech
             return new ManeuverParameters((vpos - vneg).V3ToWorld(), ut0 + dt);
         }
 
-        private double        _impulseScale;
-        private double        _timeScale;
-        private double        _initialTime;
-        private double        _arrivalTime;
-        private double        _targetPeR;
-        private Orbit         _initialOrbit;
+        private double _impulseScale;
+        private double _timeScale;
+        private double _initialTime;
+        private double _arrivalTime;
+        private double _targetPeR;
+        private Orbit _initialOrbit;
         private CelestialBody _targetBody;
 
         private void FindSOIObjective(double[] x, double[] fi, object obj)
         {
             Vector3d dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
 
-            double burnUT = _initialTime + x[3] * _timeScale;
+            double burnUT    = _initialTime + x[3] * _timeScale;
             double arrivalUT = _arrivalTime + x[4] * _timeScale;
 
             OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out Orbit orbit);
@@ -265,19 +265,19 @@ namespace MuMech
 
         private void FindSOI(ManeuverParameters maneuver, ref double utArrival)
         {
-            const int VARS = 5;
-            const double DIFFSTEP = 1e-10;
-            const double EPSX = 1e-4;
-            const int MAXITS = 1000;
-            const int EQUALITYCONSTRAINTS = 3;
-            const int INEQUALITYCONSTRAINTS = 0;
+            const int    VARS                  = 5;
+            const double DIFFSTEP              = 1e-10;
+            const double EPSX                  = 1e-4;
+            const int    MAXITS                = 1000;
+            const int    EQUALITYCONSTRAINTS   = 3;
+            const int    INEQUALITYCONSTRAINTS = 0;
 
             double[] x = new double[VARS];
 
             _impulseScale = maneuver.dV.magnitude;
-            _timeScale    = _initialOrbit.period;
-            _initialTime  = maneuver.UT;
-            _arrivalTime  = utArrival;
+            _timeScale = _initialOrbit.period;
+            _initialTime = maneuver.UT;
+            _arrivalTime = utArrival;
 
             x[0] = maneuver.dV.x / _impulseScale;
             x[1] = maneuver.dV.y / _impulseScale;
@@ -304,14 +304,14 @@ namespace MuMech
 
             maneuver.dV = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
             maneuver.UT = _initialTime + x[3] * _timeScale;
-            utArrival   = _arrivalTime + x[4] * _timeScale;
+            utArrival = _arrivalTime + x[4] * _timeScale;
         }
 
         private void PeriapsisObjective(double[] x, double[] fi, object obj)
         {
             Vector3d dv = new Vector3d(x[0], x[1], x[2]) * _impulseScale;
 
-            double burnUT = _initialTime;
+            double burnUT    = _initialTime;
             double arrivalUT = _arrivalTime;
 
             OrbitalManeuverCalculator.PatchedConicInterceptBody(_initialOrbit, _targetBody, dv, burnUT, arrivalUT, out Orbit orbit);
@@ -332,12 +332,12 @@ namespace MuMech
 
         private void AdjustPeriapsis(ManeuverParameters maneuver, ref double utArrival)
         {
-            const int VARS = 3;
-            const double DIFFSTEP = 1e-10;
-            const double EPSX = 1e-4;
-            const int MAXITS = 1000;
-            const int EQUALITYCONSTRAINTS = 1;
-            const int INEQUALITYCONSTRAINTS = 0;
+            const int    VARS                  = 3;
+            const double DIFFSTEP              = 1e-10;
+            const double EPSX                  = 1e-4;
+            const int    MAXITS                = 1000;
+            const int    EQUALITYCONSTRAINTS   = 1;
+            const int    INEQUALITYCONSTRAINTS = 0;
 
             double[] x = new double[VARS];
 
@@ -359,9 +359,9 @@ namespace MuMech
             Debug.Log($"source at {utArrival} x = {r3}; v = {v3}");
 
             _impulseScale = maneuver.dV.magnitude;
-            _timeScale    = _initialOrbit.period;
-            _initialTime  = maneuver.UT;
-            _arrivalTime  = utArrival;
+            _timeScale = _initialOrbit.period;
+            _initialTime = maneuver.UT;
+            _arrivalTime = utArrival;
 
             x[0] = maneuver.dV.x / _impulseScale;
             x[1] = maneuver.dV.y / _impulseScale;
@@ -396,8 +396,8 @@ namespace MuMech
             int n = 0;
 
             _initialOrbit = initialOrbit;
-            _targetBody   = targetBody;
-            _targetPeR    = targetPeR;
+            _targetBody = targetBody;
+            _targetPeR = targetPeR;
 
             var nodeList = new List<ManeuverParameters>();
 
@@ -418,11 +418,11 @@ namespace MuMech
 
                 // convert from heliocentric to body centered velocity
                 Vector3d vsoi = transferOrbit.getOrbitalVelocityAtUT(utSoiExit) -
-                                initialOrbit.referenceBody.orbit.getOrbitalVelocityAtUT(utSoiExit);
+                    initialOrbit.referenceBody.orbit.getOrbitalVelocityAtUT(utSoiExit);
 
                 // find the magnitude of Vinf from energy
                 double vsoiMag = vsoi.magnitude;
-                double eh = vsoiMag * vsoiMag / 2 - initialOrbit.referenceBody.gravParameter / initialOrbit.referenceBody.sphereOfInfluence;
+                double eh      = vsoiMag * vsoiMag / 2 - initialOrbit.referenceBody.gravParameter / initialOrbit.referenceBody.sphereOfInfluence;
                 double vinfMag = Math.Sqrt(2 * eh);
 
                 // scale Vsoi by the Vinf magnitude (this is now the Vinf target that will yield Vsoi at the SOI interface, but in the Vsoi direction)
@@ -466,7 +466,7 @@ namespace MuMech
                 if (maneuver.UT < earliestUT || failed)
                 {
                     Debug.Log("Transfer calculator: maneuver is " + (earliestUT - maneuver.UT) + " s too early, trying again in " +
-                              initialOrbit.period + " s");
+                        initialOrbit.period + " s");
                     utTransfer += initialOrbit.period;
                 }
                 else
