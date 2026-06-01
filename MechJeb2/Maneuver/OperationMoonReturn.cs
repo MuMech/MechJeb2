@@ -14,12 +14,21 @@ namespace MuMech
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public EditableDoubleMult MoonReturnAltitude = new EditableDoubleMult(100000, 1000);
+        public EditableDoubleMult Periapsis = new EditableDoubleMult(100000, 1000);
+
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public EditableDouble Inclination = new EditableDouble(-90);
+
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool InclinationFlag;
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_return_label1"), MoonReturnAltitude, "km"); //Approximate final periapsis:
-            GUILayout.Label(Localizer.Format("#MechJeb_return_label2")); //Schedule the burn at the next return window.
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_return_label1"), Periapsis, "km");   //Approximate final periapsis:
+            GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°");         //Inclination
+            GUILayout.Label(Localizer.Format("#MechJeb_return_label2"));                           //Schedule the burn at the next return window.
         }
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
@@ -30,12 +39,10 @@ namespace MuMech
                     o.referenceBody.displayName.LocalizeRemoveGender())); //<<1>> is not orbiting another body you could return to.
             }
 
-            // fixed 30 second delay for hyperbolic orbits (this doesn't work for elliptical and i don't want to deal
-            // with requests to "fix" it by surfacing it as a tweakable).
-            double t0 = o.eccentricity >= 1 ? universalTime + 30 : universalTime;
+            double per = o.referenceBody.referenceBody.Radius + Periapsis;
+            double inc = InclinationFlag ? Inclination.Val : double.NaN;
 
-            (Vector3d dV, double ut) = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, t0,
-                o.referenceBody.referenceBody.Radius + MoonReturnAltitude);
+            (Vector3d dV, double ut) = OrbitalManeuverCalculator.DeltaVAndTimeForMoonReturnEjection(o, universalTime, per, inc);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }

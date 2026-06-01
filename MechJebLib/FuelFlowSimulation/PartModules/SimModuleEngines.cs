@@ -66,6 +66,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public bool NoPropellants;
         public bool IsModuleEnginesRf;
         public bool IsUnrestartableDeadEngine;
+        public bool Ullage;
 
         public readonly H1 ThrustCurve = H1.Get(true);
         public readonly H1 ThrottleIspCurve = H1.Get(true);

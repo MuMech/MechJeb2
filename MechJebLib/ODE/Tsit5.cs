@@ -5,6 +5,7 @@
 
 using System;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -55,35 +56,6 @@ namespace MechJebLib.ODE
         private const double E5 = -0.5823571654525552;
         private const double E6 = 0.45808210592918686;
         private const double E7 = -0.015151515151515152;
-
-        private const double R11 = 1.0;
-        private const double R12 = -2.763706197274826;
-        private const double R13 = 2.9132554618219126;
-        private const double R14 = -1.0530884977290216;
-
-        private const double R22 = 0.13169999999999998;
-        private const double R23 = -0.2234;
-        private const double R24 = 0.1017;
-
-        private const double R32 = 3.9302962368947516;
-        private const double R33 = -5.941033872131505;
-        private const double R34 = 2.490627285651253;
-
-        private const double R42 = -12.411077166933676;
-        private const double R43 = 30.33818863028232;
-        private const double R44 = -16.548102889244902;
-
-        private const double R52 = 37.50931341651104;
-        private const double R53 = -88.1789048947664;
-        private const double R54 = 47.37952196281928;
-
-        private const double R62 = -27.896526289197286;
-        private const double R63 = 65.09189467479366;
-        private const double R64 = -34.87065786149661;
-
-        private const double R72 = 1.5;
-        private const double R73 = -4;
-        private const double R74 = 2.5;
 
         #endregion
 
@@ -169,17 +141,48 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
-        protected override void Interpolate(double x, Vec yout)
+        protected override DenseNode SnapshotStep() => Tsit5Node.Rent(T, Habs * Direction, Y, _k1, _k2, _k3, _k4, _k5, _k6, _k7);
+
+        protected override void Interpolate(double x, Vec yout) => Tsit5Math.Interpolate(x, T, Habs * Direction, Y, _k1, _k2, _k3, _k4, _k5, _k6, _k7, yout);
+    }
+
+    internal static class Tsit5Math
+    {
+        private const double R11 = 1.0;
+        private const double R12 = -2.763706197274826;
+        private const double R13 = 2.9132554618219126;
+        private const double R14 = -1.0530884977290216;
+
+        private const double R22 = 0.13169999999999998;
+        private const double R23 = -0.2234;
+        private const double R24 = 0.1017;
+
+        private const double R32 = 3.9302962368947516;
+        private const double R33 = -5.941033872131505;
+        private const double R34 = 2.490627285651253;
+
+        private const double R42 = -12.411077166933676;
+        private const double R43 = 30.33818863028232;
+        private const double R44 = -16.548102889244902;
+
+        private const double R52 = 37.50931341651104;
+        private const double R53 = -88.1789048947664;
+        private const double R54 = 47.37952196281928;
+
+        private const double R62 = -27.896526289197286;
+        private const double R63 = 65.09189467479366;
+        private const double R64 = -34.87065786149661;
+
+        private const double R72 = 1.5;
+        private const double R73 = -4;
+        private const double R74 = 2.5;
+
+        public static void Interpolate(double x, double t, double h, Vec y, Vec k1, Vec k2, Vec k3, Vec k4, Vec k5, Vec k6, Vec k7, Vec yout)
         {
-            double h  = Habs * Direction;
-            double s  = (x - T) / h;
+            double s  = (x - t) / h;
             double s2 = s * s;
             double s3 = s * s2;
 
-            // Tsit5 dense output (SciML convention):
-            //   y(t_n + s·h) = y_n + h · Σᵢ b_iΘ(s) · k_i
-            // The θ factors are baked into b_iΘ, so the leading multiplier is
-            // h alone — not h·s.
             double b1 = s * (R11 + R12 * s + R13 * s2 + R14 * s3);
             double b2 = s2 * (R22 + R23 * s + R24 * s2);
             double b3 = s2 * (R32 + R33 * s + R34 * s2);
@@ -188,9 +191,70 @@ namespace MechJebLib.ODE
             double b6 = s2 * (R62 + R63 * s + R64 * s2);
             double b7 = s2 * (R72 + R73 * s + R74 * s2);
 
-            yout.LinComb7(Y,
-                h * b1, _k1, h * b2, _k2, h * b3, _k3, h * b4, _k4,
-                h * b5, _k5, h * b6, _k6, h * b7, _k7);
+            yout.LinComb7(y,
+                h * b1, k1, h * b2, k2, h * b3, k3, h * b4, k4,
+                h * b5, k5, h * b6, k6, h * b7, k7);
+        }
+    }
+
+    internal class Tsit5Node : DenseNode
+    {
+        private static readonly ObjectPool<Tsit5Node> _pool = new ObjectPool<Tsit5Node>(New, Clear);
+
+        public static Tsit5Node Rent(double t, double h, Vec y, Vec k1, Vec k2, Vec k3, Vec k4, Vec k5, Vec k6, Vec k7)
+        {
+            Tsit5Node node = _pool.Borrow();
+            node.T = t;
+            node.H = h;
+            node.Y = y.Dup();
+            node.N = y.Length;
+            node._k1 = k1.Dup();
+            node._k2 = k2.Dup();
+            node._k3 = k3.Dup();
+            node._k4 = k4.Dup();
+            node._k5 = k5.Dup();
+            node._k6 = k6.Dup();
+            node._k7 = k7.Dup();
+            return node;
+        }
+
+        private Tsit5Node() { }
+
+        private static Tsit5Node New() => new Tsit5Node();
+
+        private static void Clear(Tsit5Node o)
+        {
+            // ReSharper disable once NullableWarningSuppressionIsUsed
+            o.Y = o._k1 = o._k2 = o._k3 = o._k4 = o._k5 = o._k6 = o._k7 = null!;
+            o.N = -1;
+            o.T = 0;
+            o.H = 0;
+        }
+
+        // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vec _k1 = null!;
+        private Vec _k2 = null!;
+        private Vec _k3 = null!;
+        private Vec _k4 = null!;
+        private Vec _k5 = null!;
+        private Vec _k6 = null!;
+        private Vec _k7 = null!;
+        // ReSharper restore NullableWarningSuppressionIsUsed
+
+
+        public override void Evaluate(double x, Vec yout) => Tsit5Math.Interpolate(x, T, H, Y, _k1, _k2, _k3, _k4, _k5, _k6, _k7, yout);
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            _k1.Dispose();
+            _k2.Dispose();
+            _k3.Dispose();
+            _k4.Dispose();
+            _k5.Dispose();
+            _k6.Dispose();
+            _k7.Dispose();
+            _pool.Release(this);
         }
     }
 }

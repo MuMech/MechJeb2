@@ -44,6 +44,7 @@ namespace MechJebLibTest
             Clamp2Pi(3 * PI / 2).ShouldEqual(3 * PI / 2, double.Epsilon);
             Clamp2Pi(TAU).ShouldBeZero(double.Epsilon);
             Clamp2Pi(3 * PI).ShouldEqual(PI, double.Epsilon);
+            Clamp2Pi(-double.Epsilon).ShouldEqual(0);
         }
 
         [Fact]

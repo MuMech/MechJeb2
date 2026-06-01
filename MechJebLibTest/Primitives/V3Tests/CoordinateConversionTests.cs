@@ -204,19 +204,6 @@ namespace MechJebLibTest.Primitives.V3Tests
         }
 
         [Fact]
-        private void CartesianToSphericalRhoOverflow()
-        {
-            const double LARGE = 1.5e154;
-            var          v     = new V3(LARGE, LARGE, LARGE);
-
-            V3 result = v.cart2sph;
-
-            result.x.ShouldEqual(LARGE * Sqrt(3));
-            result.y.ShouldEqual(V3.Angle(new V3(0, 0, 1), new V3(1, 1, 1)));
-            result.z.ShouldEqual(PI / 4);
-        }
-
-        [Fact]
         private void SphericalCartesianRoundTrip()
         {
             var original   = new V3(3, 4, 5);

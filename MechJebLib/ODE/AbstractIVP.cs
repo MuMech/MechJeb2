@@ -45,7 +45,7 @@ namespace MechJebLib.ODE
 
 
         /// <summary>
-        ///     Minimum h step (may be violated on the last step or before an event).
+        ///     Minimum h step (might be violated on the last step or before an event).
         /// </summary>
         public double Hmin { get; set; } = 0;
 
@@ -75,11 +75,6 @@ namespace MechJebLib.ODE
         public double Hstart { get; set; } = 0.0;
 
         /// <summary>
-        ///     Interpolants are pulled on an evenly spaced grid
-        /// </summary>
-        public int Interpnum { get; set; } = 20;
-
-        /// <summary>
         ///     Throw exception when MaxIter is hit (old PVG optimizer worked better with this set to false).
         /// </summary>
         public bool ThrowOnMaxIter { get; set; } = true;
@@ -93,7 +88,12 @@ namespace MechJebLib.ODE
 
         public CancellationToken CancellationToken { get; }
 
-        private Func<double, object?, double> _eventFunctionDelegate => EventFuncWrapper;
+        protected AbstractIVP()
+        {
+            _eventFunctionDelegate = EventFuncWrapper;
+        }
+
+        private readonly Func<double, object?, double> _eventFunctionDelegate;
 
         /// <summary>
         ///     Dormand Prince 5(4)7FM ODE integrator (aka DOPRI5 aka ODE45)
@@ -107,7 +107,7 @@ namespace MechJebLib.ODE
         /// <param name="events"></param>
         /// <exception cref="ArgumentException"></exception>
         public void Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
-            Hn? interpolant = null,
+            DenseOutput? interpolant = null,
             IReadOnlyList<Event>? events = null)
         {
             try
@@ -145,7 +145,7 @@ namespace MechJebLib.ODE
         }
 
         private void _Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
-            Hn? interpolant,
+            DenseOutput? interpolant,
             IReadOnlyList<Event>? events)
         {
             Status = IVPStatus.Initialized;
@@ -156,15 +156,12 @@ namespace MechJebLib.ODE
 
             T = t0;
             Y.CopyFrom(y0);
-            double niter       = 0;
-            int    interpCount = 1;
+            double niter = 0;
 
             f(Y, T, Dy);
 
             Habs = Hstart > 0 ? Hstart : SelectInitialStep(f, T, Y, Dy, Direction);
             Habs = Clamp(Habs, MinStep, MaxStep);
-
-            interpolant?.Add(T, Y, Dy);
 
             if (events != null)
             {
@@ -225,18 +222,13 @@ namespace MechJebLib.ODE
                             if (_activeEvents[i].Terminal)
                             {
                                 terminate = true;
-                                // Truncate the step to the event point. Evaluate the
-                                // interpolant FIRST against the full-step (T,Y,Dy)/
-                                // (Tnew,Ynew,Dynew) — interpolants that read Tnew/Ynew/
-                                // Dynew (e.g. the cubic Hermite in BS3) would degenerate
-                                // if we mutated those first. Then commit the new
-                                // endpoint and refresh Dynew so any downstream
-                                // Interpolate() over [T, Tnew] sees a consistent right
-                                // endpoint.
+                                // take a snapshot of the full interpolant with all values
+                                interpolant?.Append(SnapshotStep(), _activeEvents[i].Time);
+                                // evaluate the interpolant and update Ynew, Tnew, Dynew for next step
                                 using var yinterp = Vec.Rent(N);
                                 Interpolate(_activeEvents[i].Time, yinterp);
-                                Tnew = _activeEvents[i].Time;
                                 Ynew.CopyFrom(yinterp);
+                                Tnew = _activeEvents[i].Time;
                                 f(Ynew, Tnew, Dynew);
                                 break;
                             }
@@ -247,9 +239,8 @@ namespace MechJebLib.ODE
                         events[i].LastValue = events[i].NewValue;
                 }
 
-                // extract a low fidelity interpolant
-                if (interpolant != null)
-                    interpCount = FillInterpolant(f, t0, tf, interpolant, interpCount);
+                if (!terminate)
+                    interpolant?.Append(SnapshotStep(), Tnew);
 
                 // take a step
                 Y.CopyFrom(Ynew);
@@ -275,7 +266,8 @@ namespace MechJebLib.ODE
                 }
             }
 
-            interpolant?.Add(T, Y, Dy);
+            if (t0 == tf)
+                interpolant?.Append(new ConstantNode(T, Y), T);
 
             Y.CopyTo(yf);
 
@@ -292,36 +284,15 @@ namespace MechJebLib.ODE
             return (up && e.Direction > 0) || (down && e.Direction < 0) || (either && e.Direction == 0);
         }
 
-        private int FillInterpolant(IVPFunc f, double t0, double tf, Hn interpolant, int interpCount)
-        {
-            while (interpCount < Interpnum)
-            {
-                double tinterp = t0 + (tf - t0) * interpCount / Interpnum;
-
-                if (!tinterp.IsWithin(T, Tnew))
-                    break;
-
-                using var yinterp = Vec.Rent(N);
-                using var finterp = Vec.Rent(N);
-
-                InitInterpolant();
-                Interpolate(tinterp, yinterp);
-                f(yinterp, tinterp, finterp);
-                interpolant?.Add(tinterp, yinterp, finterp);
-                interpCount++;
-            }
-
-            return interpCount;
-        }
-
         protected abstract (double, double) Step(IVPFunc f);
 
         protected abstract double SelectInitialStep(IVPFunc f, double t0, Vec y0,
             Vec f0, int direction);
 
-        protected abstract void InitInterpolant();
-        protected abstract void Interpolate(double x, Vec yout);
-        protected abstract void Init();
-        protected abstract void Cleanup();
+        protected abstract void      InitInterpolant();
+        protected abstract DenseNode SnapshotStep();
+        protected abstract void      Interpolate(double x, Vec yout);
+        protected abstract void      Init();
+        protected abstract void      Cleanup();
     }
 }

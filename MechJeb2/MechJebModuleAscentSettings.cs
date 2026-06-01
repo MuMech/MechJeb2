@@ -144,9 +144,6 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))] public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
 
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble LaunchPhaseAngle = LAUNCH_PHASE_ANGLE_DEFAULT;
-
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))] public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
 
         [Persistent(pass = (int)Pass.GLOBAL)] public readonly EditableInt WarpCountDown = 11;
@@ -252,7 +249,6 @@ namespace MuMech
          */
 
         public bool LaunchingToPlane;
-        public bool LaunchingToRendezvous;
         public bool LaunchingToMatchLan;
         public bool LaunchingToLan;
         public bool OverrideWarpToPlane;
@@ -308,7 +304,6 @@ namespace MuMech
             MinDeltaV.Val             = MIN_DELTAV_DEFAULT;
             MaxCoast.Val              = MAX_COAST_DEFAULT;
             MinCoast.Val              = MIN_COAST_DEFAULT;
-            LaunchPhaseAngle.Val      = LAUNCH_PHASE_ANGLE_DEFAULT;
             LaunchLANDifference.Val   = LAUNCH_LAN_DIFFERENCE;
             PreStageTime.Val          = PRE_STAGE_TIME_DEFAULT;
             OptimizerPauseTime.Val    = OPTIMIZER_PAUSE_TIME_DEFAULT;
@@ -376,7 +371,6 @@ namespace MuMech
         }
 
         private const double LAUNCH_LAN_DIFFERENCE        = 0;
-        private const double LAUNCH_PHASE_ANGLE_DEFAULT   = 0;
         private const double MIN_COAST_DEFAULT            = 0;
         private const double MAX_COAST_DEFAULT            = 450;
         private const double MIN_DELTAV_DEFAULT           = 40;

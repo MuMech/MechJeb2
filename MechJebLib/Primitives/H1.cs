@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using MechJebLib.Functions;
 using MechJebLib.Utils;
 
 namespace MechJebLib.Primitives
@@ -44,7 +43,7 @@ namespace MechJebLib.Primitives
         protected override void Addition(double a, double b, ref double result) => result = a + b;
 
         protected override double Interpolant(double x1, double y1, double yp1, double x2, double y2, double yp2, double x) =>
-            Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
+            Functions.Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
 
         private static void Clear(H1 h) => h.Clear();
     }

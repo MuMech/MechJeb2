@@ -10,7 +10,9 @@ using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using MechJebLib.Rootfinding;
+using MechJebLib.TwoBody;
 using MechJebLib.Utils;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.HoverslamSimulation
 {
@@ -24,7 +26,7 @@ namespace MechJebLib.HoverslamSimulation
         private V3 _w;
         private double _vfm;
 
-        private List<Phase> _phases = new List<Phase>();
+        private readonly List<Phase> _phases = new List<Phase>();
 
         public V3 Rf;
         public V3 Vf;
@@ -34,7 +36,11 @@ namespace MechJebLib.HoverslamSimulation
         public double LandingUT;
         public double Dv;
 
-        public static HoverslamSimulationBuilder Builder() => new HoverslamSimulationBuilder();
+        public HoverslamSimulation()
+        {
+            _eventFunc = AltitudeResidual;
+            _rhs = Rhs;
+        }
 
         private void Reset()
         {
@@ -55,31 +61,36 @@ namespace MechJebLib.HoverslamSimulation
             public double Af;
         }
 
+        private readonly Tsit5 _solver = new Tsit5
+        {
+            Rtol = 1e-6,
+            Atol = 1e-6,
+            Maxiter = 2000,
+            ThrowOnMaxIter = false,
+            ThrowOnMinStep = false
+        };
+
+        // ReSharper disable once NullableWarningSuppressionIsUsed
+        private Phase _phase = null!;
+
+        private readonly Action<Vec, double, Vec> _rhs;
+
         private bool PropagatePhase(ref HoverslamLayout x, double t0, ref double tf, Phase phase)
         {
-            var solver = new DP5
-            {
-                Rtol = 1e-9,
-                Atol = 1e-9,
-                Maxiter = 2000,
-                ThrowOnMaxIter = false,
-                ThrowOnMinStep = false
-            };
-            var ode = new HoverslamODE(_mu, _w, _vfm, phase);
-            var f   = new Action<IList<double>, double, IList<double>>(ode.dydt);
+            _phase = phase;
 
-            using var y0 = Vec.Rent(HoverslamODE.N);
-            using var yf = Vec.Rent(HoverslamODE.N);
+            using var y0 = Vec.Rent(N);
+            using var yf = Vec.Rent(N);
 
             x.CopyTo(y0);
             if (phase.Coast)
-                solver.Solve(f, y0, yf, t0, tf);
+                _solver.Solve(_rhs, y0, yf, t0, tf);
             else
-                solver.Solve(f, y0, yf, t0, tf, events: _events);
+                _solver.Solve(_rhs, y0, yf, t0, tf, events: _events);
             x.CopyFrom(yf);
 
-            tf = solver.T;
-            return solver.Status == AbstractIVP.IVPStatus.EventTerminated;
+            tf = _solver.T;
+            return _solver.Status == AbstractIVP.IVPStatus.EventTerminated;
         }
 
         private readonly List<Event> _events = new List<Event> { new Event(ZeroVerticalVelocity) };
@@ -98,7 +109,7 @@ namespace MechJebLib.HoverslamSimulation
             double t0 = 0;
             double tf = t;
 
-            var coastPhase = Phase.NewCoast(1.0, t0, tf, 0, 0);
+            using var coastPhase = Phase.NewCoast(1.0, t0, tf, 0, 0);
             PropagatePhase(ref x, t0, ref tf, coastPhase);
 
             V3     vRel  = x.V - V3.Cross(_w, x.R);
@@ -126,25 +137,36 @@ namespace MechJebLib.HoverslamSimulation
 
         private double AltitudeResidual(double t, object? o) => PropagateTrajectory(t).X.R.magnitude - _height;
 
+        private readonly Func<double, object?, double> _eventFunc;
+
         private (double maxT, double minT) GenerateBracketGuess()
         {
-            // ignition point should be before we hit the ground
-            double maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
+            double maxT;
             double minT;
 
             if (Astro.EccFromStateVectors(_mu, _r0, _v0) < 1.0)
             {
-                // if we're not yet at the apoapsis we should start at the next apoapsis
-                minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
-                if (minT > maxT)
-                    // if we're ahead of the apoapsis, we should rewind to the last apoapsis
-                    minT -= Astro.PeriodFromStateVectors(_mu, _r0, _v0);
+                double tanom = Astro.TrueAnomalyFromStateVectors(_mu, _r0, _v0);
+                if (ClampPi(tanom) > 0)
+                {
+                    // still rising, advance to the apoapsis
+                    minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0);
+                    (V3 rApr, V3 vApr) = Shepperd.Solve(_mu, minT, _r0, _v0);
+                    maxT = minT + Astro.TimeToNextRadius(_mu, rApr, vApr, _height);
+                }
+                else
+                {
+                    // falling
+                    minT = Astro.TimeToNextApoapsis(_mu, _r0, _v0) - Astro.PeriodFromStateVectors(_mu, _r0, _v0);
+                    maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
+                }
             }
             else
             {
-                // heuristically, try to capture a range that includes the ignition point.  i'd rather not
+                // heuristically, try to capture a range that includes the ignition point.  I'd rather not
                 // use the mainBody SOI radius here, but that would certainly do it.
                 minT = Astro.TimeToLastRadius(_mu, _r0, _v0, _r0.magnitude * 2.0);
+                maxT = Astro.TimeToNextRadius(_mu, _r0, _v0, _height);
             }
 
             return (maxT, minT);
@@ -154,7 +176,7 @@ namespace MechJebLib.HoverslamSimulation
         {
             try
             {
-                return BrentRoot.Solve(AltitudeResidual, minT, maxT, null, rtol: 1e-8);
+                return BrentRoot.Solve(_eventFunc, minT, maxT, null, rtol: 1e-6);
             }
             catch (Exception)
             {
@@ -180,48 +202,32 @@ namespace MechJebLib.HoverslamSimulation
             FinalThrustAccel = result.Af;
         }
 
-        private class HoverslamODE
+        public static int N => HoverslamLayout.HOVERSLAM_LAYOUT_LEN;
+
+        public void Rhs(Vec yin, double x, Vec dyout)
         {
-            public static int N => HoverslamLayout.HOVERSLAM_LAYOUT_LEN;
+            // TODO: normalization
+            //Check.True(_phase.Normalized);
 
-            private readonly Phase _phase;
-            private readonly double _mu;
-            private readonly V3 _w;
-            private readonly double _vfm; // final vertical speed, should be negative or zero
+            var y  = HoverslamLayout.CreateFrom(yin);
+            var dy = new HoverslamLayout();
 
-            public HoverslamODE(double mu, V3 w, double vfm, Phase phase)
-            {
-                _mu = mu;
-                _w = w;
-                _vfm = vfm;
-                _phase = phase;
-            }
+            double at = _phase.VacThrust / y.M;
 
-            public void dydt(IList<double> yin, double x, IList<double> dyout)
-            {
-                // TODO: normalization
-                //Check.True(_phase.Normalized);
+            double r2 = y.R.sqrMagnitude;
+            double r  = Math.Sqrt(r2);
+            double r3 = r2 * r;
 
-                var y  = HoverslamLayout.CreateFrom(yin);
-                var dy = new HoverslamLayout();
+            V3 vRel = y.V - V3.Cross(_w, y.R);
+            V3 vf   = y.R.normalized * _vfm;
+            V3 u    = -(vRel - vf).normalized;
 
-                double at = _phase.VacThrust / y.M;
+            dy.R = y.V;
+            dy.V = -_mu * y.R / r3 + at * u;
+            dy.M = -_phase.Mdot;
+            dy.DV = at;
 
-                double r2 = y.R.sqrMagnitude;
-                double r  = Math.Sqrt(r2);
-                double r3 = r2 * r;
-
-                V3 vRel = y.V - V3.Cross(_w, y.R);
-                V3 vf   = y.R.normalized * _vfm;
-                V3 u    = -(vRel - vf).normalized;
-
-                dy.R = y.V;
-                dy.V = -_mu * y.R / r3 + at * u;
-                dy.M = -_phase.Mdot;
-                dy.DV = at;
-
-                dy.CopyTo(dyout);
-            }
+            dy.CopyTo(dyout);
         }
     }
 }

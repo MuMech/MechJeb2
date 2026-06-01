@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using MechJebLib.Interpolants;
 using static System.Math;
 
 namespace MechJebLib.Primitives
@@ -14,8 +15,8 @@ namespace MechJebLib.Primitives
         // UnityCompat does no extrapolation outside of MinTime/MaxTime
         public bool UnityCompat;
 
-        public double MinTime = double.MaxValue;
-        public double MaxTime = double.MinValue;
+        public double MinT { get; protected set; } = double.MaxValue;
+        public double MaxT { get; protected set; } = double.MinValue;
 
         protected int LastLo = -1;
 
@@ -24,8 +25,8 @@ namespace MechJebLib.Primitives
         public void Add(double time, T value)
         {
             _list[time] = new HFrame<T>(time, Allocate(value), Allocate(), Allocate(), true);
-            MinTime = Min(MinTime, time);
-            MaxTime = Max(MaxTime, time);
+            MinT = Min(MinT, time);
+            MaxT = Max(MaxT, time);
             RecomputeTangents(_list.IndexOfKey(time));
             LastLo = -1;
         }
@@ -33,8 +34,8 @@ namespace MechJebLib.Primitives
         public void Add(double time, T value, T inTangent, T outTangent)
         {
             _list[time] = new HFrame<T>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
-            MinTime = Min(MinTime, time);
-            MaxTime = Max(MaxTime, time);
+            MinT = Min(MinT, time);
+            MaxT = Max(MaxT, time);
             LastLo = -1;
         }
 
@@ -59,10 +60,10 @@ namespace MechJebLib.Primitives
             if (_list.Count <= 1)
                 throw new ApplicationException("FindIndex called on interpolant with less than 2 values.");
 
-            if (value <= MinTime)
+            if (value <= MinT)
                 throw new ApplicationException("FindIndex called value below min value.");
 
-            if (value >= MaxTime)
+            if (value >= MaxT)
                 throw new ApplicationException("FindIndex called value above max value.");
 
             // acceleration for sequential access
@@ -204,24 +205,24 @@ namespace MechJebLib.Primitives
             if (_list.Count == 0)
                 return Allocate();
 
-            if (t <= MinTime)
+            if (t <= MinT)
             {
                 if (UnityCompat)
                     return Allocate(_list.Values[0].Value);
 
                 T ret = Allocate();
-                Multiply(_list.Values[0].InTangent, MinTime - t, ref ret);
+                Multiply(_list.Values[0].InTangent, MinT - t, ref ret);
                 Subtract(_list.Values[0].Value, ret, ref ret);
                 return ret;
             }
 
-            if (t >= MaxTime)
+            if (t >= MaxT)
             {
                 if (UnityCompat)
                     return Allocate(_list.Values[_list.Count - 1].Value);
 
                 T ret = Allocate();
-                Multiply(_list.Values[_list.Count - 1].OutTangent, t - MaxTime, ref ret);
+                Multiply(_list.Values[_list.Count - 1].OutTangent, t - MaxT, ref ret);
                 Addition(_list.Values[_list.Count - 1].Value, ret, ref ret);
                 return ret;
             }
@@ -253,8 +254,8 @@ namespace MechJebLib.Primitives
         public virtual void Clear()
         {
             _list.Clear();
-            MinTime = double.MaxValue;
-            MaxTime = double.MinValue;
+            MinT = double.MaxValue;
+            MaxT = double.MinValue;
             LastLo = -1;
         }
 

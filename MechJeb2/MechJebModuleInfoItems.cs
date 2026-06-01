@@ -22,7 +22,7 @@ namespace MuMech
         //Provides a unified interface for getting the parts list in the editor or in flight:
         private List<Part> parts =>
             HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts :
-            Vessel == null                ? new List<Part>() : Vessel.Parts;
+            Vessel == null ? new List<Part>() : Vessel.Parts;
 
         [ValueInfoItem("#MechJeb_NodeBurnTime", InfoItem.Category.Misc)] //Node burn time
         public string NextManeuverNodeBurnTime()
@@ -465,7 +465,7 @@ namespace MuMech
 
                 double relVel =
                     (Orbit.WorldOrbitalVelocityAtUT(UT) - Core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT))
-                    .magnitude;
+                   .magnitude;
                 return relVel.ToSI() + "m/s";
             }
             catch
@@ -712,48 +712,80 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_CircularOrbitSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Circular orbit speed
         public double CircularOrbitSpeed() => Orbit.CircularOrbitSpeed();
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showStagedMass = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showStagedMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showBurnedMass = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showBurnedMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showInitialMass = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showInitialMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showFinalMass = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showFinalMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showThrust = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showThrust = false;
 
         // don't persist this so it defaults to off on scene-change
         public bool showRcs = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showVacInitialTWR = true;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showVacInitialTWR = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showAtmoInitialTWR = false; // NK
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showAtmoInitialTWR = false; // NK
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showAtmoMaxTWR = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showAtmoMaxTWR = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showVacMaxTWR = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showVacMaxTWR = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showVacDeltaV = true;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showVacDeltaV = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showTime = true;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showAtmoCumulativeDeltaV = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showAtmoDeltaV = true;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showVacCumulativeDeltaV = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showISP = true;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showControllableMass = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool liveSLT = true;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showRcsUllageTime = false;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public float altSLTScale = 0;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showTime = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public float machScale = 0;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showAtmoDeltaV = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public int TWRBody = 1;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showISP = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public int StageDisplayState = 0;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool liveSLT = true;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showEmpty = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public float altSLTScale = 0;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool timeSeconds = false;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public float machScale = 0;
+
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int TWRBody = 1;
+
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int StageDisplayState = 0;
+
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showEmpty = false;
+
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool timeSeconds = false;
 
         private MechJebStageStatsHelper stageStatsHelper;
 
@@ -931,7 +963,7 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_AllPlanetPhaseAngles", InfoItem.Category.Orbit)] //All planet phase angles
         public void AllPlanetPhaseAngles()
         {
-            Orbit o                                            = Orbit;
+            Orbit o = Orbit;
             while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
             GUILayout.BeginVertical();
@@ -972,7 +1004,7 @@ namespace MuMech
 
             if (Orbit.referenceBody != Planetarium.fetch.Sun)
             {
-                Orbit o                                                          = Orbit;
+                Orbit o = Orbit;
                 while (o.referenceBody.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
 
                 for (int i = 0; i < o.referenceBody.orbitingBodies.Count; i++)

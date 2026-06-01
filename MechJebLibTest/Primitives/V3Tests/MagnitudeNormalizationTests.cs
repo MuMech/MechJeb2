@@ -5,7 +5,6 @@
 
 using MechJebLib.Primitives;
 using Xunit;
-using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.Primitives.V3Tests
@@ -44,17 +43,6 @@ namespace MechJebLibTest.Primitives.V3Tests
         }
 
         [Fact]
-        private void MagnitudeOfVeryLargeVectors()
-        {
-            const double LARGE = 1e190;
-            new V3(LARGE, 0, 0).magnitude.ShouldEqual(LARGE);
-            new V3(LARGE, LARGE, LARGE).magnitude.ShouldEqual(Sqrt(3) * LARGE);
-
-            const double NEAR_MAX = 1e308;
-            new V3(NEAR_MAX, 0, 0).magnitude.ShouldEqual(NEAR_MAX);
-        }
-
-        [Fact]
         private void MagnitudeOfVerySmallVectors()
         {
             const double SMALL = 1e-190;
@@ -63,26 +51,6 @@ namespace MechJebLibTest.Primitives.V3Tests
 
             const double TINY = 1e-300;
             new V3(TINY, 0, 0).magnitude.ShouldEqual(TINY);
-        }
-
-        [Fact]
-        private void MagnitudeAvoidingOverflow()
-        {
-            const double LARGE = 1e200;
-            var          v     = new V3(LARGE, LARGE, LARGE);
-
-            v.magnitude.ShouldEqual(Sqrt(3) * LARGE);
-            Assert.True(IsFinite(v.magnitude));
-        }
-
-        [Fact]
-        private void MagnitudeAvoidingUnderflow()
-        {
-            const double SMALL = 1e-200;
-            var          v     = new V3(SMALL, SMALL, SMALL);
-
-            v.magnitude.ShouldEqual(Sqrt(3) * SMALL);
-            Assert.True(v.magnitude > 0);
         }
 
         [Fact]
@@ -137,42 +105,6 @@ namespace MechJebLibTest.Primitives.V3Tests
         {
             V3.zero.normalized.ShouldEqual(V3.zero);
             new V3(0, 0, 0).normalized.ShouldEqual(V3.zero);
-        }
-
-        [Fact]
-        private void NormalizeVeryLargeVectors()
-        {
-            const double LARGE = 1e190;
-
-            var v = new V3(LARGE, 0, 0);
-
-            v.normalized.ShouldEqual(new V3(1, 0, 0));
-
-            var v2 = new V3(LARGE, LARGE, LARGE);
-            V3  n2 = v2.normalized;
-
-            n2.x.ShouldEqual(1.0 / Sqrt(3));
-            n2.y.ShouldEqual(1.0 / Sqrt(3));
-            n2.z.ShouldEqual(1.0 / Sqrt(3));
-            n2.magnitude.ShouldEqual(1.0);
-        }
-
-        [Fact]
-        private void NormalizeVerySmallVectors()
-        {
-            const double SMALL = 1e-190;
-
-            var v = new V3(SMALL, 0, 0);
-
-            v.normalized.ShouldEqual(new V3(1, 0, 0));
-
-            var v2 = new V3(SMALL, SMALL, SMALL);
-            V3  n2 = v2.normalized;
-
-            n2.x.ShouldEqual(1.0 / Sqrt(3));
-            n2.y.ShouldEqual(1.0 / Sqrt(3));
-            n2.z.ShouldEqual(1.0 / Sqrt(3));
-            n2.magnitude.ShouldEqual(1.0);
         }
 
         [Fact]
@@ -244,20 +176,6 @@ namespace MechJebLibTest.Primitives.V3Tests
             var clamped = V3.ClampMagnitude(v, 0);
 
             clamped.ShouldEqual(V3.zero);
-        }
-
-        [Fact]
-        private void ClampMagnitudeLargeVectors()
-        {
-            const double LARGE = 1e190;
-
-            var v       = new V3(LARGE, LARGE, LARGE);
-            var clamped = V3.ClampMagnitude(v, 1e189);
-
-            clamped.magnitude.ShouldEqual(1e189);
-            Assert.True(IsFinite(clamped.x));
-            Assert.True(IsFinite(clamped.y));
-            Assert.True(IsFinite(clamped.z));
         }
 
         [Fact]

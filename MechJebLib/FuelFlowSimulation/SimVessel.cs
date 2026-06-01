@@ -19,6 +19,7 @@ namespace MechJebLib.FuelFlowSimulation
 
         public readonly List<SimPart> Parts = new List<SimPart>(30);
         public readonly DictOfLists<int, SimPart> PartsRemainingInStage = new DictOfLists<int, SimPart>(10);
+        public readonly DictOfLists<int, SimModuleAvionics> AvionicsRemainingInStage = new DictOfLists<int, SimModuleAvionics>(10);
         public readonly DictOfLists<int, SimModuleEngines> EnginesDroppedInStage = new DictOfLists<int, SimModuleEngines>(10);
         public readonly DictOfLists<int, SimModuleEngines> EnginesActivatedInStage = new DictOfLists<int, SimModuleEngines>(10);
         public readonly DictOfLists<int, SimModuleRCS> RCSActivatedInStage = new DictOfLists<int, SimModuleRCS>(10);
@@ -229,6 +230,18 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ActiveEngineNeedsUllage()
+        {
+            foreach (SimModuleEngines e in ActiveEngines)
+            {
+                if (e.Ullage)
+                    return true;
+            }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             foreach (SimPart p in Parts)
@@ -248,6 +261,7 @@ namespace MechJebLib.FuelFlowSimulation
             v.HasLaunchClamp = false;
             v.Parts.Clear();
             v.PartsRemainingInStage.Clear();
+            v.AvionicsRemainingInStage.Clear();
             v.EnginesDroppedInStage.Clear();
             v.EnginesActivatedInStage.Clear();
             v.RCSActivatedInStage.Clear();
