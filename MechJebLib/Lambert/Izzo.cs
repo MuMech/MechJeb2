@@ -3,297 +3,315 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLib.Lambert
+/*
+ * Izzo's algorithm for solving Lambert's problem.
+ *
+ * Ported to C# from poliastro (MIT License), poliastro/core/iod.py
+ * (commit 21fd7719e89a7d22b4eac63141a60a7f1b01768c), which itself implements:
+ *
+ *   Izzo, D. "Revisiting Lambert's problem." Celestial Mechanics and
+ *   Dynamical Astronomy 121.1 (2015): 1-15.
+ */
+
+// ReSharper disable CompareOfFloatsByEqualityOperator
+namespace MechJebLib.Maths
 {
     /// <summary>
-    ///     This is Izzo's method, copied from:
-    ///     https://github.com/esa/pykep/blob/8b0e9444d09b909d7d1d11e951c8efcfde0a2ffd/src/lambert_problem.cpp
-    ///     I made some changes to the API, largely around making it conform to the Gooding method API that we had
-    ///     previously and not using the clockwise/counterclockwise API so it doesn't have that weird singularity
-    ///     for perfectly polar orbits.
-    ///     This implementation isn't any faster than the Gooding implementation in this repo for nrev=0.
+    ///     Solves Lambert's problem using Izzo's algorithm (Householder iteration on the
+    ///     non-dimensional time-of-flight equation).
     /// </summary>
-    public class Izzo
+    public static class Izzo
     {
-        public (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 v1, V3 r2, double tof, int nrev)
+        /// <summary>
+        ///     Applies Izzo's algorithm to solve Lambert's problem.
+        /// </summary>
+        /// <param name="mu">Gravitational parameter (mu)</param>
+        /// <param name="r1">Initial position vector</param>
+        /// <param name="r2">Final position vector</param>
+        /// <param name="tof">Time of flight between both positions</param>
+        /// <param name="m">Number of revolutions</param>
+        /// <param name="prograde">Controls the desired inclination of the transfer orbit</param>
+        /// <param name="lowpath">
+        ///     If true or false, gets the transfer orbit whose vacant focus is below or above the
+        ///     chord line, respectively (only relevant for the multi-revolution case)
+        /// </param>
+        /// <param name="numiter">Maximum number of iterations</param>
+        /// <param name="rtol">Error tolerance</param>
+        /// <returns>The initial (v1) and final (v2) velocity vectors</returns>
+        public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof, int m = 0, bool prograde = true,
+            bool lowpath = true, int numiter = 35, double rtol = 1e-8)
         {
-            Solve2(mu, r1, v1, r2, tof, nrev);
-
-            if (_nsol == 0)
-                return (_v1[0], _v2[0]);
-
-            double mindv = double.PositiveInfinity;
-            int    index = 0;
-
-            for (int i = 0; i < _nsol; i++)
-            {
-                double dv = (_v1[i] - v1).sqrMagnitude;
-                if (dv >= mindv)
-                    continue;
-
-                index = i;
-                mindv = dv;
-            }
-
-            return (_v1[index], _v2[index]);
-        }
-
-        private int _nsol;
-        private V3[] _v1 = new V3[5];
-        private V3[] _v2 = new V3[5];
-        private int[] _iters = new int[5];
-        private double[] _x = new double[5];
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Solve2(double mu, V3 r1, V3 v1, V3 r2, double tof, int nrev)
-        {
-            V3 hhat = V3.Cross(r1, v1).normalized;
-            V3 zhat = V3.Cross(r1.normalized, r2.normalized).normalized;
-
-            /* if angle to orbit normal is greater than 90 degrees, then flip the orbit normal */
-            bool flip = V3.Dot(hhat, zhat) < 0;
-
-            Solve3(mu, r1, r2, tof, nrev, flip);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Solve3(double mu, V3 r1, V3 r2, double tof, int nrev, bool flip = false)
-        {
+            // Check preconditions
             Check.PositiveFinite(tof);
             Check.PositiveFinite(mu);
 
-            // calculate lambda and normalized tof
-            double c       = (r2 - r1).magnitude;
-            double r1M     = r1.magnitude;
-            double r2M     = r2.magnitude;
-            double s       = (c + r1M + r2M) / 2.0;
-            double lambda2 = 1.0 - c / s;
-            double lambda  = Sqrt(lambda2);
-            double lambda3 = lambda * lambda2;
-            double t       = Sqrt(2.0 * mu / s / s / s) * tof;
+            // Check collinearity of r1 and r2
+            if (V3.Cross(r1, r2) == V3.zero)
+                throw new ArgumentException("Lambert solution cannot be computed for collinear vectors");
 
-            // unit vectors
-            V3 ir1 = r1.normalized;
-            V3 ir2 = r2.normalized;
-            V3 ih  = V3.Cross(ir1, ir2).normalized;
-            V3 it1 = V3.Cross(ih, ir1).normalized;
-            V3 it2 = V3.Cross(ih, ir2).normalized;
+            // Chord
+            V3     c      = r2 - r1;
+            double cNorm  = c.magnitude;
+            double r1Norm = r1.magnitude;
+            double r2Norm = r2.magnitude;
 
-            if (flip)
+            // Semiperimeter
+            double s = (r1Norm + r2Norm + cNorm) * 0.5;
+
+            // Versors
+            V3 iR1 = r1 / r1Norm;
+            V3 iR2 = r2 / r2Norm;
+            V3 iH  = V3.Cross(iR1, iR2).normalized;
+
+            // Geometry of the problem
+            double ll = Sqrt(1 - Min(1.0, cNorm / s));
+
+            // Compute the fundamental tangential directions
+            V3 iT1, iT2;
+            if (iH.z < 0)
             {
-                lambda = -lambda;
-                it1 = -it1;
-                it2 = -it2;
+                ll = -ll;
+                iT1 = V3.Cross(iR1, iH);
+                iT2 = V3.Cross(iR2, iH);
             }
-
-            // compute nmax;
-            int    nmax = (int)(t / PI);
-            double t00  = Acos(lambda) + lambda * Sqrt(1.0 - lambda2);
-            double t0   = t00 + nmax * PI;
-            double t1   = 2.0 / 3.0 * (1.0 - lambda3);
-            if (nmax > 0)
-            {
-                if (t < t0)
-                {
-                    // We use Halley iterations to find xM and TM
-                    int    it   = 0;
-                    double tMin = t0;
-                    double xOld = 0.0, xNew = 0.0;
-                    while (true)
-                    {
-                        (double dt, double ddt, double dddt) = DTdx(lambda, xOld, tMin);
-                        if (dt != 0.0)
-                            xNew = xOld - dt * ddt / (ddt * ddt - dt * dddt / 2.0);
-
-                        double err = Abs(xOld - xNew);
-                        if (err < 1e-13 || it > 12)
-                            break;
-
-                        tMin = TimeOfFlight(lambda, xNew, nmax);
-                        xOld = xNew;
-                        it++;
-                    }
-
-                    if (tMin > t)
-                        nmax -= 1;
-                }
-            }
-
-            // clip nmax to nrev
-            nmax = Min(nrev, nmax);
-            _nsol = nmax * 2 + 1;
-
-            // extend memory if necessary
-            if (_nsol > _x.Length)
-            {
-                _v1 = new V3[nmax * 2 + 1];
-                _v2 = new V3[nmax * 2 + 1];
-                _iters = new int[nmax * 2 + 1];
-                _x = new double[nmax * 2 + 1];
-            }
-
-            // initial guess
-            if (t >= t00)
-                _x[0] = -(t - t00) / (t - t00 + 4);
-            else if (t <= t1)
-                _x[0] = t1 * (t1 - t) / (2.0 / 5.0 * (1 - lambda2 * lambda3) * t) + 1;
             else
-                _x[0] = Pow(t / t00, 0.69314718055994529 / Log(t1 / t00)) - 1.0;
-
-            // householder iteration for all revolutions
-            _iters[0] = Householder(lambda, t, ref _x[0], 0, 1e-5, 15);
-            for (int i = 1; i < nmax + 1; ++i)
             {
-                // left householder
-                double tmp = Pow((i * PI + PI) / (8.0 * t), 2.0 / 3.0);
-                _x[2 * i - 1] = (tmp - 1) / (tmp + 1);
-                _iters[2 * i - 1] = Householder(lambda, t, ref _x[2 * i - 1], i, 1e-8, 15);
-                // right householder
-                tmp = Pow(8.0 * t / (i * PI), 2.0 / 3.0);
-                _x[2 * i] = (tmp - 1) / (tmp + 1);
-                _iters[2 * i] = Householder(lambda, t, ref _x[2 * i], i, 1e-8, 15);
+                iT1 = V3.Cross(iH, iR1);
+                iT2 = V3.Cross(iH, iR2);
             }
 
-            // build the velocities for all revolutions
-            double gamma = Sqrt(mu * s / 2.0);
-            double rho   = (r1M - r2M) / c;
+            // Correct transfer angle parameter and tangential vectors if required
+            if (!prograde)
+            {
+                ll = -ll;
+                iT1 = -iT1;
+                iT2 = -iT2;
+            }
+
+            // Non-dimensional time of flight
+            double t = Sqrt(2 * mu / (s * s * s)) * tof;
+
+            // Find solutions
+            (double x, double y) = FindXY(ll, t, m, numiter, lowpath, rtol);
+
+            // Reconstruct
+            double gamma = Sqrt(mu * s / 2);
+            double rho   = (r1Norm - r2Norm) / cNorm;
             double sigma = Sqrt(1 - rho * rho);
-            for (int i = 0; i < _nsol; ++i)
-            {
-                double y   = Sqrt(1.0 - lambda2 + lambda2 * _x[i] * _x[i]);
-                double vr1 = gamma * (lambda * y - _x[i] - rho * (lambda * y + _x[i])) / r1M;
-                double vr2 = -gamma * (lambda * y - _x[i] + rho * (lambda * y + _x[i])) / r2M;
-                double vt  = gamma * sigma * (y + lambda * _x[i]);
-                double vt1 = vt / r1M;
-                double vt2 = vt / r2M;
-                for (int j = 0; j < 3; ++j)
-                    _v1[i][j] = vr1 * ir1[j] + vt1 * it1[j];
-                for (int j = 0; j < 3; ++j)
-                    _v2[i][j] = vr2 * ir2[j] + vt2 * it2[j];
-            }
+
+            // Compute the radial and tangential components at r1 and r2
+            (double vr1, double vr2, double vt1, double vt2) = Reconstruct(x, y, r1Norm, r2Norm, ll, gamma, rho, sigma);
+
+            // Solve for the initial and final velocity
+            V3 v1 = vr1 * (r1 / r1Norm) + vt1 * iT1;
+            V3 v2 = vr2 * (r2 / r2Norm) + vt2 * iT2;
+
+            return (v1, v2);
         }
 
+        /// <summary>
+        ///     Reconstruct solution velocity components.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Householder(double lambda, double t, ref double x0, int n, double eps, int maxIter)
+        private static ( double Vr1, double Vr2, double Vt1, double Vt2) Reconstruct(double x, double y, double r1, double r2, double ll, double gamma, double rho,
+            double sigma)
         {
-            int    it  = 0;
-            double err = 1.0;
-            while (err > eps && it < maxIter)
-            {
-                double tof = TimeOfFlight(lambda, x0, n);
-                (double dt, double ddt, double dddt) = DTdx(lambda, x0, tof);
-                double delta = tof - t;
-                double dt2   = dt * dt;
-                double xnew  = x0 - delta * (dt2 - delta * ddt / 2.0) / (dt * (dt2 - delta * ddt) + dddt * delta * delta / 6.0);
-                err = Abs(x0 - xnew);
-                x0 = xnew;
-                it++;
-            }
-
-            return it;
+            double vr1 = gamma * (ll * y - x - rho * (ll * y + x)) / r1;
+            double vr2 = -gamma * (ll * y - x + rho * (ll * y + x)) / r2;
+            double vt1 = gamma * sigma * (y + ll * x) / r1;
+            double vt2 = gamma * sigma * (y + ll * x) / r2;
+            return (vr1, vr2, vt1, vt2);
         }
 
+        /// <summary>
+        ///     Computes x, y for the given number of revolutions.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ( double DT, double DDT, double DDDT) DTdx(double lambda, double x, double t)
+        private static (double x, double y) FindXY(double ll, double t, int m, int numiter, bool lowpath, double rtol)
         {
-            double l2   = lambda * lambda;
-            double l3   = l2 * lambda;
-            double umx2 = 1.0 - x * x;
-            double y    = Sqrt(1.0 - l2 * umx2);
-            double y2   = y * y;
-            double y3   = y2 * y;
-            double dt   = 1.0 / umx2 * (3.0 * t * x - 2.0 + 2.0 * l3 * x / y);
-            double ddt  = 1.0 / umx2 * (3.0 * t + 5.0 * x * dt + 2.0 * (1.0 - l2) * l3 / y3);
-            double dddt = 1.0 / umx2 * (7.0 * x * ddt + 8.0 * dt - 6.0 * (1.0 - l2) * l2 * l3 * x / y3 / y2);
-            return (dt, ddt, dddt);
+            // For abs(ll) == 1 the derivative is not continuous
+            Check.True(Abs(ll) < 1);
+            Check.True(t > 0); // Mistake in the original paper
+
+            // NOTE: we dropped the determination of mMax and prefer to just let
+            // the householder iteration fail to converge if the caller asks for
+            // something infeasible.  The poliastro implementation of ComputeTMin
+            // is also buggy.
+
+            // Initial guess
+            double x0 = InitialGuess(t, ll, m, lowpath);
+
+            // Start Householder iterations from x0 and find x, y
+            double x = Householder(x0, t, ll, m, rtol, numiter);
+            double y = ComputeY(x, ll);
+            return (x, y);
         }
 
+        /// <summary>
+        ///     Computes y.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double TimeOfFlight(double lambda, double x, int n)
+        private static double ComputeY(double x, double ll) => Sqrt(1 - ll * ll * (1 - x * x));
+
+        /// <summary>
+        ///     Computes psi, the auxiliary angle (Eq. 17), via the appropriate inverse function.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double ComputePsi(double x, double y, double ll)
         {
-            const double BATTIN   = 0.01;
-            const double LAGRANGE = 0.2;
-            double       dist     = Abs(x - 1);
-            if (dist < LAGRANGE && dist > BATTIN)
-                // use lagrange expression
-                return TimeOfFlightLagrange(lambda, x, n);
+            if (x >= -1 && x < 1)
+                // Elliptic motion. Use arc cosine to avoid numerical errors.
+                return SafeAcos(x * y + ll * (1 - x * x));
 
-            double k   = lambda * lambda;
-            double e   = x * x - 1.0;
-            double rho = Abs(e);
-            double z   = Sqrt(1 + k * e);
-            if (dist < BATTIN)
-            {
-                // use battin expression
-                double eta = z - lambda * x;
-                double s1  = 0.5 * (1.0 - lambda - x * eta);
-                double q   = HypergeometricF(s1, 1e-11);
-                q = 4.0 / 3.0 * q;
-                return (eta * eta * eta * q + 4.0 * lambda * eta) / 2.0 + n * PI / Pow(rho, 1.5);
-            }
+            if (x > 1)
+                // Hyperbolic motion. The hyperbolic sine is bijective.
+                return Asinh((y - x * ll) * Sqrt(x * x - 1));
 
-            // use lancaster expression
-            double y = Sqrt(rho);
-            double g = x * z - lambda * e;
-            double d;
-            if (e < 0)
+            // Parabolic motion
+            return 0.0;
+        }
+
+        /// <summary>
+        ///     Time-of-flight equation with externally computed y.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double TofEquationY(double x, double y, double t0, double ll, int m)
+        {
+            double t;
+            if (m == 0 && Sqrt(0.6) < x && x < Sqrt(1.4))
             {
-                double l = Acos(g);
-                d = n * PI + l;
+                double eta = y - ll * x;
+                double s1  = (1 - ll - x * eta) * 0.5;
+                double q   = 4.0 / 3.0 * Hyp2F1B(s1);
+                t = (eta * eta * eta * q + 4 * ll * eta) * 0.5;
             }
             else
             {
-                double f = y * (z - lambda * x);
-                d = Log(f + g);
+                double psi = ComputePsi(x, y, ll);
+                t = ((psi + m * PI) / Sqrt(Abs(1 - x * x)) - x + ll * y) / (1 - x * x);
             }
 
-            return (x - lambda * z - d / y) / e;
+            return t - t0;
         }
 
+        /// <summary>
+        ///     First derivative of the time-of-flight equation w.r.t. x.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double TimeOfFlightLagrange(double lambda, double x, int n)
+        private static double TofEquationP(double x, double y, double t, double ll) =>
+            (3 * t * x - 2 + 2 * ll * ll * ll * x / y) / (1 - x * x);
+
+        /// <summary>
+        ///     Second derivative of the time-of-flight equation w.r.t. x.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double TofEquationP2(double x, double y, double t, double dT, double ll) =>
+            (3 * t + 5 * x * dT + 2 * (1 - ll * ll) * ll * ll * ll / (y * y * y)) / (1 - x * x);
+
+        /// <summary>
+        ///     Third derivative of the time-of-flight equation w.r.t. x.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double TofEquationP3(double x, double y, double dT, double ddT, double ll) =>
+            (7 * x * ddT + 8 * dT - 6 * (1 - ll * ll) * Powi(ll, 5) * x / Powi(y, 5)) / (1 - x * x);
+
+        /// <summary>
+        ///     Initial guess.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double InitialGuess(double t, double ll, int m, bool lowpath)
         {
-            double a = 1.0 / (1.0 - x * x);
-            if (a > 0) // ellipse
+            // NOTE: this is the m == 0 initial guess algorithm from pykep, not from the
+            // paper, or from poliastro.
+            // See https://github.com/esa/pykep/commit/fef5f271984f34c390b4fb85f0781bedb737702c
+            if (m == 0)
             {
-                double alfa = 2.0 * Acos(x);
-                double beta = 2.0 * Asin(Sqrt(lambda * lambda / a));
-                if (lambda < 0.0) beta = -beta;
-                return a * Sqrt(a) * (alfa - Sin(alfa) - (beta - Sin(beta)) + 2.0 * PI * n) / 2.0;
+                double ll2 = ll * ll;
+                double ll3 = ll * ll2;
+
+                // Single revolution
+                double t0 = SafeAcos(ll) + ll * Sqrt(1 - ll2); // Equation 19
+                double t1 = 2 * (1 - ll3) / 3.0;               // Equation 21
+
+                if (t >= t0)
+                    return -(t - t0) / (t - t0 + 4);
+                if (t < t1)
+                    return t1 * (t1 - t) / (2.0 / 5.0 * (1 - ll2 * ll3) * t) + 1;
+
+                // constant is just Log(2)
+                return Pow(t / t0, 0.69314718055994529 / Log(t1 / t0)) - 1.0;
             }
-            else
+
+            // we change the meaning of lowpath compared to poliastro here out of smoothness concerns
+            if (lowpath)
             {
-                double alfa = 2.0 * Acosh(x);
-                double beta = 2.0 * Asinh(Sqrt(-lambda * lambda / a));
-                if (lambda < 0.0) beta = -beta;
-                return -a * Sqrt(-a) * (beta - Sinh(beta) - (alfa - Sinh(alfa))) / 2.0;
+                double r   = Pow(8 * t / (m * PI), 2.0 / 3.0);
+                double x0R = (r - 1) / (r + 1);
+                return x0R;
             }
+
+            double l   = Pow((m * PI + PI) / (8 * t), 2.0 / 3.0);
+            double x0L = (l - 1) / (l + 1);
+            return x0L;
         }
 
+        /// <summary>
+        ///     Find a zero of the time-of-flight equation using the Householder method.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double HypergeometricF(double z, double tol)
+        private static double Householder(double p0, double t0, double ll, int m, double tol, int maxiter)
         {
-            double sj  = 1.0;
-            double cj  = 1.0;
-            double err = 1.0;
-            int    j   = 0;
-            while (err > tol)
+            for (int ii = 0; ii < maxiter; ii++)
             {
-                double cj1 = cj * (3.0 + j) * (1.0 + j) / (2.5 + j) * z / (j + 1);
-                double sj1 = sj + cj1;
-                err = Abs(cj1);
-                sj = sj1;
-                cj = cj1;
-                j += 1;
+                double y     = ComputeY(p0, ll);
+                double fval  = TofEquationY(p0, y, t0, ll, m);
+                double t     = fval + t0;
+                double fder  = TofEquationP(p0, y, t, ll);
+                double fder2 = TofEquationP2(p0, y, t, fder, ll);
+                double fder3 = TofEquationP3(p0, y, fder, fder2, ll);
+
+                // Householder step (quartic)
+                double p = p0 - fval * ((fder * fder - fval * fder2 / 2)
+                    / (fder * (fder * fder - fval * fder2) + fder3 * fval * fval / 6));
+
+                if (Abs(p - p0) < tol)
+                    return p;
+                p0 = p;
             }
 
-            return sj;
+            throw new Exception("Failed to converge");
+        }
+
+        /// <summary>
+        ///     Hypergeometric function 2F1(3, 1; 5/2; x), see Battin. Ported from
+        ///     poliastro/_math/special.py.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double Hyp2F1B(double x)
+        {
+            if (x >= 1.0)
+                return double.PositiveInfinity;
+
+            double res  = 1.0;
+            double term = 1.0;
+            int    ii   = 0;
+
+            while (true)
+            {
+                term = term * (3 + ii) * (1 + ii) / (2.5 + ii) * x / (ii + 1);
+                double resOld = res;
+                res += term;
+                if (resOld == res)
+                    return res;
+                ii += 1;
+            }
         }
     }
 }
