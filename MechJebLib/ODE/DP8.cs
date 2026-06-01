@@ -130,38 +130,6 @@ namespace MechJebLib.ODE
         private const double E303 = 0.220588235294117647058823529412e-1;
         private const double E309 = 0.733846688281611857341361741547;
 
-        /*
-        private const double B10 = 11282082432.0 / 11282082432.0;
-        private const double B11 = -32272833064.0 / 11282082432.0;
-        private const double B12 = 34969693132.0 / 11282082432.0;
-        private const double B13 = -13107642775.0 / 11282082432.0;
-        private const double B14 = 157015080.0 / 11282082432.0;
-
-        private const double B31 = -100 * -1323431896.0 / 32700410799.0;
-        private const double B32 = -100 * 2074956840.0 / 32700410799.0;
-        private const double B33 = -100 * -914128567.0 / 32700410799.0;
-        private const double B34 = -100 * 15701508.0 / 32700410799.0;
-
-        private const double B41 = 25.0 * -889289856.0 / 5641041216.0;
-        private const double B42 = 25.0 * 2460397220.0 / 5641041216.0;
-        private const double B43 = 25.0 * -1518414297.0 / 5641041216.0;
-        private const double B44 = 25.0 * 94209048.0 / 5641041216.0;
-
-        private const double B51 = -2187.0 * -259006536.0 / 199316789632.0;
-        private const double B52 = -2187.0 * 687873124.0 / 199316789632.0;
-        private const double B53 = -2187.0 * -451824525.0 / 199316789632.0;
-        private const double B54 = -2187.0 * 52338360.0 / 199316789632.0;
-
-        private const double B61 = 11.0 * -361440756.0 / 2467955532.0;
-        private const double B62 = 11.0 * 946554244.0 / 2467955532.0;
-        private const double B63 = 11.0 * -661884105.0 / 2467955532.0;
-        private const double B64 = 11.0 * 106151040.0 / 2467955532.0;
-
-        private const double B71 = 44764047.0 / 29380423.0;
-        private const double B72 = -82437520.0 / 29380423.0;
-        private const double B73 = 8293050.0 / 29380423.0;
-        */
-
         #endregion
 
         // ReSharper disable NullableWarningSuppressionIsUsed
@@ -229,6 +197,8 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
+        protected override DenseNode SnapshotStep() => throw new NotImplementedException();
+
         protected override void Init()
         {
             base.Init();
@@ -262,41 +232,7 @@ namespace MechJebLib.ODE
             _k12.Dispose();
         }
 
-        // https://doi.org/10.1016/0898-1221(86)90025-8
-        protected override void Interpolate(double x, Vec yout)
-        {
-            throw new NotImplementedException();
-
-            /*
-            double h = Habs * Direction;
-            double s = (x - T) / h;
-            double s2 = s * s;
-            double s3 = s * s2;
-            double s4 = s2 * s2;
-
-            double bs1 = B10 + B11 * s + B12 * s2 + B13 * s3 + B14 * s4;
-            double bs3 = s * (B31 + B32 * s + B33 * s2 + B34 * s3);
-            double bs4 = s * (B41 + B42 * s + B43 * s2 + B44 * s3);
-            double bs5 = s * (B51 + B52 * s + B53 * s2 + B54 * s3);
-            double bs6 = s * (B61 + B62 * s + B63 * s2 + B64 * s3);
-            double bs7 = (1.0 - s) * s * (B71 + B72 * s + B73 * s2);
-
-            for (int i = 0; i < N; i++)
-                yout[i] = Y[i] + h * s * (bs1 * k1[i] + bs3 * k3[i] + bs4 * k4[i] + bs5 * k5[i] + bs6 * k6[i] + bs7 * k7[i]);
-                */
-        }
-
-        /*
-         * def _estimate_error_norm(self, K, h, scale):
-           err5 = np.dot(K.T, self.E5) / scale
-           err3 = np.dot(K.T, self.E3) / scale
-           err5_norm_2 = np.linalg.norm(err5)**2
-           err3_norm_2 = np.linalg.norm(err3)**2
-           if err5_norm_2 == 0 and err3_norm_2 == 0:
-           return 0.0
-           denom = err5_norm_2 + 0.01 * err3_norm_2
-           return np.abs(h) * err5_norm_2 / np.sqrt(denom * len(scale))
-         */
+        protected override void Interpolate(double x, Vec yout) => throw new NotImplementedException();
 
         protected override double ScaledErrorNorm()
         {

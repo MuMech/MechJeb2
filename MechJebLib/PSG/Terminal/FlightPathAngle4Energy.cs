@@ -26,7 +26,7 @@ namespace MechJebLib.PSG.Terminal
             _incT = incT;
             _lanT = lanT;
             _gammaT = gammaT;
-            _iHT = Astro.HunitFromKeplerian(_incT, _lanT);
+            _iHT = Astro.HunitFromKeplerian(Abs(_incT), _lanT);
         }
 
         public ITerminal Rescale(Scale scale)  => new FlightPathAngle4Energy(_gammaT, _rT / scale.LengthScale, _incT, _lanT);

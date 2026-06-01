@@ -2,13 +2,7 @@
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
-﻿/*
- * Copyright Lamont Granquist (lamont@scriptkiddie.org)
- * Dual licensed under the MIT (MIT-LICENSE) license
- * and GPLv2 (GPLv2-LICENSE) license or any later version.
- */
 
-using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
@@ -64,97 +58,6 @@ namespace MechJebLibTest.MathsTests
         }
 
         [Fact]
-        public void KeplerianFromStateVectorsTest1()
-        {
-            double smaEx   = 3.843084377707066e+08;
-            double eccEx   = 5.328149353682574e-02;
-            double incEx   = 4.950221141769940e-01;
-            double argpEx  = 3.486541150390846e+00;
-            double lanEx   = 4.008351366616158e-02;
-            double tanomEx = 7.853981633974483e-01;
-            var r = new V3(
-                -1.455451021873417e+08,
-                -3.000298697925529e+08,
-                -1.586943000620733e+08
-            );
-            var v = new V3(
-                9.572921091669031e+02,
-                -3.895747803416348e+02,
-                -2.308551508912105e+02
-            );
-            double mu = 3.986004418000000e+14;
-
-            (double sma, double ecc, double inc, double lan, double argp, double tanom, _) =
-                Astro.KeplerianFromStateVectors(mu, r, v);
-            sma.ShouldEqual(smaEx, 4e-15);
-            ecc.ShouldEqual(eccEx, 8e-15);
-            inc.ShouldEqual(incEx);
-            lan.ShouldEqual(lanEx, 4e-15);
-            argp.ShouldEqual(argpEx, 4e-15);
-            tanom.ShouldEqual(tanomEx, 8e-15);
-        }
-
-        [Fact]
-        public void KeplerianFromStateVectorsTest2()
-        {
-            double sma, ecc, inc, lan, argp, tanom;
-            (sma, ecc, inc, lan, argp, tanom, _) = Astro.KeplerianFromStateVectors(1.0, new V3(1, 0, 0), new V3(0, 0, 1));
-            sma.ShouldEqual(1.0);
-            ecc.ShouldEqual(0.0);
-            inc.ShouldEqual(PI / 2);
-            lan.ShouldEqual(0);
-            argp.ShouldEqual(0);
-            tanom.ShouldEqual(0);
-            (sma, ecc, inc, lan, argp, tanom, _) = Astro.KeplerianFromStateVectors(1.0, new V3(1, 0, 0), new V3(0, 1, 0));
-            sma.ShouldEqual(1.0);
-            ecc.ShouldEqual(0.0);
-            inc.ShouldEqual(0.0);
-            lan.ShouldEqual(0);
-            argp.ShouldEqual(0);
-            tanom.ShouldEqual(0);
-            (sma, ecc, inc, lan, argp, tanom, _) = Astro.KeplerianFromStateVectors(1.0, new V3(1, 0, 0), new V3(0, 0, -1));
-            sma.ShouldEqual(1.0);
-            ecc.ShouldEqual(0.0);
-            inc.ShouldEqual(PI / 2);
-            lan.ShouldEqual(PI);
-            argp.ShouldEqual(0);
-            tanom.ShouldEqual(PI);
-            (sma, ecc, inc, lan, argp, tanom, _) = Astro.KeplerianFromStateVectors(1.0, new V3(0, 1, 0), new V3(-1, 0, 0));
-            sma.ShouldEqual(1.0);
-            ecc.ShouldEqual(0.0);
-            inc.ShouldEqual(0.0);
-            lan.ShouldEqual(0);
-            argp.ShouldEqual(0);
-            tanom.ShouldEqual(PI / 2);
-        }
-
-        [Fact]
-        private void RandomOrbitalElementsForwardAndBack()
-        {
-            const int NTRIALS = 5000;
-
-            var random = new Random();
-
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-
-                (double _, double ecc, double inc, double lan, double argp, double nu, double l) =
-                    Astro.KeplerianFromStateVectors(1.0, r0, v0);
-                (V3 r02, V3 v02) = Astro.StateVectorsFromKeplerian(1.0, l, ecc, inc, lan, argp, nu);
-
-                if ((r02 - r0).magnitude / r0.magnitude > 1e-8 || (v02 - v0).magnitude / v0.magnitude > 1e-8)
-                {
-                    _testOutputHelper.WriteLine($"r0: {r0} v0: {v0}\nr02: {r02} v02: {v02}\n");
-                }
-
-                r02.ShouldEqual(r0, 1e-8);
-                v02.ShouldEqual(v0, 1e-8);
-            }
-        }
-
-        [Fact]
         public void ECIToPitchHeadingTest1()
         {
             (double pitch, double heading) = Astro.ECIToPitchHeading(new V3(10, 10, 0), new V3(0, 0, 10));
@@ -197,62 +100,62 @@ namespace MechJebLibTest.MathsTests
         public void VelocityForHeadingTest1()
         {
             V3 vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), 0);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], 10, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(10, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), PI / 2);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), PI);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], -10, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(-10, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(0, 10, 0), 3 * PI / 2);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], -10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(-10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), 0);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], 10, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(10, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), PI / 2);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], 10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), PI);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], -10, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(-10, vf[2], 9);
             vf = Astro.VelocityForHeading(new V3(10, 0, 0), new V3(10, 10, 0), 3 * PI / 2);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], -10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(-10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
         }
 
         [Fact]
         public void VelocityForInclinationTest1()
         {
             V3 vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), 0);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), PI / 2);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], 10, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(10, vf[2], 9);
             vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), PI);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], -10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(-10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
             vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(0, 10, 0), -PI / 2);
-            Assert.Equal(vf[0], 0, 9);
-            Assert.Equal(vf[1], 0, 9);
-            Assert.Equal(vf[2], -10, 9);
+            Assert.Equal(0, vf[0], 9);
+            Assert.Equal(0, vf[1], 9);
+            Assert.Equal(-10, vf[2], 9);
             vf = Astro.VelocityForInclination(new V3(10, 0, 0), new V3(10, 10, 0), 0);
-            Assert.Equal(vf[0], 10, 9);
-            Assert.Equal(vf[1], 10, 9);
-            Assert.Equal(vf[2], 0, 9);
+            Assert.Equal(10, vf[0], 9);
+            Assert.Equal(10, vf[1], 9);
+            Assert.Equal(0, vf[2], 9);
         }
 
         [Fact]

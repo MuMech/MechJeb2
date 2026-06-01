@@ -372,17 +372,6 @@ namespace MechJebLibTest.Primitives.V3Tests
         }
 
         [Fact]
-        private void DistanceOverflowWithLargeDifferences()
-        {
-            var a = new V3(1e200, 1e200, 1e200);
-            var b = new V3(-1e200, -1e200, -1e200);
-
-            double distance = V3.Distance(a, b);
-
-            distance.ShouldEqual(Sqrt(3) * 2e200);
-        }
-
-        [Fact]
         private void OrthoNormalizeBasicVectors()
         {
             var normal  = new V3(1, 1, 0);

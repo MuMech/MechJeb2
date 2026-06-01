@@ -1,0 +1,89 @@
+name: create-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-string:
+        type: string
+        required: true
+        description: 'Version in major.minor.patch.build format (e.g. 2.15.2.0)'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+
+      - name: Update AssemblyFileVersion
+        run: |
+          VERSION="${{ inputs.version-string }}"
+
+          VERSION=`awk -F '"' '/^\[.*AssemblyFileVersion/{print $2}' MechJeb2/Properties/AssemblyInfo.cs`
+
+          sed -i "s/\[assembly: AssemblyFileVersion(\"[^\"]*\")\]/[assembly: AssemblyFileVersion(\"$VERSION\")]/" MechJeb2/Properties/AssemblyInfo.cs
+          #sed -i "s/AssemblyInformationalVersion(\"\(.*\)\")/AssemblyInformationalVersion(\"Dev #${BUILD_NUMBER} Sarbian\")/" MechJeb2/Properties/AssemblyInfo.cs
+
+          echo "Updated to:"
+          grep AssemblyFileVersion MechJeb2/Properties/AssemblyInfo.cs
+
+      - name: Download KSP Libs
+        run: |
+          wget --quiet https://github.com/KSPModdingLibs/KSPLibs/raw/main/KSP-1.12.5.zip -O /tmp/ksp.zip
+          unzip -q /tmp/ksp.zip -d /tmp/ksp
+
+      - name: Restore
+        run: dotnet restore MechJeb2.sln
+
+      # This is required to test the workflow localy on Windows...
+      - name: FixWinPerm
+        run: chmod u+x MechJeb2/copy_build.sh
+
+      - name: Build
+        run: >
+          dotnet msbuild -m:1
+          -p:Configuration=Release
+          -p:KspData=/tmp/ksp/KSP_x64_Data
+          -p:KspDir=/tmp/ksp
+          MechJeb2.sln
+
+      # - name: Test
+      #   run: dotnet test MechJebLibTest/MechJebLibTest.csproj --configuration Release --no-build
+
+      - name: Assemble package
+        run: |
+          VERSION="${{ inputs.version-string }}"
+          cd /tmp/ksp/GameData/ && zip -9 -r "../MechJeb2-$VERSION.zip" MechJeb2
+          echo "RELEASE_ZIP=MechJeb2-$VERSION.zip" >> "$GITHUB_ENV"
+
+      - name: Commit version and create tag
+        run: |
+          VERSION="${{ inputs.version-string }}"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add MechJeb2/Properties/AssemblyInfo.cs
+          git commit -m "bump version to $VERSION"
+          git tag -f -a "$VERSION" -m "$VERSION"
+          git push
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ inputs.version-string }}"
+          gh release create "$VERSION" \
+            --draft \
+            --target "${{ github.ref_name }}" \
+            --title "$VERSION" \
+            --generate-notes \
+            "${{ env.RELEASE_ZIP }}"

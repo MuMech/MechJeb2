@@ -1,0 +1,78 @@
+name: build
+
+on:
+  push:
+    branches: [master, dev]
+    paths:
+      - '**/*.cs'
+      - '**/*.csproj'
+      - '**/*.sln'
+      - 'Directory.Build.*'
+  pull_request:
+    paths:
+      - '**/*.cs'
+      - '**/*.csproj'
+      - '**/*.sln'
+      - 'Directory.Build.*'
+  workflow_dispatch:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    # runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+  
+      # required to run the tests
+      # - name: Install Mono
+      #   run: |
+      #     sudo apt install -y ca-certificates gnupg
+      #     sudo gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+      #     echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+      #     sudo apt update -y
+      #     sudo apt install -y mono-complete
+      #     mono --version
+
+      - name: Download KSP Libs
+        run: |
+          wget --quiet https://github.com/KSPModdingLibs/KSPLibs/raw/main/KSP-1.12.5.zip -O /tmp/ksp.zip
+          unzip -q /tmp/ksp.zip -d /tmp/ksp
+
+      - name: Restore
+        run: dotnet restore MechJeb2.sln
+
+      # This is required to test the workflow localy on Windows...
+      - name: FixWinPerm
+        run: chmod u+x MechJeb2/copy_build.sh
+
+      - name: Build
+        run: >
+          dotnet msbuild -m:1
+          -p:Configuration=Release
+          -p:KspData=/tmp/ksp/KSP_x64_Data
+          -p:KspDir=/tmp/ksp
+          MechJeb2.sln
+
+      # - name: Test
+      #   run: dotnet test MechJebLibTest/MechJebLibTest.csproj --configuration Release --no-build
+
+      - name: Build
+        run: >
+          find /tmp/ksp
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: MechJeb2
+          path: /tmp/ksp/GameData/
+          if-no-files-found: error

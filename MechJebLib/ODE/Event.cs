@@ -4,11 +4,11 @@
  */
 
 using System;
-using System.Collections.Generic;
+using MechJebLib.Primitives;
 
 namespace MechJebLib.ODE
 {
-    using ConditionFunc = Func<IList<double>, double, AbstractIVP, double>;
+    using ConditionFunc = Func<Vec, double, AbstractIVP, double>;
     using AssertFunc = Action<AbstractIVP>;
 
     public class Event : IComparable<Event>

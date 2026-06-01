@@ -39,14 +39,14 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void ToStringWithLargeValues()
         {
             var v = new V3(1.23456789e100, 2.3456789e150, 3.456789e200);
-            v.ToString().ShouldEqual("[1.23456789E+100, 2.3456789E+150, 3.456789E+200]");
+            v.ToString().ShouldEqual("[1.2345678900000001E+100, 2.3456789E+150, 3.4567890000000002E+200]");
         }
 
         [Fact]
         private void ToStringWithSmallValues()
         {
             var v = new V3(1.23456789e-100, 2.3456789e-150, 3.456789e-200);
-            v.ToString().ShouldEqual("[1.23456789E-100, 2.3456789E-150, 3.456789E-200]");
+            v.ToString().ShouldEqual("[1.2345678900000001E-100, 2.3456789000000001E-150, 3.4567889999999998E-200]");
         }
 
         [Fact]
@@ -201,7 +201,7 @@ namespace MechJebLibTest.Primitives.V3Tests
             var    v      = new V3(1.23e-10, 4.56e20, 7.89e5);
             string result = v.ToString();
 
-            result.ShouldContain("1.23E-10");
+            result.ShouldContain("1.2299999999999999E-10");
             result.ShouldContain("4.56E+20");
             result.ShouldContain("789000");
         }

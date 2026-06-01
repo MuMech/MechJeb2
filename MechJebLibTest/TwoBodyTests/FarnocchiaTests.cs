@@ -60,7 +60,7 @@ namespace MechJebLibTest.TwoBodyTests
         {
             public int N => 6;
 
-            public void dydt(IList<double> yin, double x, IList<double> dyout)
+            public void Rhs(Vec yin, double x, Vec dyout)
             {
                 var r = new V3(yin[0], yin[1], yin[2]);
                 var v = new V3(yin[3], yin[4], yin[5]);
@@ -107,7 +107,7 @@ namespace MechJebLibTest.TwoBodyTests
 
                 try
                 {
-                    solver.Solve(_ode.dydt, y0, yf, 0, dt);
+                    solver.Solve(_ode.Rhs, y0, yf, 0, dt);
                 }
                 catch (ArgumentException) // sometimes RK method still throws
                 {

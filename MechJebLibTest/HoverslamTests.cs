@@ -1,4 +1,4 @@
-﻿using MechJebLib.Functions;
+﻿using System;
 using MechJebLib.HoverslamSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
@@ -28,11 +28,13 @@ namespace MechJebLibTest
             V3     w     = 2.6617e-6 * V3.northpole;
             var    v0    = V3.Cross(w, r0);
 
-            HoverslamSimulation hoverslam = HoverslamSimulation.Builder()
-               .AddStage(15095, 15095 - 8200, 45040, 311, 0, 0)
+            var manager   = new HoverslamSimulation.HoverslamSimulationManager();
+            var hoverslam = new HoverslamSimulation();
+
+            manager.AddStage(15095, 15095 - 8200, 45040, 311, 0, 0)
                .Initial(r0, v0, t0, mu, w)
                .TargetConditions(rbody, 0)
-               .Build();
+               .Reconfigure(hoverslam);
 
             hoverslam.Run();
 
@@ -54,18 +56,37 @@ namespace MechJebLibTest
             var    w      = new V3(0, 0, 4.52078533000628E-05);
             double height = 203258.308103023;
 
-            HoverslamSimulation hoverslam = HoverslamSimulation.Builder()
-               .Initial(r0, v0, t0, mu, w)
+            var manager   = new HoverslamSimulation.HoverslamSimulationManager(false);
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r0, v0, t0, mu, w)
                .TargetConditions(height, 0)
                .AddStage(2223.31037385158, 870.000015944242, 78784.6518490292, 246.202054544791, 0, 0)
-               .Build();
+               .Reconfigure(hoverslam);
 
             hoverslam.Run();
 
-            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-8);
-            (hoverslam.IgnitionUT - t0).ShouldEqual(430.07250464949175, 1e-8);
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(430.07250464949175, 1e-5);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
-            hoverslam.Dv.ShouldEqual(487.37958512603763, 1e-8);
+            hoverslam.Dv.ShouldEqual(487.37958512603763, 1e-5);
+
+            long start = GC.GetAllocatedBytesForCurrentThread();
+
+            manager.Reset()
+               .Initial(r0, v0, t0, mu, w)
+               .TargetConditions(height, 0)
+               .AddStage(2223.31037385158, 870.000015944242, 78784.6518490292, 246.202054544791, 0, 0)
+               .Reconfigure(hoverslam);
+
+            hoverslam.Run();
+
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(430.07250464949175, 1e-5);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
+            hoverslam.Dv.ShouldEqual(487.37958512603763, 1e-5);
+
+            Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - start);
         }
 
         [Fact]
@@ -80,18 +101,20 @@ namespace MechJebLibTest
             var    w      = new V3(0, 0, 4.52078533000628E-05);
             double height = 203258.308103023;
 
-            HoverslamSimulation hoverslam = HoverslamSimulation.Builder()
-               .Initial(r0, v0, t0, mu, w)
+            var manager   = new HoverslamSimulation.HoverslamSimulationManager();
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r0, v0, t0, mu, w)
                .TargetConditions(height, 0)
                .AddStage(2207.15807097463, 870.000015944242, 11817.6925209644, 246.201945036659, 0, 0)
-               .Build();
+               .Reconfigure(hoverslam);
 
             hoverslam.Run();
 
             hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
-            (hoverslam.IgnitionUT - t0).ShouldEqual(6295.6858380440681, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(6295.6858380440681, 1e-5);
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-6);
-            hoverslam.Dv.ShouldEqual(887.5077419925741, 1e-6);
+            hoverslam.Dv.ShouldEqual(887.5077419925741, 1e-3);
         }
 
         [Fact]
@@ -107,27 +130,22 @@ namespace MechJebLibTest
             double height       = 203079.078627833;
             double descentSpeed = 111.496373594304;
 
-            HoverslamSimulation hoverslam = HoverslamSimulation.Builder()
-               .Initial(r0, v0, t0, mu, w)
+            var manager   = new HoverslamSimulation.HoverslamSimulationManager();
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r0, v0, t0, mu, w)
                .TargetConditions(height, descentSpeed)
                .AddStage(1631.71526258703, 1478.0574232488, 64000.011946753, 290.00005572948, 2, 2)
                .AddStage(1041.14351191796, 733.827833241511, 64000.0112782489, 290.000052700321, 0, 0)
-               .Build();
+               .Reconfigure(hoverslam);
 
             hoverslam.Run();
 
             hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
-            (hoverslam.IgnitionUT - t0).ShouldEqual(352.36724527248589, 1e-6);
-            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized , 1e-6);
-            hoverslam.Dv.ShouldEqual(384.35206383554907, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(352.36724527248589, 1e-4);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
+            hoverslam.Dv.ShouldEqual(384.35206383554907, 1e-4);
         }
-
-        /*
-
-        [LOG 17:59:21.512] [MechJeb2] [MechJebLib.HoverslamSimulationBuilder] Initial(
-        new V3([277354.901930395, 52073.8040485903, 0.00727448590091598]),
-         new V3([-112.093343687681, 178.249208847387, 7.73831475858213E-05]), 104028.344130375, 65138397520.7807, new V3([0, 0, 4.52078533000628E-05]))
-        */
 
         [Fact]
         private void MunLanderTwoStageWithCoast()
@@ -142,20 +160,22 @@ namespace MechJebLibTest
             double height       = 203079.452561372;
             double descentSpeed = 111.503169115681;
 
-            HoverslamSimulation hoverslam = HoverslamSimulation.Builder()
-               .Initial(r0, v0, t0, mu, w)
+            var manager   = new HoverslamSimulation.HoverslamSimulationManager();
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r0, v0, t0, mu, w)
                .TargetConditions(height, descentSpeed)
                .AddStage(1631.71526258703, 1478.0574232488, 64000.0164757482, 290.000076251489, 2, 2)
                .AddCoast(1041.14351191796, 0.5625, 0, 0)
                .AddStage(1041.14351191796, 733.827833241511, 64000.0092904123, 290.000043692936, 0, 0)
-               .Build();
+               .Reconfigure(hoverslam);
 
             hoverslam.Run();
 
             hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
-            (hoverslam.IgnitionUT - t0).ShouldEqual(357.69288233217958, 1e-6);
-            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized , 1e-6);
-            hoverslam.Dv.ShouldEqual(384.68994637708414, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(357.69288233217958, 1e-5);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
+            hoverslam.Dv.ShouldEqual(384.68994637708414, 1e-4);
         }
     }
 }

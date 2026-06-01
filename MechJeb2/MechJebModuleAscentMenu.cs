@@ -23,12 +23,6 @@ namespace MuMech
             set => _ascentSettings.LaunchingToPlane = value;
         }
 
-        private bool _launchingToRendezvous
-        {
-            get => _ascentSettings.LaunchingToRendezvous;
-            set => _ascentSettings.LaunchingToRendezvous = value;
-        }
-
         private bool _launchingToMatchLan
         {
             get => _ascentSettings.LaunchingToMatchLan;
@@ -43,7 +37,7 @@ namespace MuMech
 
         #endregion
 
-        private bool _launchingWithAnyPlaneControl => _launchingToPlane || _launchingToRendezvous || _launchingToMatchLan || _launchingToLan;
+        private bool _launchingWithAnyPlaneControl => _launchingToPlane || _launchingToMatchLan || _launchingToLan;
 
         private MechJebModuleAscentBaseAutopilot   _autopilot       => Core.Ascent;
         private MechJebModuleAscentSettings        _ascentSettings  => Core.AscentSettings;
@@ -66,7 +60,6 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             _launchingToPlane        = false;
-            _launchingToRendezvous   = false;
             _launchingToMatchLan     = false;
             _lastPSGSettingsEnabled  = _psgSettingsMenu.Enabled;
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
@@ -232,7 +225,7 @@ namespace MuMech
             bool targetExists = Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == VesselState.mainBody;
             if (!_launchingWithAnyPlaneControl && !targetExists)
             {
-                _launchingToPlane = _launchingToRendezvous = _launchingToMatchLan = false;
+                _launchingToPlane = _launchingToMatchLan = false;
                 if (Core.Target.NormalTargetExists)
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnInvalidTarget,
                         GuiUtils.OrangeLabel); // Target must be in the same sphere of influence.
@@ -242,17 +235,6 @@ namespace MuMech
 
             if (!_launchingWithAnyPlaneControl)
             {
-                // Launch to Rendezvous
-                if (targetExists && _ascentSettings.AscentType != AscentType.PSG
-                    && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJebAscentButton14, _ascentSettings.LaunchPhaseAngle, "º",
-                        width: 40)) //Launch to rendezvous:
-                {
-                    _launchingToRendezvous = true;
-                    _autopilot.StartCountdown(VesselState.time +
-                        TimeToPhaseAngle(_ascentSettings.LaunchPhaseAngle,
-                            MainBody, VesselState.longitude, Core.Target.TargetOrbit));
-                }
-
                 //Launch into plane of target
                 if (targetExists && GuiUtils.ButtonTextBox(CachedLocalizer.Instance.MechJebAscentButton15, _ascentSettings.LaunchLANDifference, "º",
                         width: LAN_WIDTH)) //Launch into plane of target
@@ -313,7 +295,7 @@ namespace MuMech
             {
                 GUILayout.Label(launchTimer);
                 if (GUILayout.Button(CachedLocalizer.Instance.MechJebAscentButton17)) //Abort
-                    _launchingToPlane = _launchingToRendezvous = _launchingToMatchLan = _launchingToLan = _autopilot.TimedLaunch = false;
+                    _launchingToPlane = _launchingToMatchLan = _launchingToLan = _autopilot.TimedLaunch = false;
             }
 
             _ascentSettings.OverrideWarpToPlane = GUILayout.Toggle(_ascentSettings.OverrideWarpToPlane, "Override Warp to Plane");
@@ -350,7 +332,6 @@ namespace MuMech
                 label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.Glueball.Exception.Message}";
 
             if (_launchingToPlane) launchTimer           = CachedLocalizer.Instance.MechJebAscentMsg2;                 //Launching to target plane
-            else if (_launchingToRendezvous) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg3;                 //Launching to rendezvous
             else if (_launchingToMatchLan) launchTimer   = CachedLocalizer.Instance.MechJebAscentLaunchingToTargetLAN; //Launching to target LAN
             else if (_launchingToLan) launchTimer        = CachedLocalizer.Instance.MechJebAscentLaunchingToManualLAN; //Launching to manual LAN
             else launchTimer                             = string.Empty;
@@ -425,42 +406,6 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
-        }
-
-        //Computes the time until the phase angle between the launchpad and the target equals the given angle.
-        //The convention used is that phase angle is the angle measured starting at the target and going east until
-        //you get to the launchpad.
-        //The time returned will not be exactly accurate unless the target is in an exactly circular orbit. However,
-        //the time returned will go to exactly zero when the desired phase angle is reached.
-        private static double TimeToPhaseAngle(double phaseAngle, CelestialBody launchBody, double launchLongitude, Orbit target)
-        {
-            double launchpadAngularRate = 360 / launchBody.rotationPeriod;
-            double targetAngularRate    = 360.0 / target.period;
-            if (Vector3d.Dot(-target.GetOrbitNormal().xzy.normalized, launchBody.angularVelocity) < 0)
-                targetAngularRate *= -1; //retrograde target
-
-            Vector3d currentLaunchpadDirection = launchBody.GetSurfaceNVector(0, launchLongitude);
-            Vector3d currentTargetDirection    = target.WorldBCIPositionAtUT(Planetarium.GetUniversalTime());
-            currentTargetDirection = Vector3d.Exclude(launchBody.angularVelocity, currentTargetDirection);
-
-            double currentPhaseAngle = Math.Abs(Vector3d.Angle(currentLaunchpadDirection, currentTargetDirection));
-            if (Vector3d.Dot(Vector3d.Cross(currentTargetDirection, currentLaunchpadDirection), launchBody.angularVelocity) < 0)
-            {
-                currentPhaseAngle = 360 - currentPhaseAngle;
-            }
-
-            double phaseAngleRate = launchpadAngularRate - targetAngularRate;
-
-            double phaseAngleDifference = MuUtils.ClampDegrees360(phaseAngle - currentPhaseAngle);
-
-            if (phaseAngleRate < 0)
-            {
-                phaseAngleRate       *= -1;
-                phaseAngleDifference =  360 - phaseAngleDifference;
-            }
-
-
-            return phaseAngleDifference / phaseAngleRate;
         }
 
         private string PhaseString(Solution solution, double t, int psgPhase)

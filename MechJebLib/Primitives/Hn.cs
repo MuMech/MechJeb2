@@ -4,12 +4,13 @@
  */
 
 using System.Collections.Generic;
+using MechJebLib.Interpolants;
 using MechJebLib.Utils;
 using static System.Math;
 
 namespace MechJebLib.Primitives
 {
-    public class Hn : HBase<Vec>
+    public class Hn : HBase<Vec>, IInterpolant
     {
         public int N;
 
@@ -20,8 +21,8 @@ namespace MechJebLib.Primitives
         public void Add(double time, double[] value, double[] inTangent, double[] outTangent)
         {
             _list[time] = new HFrame<Vec>(time, Allocate(value), Allocate(inTangent), Allocate(outTangent));
-            MinTime = Min(MinTime, time);
-            MaxTime = Max(MaxTime, time);
+            MinT = Min(MinT, time);
+            MaxT = Max(MaxT, time);
             RecomputeTangents(_list.IndexOfKey(time));
             LastLo = -1;
         }
@@ -116,8 +117,8 @@ namespace MechJebLib.Primitives
                 DisposeKeyframe(_list.Values[i]);
             }
 
-            MinTime = double.MaxValue;
-            MaxTime = double.MinValue;
+            MinT = double.MaxValue;
+            MaxT = double.MinValue;
             LastLo = -1;
             _list.Clear();
         }

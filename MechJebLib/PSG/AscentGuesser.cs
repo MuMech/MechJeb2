@@ -29,7 +29,7 @@ namespace MechJebLib.PSG
             // ReSharper disable once NullableWarningSuppressionIsUsed
             public Phase Phase = null!;
 
-            public void dydt(IList<double> yin, double x, IList<double> dyout)
+            public void Rhs(Vec yin, double x, Vec dyout)
             {
                 Check.True(Phase.Normalized);
 
@@ -69,18 +69,18 @@ namespace MechJebLib.PSG
         private readonly DP5 _solver = new DP5();
         private readonly List<Event> _events;
 
-        private Hn Integrate(Vec y0, Vec yf, Phase phase, double t0, double tf)
+        private DenseOutput Integrate(Vec y0, Vec yf, Phase phase, double t0, double tf)
         {
             _solver.ThrowOnMaxIter = true;
             _solver.Maxiter = 2000;
             _solver.Rtol = 1e-6;
             _solver.Atol = 1e-6;
             _ode.Phase = phase;
-            var interpolant = Hn.Get(VacuumThrustKernel.N);
+            var interpolant = DenseOutput.Rent();
             if (phase.Coast)
-                _solver.Solve(_ode.dydt, y0, yf, t0, tf, interpolant);
+                _solver.Solve(_ode.Rhs, y0, yf, t0, tf, interpolant);
             else
-                _solver.Solve(_ode.dydt, y0, yf, t0, tf, interpolant, _events);
+                _solver.Solve(_ode.Rhs, y0, yf, t0, tf, interpolant, _events);
 
             return interpolant;
         }
@@ -128,17 +128,18 @@ namespace MechJebLib.PSG
 
                 y0.CopyTo(initial);
 
-                Hn interpolant = Integrate(initial, terminal, phase, t0, t0 + bt);
+                DenseOutput interpolant = Integrate(initial, terminal, phase, t0, t0 + bt);
 
                 if (WillIntraPhaseCoast(phases, p))
                 {
-                    double btActual     = interpolant.MaxTime - interpolant.MinTime;
-                    Hn     interpolant2 = Integrate(initial, terminal, phase, t0, t0 + btActual * 0.75);
-                    solution.AddSegment(interpolant2.MinTime, interpolant2.MaxTime, interpolant2, phase);
+                    double btActual = interpolant.MaxT - interpolant.MinT;
+                    interpolant.Dispose();
+                    DenseOutput interpolant2 = Integrate(initial, terminal, phase, t0, t0 + btActual * 0.75);
+                    solution.AddSegment(interpolant2, phase);
                 }
                 else
                 {
-                    solution.AddSegment(interpolant.MinTime, interpolant.MaxTime, interpolant, phase);
+                    solution.AddSegment(interpolant, phase);
                 }
 
                 y0.CopyFrom(terminal);

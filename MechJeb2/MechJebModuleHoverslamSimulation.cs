@@ -100,23 +100,25 @@ namespace MuMech
         // TODO: could we check for the presence of the old suicide burn countdown timer in a user's config and then
         //       delete that, and add the new hoverslam info item menu automagically?
 
-        private List<FuelStats>      _vacStats => Core.StageStats.VacStats;
-        private HoverslamSimulation? _hoverslam;
+        private List<FuelStats> _vacStats => Core.StageStats.VacStats;
 
         // ReSharper disable MemberCanBePrivate.Global
         public Vector3d LandingPosition;
-        public double   IgnitionUT;
-        public double   LandingUT;
-        public double   FinalThrustAccel;
-        public double   Lat;
-        public double   Lng;
-        public double   IgnitionCountdown => IgnitionUT - VesselState.time;
-        public double   LandingCountdown  => LandingUT - VesselState.time;
-        public double   FinalDescentSpeed; // should be positive
+        public double IgnitionUT;
+        public double LandingUT;
+        public double FinalThrustAccel;
+        public double Lat;
+        public double Lng;
+        public double IgnitionCountdown => IgnitionUT - VesselState.time;
+        public double LandingCountdown  => LandingUT - VesselState.time;
+        public double FinalDescentSpeed; // should be positive
         public Vector3d IgnitionAttitude;
         // ReSharper restore MemberCanBePrivate.Global
 
         private double _lastCycleUT;
+
+        private readonly HoverslamSimulation.HoverslamSimulationManager _manager = new HoverslamSimulation.HoverslamSimulationManager();
+        private readonly HoverslamSimulation _hoverslam = new HoverslamSimulation();
 
         public MechJebModuleHoverslamSimulation(MechJebCore core) : base(core)
         {
@@ -151,8 +153,7 @@ namespace MuMech
             Lat = 0;
             Lng = 0;
             FinalThrustAccel = -1;
-            _hoverslam?.Cancel();
-            _hoverslam = null;
+            _hoverslam.Cancel();
             _lastCycleUT = 0;
         }
 
@@ -193,7 +194,9 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (VesselState.mainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0)
+            double r = GetGroundRadius();
+
+            if (VesselState.mainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
             {
                 Reset();
                 return;
@@ -207,30 +210,30 @@ namespace MuMech
             if (_vacStats.Count <= 0)
                 return;
 
-            if (_hoverslam != null)
+            if (_hoverslam.IsRunning)
+                return;
+
+            if (_hoverslam.IsCompleted)
             {
-                if (_hoverslam.IsRunning)
-                    return;
-
-                if (_hoverslam.IsCompleted)
-                {
-                    LandingPosition = _hoverslam.Rf.V3ToWorldRotated();
-                    IgnitionUT = _hoverslam.IgnitionUT;
-                    IgnitionAttitude = _hoverslam.IgnitionAttitude.V3ToWorldRotated();
-                    LandingUT = _hoverslam.LandingUT;
-                    FinalThrustAccel = _hoverslam.FinalThrustAccel;
-                    MainBody.GetLatLngAltAtUT(LandingUT, LandingPosition, out Lat, out Lng, out _);
-                    TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, true);
-                    Slope = MainBody.GetPQSSlopeDegrees(Lat, Lng);
-                }
-
-                if (_hoverslam.IsFaulted && _hoverslam.ExceptionMessage != null)
-                    Print($"[MechJebModuleHoverslamSimulation] {_hoverslam.ExceptionMessage}");
+                LandingPosition = _hoverslam.Rf.V3ToWorldRotated();
+                IgnitionUT = _hoverslam.IgnitionUT;
+                IgnitionAttitude = _hoverslam.IgnitionAttitude.V3ToWorldRotated();
+                LandingUT = _hoverslam.LandingUT;
+                FinalThrustAccel = _hoverslam.FinalThrustAccel;
+                MainBody.GetLatLngAltAtUT(LandingUT, LandingPosition, out Lat, out Lng, out _);
+                TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, true);
+                Slope = MainBody.GetPQSSlopeDegrees(Lat, Lng);
             }
 
-            V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
+            if (_hoverslam.IsFaulted && _hoverslam.ExceptionMessage != null)
+                Print($"[MechJebModuleHoverslamSimulation] {_hoverslam.ExceptionMessage}");
 
-            HoverslamSimulation.HoverslamSimulationBuilder builder = HoverslamSimulation.Builder();
+            if (!_hoverslam.TryMarkReady())
+                return;
+
+            _manager.Reset();
+
+            V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
             bool noBurnableStages = true;
             int  lastKSPStage     = -1;
@@ -242,7 +245,7 @@ namespace MuMech
                 if (fuelStats.DeltaV <= 0)
                     continue;
 
-                int deltaStage      = lastKSPStage - fuelStats.KSPStage;
+                int deltaStage = lastKSPStage - fuelStats.KSPStage;
 
                 // for every stage, we need to include a coast for the correct staging delays.
                 if (deltaStage > 0)
@@ -260,9 +263,10 @@ namespace MuMech
                         stagingDelay += nextDelay * (deltaStage - 1);
                     }
 
-                    builder.AddCoast(fuelStats.StartMass * 1000, stagingDelay, fuelStats.KSPStage, mjPhase);
+                    _manager.AddCoast(fuelStats.StartMass * 1000, stagingDelay, fuelStats.KSPStage, mjPhase);
                 }
-                builder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
+
+                _manager.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
                     fuelStats.KSPStage, mjPhase);
 
                 lastKSPStage = fuelStats.KSPStage;
@@ -273,15 +277,14 @@ namespace MuMech
             if (noBurnableStages)
                 return;
 
-            double r = GetGroundRadius();
             double g = MainBody.gravParameter / (r * r);
             double a = g + Clamp01(VerticalAuthority) * (FinalThrustAccel - g);
             FinalDescentSpeed = FinalThrustAccel < 0 ? 0 : Sqrt(Max(2.0 * (a - g) * VerticalAltitude, 0));
 
-            builder.Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacT, MainBody.gravParameter, w);
-            builder.TargetConditions(r + VerticalAltitude, FinalDescentSpeed);
+            _manager.Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacT, MainBody.gravParameter, w);
+            _manager.TargetConditions(r + VerticalAltitude, FinalDescentSpeed);
 
-            _hoverslam = builder.Build();
+            _manager.Reconfigure(_hoverslam);
             if (!_hoverslam.TryStartJob())
                 throw new Exception("[MechJebModuleHoverslamSimulation] could not start job");
 

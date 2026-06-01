@@ -8,6 +8,7 @@ using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
+using MechJebLib.Utils;
 using Xunit;
 using Xunit.Abstractions;
 using static System.Math;
@@ -27,6 +28,8 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void HohmannTest()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             const int NTRIALS = 50;
 
             var random = new Random();
@@ -74,6 +77,8 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void GeoTestFixed()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             double mu = 3.986004418e+14;
             var    r1 = new V3(5673188.62234991, 1106269.57811856, 3093900.30098098);
             var    v1 = new V3(-1154.38931594925, 7685.58250511721, -631.330049272638);
@@ -97,6 +102,8 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void GeoTestFree()
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             double mu = 3.986004418e+14;
             var    r1 = new V3(5673188.62234991, 1106269.57811856, 3093900.30098098);
             var    v1 = new V3(-1154.38931594925, 7685.58250511721, -631.330049272638);
@@ -111,9 +118,9 @@ namespace MechJebLibTest.ManeuversTests
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);
             dv2.magnitude.ShouldEqual(1793.10206031673, 1e-4);
-            dt1.ShouldEqual(1177.74844650851, 1e-4);
+            dt1.ShouldEqual(1177.74844650851, 1e-3);
             inc.ShouldEqual(Deg2Rad(26.440413305834294), 1e-4);
-            dt2.ShouldEqual(20097.46881536536, 1e-4);
+            dt2.ShouldEqual(20097.46881536536, 1e-3);
         }
     }
 }

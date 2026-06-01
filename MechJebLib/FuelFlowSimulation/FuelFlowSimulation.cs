@@ -94,9 +94,27 @@ namespace MechJebLib.FuelFlowSimulation
                 p.UnapplyRCSDrains();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ComputeRcsMinValues(SimVessel vessel) => SimulateRCS(vessel, false);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ComputeRcsMaxValues(SimVessel vessel) => SimulateRCS(vessel, true);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void ComputeRcsUllageTime(SimVessel vessel)
+        {
+            _currentSegment.RcsUllageTime = 0.0;
+
+            if (!vessel.ActiveEngineNeedsUllage()) return;
+
+            // FIXME: read this from RFSettings via reflection
+            double translateAxialCoefficientY = 1.5;
+            // magic calculation that gives time to ullage up to 0.996 guaranteed ignition
+            double a             = vessel.RcsThrust / vessel.Mass;
+            double rcsUllageTime = 0.35 / (translateAxialCoefficientY * a);
+
+            _currentSegment.RcsUllageTime = rcsUllageTime;
+        }
 
         private void SimulateStage(SimVessel vessel)
         {
@@ -106,6 +124,9 @@ namespace MechJebLib.FuelFlowSimulation
 
             GetNextSegment(vessel);
             ComputeRcsMinValues(vessel);
+
+            vessel.UpdateActiveRcs();
+            ComputeRcsUllageTime(vessel);
 
             UpdateResourceDrainsAndResiduals(vessel);
             double currentThrust = vessel.ThrustMagnitude;
@@ -420,12 +441,22 @@ namespace MechJebLib.FuelFlowSimulation
             double deltaV    = startMass > endMass ? thrust * deltaTime / (startMass - endMass) * Log(startMass / endMass) : 0;
             double isp       = startMass > endMass ? deltaV / (G0 * Log(startMass / endMass)) : 0;
 
+            _currentSegment.ControllableMass = ComputeControllableMass(vessel);
             _currentSegment.DeltaTime = deltaTime;
             _currentSegment.EndMass = endMass;
             _currentSegment.DeltaV = deltaV;
             _currentSegment.Isp = isp;
 
             Segments.Add(_currentSegment);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double ComputeControllableMass(SimVessel vessel)
+        {
+            double max = 0;
+            foreach (SimModuleAvionics avionics in vessel.AvionicsRemainingInStage[vessel.CurrentStage])
+                max = Max(avionics.ControllableMass, max);
+            return max;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
