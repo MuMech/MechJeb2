@@ -46,7 +46,7 @@ namespace MechJebLibTest.ManeuversTests
         public void ZeroPeriapsis()
         {
             // tests the PeR=0.0 branch, which could NaN.  inc is degenerate at zero PeR.
-            DoTransfer(0.0, double.NaN, EPS);
+            DoTransfer(0.0, double.NaN);
         }
 
         [Fact]

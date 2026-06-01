@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
+using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using static MechJebLib.Utils.Statics;
@@ -55,7 +55,7 @@ namespace MechJebLib.Maneuvers
             // All moon scaled
             (V3 rBurn, V3 vNeg) = Shepperd.Solve(1.0, tBurn, _r0, _v0);
 
-            (V3 vPos, V3 vSoiNeg) = Gooding.Solve(1.0, rBurn, vNeg, rSoi, tCoast, 0, _direction);
+            (V3 vPos, V3 vSoiNeg) = Izzo.Solve(1.0, rBurn, rSoi, tCoast, _direction);
             V3 dv1 = vPos - vNeg;
             V3 dv2 = vSoiPos - vSoiNeg;
 
@@ -156,7 +156,7 @@ namespace MechJebLib.Maneuvers
             _cosInc = Cos(inc);
             _inc = inc;
 
-            double[] x0    = new double[NVARIABLES];
+            double[] x0   = new double[NVARIABLES];
             double[] bndl = new double[NVARIABLES];
             double[] bndu = new double[NVARIABLES];
 

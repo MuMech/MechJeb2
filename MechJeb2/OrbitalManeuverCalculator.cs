@@ -186,13 +186,13 @@ namespace MuMech
             TransferGeometry direction = prograde ? TransferGeometry.Prograde : TransferGeometry.Retrograde;
 
             (V3 transferVi, V3 transferVf) =
-                Gooding.Solve(o.referenceBody.gravParameter, ri, vi, rf, dt, 0, direction);
+                Gooding.Solve(o.referenceBody.gravParameter, ri, rf, dt, direction, 0, V3.Cross(ri, vi));
 
             if (offsetDistance != 0)
             {
                 rf -= offsetDistance * V3.Cross(vf, rf).normalized;
-                (transferVi, transferVf) = Gooding.Solve(o.referenceBody.gravParameter, ri, vi, rf,
-                    dt, 0, direction);
+                (transferVi, transferVf) = Gooding.Solve(o.referenceBody.gravParameter, ri, rf,
+                    dt, direction, 0, V3.Cross(ri, vi));
             }
 
             return ((transferVi - vi).V3ToWorld(), (vf - transferVf).V3ToWorld());
@@ -250,9 +250,11 @@ namespace MuMech
 
             Vector3d interceptTarget = targetPos + target.NormalPlus(collisionUT) * caDistance;
 
-            (V3 velAfterBurn, _) = Gooding.Solve(o.referenceBody.gravParameter, o.WorldBCIPositionAtUT(burnUT).ToV3(),
-                o.WorldOrbitalVelocityAtUT(burnUT).ToV3(),
-                (interceptTarget - o.referenceBody.position).ToV3(), collisionUT - burnUT, 0);
+            var ri = o.WorldBCIPositionAtUT(burnUT).ToV3();
+            var vi = o.WorldOrbitalVelocityAtUT(burnUT).ToV3();
+            var rf = (interceptTarget - o.referenceBody.position).ToV3();
+            (V3 velAfterBurn, _) = Gooding.Solve(o.referenceBody.gravParameter, ri,
+                rf, collisionUT - burnUT, TransferGeometry.Prograde, 0, V3.Cross(ri, vi));
 
             Vector3d deltaV = velAfterBurn.ToVector3d() - o.WorldOrbitalVelocityAtUT(burnUT);
             return deltaV;
@@ -355,7 +357,7 @@ namespace MuMech
             double planetSOI = primary.sphereOfInfluence;
 
             (V3 dv, double dt) = solver.NextManeuver(primary.gravParameter, moon.gravParameter, moonR0,
-                moonV0, moonSOI, r0, v0, Clamp(peR,0, planetSOI), Deg2Rad(inc));
+                moonV0, moonSOI, r0, v0, Clamp(peR, 0, planetSOI), Deg2Rad(inc));
 
             return (dv.V3ToWorld(), ut + dt);
         }

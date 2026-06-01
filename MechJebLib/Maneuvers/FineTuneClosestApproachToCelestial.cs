@@ -1,5 +1,6 @@
 ﻿using MechJebLib.Functions;
 using MechJebLib.Lambert;
+using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
@@ -57,7 +58,7 @@ namespace MechJebLib.Maneuvers
             V3 rsoi2 = rf1 + rsoi;
             V3 vsoi2 = vf1 + vsoi;
 
-            (V3 vi, V3 vf) = Gooding.Solve(1.0, r0Burn, v0Burn, rsoi2, dt2, 0, _direction);
+            (V3 vi, V3 vf) = Izzo.Solve(1.0, r0Burn, rsoi2, dt2, _direction);
             return (rsoi, vsoi, vi - v0Burn, vsoi2 - vf);
         }
 
