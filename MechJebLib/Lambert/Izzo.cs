@@ -37,12 +37,9 @@ namespace MechJebLib.Maths
         /// <param name="r1">Initial position vector</param>
         /// <param name="r2">Final position vector</param>
         /// <param name="tof">Time of flight between both positions</param>
-        /// <param name="nrev">Number of revolutions</param>
-        /// <param name="prograde">Controls the desired inclination of the transfer orbit</param>
-        /// <param name="lowpath">
-        ///     If true or false, gets the transfer orbit whose vacant focus is below or above the
-        ///     chord line, respectively (only relevant for the multi-revolution case)
-        /// </param>
+        /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
+        /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
+        /// <param name="h">Axis to use for prograde/retrograde (does not need to be normalized)</param>
         /// <param name="numiter">Maximum number of iterations</param>
         /// <param name="rtol">Error tolerance</param>
         /// <returns>The initial (v1) and final (v2) velocity vectors</returns>
@@ -152,15 +149,9 @@ namespace MechJebLib.Maths
 
             // Start Householder iterations from x0 and find x, y
             double x = Householder(x0, t, ll, m, rtol, numiter);
-            double y = ComputeY(x, ll);
+            double y = Sqrt(1 - ll * ll * (1 - x * x));
             return (x, y);
         }
-
-        /// <summary>
-        ///     Computes y.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double ComputeY(double x, double ll) => Sqrt(1 - ll * ll * (1 - x * x));
 
         /// <summary>
         ///     Computes psi, the auxiliary angle (Eq. 17), via the appropriate inverse function.
@@ -202,27 +193,6 @@ namespace MechJebLib.Maths
 
             return t - t0;
         }
-
-        /// <summary>
-        ///     First derivative of the time-of-flight equation w.r.t. x.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double TofEquationP(double x, double y, double t, double ll) =>
-            (3 * t * x - 2 + 2 * ll * ll * ll * x / y) / (1 - x * x);
-
-        /// <summary>
-        ///     Second derivative of the time-of-flight equation w.r.t. x.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double TofEquationP2(double x, double y, double t, double dT, double ll) =>
-            (3 * t + 5 * x * dT + 2 * (1 - ll * ll) * ll * ll * ll / (y * y * y)) / (1 - x * x);
-
-        /// <summary>
-        ///     Third derivative of the time-of-flight equation w.r.t. x.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double TofEquationP3(double x, double y, double dT, double ddT, double ll) =>
-            (7 * x * ddT + 8 * dT - 6 * (1 - ll * ll) * Powi(ll, 5) * x / Powi(y, 5)) / (1 - x * x);
 
         /// <summary>
         ///     Initial guess.
@@ -272,12 +242,12 @@ namespace MechJebLib.Maths
         {
             for (int ii = 0; ii < maxiter; ii++)
             {
-                double y     = ComputeY(p0, ll);
+                double y     = Sqrt(1 - ll * ll * (1 - p0 * p0));
                 double fval  = TofEquationY(p0, y, t0, ll, m);
                 double t     = fval + t0;
-                double fder  = TofEquationP(p0, y, t, ll);
-                double fder2 = TofEquationP2(p0, y, t, fder, ll);
-                double fder3 = TofEquationP3(p0, y, fder, fder2, ll);
+                double fder  = (3 * t * p0 - 2 + 2 * ll * ll * ll * p0 / y) / (1 - p0 * p0);
+                double fder2 = (3 * t + 5 * p0 * fder + 2 * (1 - ll * ll) * ll * ll * ll / (y * y * y)) / (1 - p0 * p0);
+                double fder3 = (7 * p0 * fder2 + 8 * fder - 6 * (1 - ll * ll) * Powi(ll, 5) * p0 / Powi(y, 5)) / (1 - p0 * p0);
 
                 // Householder step (quartic)
                 double p = p0 - fval * ((fder * fder - fval * fder2 / 2)

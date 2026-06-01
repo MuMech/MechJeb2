@@ -35,11 +35,11 @@ namespace MechJebLib.Lambert
         /// </summary>
         /// <param name="mu">Gravitational parameter of central body</param>
         /// <param name="r1">Position at t0</param>
-        /// <param name="v1">Velocity at t0 (only used to define the orbit plane for Prograde/Retrograde)</param>
         /// <param name="r2">Position at t1</param>
         /// <param name="tof">Time of flight (t1 - t0), must be positive</param>
-        /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
         /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
+        /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
+        /// <param name="h">Axis to use for prograde/retrograde (does not need to be normalized)</param>
         /// <returns>Initial and Final velocity vector of transfer orbit</returns>
         /// <exception cref="Exception"></exception>
         public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 r2, double tof,
