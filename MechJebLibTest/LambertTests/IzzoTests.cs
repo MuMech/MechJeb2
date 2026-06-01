@@ -1,12 +1,7 @@
-/*
- * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
- * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
- */
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MechJebLib.Functions;
-using MechJebLib.Lambert;
+using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using Xunit;
@@ -14,11 +9,11 @@ using Xunit.Abstractions;
 
 namespace MechJebLibTest.LambertTests
 {
-    public class GoodingTests
+    public class IzzoTests
     {
         private readonly ITestOutputHelper _testOutputHelper;
 
-        public GoodingTests(ITestOutputHelper testOutputHelper)
+        public IzzoTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
         }
@@ -61,30 +56,31 @@ namespace MechJebLibTest.LambertTests
 
             // relax tolerance for nearly collinear
             if (Math.Abs(V3.Dot(r0.normalized, rfShepperd.normalized)) > 0.999)
-                tol = 5e-2;
+                tol = 2e-3;
 
-            (V3 viGooding, V3 vfGooding) = Gooding.Solve(1.0, r0, v0, rfShepperd, dt, 0, TransferGeometry.Prograde);
+            bool prograde = V3.Cross(r0, v0).z >= 0;
 
-            viGooding.ShouldEqual(v0, tol);
-            vfGooding.ShouldEqual(vfShepperd, tol);
+            (V3 viIzzo, V3 vfIzzo) = Izzo.Solve(1.0, r0, rfShepperd, dt, prograde: prograde);
+
+            viIzzo.ShouldEqual(v0, tol);
+            vfIzzo.ShouldEqual(vfShepperd, tol);
 
             if (period <= 0) return;
 
-            for (int n = 1; n < 10; n++)
+            for (int m = 1; m < 10; m++)
             {
                 try
                 {
-                    (V3 viNRev, V3 vfNRev) = Gooding.Solve(1.0, r0, v0, rfShepperd, dt + n * period, -n, TransferGeometry.Prograde);
-
-                    viNRev.ShouldEqual(viGooding, tol);
-                    vfNRev.ShouldEqual(vfGooding, tol);
+                    (V3 viNRev, V3 vfNRev) = Izzo.Solve(1.0, r0, rfShepperd, dt + m * period, m, prograde);
+                    viNRev.ShouldEqual(viIzzo, tol);
+                    vfNRev.ShouldEqual(vfIzzo, tol);
                 }
                 catch (Exception e)
                 {
-                    (V3 viNRev, V3 vfNRev) = Gooding.Solve(1.0, r0, v0, rfShepperd, dt + n * period, n, TransferGeometry.Prograde);
+                    (V3 viNRev, V3 vfNRev) = Izzo.Solve(1.0, r0, rfShepperd, dt + m * period, m, prograde, false);
 
-                    viNRev.ShouldEqual(viGooding, tol);
-                    vfNRev.ShouldEqual(vfGooding, tol);
+                    viNRev.ShouldEqual(viIzzo, tol);
+                    vfNRev.ShouldEqual(vfIzzo, tol);
                 }
             }
         }
@@ -109,8 +105,8 @@ namespace MechJebLibTest.LambertTests
             if (Math.Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
                 tol = 2e-3;
 
-            (V3 viPrograde, V3 vfPrograde) = Gooding.Solve(1.0, r0, V3.zero, rf, dt, 0, TransferGeometry.ShortWay);
-            (V3 viRetrograde, V3 vfRetrograde) = Gooding.Solve(1.0, r0, V3.zero, rf, dt, 0, TransferGeometry.LongWay);
+            (V3 viPrograde, V3 vfPrograde) = Izzo.Solve(1.0, r0, rf, dt, prograde: true);
+            (V3 viRetrograde, V3 vfRetrograde) = Izzo.Solve(1.0, r0, rf, dt, prograde: false);
 
             (V3 rfShepperdPrograde, V3 vfShepperdPrograde) = Shepperd.Solve(1.0, dt, r0, viPrograde);
             vfShepperdPrograde.ShouldEqual(vfPrograde, tol);
