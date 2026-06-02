@@ -7,7 +7,6 @@ using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
-using static System.Math;
 
 namespace MechJebLib.Maneuvers
 {
@@ -114,14 +113,14 @@ namespace MechJebLib.Maneuvers
                 throw new ArgumentException("bad v in ChangeOrbitalElement");
 
             const double DIFFSTEP = 1e-7;
-            const double EPSX     = 1e-7;
-            const int    MAXITS   = 1000;
+            //const double EPSX     = 1e-10;
+            const int MAXITS = 1000;
 
             const int NVARIABLES             = 2;
             const int NEQUALITYCONSTRAINTS   = 1;
             const int NINEQUALITYCONSTRAINTS = 0;
 
-            double[] x = new double[NVARIABLES];
+            double[] x0 = new double[NVARIABLES];
 
             var scale = Scale.Create(mu, r.magnitude);
 
@@ -130,40 +129,38 @@ namespace MechJebLib.Maneuvers
             p /= scale.LengthScale;
             q /= scale.VelocityScale;
 
-            if (type == Type.ECC)
-            {
-                // changing the ECC is actually a global optimization problem due to basins around parabolic ecc == 1.0
-                double boost = Sign(value - 1.0) * 0.1 + Sqrt(2);
-
-                V3 dv = Simple.DeltaVRelativeToCircularVelocity(1.0, p, q, boost);
-                x[0] = dv.x;
-                x[1] = dv.y;
-            }
-            else
-            {
-                x[0] = 0; // maneuver vy
-                x[1] = 0; // maneuver vy
-            }
+            x0[0] = 0; // maneuver vy
+            x0[1] = 0; // maneuver vy
 
             var args = new Args { P = p, Q = q, Value = type == Type.ECC ? value : value / scale.LengthScale, Type = type };
 
-            alglib.minnlccreate(NVARIABLES, x, out alglib.minnlcstate state);
-            alglib.minnlcsetalgosqp(state);
-            alglib.minnlcsetcond(state, EPSX, MAXITS);
+            // For adjusting ecc, SQP gets hung up on derivatives crossing parabolic orbits,
+            // so use a first pass with AUL, then refine the output of that with SQP.
+            alglib.minnlccreate(NVARIABLES, x0, out alglib.minnlcstate state);
+            alglib.minnlcsetalgoaul2(state, MAXITS);
+            alglib.minnlcsetcond(state, 0, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
-
-            if (optguard)
-            {
-                alglib.minnlcoptguardsmoothness(state);
-                alglib.minnlcoptguardgradient(state, DIFFSTEP);
-            }
-
+#if DEBUG
+            alglib.minnlcoptguardsmoothness(state);
+            alglib.minnlcoptguardgradient(state, DIFFSTEP);
+#endif
             alglib.minnlcoptimize(state, NLPFunction2, null, args);
-            alglib.minnlcresults(state, out double[] x2, out alglib.minnlcreport rep);
+            alglib.minnlcresults(state, out double[] x1, out alglib.minnlcreport rep1);
 
-            if (rep.terminationtype < 0)
+            alglib.minnlccreate(NVARIABLES, x1, out alglib.minnlcstate state2);
+            alglib.minnlcsetalgosqp(state2);
+            alglib.minnlcsetcond(state2, 0, MAXITS);
+            alglib.minnlcsetnlc(state2, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
+#if DEBUG
+            alglib.minnlcoptguardsmoothness(state2);
+            alglib.minnlcoptguardgradient(state2, DIFFSTEP);
+#endif
+            alglib.minnlcoptimize(state2, NLPFunction2, null, args);
+            alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
+
+            if (rep2.terminationtype < 0)
                 throw new Exception(
-                    $"ChangeOrbitalElement.DeltaV({mu}, {r}, {v}, {value}, {type}): SQP solver terminated abnormally: {rep.terminationtype}"
+                    $"ChangeOrbitalElement.DeltaV({mu}, {r}, {v}, {value}, {type}): SQP solver terminated abnormally: {rep2.terminationtype}"
                 );
 
             if (optguard)

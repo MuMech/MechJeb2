@@ -4,69 +4,83 @@
  */
 
 using System;
+using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace MechJebLibTest.ManeuversTests
 {
     public class ChangeOrbitalElementTests
     {
-        [Fact]
-        private void ChangeOrbitalElementTest()
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public ChangeOrbitalElementTests(ITestOutputHelper testOutputHelper)
         {
-            const int NTRIALS = 50;
+            _testOutputHelper = testOutputHelper;
+        }
 
-            var random = new Random();
+        public static IEnumerable<object[]> Seeds()
+        {
+            for (int i = 0; i <= 50; i++)
+                yield return new object[] { i };
+        }
 
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                var    r    = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var    v    = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double newR = random.NextDouble() * r.magnitude;
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        private void ChangeOrbitalElementTest(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-                double rscale = random.NextDouble() * 1.5e8 + 1;
-                double vscale = random.NextDouble() * 3e4 + 1;
-                r *= rscale;
-                v *= vscale;
-                newR *= rscale;
-                double mu = rscale * vscale * vscale;
+            var random = new Random(seed);
 
-                V3 dv = ChangeOrbitalElement.ChangePeriapsis(mu, r, v, newR, true);
-                Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newR, 1e-9);
+            var    r    = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var    v    = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double newR = random.NextDouble() * r.magnitude;
 
-                // validate this API works left handed.
-                V3 dv2 = ChangeOrbitalElement.ChangePeriapsis(mu, r.xzy, v.xzy, newR);
-                dv2.ShouldEqual(dv.xzy, 1e-3);
+            double rscale = random.NextDouble() * 1.5e8 + 1;
+            double vscale = random.NextDouble() * 3e4 + 1;
+            r *= rscale;
+            v *= vscale;
+            newR *= rscale;
+            double mu = rscale * vscale * vscale;
 
-                // now test apoapsis changing to elliptical
-                newR = random.NextDouble() * rscale * 1e9 + r.magnitude;
-                V3 dv3 = ChangeOrbitalElement.ChangeApoapsis(mu, r, v, newR, true);
-                Astro.ApoapsisFromStateVectors(mu, r, v + dv3).ShouldEqual(newR, 1e-4);
+            V3 dv = ChangeOrbitalElement.ChangePeriapsis(mu, r, v, newR, true);
+            Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newR, 1e-9);
 
-                // now test apoapsis changing to hyperbolic
-                newR = -(random.NextDouble() * 1e9 + 1e3) * rscale;
-                V3 dv4 = ChangeOrbitalElement.ChangeApoapsis(mu, r, v, newR, true);
-                Astro.ApoapsisFromStateVectors(mu, r, v + dv4).ShouldEqual(newR, 1e-5);
+            // validate this API works left handed.
+            V3 dv2 = ChangeOrbitalElement.ChangePeriapsis(mu, r.xzy, v.xzy, newR);
+            dv2.ShouldEqual(dv.xzy, 1e-3);
 
-                // now test changing the SMA.
-                newR = random.NextDouble() * 1e3 * rscale;
-                /*
-                mu   = 8657343022269006;
-                r    = new V3(-37559037.128101, -13154072.5832729, -86913972.3215555);
-                v    = new V3(23370.6359939819, 12558.3695536628, 17864.1347044172);
-                newR = 35354091.544774853;
-                */
-                V3 dv5 = ChangeOrbitalElement.ChangeSMA(mu, r, v, newR, true);
-                Astro.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-9);
+            // now test apoapsis changing to elliptical
+            newR = random.NextDouble() * rscale * 1e9 + r.magnitude;
+            V3 dv3 = ChangeOrbitalElement.ChangeApoapsis(mu, r, v, newR, true);
+            Astro.ApoapsisFromStateVectors(mu, r, v + dv3).ShouldEqual(newR, 1e-4);
 
-                // now test changing the Ecc
-                double newEcc = random.NextDouble() * 5 + 2.5;
-                V3     dv6    = ChangeOrbitalElement.ChangeECC(mu, r, v, newEcc);
-                (_, double ecc) = Astro.SmaEccFromStateVectors(mu, r, v + dv6);
-                ecc.ShouldEqual(newEcc, 1e-9);
-            }
+            // now test apoapsis changing to hyperbolic
+            newR = -(random.NextDouble() * 1e9 + 1e3) * rscale;
+            V3 dv4 = ChangeOrbitalElement.ChangeApoapsis(mu, r, v, newR, true);
+            Astro.ApoapsisFromStateVectors(mu, r, v + dv4).ShouldEqual(newR, 1e-5);
+
+            // now test changing the SMA.
+            newR = random.NextDouble() * 1e3 * rscale;
+            /*
+            mu   = 8657343022269006;
+            r    = new V3(-37559037.128101, -13154072.5832729, -86913972.3215555);
+            v    = new V3(23370.6359939819, 12558.3695536628, 17864.1347044172);
+            newR = 35354091.544774853;
+            */
+            V3 dv5 = ChangeOrbitalElement.ChangeSMA(mu, r, v, newR, true);
+            Astro.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-9);
+
+            // now test changing the Ecc
+            double newEcc = random.NextDouble() * 5 + 2.5;
+            V3     dv6    = ChangeOrbitalElement.ChangeECC(mu, r, v, newEcc);
+            (_, double ecc) = Astro.SmaEccFromStateVectors(mu, r, v + dv6);
+            ecc.ShouldEqual(newEcc, 1e-9);
         }
 
         [Fact]
