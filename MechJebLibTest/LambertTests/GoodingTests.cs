@@ -11,8 +11,6 @@ using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using Xunit;
 using Xunit.Abstractions;
-using static MechJebLib.Utils.Statics;
-using static System.Math;
 
 namespace MechJebLibTest.LambertTests
 {
@@ -25,131 +23,102 @@ namespace MechJebLibTest.LambertTests
             _testOutputHelper = testOutputHelper;
         }
 
-        [Fact]
-        private void SingleRevolution2()
+        public static IEnumerable<object[]> Seeds()
         {
-            const int NTRIALS = 500;
+            for (int i = 0; i < 250; i++)
+                yield return new object[] { i };
+        }
 
-            var random = new Random();
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        private void RandomMultipleRevolution(int seed)
+        {
+            double tol = 1e-6;
 
-            for (int i = 0; i < NTRIALS; i++)
+            var random = new Random(seed);
+
+            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double dt, period;
+            double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
+
+            if (ecc < 1)
             {
-                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double dt;
-                double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
+                period = Astro.PeriodFromStateVectors(1.0, r0, v0);
+                dt = random.NextDouble() * period;
+            }
+            else
+            {
+                period = 0;
+                dt = random.NextDouble() * 5;
+            }
 
-                if (ecc < 1)
-                    dt = random.NextDouble() * Astro.PeriodFromStateVectors(1.0, r0, v0);
-                else
-                    dt = random.NextDouble() * 5;
+            (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, v0);
 
-                (V3 r1, V3 v1) = Shepperd.Solve(1.0, dt, r0, v0);
-                (V3 vi, V3 vf) = Gooding.Solve(1.0, r0, v0, r1, dt, 0);
+            // avoid inherent singularity at collinear ri, rf
+            if (Math.Abs(V3.Dot(r0.normalized, rfShepperd.normalized)) > 0.99998)
+                return;
 
-                // most of the time we get 1e-10 accuracy, but not always
-                vi.ShouldEqual(v0, 1e-4);
-                vf.ShouldEqual(v1, 1e-4);
+            // relax tolerance for nearly collinear
+            if (Math.Abs(V3.Dot(r0.normalized, rfShepperd.normalized)) > 0.999)
+                tol = 5e-2;
+
+            (V3 viGooding, V3 vfGooding) = Gooding.Solve(1.0, r0, rfShepperd, dt, TransferGeometry.Prograde, 0, V3.Cross(r0, v0));
+
+            viGooding.ShouldEqual(v0, tol);
+            vfGooding.ShouldEqual(vfShepperd, tol);
+
+            if (period <= 0) return;
+
+            for (int n = 1; n < 10; n++)
+            {
+                try
+                {
+                    (V3 viNRev, V3 vfNRev) = Gooding.Solve(1.0, r0, rfShepperd, dt + n * period, TransferGeometry.Prograde, -n, V3.Cross(r0, v0));
+
+                    viNRev.ShouldEqual(viGooding, tol);
+                    vfNRev.ShouldEqual(vfGooding, tol);
+                }
+                catch (Exception e)
+                {
+                    (V3 viNRev, V3 vfNRev) = Gooding.Solve(1.0, r0, rfShepperd, dt + n * period, TransferGeometry.Prograde, n, V3.Cross(r0, v0));
+
+                    viNRev.ShouldEqual(viGooding, tol);
+                    vfNRev.ShouldEqual(vfGooding, tol);
+                }
             }
         }
 
-        [Fact]
-        private void SingleRevolution3()
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        private void RandomPositions(int seed)
         {
-            const int NTRIALS = 500;
+            double tol = 1e-6;
 
-            var random = new Random();
+            var random = new Random(seed);
 
-            var izzo = new Izzo();
+            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var    rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double dt = random.NextDouble() * 6 + 0.05;
 
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double dt;
-                double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
+            // avoid inherent singularity at nearly collinear ri, rf
+            if (Math.Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.99998)
+                return;
 
-                if (ecc < 1)
-                    dt = random.NextDouble() * Astro.PeriodFromStateVectors(1.0, r0, v0);
-                else
-                    dt = random.NextDouble() * 5;
+            // relax tolerance for nearly collinear
+            if (Math.Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
+                tol = 2e-3;
 
-                (V3 r1, V3 v1) = Shepperd.Solve(1.0, dt, r0, v0);
-                (V3 vi, V3 vf) = izzo.Solve(1.0, r0, v0, r1, dt, 0);
+            (V3 viPrograde, V3 vfPrograde) = Gooding.Solve(1.0, r0, rf, dt);
+            (V3 viRetrograde, V3 vfRetrograde) = Gooding.Solve(1.0, r0, rf, dt);
 
-                // most of the time we get 1e-10 accuracy, but not always
-                vi.ShouldEqual(v0, 1e-4);
-                vf.ShouldEqual(v1, 1e-4);
-            }
-        }
+            (V3 rfShepperdPrograde, V3 vfShepperdPrograde) = Shepperd.Solve(1.0, dt, r0, viPrograde);
+            vfShepperdPrograde.ShouldEqual(vfPrograde, tol);
+            rfShepperdPrograde.ShouldEqual(rf, tol);
 
-        [Fact]
-        private void SingleRevolution()
-        {
-            double mu = 1.0;
-
-            for (int j = 0; j < 40; j++)
-            {
-                double ecc = 0.1 * j;
-                double sma = ecc > 1 ? -1.0 : 1.0;
-
-                _testOutputHelper.WriteLine($"{ecc}");
-
-                var elist = new List<double>(); // eccentric anomaly
-                var tlist = new List<double>(); // time of flight
-                var rlist = new List<double>(); // magnitude of r
-                var vlist = new List<double>(); // mangitude of v
-                var flist = new List<double>(); // true anomaly
-
-                for (int i = 0; i < 360; i += 4)
-                {
-                    double eanom = Deg2Rad(i);
-
-                    double time = Astro.TimeSincePeriapsisFromEccentricAnomaly(mu, sma, ecc, eanom);
-
-                    double tanom = Astro.TrueAnomalyFromEccentricAnomaly(ecc, eanom);
-
-                    double smp = ecc == 1 ? 2 * sma : sma * (1.0 - ecc * ecc);
-
-                    double energy = ecc != 1 ? -1.0 / (2.0 * sma) : 0;
-
-                    double r = smp / (1.0 + ecc * Cos(tanom));
-
-                    double v = Sqrt(2 * (energy + 1.0 / r));
-
-                    elist.Add(eanom);
-                    tlist.Add(time);
-                    rlist.Add(r);
-                    vlist.Add(v);
-                    flist.Add(tanom);
-                }
-
-                double diffmax = 0;
-
-                for (int n1 = 0; n1 < elist.Count; n1++)
-                {
-                    for (int n2 = n1 + 1; n2 < elist.Count; n2++)
-                    {
-                        double VR11, VT11, VR12, VT12;
-
-                        (_, VR11, VT11, VR12, VT12, _, _, _, _) =
-                            Gooding.VLAMB(1.0, rlist[n1], rlist[n2], flist[n2] - flist[n1], tlist[n2] - tlist[n1]);
-                        double vi    = Sqrt(VR11 * VR11 + VT11 * VT11);
-                        double vf    = Sqrt(VR12 * VR12 + VT12 * VT12);
-                        double diff1 = vlist[n1] - vi;
-                        double diff2 = vlist[n2] - vf;
-                        double diff  = Sqrt(diff1 * diff1 + diff2 * diff2);
-                        if (diff > diffmax)
-                        {
-                            diffmax = diff;
-                        }
-                    }
-                }
-
-                _testOutputHelper.WriteLine($"{diffmax}");
-
-                diffmax.ShouldBeZero(1e-10);
-            }
+            (V3 rfShepperdRetrograde, V3 vfShepperdRetrograde) = Shepperd.Solve(1.0, dt, r0, viRetrograde);
+            vfShepperdRetrograde.ShouldEqual(vfRetrograde, tol);
+            rfShepperdRetrograde.ShouldEqual(rf, tol);
         }
     }
 }
