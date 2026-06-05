@@ -351,11 +351,11 @@ namespace MuMech
             Debug.Log("maneuver guess dV: " + maneuver.dV);
             Debug.Log("maneuver guess UT: " + maneuver.UT);
             Debug.Log("arrival guess UT: " + utArrival);
-            _initialOrbit.GetOrbitalStateVectorsAtUT(maneuver.UT, out Vector3d r1, out Vector3d v1);
+            _initialOrbit.FixedGetOrbitalStateVectorsAtUT(maneuver.UT, out Vector3d r1, out Vector3d v1);
             Debug.Log($"initial orbit at {maneuver.UT} x = {r1}; v = {v1}");
-            _initialOrbit.referenceBody.orbit.GetOrbitalStateVectorsAtUT(maneuver.UT, out Vector3d r2, out Vector3d v2);
+            _initialOrbit.referenceBody.orbit.FixedGetOrbitalStateVectorsAtUT(maneuver.UT, out Vector3d r2, out Vector3d v2);
             Debug.Log($"source at {maneuver.UT} x = {r2}; v = {v2}");
-            _targetBody.orbit.GetOrbitalStateVectorsAtUT(utArrival, out Vector3d r3, out Vector3d v3);
+            _targetBody.orbit.FixedGetOrbitalStateVectorsAtUT(utArrival, out Vector3d r3, out Vector3d v3);
             Debug.Log($"source at {utArrival} x = {r3}; v = {v3}");
 
             _impulseScale = maneuver.dV.magnitude;

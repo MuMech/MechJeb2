@@ -300,7 +300,7 @@ namespace MuMech
 
         private void SetAttitude()
         {
-            Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL, this, killRollRotation:KillRollRotation);
+            Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL_COT, this, killRollRotation:KillRollRotation);
         }
 
         private bool ShouldTerminatePrincipia()
