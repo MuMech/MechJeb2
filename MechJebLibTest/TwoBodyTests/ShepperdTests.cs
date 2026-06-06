@@ -294,32 +294,32 @@ namespace MechJebLibTest.TwoBodyTests
                 vColsVel[j] = (vfp - vfm) / (2 * h);
             }
 
-            var stm00 = new M3(rCols[0], rCols[1], rCols[2]);
-            var stm01 = new M3(rColsVel[0], rColsVel[1], rColsVel[2]);
-            var stm10 = new M3(vCols[0], vCols[1], vCols[2]);
-            var stm11 = new M3(vColsVel[0], vColsVel[1], vColsVel[2]);
-            return (stm00, stm01, stm10, stm11);
+            var stmRr = new M3(rCols[0], rCols[1], rCols[2]);
+            var stmRv = new M3(rColsVel[0], rColsVel[1], rColsVel[2]);
+            var stmVr = new M3(vCols[0], vCols[1], vCols[2]);
+            var stmVv = new M3(vColsVel[0], vColsVel[1], vColsVel[2]);
+            return (stmRr, stmRv, stmVr, stmVv);
         }
 
         private void AssertStmMatchesFD(double mu, double dt, V3 r0, V3 v0, double tol = 1e-6, double h = 1e-6)
         {
-            (V3 _, V3 _, M3 a00, M3 a01, M3 a10, M3 a11) = Shepperd.Solve2(mu, dt, r0, v0);
-            (M3 b00, M3 b01, M3 b10, M3 b11) = StmByFiniteDifference(mu, dt, r0, v0, h);
+            (V3 _, V3 _, M3 aRfR0, M3 aRfV0, M3 aVfR0, M3 aVfV0) = Shepperd.Solve2(mu, dt, r0, v0);
+            (M3 bRfR0, M3 bRfV0, M3 bVfR0, M3 bVfV0) = StmByFiniteDifference(mu, dt, r0, v0, h);
 
-            if (!NearlyEqual(a00, b00, tol) || !NearlyEqual(a01, b01, tol) ||
-                !NearlyEqual(a10, b10, tol) || !NearlyEqual(a11, b11, tol))
+            if (!NearlyEqual(aRfR0, bRfR0, tol) || !NearlyEqual(aRfV0, bRfV0, tol) ||
+                !NearlyEqual(aVfR0, bVfR0, tol) || !NearlyEqual(aVfV0, bVfV0, tol))
             {
                 _testOutputHelper.WriteLine($"r0:{r0} v0:{v0} dt:{dt}");
-                _testOutputHelper.WriteLine($"stm00 analytic:\n{a00}\nstm00 FD:\n{b00}");
-                _testOutputHelper.WriteLine($"stm01 analytic:\n{a01}\nstm01 FD:\n{b01}");
-                _testOutputHelper.WriteLine($"stm10 analytic:\n{a10}\nstm10 FD:\n{b10}");
-                _testOutputHelper.WriteLine($"stm11 analytic:\n{a11}\nstm11 FD:\n{b11}");
+                _testOutputHelper.WriteLine($"stm00 analytic:\n{aRfR0}\nstm00 FD:\n{bRfR0}");
+                _testOutputHelper.WriteLine($"stm01 analytic:\n{aRfV0}\nstm01 FD:\n{bRfV0}");
+                _testOutputHelper.WriteLine($"stm10 analytic:\n{aVfR0}\nstm10 FD:\n{bVfR0}");
+                _testOutputHelper.WriteLine($"stm11 analytic:\n{aVfV0}\nstm11 FD:\n{bVfV0}");
             }
 
-            a00.ShouldEqual(b00, tol);
-            a01.ShouldEqual(b01, tol);
-            a10.ShouldEqual(b10, tol);
-            a11.ShouldEqual(b11, tol);
+            aRfR0.ShouldEqual(bRfR0, tol);
+            aRfV0.ShouldEqual(bRfV0, tol);
+            aVfR0.ShouldEqual(bVfR0, tol);
+            aVfV0.ShouldEqual(bVfV0, tol);
         }
 
         [Fact]

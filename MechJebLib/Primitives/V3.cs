@@ -277,10 +277,24 @@ namespace MechJebLib.Primitives
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static V3 SafeNormalize(V3 v)
+        {
+            double c = v.max_magnitude;
+            return c > 0 ? (v / c).normalized : zero;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Normalize()
         {
             double norm = Math.Sqrt(x * x + y * y + z * z);
             this = norm > 0 ? this / norm : zero;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SafeNormalize()
+        {
+            double c = max_magnitude;
+            this = c > 0 ? (this / c).normalized : zero;
         }
 
         public V3 orthonormal
@@ -298,6 +312,12 @@ namespace MechJebLib.Primitives
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Normalize(this);
+        }
+
+        public V3 safeNormalized
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => SafeNormalize(this);
         }
 
         public static void OrthoNormalize(ref V3 normal, ref V3 tangent)

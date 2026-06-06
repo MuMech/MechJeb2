@@ -223,7 +223,7 @@ namespace MuMech
             return dV;
         }
 
-        public static (Vector3d dv, double dt1, double dt2) DeltaVAndTimeForCourseCorrectionToCelestial(Orbit o, double ut, CelestialBody targetBody, double per, double dt = double.NaN, double inc = double.NaN)
+        public static (Vector3d dv, double dt1) DeltaVAndTimeForCourseCorrectionToCelestial(Orbit o, double ut, CelestialBody targetBody, double per, double dt = double.NaN, double inc = double.NaN)
         {
             Orbit  target = targetBody.orbit;
             double mu0    = o.referenceBody.gravParameter;
@@ -235,9 +235,9 @@ namespace MuMech
             (V3 r1, V3 v1) = target.RightHandedStateVectorsAtUT(ut);
 
             var maneuver = new FineTuneClosestApproachToCelestial();
-            (V3 dv, double dt1, double dt2) = maneuver.Maneuver(mu0, r0, v0, mu1, r1, v1, soi, tsoi, Clamp(per, 0, soi), dt, Deg2Rad(inc));
+            (V3 dv, double dt1, double _) = maneuver.Maneuver(mu0, r0, v0, mu1, r1, v1, soi, tsoi, Clamp(per, 0, soi), dt, Deg2Rad(inc));
 
-            return (dv.V3ToWorld(), dt1, dt2);
+            return (dv.V3ToWorld(), dt1);
         }
 
         // This is the entry point for the course-correction to a target orbit which is not a celestial
