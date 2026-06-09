@@ -139,16 +139,26 @@ namespace MechJebLib.TwoBody
             return (rf, vf);
         }
 
+        // Aux function for derivatives if all you care about is w.r.t the time of flight
+        public static (DualV3 rf, DualV3 vf) Solve(double mu, Dual tau, V3 ri, V3 vi)
+        {
+            (V3 rfM, V3 vfM) = Solve(mu, tau.M, ri, vi);
+            double rfM3 = rfM.sqrMagnitude * rfM.magnitude;
+            var rf = new DualV3(rfM, vfM * tau.D);
+            var vf = new DualV3(vfM, -mu * rfM/rfM3 * tau.D);
+            return (rf, vf);
+        }
+
         // The STM is a 6x6 matrix which we return decomposed into 4 3x3 matrices
         //
-        //  [ 𝛿r ] = [ stm00 stm01 ] [ r ]
-        //  [ 𝛿v ] = [ stm10 stm11 ] [ v ]
+        //  [ 𝛿r ] = [ stmRfR0 stmRfV0 ] [ r ]
+        //  [ 𝛿v ] = [ stmVfR0 stmVfV0 ] [ v ]
         //
         // More robust version of Shepperd's method that solves for U3 directly to just propagate state, with a
         // fallback to bisection.  Then it solves for U5 with one additional continued fraction to generate U5
         // and the STM matrix.
         //
-        public static ( V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) Solve2(double mu, double tau, V3 ri, V3 vi)
+        public static (V3 rf, V3 vf, M3 stmRfR0, M3 stmRfV0, M3 stmVfR0, M3 stmVfV0) Solve2(double mu, double tau, V3 ri, V3 vi)
 
         {
             double tolerance = 1.0e-12;
@@ -344,12 +354,12 @@ namespace MechJebLib.TwoBody
             V3 t11 = rf * m[0, 1] + vf * m[1, 1];
             V3 t12 = rf * m[0, 2] + vf * m[1, 2];
 
-            M3 stm00 = V3.Outer(t00, ri) + V3.Outer(t01, vi) + M3.Diagonal(f);
-            M3 stm01 = V3.Outer(t01, ri) + V3.Outer(t02, vi) + M3.Diagonal(g);
-            M3 stm10 = -(V3.Outer(t10, ri) + V3.Outer(t11, vi)) + M3.Diagonal(ff);
-            M3 stm11 = -(V3.Outer(t11, ri) + V3.Outer(t12, vi)) + M3.Diagonal(gg);
+            M3 stmRfR0 = V3.Outer(t00, ri) + V3.Outer(t01, vi) + M3.Diagonal(f);
+            M3 stmRfV0 = V3.Outer(t01, ri) + V3.Outer(t02, vi) + M3.Diagonal(g);
+            M3 stmVfR0 = -(V3.Outer(t10, ri) + V3.Outer(t11, vi)) + M3.Diagonal(ff);
+            M3 stmVfV0 = -(V3.Outer(t11, ri) + V3.Outer(t12, vi)) + M3.Diagonal(gg);
 
-            return (rf, vf, stm00, stm01, stm10, stm11);
+            return (rf, vf, stmRfR0, stmRfV0, stmVfR0, stmVfV0);
         }
     }
 }

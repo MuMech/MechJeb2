@@ -83,7 +83,7 @@ namespace MechJebLib.Maneuvers
             _v0 = v0 / _planetScale.VelocityScale;
             _r1 = r1 / _planetScale.LengthScale;
             _v1 = v1 / _planetScale.VelocityScale;
-            dt = dt / _planetScale.TimeScale;
+            dt /= _planetScale.TimeScale;
             _cosInc = Cos(inc);
 
             const int    NUM_EQUALITY_CONSTRAINTS   = 5;

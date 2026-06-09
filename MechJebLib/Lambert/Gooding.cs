@@ -43,7 +43,7 @@ namespace MechJebLib.Lambert
         /// <returns>Initial and Final velocity vector of transfer orbit</returns>
         /// <exception cref="Exception"></exception>
         public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 r2, double tof,
-            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3 h = default)
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null)
         {
             /* most of this function lifted from https://www.mathworks.com/matlabcentral/fileexchange/39530-lambert-s-problem/content/glambert.m */
 
@@ -61,7 +61,7 @@ namespace MechJebLib.Lambert
             V3 ux1 = r1.normalized;
             V3 ux2 = r2.normalized;
 
-            V3 uz1 = V3.Cross(ux1, ux2).normalized;
+            V3 uz1 = V3.Cross(ux1, ux2).safeNormalized;
 
             /* calculate the minimum transfer angle (radians) */
 
@@ -69,7 +69,11 @@ namespace MechJebLib.Lambert
 
             bool flip = direction == TransferGeometry.LongWay || direction == TransferGeometry.Retrograde;
             if (direction == TransferGeometry.Prograde || direction == TransferGeometry.Retrograde)
-                flip ^= V3.Dot(uz1, h) < 0;
+            {
+                if (h == null)
+                    throw new Exception("Prograde or Retrograde directions require a normal vector");
+                flip ^= V3.Dot(uz1, h.Value) < 0;
+            }
 
             if (flip)
             {
@@ -257,7 +261,7 @@ namespace MechJebLib.Lambert
             }
             else
             {
-                /* "WITH MUTIREVS, FIRST GET T(MIN) AS BASIS FOR STARTER */
+                /* "WITH MUTIREVS, FIRST GET T(MIN) AS BASIS FOR STARTER" */
                 XM = 1.0 / (1.5 * (M + 0.5) * PI);
                 if (THR2 < 0.5)
                     XM = Pow(2.0 * THR2, 1.0 / 8.0) * XM;
@@ -294,7 +298,7 @@ namespace MechJebLib.Lambert
                     X = XM;
                     N = 1;
                     return (N, X, XPL);
-                    /* "EXIT IF UNIQUE SOLUTION ALREADY FROM X(TMIN) -- Gooding */
+                    /* "EXIT IF UNIQUE SOLUTION ALREADY FROM X(TMIN)" -- Gooding */
                 }
 
                 N = 3;

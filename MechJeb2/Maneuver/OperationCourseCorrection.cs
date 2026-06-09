@@ -117,7 +117,7 @@ namespace MuMech
                 double dt  = _timeSelector.TimeReference == TimeReference.COMPUTED ? double.NaN : 0;
                 double inc = InclinationFlag ? Inclination.Val : double.NaN;
 
-                (dV, dt1, _) = OrbitalManeuverCalculator.DeltaVAndTimeForCourseCorrectionToCelestial(o, ut, targetBody, targetBody.Radius + Periapsis, dt, inc);
+                (dV, dt1) = OrbitalManeuverCalculator.DeltaVAndTimeForCourseCorrectionToCelestial(o, ut, targetBody, targetBody.Radius + Periapsis, dt, inc);
             }
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut + dt1) };

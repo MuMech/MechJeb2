@@ -19,13 +19,10 @@ namespace MuMech
         }
 
         private static readonly string _name = Localizer.Format("#MechJeb_AdvancedTransfer_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
         private static readonly string[]
-            modeNames =
-            {
-                Localizer.Format("#MechJeb_adv_modeName1"), Localizer.Format("#MechJeb_adv_modeName2")
-            }; //"Limited time","Porkchop selection"
+            modeNames = { Localizer.Format("#MechJeb_adv_modeName1"), Localizer.Format("#MechJeb_adv_modeName2") }; //"Limited time","Porkchop selection"
 
         private double minDepartureTime;
         private double minTransferTime;
@@ -41,16 +38,16 @@ namespace MuMech
         private const double minSamplingStep = 12 * 3600;
 
         private Mode selectionMode = Mode.PORKCHOP;
-        private int  windowWidth;
+        private int windowWidth;
 
         private CelestialBody lastTargetCelestial;
 
         private TransferCalculator worker;
-        private PlotArea           plot;
+        private PlotArea plot;
 
         private static Texture2D texture;
 
-        private         bool _draggable = true;
+        private bool _draggable = true;
         public override bool Draggable => _draggable;
 
         private const int porkchop_Height = 200;
@@ -72,18 +69,18 @@ namespace MuMech
             if (o.referenceBody.referenceBody == null)
                 return Localizer.Format("#MechJeb_adv_Preconditions4",
                     o.referenceBody.displayName
-                        .LocalizeRemoveGender()); //"doesn't make sense to plot an interplanetary transfer from an orbit around <<1>> ."
+                       .LocalizeRemoveGender()); //"doesn't make sense to plot an interplanetary transfer from an orbit around <<1>> ."
 
             if (o.referenceBody.referenceBody != target.TargetOrbit.referenceBody)
             {
                 if (o.referenceBody == target.TargetOrbit.referenceBody)
                     return Localizer.Format("#MechJeb_adv_Preconditions5",
                         o.referenceBody.displayName
-                            .LocalizeRemoveGender()); //"use regular Hohmann transfer function to intercept another body orbiting <<1>>."
+                           .LocalizeRemoveGender()); //"use regular Hohmann transfer function to intercept another body orbiting <<1>>."
                 return Localizer.Format("#MechJeb_adv_Preconditions6", o.referenceBody.displayName.LocalizeRemoveGender(),
                     o.referenceBody.displayName.LocalizeRemoveGender(),
                     o.referenceBody.referenceBody.displayName
-                        .LocalizeRemoveGender()); //"an interplanetary transfer from within <<1>>'s sphere of influence must target a body that orbits <<2>>'s parent,<<3>> "
+                       .LocalizeRemoveGender()); //"an interplanetary transfer from within <<1>>'s sphere of influence must target a body that orbits <<2>>'s parent,<<3>> "
             }
 
             if (o.referenceBody == Planetarium.fetch.Sun)
@@ -139,10 +136,10 @@ namespace MuMech
                 synodic_period = o.referenceBody.orbit.period;
 
             minDepartureTime = universalTime;
-            minTransferTime  = 3600;
+            minTransferTime = 3600;
 
-            maxDepartureTime   = minDepartureTime + synodic_period * 1.5;
-            maxTransferTime    = hohmann_transfer_time * 2.0;
+            maxDepartureTime = minDepartureTime + synodic_period * 1.5;
+            maxTransferTime = hohmann_transfer_time * 2.0;
             maxArrivalTime.Val = synodic_period * 1.5 + hohmann_transfer_time * 2.0;
         }
 
@@ -197,9 +194,9 @@ namespace MuMech
                         {
                             minDepartureTime = Math.Max(xmin, universalTime);
                             maxDepartureTime = xmax;
-                            minTransferTime  = Math.Max(ymin, 3600);
-                            maxTransferTime  = ymax;
-                            GUI.changed      = true;
+                            minTransferTime = Math.Max(ymin, 3600);
+                            maxTransferTime = ymax;
+                            GUI.changed = true;
                         });
                     plot.SelectedPoint = new[] { worker.BestDate, worker.BestDuration };
                 }
@@ -228,13 +225,7 @@ namespace MuMech
             else
             {
                 if (progressStyle == null)
-                    progressStyle = new GUIStyle
-                    {
-                        font      = GuiUtils.Skin.font,
-                        fontSize  = GuiUtils.Skin.label.fontSize,
-                        fontStyle = GuiUtils.Skin.label.fontStyle,
-                        normal    = { textColor = GuiUtils.Skin.label.normal.textColor }
-                    };
+                    progressStyle = new GUIStyle { font = GuiUtils.Skin.font, fontSize = GuiUtils.Skin.label.fontSize, fontStyle = GuiUtils.Skin.label.fontStyle, normal = { textColor = GuiUtils.Skin.label.normal.textColor } };
                 GUILayout.Box(Localizer.Format("#MechJeb_adv_computing") + worker.Progress + "%", progressStyle, GuiUtils.LayoutWidth(windowWidth),
                     GUILayout.Height(porkchop_Height)); //"Computing:"
             }
@@ -269,7 +260,7 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_adv_button1"))) //Lowest ΔV
             {
                 plot.SelectedPoint = new[] { worker.BestDate, worker.BestDuration };
-                GUI.changed        = false;
+                GUI.changed = false;
             }
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_adv_button2"))) //ASAP
@@ -282,7 +273,7 @@ namespace MuMech
                 }
 
                 plot.SelectedPoint = new[] { 0, bestDuration };
-                GUI.changed        = false;
+                GUI.changed = false;
             }
 
             GUILayout.EndHorizontal();
@@ -299,8 +290,8 @@ namespace MuMech
             if (worker != null && !target.NormalTargetExists && Event.current.type == EventType.Layout)
             {
                 worker.Stop = true;
-                worker      = null;
-                plot        = null;
+                worker = null;
+                plot = null;
             }
 
             selectionMode = (Mode)GuiUtils.ComboBox.Box((int)selectionMode, modeNames, this);
@@ -333,38 +324,29 @@ namespace MuMech
             if (message != null)
                 throw new OperationException(message);
 
-            // Check if computation is finished
-            if (worker != null && !worker.Finished)
-                throw new OperationException(Localizer.Format("#MechJeb_adv_Exception1")); //Computation not finished
-            if (worker == null)
+            switch (worker)
             {
-                ComputeStuff(o, UT, target);
-                throw new OperationException(Localizer.Format("#MechJeb_adv_Exception2")); //Started computation
+                case { Finished: false }:
+                    throw new OperationException(Localizer.Format("#MechJeb_adv_Exception1")); //Computation not finished
+                case null:
+                    ComputeStuff(o, UT, target);
+                    throw new OperationException(Localizer.Format("#MechJeb_adv_Exception2")); //Started computation
             }
 
             if (worker.ArrivalDate < 0)
-            {
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception3")); //Computation failed
-            }
 
-            double target_PeR = lastTargetCelestial.Radius + periapsisHeight * 1000;
+            double target_PeR = (lastTargetCelestial?.Radius ?? 0) + periapsisHeight * 1000;
 
             if (selectionMode == Mode.PORKCHOP)
             {
-                if (plot == null || plot.SelectedPoint == null)
+                if (plot?.SelectedPoint == null)
                     throw new OperationException(Localizer.Format("#MechJeb_adv_Exception4")); //Invalid point selected.
-                return worker.OptimizeEjection(
-                    worker.DateFromIndex(plot.SelectedPoint[0]),
-                    o, target.Target as CelestialBody,
-                    worker.DateFromIndex(plot.SelectedPoint[0]) + worker.DurationFromIndex(plot.SelectedPoint[1]),
-                    UT, target_PeR, includeCaptureBurn);
+
+                return worker.OptimizeEjection(o, target, target_PeR, selectedPoint: plot.SelectedPoint);
             }
 
-            return worker.OptimizeEjection(
-                worker.DateFromIndex(worker.BestDate),
-                o, target.Target as CelestialBody,
-                worker.DateFromIndex(worker.BestDate) + worker.DurationFromIndex(worker.BestDuration),
-                UT, target_PeR, includeCaptureBurn);
+            return worker.OptimizeEjection(o, target, target_PeR, maxArrivalTime: maxArrivalTime);
         }
     }
 }

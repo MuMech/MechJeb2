@@ -6,6 +6,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
+using MechJebLib.Rootfinding;
+using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -403,6 +405,9 @@ namespace MechJebLib.Functions
         public static double VelocityFromRadiusSMA(double mu, double rmag, double sma) => Sqrt(mu * (2.0 / rmag - 1 / sma));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Dual VelocityFromRadiusSMA(Dual mu, Dual rmag, Dual sma) => Dual.Sqrt(mu * (2.0 / rmag - 1 / sma));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double VelocityFromRadiusSMA(double mu, V3 r, double sma) => Sqrt(mu * (2.0 / r.magnitude - 1 / sma));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -554,6 +559,42 @@ namespace MechJebLib.Functions
             if (time1 < 0 && time2 < 0)
                 return Max(time1, time2);
             return time1 >= 0 ? time1 : time2;
+        }
+
+        // Propagate the orbit forward from (r0, v0) until the straight-line chord distance from the
+        // starting point equals 'distance', returning the state vectors there.
+        public static (V3 r, V3 v) StateVectorsAtDistance(double mu, V3 r0, V3 v0, double distance)
+        {
+            Check.PositiveFinite(mu);
+            Check.Finite(r0);
+            Check.Finite(v0);
+            Check.PositiveFinite(distance);
+
+            double hi  = distance / v0.magnitude;
+            double sma = SmaFromStateVectors(mu, r0, v0);
+            double cap = sma > 0 ? 0.5 * PeriodFromStateVectors(mu, r0, v0) : double.PositiveInfinity;
+
+            // doubling to find the bracket
+            while (Chord(hi, null) < 0)
+            {
+                hi *= 2;
+                if (hi > cap)
+                {
+                    if (Chord(cap, null) >= 0)
+                        hi = cap;
+                    else
+                        throw new Exception($"StateVectorsAtDistance: distance {distance} is not reachable on this orbit");
+                }
+            }
+
+            double tof = BrentRoot.Solve(Chord, 0, hi, null);
+            return Shepperd.Solve(mu, tof, r0, v0);
+
+            double Chord(double dt, object? o)
+            {
+                (V3 r, V3 _) = Shepperd.Solve(mu, dt, r0, v0);
+                return (r - r0).magnitude - distance;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

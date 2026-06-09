@@ -14,7 +14,7 @@ namespace MechJebLib.Functions
     public static class SingleImpulseHyperbolicBurn
     {
         /// <summary>
-        ///     Single impulse transfer from an ellipitical, non-coplanar parking orbit to an arbitrary hyperbolic v-infinity target.
+        ///     Single impulse transfer from an elliptical, non-coplanar parking orbit to an arbitrary hyperbolic v-infinity target.
         ///     Ocampo, C., & Saudemont, R. R. (2010). Initial Trajectory Model for a Multi-Maneuver Moon-to-Earth Abort Sequence.
         ///     Journal of Guidance, Control, and Dynamics, 33(4), 1184–1194.
         /// </summary>
@@ -25,7 +25,7 @@ namespace MechJebLib.Functions
         /// <param name="debug">Log debug information</param>
         /// <param name="rtol">Relative tolerance for the 1-d minimization algorithm</param>
         /// <returns name="vNeg">Velocity on the parking orbit before the burn.</returns>
-        /// <returns name="vPos">Velocity on the hyperboliic ejection orbit after the burn.</returns>
+        /// <returns name="vPos">Velocity on the hyperbolic ejection orbit after the burn.</returns>
         /// <returns name="r">Position of the burn.</returns>
         /// <returns name="dt">Coasting time on the parking orbit from the reference to the burn.</returns>
         public static ( V3 vNeg, V3 vPos, V3 r, double dt) Solve(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false, double rtol = 1e-6)
@@ -56,14 +56,14 @@ namespace MechJebLib.Functions
         ///     nearly optimal in many cases, but fails in the kinds of nearly coplanar conditions which are common in KSP.
         /// </summary>
         /// <param name="mu">Gravitational parameter of central body.</param>
-        /// <param name="r0">Reference position on the parking orbit (right handed).</param>
-        /// <param name="v0">Reference velocity on the parking orbit (right handed).</param>
-        /// <param name="vInf">Target hyperbolic v-infinity vector (right handed).</param>
+        /// <param name="r0">Reference position on the parking orbit (right-handed).</param>
+        /// <param name="v0">Reference velocity on the parking orbit (right-handed).</param>
+        /// <param name="vInf">Target hyperbolic v-infinity vector (right-handed).</param>
         /// <param name="rot">Rotation of hf_hat around v_inf_hat. or r1_hat around h0_hat (radians).</param>
         /// <param name="debug">Log debug information</param>
-        /// <returns name="vNeg">Velocity on the parking orbit before the burn (right handed).</returns>
-        /// <returns name="vPos">Velocity on the hyperboliic ejection orbit after the burn (right handed).</returns>
-        /// <returns name="r">Position of the burn. (right handed)</returns>
+        /// <returns name="vNeg">Velocity on the parking orbit before the burn (right-handed).</returns>
+        /// <returns name="vPos">Velocity on the hyperbolic ejection orbit after the burn (right-handed).</returns>
+        /// <returns name="r">Position of the burn. (right-handed)</returns>
         /// <returns name="dt">Coasting time on the parking orbit from the reference to the burn.</returns>
         private static ( V3 vNeg, V3 vPos, V3 r, double dt) SolveAnalytic(double mu, V3 r0, V3 v0, V3 vInf, double rot, bool debug = false)
         {
@@ -91,7 +91,7 @@ namespace MechJebLib.Functions
             if (ecc0 >= 1)
                 throw new Exception("SingleImpulseHyperbolicBurn does not work with a hyperbolic initial orbit");
 
-            // semilatus rectum of parking orbit
+            // semi-latus rectum of parking orbit
             double p0 = a0 * (1 - ecc0 * ecc0);
 
             // parking orbit periapsis position unit vector
@@ -117,7 +117,7 @@ namespace MechJebLib.Functions
 
             V3 r1Hat;
 
-            // NOTE: the "rot" parameter should be used only for nearly cicular, low eccentricity parking orbits
+            // NOTE: the "rot" parameter should be used only for nearly circular, low eccentricity parking orbits
             if (Abs(V3.Dot(h0Hat, vInfHat)) > 1e-10)
             {
                 // if the planes are not coincident, rotate hf_hat around v_inf_hat
@@ -160,7 +160,7 @@ namespace MechJebLib.Functions
                 Sqrt(sin2dnu + 2 * k * k + 2 * k * (1 - cosdnu) + sindnu * Sqrt(sin2dnu + 4 * k * (1 - cosdnu))) / (Sqrt(2) * k),
                 1 + EPS);
 
-            // semilatus rectum of hyperbolic ejection orbit
+            // semi-latus rectum of hyperbolic ejection orbit
             double pf = af * (1 - ef * ef);
 
             // true anomaly of the vInf on the hyperbolic ejection orbit
@@ -205,7 +205,7 @@ namespace MechJebLib.Functions
                 Print("mean motion: " + n);
                 Print("true anomaly of ref position: " + nu0 + " true anomaly of burn: " + nu10);
                 Print("eccentric anomaly of ref position: " + e0 + " eccentric anomaly of burn: " + e1);
-                Print("mean anomaly of ref posotion: " + m0 + " mean anomaly of burn: " + m1);
+                Print("mean anomaly of ref position: " + m0 + " mean anomaly of burn: " + m1);
             }
 
             // coast time on the parking orbit

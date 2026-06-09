@@ -9,6 +9,7 @@ using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
+using MechJebLib.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -33,6 +34,8 @@ namespace MechJebLibTest.LambertTests
         [MemberData(nameof(Seeds))]
         private void RandomMultipleRevolution(int seed)
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             double tol = 1e-6;
 
             var random = new Random(seed);
@@ -79,7 +82,7 @@ namespace MechJebLibTest.LambertTests
                     viNRev.ShouldEqual(viGooding, tol);
                     vfNRev.ShouldEqual(vfGooding, tol);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     (V3 viNRev, V3 vfNRev) = Gooding.Solve(1.0, r0, rfShepperd, dt + n * period, TransferGeometry.Prograde, n, V3.Cross(r0, v0));
 
@@ -93,6 +96,8 @@ namespace MechJebLibTest.LambertTests
         [MemberData(nameof(Seeds))]
         private void RandomPositions(int seed)
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             double tol = 1e-6;
 
             var random = new Random(seed);

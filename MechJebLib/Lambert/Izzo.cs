@@ -7,6 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
@@ -44,7 +45,7 @@ namespace MechJebLib.Maths
         /// <param name="rtol">Error tolerance</param>
         /// <returns>The initial (v1) and final (v2) velocity vectors</returns>
         public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof,
-            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3 h = default,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null,
             int numiter = 35, double rtol = 1e-8)
         {
             // Check preconditions
@@ -71,14 +72,18 @@ namespace MechJebLib.Maths
             // Versors
             V3 iR1 = r1 / r1Norm;
             V3 iR2 = r2 / r2Norm;
-            V3 iH  = V3.Cross(iR1, iR2).normalized;
+            V3 iH  = V3.Cross(iR1, iR2).safeNormalized;
 
             // Geometry of the problem
             double ll = Sqrt(1 - Min(1.0, cNorm / s));
 
             bool flip = direction == TransferGeometry.LongWay || direction == TransferGeometry.Retrograde;
             if (direction == TransferGeometry.Prograde || direction == TransferGeometry.Retrograde)
-                flip ^= V3.Dot(iH, h) < 0;
+            {
+                if (h == null)
+                    throw new Exception("Prograde or Retrograde directions require a normal vector");
+                flip ^= V3.Dot(iH, h.Value) < 0;
+            }
 
             // Compute the fundamental tangential directions
             V3 iT1, iT2;
@@ -111,6 +116,31 @@ namespace MechJebLib.Maths
             // Solve for the initial and final velocity
             V3 v1 = vr1 * (r1 / r1Norm) + vt1 * iT1;
             V3 v2 = vr2 * (r2 / r2Norm) + vt2 * iT2;
+
+            return (v1, v2);
+        }
+
+        public static (DualV3 v1, DualV3 v2) Solve(double mu, DualV3 r1, DualV3 r2, Dual tof,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null,
+            int numiter = 35, double rtol = 1e-8)
+        {
+            (V3 v1M, V3 v2M) = Solve(mu, r1.M, r2.M, tof.M, direction, nrev, h, numiter, rtol);
+            (V3 _, V3 _, M3 stmRfR0, M3 stmRfV0, M3 stmVfR0, M3 stmVfV0) = Shepperd.Solve2(mu, tof.M, r1.M, v1M);
+
+            M3 stmRfV0Inv = stmRfV0.inverse;
+            M3 stmRfV0InvRfR0 = stmRfV0Inv * stmRfR0;
+
+            M3 v1R1 = -stmRfV0InvRfR0;
+            M3 v1R2 = stmRfV0Inv;
+            M3 v2R1 = stmVfR0 - stmVfV0 * stmRfV0InvRfR0;
+            M3 v2R2 = stmVfV0 * stmRfV0Inv;
+
+            V3 v1Tof = -stmRfV0Inv * v2M;
+            V3 a2 = -mu / (r2.M.magnitude * r2.M.sqrMagnitude) * r2.M;
+            V3 v2Tof = a2 - stmVfV0 * (stmRfV0Inv * v2M);
+
+            var v1 = new DualV3(v1M, v1R1 * r1.D + v1R2 * r2.D + v1Tof * tof.D);
+            var v2 = new DualV3(v2M, v2R1 * r1.D + v2R2 * r2.D + v2Tof * tof.D);
 
             return (v1, v2);
         }
