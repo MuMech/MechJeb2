@@ -38,8 +38,8 @@ namespace MechJebLibTest.TwoBodyTests
         {
             var rng = new Random(seed);
 
-            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
-            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
             double dt = 40 * rng.NextDouble() - 20;
 
             (V3 rf, V3 vf) = Shepperd.Solve(1.0, dt, r0, v0);
@@ -61,8 +61,8 @@ namespace MechJebLibTest.TwoBodyTests
         {
             var rng = new Random(seed);
 
-            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
-            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
             double dt = 40 * rng.NextDouble() - 20;
 
             (V3 rf, V3 vf, M3 _, M3 _, M3 _, M3 _) = Shepperd.Solve2(1.0, dt, r0, v0);
@@ -87,7 +87,7 @@ namespace MechJebLibTest.TwoBodyTests
                 var v = new V3(yin[3], yin[4], yin[5]);
 
                 double rm2 = r.sqrMagnitude;
-                double rm  = Sqrt(rm2);
+                double rm = Sqrt(rm2);
                 double rm3 = rm2 * rm;
 
                 V3 dr = v;
@@ -103,10 +103,10 @@ namespace MechJebLibTest.TwoBodyTests
         public void RandomComparedToDP5(int seed)
         {
             var solver = new DP5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
-            var rng    = new Random(seed);
+            var rng = new Random(seed);
 
-            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
-            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
             double dt = 10 * rng.NextDouble() - 5;
 
             (double _, double ecc, double _, double _, double _, double _, double l) =
@@ -155,10 +155,10 @@ namespace MechJebLibTest.TwoBodyTests
         public void RandomComparedToTsit5(int seed)
         {
             var solver = new Tsit5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
-            var rng    = new Random(seed);
+            var rng = new Random(seed);
 
-            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
-            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
             double dt = 10 * rng.NextDouble() - 5;
 
             (double _, double ecc, double _, double _, double _, double _, double l) =
@@ -216,8 +216,8 @@ namespace MechJebLibTest.TwoBodyTests
             };
             var rng = new Random(seed);
 
-            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
-            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
             double dt = 10 * rng.NextDouble() - 5;
 
             (double _, double ecc, double _, double _, double _, double _, double l) =
@@ -268,8 +268,8 @@ namespace MechJebLibTest.TwoBodyTests
         private static (M3 stm00, M3 stm01, M3 stm10, M3 stm11) StmByFiniteDifference(
             double mu, double dt, V3 r0, V3 v0, double h)
         {
-            var rCols    = new V3[3];
-            var vCols    = new V3[3];
+            var rCols = new V3[3];
+            var vCols = new V3[3];
             var rColsVel = new V3[3];
             var vColsVel = new V3[3];
 

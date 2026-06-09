@@ -83,8 +83,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void NormalizeSimpleVectors()
         {
-            var v          = new V3(3, 4, 0);
-            V3  normalized = v.normalized;
+            var v = new V3(3, 4, 0);
+            V3 normalized = v.normalized;
 
             normalized.x.ShouldEqual(0.6);
             normalized.y.ShouldEqual(0.8);
@@ -133,7 +133,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void StaticNormalizeMethod()
         {
-            var v          = new V3(3, 4, 0);
+            var v = new V3(3, 4, 0);
             var normalized = V3.Normalize(v);
 
             normalized.x.ShouldEqual(0.6);
@@ -145,7 +145,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ClampMagnitudeWithinLimit()
         {
-            var v       = new V3(3, 4, 0);
+            var v = new V3(3, 4, 0);
             var clamped = V3.ClampMagnitude(v, 10);
 
             clamped.ShouldEqual(v);
@@ -154,7 +154,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ClampMagnitudeExceedsLimit()
         {
-            var v       = new V3(3, 4, 0);
+            var v = new V3(3, 4, 0);
             var clamped = V3.ClampMagnitude(v, 2.5);
 
             clamped.magnitude.ShouldEqual(2.5);
@@ -172,7 +172,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ClampMagnitudeToZero()
         {
-            var v       = new V3(3, 4, 0);
+            var v = new V3(3, 4, 0);
             var clamped = V3.ClampMagnitude(v, 0);
 
             clamped.ShouldEqual(V3.zero);
@@ -181,9 +181,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void NormalizedVectorMaintainsDirection()
         {
-            var v      = new V3(1, 2, 3);
-            V3  n      = v.normalized;
-            V3  scaled = n * v.magnitude;
+            var v = new V3(1, 2, 3);
+            V3 n = v.normalized;
+            V3 scaled = n * v.magnitude;
 
             scaled.ShouldEqual(v, 1e-14);
         }
@@ -191,8 +191,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void MagnitudeConsistencyWithSquaredMagnitude()
         {
-            var    v      = new V3(5, 12, 13);
-            double mag    = v.magnitude;
+            var v = new V3(5, 12, 13);
+            double mag = v.magnitude;
             double sqrMag = v.sqrMagnitude;
 
             (mag * mag).ShouldEqual(sqrMag, 1e-14);
@@ -203,7 +203,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void NormalizePreservesZeroForNearZeroComponents()
         {
             var v = new V3(1, 0, 0);
-            V3  n = v.normalized;
+            V3 n = v.normalized;
 
             n.x.ShouldEqual(1.0);
             n.y.ShouldEqual(0.0);

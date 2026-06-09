@@ -40,8 +40,8 @@ namespace MechJebLibTest.LambertTests
 
             var random = new Random(seed);
 
-            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt, period;
             double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
 
@@ -102,8 +102,8 @@ namespace MechJebLibTest.LambertTests
 
             var random = new Random(seed);
 
-            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt = random.NextDouble() * 6 + 0.05;
 
             // avoid inherent singularity at nearly collinear ri, rf

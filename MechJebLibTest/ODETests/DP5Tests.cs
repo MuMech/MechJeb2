@@ -58,8 +58,8 @@ namespace MechJebLibTest.ODETests
 
             var random = new Random(seed);
 
-            double k  = 2 * random.NextDouble() + 1;
-            double m  = 2 * random.NextDouble() + 1;
+            double k = 2 * random.NextDouble() + 1;
+            double m = 2 * random.NextDouble() + 1;
             double x0 = 4 * random.NextDouble() - 2;
             double v0 = 4 * random.NextDouble() - 2;
 
@@ -70,16 +70,16 @@ namespace MechJebLibTest.ODETests
             int count2 = random.Next(5, 40);
 
             var solver = new DP5 { Rtol = 1e-9, Atol = 0, Maxiter = 400, ThrowOnMaxIter = true };
-            var ode    = new SimpleOscillator(k, m);
-            var f      = new Action<Vec, double, Vec>(ode.Rhs);
+            var ode = new SimpleOscillator(k, m);
+            var f = new Action<Vec, double, Vec>(ode.Rhs);
 
             using var y0 = Vec.Rent(SimpleOscillator.N);
             y0[0] = x0;
             y0[1] = v0;
-            using var yf    = Vec.Rent(SimpleOscillator.N);
-            double    omega = Sqrt(k / m);
+            using var yf = Vec.Rent(SimpleOscillator.N);
+            double omega = Sqrt(k / m);
 
-            double dt  = (tf - t0) / count1;
+            double dt = (tf - t0) / count1;
             double dt2 = (tf - t0) / count2;
 
             double[] expected = new double[count1 + 1];
@@ -111,7 +111,7 @@ namespace MechJebLibTest.ODETests
 
                 for (int i = 0; i <= count1; i++)
                 {
-                    double    t = t0 + dt * i;
+                    double t = t0 + dt * i;
                     using Vec y = interpolant.Evaluate(t);
 
                     y[0].ShouldEqual(expected[i], 1e-11);
@@ -119,7 +119,7 @@ namespace MechJebLibTest.ODETests
 
                 for (int i = 0; i <= count2; i++)
                 {
-                    double    t = t0 + dt2 * i;
+                    double t = t0 + dt2 * i;
                     using Vec y = interpolant.Evaluate(t);
 
                     y[0].ShouldEqual(expected2[i], 1e-11);
@@ -134,7 +134,7 @@ namespace MechJebLibTest.ODETests
 
                 for (int i = 0; i <= count1; i++)
                 {
-                    double    t = t0 + dt * i;
+                    double t = t0 + dt * i;
                     using Vec y = interpolant.Evaluate(t);
 
                     y[0].ShouldEqual(expected[i], 1e-11);
@@ -142,7 +142,7 @@ namespace MechJebLibTest.ODETests
 
                 for (int i = 0; i <= count2; i++)
                 {
-                    double    t = t0 + dt2 * i;
+                    double t = t0 + dt2 * i;
                     using Vec y = interpolant.Evaluate(t);
 
                     y[0].ShouldEqual(expected2[i], 1e-11);
@@ -158,7 +158,7 @@ namespace MechJebLibTest.ODETests
             var v = new V3(yin[3], yin[4], yin[5]);
 
             double rm2 = r.sqrMagnitude;
-            double rm  = Sqrt(rm2);
+            double rm = Sqrt(rm2);
             double rm3 = rm2 * rm;
 
             V3 dr = v;

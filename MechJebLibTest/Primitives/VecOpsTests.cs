@@ -187,8 +187,8 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void Nrm2_MatchesSqrtDot()
         {
-            double[] x        = { 1.5, -2.5, 0.5, -0.5, 3.0 };
-            double   expected = Math.Sqrt(VecOps.Dot(x, x, 5));
+            double[] x = { 1.5, -2.5, 0.5, -0.5, 3.0 };
+            double expected = Math.Sqrt(VecOps.Dot(x, x, 5));
             Assert.Equal(expected, VecOps.Nrm2(x, 5));
         }
 
@@ -389,8 +389,8 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void Swap_RoundTripIsIdentity()
         {
-            double[] x     = { 1.0, 2.0, 3.0 };
-            double[] y     = { 10.0, 20.0, 30.0 };
+            double[] x = { 1.0, 2.0, 3.0 };
+            double[] y = { 10.0, 20.0, 30.0 };
             double[] xOrig = (double[])x.Clone();
             double[] yOrig = (double[])y.Clone();
             VecOps.Swap(x, y, 3);
@@ -819,8 +819,8 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void Rot_FortyFiveDegrees_RotatesUnitVector()
         {
-            double   c = Math.Cos(Math.PI / 4);
-            double   s = Math.Sin(Math.PI / 4);
+            double c = Math.Cos(Math.PI / 4);
+            double s = Math.Sin(Math.PI / 4);
             double[] x = { 1.0 };
             double[] y = { 0.0 };
             VecOps.Rot(x, y, c, s, 1);
@@ -832,10 +832,10 @@ namespace MechJebLibTest.Primitives
         public void Rot_RoundTripWithInverse_RestoresInputs()
         {
             // Inverse of [c s; -s c] is [c -s; s c] (since det = c²+s² = 1)
-            double   c     = Math.Cos(0.7);
-            double   s     = Math.Sin(0.7);
-            double[] x     = { 1.5, -2.5, 3.0 };
-            double[] y     = { 0.5, 1.5, -1.0 };
+            double c = Math.Cos(0.7);
+            double s = Math.Sin(0.7);
+            double[] x = { 1.5, -2.5, 3.0 };
+            double[] y = { 0.5, 1.5, -1.0 };
             double[] xOrig = (double[])x.Clone();
             double[] yOrig = (double[])y.Clone();
 
@@ -958,7 +958,7 @@ namespace MechJebLibTest.Primitives
         {
             double[] y0 = { 1.0, 2.0, 3.0 };
             double[] x1 = { 10.0, 20.0, 30.0 };
-            double[] y  = new double[3];
+            double[] y = new double[3];
             VecOps.LinComb1(y, y0, 2.0, x1, 3);
             // y[i] = y0[i] + 2·x1[i]
             Assert.Equal(new[] { 21.0, 42.0, 63.0 }, y);
@@ -984,7 +984,7 @@ namespace MechJebLibTest.Primitives
         public void LinComb1_AliasingInPlace_IsSafe()
         {
             // y = y + a1·x1  (passing same array as y and y0) — equivalent to Axpy.
-            double[] y  = { 1.0, 2.0, 3.0 };
+            double[] y = { 1.0, 2.0, 3.0 };
             double[] x1 = { 10.0, 20.0, 30.0 };
             VecOps.LinComb1(y, y, 2.0, x1, 3);
             Assert.Equal(new[] { 21.0, 42.0, 63.0 }, y);
@@ -994,7 +994,7 @@ namespace MechJebLibTest.Primitives
         public void LinComb1_AliasingYEqualsX1_IsSafe()
         {
             // Each element of x1 is read once before y is overwritten.
-            double[] y0       = { 1.0, 2.0, 3.0 };
+            double[] y0 = { 1.0, 2.0, 3.0 };
             double[] y_and_x1 = { 10.0, 20.0, 30.0 };
             VecOps.LinComb1(y_and_x1, y0, 2.0, y_and_x1, 3);
             // y[i] = y0[i] + 2·x1[i]
@@ -1006,7 +1006,7 @@ namespace MechJebLibTest.Primitives
         {
             double[] y0 = { 1.0, 2.0, 999.0 };
             double[] x1 = { 1.0, 1.0, 999.0 };
-            double[] y  = { 0.0, 0.0, 42.0 };
+            double[] y = { 0.0, 0.0, 42.0 };
             VecOps.LinComb1(y, y0, 1.0, x1, 2);
             Assert.Equal(new[] { 2.0, 3.0, 42.0 }, y);
         }
@@ -1016,7 +1016,7 @@ namespace MechJebLibTest.Primitives
         {
             double[] y0 = { 99.0 };
             double[] x1 = { 1.0 };
-            double[] y  = { 7.0 };
+            double[] y = { 7.0 };
             VecOps.LinComb1(y, y0, 5.0, x1, 0);
             Assert.Equal(7.0, y[0]);
         }
@@ -1027,7 +1027,7 @@ namespace MechJebLibTest.Primitives
             double[] y0 = { 1.0, 2.0, 3.0 };
             double[] x1 = { 10.0, 20.0, 30.0 };
             double[] x2 = { 100.0, 200.0, 300.0 };
-            double[] y  = new double[3];
+            double[] y = new double[3];
             VecOps.LinComb2(y, y0, 2.0, x1, 3.0, x2, 3);
             // y[i] = y0[i] + 2·x1[i] + 3·x2[i]
             Assert.Equal(new[] { 1 + 20 + 300.0, 2 + 40 + 600.0, 3 + 60 + 900.0 }, y);
@@ -1056,7 +1056,7 @@ namespace MechJebLibTest.Primitives
         public void LinComb2_AliasingInPlace_IsSafe()
         {
             // y = y + a1·x1 + a2·x2  (passing same array as y and y0)
-            double[] y  = { 1.0, 2.0, 3.0 };
+            double[] y = { 1.0, 2.0, 3.0 };
             double[] x1 = { 10.0, 20.0, 30.0 };
             double[] x2 = { 100.0, 200.0, 300.0 };
             VecOps.LinComb2(y, y, 1.0, x1, 1.0, x2, 3);
@@ -1067,9 +1067,9 @@ namespace MechJebLibTest.Primitives
         public void LinComb2_AliasingYEqualsX1_IsSafe()
         {
             // Each element of x1 is read once before y is overwritten.
-            double[] y0       = { 1.0, 2.0, 3.0 };
+            double[] y0 = { 1.0, 2.0, 3.0 };
             double[] y_and_x1 = { 10.0, 20.0, 30.0 };
-            double[] x2       = { 100.0, 200.0, 300.0 };
+            double[] x2 = { 100.0, 200.0, 300.0 };
             VecOps.LinComb2(y_and_x1, y0, 2.0, y_and_x1, 0.5, x2, 3);
             // expected y[i] = y0[i] + 2·x1[i] + 0.5·x2[i]
             Assert.Equal(new[] { 1 + 20 + 50.0, 2 + 40 + 100.0, 3 + 60 + 150.0 }, y_and_x1);
@@ -1080,14 +1080,14 @@ namespace MechJebLibTest.Primitives
         {
             // Y_new = Y + h·(A51·K1 + A52·K2 + A53·K3 + A54·K4)
             // Use simple symbolic values to verify the shape.
-            int      N    = 3;
-            double   h    = 0.1;
-            double   A51  = 1.0, A52 = 2.0, A53 = 3.0, A54 = 4.0;
-            double[] Y    = { 5.0, 5.0, 5.0 };
-            double[] K1   = { 1.0, 1.0, 1.0 };
-            double[] K2   = { 1.0, 1.0, 1.0 };
-            double[] K3   = { 1.0, 1.0, 1.0 };
-            double[] K4   = { 1.0, 1.0, 1.0 };
+            int N = 3;
+            double h = 0.1;
+            double A51 = 1.0, A52 = 2.0, A53 = 3.0, A54 = 4.0;
+            double[] Y = { 5.0, 5.0, 5.0 };
+            double[] K1 = { 1.0, 1.0, 1.0 };
+            double[] K2 = { 1.0, 1.0, 1.0 };
+            double[] K3 = { 1.0, 1.0, 1.0 };
+            double[] K4 = { 1.0, 1.0, 1.0 };
             double[] Ynew = new double[N];
 
             VecOps.LinComb4(Ynew, Y,
@@ -1101,15 +1101,15 @@ namespace MechJebLibTest.Primitives
         public void LinComb6_DormandPrinceFinalUpdate()
         {
             // Y_new = Y + Σ b_i K_i  (DP5-style; coefficients chosen to sum easily)
-            int      N  = 2;
-            double[] Y  = { 0.0, 0.0 };
+            int N = 2;
+            double[] Y = { 0.0, 0.0 };
             double[] K1 = { 1.0, -1.0 };
             double[] K2 = { 1.0, -1.0 };
             double[] K3 = { 1.0, -1.0 };
             double[] K4 = { 1.0, -1.0 };
             double[] K5 = { 1.0, -1.0 };
             double[] K6 = { 1.0, -1.0 };
-            double[] y  = new double[N];
+            double[] y = new double[N];
 
             VecOps.LinComb6(y, Y,
                 0.1, K1, 0.2, K2, 0.3, K3, 0.4, K4, 0.5, K5, 0.5, K6, N);
@@ -1122,10 +1122,10 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb9_AllStagesContribute()
         {
-            int        N = 1;
-            double[]   Y = { 100.0 };
+            int N = 1;
+            double[] Y = { 100.0 };
             double[][] X = new double[9][];
-            double[]   a = new double[9];
+            double[] a = new double[9];
             for (int k = 0; k < 9; k++)
             {
                 X[k] = new[] { 1.0 };
@@ -1147,7 +1147,7 @@ namespace MechJebLibTest.Primitives
             double[] y0 = { 1.0, 2.0, 999.0 };
             double[] x1 = { 1.0, 1.0, 999.0 };
             double[] x2 = { 1.0, 1.0, 999.0 };
-            double[] y  = { 0.0, 0.0, 42.0 };
+            double[] y = { 0.0, 0.0, 42.0 };
             VecOps.LinComb2(y, y0, 1.0, x1, 1.0, x2, 2);
             Assert.Equal(new[] { 3.0, 4.0, 42.0 }, y);
         }
@@ -1158,7 +1158,7 @@ namespace MechJebLibTest.Primitives
             double[] y0 = { 99.0 };
             double[] x1 = { 1.0 };
             double[] x2 = { 1.0 };
-            double[] y  = { 7.0 };
+            double[] y = { 7.0 };
             VecOps.LinComb2(y, y0, 5.0, x1, 5.0, x2, 0);
             Assert.Equal(7.0, y[0]);
         }
@@ -1361,7 +1361,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void Vec_LinComb2_Delegates()
         {
-            using var y  = Vec.Rent(3);
+            using var y = Vec.Rent(3);
             using var y0 = Vec.Rent(3);
             using var x1 = Vec.Rent(3);
             using var x2 = Vec.Rent(3);
@@ -1385,12 +1385,12 @@ namespace MechJebLibTest.Primitives
         public void Vec_LinComb4_RkStyleUpdate()
         {
             // The motivating use case: Ynew = Y + h·(A51·K1 + A52·K2 + A53·K3 + A54·K4)
-            using var Y    = Vec.Rent(2);
+            using var Y = Vec.Rent(2);
             using var Ynew = Vec.Rent(2);
-            using var K1   = Vec.Rent(2);
-            using var K2   = Vec.Rent(2);
-            using var K3   = Vec.Rent(2);
-            using var K4   = Vec.Rent(2);
+            using var K1 = Vec.Rent(2);
+            using var K2 = Vec.Rent(2);
+            using var K3 = Vec.Rent(2);
+            using var K4 = Vec.Rent(2);
 
             Y[0] = 5.0;
             Y[1] = 5.0;

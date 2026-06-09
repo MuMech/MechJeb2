@@ -56,6 +56,7 @@ namespace MechJebLib.Maneuvers
                 Dual dv = Astro.VelocityFromRadiusSMA(1.0, _peR, sma) - Astro.CircularVelocity(1.0, _peR);
                 fi0 += dv * dv;
             }
+
             fi[0] = fi0.M;
             jac[0, i] = fi0.D;
 
@@ -233,8 +234,8 @@ namespace MechJebLib.Maneuvers
             (V3 r2soi2, V3 v2soi2) = Shepperd.Solve(1.0, arrivalUTscaled, _r2, _v2);
 
             // solve the ZSOI heliocentric trajectory from source to target using both geometries
-            (V3 vishortBootstrap, V3 _) = Izzo.Solve(1.0, _r1, r2soi2, arrivalUTscaled, TransferGeometry.Prograde, h:V3.Cross(_r1, _v1));
-            (V3 vilongBootstrap, V3 _) = Izzo.Solve(1.0, _r1, r2soi2, arrivalUTscaled, TransferGeometry.Retrograde, h:V3.Cross(_r1, _v1));
+            (V3 vishortBootstrap, V3 _) = Izzo.Solve(1.0, _r1, r2soi2, arrivalUTscaled, TransferGeometry.Prograde, h: V3.Cross(_r1, _v1));
+            (V3 vilongBootstrap, V3 _) = Izzo.Solve(1.0, _r1, r2soi2, arrivalUTscaled, TransferGeometry.Retrograde, h: V3.Cross(_r1, _v1));
 
             // estimate travel time to the SOI boundary and propagate the source celestial
             (V3 _, V3 vPosShortBootstrap, V3 rBurnShortBootstrap, double dt1ShortBootstrap) = Astro.SingleImpulseHyperbolicBurn(1.0, _r0, _v0, (vishortBootstrap - _v1) * _sourceToHelioScale.VelocityScale);
@@ -248,8 +249,8 @@ namespace MechJebLib.Maneuvers
             (V3 r1soi1Long, V3 v1soi1Long) = Shepperd.Solve(1.0, dt1HelioLongBootstrap, _r1, _v1);
 
             // re-solve the ZSOI helicentric trajectory with estimated travel time to the first SOI boundary
-            (V3 vishort, V3 vfshort) = Izzo.Solve(1.0, r1soi1Short, r2soi2, arrivalUTscaled - dt1HelioShortBootstrap, TransferGeometry.Prograde, h:V3.Cross(r1soi1Short, v1soi1Short));
-            (V3 vilong, V3 vflong) = Izzo.Solve(1.0, r1soi1Long, r2soi2, arrivalUTscaled - dt1HelioLongBootstrap, TransferGeometry.Retrograde, h:V3.Cross(r1soi1Long, v1soi1Long));
+            (V3 vishort, V3 vfshort) = Izzo.Solve(1.0, r1soi1Short, r2soi2, arrivalUTscaled - dt1HelioShortBootstrap, TransferGeometry.Prograde, h: V3.Cross(r1soi1Short, v1soi1Short));
+            (V3 vilong, V3 vflong) = Izzo.Solve(1.0, r1soi1Long, r2soi2, arrivalUTscaled - dt1HelioLongBootstrap, TransferGeometry.Retrograde, h: V3.Cross(r1soi1Long, v1soi1Long));
 
             // refine the ZSOI solution into finite SOI
             (V3 _, V3 vsoi1short) = Astro.StateVectorsAtDistance(1.0, r1soi1Short, vishort, soi1 / _helioScale.LengthScale);
@@ -351,7 +352,7 @@ namespace MechJebLib.Maneuvers
             Solution sol4 = RunOptimizer(x0long, bndl, bndu, optguard);
             best = UpdateBestSolution(sol4, best);
 
-            Print($"dv: {best.dv* _sourceScale.VelocityScale} dt1: {best.dt1 * _sourceScale.TimeScale} dt2: {best.dt2 * _sourceScale.TimeScale}, dt3: {best.dt3 * _helioScale.TimeScale}");
+            Print($"dv: {best.dv * _sourceScale.VelocityScale} dt1: {best.dt1 * _sourceScale.TimeScale} dt2: {best.dt2 * _sourceScale.TimeScale}, dt3: {best.dt3 * _helioScale.TimeScale}");
             return (best.dv * _sourceScale.VelocityScale, best.dt1 * _sourceScale.TimeScale, best.dt2 * _sourceScale.TimeScale, best.dt3 * _helioScale.TimeScale);
         }
 

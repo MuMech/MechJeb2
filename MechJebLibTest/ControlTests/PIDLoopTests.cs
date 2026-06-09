@@ -87,16 +87,16 @@ namespace MechJebLibTest.ControlTests
             );
 
             const double SETPOINT = 1.0;
-            const double T_FINAL  = 10.0;
+            const double T_FINAL = 10.0;
 
-            double y     = 0;
-            int    steps = (int)(T_FINAL / pid.Ts);
+            double y = 0;
+            int steps = (int)(T_FINAL / pid.Ts);
 
-            double peakValue     = 0;
-            double peakTime      = 0;
-            double settlingTime  = 0;
+            double peakValue = 0;
+            double peakTime = 0;
+            double settlingTime = 0;
             double riseTimeStart = -1;
-            double riseTimeEnd   = -1;
+            double riseTimeEnd = -1;
 
             for (int i = 0; i < steps; i++)
             {
@@ -121,7 +121,7 @@ namespace MechJebLibTest.ControlTests
             }
 
             double overshoot = (peakValue - SETPOINT) / SETPOINT * 100.0;
-            double riseTime  = riseTimeEnd - riseTimeStart;
+            double riseTime = riseTimeEnd - riseTimeStart;
 
             // Expected: Overshoot=4.22%, SettlingTime=1.85s, RiseTime=0.69s, PeakTime=1.42s
             Assert.True(overshoot > 3.0 && overshoot < 7.0,
@@ -162,16 +162,16 @@ namespace MechJebLibTest.ControlTests
             );
 
             const double SETPOINT = 1.0;
-            const double T_FINAL  = 10.0;
+            const double T_FINAL = 10.0;
 
-            double y     = 0;
-            int    steps = (int)(T_FINAL / pid.Ts);
+            double y = 0;
+            int steps = (int)(T_FINAL / pid.Ts);
 
-            double peakValue     = 0;
-            double peakTime      = 0;
-            double settlingTime  = 0;
+            double peakValue = 0;
+            double peakTime = 0;
+            double settlingTime = 0;
             double riseTimeStart = -1;
-            double riseTimeEnd   = -1;
+            double riseTimeEnd = -1;
 
             for (int i = 0; i < steps; i++)
             {
@@ -196,7 +196,7 @@ namespace MechJebLibTest.ControlTests
             }
 
             double overshoot = (peakValue - SETPOINT) / SETPOINT * 100.0;
-            double riseTime  = riseTimeEnd - riseTimeStart;
+            double riseTime = riseTimeEnd - riseTimeStart;
 
             // Expected: Overshoot=34.02%, SettlingTime=7.89s, RiseTime=0.94s, PeakTime=2.38s
             Assert.True(overshoot > 30.0 && overshoot < 36.0,

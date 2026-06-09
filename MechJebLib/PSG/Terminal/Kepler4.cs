@@ -36,7 +36,7 @@ namespace MechJebLib.PSG.Terminal
 
         public void Constraints(double[] x, (int, int, int) ri, (int, int, int) vi, double[] f, alglib.sparsematrix j, ref int ci)
         {
-            V3     hT   = _hT;
+            V3 hT = _hT;
             double eccT = _eccT;
 
             var rf = V3.CopyFromIndices(x, ri);

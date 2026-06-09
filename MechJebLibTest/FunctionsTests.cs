@@ -162,15 +162,15 @@ namespace MechJebLibTest.MathsTests
         [Fact]
         public void TimeToNextRadiusTest()
         {
-            const double mu     = 3.986004418e+14;
+            const double mu = 3.986004418e+14;
             const double rearth = 6.371e+6;
-            const double r185   = rearth + 185e+3;
-            const double r1000  = rearth + 1000e+3;
+            const double r185 = rearth + 185e+3;
+            const double r1000 = rearth + 1000e+3;
 
             (double sma, double _) = Astro.SmaEccFromApsides(r185, r1000);
             double v185 = Astro.VmagFromVisViva(mu, sma, r185);
-            var    r0   = new V3(r185, 0, 0);
-            var    v0   = new V3(0, v185, 0);
+            var r0 = new V3(r185, 0, 0);
+            var v0 = new V3(0, v185, 0);
 
             double period = Astro.PeriodFromStateVectors(mu, r0, v0);
 
@@ -185,15 +185,15 @@ namespace MechJebLibTest.MathsTests
         [Fact]
         public void StateVectorsAtDistanceTest()
         {
-            const double mu     = 3.986004418e+14;
+            const double mu = 3.986004418e+14;
             const double rearth = 6.371e+6;
-            const double r185   = rearth + 185e+3;
-            const double r1000  = rearth + 1000e+3;
+            const double r185 = rearth + 185e+3;
+            const double r1000 = rearth + 1000e+3;
 
             (double sma, double _) = Astro.SmaEccFromApsides(r185, r1000);
             double v185 = Astro.VmagFromVisViva(mu, sma, r185);
-            var    r0   = new V3(r185, 0, 0);
-            var    v0   = new V3(0, v185, 0);
+            var r0 = new V3(r185, 0, 0);
+            var v0 = new V3(0, v185, 0);
 
             // elliptical orbit, distance well within the first arc
             const double distance = 100e+3;
@@ -202,15 +202,15 @@ namespace MechJebLibTest.MathsTests
             Assert.Equal(1.0, Astro.SmaFromStateVectors(mu, r, v) / sma, 9); // still on the same orbit
 
             // circular orbit (mu = 1)
-            var          cr0 = new V3(1, 0, 0);
-            var          cv0 = new V3(0, 1, 0);
-            const double cd  = 0.1;
+            var cr0 = new V3(1, 0, 0);
+            var cv0 = new V3(0, 1, 0);
+            const double cd = 0.1;
             (V3 cr, V3 _) = Astro.StateVectorsAtDistance(1.0, cr0, cv0, cd);
             Assert.Equal(1.0, (cr - cr0).magnitude / cd, 9);
 
             // hyperbolic orbit (no period cap), large distance
             double vesc = Astro.EscapeVelocity(mu, r185);
-            var    hv0  = new V3(0, 1.5 * vesc, 0);
+            var hv0 = new V3(0, 1.5 * vesc, 0);
             (V3 hr, V3 _) = Astro.StateVectorsAtDistance(mu, r0, hv0, rearth);
             Assert.Equal(1.0, (hr - r0).magnitude / rearth, 9);
 
@@ -221,15 +221,15 @@ namespace MechJebLibTest.MathsTests
         [Fact]
         public void ApoapsisFromStateVectorsTest()
         {
-            const double mu     = 3.986004418e+14;
+            const double mu = 3.986004418e+14;
             const double rearth = 6.371e+6;
-            const double r185   = rearth + 185e+3;
-            const double r1000  = rearth + 1000e+3;
+            const double r185 = rearth + 185e+3;
+            const double r1000 = rearth + 1000e+3;
 
             (double sma, double _) = Astro.SmaEccFromApsides(r185, r1000);
             double v185 = Astro.VmagFromVisViva(mu, sma, r185);
-            var    r0   = new V3(r185, 0, 0);
-            var    v0   = new V3(0, v185, 0);
+            var r0 = new V3(r185, 0, 0);
+            var v0 = new V3(0, v185, 0);
 
             Assert.Equal(1.0, Astro.ApoapsisFromStateVectors(mu, r0, v0) / r1000, 14);
             Assert.Equal(1.0, Astro.PeriapsisFromStateVectors(mu, r0, v0) / r185, 14);
@@ -239,8 +239,8 @@ namespace MechJebLibTest.MathsTests
         public void ApsidesFromKeplerianTest()
         {
             const double rearth = 6.371e+6;
-            const double r185   = rearth + 185e+3;
-            const double r1000  = rearth + 1000e+3;
+            const double r185 = rearth + 185e+3;
+            const double r1000 = rearth + 1000e+3;
 
             (double sma, double ecc) = Astro.SmaEccFromApsides(r185, r1000);
             Assert.Equal(r185, Astro.PeriapsisFromKeplerian(sma, ecc));

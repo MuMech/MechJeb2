@@ -115,7 +115,7 @@ namespace MechJebLib.PSG
 
             public Ascent Build()
             {
-                double    m0 = _phases[0].M0;
+                double m0 = _phases[0].M0;
                 ITerminal terminal;
 
                 _fixedBurnTime = true;

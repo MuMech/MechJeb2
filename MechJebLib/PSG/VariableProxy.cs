@@ -17,7 +17,7 @@ namespace MechJebLib.PSG
 
         public VariableProxy(Problem problem, PhaseCollection phases, ITerminal terminal, int n)
         {
-            int idx  = 0;
+            int idx = 0;
             int cons = 0;
 
             for (int p = 0; p < phases.Count; p++)

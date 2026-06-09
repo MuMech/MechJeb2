@@ -36,8 +36,8 @@ namespace MechJebLibTest.LambertTests
 
             var random = new Random(seed);
 
-            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt, period;
             double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
 
@@ -54,7 +54,7 @@ namespace MechJebLibTest.LambertTests
 
             (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, v0);
 
-            bool             prograde  = V3.Cross(r0, v0).z >= 0;
+            bool prograde = V3.Cross(r0, v0).z >= 0;
             TransferGeometry direction = prograde ? TransferGeometry.Prograde : TransferGeometry.Retrograde;
 
             (V3 viIzzo, V3 vfIzzo) = Izzo.Solve(1.0, r0, rfShepperd, dt, direction, 0, V3.northpole);
@@ -92,8 +92,8 @@ namespace MechJebLibTest.LambertTests
 
             var random = new Random(seed);
 
-            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt, period;
             double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
 
@@ -113,7 +113,7 @@ namespace MechJebLibTest.LambertTests
             bool longway = V3.Dot(V3.Cross(r0, v0), V3.Cross(r0, rfShepperd)) < 0;
             TransferGeometry direction = longway ? TransferGeometry.LongWay : TransferGeometry.ShortWay;
 
-            (V3 viIzzo, V3 vfIzzo) = Izzo.Solve(1.0, r0, rfShepperd, dt, direction, 0);
+            (V3 viIzzo, V3 vfIzzo) = Izzo.Solve(1.0, r0, rfShepperd, dt, direction);
 
             viIzzo.ShouldEqual(v0, tol);
             vfIzzo.ShouldEqual(vfShepperd, tol);
@@ -148,8 +148,8 @@ namespace MechJebLibTest.LambertTests
 
             var random = new Random(seed);
 
-            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt = random.NextDouble() * 6 + 0.05;
 
             (V3 viPrograde, V3 vfPrograde) = Izzo.Solve(1.0, r0, rf, dt, TransferGeometry.Prograde, 0, V3.northpole);
@@ -174,9 +174,9 @@ namespace MechJebLibTest.LambertTests
 
             var random = new Random(seed);
 
-            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt = random.NextDouble() * 6 + 0.05;
 
             V3 vi1, vf1, vi2, vf2;

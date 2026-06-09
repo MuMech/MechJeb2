@@ -30,7 +30,7 @@ namespace MechJebLib.Maneuvers
 
         private void NLPFunction(double[] x, double[] fi, object? o)
         {
-            V3 rsoi    = new V3(_soi, x[2], x[3]).sph2cart;
+            V3 rsoi = new V3(_soi, x[2], x[3]).sph2cart;
             V3 vsoiPos = new V3(x[4], x[5], x[6]).sph2cart;
 
             (V3 rsoiPlanet, V3 vsoiPlanet, V3 dv1, V3 dv2) = GenerateValues(x);
@@ -46,10 +46,10 @@ namespace MechJebLib.Maneuvers
 
         private (V3 rsoiPlanet, V3 vsoiPlanet, V3 dv1, V3 dv2) GenerateValues(double[] x)
         {
-            double tBurn  = x[0]; // moon scaled
+            double tBurn = x[0];  // moon scaled
             double tCoast = x[1]; // moon scaled
 
-            V3 rSoi    = new V3(_soi, x[2], x[3]).sph2cart; // moon scaled
+            V3 rSoi = new V3(_soi, x[2], x[3]).sph2cart;    // moon scaled
             V3 vSoiPos = new V3(x[4], x[5], x[6]).sph2cart; // moon scaled
 
             // All moon scaled
@@ -70,11 +70,11 @@ namespace MechJebLib.Maneuvers
         private void GenerateGuess(double[] x)
         {
             double tBurn, tCoast;
-            V3     rSoi,  vSoi;
+            V3 rSoi, vSoi;
 
 
             double tSoi = 0;
-            int    i    = 0;
+            int i = 0;
             while (true)
             {
                 Print($"{tSoi}");
@@ -140,8 +140,8 @@ namespace MechJebLib.Maneuvers
             Print(
                 $"ReturnFromMoon.Maneuver({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
 
-            var   moonScale         = Scale.Create(moonMu, Sqrt(r0.magnitude * moonSOI));
-            var   planetScale       = Scale.Create(centralMu, Sqrt(peR * moonR0.magnitude));
+            var moonScale = Scale.Create(moonMu, Sqrt(r0.magnitude * moonSOI));
+            var planetScale = Scale.Create(centralMu, Sqrt(peR * moonR0.magnitude));
             Scale moonToPlanetScale = moonScale.ConvertTo(planetScale);
 
             _soi = moonSOI / moonScale.LengthScale;
@@ -156,7 +156,7 @@ namespace MechJebLib.Maneuvers
             _cosInc = Cos(inc);
             _inc = inc;
 
-            double[] x0   = new double[NVARIABLES];
+            double[] x0 = new double[NVARIABLES];
             double[] bndl = new double[NVARIABLES];
             double[] bndu = new double[NVARIABLES];
 
@@ -182,7 +182,7 @@ namespace MechJebLib.Maneuvers
 
             double[] fi = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1];
             NLPFunction(x1, fi, null);
-            double shortCost  = fi[0];
+            double shortCost = fi[0];
             double shortError = Max(Max(rep1.bcerr, rep1.lcerr), rep1.nlcerr);
 
             Print($"termination type: {rep1.terminationtype}");
@@ -203,7 +203,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
 
             NLPFunction(x2, fi, null);
-            double longCost  = fi[0];
+            double longCost = fi[0];
             double longError = Max(Max(rep2.bcerr, rep2.lcerr), rep2.nlcerr);
 
             Print($"termination type: {rep1.terminationtype}");

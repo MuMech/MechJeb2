@@ -86,10 +86,10 @@ namespace MechJebLib.Maneuvers
             dt /= _planetScale.TimeScale;
             _cosInc = Cos(inc);
 
-            const int    NUM_EQUALITY_CONSTRAINTS   = 5;
-            const int    NUM_INEQUALITY_CONSTRAINTS = 1;
-            const double DIFFSTEP                   = 1e-6;
-            const int    MAXITS                     = 500;
+            const int NUM_EQUALITY_CONSTRAINTS = 5;
+            const int NUM_INEQUALITY_CONSTRAINTS = 1;
+            const double DIFFSTEP = 1e-6;
+            const int MAXITS = 500;
 
             const int NVARIABLES = 7;
 
@@ -139,7 +139,7 @@ namespace MechJebLib.Maneuvers
             double[] fi = new double[NUM_EQUALITY_CONSTRAINTS + NUM_INEQUALITY_CONSTRAINTS + 1];
 
             NLPFunction(x1, fi, null);
-            double shortCost  = fi[0];
+            double shortCost = fi[0];
             double shortError = Max(Max(rep1.bcerr, rep1.lcerr), rep1.nlcerr);
 
             Print($"termination type: {rep1.terminationtype}");
@@ -160,7 +160,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
 
             NLPFunction(x2, fi, null);
-            double longCost  = fi[0];
+            double longCost = fi[0];
             double longError = Max(Max(rep2.bcerr, rep2.lcerr), rep2.nlcerr);
 
             Print($"termination type: {rep2.terminationtype}");

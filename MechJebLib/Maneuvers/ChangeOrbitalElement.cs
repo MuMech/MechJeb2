@@ -27,11 +27,11 @@ namespace MechJebLib.Maneuvers
             var dv0 = new DualV3(x[0], x[1], 0, 1, 0, 0);
             var dv1 = new DualV3(x[0], x[1], 0, 0, 1, 0);
 
-            var    args  = (Args)obj;
-            V3     p     = args.P;
-            V3     q     = args.Q;
+            var args = (Args)obj;
+            V3 p = args.P;
+            V3 q = args.Q;
             double value = args.Value;
-            Type   type  = args.Type;
+            Type type = args.Type;
 
             Dual sqM0 = dv0.sqrMagnitude;
             Dual sqM1 = dv1.sqrMagnitude;
@@ -77,11 +77,11 @@ namespace MechJebLib.Maneuvers
         {
             var dv = new V3(x[0], x[1], 0);
 
-            var    args  = (Args)obj;
-            V3     p     = args.P;
-            V3     q     = args.Q;
+            var args = (Args)obj;
+            V3 p = args.P;
+            V3 q = args.Q;
             double value = args.Value;
-            Type   type  = args.Type;
+            Type type = args.Type;
 
             fi[0] = dv.sqrMagnitude;
 
@@ -116,8 +116,8 @@ namespace MechJebLib.Maneuvers
             //const double EPSX     = 1e-10;
             const int MAXITS = 1000;
 
-            const int NVARIABLES             = 2;
-            const int NEQUALITYCONSTRAINTS   = 1;
+            const int NVARIABLES = 2;
+            const int NEQUALITYCONSTRAINTS = 1;
             const int NINEQUALITYCONSTRAINTS = 0;
 
             double[] x0 = new double[NVARIABLES];

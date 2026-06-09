@@ -58,9 +58,9 @@ namespace MechJebLib.Primitives
         // Rotates the point /point/ with /rotation/.
         public static V3 operator *(Q3 q, V3 v)
         {
-            double x  = q.x * 2.0;
-            double y  = q.y * 2.0;
-            double z  = q.z * 2.0;
+            double x = q.x * 2.0;
+            double y = q.y * 2.0;
+            double z = q.z * 2.0;
             double xx = q.x * x;
             double yy = q.y * y;
             double zz = q.z * z;
@@ -227,7 +227,7 @@ namespace MechJebLib.Primitives
             double trace = m00 + m11 + m22;
             if (trace > 0f)
             {
-                double num      = Sqrt(trace + 1);
+                double num = Sqrt(trace + 1);
                 double fiveonum = 0.5 / num;
                 return new Q3(
                     (m12 - m21) * fiveonum,
@@ -295,7 +295,7 @@ namespace MechJebLib.Primitives
             if (dot > 0.99999999)
                 return Lerp(a, end, t);
 
-            double theta    = Acos(dot);
+            double theta = Acos(dot);
             double sinTheta = Sin(theta);
 
             double wa = Sin((1 - t) * theta) / sinTheta;
@@ -332,9 +332,9 @@ namespace MechJebLib.Primitives
             if (dot > 0.9999999999) // Vectors are nearly identical (zero cross-product)
                 return identity; */
 
-            var    cross = V3.Cross(fromDirection, toDirection);
-            double s     = Sqrt((1.0 + dot) * 2.0);
-            double invs  = 1 / s;
+            var cross = V3.Cross(fromDirection, toDirection);
+            double s = Sqrt((1.0 + dot) * 2.0);
+            double invs = 1 / s;
 
             return new Q3(
                 cross.x * invs,

@@ -33,7 +33,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
@@ -61,7 +61,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);

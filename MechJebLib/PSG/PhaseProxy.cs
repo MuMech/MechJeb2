@@ -103,7 +103,7 @@ namespace MechJebLib.PSG
 
         public PhaseProxy(Problem problem, int n, int idx, int p, Phase phase)
         {
-            int k     = 2 * n - 1;
+            int k = 2 * n - 1;
             int start = idx;
 
             // position grid points

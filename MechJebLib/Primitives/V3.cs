@@ -149,7 +149,7 @@ namespace MechJebLib.Primitives
             double invC = 1.0 / Math.Max(vector.max_magnitude, onNormal.max_magnitude);
             if (double.IsPositiveInfinity(invC)) return zero;
 
-            V3 vectorC   = vector * invC;
+            V3 vectorC = vector * invC;
             V3 onNormalC = onNormal * invC;
 
             double invSqrMag = 1.0 / Dot(onNormalC, onNormalC);
@@ -170,11 +170,11 @@ namespace MechJebLib.Primitives
             double invC = 1.0 / Math.Max(vector.max_magnitude, planeNormal.max_magnitude);
             if (double.IsPositiveInfinity(invC)) return zero;
 
-            V3 vectorC      = vector * invC;
+            V3 vectorC = vector * invC;
             V3 planeNormalC = planeNormal * invC;
 
             double invSqrMag = 1.0 / Dot(planeNormalC, planeNormalC);
-            double dot       = Dot(vectorC, planeNormalC);
+            double dot = Dot(vectorC, planeNormalC);
 
             return new V3(vector.x - planeNormal.x * dot * invSqrMag,
                 vector.y - planeNormal.y * dot * invSqrMag,
@@ -191,8 +191,8 @@ namespace MechJebLib.Primitives
             if (magA == 0 || magB == 0)
                 return Lerp(a, b, t);
 
-            var qa     = Q3.FromToRotation(forward, a.normalized);
-            var qb     = Q3.FromToRotation(forward, b.normalized);
+            var qa = Q3.FromToRotation(forward, a.normalized);
+            var qb = Q3.FromToRotation(forward, b.normalized);
             var qSlerp = Q3.Slerp(qa, qb, t);
 
             V3 direction = qSlerp * forward;
@@ -208,7 +208,7 @@ namespace MechJebLib.Primitives
             if (c <= 0) return 0;
 
             V3 from_scaled = from / c;
-            V3 to_scaled   = to / c;
+            V3 to_scaled = to / c;
 
             double denominator = from_scaled.magnitude * to_scaled.magnitude;
             if (denominator <= 0) return 0;
@@ -227,8 +227,8 @@ namespace MechJebLib.Primitives
             to.Normalize();
             axis.Normalize();
 
-            V3     cross = Cross(from, to);
-            double sign  = Dot(cross, axis);
+            V3 cross = Cross(from, to);
+            double sign = Dot(cross, axis);
             double angle = Angle(from, to);
 
             return sign >= 0 ? angle : -angle;
@@ -400,9 +400,9 @@ namespace MechJebLib.Primitives
                 if (r == 0)
                     return zero;
 
-                double rho   = new V3(x, y, 0).magnitude;
+                double rho = new V3(x, y, 0).magnitude;
                 double theta = Atan2(rho, z);
-                double phi   = Clamp2Pi(Atan2(y, x));
+                double phi = Clamp2Pi(Atan2(y, x));
 
                 return new V3(r, theta, phi);
             }

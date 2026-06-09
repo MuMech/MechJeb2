@@ -120,7 +120,7 @@ namespace MechJebLib.Control
             var C = new M3(1.0, 0, 0, 0, 1.0, 0, 0, 0, 0);
 
             V3 X̂pred = A * X̂ + B * _uSat;
-            V3 ypred  = C * X̂pred;
+            V3 ypred = C * X̂pred;
             X̂ = X̂pred + L * (ytrue - ypred);
 
             double u = -V3.Dot(Kstate, X̂) - Kint * _ei;

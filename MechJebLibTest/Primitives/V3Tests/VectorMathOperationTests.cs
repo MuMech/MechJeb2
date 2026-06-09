@@ -125,7 +125,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void ProjectOntoArbitraryVector()
         {
             var vector = new V3(3, 4, 0);
-            var onto   = new V3(1, 1, 0);
+            var onto = new V3(1, 1, 0);
 
             var projected = V3.Project(vector, onto);
             projected.ShouldEqual(new V3(3.5, 3.5, 0));
@@ -149,14 +149,14 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void ProjectWithOverflow()
         {
             var vector = new V3(1e200, 0, 0);
-            var onto   = new V3(1e200, 1e200, 0);
+            var onto = new V3(1e200, 1e200, 0);
             V3.Project(vector, onto).ShouldEqual(new V3(5e199, 5e199, 0));
         }
 
         [Fact]
         private void ProjectOnPlaneWithNormalVector()
         {
-            var vector      = new V3(3, 4, 5);
+            var vector = new V3(3, 4, 5);
             var planeNormal = new V3(0, 0, 1);
 
             V3.ProjectOnPlane(vector, planeNormal).ShouldEqual(new V3(3, 4, 0));
@@ -165,7 +165,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ProjectOnPlaneWithArbitraryNormal()
         {
-            var vector      = new V3(1, 2, 3);
+            var vector = new V3(1, 2, 3);
             var planeNormal = new V3(1, 1, 1);
 
             var projected = V3.ProjectOnPlane(vector, planeNormal);
@@ -182,7 +182,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ProjectOnPlaneWithOverflow()
         {
-            var vector      = new V3(1e200, 0, 0);
+            var vector = new V3(1e200, 0, 0);
             var planeNormal = new V3(1e200, 1e200, 0);
 
             V3.ProjectOnPlane(vector, planeNormal).ShouldEqual(new V3(5e199, -5e199, 0));
@@ -195,7 +195,7 @@ namespace MechJebLibTest.Primitives.V3Tests
             var normal = new V3(1, 2, 2);
 
             var onNormal = V3.Project(vector, normal);
-            var onPlane  = V3.ProjectOnPlane(vector, normal);
+            var onPlane = V3.ProjectOnPlane(vector, normal);
 
             (onNormal + onPlane).ShouldEqual(vector, 1e-14);
         }
@@ -267,7 +267,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void SignedAnglePositive()
         {
             var from = new V3(1, 0, 0);
-            var to   = new V3(0, 1, 0);
+            var to = new V3(0, 1, 0);
             var axis = new V3(0, 0, 1);
 
             V3.SignedAngle(from, to, axis).ShouldEqual(PI / 2);
@@ -277,7 +277,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void SignedAngleNegative()
         {
             var from = new V3(1, 0, 0);
-            var to   = new V3(0, -1, 0);
+            var to = new V3(0, -1, 0);
             var axis = new V3(0, 0, 1);
 
             V3.SignedAngle(from, to, axis).ShouldEqual(-PI / 2);
@@ -287,7 +287,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void SignedAngleFullRotation()
         {
             var from = new V3(1, 0, 0);
-            var to   = new V3(-1, 0, 0);
+            var to = new V3(-1, 0, 0);
             var axis = new V3(0, 0, 1);
 
             double angle = V3.SignedAngle(from, to, axis);
@@ -298,7 +298,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void SignedAngleWithParallelVectors()
         {
             var from = new V3(1, 2, 3);
-            var to   = new V3(2, 4, 6);
+            var to = new V3(2, 4, 6);
             var axis = new V3(0, 0, 1);
 
             V3.SignedAngle(from, to, axis).ShouldEqual(0.0);
@@ -307,8 +307,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void SignedAngleFlipsWithAxis()
         {
-            var from  = new V3(1, 0, 0);
-            var to    = new V3(0, 1, 0);
+            var from = new V3(1, 0, 0);
+            var to = new V3(0, 1, 0);
             var axis1 = new V3(0, 0, 1);
             var axis2 = new V3(0, 0, -1);
 
@@ -374,7 +374,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OrthoNormalizeBasicVectors()
         {
-            var normal  = new V3(1, 1, 0);
+            var normal = new V3(1, 1, 0);
             var tangent = new V3(1, 0, 0);
 
             V3.OrthoNormalize(ref normal, ref tangent);
@@ -387,7 +387,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OrthoNormalizePreservesNormalDirection()
         {
-            var normal  = new V3(2, 0, 0);
+            var normal = new V3(2, 0, 0);
             var tangent = new V3(1, 1, 0);
 
             V3 originalNormalDir = normal.normalized;
@@ -399,7 +399,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OrthoNormalizeCreatesOrthogonalVectors()
         {
-            var normal  = new V3(0, 0, 1);
+            var normal = new V3(0, 0, 1);
             var tangent = new V3(1, 1, 0);
 
             V3.OrthoNormalize(ref normal, ref tangent);
@@ -417,7 +417,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OrthoNormalizeWithNearlyParallelVectors()
         {
-            var normal  = new V3(1, 0, 0);
+            var normal = new V3(1, 0, 0);
             var tangent = new V3(1, 0.001, 0);
 
             V3.OrthoNormalize(ref normal, ref tangent);
@@ -459,9 +459,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OuterProductBasicVectors()
         {
-            var a      = new V3(1, 2, 3);
-            var b      = new V3(4, 5, 6);
-            M3  result = V3.Outer(a, b);
+            var a = new V3(1, 2, 3);
+            var b = new V3(4, 5, 6);
+            M3 result = V3.Outer(a, b);
 
             result.GetColumn(0).ShouldEqual(a * 4);
             result.GetColumn(1).ShouldEqual(a * 5);
@@ -508,9 +508,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OuterProductWithNegativeComponents()
         {
-            var a      = new V3(-1, 2, -3);
-            var b      = new V3(4, -5, 6);
-            M3  result = V3.Outer(a, b);
+            var a = new V3(-1, 2, -3);
+            var b = new V3(4, -5, 6);
+            M3 result = V3.Outer(a, b);
 
             result.GetColumn(0).ShouldEqual(new V3(-4, 8, -12));
             result.GetColumn(1).ShouldEqual(new V3(5, -10, 15));
@@ -520,9 +520,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OuterProductRankOne()
         {
-            var a      = new V3(1, 2, 3);
-            var b      = new V3(4, 5, 6);
-            M3  result = V3.Outer(a, b);
+            var a = new V3(1, 2, 3);
+            var b = new V3(4, 5, 6);
+            M3 result = V3.Outer(a, b);
 
             result.determinant.ShouldEqual(0.0);
         }
@@ -548,7 +548,7 @@ namespace MechJebLibTest.Primitives.V3Tests
             var b = new V3(5, 6, 7);
             var c = new V3(1, 1, 1);
 
-            M3 outer  = V3.Outer(a, b);
+            M3 outer = V3.Outer(a, b);
             V3 result = outer * c;
 
             double bDotC = V3.Dot(b, c);
@@ -558,9 +558,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OuterProductLargeValues()
         {
-            var a      = new V3(1e100, 1e100, 1e100);
-            var b      = new V3(1e50, 1e50, 1e50);
-            M3  result = V3.Outer(a, b);
+            var a = new V3(1e100, 1e100, 1e100);
+            var b = new V3(1e50, 1e50, 1e50);
+            M3 result = V3.Outer(a, b);
 
             result.m00.ShouldEqual(1e150);
             result.m11.ShouldEqual(1e150);
@@ -570,9 +570,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void OuterProductSmallValues()
         {
-            var a      = new V3(1e-100, 1e-100, 1e-100);
-            var b      = new V3(1e-50, 1e-50, 1e-50);
-            M3  result = V3.Outer(a, b);
+            var a = new V3(1e-100, 1e-100, 1e-100);
+            var b = new V3(1e-50, 1e-50, 1e-50);
+            M3 result = V3.Outer(a, b);
 
             result.m00.ShouldEqual(1e-150);
             result.m11.ShouldEqual(1e-150);

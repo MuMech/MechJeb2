@@ -61,8 +61,8 @@ namespace MechJebLib.Maths
             nrev = Abs(nrev);
 
             // Chord
-            V3     c      = r2 - r1;
-            double cNorm  = c.magnitude;
+            V3 c = r2 - r1;
+            double cNorm = c.magnitude;
             double r1Norm = r1.magnitude;
             double r2Norm = r2.magnitude;
 
@@ -72,7 +72,7 @@ namespace MechJebLib.Maths
             // Versors
             V3 iR1 = r1 / r1Norm;
             V3 iR2 = r2 / r2Norm;
-            V3 iH  = V3.Cross(iR1, iR2).safeNormalized;
+            V3 iH = V3.Cross(iR1, iR2).safeNormalized;
 
             // Geometry of the problem
             double ll = Sqrt(1 - Min(1.0, cNorm / s));
@@ -107,7 +107,7 @@ namespace MechJebLib.Maths
 
             // Reconstruct
             double gamma = Sqrt(mu * s / 2);
-            double rho   = (r1Norm - r2Norm) / cNorm;
+            double rho = (r1Norm - r2Norm) / cNorm;
             double sigma = Sqrt(1 - rho * rho);
 
             // Compute the radial and tangential components at r1 and r2
@@ -211,8 +211,8 @@ namespace MechJebLib.Maths
             if (m == 0 && Sqrt(0.6) < x && x < Sqrt(1.4))
             {
                 double eta = y - ll * x;
-                double s1  = (1 - ll - x * eta) * 0.5;
-                double q   = 4.0 / 3.0 * Hyp2F1B(s1);
+                double s1 = (1 - ll - x * eta) * 0.5;
+                double q = 4.0 / 3.0 * Hyp2F1B(s1);
                 t = (eta * eta * eta * q + 4 * ll * eta) * 0.5;
             }
             else
@@ -254,12 +254,12 @@ namespace MechJebLib.Maths
             // we change the meaning of lowpath compared to poliastro here out of smoothness concerns
             if (lowpath)
             {
-                double r   = Pow(8 * t / (m * PI), 2.0 / 3.0);
+                double r = Pow(8 * t / (m * PI), 2.0 / 3.0);
                 double x0R = (r - 1) / (r + 1);
                 return x0R;
             }
 
-            double l   = Pow((m * PI + PI) / (8 * t), 2.0 / 3.0);
+            double l = Pow((m * PI + PI) / (8 * t), 2.0 / 3.0);
             double x0L = (l - 1) / (l + 1);
             return x0L;
         }
@@ -272,10 +272,10 @@ namespace MechJebLib.Maths
         {
             for (int ii = 0; ii < maxiter; ii++)
             {
-                double y     = Sqrt(1 - ll * ll * (1 - p0 * p0));
-                double fval  = TofEquationY(p0, y, t0, ll, m);
-                double t     = fval + t0;
-                double fder  = (3 * t * p0 - 2 + 2 * ll * ll * ll * p0 / y) / (1 - p0 * p0);
+                double y = Sqrt(1 - ll * ll * (1 - p0 * p0));
+                double fval = TofEquationY(p0, y, t0, ll, m);
+                double t = fval + t0;
+                double fder = (3 * t * p0 - 2 + 2 * ll * ll * ll * p0 / y) / (1 - p0 * p0);
                 double fder2 = (3 * t + 5 * p0 * fder + 2 * (1 - ll * ll) * ll * ll * ll / (y * y * y)) / (1 - p0 * p0);
                 double fder3 = (7 * p0 * fder2 + 8 * fder - 6 * (1 - ll * ll) * Powi(ll, 5) * p0 / Powi(y, 5)) / (1 - p0 * p0);
 
@@ -301,9 +301,9 @@ namespace MechJebLib.Maths
             if (x >= 1.0)
                 return double.PositiveInfinity;
 
-            double res  = 1.0;
+            double res = 1.0;
             double term = 1.0;
-            int    ii   = 0;
+            int ii = 0;
 
             while (true)
             {

@@ -111,8 +111,8 @@ namespace MechJebLib.Functions
             V3 vInfHat = vInf.normalized;
 
             // 2 cases for finding hf_hat (90 degree plane change vs general case)
-            double dot   = V3.Dot(h0Hat, vInfHat);
-            V3     hfHat = 1 - Abs(dot) < 1e-10 ? V3.Cross(rp0Hat, vInfHat) : V3.Cross(vInfHat, V3.Cross(h0Hat, vInfHat));
+            double dot = V3.Dot(h0Hat, vInfHat);
+            V3 hfHat = 1 - Abs(dot) < 1e-10 ? V3.Cross(rp0Hat, vInfHat) : V3.Cross(vInfHat, V3.Cross(h0Hat, vInfHat));
             hfHat = hfHat.normalized;
 
             V3 r1Hat;
@@ -153,9 +153,9 @@ namespace MechJebLib.Functions
             double deltaNu = SafeAcos(V3.Dot(r1Hat, vInfHat));
 
             // eccentricity of the hyperbolic ejection orbit
-            double sindnu  = Sin(deltaNu);
+            double sindnu = Sin(deltaNu);
             double sin2dnu = sindnu * sindnu;
-            double cosdnu  = Cos(deltaNu);
+            double cosdnu = Cos(deltaNu);
             double ef = Max(
                 Sqrt(sin2dnu + 2 * k * k + 2 * k * (1 - cosdnu) + sindnu * Sqrt(sin2dnu + 4 * k * (1 - cosdnu))) / (Sqrt(2) * k),
                 1 + EPS);
@@ -186,8 +186,8 @@ namespace MechJebLib.Functions
             V3 vNeg = Sqrt(mu / p0) * (-Sin(nu10) * rp0Hat + (ecc0 + Cos(nu10)) * vp0Hat);
 
             // compute nu of the reference position on the parking orbit
-            V3     r0Hat = r0 / r0.magnitude;
-            double nu0   = Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat))) * SafeAcos(V3.Dot(rp0Hat, r0Hat));
+            V3 r0Hat = r0 / r0.magnitude;
+            double nu0 = Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat))) * SafeAcos(V3.Dot(rp0Hat, r0Hat));
 
             // mean angular motion of the parking orbit (rad/time)
             double n = 1 / Sqrt(a0 * a0 * a0 / mu);

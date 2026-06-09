@@ -29,8 +29,8 @@ namespace MechJebLibTest.FunctionsTests
             //   acos formulation: inc = acos(1.0) = 0           ← catastrophic loss
             //   atan2 formulation: q = 5e-11, inc = 2·atan(q) ≈ 1e-10   ← preserved
             const double eps = 1e-10;
-            var          r   = new V3(1, 0, 0);
-            var          v   = new V3(0, Cos(eps), Sin(eps));
+            var r = new V3(1, 0, 0);
+            var v = new V3(0, Cos(eps), Sin(eps));
 
             (double sma, double ecc, double inc, double lan, double argp, double nu, _) = Astro.KeplerianFromStateVectors(1.0, r, v);
 
@@ -49,8 +49,8 @@ namespace MechJebLibTest.FunctionsTests
             //   acos formulation: hhat.z rounds to -1.0; inc = acos(-1.0) = π
             //   atan2 formulation with I=-1: q ≈ 5e-11, inc = π - 2·atan(q) ≈ π - 1e-10
             const double eps = 1e-10;
-            var          r   = new V3(1, 0, 0);
-            var          v   = new V3(0, -Cos(eps), Sin(eps));
+            var r = new V3(1, 0, 0);
+            var v = new V3(0, -Cos(eps), Sin(eps));
 
             (double sma, double ecc, double inc, double lan, double argp, double nu, _) = Astro.KeplerianFromStateVectors(1.0, r, v);
 
@@ -70,8 +70,8 @@ namespace MechJebLibTest.FunctionsTests
             //   acos formulation: Ω = acos(1.0) = 0              ← node azimuth lost
             //   atan2 formulation: p = 1e-10, q = 1, lan = atan2(p, q) ≈ 1e-10
             const double eps = 1e-10;
-            var          r   = new V3(Cos(eps), Sin(eps), 0);
-            var          v   = new V3(0, 0, 1);
+            var r = new V3(Cos(eps), Sin(eps), 0);
+            var v = new V3(0, 0, 1);
 
             (double sma, double ecc, double inc, double lan, double argp, double nu, _) = Astro.KeplerianFromStateVectors(1.0, r, v);
 
@@ -98,8 +98,8 @@ namespace MechJebLibTest.FunctionsTests
             //   v at periapsis = sqrt(μ(1+e)/(a(1-e))) · (-sin ω, 0, cos ω)
             //                  = sqrt(3) · (-sin ω, 0, cos ω)
             const double eps = 1e-10;
-            var          r   = new V3(0.5 * Cos(eps), 0, 0.5 * Sin(eps));
-            var          v   = new V3(-Sqrt(3) * Sin(eps), 0, Sqrt(3) * Cos(eps));
+            var r = new V3(0.5 * Cos(eps), 0, 0.5 * Sin(eps));
+            var v = new V3(-Sqrt(3) * Sin(eps), 0, Sqrt(3) * Cos(eps));
 
             (double sma, double ecc, double inc, double lan, double argp, double nu, _) = Astro.KeplerianFromStateVectors(1.0, r, v);
 
