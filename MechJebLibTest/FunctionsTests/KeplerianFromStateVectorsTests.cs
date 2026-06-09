@@ -141,8 +141,8 @@ namespace MechJebLibTest.FunctionsTests
             // Perifocal velocity at ν=π/2: v_p = √(μ/l) · (-sin ν, e+cos ν) = √(4/3) · (-1, 0.5).
             // Rotated to inertial (Ω=ω=0, i=π/2): (-1)·x̂ + 0.5·ẑ scaled by √(4/3).
             double s = Sqrt(4.0 / 3.0);
-            var    r = new V3(0, 0, 0.75);
-            var    v = new V3(-s, 0, 0.5 * s);
+            var r = new V3(0, 0, 0.75);
+            var v = new V3(-s, 0, 0.5 * s);
 
             (double sma, double ecc, double inc, double lan, double argp, double nu, _) =
                 Astro.KeplerianFromStateVectors(1.0, r, v);

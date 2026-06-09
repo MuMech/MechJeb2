@@ -87,9 +87,9 @@ namespace MechJebLib.PSG
 
         private (double t0, double oldt0) TranscribePhasesFromOldSolution(int phaseStart, int phaseLimit, double t0, Solution oldSolution, double oldt0, double oldtf)
         {
-            double tbt    = 0;
+            double tbt = 0;
             double oldtbt = oldtf - oldt0;
-            double frac   = 1.0;
+            double frac = 1.0;
 
             if (!Phases[phaseStart].Coast)
             {
@@ -101,24 +101,24 @@ namespace MechJebLib.PSG
 
             for (int p = phaseStart; p < phaseLimit; p++)
             {
-                Phase      phase     = Phases[p];
+                Phase phase = Phases[p];
                 PhaseProxy thisPhase = _vars[p];
 
                 oldtbt = oldtf - oldt0;
-                double bt    = Phases[p].Coast ? oldtbt : Clamp(phase.Bt, 0, oldtbt / frac);
+                double bt = Phases[p].Coast ? oldtbt : Clamp(phase.Bt, 0, oldtbt / frac);
                 double oldbt = bt * frac;
                 oldbt = Min(oldbt, oldtf - oldt0);
                 double oldh = oldbt / (K - 1);
 
                 double tf = t0 + bt;
-                double h  = bt / (K - 1);
+                double h = bt / (K - 1);
 
-                double m0   = phase.M0;
+                double m0 = phase.M0;
                 double mdot = -phase.Mdot;
 
                 for (int k = 0; k < K; k++)
                 {
-                    double dt    = k * h;
+                    double dt = k * h;
                     double olddt = k * oldh;
 
                     V3 r = oldSolution.RBar(oldt0 + olddt);
@@ -177,7 +177,7 @@ namespace MechJebLib.PSG
                 if (Phases[p].Coast)
                     coastPhaseIndex = p;
 
-            double t0    = 0;
+            double t0 = 0;
             double oldt0 = (Problem.T0 - oldSolution.T0) / Problem.Scale.TimeScale;
 
             (double oldburn1, double oldcoast, double oldburn2) = oldSolution.TgoBarSplit(oldt0);
@@ -219,16 +219,16 @@ namespace MechJebLib.PSG
             _xGuess = new double[_vars.TotalVariables];
             _vars.WrapVars(_xGuess);
 
-            double t0    = 0;
+            double t0 = 0;
             double oldt0 = 0;
             for (int p = 0; p < Phases.Count; p++)
             {
-                Phase      phase     = Phases[p];
+                Phase phase = Phases[p];
                 PhaseProxy thisPhase = _vars[p];
 
                 double oldbt = oldSolution.BtBar(p, 0);
                 double oldtf = oldt0 + oldbt;
-                double oldh  = (oldtf - oldt0) / (K - 1);
+                double oldh = (oldtf - oldt0) / (K - 1);
 
                 // a previous infinite stage can exceed the burn time, so start by clamping it back
                 // down, but we want to end at the same location, so we index into the old solution
@@ -237,14 +237,14 @@ namespace MechJebLib.PSG
                 if (!phase.Coast)
                     bt = Min(oldbt, phase.Bt);
                 double tf = t0 + bt;
-                double h  = (tf - t0) / (K - 1);
+                double h = (tf - t0) / (K - 1);
 
-                double m0   = phase.MassContinuity ? oldSolution.MBar(t0) : phase.M0;
+                double m0 = phase.MassContinuity ? oldSolution.MBar(t0) : phase.M0;
                 double mdot = -phase.Mdot;
 
                 for (int k = 0; k < K; k++)
                 {
-                    double dt    = k * h;
+                    double dt = k * h;
                     double olddt = k * oldh;
 
                     V3 r = oldSolution.RBar(t0 + olddt);
@@ -295,10 +295,10 @@ namespace MechJebLib.PSG
 
         private Solution UnSafeRun()
         {
-            double[] x              = new double[_vars.TotalVariables];
-            double[] bndl           = new double[_vars.TotalVariables];
-            double[] bndu           = new double[_vars.TotalVariables];
-            bool[]   boxConstrained = new bool[_vars.TotalVariables];
+            double[] x = new double[_vars.TotalVariables];
+            double[] bndl = new double[_vars.TotalVariables];
+            double[] bndu = new double[_vars.TotalVariables];
+            bool[] boxConstrained = new bool[_vars.TotalVariables];
             _nl = new double[_vars.TotalConstraints];
             _nu = new double[_vars.TotalConstraints];
             double[] f = new double[_vars.TotalConstraints + 1];
@@ -333,7 +333,7 @@ namespace MechJebLib.PSG
             for (int p = 0; p < Phases.Count; p++)
             {
                 PhaseProxy thisPhase = _vars[p];
-                int        idx       = thisPhase.BtIdx();
+                int idx = thisPhase.BtIdx();
 
                 bndl[idx] = Phases[p].MinT;
                 bndu[idx] = Phases[p].MaxT;

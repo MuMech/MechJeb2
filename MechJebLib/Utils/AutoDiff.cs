@@ -42,9 +42,9 @@ namespace MechJebLib.Utils
 
         private static (double, Vec) Gradient(Func<Dual[], Dual> f, double[] point)
         {
-            int n        = point.Length;
+            int n = point.Length;
             var partials = Vec.Rent(n);
-            var ans      = new Dual(0);
+            var ans = new Dual(0);
 
             Dual[] duals = RentDualArray(n);
 
@@ -66,9 +66,9 @@ namespace MechJebLib.Utils
 
         private static (double, Vec) GradientV3(Func<DualV3[], Dual> f, V3[] point)
         {
-            int n        = point.Length;
+            int n = point.Length;
             var partials = Vec.Rent(3 * n);
-            var ans      = new Dual(0);
+            var ans = new Dual(0);
 
             DualV3[] duals = RentDualV3Array(n);
             for (int j = 0; j < n; j++)
@@ -92,11 +92,11 @@ namespace MechJebLib.Utils
 
         public static (V3, Vec partialX, Vec partialY, Vec partialZ) JacobianV3(Func<DualV3[], DualV3> f, V3[] point)
         {
-            int n        = point.Length;
+            int n = point.Length;
             var partialX = Vec.Rent(3 * n);
             var partialY = Vec.Rent(3 * n);
             var partialZ = Vec.Rent(3 * n);
-            var ans      = new DualV3(V3.zero, V3.zero);
+            var ans = new DualV3(V3.zero, V3.zero);
 
             DualV3[] duals = RentDualV3Array(n);
             for (int j = 0; j < n; j++)
@@ -250,9 +250,9 @@ namespace MechJebLib.Utils
 
             public void Seed(int k, double s)
             {
-                int field   = k / 3;
-                int axis    = k % 3;
-                V3  seedVec = s * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
+                int field = k / 3;
+                int axis = k % 3;
+                V3 seedVec = s * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
 
                 switch (field)
                 {
@@ -275,8 +275,8 @@ namespace MechJebLib.Utils
             {
                 if (k < 18)
                 {
-                    int bank  = k / 9;
-                    int axis  = k % 9 / 3;
+                    int bank = k / 9;
+                    int axis = k % 9 / 3;
                     int point = k % 3;
                     return bank switch
                     {
@@ -303,7 +303,7 @@ namespace MechJebLib.Utils
 
                 if (k < 30)
                 {
-                    int axis  = (k - 21) / 3;
+                    int axis = (k - 21) / 3;
                     int point = k % 3;
                     return axis switch
                     {
@@ -336,10 +336,10 @@ namespace MechJebLib.Utils
         {
             if (k < 18)
             {
-                int bank  = k / 9;
-                int axis  = k % 9 / 3;
+                int bank = k / 9;
+                int axis = k % 9 / 3;
                 int point = k % 3;
-                V3  vec   = val * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
+                V3 vec = val * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
                 switch (bank)
                 {
                     case 0:
@@ -394,9 +394,9 @@ namespace MechJebLib.Utils
             }
             else if (k < 30)
             {
-                int axis  = (k - 21) / 3;
+                int axis = (k - 21) / 3;
                 int point = k % 3;
-                V3  vec   = val * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
+                V3 vec = val * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
                 switch (point)
                 {
                     case 0:
@@ -416,21 +416,21 @@ namespace MechJebLib.Utils
         public static int ApplyHermiteSimpsonDynamics(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot, HermiteSimpsonSegment segment, HermiteSimpsonIndexes indexes, int n)
         {
             const int NUM_VARS = 31;
-            DualV3    ans;
-            var       jacX = Vec.Rent(NUM_VARS, true);
-            var       jacY = Vec.Rent(NUM_VARS, true);
-            var       jacZ = Vec.Rent(NUM_VARS, true);
+            DualV3 ans;
+            var jacX = Vec.Rent(NUM_VARS, true);
+            var jacY = Vec.Rent(NUM_VARS, true);
+            var jacZ = Vec.Rent(NUM_VARS, true);
 
-            var d0  = new HermiteSimpsonDualPoint { R = segment.R0, V = segment.V0, U = segment.U0, M = segment.M0 };
-            var d1  = new HermiteSimpsonDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, M = segment.M1 };
-            var d2  = new HermiteSimpsonDualPoint { R = segment.R2, V = segment.V2, U = segment.U2, M = segment.M2 };
+            var d0 = new HermiteSimpsonDualPoint { R = segment.R0, V = segment.V0, U = segment.U0, M = segment.M0 };
+            var d1 = new HermiteSimpsonDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, M = segment.M1 };
+            var d2 = new HermiteSimpsonDualPoint { R = segment.R2, V = segment.V2, U = segment.U2, M = segment.M2 };
             var dbt = new Dual(segment.Bt);
 
             /*
              * RDot
              */
 
-            Dual H  = dbt / (n - 1);
+            Dual H = dbt / (n - 1);
             Dual H6 = H / 6.0;
 
             d0.R = new DualV3(d0.R.M, V3.one);
@@ -623,7 +623,7 @@ namespace MechJebLib.Utils
                 else
                     dbt = new Dual(segment.Bt, 1);
 
-                Dual h  = dbt / (n - 1);
+                Dual h = dbt / (n - 1);
                 Dual h6 = h / 6.0;
 
                 ans = d2.V - d0.V - h6 * (vDot(ref d0) + 4 * vDot(ref d1) + vDot(ref d2));
@@ -719,7 +719,7 @@ namespace MechJebLib.Utils
                 else
                     dbt = new Dual(segment.Bt, 1);
 
-                Dual h  = dbt / (n - 1);
+                Dual h = dbt / (n - 1);
                 Dual h8 = h * 0.125;
 
                 ans = d1.V - 0.5 * (d0.V + d2.V) - h8 * (vDot(ref d0) - vDot(ref d2));

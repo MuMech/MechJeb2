@@ -46,7 +46,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ScaleMethodInPlace()
         {
-            var v     = new V3(2, 3, 4);
+            var v = new V3(2, 3, 4);
             var scale = new V3(5, 6, 7);
             v.Scale(scale);
             v.ShouldEqual(new V3(10, 18, 28));
@@ -78,8 +78,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void DivideProducesInfinity()
         {
-            var a      = new V3(1, 2, 3);
-            var b      = new V3(0, 0, 0);
+            var a = new V3(1, 2, 3);
+            var b = new V3(0, 0, 0);
             var result = V3.Divide(a, b);
             result.x.ShouldBePositiveInfinity();
             result.y.ShouldBePositiveInfinity();
@@ -122,7 +122,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void AbsSpecialValues()
         {
-            var v      = new V3(double.NegativeInfinity, double.NaN, -0.0);
+            var v = new V3(double.NegativeInfinity, double.NaN, -0.0);
             var result = V3.Abs(v);
             result.x.ShouldBePositiveInfinity();
             result.y.ShouldBeNaN();
@@ -175,7 +175,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void SqrtLargeValues()
         {
-            var v      = new V3(1e100, 4e200, 9e150);
+            var v = new V3(1e100, 4e200, 9e150);
             var result = V3.Sqrt(v);
             result.x.ShouldEqual(1e50);
             result.y.ShouldEqual(2e100);
@@ -185,7 +185,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void SqrtNegativeProducesNaN()
         {
-            var v      = new V3(-1, -4, -9);
+            var v = new V3(-1, -4, -9);
             var result = V3.Sqrt(v);
             result.x.ShouldBeNaN();
             result.y.ShouldBeNaN();
@@ -233,8 +233,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void MaxWithNaN()
         {
-            var a      = new V3(1, 2, 3);
-            var b      = new V3(double.NaN, 5, 6);
+            var a = new V3(1, 2, 3);
+            var b = new V3(double.NaN, 5, 6);
             var result = V3.Max(a, b);
             result.x.ShouldBeNaN();
             result.y.ShouldEqual(5);
@@ -282,8 +282,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void MinWithNaN()
         {
-            var a      = new V3(1, 2, 3);
-            var b      = new V3(double.NaN, 5, 6);
+            var a = new V3(1, 2, 3);
+            var b = new V3(double.NaN, 5, 6);
             var result = V3.Min(a, b);
             result.x.ShouldBeNaN();
             result.y.ShouldEqual(2);
@@ -293,7 +293,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ComponentWiseOperationsPreserveStructure()
         {
-            var v        = new V3(2, 3, 4);
+            var v = new V3(2, 3, 4);
             var identity = V3.Divide(V3.Scale(v, v), v);
             identity.ShouldEqual(v);
         }
@@ -301,8 +301,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void MaxMinRelationship()
         {
-            var a   = new V3(1, 5, 3);
-            var b   = new V3(4, 2, 6);
+            var a = new V3(1, 5, 3);
+            var b = new V3(4, 2, 6);
             var max = V3.Max(a, b);
             var min = V3.Min(a, b);
 

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Text;
 using MechJebLib.Functions;
 using MechJebLib.Interpolants;
-using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -81,14 +80,14 @@ namespace MechJebLib.PSG
         public V3 RBar(double tBar)
         {
             using Vec xRaw = Interpolate(tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.R;
         }
 
         public V3 RBar(int segment, double tBar)
         {
             using Vec xRaw = Interpolate(segment, tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.R;
         }
 
@@ -101,14 +100,14 @@ namespace MechJebLib.PSG
         public V3 VBar(double tBar)
         {
             using Vec xRaw = Interpolate(tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.V;
         }
 
         public V3 VBar(int segment, double tBar)
         {
             using Vec xRaw = Interpolate(segment, tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.V;
         }
 
@@ -121,14 +120,14 @@ namespace MechJebLib.PSG
         public V3 UBar(double tBar)
         {
             using Vec xRaw = Interpolate(tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.U;
         }
 
         public V3 UBar(int segment, double tBar)
         {
             using Vec xRaw = Interpolate(segment, tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.U;
         }
 
@@ -144,14 +143,14 @@ namespace MechJebLib.PSG
         public double MBar(int segment, double tBar)
         {
             using Vec xRaw = Interpolate(segment, tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.M;
         }
 
         public double MBar(double tBar)
         {
             using Vec xRaw = Interpolate(tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.M;
         }
 
@@ -174,7 +173,7 @@ namespace MechJebLib.PSG
         public double DVBar(double tBar)
         {
             using Vec xRaw = Interpolate(tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
+            var x = InterpolantLayout.CreateFrom(xRaw);
             return x.Dv;
         }
 
@@ -186,13 +185,13 @@ namespace MechJebLib.PSG
 
         public double DV(double t, int n)
         {
-            double    tbar  = (t - T0) / _timeScale;
-            double    min   = tbar > _tmin[n] ? tbar : _tmin[n];
-            double    max   = _tmax[n];
+            double tbar = (t - T0) / _timeScale;
+            double min = tbar > _tmin[n] ? tbar : _tmin[n];
+            double max = _tmax[n];
             using Vec ddmin = Interpolate(n, min);
-            var       xmin  = InterpolantLayout.CreateFrom(ddmin);
+            var xmin = InterpolantLayout.CreateFrom(ddmin);
             using Vec ddmax = Interpolate(n, max);
-            var       xmax  = InterpolantLayout.CreateFrom(ddmax);
+            var xmax = InterpolantLayout.CreateFrom(ddmax);
             return Max(xmax.Dv - xmin.Dv, 0) * _velocityScale;
         }
 
@@ -291,8 +290,8 @@ namespace MechJebLib.PSG
 
         public double StageTimeLeft(double t)
         {
-            double tbar  = (t - T0) / _timeScale;
-            int    phase = IndexForTbar(tbar);
+            double tbar = (t - T0) / _timeScale;
+            int phase = IndexForTbar(tbar);
             return (_tmax[phase] - tbar) * _timeScale;
         }
 
@@ -301,11 +300,11 @@ namespace MechJebLib.PSG
             double tBar = (t - T0) / _timeScale;
 
             using Vec xRaw = Interpolate(tBar);
-            var       x    = InterpolantLayout.CreateFrom(xRaw);
-            V3        u0   = x.U.normalized;
+            var x = InterpolantLayout.CreateFrom(xRaw);
+            V3 u0 = x.U.normalized;
 
-            double thrustPct   = x.U.magnitude;
-            int    phase       = IndexForTbar(tBar);
+            double thrustPct = x.U.magnitude;
+            int phase = IndexForTbar(tBar);
             double minThrottle = Phases[phase].MinThrottle;
             double kspThrottle = minThrottle < 1.0 ? (thrustPct - minThrottle) / (1.0 - minThrottle) : 1.0;
 
@@ -319,7 +318,7 @@ namespace MechJebLib.PSG
             double tBar = (t - T0) / _timeScale;
 
             using Vec xraw = Interpolate(tBar);
-            var       x    = InterpolantLayout.CreateFrom(xraw);
+            var x = InterpolantLayout.CreateFrom(xraw);
             return (x.R * _lengthScale, x.V * _velocityScale);
         }
 
@@ -336,8 +335,8 @@ namespace MechJebLib.PSG
             double peA = peR - _rbody;
             double apA = apR <= 0 ? apR : apR - _rbody;
             double fpa = Astro.FlightPathAngle(rf, vf);
-            double rT  = rf.magnitude - _rbody;
-            double vT  = vf.magnitude;
+            double rT = rf.magnitude - _rbody;
+            double vT = vf.magnitude;
 
             var sb = new StringBuilder();
             sb.AppendLine($"Orbit: {peA.ToSI()}m x {apA.ToSI()}m");
@@ -410,7 +409,7 @@ namespace MechJebLib.PSG
 
              XXX: This tests for the angular momentum exceeding the target, so it is only applicable for orbit raising / ascents.
             */
-            var    hf   = V3.Cross(pos, vel);
+            var hf = V3.Cross(pos, vel);
             double tbar = (t - T0) / _timeScale;
 
             (V3 rT, V3 vT) = StateVectors(Tf);

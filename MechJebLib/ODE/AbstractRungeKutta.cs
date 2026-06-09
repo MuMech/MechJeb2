@@ -99,8 +99,8 @@ namespace MechJebLib.ODE
             if (MaxStep == MinStep)
                 return MinStep;
 
-            using Vec y     = Vec.Rent(N).CopyFrom(y0);
-            using Vec f0    = Vec.Rent(N).CopyFrom(dy);
+            using Vec y = Vec.Rent(N).CopyFrom(y0);
+            using Vec f0 = Vec.Rent(N).CopyFrom(dy);
             using Vec scale = y.Dup().Abs().Scal(Rtol).Shift(Atol);
 
             double d0 = y.Nrm2() / scale.Nrm2();

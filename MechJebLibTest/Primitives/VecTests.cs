@@ -142,8 +142,8 @@ namespace MechJebLibTest.Primitives
             }
 
             using var smaller = Vec.Rent(3, true);
-            int       count   = 0;
-            double    sum     = 0.0;
+            int count = 0;
+            double sum = 0.0;
             foreach (double x in smaller)
             {
                 count++;
@@ -157,7 +157,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void IList_Indexer_Works()
         {
-            using var     v      = Vec.Rent(4);
+            using var v = Vec.Rent(4);
             IList<double> asList = v;
             asList[0] = 1.0;
             asList[1] = 2.0;
@@ -182,7 +182,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void IList_MutationOps_Throw()
         {
-            using var     v      = Vec.Rent(3);
+            using var v = Vec.Rent(3);
             IList<double> asList = v;
             Assert.Throws<NotSupportedException>(() => asList.Add(1.0));
             Assert.Throws<NotSupportedException>(() => asList.Insert(0, 1.0));
@@ -269,7 +269,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void Dup_AllocatesFreshBackingArray()
         {
-            using var src  = Vec.Rent(4);
+            using var src = Vec.Rent(4);
             using Vec copy = src.Dup();
             Assert.NotSame(src.Data, copy.Data);
         }
@@ -334,8 +334,8 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void Fill_ReturnsSelf_ForChaining()
         {
-            using var v        = Vec.Rent(3);
-            Vec       returned = v.Fill(2.0);
+            using var v = Vec.Rent(3);
+            Vec returned = v.Fill(2.0);
             Assert.Same(v, returned);
             Assert.Equal(new[] { 2.0, 2.0, 2.0 }, new[] { v[0], v[1], v[2] });
         }
@@ -528,7 +528,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb1_ReturnsSelf()
         {
-            using var y  = Vec.Rent(2, true);
+            using var y = Vec.Rent(2, true);
             using var y0 = Vec.Rent(2);
             using var x1 = Vec.Rent(2);
             y0[0] = 1.0;
@@ -545,7 +545,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb2_ReturnsSelf()
         {
-            using var y  = Vec.Rent(2, true);
+            using var y = Vec.Rent(2, true);
             using var y0 = Vec.Rent(2, true);
             using var x1 = Vec.Rent(2);
             using var x2 = Vec.Rent(2);
@@ -562,7 +562,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb3_ReturnsSelf()
         {
-            using var y  = Vec.Rent(1, true);
+            using var y = Vec.Rent(1, true);
             using var y0 = Vec.Rent(1, true);
             using var x1 = Vec.Rent(1);
             using var x2 = Vec.Rent(1);
@@ -576,7 +576,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb4_ReturnsSelf()
         {
-            using var y  = Vec.Rent(1, true);
+            using var y = Vec.Rent(1, true);
             using var y0 = Vec.Rent(1, true);
             using var x1 = Vec.Rent(1);
             using var x2 = Vec.Rent(1);
@@ -591,7 +591,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb5_ReturnsSelf()
         {
-            using var y  = Vec.Rent(1, true);
+            using var y = Vec.Rent(1, true);
             using var y0 = Vec.Rent(1, true);
             using var x1 = Vec.Rent(1);
             using var x2 = Vec.Rent(1);
@@ -607,7 +607,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb6_ReturnsSelf()
         {
-            using var y  = Vec.Rent(1, true);
+            using var y = Vec.Rent(1, true);
             using var y0 = Vec.Rent(1, true);
             using var x1 = Vec.Rent(1);
             using var x2 = Vec.Rent(1);
@@ -624,7 +624,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb7_ReturnsSelf()
         {
-            using var y  = Vec.Rent(1, true);
+            using var y = Vec.Rent(1, true);
             using var y0 = Vec.Rent(1, true);
             using var x1 = Vec.Rent(1);
             using var x2 = Vec.Rent(1);
@@ -642,7 +642,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb8_ReturnsSelf()
         {
-            using var y  = Vec.Rent(1, true);
+            using var y = Vec.Rent(1, true);
             using var y0 = Vec.Rent(1, true);
             using var x1 = Vec.Rent(1);
             using var x2 = Vec.Rent(1);
@@ -663,7 +663,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         public void LinComb9_ReturnsSelf()
         {
-            using var y  = Vec.Rent(1, true);
+            using var y = Vec.Rent(1, true);
             using var y0 = Vec.Rent(1, true);
             using var x1 = Vec.Rent(1);
             using var x2 = Vec.Rent(1);

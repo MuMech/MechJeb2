@@ -32,7 +32,7 @@ namespace MechJebLibTest.ManeuversTests
         {
             var rng = new Random(seed);
 
-            double soi   = 66167158.6569544;
+            double soi = 66167158.6569544;
             double rmoon = 1737100;
             // i think as the peR gets larger the feasible set of inclinations tends to shrink?
             double peR = 0.80 * soi * rng.NextDouble() + rmoon / 10;
@@ -56,13 +56,13 @@ namespace MechJebLibTest.ManeuversTests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            double soi  = 66167158.6569544;
-            double mu0  = 398600435436096;
-            var    r0   = new V3(-6419931.35599855, -1598504.22548976, 1968486.96029449);
-            var    v0   = new V3(-747.608332256415, -9974.07871417746, -3695.67552943825);
-            double mu1  = 4902800066163.8;
-            var    r1   = new V3(4781917.4840911, -344412903.013029, -122488006.928327);
-            var    v1   = new V3(996.891435624119, 120.171877824752, -367.753988404139);
+            double soi = 66167158.6569544;
+            double mu0 = 398600435436096;
+            var r0 = new V3(-6419931.35599855, -1598504.22548976, 1968486.96029449);
+            var v0 = new V3(-747.608332256415, -9974.07871417746, -3695.67552943825);
+            double mu1 = 4902800066163.8;
+            var r1 = new V3(4781917.4840911, -344412903.013029, -122488006.928327);
+            var v1 = new V3(996.891435624119, 120.171877824752, -367.753988404139);
             double tsoi = 403785.23845505138; // time on initial coast to SOI
 
             Print($"periapsis: {peR} inc: {Rad2Deg(inc)}");

@@ -112,8 +112,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EqualityTest1()
         {
-            var one  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var two  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var one = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             var nan1 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
             var nan2 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
 
@@ -128,8 +128,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void InequalityTest1()
         {
-            var one  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var two  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var one = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             var nan1 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
             var nan2 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
 
@@ -144,8 +144,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EqualityTest2()
         {
-            var one  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var two  = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var one = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var two = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             var nan1 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
             var nan2 = new M3(double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN);
 
@@ -452,8 +452,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void AdditionDistributesOverScalarMultiplication()
         {
-            var          a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var          b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
+            var a = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var b = new M3(9, 8, 7, 6, 5, 4, 3, 2, 1);
             const double S = 2.5;
 
             (S * (a + b)).ShouldEqual(S * a + S * b);
@@ -462,9 +462,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void AdditionPreservesSymmetry()
         {
-            var a   = new M3(1, 2, 3, 2, 4, 5, 3, 5, 6);
-            var b   = new M3(6, 5, 4, 5, 3, 2, 4, 2, 1);
-            M3  sum = a + b;
+            var a = new M3(1, 2, 3, 2, 4, 5, 3, 5, 6);
+            var b = new M3(6, 5, 4, 5, 3, 2, 4, 2, 1);
+            M3 sum = a + b;
 
             sum[0, 1].ShouldEqual(sum[1, 0]);
             sum[0, 2].ShouldEqual(sum[2, 0]);
@@ -474,8 +474,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void RotateTest()
         {
-            var one   = Q3.AngleAxis(Deg2Rad(30), new V3(1, 0, 0));
-            var two   = Q3.AngleAxis(Deg2Rad(45), new V3(0, 1, 0));
+            var one = Q3.AngleAxis(Deg2Rad(30), new V3(1, 0, 0));
+            var two = Q3.AngleAxis(Deg2Rad(45), new V3(0, 1, 0));
             var three = Q3.AngleAxis(Deg2Rad(60), new V3(0, 0, 1));
             var five = new M3(1, 0, 0,
                 0, Cos(Deg2Rad(30)), -Sin(Deg2Rad(30)),
@@ -657,7 +657,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void CopyToBasic()
         {
-            var       m     = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             double[,] array = new double[5, 5];
 
             m.CopyTo(array, 0, 0);
@@ -676,7 +676,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void CopyToWithOffset()
         {
-            var       m     = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             double[,] array = new double[6, 6];
 
             m.CopyTo(array, 1, 2);
@@ -728,7 +728,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void CopyToPreservesOtherElements()
         {
-            var       m     = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             double[,] array = new double[5, 5];
             array[0, 4] = 100;
             array[4, 0] = 200;
@@ -744,8 +744,8 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void CopyToMultipleMatrices()
         {
-            var       m1    = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            var       m2    = new M3(10, 20, 30, 40, 50, 60, 70, 80, 90);
+            var m1 = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m2 = new M3(10, 20, 30, 40, 50, 60, 70, 80, 90);
             double[,] array = new double[3, 6];
 
             m1.CopyTo(array, 0, 0);
@@ -762,7 +762,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void CopyToWithNegativeValues()
         {
-            var       m     = new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9);
+            var m = new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9);
             double[,] array = new double[3, 3];
 
             m.CopyTo(array, 0, 0);
@@ -775,7 +775,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void CopyToWithLargeValues()
         {
-            var       m     = new M3(1e100, 1e200, 1e-100, 1e-200, 0, 1, -1e100, -1e200, 1e150);
+            var m = new M3(1e100, 1e200, 1e-100, 1e-200, 0, 1, -1e100, -1e200, 1e150);
             double[,] array = new double[3, 3];
 
             m.CopyTo(array, 0, 0);
@@ -889,7 +889,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void WithDiagonalThenGetDiagonal()
         {
             var v = new V3(7, 8, 9);
-            M3  m = M3.zero.WithDiagonal(v);
+            M3 m = M3.zero.WithDiagonal(v);
 
             m.diagonal.ShouldEqual(v);
         }
@@ -928,7 +928,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void WithSwappedRowsSameIndex()
         {
             var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            M3  m        = original.WithSwappedRows(1, 1);
+            M3 m = original.WithSwappedRows(1, 1);
 
             m.ShouldEqual(original);
         }
@@ -937,7 +937,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void WithSwappedRowsTwiceRestoresOriginal()
         {
             var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            M3  m        = original.WithSwappedRows(0, 2).WithSwappedRows(0, 2);
+            M3 m = original.WithSwappedRows(0, 2).WithSwappedRows(0, 2);
 
             m.ShouldEqual(original);
         }
@@ -987,7 +987,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void WithSwappedColumnsSameIndex()
         {
             var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            M3  m        = original.WithSwappedColumns(1, 1);
+            M3 m = original.WithSwappedColumns(1, 1);
 
             m.ShouldEqual(original);
         }
@@ -996,7 +996,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void WithSwappedColumnsTwiceRestoresOriginal()
         {
             var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            M3  m        = original.WithSwappedColumns(0, 2).WithSwappedColumns(0, 2);
+            M3 m = original.WithSwappedColumns(0, 2).WithSwappedColumns(0, 2);
 
             m.ShouldEqual(original);
         }
@@ -1035,9 +1035,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void WithSwappedRowsChangesDeterminantSign()
         {
-            var    original    = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
             double originalDet = original.determinant;
-            M3     m           = original.WithSwappedRows(0, 1);
+            M3 m = original.WithSwappedRows(0, 1);
 
             m.determinant.ShouldEqual(-originalDet, 1e-14);
         }
@@ -1045,9 +1045,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void WithSwappedColumnsChangesDeterminantSign()
         {
-            var    original    = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
+            var original = new M3(1, 2, 3, 4, 5, 6, 7, 8, 10);
             double originalDet = original.determinant;
-            M3     m           = original.WithSwappedColumns(0, 1);
+            M3 m = original.WithSwappedColumns(0, 1);
 
             m.determinant.ShouldEqual(-originalDet, 1e-14);
         }

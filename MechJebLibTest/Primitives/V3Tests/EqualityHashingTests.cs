@@ -44,7 +44,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void EqualsWithZeroVectors()
         {
             var v1 = new V3(0, 0, 0);
-            V3  v2 = V3.zero;
+            V3 v2 = V3.zero;
 
             v1.Equals(v2).ShouldBeTrue();
             v2.Equals(v1).ShouldBeTrue();
@@ -93,7 +93,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void EqualsObjectOverloadWithV3()
         {
-            var    v1 = new V3(1, 2, 3);
+            var v1 = new V3(1, 2, 3);
             object v2 = new V3(1, 2, 3);
 
             v1.Equals(v2).ShouldBeTrue();
@@ -102,7 +102,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void EqualsObjectOverloadWithDifferentV3()
         {
-            var    v1 = new V3(1, 2, 3);
+            var v1 = new V3(1, 2, 3);
             object v2 = new V3(4, 5, 6);
 
             v1.Equals(v2).ShouldBeFalse();
@@ -119,7 +119,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void EqualsObjectOverloadWithWrongType()
         {
-            var    v          = new V3(1, 2, 3);
+            var v = new V3(1, 2, 3);
             object notAVector = "not a vector";
 
             v.Equals(notAVector).ShouldBeFalse();
@@ -128,7 +128,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void EqualsObjectOverloadWithNumber()
         {
-            var    v      = new V3(1, 2, 3);
+            var v = new V3(1, 2, 3);
             object number = 42.0;
 
             v.Equals(number).ShouldBeFalse();
@@ -155,7 +155,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void GetHashCodeConsistency()
         {
-            var v     = new V3(1.5, 2.7, -3.2);
+            var v = new V3(1.5, 2.7, -3.2);
             int hash1 = v.GetHashCode();
             int hash2 = v.GetHashCode();
 
@@ -166,7 +166,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void GetHashCodeZeroVector()
         {
             var v1 = new V3(0, 0, 0);
-            V3  v2 = V3.zero;
+            V3 v2 = V3.zero;
 
             v1.GetHashCode().ShouldEqual(v2.GetHashCode());
         }
@@ -251,7 +251,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void GetHashCodeStabilityAfterModification()
         {
-            var v            = new V3(1, 2, 3);
+            var v = new V3(1, 2, 3);
             int originalHash = v.GetHashCode();
 
             v.x = 4;
@@ -310,9 +310,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void DictionaryUsage()
         {
             var dict = new Dictionary<V3, string>();
-            var v1   = new V3(1, 2, 3);
-            var v2   = new V3(1, 2, 3);
-            var v3   = new V3(4, 5, 6);
+            var v1 = new V3(1, 2, 3);
+            var v2 = new V3(1, 2, 3);
+            var v3 = new V3(4, 5, 6);
 
             dict[v1] = "first";
             dict[v3] = "second";
@@ -326,9 +326,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void HashSetUsage()
         {
             var set = new HashSet<V3>();
-            var v1  = new V3(1, 2, 3);
-            var v2  = new V3(1, 2, 3);
-            var v3  = new V3(4, 5, 6);
+            var v1 = new V3(1, 2, 3);
+            var v2 = new V3(1, 2, 3);
+            var v3 = new V3(4, 5, 6);
 
             set.Add(v1).ShouldBeTrue();
             set.Add(v2).ShouldBeFalse();

@@ -507,7 +507,7 @@ namespace MechJebLib.Utils
 
         public static double[] GetRow(double[,] array, int row)
         {
-            int      cols   = array.GetUpperBound(1) + 1;
+            int cols = array.GetUpperBound(1) + 1;
             double[] result = new double[cols];
 
             int size = sizeof(double);
@@ -553,9 +553,9 @@ namespace MechJebLib.Utils
 
             d /= Pow(10, siExponent); // scale d by the SI prefix exponent
 
-            int wholeDigits      = d != 0 ? exponent - siExponent + 1 : 1;
+            int wholeDigits = d != 0 ? exponent - siExponent + 1 : 1;
             int maxDecimalDigits = siExponent - maxPrecision;
-            int decimalDigits    = sigFigs - wholeDigits;
+            int decimalDigits = sigFigs - wholeDigits;
             decimalDigits = decimalDigits > maxDecimalDigits ? maxDecimalDigits : decimalDigits;
             decimalDigits = decimalDigits < 0 ? 0 : decimalDigits;
 

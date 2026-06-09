@@ -112,10 +112,10 @@ namespace MechJebLib.HoverslamSimulation
             using var coastPhase = Phase.NewCoast(1.0, t0, tf, 0, 0);
             PropagatePhase(ref x, t0, ref tf, coastPhase);
 
-            V3     vRel  = x.V - V3.Cross(_w, x.R);
-            V3     vf    = x.R.normalized * _vfm;
-            V3     uBurn = -(vRel - vf).normalized;
-            double af    = 0;
+            V3 vRel = x.V - V3.Cross(_w, x.R);
+            V3 vf = x.R.normalized * _vfm;
+            V3 uBurn = -(vRel - vf).normalized;
+            double af = 0;
 
             for (int p = 0; p < _phases.Count; p++)
             {
@@ -209,18 +209,18 @@ namespace MechJebLib.HoverslamSimulation
             // TODO: normalization
             //Check.True(_phase.Normalized);
 
-            var y  = HoverslamLayout.CreateFrom(yin);
+            var y = HoverslamLayout.CreateFrom(yin);
             var dy = new HoverslamLayout();
 
             double at = _phase.VacThrust / y.M;
 
             double r2 = y.R.sqrMagnitude;
-            double r  = Math.Sqrt(r2);
+            double r = Math.Sqrt(r2);
             double r3 = r2 * r;
 
             V3 vRel = y.V - V3.Cross(_w, y.R);
-            V3 vf   = y.R.normalized * _vfm;
-            V3 u    = -(vRel - vf).normalized;
+            V3 vf = y.R.normalized * _vfm;
+            V3 u = -(vRel - vf).normalized;
 
             dy.R = y.V;
             dy.V = -_mu * y.R / r3 + at * u;

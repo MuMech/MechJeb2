@@ -45,26 +45,26 @@ namespace MechJebLibTest.ManeuversTests
 
             var solver = new ReturnFromMoon();
 
-            const double CENTRAL_MU   = 398600435436096;
-            const double MOON_MU      = 4902800066163.8;
-            var          moonR0       = new V3(325420116.073166, -166367503.579338, -138858150.96145);
-            var          moonV0       = new V3(577.012296778094, 761.848508254181, 297.464594270612);
-            const double MOON_SOI     = 66167158.6569544;
-            const double MOON_SURFACE = 3474 * 1000;      // 3,474 km
-            const double PER          = 6.3781e6 + 60000; // PeA = 60 km
-            double       incT         = TAU * rng.NextDouble() - PI;
+            const double CENTRAL_MU = 398600435436096;
+            const double MOON_MU = 4902800066163.8;
+            var moonR0 = new V3(325420116.073166, -166367503.579338, -138858150.96145);
+            var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
+            const double MOON_SOI = 66167158.6569544;
+            const double MOON_SURFACE = 3474 * 1000; // 3,474 km
+            const double PER = 6.3781e6 + 60000;     // PeA = 60 km
+            double incT = TAU * rng.NextDouble() - PI;
 
             // FIXME: weakly bound orbits give the algorithm problems.
             double per = (MOON_SOI * 0.6 - MOON_SURFACE) * rng.NextDouble() + MOON_SURFACE;
             double apr = (MOON_SOI * 0.6 - MOON_SURFACE) * rng.NextDouble() + MOON_SURFACE;
             if (per > apr)
                 (per, apr) = (apr, per);
-            double l    = 1 / (0.5 * (1 / apr + 1 / per));
-            double ecc  = (apr - per) / (apr + per);
-            double inc  = PI * rng.NextDouble();
-            double lan  = TAU * rng.NextDouble();
+            double l = 1 / (0.5 * (1 / apr + 1 / per));
+            double ecc = (apr - per) / (apr + per);
+            double inc = PI * rng.NextDouble();
+            double lan = TAU * rng.NextDouble();
             double argp = TAU * rng.NextDouble();
-            double nu   = TAU * rng.NextDouble();
+            double nu = TAU * rng.NextDouble();
 
             Print($"per: {per} apr: {apr} l: {l} ecc: {ecc} inc: {Rad2Deg(inc)} lan: {Rad2Deg(lan)} argp: {Rad2Deg(argp)} nu: {Rad2Deg(nu)}");
 
