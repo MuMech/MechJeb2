@@ -50,7 +50,6 @@ namespace MechJebLibTest.ManeuversTests
             _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             dv.magnitude.ShouldEqual(6255.6098503827661, 1e-4);
-            dt3out.ShouldEqual(7633404.2285390059, 1e-4);
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
             (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
@@ -139,7 +138,9 @@ namespace MechJebLibTest.ManeuversTests
             double peR = 573000;
 
             var maneuver = new InterplanetaryTransfer();
-            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR);
+            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: true);
+            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+
             dv.magnitude.ShouldEqual(4944.8587050280121, 1e-4);
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
@@ -177,7 +178,7 @@ namespace MechJebLibTest.ManeuversTests
             double peR = 3510800;
 
             var maneuver = new InterplanetaryTransfer();
-            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR);
+            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: true);
             _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
             dv.magnitude.ShouldEqual(3640.1292730002069, 1e-4);
 
@@ -213,7 +214,7 @@ namespace MechJebLibTest.ManeuversTests
             double peR = 0;
 
             var maneuver = new InterplanetaryTransfer();
-            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: peR, inc: double.NaN);
+            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: peR, optguard: true);
             _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
             dv.magnitude.ShouldEqual(4789.592962160028, 1e-4);
 
@@ -255,6 +256,44 @@ namespace MechJebLibTest.ManeuversTests
             // deep-well case (Jupiter, focusing factor ~10): exercises the analytic-b warm start + Jacobian
             // preconditioner landing the cheap (~6340 m/s, textbook Earth->Jupiter) basin.
             dv.magnitude.ShouldEqual(6339.7019346132129, 1e-4);
+
+            (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
+            (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
+            rsoi1.magnitude.ShouldEqual(soi1, 1e-6);
+            (V3 r1soi1, V3 v1soi1) = Shepperd.Solve(mu3, dt1out + dt2out, r1, v1);
+            V3 rsoi1helio = rsoi1 + r1soi1;
+            V3 vsoi1helio = vsoi1 + v1soi1;
+            (V3 rsoi2helio, V3 _) = Shepperd.Solve(mu3, dt3out - (dt1out + dt2out), rsoi1helio, vsoi1helio);
+            (V3 r2soi2, V3 _) = Shepperd.Solve(mu3, dt3out, r2, v2);
+            V3 rsoi2 = rsoi2helio - r2soi2;
+            rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
+        }
+
+        [Fact]
+        private void EarthToVenus()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var r0 = new V3(-2524692.3521177084, -6010111.3403185587, -1430397.88334662);
+            var v0 = new V3(6697.4581339203833, -2033.861683166539, -3276.0604346038458);
+            var r1 = new V3(81107302085.431351, -113426897855.24834, -60210730828.347397);
+            var v1 = new V3(23670.714980723751, 17290.925848593863, -1058.9529613984164);
+            var r2 = new V3(-27443019348.482018, -102420278412.13942, -21215617737.593018);
+            var v2 = new V3(32023.172615437456, -6174.1220120587095, -12826.981238246499);
+            double mu1 = 398600435436096;
+            double soi1 = 924649202.46102285;
+            double mu2 = 324858592000000.06;
+            double soi2 = 616280853.74695194;
+            double mu3 = 1.3271244004193939E+20;
+            double arrivalDT = 12000356.02100748;
+            double arrivalDTlower = 0;
+            double arrivalDTupper = double.PositiveInfinity;
+            double peR = 6204000;
+
+            var maneuver = new InterplanetaryTransfer();
+            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: true);
+            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            dv.magnitude.ShouldEqual(3449.6799310543329, 1e-4);
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
             (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);

@@ -2,19 +2,15 @@
 
 extern alias JetBrainsAnnotations;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
-using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using MechJebLibBindings;
 using UnityEngine;
 using UnityToolbag;
-using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -34,7 +30,7 @@ namespace MuMech
         private readonly Orbit _destination;
 
         protected int NextDateIndex;
-        protected readonly int DateSamples;
+        public readonly int DateSamples;
         public readonly double MinDepartureTime;
         public readonly double MaxDepartureTime;
         public readonly double MinTransferTime;
@@ -192,7 +188,7 @@ namespace MuMech
                 _pendingJobs = -1;
 
 #if DEBUG
-                string       dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 StreamWriter f = File.CreateText(dir + "/DeltaVWorking.csv");
                 f.WriteLine(OriginOrbit.referenceBody.referenceBody.gravParameter);
                 for (int dateIndex = 0; dateIndex < DateSamples; dateIndex++)
@@ -237,54 +233,6 @@ namespace MuMech
             }
 
             return new ManeuverParameters((vpos - vneg).V3ToWorld(), ut0 + dt);
-        }
-
-        public List<ManeuverParameters> OptimizeEjection(Orbit o, MechJebModuleTargetController target, double targetPeR, int[] selectedPoint = null, double maxArrivalTime = 0)
-        {
-            // FIXME: use _includeCaptureBurn (totally broken now).
-            // FIXME: probably move this off of the "worker" and onto the OrbitalManeuverCalculator
-
-            int dateIndex = selectedPoint?[0] ?? BestDate;
-            int durationIndex = selectedPoint?[1] ?? BestDuration;
-            double epoch = DateFromIndex(dateIndex);
-            double arrivalDT = DurationFromIndex(durationIndex);
-
-            // If the user picks a point, bound the arrival DT to the point
-            double arrivalBracket = (MaxDepartureTime - MinDepartureTime) / DateSamples;
-            double arrivalDTlower = arrivalDT - 0.5 * arrivalBracket;
-            double arrivalDTupper = arrivalDT + 0.5 * arrivalBracket;
-
-            // XXX: this is a bit of a hack to just let the optimizer decide
-            if (dateIndex == BestDate && durationIndex == BestDuration)
-            {
-                arrivalDTlower = 0;
-                arrivalDTupper = double.PositiveInfinity;
-            }
-
-            if (maxArrivalTime > 0)
-                arrivalDTupper = maxArrivalTime;
-
-            Orbit targetOrbit = target.TargetOrbit;
-            var targetBody = target.Target as CelestialBody;
-            CelestialBody sourceBody = o.referenceBody;
-            Orbit sourceOrbit = sourceBody.orbit;
-
-            (V3 r0, V3 v0) = o.RightHandedStateVectorsAtUT(epoch);
-            double mu1 = sourceBody.gravParameter;
-            (V3 r1, V3 v1) = sourceOrbit.RightHandedStateVectorsAtUT(epoch);
-            double soi1 = sourceBody.sphereOfInfluence;
-            double mu2 = targetBody?.gravParameter ?? 0;
-            (V3 r2, V3 v2) = targetOrbit.RightHandedStateVectorsAtUT(epoch);
-            double soi2 = targetBody?.sphereOfInfluence ?? 0;
-            double mu3 = sourceOrbit.referenceBody.gravParameter;
-            double per = Clamp(targetPeR, 0, soi2);
-
-            var maneuver = new InterplanetaryTransfer();
-            (V3 dv, double dt, double _, double _) = maneuver.Maneuver(
-                r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, per
-            );
-
-            return new List<ManeuverParameters> { new ManeuverParameters(dv.V3ToWorld(), epoch + dt) };
         }
     }
 
