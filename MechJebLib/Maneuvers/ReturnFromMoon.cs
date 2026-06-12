@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
+using System.Linq;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Maths;
@@ -28,43 +30,87 @@ namespace MechJebLib.Maneuvers
 
         private Scale _moonToPlanetScale;
 
-        private void NLPFunction(double[] x, double[] fi, object? o)
+        private void NLPFunctionColumn(Dual[] x, double[] fi, double[,] jac, int i)
         {
-            V3 rsoi = new V3(_soi, x[2], x[3]).sph2cart;
-            V3 vsoiPos = new V3(x[4], x[5], x[6]).sph2cart;
+            DualV3 rsoi, vsoiPos, rsoiPlanet, vsoiPlanet, dv1, dv2;
 
-            (V3 rsoiPlanet, V3 vsoiPlanet, V3 dv1, V3 dv2) = GenerateValues(x);
+            try
+            {
+                (rsoi, vsoiPos, rsoiPlanet, vsoiPlanet, dv1, dv2) = EvaluateTrajectory(x);
+            }
+            catch (Exception)
+            {
+                fi[0] = 1e300;
+                return;
+            }
 
-            fi[0] = dv1.sqrMagnitude;
-            fi[1] = dv2.x;
-            fi[2] = dv2.y;
-            fi[3] = dv2.z;
-            fi[4] = Astro.PeriapsisFromStateVectors(1.0, rsoiPlanet, vsoiPlanet) - _peR;
-            fi[5] = IsFinite(_cosInc) && _peR > 0 ? V3.Cross(rsoiPlanet, vsoiPlanet).normalized.z - _cosInc : 0;
-            fi[6] = -V3.Dot(rsoi, vsoiPos);
+            Dual fi0 = dv1.sqrMagnitude;
+            fi[0] = fi0.M;
+            jac[0, i] = fi0.D;
+            fi[1] = dv2.x.M;
+            jac[1, i] = dv2.x.D;
+            fi[2] = dv2.y.M;
+            jac[2, i] = dv2.y.D;
+            fi[3] = dv2.z.M;
+            jac[3, i] = dv2.z.D;
+            Dual fi4 = Astro.PeriapsisFromStateVectors(1.0, rsoiPlanet, vsoiPlanet) - _peR;
+            fi[4] = fi4.M;
+            jac[4, i] = fi4.D;
+            Dual fi5 = IsFinite(_cosInc) && _peR > 0 ? DualV3.Cross(rsoiPlanet, vsoiPlanet).normalized.z - _cosInc : 0;
+            fi[5] = fi5.M;
+            jac[5, i] = fi5.D;
+            Dual fi6 = -DualV3.Dot(rsoi, vsoiPos);
+            fi[6] = fi6.M;
+            jac[6, i] = fi6.D;
         }
 
-        private (V3 rsoiPlanet, V3 vsoiPlanet, V3 dv1, V3 dv2) GenerateValues(double[] x)
-        {
-            double tBurn = x[0];  // moon scaled
-            double tCoast = x[1]; // moon scaled
+        private readonly Dual[] _duals = new Dual[NVARIABLES];
 
-            V3 rSoi = new V3(_soi, x[2], x[3]).sph2cart;    // moon scaled
-            V3 vSoiPos = new V3(x[4], x[5], x[6]).sph2cart; // moon scaled
+        private void NLPFunction(double[] x, double[] fi, double[,] jac, object? obj = null)
+        {
+            for (int i = 0; i < x.Length; i++)
+            {
+                for (int j = 0; j < x.Length; j++)
+                    _duals[j] = new Dual(x[j], i == j ? 1.0 : 0.0);
+
+                NLPFunctionColumn(_duals, fi, jac, i);
+            }
+        }
+
+        private (DualV3 rsoi, DualV3 vsoiPos, DualV3 rsoiPlanet, DualV3 vsoiPlanet, DualV3 dv1, DualV3 dv2) EvaluateTrajectory(Dual[] x)
+        {
+            if (x.Any(v => !IsFinite(v.M)))
+                throw new Exception("invalid value");
+
+            Dual tBurn = x[0];  // moon scaled
+            Dual tCoast = x[1]; // moon scaled
+
+            DualV3 rSoi = new DualV3(_soi, x[2], x[3]).sph2cart;    // moon scaled
+            DualV3 vSoiPos = new DualV3(x[4], x[5], x[6]).sph2cart; // moon scaled
 
             // All moon scaled
-            (V3 rBurn, V3 vNeg) = Shepperd.Solve(1.0, tBurn, _r0, _v0);
+            (DualV3 rBurn, DualV3 vNeg) = Shepperd.Solve(1.0, tBurn, _r0, _v0);
 
-            (V3 vPos, V3 vSoiNeg) = Izzo.Solve(1.0, rBurn, rSoi, tCoast, _direction);
-            V3 dv1 = vPos - vNeg;
-            V3 dv2 = vSoiPos - vSoiNeg;
+            (DualV3 vPos, DualV3 vSoiNeg) = Izzo.Solve(1.0, rBurn, rSoi, tCoast, _direction);
+            DualV3 dv1 = vPos - vNeg;
+            DualV3 dv2 = vSoiPos - vSoiNeg;
 
             // All planet scaled
-            (V3 moonRsoi, V3 moonVsoi) = Shepperd.Solve(1.0, (tBurn + tCoast) / _moonToPlanetScale.TimeScale, _moonR0, _moonV0);
-            V3 rsoiPlanet = rSoi / _moonToPlanetScale.LengthScale + moonRsoi;
-            V3 vsoiPlanet = vSoiPos / _moonToPlanetScale.VelocityScale + moonVsoi;
+            (DualV3 moonRsoi, DualV3 moonVsoi) = Shepperd.Solve(1.0, (tBurn + tCoast) / _moonToPlanetScale.TimeScale, _moonR0, _moonV0);
+            DualV3 rsoiPlanet = rSoi / _moonToPlanetScale.LengthScale + moonRsoi;
+            DualV3 vsoiPlanet = vSoiPos / _moonToPlanetScale.VelocityScale + moonVsoi;
 
-            return (rsoiPlanet, vsoiPlanet, dv1, dv2);
+            return (rSoi, vSoiPos, rsoiPlanet, vsoiPlanet, dv1, dv2);
+        }
+
+        private (V3 rsoi, V3 vsoiPos, V3 rsoiPlanet, V3 vsoiPlanet, V3 dv1, V3 dv2) EvaluateTrajectory(double[] x)
+        {
+            for (int j = 0; j < x.Length; j++)
+                _duals[j] = new Dual(x[j]);
+
+            (DualV3 rsoi, DualV3 vsoiPos, DualV3 rsoiPlanet, DualV3 vsoiPlanet, DualV3 dv1, DualV3 dv2) = EvaluateTrajectory(_duals);
+
+            return (rsoi.M, vsoiPos.M, rsoiPlanet.M, vsoiPlanet.M, dv1.M, dv2.M);
         }
 
         private void GenerateGuess(double[] x)
@@ -128,8 +174,6 @@ namespace MechJebLib.Maneuvers
             x[6] = vSoi.z;
         }
 
-        private const double DIFFSTEP = 1e-6;
-        private const double EPSX = 1e-6;
         private const int MAXITS = 2500;
         private const int NVARIABLES = 7;
         private const int NEQUALITYCONSTRAINTS = 5;
@@ -172,7 +216,7 @@ namespace MechJebLib.Maneuvers
             bndl[1] = EPS;
 
             _direction = TransferGeometry.ShortWay;
-            alglib.minnlccreatef(NVARIABLES, x0, DIFFSTEP, out alglib.minnlcstate state);
+            alglib.minnlccreate(x0, out alglib.minnlcstate state);
             alglib.minnlcsetbc(state, bndl, bndu);
             alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, 0, MAXITS);
@@ -181,7 +225,8 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcresults(state, out double[] x1, out alglib.minnlcreport rep1);
 
             double[] fi = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1];
-            NLPFunction(x1, fi, null);
+            double[,] jac = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1, NVARIABLES];
+            NLPFunction(x1, fi, jac);
             double shortCost = fi[0];
             double shortError = Max(Max(rep1.bcerr, rep1.lcerr), rep1.nlcerr);
 
@@ -194,7 +239,7 @@ namespace MechJebLib.Maneuvers
                 Print($"fi[{i}]: {fi[i]}");
 
             _direction = TransferGeometry.LongWay;
-            alglib.minnlccreatef(NVARIABLES, x0, DIFFSTEP, out alglib.minnlcstate state2);
+            alglib.minnlccreate(x0, out alglib.minnlcstate state2);
             alglib.minnlcsetbc(state2, bndl, bndu);
             alglib.minnlcsetalgosqp(state2);
             alglib.minnlcsetcond(state2, 0, MAXITS);
@@ -202,7 +247,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcoptimize(state2, NLPFunction, null, null);
             alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
 
-            NLPFunction(x2, fi, null);
+            NLPFunction(x2, fi, jac);
             double longCost = fi[0];
             double longError = Max(Max(rep2.bcerr, rep2.lcerr), rep2.nlcerr);
 
@@ -224,13 +269,13 @@ namespace MechJebLib.Maneuvers
             if (pickShort)
             {
                 _direction = TransferGeometry.ShortWay;
-                (V3 _, V3 _, V3 dv, V3 _) = GenerateValues(x1);
+                (V3 _, V3 _, V3 _, V3 _, V3 dv, V3 _) = EvaluateTrajectory(x1);
                 return (dv * moonScale.VelocityScale, x1[0] * moonScale.TimeScale);
             }
             else
             {
                 _direction = TransferGeometry.LongWay;
-                (V3 _, V3 _, V3 dv, V3 _) = GenerateValues(x2);
+                (V3 _, V3 _, V3 _, V3 _, V3 dv, V3 _) = EvaluateTrajectory(x2);
                 return (dv * moonScale.VelocityScale, x2[0] * moonScale.TimeScale);
             }
         }

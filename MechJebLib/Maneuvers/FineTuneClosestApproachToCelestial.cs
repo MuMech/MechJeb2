@@ -1,4 +1,6 @@
-﻿using MechJebLib.Functions;
+﻿using System;
+using System.Linq;
+using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Maths;
 using MechJebLib.Primitives;
@@ -23,44 +25,96 @@ namespace MechJebLib.Maneuvers
 
         private Scale _planetScale;
 
-        private void NLPFunction(double[] x, double[] fi, object? obj)
+        private void NLPFunctionColumn(Dual[] x, double[] fi, double[,] jac, int i)
         {
-            (V3 rsoi, V3 vsoi, V3 dv1, V3 dv2) = DeriveValues(x);
+            DualV3 rsoi, vsoi, dv1, dv2;
 
-            fi[0] = 0.5 * dv1.sqrMagnitude;
-            double periapsis = Astro.PeriapsisFromStateVectors(_mu1, rsoi, vsoi);
+            try
+            {
+                (rsoi, vsoi, dv1, dv2) = EvaluateTrajectory(x);
+            }
+            catch (Exception)
+            {
+                fi[0] = 1e300;
+                return;
+            }
+
+            Dual fi0 = 0.5 * dv1.sqrMagnitude;
+            fi[0] = fi0.M;
+            jac[0, i] = fi0.D;
+            Dual periapsis = Astro.PeriapsisFromStateVectors(_mu1, rsoi, vsoi);
             // when _peR is zero, drive the periapsis to zero directly rather than normalizing (which would be NaN/Inf)
-            fi[1] = _peR > 0 ? periapsis / _peR - 1.0 : periapsis;
-            fi[2] = IsFinite(_cosInc) && _peR > 0 ? V3.Cross(rsoi, vsoi).normalized.z - _cosInc : 0;
-            fi[3] = dv2.x;
-            fi[4] = dv2.y;
-            fi[5] = dv2.z;
-            fi[6] = V3.Dot(rsoi.normalized, vsoi.normalized);
+            Dual fi1 = _peR > 0 ? periapsis / _peR - 1.0 : periapsis;
+            fi[1] = fi1.M;
+            jac[1, i] = fi1.D;
+            Dual fi2 = IsFinite(_cosInc) && _peR > 0 ? DualV3.Cross(rsoi, vsoi).normalized.z - _cosInc : 0;
+            fi[2] = fi2.M;
+            jac[2, i] = fi2.D;
+            fi[3] = dv2.x.M;
+            jac[3, i] = dv2.x.D;
+            fi[4] = dv2.y.M;
+            jac[4, i] = dv2.y.D;
+            fi[5] = dv2.z.M;
+            jac[5, i] = dv2.z.D;
+            Dual fi6 = DualV3.Dot(rsoi.normalized, vsoi.normalized);
+            fi[6] = fi6.M;
+            jac[6, i] = fi6.D;
         }
 
-        private (V3 rsoi, V3 vsoi, V3 dv1, V3 dv2) DeriveValues(double[] x)
+        private readonly Dual[] _duals = new Dual[NVARIABLES];
+
+        private void NLPFunction(double[] x, double[] fi, double[,] jac, object? obj = null)
         {
-            double dt1 = x[0]; // coast time on initial orbit to burn
-            double dt2 = x[1]; // coast time after burn to soi interface
+            for (int i = 0; i < x.Length; i++)
+            {
+                for (int j = 0; j < x.Length; j++)
+                    _duals[j] = new Dual(x[j], i == j ? 1.0 : 0.0);
 
-            var rsoiSph = new V3(_soi, x[2], x[3]); // spherical position at soi boundary
-            var vsoiSph = new V3(x[4], x[5], x[6]); // spherical velocity at soi boundary
+                NLPFunctionColumn(_duals, fi, jac, i);
+            }
+        }
 
-            V3 rsoi = rsoiSph.sph2cart;
-            V3 vsoi = vsoiSph.sph2cart;
+        private (DualV3 rsoi, DualV3 vsoi, DualV3 dv1, DualV3 dv2) EvaluateTrajectory(Dual[] x)
+        {
+            if (x.Any(v => !IsFinite(v.M)))
+                throw new Exception("invalid value");
+
+            Dual dt1 = x[0]; // coast time on initial orbit to burn
+            Dual dt2 = x[1]; // coast time after burn to soi interface
+
+            var rsoiSph = new DualV3(_soi, x[2], x[3]); // spherical position at soi boundary
+            var vsoiSph = new DualV3(x[4], x[5], x[6]); // spherical velocity at soi boundary
+
+            DualV3 rsoi = rsoiSph.sph2cart;
+            DualV3 vsoi = vsoiSph.sph2cart;
 
             // propagate initial orbit to burn
-            (V3 r0Burn, V3 v0Burn) = Shepperd.Solve(1.0, dt1, _r0, _v0);
+            (DualV3 r0Burn, DualV3 v0Burn) = Shepperd.Solve(1.0, dt1, _r0, _v0);
             // propagate celestial to soi intercept time
-            (V3 rf1, V3 vf1) = Shepperd.Solve(1.0, dt1 + dt2, _r1, _v1);
+            (DualV3 rf1, DualV3 vf1) = Shepperd.Solve(1.0, dt1 + dt2, _r1, _v1);
 
             // convert soi intercept to central-body coordinates
-            V3 rsoi2 = rf1 + rsoi;
-            V3 vsoi2 = vf1 + vsoi;
+            DualV3 rsoi2 = rf1 + rsoi;
+            DualV3 vsoi2 = vf1 + vsoi;
 
-            (V3 vi, V3 vf) = Izzo.Solve(1.0, r0Burn, rsoi2, dt2, _direction);
+            (DualV3 vi, DualV3 vf) = Izzo.Solve(1.0, r0Burn, rsoi2, dt2, _direction);
             return (rsoi, vsoi, vi - v0Burn, vsoi2 - vf);
         }
+
+        private (V3 rsoi, V3 vsoi, V3 dv1, V3 dv2) EvaluateTrajectory(double[] x)
+        {
+            for (int j = 0; j < x.Length; j++)
+                _duals[j] = new Dual(x[j]);
+
+            (DualV3 rsoi, DualV3 vsoi, DualV3 dv1, DualV3 dv2) = EvaluateTrajectory(_duals);
+
+            return (rsoi.M, vsoi.M, dv1.M, dv2.M);
+        }
+
+        private const int NUM_EQUALITY_CONSTRAINTS = 5;
+        private const int NUM_INEQUALITY_CONSTRAINTS = 1;
+        private const int MAXITS = 500;
+        private const int NVARIABLES = 7;
 
         public (V3 dv, double dt1, double dt2) Maneuver(double mu0, V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi, double tsoi, double peR, double dt = double.NaN, double inc = double.NaN)
         {
@@ -85,13 +139,6 @@ namespace MechJebLib.Maneuvers
             _v1 = v1 / _planetScale.VelocityScale;
             dt /= _planetScale.TimeScale;
             _cosInc = Cos(inc);
-
-            const int NUM_EQUALITY_CONSTRAINTS = 5;
-            const int NUM_INEQUALITY_CONSTRAINTS = 1;
-            const double DIFFSTEP = 1e-6;
-            const int MAXITS = 500;
-
-            const int NVARIABLES = 7;
 
             double[] x0 = new double[NVARIABLES];
 
@@ -128,7 +175,7 @@ namespace MechJebLib.Maneuvers
             bndu[1] = tsoi / _planetScale.TimeScale;
 
             _direction = TransferGeometry.ShortWay;
-            alglib.minnlccreatef(x0, DIFFSTEP, out alglib.minnlcstate state);
+            alglib.minnlccreate(x0, out alglib.minnlcstate state);
             alglib.minnlcsetbc(state, bndl, bndu);
             alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, 0, MAXITS);
@@ -137,8 +184,9 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcresults(state, out double[] x1, out alglib.minnlcreport rep1);
 
             double[] fi = new double[NUM_EQUALITY_CONSTRAINTS + NUM_INEQUALITY_CONSTRAINTS + 1];
+            double[,] jac = new double[NUM_EQUALITY_CONSTRAINTS + NUM_INEQUALITY_CONSTRAINTS + 1, NVARIABLES];
 
-            NLPFunction(x1, fi, null);
+            NLPFunction(x1, fi, jac);
             double shortCost = fi[0];
             double shortError = Max(Max(rep1.bcerr, rep1.lcerr), rep1.nlcerr);
 
@@ -151,7 +199,7 @@ namespace MechJebLib.Maneuvers
                 Print($"fi[{i}]: {fi[i]}");
 
             _direction = TransferGeometry.LongWay;
-            alglib.minnlccreatef(x0, DIFFSTEP, out alglib.minnlcstate state2);
+            alglib.minnlccreate(x0, out alglib.minnlcstate state2);
             alglib.minnlcsetbc(state2, bndl, bndu);
             alglib.minnlcsetalgosqp(state2);
             alglib.minnlcsetcond(state2, 0, MAXITS);
@@ -159,7 +207,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcoptimize(state2, NLPFunction, null, null);
             alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
 
-            NLPFunction(x2, fi, null);
+            NLPFunction(x2, fi, jac);
             double longCost = fi[0];
             double longError = Max(Max(rep2.bcerr, rep2.lcerr), rep2.nlcerr);
 
@@ -181,13 +229,13 @@ namespace MechJebLib.Maneuvers
             if (pickShort)
             {
                 _direction = TransferGeometry.ShortWay;
-                (V3 _, V3 _, V3 dv, V3 _) = DeriveValues(x1);
+                (V3 _, V3 _, V3 dv, V3 _) = EvaluateTrajectory(x1);
                 return (dv * _planetScale.VelocityScale, x1[0] * _planetScale.TimeScale, x1[1] * _planetScale.TimeScale);
             }
             else
             {
                 _direction = TransferGeometry.LongWay;
-                (V3 _, V3 _, V3 dv, V3 _) = DeriveValues(x2);
+                (V3 _, V3 _, V3 dv, V3 _) = EvaluateTrajectory(x2);
                 return (dv * _planetScale.VelocityScale, x2[0] * _planetScale.TimeScale, x2[1] * _planetScale.TimeScale);
             }
         }

@@ -35,13 +35,13 @@ namespace MechJebLib.Maneuvers
         private Scale _sourceToHelioScale;
         private Scale _targetToHelioScale;
 
-        private void NLPJacobianColumn(Dual[] x, double[] fi, double[,] jac, int i)
+        private void NLPFunctionColumn(Dual[] x, double[] fi, double[,] jac, int i)
         {
             DualV3 rsoi1, vsoi1, rsoi2, vsoi2, dv1, dv2, dv3, dv4;
 
             try
             {
-                (rsoi1, vsoi1, rsoi2, vsoi2, dv1, dv2, dv3, dv4) = DeriveValues(x);
+                (rsoi1, vsoi1, rsoi2, vsoi2, dv1, dv2, dv3, dv4) = EvaluateTrajectory(x);
             }
             catch (Exception)
             {
@@ -117,11 +117,11 @@ namespace MechJebLib.Maneuvers
                 for (int j = 0; j < x.Length; j++)
                     _duals[j] = new Dual(x[j], i == j ? 1.0 : 0.0);
 
-                NLPJacobianColumn(_duals, fi, jac, i);
+                NLPFunctionColumn(_duals, fi, jac, i);
             }
         }
 
-        private (DualV3 rsoi1, DualV3 vsoi1, DualV3 rsoi2, DualV3 vsoi2, DualV3 dv1, DualV3 dv2, DualV3 dv3, DualV3 dv4) DeriveValues(Dual[] x)
+        private (DualV3 rsoi1, DualV3 vsoi1, DualV3 rsoi2, DualV3 vsoi2, DualV3 dv1, DualV3 dv2, DualV3 dv3, DualV3 dv4) EvaluateTrajectory(Dual[] x)
         {
             if (x.Any(v => !IsFinite(v.M)))
                 throw new Exception("invalid value");
@@ -170,12 +170,12 @@ namespace MechJebLib.Maneuvers
             return (rsoi1, vsoi1, rsoi2, vsoi2, vi1 - v0Burn, vsoi1 - vf1, vsoi1helio - vi2, vf2 - vsoi2helio);
         }
 
-        private (V3 rsoi1, V3 vsoi1, V3 rsoi2, V3 vsoi2, V3 dv1, V3 dv2, V3 dv3, V3 dv4) DeriveValues(double[] x)
+        private (V3 rsoi1, V3 vsoi1, V3 rsoi2, V3 vsoi2, V3 dv1, V3 dv2, V3 dv3, V3 dv4) EvaluateTrajectory(double[] x)
         {
             for (int j = 0; j < x.Length; j++)
                 _duals[j] = new Dual(x[j]);
 
-            (DualV3 rsoi1, DualV3 vsoi1, DualV3 rsoi2, DualV3 vsoi2, DualV3 dv1, DualV3 dv2, DualV3 dv3, DualV3 dv4) = DeriveValues(_duals);
+            (DualV3 rsoi1, DualV3 vsoi1, DualV3 rsoi2, DualV3 vsoi2, DualV3 dv1, DualV3 dv2, DualV3 dv3, DualV3 dv4) = EvaluateTrajectory(_duals);
 
             return (rsoi1.M, vsoi1.M, rsoi2.M, vsoi2.M, dv1.M, dv2.M, dv3.M, dv4.M);
         }
@@ -569,7 +569,7 @@ namespace MechJebLib.Maneuvers
             V3 dv;
             try
             {
-                (_, _, _, _, dv, _, _, _) = DeriveValues(x);
+                (_, _, _, _, dv, _, _, _) = EvaluateTrajectory(x);
             }
             catch (Exception)
             {
