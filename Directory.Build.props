@@ -36,4 +36,9 @@
     <!-- Linux: KSP_Data sits directly under KspDir -->
     <KspData Condition="'$(OS)' != 'Windows_NT' And !Exists('$(KspDir)/KSP.app')">$(KspDir)/KSP_Data</KspData>
   </PropertyGroup>
+
+  <!-- Derive KosDll from KspDir. -->
+  <PropertyGroup Condition="'$(KosDll)' == ''">
+    <KosDll>$(KspDir)/GameData/kOS/Plugins/kOS.dll</KosDll>
+  </PropertyGroup>
 </Project>

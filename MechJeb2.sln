@@ -21,10 +21,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "alglib", "alglib\alglib.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJebLibBindings", "MechJebLibBindings\MechJebLibBindings.csproj", "{DA770208-1300-4C86-8996-C1790B945999}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJebKos", "MechJebKos\MechJebKos.csproj", "{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		Debug-kOS|Any CPU = Debug-kOS|Any CPU
+		Release-kOS|Any CPU = Release-kOS|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -47,6 +51,32 @@ Global
 		{DA770208-1300-4C86-8996-C1790B945999}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA770208-1300-4C86-8996-C1790B945999}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA770208-1300-4C86-8996-C1790B945999}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}.Debug-kOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}.Debug-kOS|Any CPU.Build.0 = Debug|Any CPU
+		{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}.Release-kOS|Any CPU.ActiveCfg = Release|Any CPU
+		{9FC90AE6-C2E4-47F1-A6D1-DB4731A40BE3}.Release-kOS|Any CPU.Build.0 = Release|Any CPU
+		{D21C9231-4F36-494F-988A-8352CFE7CCCE}.Debug-kOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{D21C9231-4F36-494F-988A-8352CFE7CCCE}.Debug-kOS|Any CPU.Build.0 = Debug|Any CPU
+		{D21C9231-4F36-494F-988A-8352CFE7CCCE}.Release-kOS|Any CPU.ActiveCfg = Release|Any CPU
+		{D21C9231-4F36-494F-988A-8352CFE7CCCE}.Release-kOS|Any CPU.Build.0 = Release|Any CPU
+		{BA86665B-A72E-41FB-858A-C0FF29E05768}.Debug-kOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA86665B-A72E-41FB-858A-C0FF29E05768}.Debug-kOS|Any CPU.Build.0 = Debug|Any CPU
+		{BA86665B-A72E-41FB-858A-C0FF29E05768}.Release-kOS|Any CPU.ActiveCfg = Release|Any CPU
+		{BA86665B-A72E-41FB-858A-C0FF29E05768}.Release-kOS|Any CPU.Build.0 = Release|Any CPU
+		{E8CBCDDD-BCFC-4F03-9309-F58395CA4762}.Debug-kOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8CBCDDD-BCFC-4F03-9309-F58395CA4762}.Debug-kOS|Any CPU.Build.0 = Debug|Any CPU
+		{E8CBCDDD-BCFC-4F03-9309-F58395CA4762}.Release-kOS|Any CPU.ActiveCfg = Release|Any CPU
+		{E8CBCDDD-BCFC-4F03-9309-F58395CA4762}.Release-kOS|Any CPU.Build.0 = Release|Any CPU
+		{DA770208-1300-4C86-8996-C1790B945999}.Debug-kOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA770208-1300-4C86-8996-C1790B945999}.Debug-kOS|Any CPU.Build.0 = Debug|Any CPU
+		{DA770208-1300-4C86-8996-C1790B945999}.Release-kOS|Any CPU.ActiveCfg = Release|Any CPU
+		{DA770208-1300-4C86-8996-C1790B945999}.Release-kOS|Any CPU.Build.0 = Release|Any CPU
+		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Debug-kOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Debug-kOS|Any CPU.Build.0 = Debug|Any CPU
+		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Release-kOS|Any CPU.ActiveCfg = Release|Any CPU
+		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Release-kOS|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <RootNamespace>MuMech</RootNamespace>
+        <AssemblyName>MechJebKos</AssemblyName>
+        <LangVersion>8</LangVersion>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <DefineConstants>$(DefineConstants);UNITY_2017_1</DefineConstants>
+        <Prefer32Bit>false</Prefer32Bit>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DefineConstants>$(DefineConstants);ENABLE_PROFILER</DefineConstants>
+        <DebugType>portable</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DebugType>None</DebugType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="kOS">
+            <HintPath>$(KosDll)</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Assembly-CSharp">
+            <HintPath>$(KspData)/Managed/Assembly-CSharp.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>$(KspData)/Managed/UnityEngine.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>$(KspData)/Managed/UnityEngine.CoreModule.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MechJeb2\MechJeb2.csproj" />
+        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj" />
+        <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj" />
+    </ItemGroup>
+
+    <Target Name="MechJebKosCopyBuild" AfterTargets="Build">
+        <ItemGroup>
+            <_MechJebKosArtifacts Include="$(TargetDir)$(TargetName).dll" />
+            <_MechJebKosArtifacts Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+        </ItemGroup>
+        <MakeDir Directories="$(KspDir)/GameData/MechJeb2/Plugins" />
+        <Copy SourceFiles="@(_MechJebKosArtifacts)"
+              DestinationFolder="$(KspDir)/GameData/MechJeb2/Plugins"
+              SkipUnchangedFiles="true" />
+    </Target>
+
+</Project>
