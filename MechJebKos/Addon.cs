@@ -33,11 +33,14 @@ namespace MuMech.MechJebKos
         private void InitializeSuffixes()
         {
             var nodeExecutor = new NodeExecutorBinding(() => _core);
+            var staging = new StagingControllerBinding(() => _core);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() =>  _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
             AddSuffix("NODEEXECUTOR", new NoArgsSuffix<NodeExecutorBinding>(() => nodeExecutor,
                 "The maneuver node executor."));
+            AddSuffix("STAGINGCONTROLLER", new NoArgsSuffix<StagingControllerBinding>(() => staging,
+                "The autostaging controller."));
         }
     }
 }
