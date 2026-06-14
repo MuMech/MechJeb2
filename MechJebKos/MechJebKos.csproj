@@ -7,6 +7,7 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <DefineConstants>$(DefineConstants);UNITY_2017_1</DefineConstants>
         <Prefer32Bit>false</Prefer32Bit>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -24,8 +25,18 @@
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
+        <Reference Include="kOS.Safe">
+            <HintPath>$(KosSafeDll)</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="Assembly-CSharp">
             <HintPath>$(KspData)/Managed/Assembly-CSharp.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Assembly-CSharp-firstpass">
+            <HintPath>$(KspData)/Managed/Assembly-CSharp-firstpass.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>

@@ -37,8 +37,11 @@
     <KspData Condition="'$(OS)' != 'Windows_NT' And !Exists('$(KspDir)/KSP.app')">$(KspDir)/KSP_Data</KspData>
   </PropertyGroup>
 
-  <!-- Derive KosDll from KspDir. -->
+  <!-- Derive KosDll / KosSafeDll from KspDir. -->
   <PropertyGroup Condition="'$(KosDll)' == ''">
     <KosDll>$(KspDir)/GameData/kOS/Plugins/kOS.dll</KosDll>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(KosSafeDll)' == ''">
+    <KosSafeDll>$(KspDir)/GameData/kOS/Plugins/kOS.Safe.dll</KosSafeDll>
   </PropertyGroup>
 </Project>
