@@ -18,6 +18,8 @@ namespace MuMech.MechJebKos
 
         protected override void InitializeSuffixes()
         {
+            AddSuffix("ENABLED", new SetSuffix<BooleanValue>(() => Module.Enabled, value => SetUsersEnabled(value),
+                "Whether continuous autostaging is engaged."));
             AddSuffix("AUTOSTAGEPREDELAY", new SetSuffix<ScalarValue>(() => Module.AutostagePreDelay.Val, value => Module.AutostagePreDelay.Val = value,
                 "Seconds to wait before firing a stage."));
             AddSuffix("AUTOSTAGEPOSTDELAY", new SetSuffix<ScalarValue>(() => Module.AutostagePostDelay.Val, value => Module.AutostagePostDelay.Val = value,
@@ -53,12 +55,5 @@ namespace MuMech.MechJebKos
                 "Stage immediately, bypassing the pre-delay."));
         }
 
-        protected override void SetEnabled(bool enabled)
-        {
-            if (enabled)
-                Module.Users.Add(this);
-            else
-                Module.Users.Remove(this);
-        }
     }
 }

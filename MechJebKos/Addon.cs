@@ -25,7 +25,7 @@ namespace MuMech.MechJebKos
     {
         public Addon(SharedObjects shared) : base(shared) => RegisterInitializer(InitializeSuffixes);
 
-        // must never be cached, it can be updated dyanmically
+        // never cached, it can be updated dyanmically
         private MechJebCore? _core => shared.Vessel.GetMasterMechJeb();
 
         public override BooleanValue Available() => !(_core is null);
@@ -33,14 +33,17 @@ namespace MuMech.MechJebKos
         private void InitializeSuffixes()
         {
             var nodeExecutor = new NodeExecutorBinding(() => _core);
-            var staging = new StagingControllerBinding(() => _core);
+            var stagingController = new StagingControllerBinding(() => _core);
+            var thrustController = new ThrustControllerBinding(() => _core);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() =>  _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
             AddSuffix("NODEEXECUTOR", new NoArgsSuffix<NodeExecutorBinding>(() => nodeExecutor,
                 "The maneuver node executor."));
-            AddSuffix("STAGINGCONTROLLER", new NoArgsSuffix<StagingControllerBinding>(() => staging,
+            AddSuffix("STAGINGCONTROLLER", new NoArgsSuffix<StagingControllerBinding>(() => stagingController,
                 "The autostaging controller."));
+            AddSuffix("THRUSTCONTROLLER", new NoArgsSuffix<ThrustControllerBinding>(() => thrustController,
+                "The thrust controller (throttle limiters)."));
         }
     }
 }

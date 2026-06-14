@@ -19,6 +19,8 @@ namespace MuMech.MechJebKos
 
         protected override void InitializeSuffixes()
         {
+            AddSuffix("ENABLED", new SetSuffix<BooleanValue>(() => Module.Enabled, value => SetEnabled(value),
+                "Whether node execution is engaged: set true to execute, false to abort."));
             AddSuffix("STATE", new Suffix<StringValue>(() => Module.State.ToString(),
                 "Executor state: WARPALIGN, LEAD, BURN, or IDLE."));
             AddSuffix("MODE", new SetSuffix<StringValue>(() => Module.Mode.ToString(), value => Module.Mode = ParseMode(value),
@@ -39,7 +41,7 @@ namespace MuMech.MechJebKos
         }
 
         // The node executor engages via ExecuteOneNode / Abort rather than the plain Enabled toggle.
-        protected override void SetEnabled(bool enabled)
+        private void SetEnabled(bool enabled)
         {
             if (enabled)
                 Module.ExecuteOneNode(this);

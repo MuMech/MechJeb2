@@ -32,7 +32,6 @@ namespace MuMech
             if (_ascentSettings.AscentType == AscentType.PSG)
             {
                 Core.Thrust.LimitThrottle           = false;
-                Core.Thrust.LimitToTerminalVelocity = false;
                 Core.Thrust.ElectricThrottle        = false;
             }
 
