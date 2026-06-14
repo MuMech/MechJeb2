@@ -71,7 +71,7 @@ namespace MuMech
                 if (_courseCorrectionBurning)
                 {
                     const double TIME_CONSTANT = 2.0;
-                    Core.Thrust.ThrustForDV(deltaV.magnitude, TIME_CONSTANT);
+                    Core.Thrust.ThrustForDv(deltaV.magnitude, TIME_CONSTANT);
                 }
                 else
                 {

@@ -5,7 +5,6 @@
 
 using System;
 using kOS.Safe.Encapsulation;
-using kOS.Safe.Encapsulation.Suffixes;
 using kOS.Safe.Exceptions;
 using kOS.Safe.Utilities;
 
@@ -19,7 +18,7 @@ namespace MuMech.MechJebKos
         protected ComputerModuleBinding(Func<MechJebCore?> core)
         {
             _core = core;
-            RegisterInitializer(InitSuffixes);
+            RegisterInitializer(InitializeSuffixes);
         }
 
         // the Module deliberately re-evaluates on every call since the core can update dynamically
@@ -32,21 +31,16 @@ namespace MuMech.MechJebKos
             }
         }
 
-        private void InitSuffixes()
-        {
-            AddSuffix("ENABLED", new SetSuffix<BooleanValue>(() => Module.Enabled, value => SetEnabled(value),
-                "Whether the module is enabled."));
-            InitializeSuffixes();
-        }
-
         protected abstract void InitializeSuffixes();
 
-        protected virtual void SetEnabled(bool enabled)
+        // For modules that do cooperative engage/disengage through the module's Users pool.
+        // (There is no one-size-fits-all)
+        protected void SetUsersEnabled(bool enabled)
         {
             if (enabled)
-                Module.Enable();
+                Module.Users.Add(this);
             else
-                Module.Disable();
+                Module.Users.Remove(this);
         }
     }
 }

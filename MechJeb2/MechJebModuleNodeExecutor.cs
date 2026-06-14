@@ -288,7 +288,7 @@ namespace MuMech
             if (!RCSOnly)
             {
                 double timeConstant = _dvLeft > 10 || VesselState.minThrustAccel > 0.25 * VesselState.maxThrustAccel ? 0.5 : 2;
-                Core.Thrust.ThrustForDV(_dvLeft, timeConstant);
+                Core.Thrust.ThrustForDv(_dvLeft, timeConstant);
             }
         }
 

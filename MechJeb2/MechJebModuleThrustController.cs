@@ -11,12 +11,7 @@ namespace MuMech
 {
     public class MechJebModuleThrustController : ComputerModule
     {
-        private static readonly bool _isLoadedRealFuels;
-
-        static MechJebModuleThrustController()
-        {
-            _isLoadedRealFuels = ReflectionUtils.IsAssemblyLoaded("RealFuels");
-        }
+        private static bool _isLoadedRealFuels => ReflectionUtils.IsAssemblyLoaded("RealFuels");
 
         public enum DifferentialThrottleStatus
         {
@@ -35,20 +30,6 @@ namespace MuMech
         public  float TransSpdAct;
         private float _transPrevThrust;
         public  bool  TransKillH = false;
-
-        // The Terminal Velocity limiter is removed to not have to deal with users who
-        // think that seeing the aerodynamic FX means they reached it.
-        // And it s really high since 1.0.x anyway so the Dynamic Pressure limiter is better now
-        //[Persistent(pass = (int)Pass.Global)]
-        public bool LimitToTerminalVelocity = false;
-
-        //[GeneralInfoItem("Limit to terminal velocity", InfoItem.Category.Thrust)]
-        //public void LimitToTerminalVelocityInfoItem()
-        //{
-        //    GUIStyle s = new GUIStyle(GUI.skin.toggle);
-        //    if (limiter == LimitMode.TerminalVelocity) s.onHover.textColor = s.onNormal.textColor = Color.green;
-        //    limitToTerminalVelocity = GUILayout.Toggle(limitToTerminalVelocity, "Limit to terminal velocity", s);
-        //}
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitDynamicPressure;
@@ -223,7 +204,7 @@ namespace MuMech
 
         public enum LimitMode
         {
-            NONE, TERMINAL_VELOCITY, TEMPERATURE, FLAMEOUT, ACCELERATION, THROTTLE, DYNAMIC_PRESSURE, MIN_THROTTLE, ELECTRIC, UNSTABLE_IGNITION,
+            NONE, TEMPERATURE, FLAMEOUT, ACCELERATION, THROTTLE, DYNAMIC_PRESSURE, MIN_THROTTLE, ELECTRIC, UNSTABLE_IGNITION,
             AUTO_RCS_ULLAGE
         }
 
@@ -301,7 +282,7 @@ namespace MuMech
 
         private void SetFlightGlobals(double throttle)
         {
-            if (FlightGlobals.ActiveVessel != null && Vessel == FlightGlobals.ActiveVessel)
+            if (!(FlightGlobals.ActiveVessel is null) && Vessel == FlightGlobals.ActiveVessel)
             {
                 FlightInputHandler.state.mainThrottle = (float)throttle; //so that the on-screen throttle gauge reflects the autopilot throttle
             }
@@ -309,12 +290,12 @@ namespace MuMech
 
         // Call this function to set the throttle for a burn with dV delta-V remaining.
         // timeConstant controls how quickly we throttle down toward the end of the burn.
-        // This function is nice because it will correctly handle engine spool-up/down times.
-        public void ThrustForDV(double dV, double timeConstant)
+        // This function is nice because it will correctly handle engine spool-up/spool-down times.
+        public void ThrustForDv(double dV, double timeConstant)
         {
             timeConstant += VesselState.maxEngineResponseTime;
-            double spooldownDV = VesselState.currentThrustAccel * VesselState.maxEngineResponseTime;
-            double desiredAcceleration = (dV - spooldownDV) / timeConstant;
+            double spooldownDv = VesselState.currentThrustAccel * VesselState.maxEngineResponseTime;
+            double desiredAcceleration = (dV - spooldownDv) / timeConstant;
 
             TargetThrottle = Mathf.Clamp((float)(desiredAcceleration / VesselState.maxThrustAccel), 0.01f, 1.00f);
         }
@@ -370,6 +351,7 @@ namespace MuMech
                 _userCommandingRotationSmoothed--;
             }
 
+            // These are tech-gates (is the window in the drop down?), not normal UI visibility of the window
             if (Core.GetComputerModule<MechJebModuleThrustWindow>().Hidden && Core.GetComputerModule<MechJebModuleAscentMenu>().Hidden) { return; }
 
             if (Tmode != TMode.OFF && VesselState.thrustAvailable > 0)
@@ -453,7 +435,7 @@ namespace MuMech
                 }
             }
 
-            // Only set throttle if a module need it. Otherwise let the user or other mods set it
+            // Only set throttle if a module need it. Otherwise, let the user or other mods set it
             // There is always at least 1 user : the module itself (why ?)
             if (Users.Count > 1)
                 s.mainThrottle = TargetThrottle;
@@ -468,15 +450,6 @@ namespace MuMech
                 if (MaxThrottle < ThrottleLimit)
                 {
                     SetFixedLimit((float)MaxThrottle, LimitMode.THROTTLE);
-                }
-            }
-
-            if (LimitToTerminalVelocity)
-            {
-                float limit = TerminalVelocityThrottle();
-                if (limit < ThrottleLimit)
-                {
-                    SetFixedLimit(limit, LimitMode.TERMINAL_VELOCITY);
                 }
             }
 
@@ -560,9 +533,7 @@ namespace MuMech
             // back on the next tick after disabling.  we save this before applying the throttle limits so that we preserve
             // the requested throttle, and not the limited throttle.
             if (Core.RssMode)
-            {
                 SetFlightGlobals(s.mainThrottle);
-            }
 
             if (double.IsNaN(ThrottleLimit)) ThrottleLimit = 1.0F;
             ThrottleLimit = Mathf.Clamp01(ThrottleLimit);
@@ -603,20 +574,6 @@ namespace MuMech
         public override void OnFixedUpdate() =>
             DifferentialThrottleSuccess =
                 DifferentialThrottle ? ComputeDifferentialThrottle(DifferentialThrottleDemandedTorque) : DifferentialThrottleStatus.SUCCESS;
-
-        //A throttle setting that throttles down when the vertical velocity of the ship exceeds terminal velocity
-        private float TerminalVelocityThrottle()
-        {
-            if (VesselState.altitudeASL > MainBody.RealMaxAtmosphereAltitude()) return 1.0F;
-
-            double velocityRatio = Vector3d.Dot(VesselState.surfaceVelocity, VesselState.up) / VesselState.TerminalVelocity();
-
-            if (velocityRatio < 1.0) return 1.0F; //full throttle if under terminal velocity
-
-            //throttle down quickly as we exceed terminal velocity:
-            const double FALLOFF = 15.0;
-            return Mathf.Clamp((float)(1.0 - FALLOFF * (velocityRatio - 1.0)), 0.0F, 1.0F);
-        }
 
         //A throttle setting that throttles down when the dynamic pressure exceed a set value
         private float MaximumDynamicPressureThrottle()
@@ -754,9 +711,8 @@ namespace MuMech
                     groupIds[partIntake] = grpId;
                     intakes.Add(partIntake);
 
-                    for (int i = 0; i < part.symmetryCounterparts.Count; i++)
+                    foreach (Part sympart in part.symmetryCounterparts)
                     {
-                        Part sympart = part.symmetryCounterparts[i];
                         stack.Push(sympart);
                     }
                 }
@@ -772,9 +728,8 @@ namespace MuMech
             {
                 if (airFlowSoFar < requiredFlow)
                 {
-                    for (int i = 0; i < grp.Count; i++)
+                    foreach (ModuleResourceIntake intake in grp)
                     {
-                        ModuleResourceIntake intake = grp[i];
                         double airFlowThisIntake = data[intake].predictedMassFlow;
                         if (!intake.intakeEnabled)
                         {
@@ -786,9 +741,8 @@ namespace MuMech
                 }
                 else
                 {
-                    for (int j = 0; j < grp.Count; j++)
+                    foreach (ModuleResourceIntake intake in grp)
                     {
-                        ModuleResourceIntake intake = grp[j];
                         if (intake.intakeEnabled)
                         {
                             intake.ToggleAction(param);
@@ -866,23 +820,6 @@ namespace MuMech
                         pm.enablePitch = pm.enableRoll = pm.enableYaw = true;
                     }
                 }
-            }
-        }
-
-        private static void MaxThrust(double[] x, ref double func, double[] grad, object obj)
-        {
-            var el = (List<VesselState.EngineWrapper>)obj;
-
-            func = 0;
-
-            for (int i = 0, j = 0; j < el.Count; j++)
-            {
-                VesselState.EngineWrapper e = el[j];
-                if (e.engine.throttleLocked) continue;
-
-                func    -= el[j].maxVariableForce.y * x[i];
-                grad[i] =  -el[j].maxVariableForce.y;
-                i++;
             }
         }
 
@@ -1011,17 +948,12 @@ namespace MuMech
 
         private void DisableDifferentialThrottle()
         {
-            for (int i = 0; i < Vessel.parts.Count; i++)
+            foreach (Part p in Vessel.parts)
             {
-                Part p = Vessel.parts[i];
-                for (int j = 0; j < p.Modules.Count; j++)
+                foreach (PartModule pm in p.Modules)
                 {
-                    PartModule pm = p.Modules[j];
-                    var engine = pm as ModuleEngines;
-                    if (engine != null)
-                    {
+                    if (pm is ModuleEngines engine)
                         engine.thrustPercentage = 100;
-                    }
                 }
             }
         }

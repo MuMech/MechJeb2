@@ -8,6 +8,7 @@ namespace MuMech
 {
     public class DisplayModule : ComputerModule
     {
+        // this means Hidden in the drop-down menu because the tech isn't unlocked.
         public bool Hidden;
 
         public Rect WindowPos
