@@ -9,14 +9,8 @@ namespace MuMech
 {
     public class MechJebModuleNodeExecutor : ComputerModule
     {
-        private static readonly bool _isLoadedRealFuels;
-        private static readonly bool _isLoadedPrincipia;
-
-        static MechJebModuleNodeExecutor()
-        {
-            _isLoadedRealFuels = ReflectionUtils.IsAssemblyLoaded("RealFuels");
-            _isLoadedPrincipia = ReflectionUtils.IsAssemblyLoaded("principia.ksp_plugin_adapter");
-        }
+        private static bool _isLoadedRealFuels => ReflectionUtils.IsAssemblyLoaded("RealFuels");
+        private static bool _isLoadedPrincipia => ReflectionUtils.IsAssemblyLoaded("principia.ksp_plugin_adapter");
 
         // whether to auto-warp to nodes
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -77,14 +71,14 @@ namespace MuMech
         public void ExecuteOneNode(object controller)
         {
             Users.Add(controller);
-            _mode = Mode.ONE_NODE;
+            Mode = Modes.ONE_NODE;
             Init();
         }
 
         public void ExecuteAllNodes(object controller)
         {
             Users.Add(controller);
-            _mode = Mode.ALL_NODES;
+            Mode = Modes.ALL_NODES;
             Init();
         }
 
@@ -125,12 +119,12 @@ namespace MuMech
             _dvLeft = 0;
         }
 
-        private enum Mode { ONE_NODE, ALL_NODES }
+        public enum Modes { ONE_NODE, ALL_NODES }
 
         public enum States { WARPALIGN, LEAD, BURN, IDLE }
 
-        private Mode   _mode = Mode.ONE_NODE;
-        public  States State = States.IDLE;
+        public Modes Mode = Modes.ONE_NODE;
+        public States State = States.IDLE;
 
         private double   _dvLeft;    // for Principia
         private Vector3d _direction; // de-rotated world vector
@@ -307,7 +301,7 @@ namespace MuMech
         {
             if (_dvLeft > 0) return false;
 
-            if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+            if (Mode == Modes.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
                 Init();
             else
                 Abort();
@@ -323,7 +317,7 @@ namespace MuMech
 
             node.RemoveSelf();
 
-            if (_mode == Mode.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+            if (Mode == Modes.ALL_NODES && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
                 Init();
             else
                 Abort();

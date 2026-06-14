@@ -36,7 +36,7 @@ namespace MuMech.MechJebKos
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() =>  _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
-            AddSuffix(new[] { "NODE", "NODEEXECUTOR" }, new NoArgsSuffix<NodeExecutorBinding>(() => nodeExecutor,
+            AddSuffix("NODEEXECUTOR", new NoArgsSuffix<NodeExecutorBinding>(() => nodeExecutor,
                 "The maneuver node executor."));
         }
     }
