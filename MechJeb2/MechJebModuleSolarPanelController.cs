@@ -15,33 +15,29 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_ToggleSolarPanels", InfoItem.Category.Misc, showInEditor = false)] //Toggle solar panels
         public void SolarPanelDeployButton()
         {
-            autoDeploy = GUILayout.Toggle(autoDeploy, Localizer.Format("#MechJeb_SolarPanelDeployButton")); //"Auto-deploy solar panels"
+            AutoDeploy = GUILayout.Toggle(AutoDeploy, Localizer.Format("#MechJeb_SolarPanelDeployButton")); //"Auto-deploy solar panels"
 
-            if (GUILayout.Button(buttonText))
-            {
-                if (ExtendingOrRetracting())
-                    return;
+            if (!GUILayout.Button(ButtonText)) return;
 
-                if (!extended)
-                    ExtendAll();
-                else
-                    RetractAll();
-            }
+            if (ExtendingOrRetracting())
+                return;
+
+            if (!Extended)
+                ExtendAll();
+            else
+                RetractAll();
         }
 
-        protected override bool isModules(ModuleDeployablePart p) => p is ModuleDeployableSolarPanel;
+        protected override bool IsModules(ModuleDeployablePart p) => p is ModuleDeployableSolarPanel;
 
-        protected override string getButtonText(DeployablePartState deployablePartState)
+        protected override string GetButtonText(DeployablePartState deployablePartState)
         {
-            switch (deployablePartState)
+            return deployablePartState switch
             {
-                case DeployablePartState.EXTENDED:
-                    return Localizer.Format("#MechJeb_SolarPanelDeploy"); //"Toggle solar panels (currently extended)"
-                case DeployablePartState.RETRACTED:
-                    return Localizer.Format("#MechJeb_SolarPanelRetracted"); //"Toggle solar panels (currently retracted)"
-                default:
-                    return Localizer.Format("#MechJeb_SolarPanelToggle"); //"Toggle solar panels"
-            }
+                DeployablePartState.EXTENDED => Localizer.Format("#MechJeb_SolarPanelDeploy"), //"Toggle solar panels (currently extended)"
+                DeployablePartState.RETRACTED => Localizer.Format("#MechJeb_SolarPanelRetracted"), //"Toggle solar panels (currently retracted)"
+                _ => Localizer.Format("#MechJeb_SolarPanelToggle")
+            };
         }
     }
 }
