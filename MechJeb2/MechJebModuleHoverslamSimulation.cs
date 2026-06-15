@@ -29,7 +29,7 @@ namespace MuMech
                 for (int iter = 0; iter < 10; iter++)
                 {
                     Vector3d impactPosition = Orbit.WorldPositionAtUT(impactTime);
-                    double   terrainRadius  = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
+                    double terrainRadius = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
                     impactTime = Orbit.NextTimeOfRadius(VesselState.time, terrainRadius);
                 }
             }
@@ -147,9 +147,10 @@ namespace MuMech
 
         private void Reset()
         {
-            LandingPosition = Vector3d.zero;
+            LandingPosition = new Vector3d(double.NaN, double.NaN, double.NaN);
             IgnitionUT = double.NaN;
             LandingUT = double.NaN;
+            IgnitionAttitude = new Vector3d(double.NaN, double.NaN, double.NaN);
             Lat = 0;
             Lng = 0;
             FinalThrustAccel = -1;
@@ -161,8 +162,8 @@ namespace MuMech
         {
             Core.StageStats.RequestUpdate();
 
-            int    lastNonZeroIndex = -1;
-            double dv               = 0;
+            int lastNonZeroIndex = -1;
+            double dv = 0;
 
             for (int mjPhase = _vacStats.Count - 1; mjPhase >= 0 && burnTime > 0; mjPhase--)
             {
@@ -236,7 +237,7 @@ namespace MuMech
             V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
             bool noBurnableStages = true;
-            int  lastKSPStage     = -1;
+            int lastKSPStage = -1;
 
             for (int mjPhase = _vacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
