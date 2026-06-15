@@ -490,7 +490,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
-                                srfVelRol = -VesselState.vesselRoll.Value;
+                                srfVelRol = -VesselState.vesselRoll;
                                 changed = true;
                             }
 
@@ -530,7 +530,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
-                                srfVelPit = VesselState.AoA.Value;
+                                srfVelPit = VesselState.AoA;
                                 changed = true;
                             }
 
@@ -571,7 +571,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
-                                srfVelYaw = -VesselState.AoS.Value;
+                                srfVelYaw = -VesselState.AoS;
                                 changed = true;
                             }
 
@@ -641,7 +641,7 @@ namespace MuMech
                     case Mode.AUTO:
                         break;
                 }
-                
+
                 // Disable smooth control for modes that don't have it
                 if (!hasSmoothControl)
                 {
@@ -785,7 +785,7 @@ namespace MuMech
                 // Get the reference rotation for the current mode
                 QuaternionD refRotation = Core.Attitude.attitudeGetReferenceRotation(reference);
                 QuaternionD vesselRotation = QuaternionD.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
-                
+
                 // Get the vessel's current attitude in the reference frame
                 QuaternionD vesselAttitudeInRef = QuaternionD.Inverse(refRotation) * vesselRotation;
 
@@ -829,7 +829,7 @@ namespace MuMech
                 // by jumping to some random attitude because the current values are out of date
                 curDirection = targetDirection;
                 curAttitude = targetAttitude;
-            } 
+            }
             // Handle smooth transitions if enabled and SmartASS is still controlling
             else
             {

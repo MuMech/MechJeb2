@@ -91,36 +91,36 @@ namespace MuMech
         //How about changing these so we store the instantaneous values and *also*
         //the smoothed MovingAverages? Sometimes we need the instantaneous value.
         [ValueInfoItem("#MechJeb_OrbitalSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Orbital speed
-        public readonly MovingAverage speedOrbital = new MovingAverage();
+        public double speedOrbital ;
 
         [ValueInfoItem("#MechJeb_SurfaceSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")] //Surface speed
-        public readonly MovingAverage speedSurface = new MovingAverage();
+        public double speedSurface ;
 
         [ValueInfoItem("#MechJeb_VerticalSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI, units = "m/s")] //Vertical speed
-        public readonly MovingAverage speedVertical = new MovingAverage();
+        public double speedVertical ;
 
         [ValueInfoItem("#MechJeb_SurfaceHorizontalSpeed", InfoItem.Category.Surface, format = ValueInfoItem.SI,
             units = "m/s")]
         //Surface horizontal speed
-        public readonly MovingAverage speedSurfaceHorizontal = new MovingAverage();
+        public double speedSurfaceHorizontal ;
 
         [ValueInfoItem("#MechJeb_OrbitHorizontalSpeed", InfoItem.Category.Orbit, format = ValueInfoItem.SI, units = "m/s")] //Orbit horizontal speed
         public double speedOrbitHorizontal;
 
         [ValueInfoItem("#MechJeb_Heading", InfoItem.Category.Surface, format = "F1", units = "º")] //Heading
-        public readonly MovingAverage vesselHeading = new MovingAverage();
+        public double vesselHeading ;
 
         [ValueInfoItem("#MechJeb_Pitch", InfoItem.Category.Surface, format = "F1", units = "º")] //Pitch
-        public readonly MovingAverage vesselPitch = new MovingAverage();
+        public double vesselPitch ;
 
         [ValueInfoItem("#MechJeb_Roll", InfoItem.Category.Surface, format = "F1", units = "º")] //Roll
-        public readonly MovingAverage vesselRoll = new MovingAverage();
+        public double vesselRoll ;
 
         [ValueInfoItem("#MechJeb_Altitude_ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Altitude (ASL)
-        public readonly MovingAverage altitudeASL = new MovingAverage();
+        public double altitudeASL ;
 
         [ValueInfoItem("#MechJeb_Altitude_true", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Altitude (true)
-        public readonly MovingAverage altitudeTrue = new MovingAverage();
+        public double altitudeTrue ;
 
         [ValueInfoItem("#MechJeb_SurfaceAltitudeASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 4,
             units = "m")]
@@ -130,58 +130,58 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6,
             category = InfoItem.Category.Orbit)]
         //Apoapsis
-        public readonly MovingAverage orbitApA = new MovingAverage();
+        public double orbitApA ;
 
         [ValueInfoItem("#MechJeb_Periapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6,
             category = InfoItem.Category.Orbit)]
         //Periapsis
-        public readonly MovingAverage orbitPeA = new MovingAverage();
+        public double orbitPeA ;
 
         [ValueInfoItem("#MechJeb_OrbitalPeriod", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 2,
             category = InfoItem.Category.Orbit)]
         //Orbital period
-        public readonly MovingAverage orbitPeriod = new MovingAverage();
+        public double orbitPeriod ;
 
         [ValueInfoItem("#MechJeb_TimeToApoapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)] //Time to apoapsis
-        public readonly MovingAverage orbitTimeToAp = new MovingAverage();
+        public double orbitTimeToAp ;
 
         [ValueInfoItem("#MechJeb_TimeToPeriapsis", InfoItem.Category.Orbit, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)] //Time to periapsis
-        public readonly MovingAverage orbitTimeToPe = new MovingAverage();
+        public double orbitTimeToPe ;
 
         [ValueInfoItem("#MechJeb_LAN", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)] //LAN
-        public readonly MovingAverage orbitLAN = new MovingAverage();
+        public double orbitLAN ;
 
         [ValueInfoItem("#MechJeb_ArgumentOfPeriapsis", InfoItem.Category.Orbit, format = "F1", units = "º")] //Argument of periapsis
-        public readonly MovingAverage orbitArgumentOfPeriapsis = new MovingAverage();
+        public double orbitArgumentOfPeriapsis ;
 
         [ValueInfoItem("#MechJeb_Inclination", InfoItem.Category.Orbit, format = "F3", units = "º")] //Inclination
-        public readonly MovingAverage orbitInclination = new MovingAverage();
+        public double orbitInclination ;
 
         [ValueInfoItem("#MechJeb_Eccentricity", InfoItem.Category.Orbit, format = "F3")] //Eccentricity
-        public readonly MovingAverage orbitEccentricity = new MovingAverage();
+        public double orbitEccentricity ;
 
         [ValueInfoItem("#MechJeb_SemiMajorAxis", InfoItem.Category.Orbit, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Semi-major axis
-        public readonly MovingAverage orbitSemiMajorAxis = new MovingAverage();
+        public double orbitSemiMajorAxis ;
 
         [ValueInfoItem("Celestial Longitude", InfoItem.Category.Orbit, format = "F3")]
-        public readonly MovingAverage celestialLongitude = new MovingAverage();
+        public double celestialLongitude ;
 
         [ValueInfoItem("#MechJeb_Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)] //Latitude
-        public readonly MovingAverage latitude = new MovingAverage();
+        public double latitude ;
 
         [ValueInfoItem("#MechJeb_Longitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_EW)] //Longitude
-        public readonly MovingAverage longitude = new MovingAverage();
+        public double longitude ;
 
         [ValueInfoItem("#MechJeb_AngleOfAttack", InfoItem.Category.Misc, format = "F2", units = "º")] //Angle of Attack
-        public readonly MovingAverage AoA = new MovingAverage();
+        public double AoA ;
 
         [ValueInfoItem("#MechJeb_AngleOfSideslip", InfoItem.Category.Misc, format = "F2", units = "º")] //Angle of Sideslip
-        public readonly MovingAverage AoS = new MovingAverage();
+        public double AoS ;
 
         [ValueInfoItem("#MechJeb_DisplacementAngle", InfoItem.Category.Misc, format = "F2", units = "º")] //Displacement Angle
-        public readonly MovingAverage displacementAngle = new MovingAverage();
+        public double displacementAngle ;
 
-        public readonly MovingAverage3d angularVelocityAvg = new MovingAverage3d(5);
+        public Vector3d angularVelocityAvg;
 
         // instantaneous values
         public double currentPitch => rotationVesselSurface.eulerAngles.x > 180
@@ -672,10 +672,10 @@ namespace MuMech
             gravityForce = FlightGlobals.getGeeForceAtPosition(CoM); // TODO vessel.gravityForPos or vessel.gravityTrue
             localg       = gravityForce.magnitude;
 
-            speedOrbital.Value  = orbitalVelocity.magnitude;
-            speedSurface.Value  = surfaceVelocity.magnitude;
-            speedVertical.Value = Vector3d.Dot(surfaceVelocity, up);
-            speedSurfaceHorizontal.Value =
+            speedOrbital  = orbitalVelocity.magnitude;
+            speedSurface  = surfaceVelocity.magnitude;
+            speedVertical = Vector3d.Dot(surfaceVelocity, up);
+            speedSurfaceHorizontal =
                 Vector3d.Exclude(up, surfaceVelocity).magnitude; //(velocityVesselSurface - (speedVertical * up)).magnitude;
             speedOrbitHorizontal = (orbitalVelocity - speedVertical * up).magnitude;
 
@@ -683,28 +683,28 @@ namespace MuMech
             var srfProj = Vector3.ProjectOnPlane(surfaceVelocity.normalized, vessel.ReferenceTransform.right);
             double tmpAoA = UtilMath.Rad2Deg * Math.Atan2(Vector3.Dot(srfProj.normalized, vessel.ReferenceTransform.forward),
                 Vector3.Dot(srfProj.normalized, vessel.ReferenceTransform.up));
-            AoA.Value = double.IsNaN(tmpAoA) || speedSurface.Value < 0.01 ? 0 : tmpAoA;
+            AoA = double.IsNaN(tmpAoA) || speedSurface < 0.01 ? 0 : tmpAoA;
 
             // Angle of Sideslip, angle between surface velocity and the ship-nose vector (KSP "up" vector) in the plane that has no ship-top/bottom in it (KSP "forward"/"back")
             srfProj = Vector3.ProjectOnPlane(surfaceVelocity.normalized, vessel.ReferenceTransform.forward);
             double tmpAoS = UtilMath.Rad2Deg * Math.Atan2(Vector3.Dot(srfProj.normalized, vessel.ReferenceTransform.right),
                 Vector3.Dot(srfProj.normalized, vessel.ReferenceTransform.up));
-            AoS.Value = double.IsNaN(tmpAoS) || speedSurface.Value < 0.01 ? 0 : tmpAoS;
+            AoS = double.IsNaN(tmpAoS) || speedSurface < 0.01 ? 0 : tmpAoS;
 
             // Displacement Angle, angle between surface velocity and the ship-nose vector (KSP "up" vector) -- ignores roll of the craft (0 to 180 degrees)
             double tempAoD = UtilMath.Rad2Deg *
                 Math.Acos(MuUtils.Clamp(Vector3.Dot(vessel.ReferenceTransform.up, surfaceVelocity.normalized), -1, 1));
-            displacementAngle.Value = double.IsNaN(tempAoD) || speedSurface.Value < 0.01 ? 0 : tempAoD;
+            displacementAngle = double.IsNaN(tempAoD) || speedSurface < 0.01 ? 0 : tempAoD;
 
-            vesselHeading.Value = currentHeading;
-            vesselPitch.Value   = currentPitch;
-            vesselRoll.Value    = currentRoll;
+            vesselHeading = currentHeading;
+            vesselPitch   = currentPitch;
+            vesselRoll    = currentRoll;
 
-            altitudeASL.Value = vessel.mainBody.GetAltitude(CoM);
+            altitudeASL = vessel.mainBody.GetAltitude(CoM);
 
             surfaceAltitudeASL = vessel.mainBody.pqsController != null ? vessel.pqsAltitude : 0d;
             if (vessel.mainBody.ocean && surfaceAltitudeASL < 0) surfaceAltitudeASL = 0;
-            altitudeTrue.Value = altitudeASL - surfaceAltitudeASL;
+            altitudeTrue = altitudeASL - surfaceAltitudeASL;
 
             // altitudeBottom will be recomputed if someone requests it.
             altitudeBottomIsCurrent = false;
@@ -730,21 +730,21 @@ namespace MuMech
 
             speedOfSound = vessel.speedOfSound;
 
-            orbitApA.Value      = vessel.orbit.ApA;
-            orbitPeA.Value      = vessel.orbit.PeA;
-            orbitPeriod.Value   = vessel.orbit.period;
-            orbitTimeToAp.Value = vessel.orbit.timeToAp;
-            orbitTimeToPe.Value = vessel.orbit.timeToPe;
+            orbitApA      = vessel.orbit.ApA;
+            orbitPeA      = vessel.orbit.PeA;
+            orbitPeriod   = vessel.orbit.period;
+            orbitTimeToAp = vessel.orbit.timeToAp;
+            orbitTimeToPe = vessel.orbit.timeToPe;
 
-            orbitLAN.Value = vessel.orbit.LAN;
+            orbitLAN = vessel.orbit.LAN;
 
-            orbitArgumentOfPeriapsis.Value = vessel.orbit.argumentOfPeriapsis;
-            orbitInclination.Value         = vessel.orbit.inclination;
-            orbitEccentricity.Value        = vessel.orbit.eccentricity;
-            orbitSemiMajorAxis.Value       = vessel.orbit.semiMajorAxis;
-            celestialLongitude.Value       = Planetarium.right.AngleInPlane(-Planetarium.up, orbitalPosition);
-            latitude.Value                 = vessel.mainBody.GetLatitude(CoM);
-            longitude.Value                = MuUtils.ClampDegrees180(vessel.mainBody.GetLongitude(CoM));
+            orbitArgumentOfPeriapsis = vessel.orbit.argumentOfPeriapsis;
+            orbitInclination         = vessel.orbit.inclination;
+            orbitEccentricity        = vessel.orbit.eccentricity;
+            orbitSemiMajorAxis       = vessel.orbit.semiMajorAxis;
+            celestialLongitude       = Planetarium.right.AngleInPlane(-Planetarium.up, orbitalPosition);
+            latitude                 = vessel.mainBody.GetLatitude(CoM);
+            longitude                = MuUtils.ClampDegrees180(vessel.mainBody.GetLongitude(CoM));
 
             if (vessel.mainBody != Planetarium.fetch.Sun)
             {
@@ -1366,7 +1366,7 @@ namespace MuMech
         {
             MoI                      = vessel.MOI;
             angularMomentum          = vessel.angularMomentum;
-            angularVelocityAvg.Value = angularVelocity;
+            angularVelocityAvg = angularVelocity;
         }
 
         [ValueInfoItem("#MechJeb_TerminalVelocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")] //Terminal velocity

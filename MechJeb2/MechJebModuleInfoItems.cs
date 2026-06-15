@@ -223,7 +223,7 @@ namespace MuMech
         }
 
         [ValueInfoItem("#MechJeb_AngularVelocity", InfoItem.Category.Vessel, showInEditor = false, showInFlight = true)] //Angular Velocity
-        public string angularVelocity() => MuUtils.PrettyPrint(VesselState.angularVelocityAvg.Value.xzy * UtilMath.Rad2Deg) + "°/s";
+        public string angularVelocity() => MuUtils.PrettyPrint(VesselState.angularVelocityAvg.xzy * UtilMath.Rad2Deg) + "°/s";
 
         [ValueInfoItem("#MechJeb_CurrentAcceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Current acceleration
         public double CurrentAcceleration() => CurrentThrust() / (1000 * VesselMass());
