@@ -1324,7 +1324,7 @@ Editable:HoverslamAutopilot.IgnitionLead
 Editable:HoverslamSimulation.SimRecalcInterval
 Toggle:HoverslamAutopilot.AutoWarp
 Toggle:HoverslamAutopilot.HoldUpright
-Action:HoverslamAutopilot.Engage
+Action:HoverslamAutopilot.ToggleEnabled
 Value:HoverslamAutopilot.HoverslamState
 -----------------------------" //Hoverslam Info
             }
