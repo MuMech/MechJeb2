@@ -57,8 +57,7 @@ namespace MuMech
         // TODO: This counts down even if you don't ignite and i'm not entirely certain what to do about it
         // TODO: this doesn't account for planned vertical descent deltaV
         [ValueInfoItem("#MechJeb_HoverslamDeltaV", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamDeltaV_tooltip")] //Hoverslam Δv
-        public string HoverslamDeltaV() =>
-            IsFinite(LandingUT) ? DeltaV(LandingCountdown - (IgnitionUT < VesselState.time ? 0 : IgnitionCountdown)).ToSI() + "m/s" : "N/A";
+        public string HoverslamDeltaV() => IsFinite(DeltaV) ? DeltaV.ToSI() + "m/s" : "N/A";
 
         [ValueInfoItem("#MechJeb_HoverslamCoordinates", InfoItem.Category.Hoverslam, width = 90, tooltip = "#MechJeb_HoverslamCoordinates_tooltip")] //Coordinates
         public string HoverslamCoordinates() => Coordinates.ToStringDMS(Lat, Lng, true);
@@ -111,6 +110,7 @@ namespace MuMech
         public double Lng;
         public double IgnitionCountdown => IgnitionUT - VesselState.time;
         public double LandingCountdown  => LandingUT - VesselState.time;
+        public double DeltaV;
         public double FinalDescentSpeed; // should be positive
         public Vector3d IgnitionAttitude;
         // ReSharper restore MemberCanBePrivate.Global
@@ -150,6 +150,7 @@ namespace MuMech
             LandingPosition = new Vector3d(double.NaN, double.NaN, double.NaN);
             IgnitionUT = double.NaN;
             LandingUT = double.NaN;
+            DeltaV = double.NaN;
             IgnitionAttitude = new Vector3d(double.NaN, double.NaN, double.NaN);
             Lat = 0;
             Lng = 0;
@@ -158,7 +159,7 @@ namespace MuMech
             _lastCycleUT = 0;
         }
 
-        private double DeltaV(double burnTime)
+        private double CalculateDeltaV(double burnTime)
         {
             Core.StageStats.RequestUpdate();
 
@@ -224,6 +225,7 @@ namespace MuMech
                 MainBody.GetLatLngAltAtUT(LandingUT, LandingPosition, out Lat, out Lng, out _);
                 TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, true);
                 Slope = MainBody.GetPQSSlopeDegrees(Lat, Lng);
+                DeltaV = CalculateDeltaV(LandingCountdown - (IgnitionUT < VesselState.time ? 0 : IgnitionCountdown));
             }
 
             if (_hoverslam.IsFaulted && _hoverslam.ExceptionMessage != null)

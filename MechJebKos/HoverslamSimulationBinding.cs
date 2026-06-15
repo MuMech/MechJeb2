@@ -37,6 +37,8 @@ namespace MuMech.MechJebKos
                 "Predicted landing latitude in degrees."));
             AddSuffix("LONGITUDE", new Suffix<ScalarValue>(() => Module.Lng,
                 "Predicted landing longitude in degrees."));
+            AddSuffix("BIOME", new Suffix<StringValue>(() => Module.Biome(),
+                "Biome name at the predicted landing site (\"N/A\" if no solution)."));
             AddSuffix("TERRAINALTITUDE", new Suffix<ScalarValue>(() => Module.TerrainAltitude,
                 "Terrain altitude at the predicted landing site in meters."));
             AddSuffix("SLOPE", new Suffix<ScalarValue>(() => Module.Slope,
@@ -45,6 +47,8 @@ namespace MuMech.MechJebKos
                 "Planned final descent speed in m/s."));
             AddSuffix("FINALTHRUSTACCEL", new Suffix<ScalarValue>(() => Module.FinalThrustAccel,
                 "Final thrust acceleration in m/s^2 (-1 if no solution)."));
+            AddSuffix("DELTAV", new Suffix<ScalarValue>(() => Module.DeltaV,
+                "Estimated hoverslam delta-v in m/s (NaN if no solution)."));
 
             AddSuffix("MAPLANDINGPREDICTION", new SetSuffix<BooleanValue>(() => Module.MapLandingPrediction, value => Module.MapLandingPrediction = value,
                 "Draw the predicted landing site marker on the map."));
