@@ -253,6 +253,10 @@ namespace MuMech
                 new ScreenMessage(Localizer.Format("#MechJeb_Ascent_srcmsg1"), 2f,
                     ScreenMessageStyle.UPPER_CENTER); //"<color=orange>[MechJeb]: Killing throttle to prevent unstable ignition</color>"
             _pid = new PIDController(0.05, 0.000001, 0.05);
+            // Permanent self-pin: keep this module always Enabled so its throttle limiters and
+            // auto-RCS-ullaging run every tick as an always-on safety service, even when no autopilot
+            // is driving the throttle (e.g. the player is flying manually). Active throttle control is
+            // gated separately on there being a *second* user (see Users.Count > 1 in Drive()).
             Users.Add(this);
 
             base.OnStart(state);
@@ -435,8 +439,9 @@ namespace MuMech
                 }
             }
 
-            // Only set throttle if a module need it. Otherwise, let the user or other mods set it
-            // There is always at least 1 user : the module itself (why ?)
+            // Only command the throttle if an actual consumer is engaged; otherwise leave it to the
+            // player or other mods. The module self-pins one permanent user in OnStart (to stay always
+            // Enabled for the limiter/ullage service), so "a consumer is driving" means Count > 1, not > 0.
             if (Users.Count > 1)
                 s.mainThrottle = TargetThrottle;
 

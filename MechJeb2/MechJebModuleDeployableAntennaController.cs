@@ -13,33 +13,29 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_ToggleAntennas", InfoItem.Category.Misc, showInEditor = false)] //Toggle antennas
         public void AntennaDeployButton()
         {
-            autoDeploy = GUILayout.Toggle(autoDeploy, Localizer.Format("#MechJeb_Autodeployantennas")); //"Auto-deploy antennas"
+            AutoDeploy = GUILayout.Toggle(AutoDeploy, Localizer.Format("#MechJeb_Autodeployantennas")); //"Auto-deploy antennas"
 
-            if (GUILayout.Button(buttonText))
-            {
-                if (ExtendingOrRetracting())
-                    return;
+            if (!GUILayout.Button(ButtonText)) return;
 
-                if (!extended)
-                    ExtendAll();
-                else
-                    RetractAll();
-            }
+            if (ExtendingOrRetracting())
+                return;
+
+            if (!Extended)
+                ExtendAll();
+            else
+                RetractAll();
         }
 
-        protected override bool isModules(ModuleDeployablePart p) => p is ModuleDeployableAntenna;
+        protected override bool IsModules(ModuleDeployablePart p) => p is ModuleDeployableAntenna;
 
-        protected override string getButtonText(DeployablePartState deployablePartState)
+        protected override string GetButtonText(DeployablePartState deployablePartState)
         {
-            switch (deployablePartState)
+            return deployablePartState switch
             {
-                case DeployablePartState.EXTENDED:
-                    return Localizer.Format("#MechJeb_AntennasEXTENDED"); //"Toggle antennas (currently extended)"
-                case DeployablePartState.RETRACTED:
-                    return Localizer.Format("#MechJeb_AntennasRETRACTED"); //"Toggle antennas (currently retracted)"
-                default:
-                    return Localizer.Format("#MechJeb_AntennasToggle"); //"Toggle antennas"
-            }
+                DeployablePartState.EXTENDED => Localizer.Format("#MechJeb_AntennasEXTENDED"), //"Toggle antennas (currently extended)"
+                DeployablePartState.RETRACTED => Localizer.Format("#MechJeb_AntennasRETRACTED"), //"Toggle antennas (currently retracted)"
+                _ => Localizer.Format("#MechJeb_AntennasToggle")
+            };
         }
     }
 }

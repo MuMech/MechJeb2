@@ -7,62 +7,64 @@ namespace MuMech
 {
     public abstract class MechJebModuleDeployableController : ComputerModule
     {
-        public MechJebModuleDeployableController(MechJebCore core) : base(core)
+        protected MechJebModuleDeployableController(MechJebCore core) : base(core)
         {
             Priority = 200;
-            Enabled  = true;
+            Enabled = true;
         }
 
-        protected string buttonText;
-        protected bool   extended;
+        protected string ButtonText;
+        protected bool Extended;
 
+        [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool autoDeploy = false;
+        public bool AutoDeploy;
 
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.LOCAL)]
-        public bool prev_shouldDeploy;
+        public bool PrevShouldDeploy;
 
-        public bool prev_autoDeploy = true;
+        public bool PrevAutoDeploy = true;
 
-        protected string type = "";
+        [UsedImplicitly]
+        protected readonly List<ModuleDeployablePart> CachedPartModules = new List<ModuleDeployablePart>(16);
 
-        protected readonly List<ModuleDeployablePart> cachedPartModules = new List<ModuleDeployablePart>(16);
-
+        [UsedImplicitly]
         protected void DiscoverDeployablePartModules()
         {
-            cachedPartModules.Clear();
+            CachedPartModules.Clear();
             foreach (Part p in Vessel.Parts)
             foreach (PartModule pm in p.Modules)
-                if (pm != null && pm is ModuleDeployablePart mdp && isModules(mdp))
-                    cachedPartModules.Add(mdp);
+                if (pm != null && pm is ModuleDeployablePart mdp && IsModules(mdp))
+                    CachedPartModules.Add(mdp);
         }
 
-        protected bool isDeployable(ModuleDeployablePart sa) => sa.Events["Extend"].active || sa.Events["Retract"].active;
+        [UsedImplicitly]
+        protected bool IsDeployable(ModuleDeployablePart sa) => sa.Events["Extend"].active || sa.Events["Retract"].active;
 
         public void ExtendAll()
         {
-            foreach (ModuleDeployablePart mdp in cachedPartModules)
-                if (mdp != null && isDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
+            foreach (ModuleDeployablePart mdp in CachedPartModules)
+                if (!(mdp is null) && IsDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
                     mdp.Extend();
         }
 
         public void RetractAll()
         {
-            foreach (ModuleDeployablePart mdp in cachedPartModules)
-                if (mdp != null && isDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
+            foreach (ModuleDeployablePart mdp in CachedPartModules)
+                if (!(mdp is null) && IsDeployable(mdp) && !mdp.part.ShieldedFromAirstream)
                     mdp.Retract();
         }
 
         public bool AllRetracted()
         {
-            foreach (ModuleDeployablePart mdp in cachedPartModules)
-                if (mdp != null && isDeployable(mdp) && mdp.deployState != ModuleDeployablePart.DeployState.RETRACTED)
+            foreach (ModuleDeployablePart mdp in CachedPartModules)
+                if (!(mdp is null) && IsDeployable(mdp) && mdp.deployState != ModuleDeployablePart.DeployState.RETRACTED)
                     return false;
             return true;
         }
 
-        public bool ShouldDeploy()
+        private bool ShouldDeploy()
         {
             if (!MainBody.atmosphere)
                 return true;
@@ -73,61 +75,63 @@ namespace MuMech
             if (Vessel.LandedOrSplashed)
                 return false; // True adds too many complex case
 
-            double dt = 10;
-            double min_alt; // minimum altitude between now and now+dt seconds
+            const double DT = 10;
+            double minAlt; // minimum altitude between now and now+dt seconds
             double t = Planetarium.GetUniversalTime();
 
-            double PeT = Orbit.NextPeriapsisTime(t) - t;
-            if (PeT > 0 && PeT < dt)
-                min_alt = Orbit.PeA;
+            double peT = Orbit.NextPeriapsisTime(t) - t;
+            if (peT > 0 && peT < DT)
+                minAlt = Orbit.PeA;
             else
-                min_alt = Math.Sqrt(Math.Min(Orbit.getRelativePositionAtUT(t).sqrMagnitude, Orbit.getRelativePositionAtUT(t + dt).sqrMagnitude)) -
-                          MainBody.Radius;
+                minAlt = Math.Sqrt(Math.Min(Orbit.getRelativePositionAtUT(t).sqrMagnitude, Orbit.getRelativePositionAtUT(t + DT).sqrMagnitude)) -
+                    MainBody.Radius;
 
-            if (min_alt > MainBody.RealMaxAtmosphereAltitude())
-                return true;
-
-            return false;
+            return minAlt > MainBody.RealMaxAtmosphereAltitude();
         }
 
         public override void OnFixedUpdate()
         {
             // Let the ascent guidance handle the solar panels to retract them before launch
-            if (autoDeploy && !Core.Ascent.Enabled)
+            if (AutoDeploy && !Core.Ascent.Enabled)
             {
                 bool tmp = ShouldDeploy();
 
-                if (tmp && (!prev_shouldDeploy || autoDeploy != prev_autoDeploy))
-                    ExtendAll();
-                else if (!tmp && (prev_shouldDeploy || autoDeploy != prev_autoDeploy))
-                    RetractAll();
+                switch (tmp)
+                {
+                    case true when !PrevShouldDeploy || AutoDeploy != PrevAutoDeploy:
+                        ExtendAll();
+                        break;
+                    case false when PrevShouldDeploy || AutoDeploy != PrevAutoDeploy:
+                        RetractAll();
+                        break;
+                }
 
-                prev_shouldDeploy = tmp;
-                prev_autoDeploy   = true;
+                PrevShouldDeploy = tmp;
+                PrevAutoDeploy = true;
             }
             else
             {
-                prev_autoDeploy = false;
+                PrevAutoDeploy = false;
             }
 
             bool extendedThisPass = !AllRetracted();
-            if (extended != extendedThisPass)
-                buttonText = getButtonText(extendedThisPass ? DeployablePartState.EXTENDED : DeployablePartState.RETRACTED);
+            if (Extended != extendedThisPass)
+                ButtonText = GetButtonText(extendedThisPass ? DeployablePartState.EXTENDED : DeployablePartState.RETRACTED);
 
-            extended = extendedThisPass;
+            Extended = extendedThisPass;
         }
 
         protected bool ExtendingOrRetracting()
         {
-            foreach (ModuleDeployablePart mdp in cachedPartModules)
-                if (mdp != null && isDeployable(mdp)
-                                && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING ||
-                                    mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
+            foreach (ModuleDeployablePart mdp in CachedPartModules)
+                if (mdp != null && IsDeployable(mdp)
+                    && (mdp.deployState == ModuleDeployablePart.DeployState.EXTENDING ||
+                        mdp.deployState == ModuleDeployablePart.DeployState.RETRACTING))
                     return true;
             return false;
         }
 
-        protected abstract bool isModules(ModuleDeployablePart p);
+        protected abstract bool IsModules(ModuleDeployablePart p);
 
         protected enum DeployablePartState
         {
@@ -135,7 +139,7 @@ namespace MuMech
             EXTENDED
         }
 
-        protected abstract string getButtonText(DeployablePartState deployablePartState);
+        protected abstract string GetButtonText(DeployablePartState deployablePartState);
 
         public override void OnStart(PartModule.StartState state)
         {

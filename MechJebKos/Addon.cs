@@ -35,6 +35,8 @@ namespace MuMech.MechJebKos
             var nodeExecutor = new NodeExecutorBinding(() => _core);
             var stagingController = new StagingControllerBinding(() => _core);
             var thrustController = new ThrustControllerBinding(() => _core);
+            var antennaController = new AntennaControllerBinding(() => _core);
+            var solarPanelController = new SolarPanelControllerBinding(() => _core);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() =>  _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -44,6 +46,10 @@ namespace MuMech.MechJebKos
                 "The autostaging controller."));
             AddSuffix("THRUSTCONTROLLER", new NoArgsSuffix<ThrustControllerBinding>(() => thrustController,
                 "The thrust controller (throttle limiters)."));
+            AddSuffix("ANTENNACONTROLLER", new NoArgsSuffix<AntennaControllerBinding>(() => antennaController,
+                "The deployable antenna controller."));
+            AddSuffix("SOLARPANELCONTROLLER", new NoArgsSuffix<SolarPanelControllerBinding>(() => solarPanelController,
+                "The solar panel controller."));
         }
     }
 }
