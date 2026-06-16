@@ -271,8 +271,8 @@ namespace MuMech.AttitudeControllers
                         _posPID[i].B = PosB.Val;
                         _posPID[i].C = PosC.Val;
                         _posPID[i].Ts = Ac.VesselState.DeltaT;
-                        _posPID[i].SmoothIn = MuUtils.Clamp01(PosSmoothIn);
-                        _posPID[i].SmoothOut = MuUtils.Clamp01(PosSmoothOut);
+                        _posPID[i].SmoothIn = Clamp01(PosSmoothIn);
+                        _posPID[i].SmoothOut = Clamp01(PosSmoothOut);
                         _posPID[i].MinOutput = -maxOmega;
                         _posPID[i].MaxOutput = maxOmega;
                         _posPID[i].IntegralDeadband = PosDeadband * maxOmega;
@@ -302,8 +302,8 @@ namespace MuMech.AttitudeControllers
                 _velPID[i].B = VelB;
                 _velPID[i].C = VelC;
                 _velPID[i].Ts = Ac.VesselState.DeltaT;
-                _velPID[i].SmoothIn = MuUtils.Clamp01(VelSmoothIn);
-                _velPID[i].SmoothOut = MuUtils.Clamp01(VelSmoothOut);
+                _velPID[i].SmoothIn = Clamp01(VelSmoothIn);
+                _velPID[i].SmoothOut = Clamp01(VelSmoothOut);
                 _velPID[i].MinOutput = -_maxAlpha[i];
                 _velPID[i].MaxOutput = _maxAlpha[i];
                 _velPID[i].IntegralDeadband = VelDeadband * _maxAlpha[i];

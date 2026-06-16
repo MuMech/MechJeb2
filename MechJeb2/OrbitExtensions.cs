@@ -175,8 +175,8 @@ namespace MuMech
                     }
                 }
 
-                minTime = MuUtils.Clamp(closestApproachTime - dt, ut, ut + interval);
-                maxTime = MuUtils.Clamp(closestApproachTime + dt, ut, ut + interval);
+                minTime = Clamp(closestApproachTime - dt, ut, ut + interval);
+                maxTime = Clamp(closestApproachTime + dt, ut, ut + interval);
             }
 
             return closestApproachTime;
@@ -195,7 +195,7 @@ namespace MuMech
             // We use ObtAtEpoch and not meanAnomalyAtEpoch because somehow meanAnomalyAtEpoch
             // can be wrong when using the RealSolarSystem mod. ObtAtEpoch is always correct.
             double ret = (o.ObTAtEpoch + (ut - o.epoch)) * o.meanMotion;
-            if (o.eccentricity < 1) ret = MuUtils.ClampRadiansTwoPi(ret);
+            if (o.eccentricity < 1) ret = Clamp2Pi(ret);
             return ret;
         }
 
@@ -208,7 +208,7 @@ namespace MuMech
         {
             double currentMeanAnomaly = o.MeanAnomalyAtUT(ut);
             double meanDifference = meanAnomaly - currentMeanAnomaly;
-            if (o.eccentricity < 1) meanDifference = MuUtils.ClampRadiansTwoPi(meanDifference);
+            if (o.eccentricity < 1) meanDifference = Clamp2Pi(meanDifference);
             return ut + meanDifference / o.meanMotion;
         }
 
@@ -255,7 +255,7 @@ namespace MuMech
         //with b's orbit.
         //The returned value is always between 0 and 2 * PI.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double DescendingNodeTrueAnomaly(this Orbit a, Orbit b) => MuUtils.ClampRadiansTwoPi(a.AscendingNodeTrueAnomaly(b) + PI);
+        private static double DescendingNodeTrueAnomaly(this Orbit a, Orbit b) => Clamp2Pi(a.AscendingNodeTrueAnomaly(b) + PI);
 
         //Gives the true anomaly at which o crosses the equator going northwards, if o is east-moving,
         //or southwards, if o is west-moving.
@@ -272,7 +272,7 @@ namespace MuMech
         //The returned value is always between 0 and 2 * PI.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double DescendingNodeEquatorialTrueAnomaly(this Orbit o) =>
-            MuUtils.ClampRadiansTwoPi(o.AscendingNodeEquatorialTrueAnomaly() + PI);
+            Clamp2Pi(o.AscendingNodeEquatorialTrueAnomaly() + PI);
 
         //For hyperbolic orbits, the true anomaly only takes on values in the range
         // -M < true anomaly < +M for some M. This function computes M.
@@ -288,28 +288,28 @@ namespace MuMech
         //angle of the hyperbola.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool AscendingNodeExists(this Orbit a, Orbit b) =>
-            Abs(MuUtils.ClampRadiansPi(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+            Abs(ClampPi(a.AscendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
 
         //Returns whether a has a descending node with b. This can be false
         //if a is hyperbolic and the would-be descending node is within the opening
         //angle of the hyperbola.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool DescendingNodeExists(this Orbit a, Orbit b) =>
-            Abs(MuUtils.ClampRadiansPi(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
+            Abs(ClampPi(a.DescendingNodeTrueAnomaly(b))) <= a.MaximumTrueAnomaly();
 
         //Returns whether o has an ascending node with the equator. This can be false
         //if o is hyperbolic and the would-be ascending node is within the opening
         //angle of the hyperbola.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool AscendingNodeEquatorialExists(this Orbit o) =>
-            Abs(MuUtils.ClampRadiansPi(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
+            Abs(ClampPi(o.AscendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
 
         //Returns whether o has a descending node with the equator. This can be false
         //if o is hyperbolic and the would-be descending node is within the opening
         //angle of the hyperbola.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool DescendingNodeEquatorialExists(this Orbit o) =>
-            Abs(MuUtils.ClampRadiansPi(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
+            Abs(ClampPi(o.DescendingNodeEquatorialTrueAnomaly())) <= o.MaximumTrueAnomaly();
 
         //Returns the vector from the primary to the orbiting body at periapsis
         //Better than using Orbit.eccVec because that is zero for circular orbits
@@ -373,7 +373,7 @@ namespace MuMech
         private static double GetEccentricAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
         {
             double ecc = o.eccentricity;
-            trueAnomaly = MuUtils.ClampRadiansTwoPi(trueAnomaly);
+            trueAnomaly = Clamp2Pi(trueAnomaly);
 
             if (ecc < 1) //elliptical orbits
             {
@@ -381,7 +381,7 @@ namespace MuMech
                 double sinE = Sqrt(1 - cosE * cosE);
                 if (trueAnomaly > PI) sinE *= -1;
 
-                return MuUtils.ClampRadiansTwoPi(Atan2(sinE, cosE));
+                return Clamp2Pi(Atan2(sinE, cosE));
             }
 
             //hyperbolic orbits
@@ -390,7 +390,7 @@ namespace MuMech
                 throw new ArgumentException("OrbitExtensions.GetEccentricAnomalyAtTrueAnomaly: True anomaly of " + trueAnomaly +
                     " radians is not attained by orbit with eccentricity " + o.eccentricity);
 
-            double eanom = MuUtils.Acosh(coshE);
+            double eanom = Acosh(coshE);
             if (trueAnomaly > PI) eanom *= -1;
 
             return eanom;
@@ -406,7 +406,7 @@ namespace MuMech
             double e = o.eccentricity;
             if (e < 1) //elliptical orbits
             {
-                return MuUtils.ClampRadiansTwoPi(eanom - e * Sin(eanom));
+                return Clamp2Pi(eanom - e * Sin(eanom));
             }
 
             //hyperbolic orbits

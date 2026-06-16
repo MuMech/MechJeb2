@@ -6,6 +6,7 @@ using KSP.Localization;
 using MechJebLibBindings;
 using Smooth.Pools;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -614,7 +615,7 @@ namespace MuMech
 
             // Displacement Angle, angle between surface velocity and the ship-nose vector (KSP "up" vector) -- ignores roll of the craft (0 to 180 degrees)
             double tempAoD = UtilMath.Rad2Deg *
-                Math.Acos(MuUtils.Clamp(Vector3.Dot(vessel.ReferenceTransform.up, SurfaceVelocity.normalized), -1, 1));
+                Math.Acos(Clamp(Vector3.Dot(vessel.ReferenceTransform.up, SurfaceVelocity.normalized), -1, 1));
             AoD = double.IsNaN(tempAoD) || SpeedSurface < 0.01 ? 0 : tempAoD;
 
             Heading = RotationVesselSurface.eulerAngles.y;
@@ -978,7 +979,7 @@ namespace MuMech
 
                                     if (surface.useExponentialSpeed)
                                     {
-                                        float effectiveActuatorDelay = (float)MuUtils.Clamp(50 - surface.actuatorSpeed / surface.ctrlSurfaceRange, 0, 50);
+                                        float effectiveActuatorDelay = (float)Clamp(50 - surface.actuatorSpeed / surface.ctrlSurfaceRange, 0, 50);
 
                                         torqueWeightedExponentialResponseDelay6.Positive = effectiveActuatorDelay * ctrlTorquePos.Abs();
                                         torqueWeightedExponentialResponseDelay6.Negative = effectiveActuatorDelay * ctrlTorqueNeg.Abs();
@@ -987,7 +988,7 @@ namespace MuMech
                                     {
                                         // 10 is a fudge factor for the difference in response time between a linear ramp and an exponential curve.
                                         // XXX: this should probably be tweakable
-                                        float effectiveActuatorDelay = (float)MuUtils.Clamp(50 - 10 * surface.actuatorSpeed / surface.ctrlSurfaceRange, 0, 50);
+                                        float effectiveActuatorDelay = (float)Clamp(50 - 10 * surface.actuatorSpeed / surface.ctrlSurfaceRange, 0, 50);
 
                                         torqueWeightedLinearResponseDelay6.Positive = effectiveActuatorDelay * ctrlTorquePos.Abs();
                                         torqueWeightedLinearResponseDelay6.Negative = effectiveActuatorDelay * ctrlTorqueNeg.Abs();
@@ -1017,7 +1018,7 @@ namespace MuMech
                                     TorqueGimbal.Add(pos);
                                     TorqueGimbal.Add(-neg);
 
-                                    float effectiveGimbalDelay = (float)MuUtils.Clamp(50 - gimbal.gimbalResponseSpeed, 0, 50);
+                                    float effectiveGimbalDelay = (float)Clamp(50 - gimbal.gimbalResponseSpeed, 0, 50);
 
                                     if (gimbal.useGimbalResponseSpeed)
                                     {

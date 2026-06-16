@@ -2,6 +2,7 @@
 using KSP.Localization;
 using KSP.UI.Screens;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -375,7 +376,7 @@ namespace MuMech
 
         private Vector3d ApplyQAlphaAoALimiter(Vector3d desiredThrustVector)
         {
-            double lim = MuUtils.Clamp(AscentSettings.LimitQa, 0, 10000);
+            double lim = Clamp(AscentSettings.LimitQa, 0, 10000);
             AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
             if (AscentSettings.LimitingAoA)
             {
