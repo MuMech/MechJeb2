@@ -36,7 +36,7 @@ namespace MuMech
 
             const double leadTime = 30;
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label4"),
-                Core.Target.TargetOrbit.PeA.ToSI(3) + "m x " + Core.Target.TargetOrbit.ApA.ToSI(3) + "m");                          //"Target orbit"
+                Core.Target.TargetOrbit.PeA.ToSI(3) + "m x " + Core.Target.TargetOrbit.ApA.ToSI(3) + "m"); //"Target orbit"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label5"), Orbit.PeA.ToSI(3) + "m x " + Orbit.ApA.ToSI(3) + "m"); //"Current orbit"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label6"),
                 Orbit.RelativeInclination(Core.Target.TargetOrbit).ToString("F2") + "º"); //"Relative inclination"

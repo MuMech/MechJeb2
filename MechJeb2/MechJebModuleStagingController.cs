@@ -33,7 +33,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMinAltitude = new EditableDoubleMult(50000, 1000);
 
-        [Persistent(pass = (int)Pass.TYPE)] public readonly EditableDouble ClampAutoStageThrustPct = 0.99;
+        [Persistent(pass = (int)Pass.TYPE)]
+        public readonly EditableDouble ClampAutoStageThrustPct = 0.99;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMaxAerothermalFlux = new EditableDoubleMult(1135);
@@ -76,17 +77,17 @@ namespace MuMech
             return limit;
         }
 
-        private readonly List<ModuleEngines>     _activeModuleEngines             = new List<ModuleEngines>(16);
-        private readonly List<ModuleEngines>     _allModuleEngines                = new List<ModuleEngines>(16);
-        private readonly List<PartModule>        _allDecouplers                   = new List<PartModule>(16);
-        private readonly List<int>               _burnedResources                 = new List<int>(16);
-        private readonly Dictionary<int, bool>   _inverseStageHasEngines          = new Dictionary<int, bool>(16);
-        private readonly Dictionary<int, bool>   _inverseStageFiresDecouplerCache = new Dictionary<int, bool>(16);
-        private readonly Dictionary<int, bool>   _inverseStageReleasesClampsCache = new Dictionary<int, bool>(16);
-        private readonly Dictionary<int, bool>   _hasStayingChutesCache           = new Dictionary<int, bool>(16);
-        private readonly Dictionary<int, bool>   _hasFairingCache                 = new Dictionary<int, bool>(16);
-        private          MechJebModuleStageStats _stats    => Core.GetComputerModule<MechJebModuleStageStats>();
-        private          List<FuelStats>         _vacStats => _stats.VacStats;
+        private readonly List<ModuleEngines> _activeModuleEngines = new List<ModuleEngines>(16);
+        private readonly List<ModuleEngines> _allModuleEngines = new List<ModuleEngines>(16);
+        private readonly List<PartModule> _allDecouplers = new List<PartModule>(16);
+        private readonly List<int> _burnedResources = new List<int>(16);
+        private readonly Dictionary<int, bool> _inverseStageHasEngines = new Dictionary<int, bool>(16);
+        private readonly Dictionary<int, bool> _inverseStageFiresDecouplerCache = new Dictionary<int, bool>(16);
+        private readonly Dictionary<int, bool> _inverseStageReleasesClampsCache = new Dictionary<int, bool>(16);
+        private readonly Dictionary<int, bool> _hasStayingChutesCache = new Dictionary<int, bool>(16);
+        private readonly Dictionary<int, bool> _hasFairingCache = new Dictionary<int, bool>(16);
+        private MechJebModuleStageStats _stats    => Core.GetComputerModule<MechJebModuleStageStats>();
+        private List<FuelStats>         _vacStats => _stats.VacStats;
 
         private enum RemoteStagingState
         {
@@ -176,7 +177,7 @@ namespace MuMech
         protected override void OnModuleDisabled() => AutostagingOnce = false;
 
         private readonly string _sFairingMinDynamicPressure = $"  {CachedLocalizer.Instance.MechJebAscentLabel39} <";
-        private readonly string _sFairingMinAltitude        = $"  {CachedLocalizer.Instance.MechJebAscentLabel40} >";
+        private readonly string _sFairingMinAltitude = $"  {CachedLocalizer.Instance.MechJebAscentLabel40} >";
         private readonly string _sFairingMaxAerothermalFlux = $"  {CachedLocalizer.Instance.MechJebAscentLabel41} <";
 
         private readonly string _sHotstaging =
@@ -204,9 +205,9 @@ namespace MuMech
 
             ClampAutostageThrust();
 
-            GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel38);                             //"Stage fairings when:"
-            GuiUtils.SimpleTextBox(_sFairingMinDynamicPressure, FairingMaxDynamicPressure, "kPa", 50);  //"dynamic pressure"
-            GuiUtils.SimpleTextBox(_sFairingMinAltitude, FairingMinAltitude, "km", 50);                 //altitude
+            GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel38); //"Stage fairings when:"
+            GuiUtils.SimpleTextBox(_sFairingMinDynamicPressure, FairingMaxDynamicPressure, "kPa", 50); //"dynamic pressure"
+            GuiUtils.SimpleTextBox(_sFairingMinAltitude, FairingMinAltitude, "km", 50); //altitude
             GuiUtils.SimpleTextBox(_sFairingMaxAerothermalFlux, FairingMaxAerothermalFlux, "W/m²", 50); //aerothermal flux
 
             GUILayout.BeginHorizontal();
@@ -227,8 +228,8 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_Autostagingstatus", InfoItem.Category.Misc)] //Autostaging status
         public string AutostageStatus()
         {
-            if (!Enabled) return CachedLocalizer.Instance.MechJebAscentStatus9;          //"Autostaging off"
-            if (AutostagingOnce) return CachedLocalizer.Instance.MechJebAscentStatus10;  //"Will autostage next stage only"
+            if (!Enabled) return CachedLocalizer.Instance.MechJebAscentStatus9; //"Autostaging off"
+            if (AutostagingOnce) return CachedLocalizer.Instance.MechJebAscentStatus10; //"Will autostage next stage only"
             return CachedLocalizer.Instance.MechJebAscentStatus11 + (int)AutostageLimit; //"Autostaging until stage #"
         }
 
@@ -245,10 +246,10 @@ namespace MuMech
 
         //internal state:
         private double _lastStageTime;
-        private bool   _countingDown;
+        private bool _countingDown;
         private double _stageCountdownStart;
         private Vessel _currentActiveVessel;
-        private bool   _initializedOnce;
+        private bool _initializedOnce;
 
         public override void OnFixedUpdate()
         {
@@ -422,7 +423,7 @@ namespace MuMech
             //length given by autostagePreDelay) and only stage once that countdown finishes,
             if (!_countingDown)
             {
-                _countingDown        = true;
+                _countingDown = true;
                 _stageCountdownStart = VesselState.Time;
             }
 
@@ -446,8 +447,8 @@ namespace MuMech
         private double LastNonZeroDVStageBurnTime()
         {
             _stats.RequestUpdate();
-            int    kspStage = -1;
-            int    mjPhase;
+            int kspStage = -1;
+            int mjPhase;
             double dt = 0f;
 
             // Find the last MJ phase and corresponding KSP stage with non-zero burn time
@@ -632,7 +633,7 @@ namespace MuMech
                 PartResource r = p.Resources[i];
                 if (r.info.id == PartResourceLibrary.ElectricityHashcode) continue;
                 if (r.maxAmount > p.resourceRequestRemainingThreshold) hadResources = true;
-                if (r.amount > p.resourceRequestRemainingThreshold) hasResources    = true;
+                if (r.amount > p.resourceRequestRemainingThreshold) hasResources = true;
             }
 
             if (hadResources && !hasResources) return true;
@@ -698,7 +699,7 @@ namespace MuMech
             //      payload fairing now (fixing payload fairings causing stacks to not decouple).
             // if a user requires an interstage fairing that is alone in a stage with no stack decoupler, engine, or
             // anything else in the stage (for cinematics?) then the user MUST use proc fairings.
-            return _partsInStage.Slinq().All(p => ((p.IsDecoupler() && p.children.Count == 0) || p.HasModule<ModuleProceduralFairing>() ) && !p.IsLaunchClamp());
+            return _partsInStage.Slinq().All(p => ((p.IsDecoupler() && p.children.Count == 0) || p.HasModule<ModuleProceduralFairing>()) && !p.IsLaunchClamp());
         }
     }
 }

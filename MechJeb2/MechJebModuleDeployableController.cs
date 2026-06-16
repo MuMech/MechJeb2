@@ -16,12 +16,10 @@ namespace MuMech
         protected string ButtonText;
         protected bool Extended;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool AutoDeploy;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.LOCAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public bool PrevShouldDeploy;
 
         public bool PrevAutoDeploy = true;

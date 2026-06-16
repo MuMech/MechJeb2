@@ -19,7 +19,7 @@ namespace MuMech
         private readonly string[] _operationNames =
             new List<Operation>(_operation).ConvertAll(x => x.GetName()).ToArray();
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public int _operationId;
 
         // Creation or replacement mode
@@ -32,7 +32,7 @@ namespace MuMech
             GUILayout.BeginVertical();
 
             List<ManeuverNode> maneuverNodes = GetManeuverNodes();
-            bool               anyNodeExists = GetManeuverNodes().Any();
+            bool anyNodeExists = GetManeuverNodes().Any();
 
             if (anyNodeExists)
             {
@@ -57,20 +57,20 @@ namespace MuMech
 
             // Compute orbit and universal time parameters for next maneuver
             double UT = VesselState.Time;
-            Orbit  o  = Orbit;
+            Orbit o = Orbit;
             if (anyNodeExists)
             {
                 if (_createNode)
                 {
                     ManeuverNode last = maneuverNodes.Last();
                     UT = last.UT;
-                    o  = last.nextPatch;
+                    o = last.nextPatch;
                 }
                 else if (maneuverNodes.Count > 1)
                 {
                     ManeuverNode last = maneuverNodes[maneuverNodes.Count - 1];
                     UT = last.UT;
-                    o  = last.nextPatch;
+                    o = last.nextPatch;
                 }
             }
 
@@ -83,7 +83,7 @@ namespace MuMech
             if (anyNodeExists)
                 GUILayout.Label(Localizer.Format("#MechJeb_Maneu_createlab3")); //"after the last maneuver node."
 
-            bool makingNode    = false;
+            bool makingNode = false;
             bool executingNode = false;
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button1"))) //"Create node"
@@ -93,7 +93,7 @@ namespace MuMech
 
             if (Core.Node != null && GUILayout.Button(Localizer.Format("#MechJeb_Maneu_button2"))) //"Create and execute"
             {
-                makingNode    = true;
+                makingNode = true;
                 executingNode = true;
             }
 

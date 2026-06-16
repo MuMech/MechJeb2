@@ -32,8 +32,7 @@ namespace MechJebLibTest.TwoBodyTests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomForwardAndBack(int seed)
         {
             var rng = new Random(seed);
@@ -55,8 +54,7 @@ namespace MechJebLibTest.TwoBodyTests
             vp.ShouldEqual(v0, 1e-8);
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomForwardAndBack2(int seed)
         {
             var rng = new Random(seed);
@@ -98,8 +96,7 @@ namespace MechJebLibTest.TwoBodyTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomComparedToDP5(int seed)
         {
             var solver = new DP5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
@@ -150,8 +147,7 @@ namespace MechJebLibTest.TwoBodyTests
             vf.ShouldEqual(vf2, 1e-5);
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomComparedToTsit5(int seed)
         {
             var solver = new Tsit5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
@@ -202,8 +198,7 @@ namespace MechJebLibTest.TwoBodyTests
             vf.ShouldEqual(vf2, 1e-5);
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomComparedToDP8(int seed)
         {
             var solver = new DP8

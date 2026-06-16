@@ -32,9 +32,9 @@ namespace MuMech
         {
             return deployablePartState switch
             {
-                DeployablePartState.EXTENDED => Localizer.Format("#MechJeb_AntennasEXTENDED"), //"Toggle antennas (currently extended)"
+                DeployablePartState.EXTENDED  => Localizer.Format("#MechJeb_AntennasEXTENDED"), //"Toggle antennas (currently extended)"
                 DeployablePartState.RETRACTED => Localizer.Format("#MechJeb_AntennasRETRACTED"), //"Toggle antennas (currently retracted)"
-                _ => Localizer.Format("#MechJeb_AntennasToggle")
+                _                             => Localizer.Format("#MechJeb_AntennasToggle")
             };
         }
     }

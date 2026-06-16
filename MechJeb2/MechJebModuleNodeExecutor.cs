@@ -84,9 +84,9 @@ namespace MuMech
 
         private void Init()
         {
-            State      = States.WARPALIGN;
+            State = States.WARPALIGN;
             _direction = Vector3d.zero;
-            _dvLeft    = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
             Core.Thrust.ThrustOff();
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
@@ -99,15 +99,15 @@ namespace MuMech
             Core.Attitude.attitudeDeactivate();
             Users.Clear();
             _direction = Vector3d.zero;
-            _dvLeft    = 0;
-            State      = States.IDLE;
+            _dvLeft = 0;
+            State = States.IDLE;
         }
 
         protected override void OnModuleEnabled()
         {
-            State      = States.IDLE;
+            State = States.IDLE;
             _direction = Vector3d.zero;
-            _dvLeft    = 0;
+            _dvLeft = 0;
         }
 
         protected override void OnModuleDisabled()
@@ -115,7 +115,7 @@ namespace MuMech
             Core.Attitude.attitudeDeactivate();
             Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
-            State   = States.IDLE;
+            State = States.IDLE;
             _dvLeft = 0;
         }
 
@@ -126,12 +126,12 @@ namespace MuMech
         public Modes Mode = Modes.ONE_NODE;
         public States State = States.IDLE;
 
-        private double   _dvLeft;    // for Principia
+        private double _dvLeft; // for Principia
         private Vector3d _direction; // de-rotated world vector
         private Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
-        private double   _ignitionUT;
-        private bool     _hasNodes => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
-        private double   _ullageUntil;
+        private double _ignitionUT;
+        private bool _hasNodes => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
+        private double _ullageUntil;
 
         public override void Drive(FlightCtrlState s) => DoRCS(s);
 
@@ -292,10 +292,7 @@ namespace MuMech
             }
         }
 
-        private void SetAttitude()
-        {
-            Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL_COT, this, killRollRotation:KillRollRotation);
-        }
+        private void SetAttitude() => Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL_COT, this, KillRollRotation);
 
         private bool ShouldTerminatePrincipia()
         {
@@ -423,7 +420,7 @@ namespace MuMech
 
             double burnTime = 0;
             halfBurnTime = 0;
-            spoolupTime  = 0;
+            spoolupTime = 0;
 
             // Old code:
             //      burnTime = dv / vesselState.limitedMaxThrustAccel;
@@ -443,8 +440,8 @@ namespace MuMech
                         // Add the remaining wait time
                         if (burnTime - lastStageBurnTime < Core.Staging.AutostagePreDelay && mjPhase != stats.VacStats.Count - 1)
                             burnTime += Core.Staging.AutostagePreDelay - (burnTime - lastStageBurnTime);
-                        burnTime          += Core.Staging.AutostagePreDelay;
-                        lastStageBurnTime =  burnTime;
+                        burnTime += Core.Staging.AutostagePreDelay;
+                        lastStageBurnTime = burnTime;
                     }
 
                     continue;
@@ -474,7 +471,7 @@ namespace MuMech
                 }
 
                 halfBurnTime += Min(halfDvLeft, stageBurnDv) / stageAvgAccel;
-                halfDvLeft   =  Max(0, halfDvLeft - stageBurnDv);
+                halfDvLeft = Max(0, halfDvLeft - stageBurnDv);
 
                 burnTime += stageBurnDv / stageAvgAccel;
 
@@ -498,13 +495,13 @@ namespace MuMech
             {
                 if (burnTime < spoolupTime * 0.5d)
                 {
-                    spoolupTime  =  burnTime / (spoolupTime * 0.5d);
-                    burnTime     += spoolupTime;
+                    spoolupTime = burnTime / (spoolupTime * 0.5d);
+                    burnTime += spoolupTime;
                     halfBurnTime += spoolupTime;
                 }
                 else
                 {
-                    burnTime     += spoolupTime;
+                    burnTime += spoolupTime;
                     halfBurnTime += spoolupTime;
                 }
             }

@@ -13,20 +13,20 @@ namespace MuMech
     {
         public class Thruster
         {
-            public readonly Part      Part;
+            public readonly Part Part;
             public readonly ModuleRCS PartModule;
-            public readonly float     OriginalForce;
+            public readonly float OriginalForce;
 
-            private readonly Vector3   _pos;
+            private readonly Vector3 _pos;
             private readonly Vector3[] _thrustDirections;
 
             public Thruster(Vector3 pos, Vector3[] thrustDirections, Part p, ModuleRCS pm)
             {
-                _pos              = pos;
+                _pos = pos;
                 _thrustDirections = thrustDirections;
-                OriginalForce     = pm.thrusterPower;
-                Part              = p;
-                PartModule        = pm;
+                OriginalForce = pm.thrusterPower;
+                Part = p;
+                PartModule = pm;
             }
 
             public void RestoreOriginalForce() => PartModule.thrusterPower = OriginalForce;
@@ -54,12 +54,12 @@ namespace MuMech
         }
 
         private double[,] _a;
-        private double[]  _b;
+        private double[] _b;
 
-        private double _factorTorque    = 1;
+        private double _factorTorque = 1;
         private double _factorTranslate = 0.005;
-        private double _factorWaste     = 1;
-        private double _wasteThreshold  = 0.25;
+        private double _factorWaste = 1;
+        private double _wasteThreshold = 0.25;
 
         private enum Params { TORQUE_X, TORQUE_Y, TORQUE_Z, TRANS_X, TRANS_Y, TRANS_Z, WASTE, FUDGE }
 
@@ -67,10 +67,10 @@ namespace MuMech
 
         public void UpdateTuningParameters(RCSSolverTuningParams tuningParams)
         {
-            _factorTorque    = tuningParams.FactorTorque;
+            _factorTorque = tuningParams.FactorTorque;
             _factorTranslate = tuningParams.FactorTranslate;
-            _factorWaste     = tuningParams.FactorWaste;
-            _wasteThreshold  = tuningParams.WasteThreshold;
+            _factorWaste = tuningParams.FactorWaste;
+            _wasteThreshold = tuningParams.WasteThreshold;
         }
 
         private void cost_func(double[] x, ref double func, object obj)
@@ -84,7 +84,7 @@ namespace MuMech
                     tmp += x[row] * _a[attr, row];
                 }
 
-                tmp  -= _b[attr];
+                tmp -= _b[attr];
                 func += tmp * tmp;
             }
         }
@@ -165,9 +165,9 @@ namespace MuMech
                 _a[(int)Params.TRANS_Z, tIdx] = transErr.z * _factorTranslate;
                 _a[(int)Params.WASTE, tIdx] = waste * _factorWaste;
                 _a[(int)Params.FUDGE, tIdx] = 0.001;
-                x[tIdx]     = 1;
-                bndl[tIdx]  = 0;
-                bndu[tIdx]  = 1;
+                x[tIdx] = 1;
+                bndl[tIdx] = 0;
+                bndu[tIdx] = 1;
             }
 
             const double EPSG = 0.01;
@@ -204,8 +204,8 @@ namespace MuMech
         }
     }
 
-// Recalculating throttles is expensive. This class is used as a key into a
-// dictionary of previously-calculated throttles.
+    // Recalculating throttles is expensive. This class is used as a key into a
+    // dictionary of previously-calculated throttles.
     public class RCSSolverKey
     {
         // x, y, and z values will each be mapped to the integer range
@@ -264,10 +264,10 @@ namespace MuMech
 
     public class RCSSolverTuningParams
     {
-        public double WasteThreshold  = 0;
-        public double FactorTorque    = 0;
+        public double WasteThreshold = 0;
+        public double FactorTorque = 0;
         public double FactorTranslate = 0;
-        public double FactorWaste     = 0;
+        public double FactorWaste = 0;
     }
 
     public class RCSSolverThread
@@ -283,33 +283,33 @@ namespace MuMech
         public int    CacheMisses       { get; private set; }
         public int    CacheSize         => _results.Count;
 
-        private readonly RCSSolver     _solver          = new RCSSolver();
+        private readonly RCSSolver _solver = new RCSSolver();
         private readonly MovingAverage _calculationTime = new MovingAverage();
 
         // A moving average reduces measurement error due to ship flexing.
         private readonly MovingAverage _comError = new MovingAverage();
 
-        private readonly Queue          _tasks     = Queue.Synchronized(new Queue());
+        private readonly Queue _tasks = Queue.Synchronized(new Queue());
         private readonly AutoResetEvent _workEvent = new AutoResetEvent(false);
-        private          bool           _stopRunning;
-        private          Thread         _t;
-        private          bool           _isWorking;
+        private bool _stopRunning;
+        private Thread _t;
+        private bool _isWorking;
 
-        private          int             _lastPartCount;
+        private int _lastPartCount;
         private readonly List<ModuleRCS> _lastDisabled = new List<ModuleRCS>();
-        private          Vector3         _lastCoM      = Vector3.zero;
+        private Vector3 _lastCoM = Vector3.zero;
 
         // Entries in the results queue have been calculated by the solver thread
         // but not yet added to the results dictionary. GetThrottles() will check
         // the results dictionary first, and then, if no result was found, empty the
         // results queue into the results dictionary.
-        private readonly Queue                              _resultsQueue = Queue.Synchronized(new Queue());
-        private readonly Dictionary<RCSSolverKey, double[]> _results      = new Dictionary<RCSSolverKey, double[]>();
-        private readonly HashSet<RCSSolverKey>              _pending      = new HashSet<RCSSolverKey>();
-        private          List<RCSSolver.Thruster>           _thrusters    = new List<RCSSolver.Thruster>();
-        private          double[]                           _originalThrottles;
-        private          double[]                           _zeroThrottles;
-        private readonly double[]                           _double0 = Array.Empty<double>();
+        private readonly Queue _resultsQueue = Queue.Synchronized(new Queue());
+        private readonly Dictionary<RCSSolverKey, double[]> _results = new Dictionary<RCSSolverKey, double[]>();
+        private readonly HashSet<RCSSolverKey> _pending = new HashSet<RCSSolverKey>();
+        private List<RCSSolver.Thruster> _thrusters = new List<RCSSolver.Thruster>();
+        private double[] _originalThrottles;
+        private double[] _zeroThrottles;
+        private readonly double[] _double0 = Array.Empty<double>();
 
         // Make a separate list of thrusters to give to clients, just to be sure
         // they don't mess up our internal one.
@@ -328,7 +328,7 @@ namespace MuMech
                 if (_t == null)
                 {
                     ClearResults();
-                    CacheHits  = CacheMisses = 0;
+                    CacheHits = CacheMisses = 0;
                     _isWorking = false;
 
                     // Make sure CheckVessel() doesn't try to reuse throttle info
@@ -336,10 +336,10 @@ namespace MuMech
                     // vessel hasn't changed. Invalidating vessel information on
                     // thread start lets the UI toggle act as a reset button.
                     _lastPartCount = 0;
-                    MaxComError    = 0;
+                    MaxComError = 0;
 
                     _stopRunning = false;
-                    _t           = new Thread(Run);
+                    _t = new Thread(Run);
                     _t.Start();
                 }
             }
@@ -363,25 +363,25 @@ namespace MuMech
         private class SolverTask
         {
             public readonly RCSSolverKey Key;
-            public readonly Vector3      Direction;
-            public readonly Vector3      Rotation;
+            public readonly Vector3 Direction;
+            public readonly Vector3 Rotation;
 
             public SolverTask(RCSSolverKey key, Vector3 direction, Vector3 rotation)
             {
-                Key       = key;
+                Key = key;
                 Direction = direction;
-                Rotation  = rotation;
+                Rotation = rotation;
             }
         }
 
         private class SolverResult
         {
             public readonly RCSSolverKey Key;
-            public readonly double[]     Throttles;
+            public readonly double[] Throttles;
 
             public SolverResult(RCSSolverKey key, double[] throttles)
             {
-                Key       = key;
+                Key = key;
                 Throttles = throttles;
             }
         }
@@ -427,7 +427,7 @@ namespace MuMech
             if (vessel.parts.Count != _lastPartCount)
             {
                 _lastPartCount = vessel.parts.Count;
-                changed        = true;
+                changed = true;
             }
 
             // Make sure all thrusters are still enabled, because if they're not,
@@ -492,12 +492,12 @@ namespace MuMech
                 Vector3 rootPos = state.RootPartPosition;
                 Vector3 com = WorldToVessel(vessel, comState - rootPos);
                 double thisComErr = (_lastCoM - com).magnitude;
-                MaxComError     = Math.Max(MaxComError, thisComErr);
+                MaxComError = Math.Max(MaxComError, thisComErr);
                 _comError.Value = thisComErr;
                 if (_comError > ComErrorThreshold)
                 {
                     _lastCoM = com;
-                    changed  = true;
+                    changed = true;
                 }
             }
 
@@ -530,7 +530,7 @@ namespace MuMech
                         // requires some assumptions about how the game's RCS code will
                         // drive the individual thrusters (which we can't control).
 
-                        var thrustDirs   = new Vector3[pm.thrusterTransforms.Count];
+                        var thrustDirs = new Vector3[pm.thrusterTransforms.Count];
                         var rotationQuat = Quaternion.Inverse(vessel.GetTransform().rotation);
                         for (int i = 0; i < pm.thrusterTransforms.Count; i++)
                         {
@@ -544,11 +544,11 @@ namespace MuMech
 
             _callerThrusters.Clear();
             _originalThrottles = new double[ts.Count];
-            _zeroThrottles     = new double[ts.Count];
+            _zeroThrottles = new double[ts.Count];
             for (int i = 0; i < ts.Count; i++)
             {
                 _originalThrottles[i] = ts[i].OriginalForce;
-                _zeroThrottles[i]     = 0;
+                _zeroThrottles[i] = 0;
                 _callerThrusters.Add(ts[i]);
             }
 
@@ -644,7 +644,7 @@ namespace MuMech
                         _resultsQueue.Enqueue(new SolverResult(task.Key, throttles));
 
                         _calculationTime.Value = (DateTime.Now - start).TotalSeconds;
-                        CalculationTime        = _calculationTime;
+                        CalculationTime = _calculationTime;
                     }
 
                     StatusString = "idle";

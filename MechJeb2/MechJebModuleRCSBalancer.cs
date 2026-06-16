@@ -9,13 +9,13 @@ namespace MuMech
 {
     public class MechJebModuleRCSBalancer : ComputerModule
     {
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        [ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)] //Smart RCS translation
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), ToggleInfoItem("#MechJeb_smartTranslation", InfoItem.Category.Thrust)]
+        //Smart RCS translation
         public bool smartTranslation;
 
         // Overdrive
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        [EditableInfoItem("#MechJeb_RCSBalancerOverdrive", InfoItem.Category.Thrust, rightLabel = "%")] //RCS balancer overdrive
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_RCSBalancerOverdrive", InfoItem.Category.Thrust, rightLabel = "%")]
+        //RCS balancer overdrive
         public EditableDoubleMult overdrive = new EditableDoubleMult(1, 0.01);
 
         // Advanced options
@@ -40,9 +40,9 @@ namespace MuMech
         public readonly EditableDouble tuningParamFactorWaste = 1;
 
         // Variables for RCS solving.
-        private readonly RCSSolverThread          solverThread = new RCSSolverThread();
-        private          List<RCSSolver.Thruster> thrusters;
-        private          double[]                 throttles;
+        private readonly RCSSolverThread solverThread = new RCSSolverThread();
+        private List<RCSSolver.Thruster> thrusters;
+        private double[] throttles;
 
         [EditableInfoItem("#MechJeb_RCSBalancerPrecision", InfoItem.Category.Thrust)] //RCS balancer precision
         public readonly EditableInt calcPrecision = 3;
@@ -52,16 +52,16 @@ namespace MuMech
         {
             GUILayout.BeginVertical();
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label1"),
-                (solverThread.CalculationTime * 1000).ToString("F0") + " ms");                                    //"Calculation time"
+                (solverThread.CalculationTime * 1000).ToString("F0") + " ms"); //"Calculation time"
             GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label2"), solverThread.TaskCount); //"Pending tasks"
 
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label3"), solverThread.CacheSize);   //"Cache size"
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label4"), solverThread.CacheHits);   //"Cache hits"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label3"), solverThread.CacheSize); //"Cache size"
+            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label4"), solverThread.CacheHits); //"Cache hits"
             GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label5"), solverThread.CacheMisses); //"Cache misses"
 
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"), solverThread.ComError.ToSI() + "m");          //"CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"), solverThread.ComError.ToSI() + "m"); //"CoM shift"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"), solverThread.ComErrorThreshold.ToSI() + "m"); //"CoM recalc"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), solverThread.MaxComError.ToSI() + "m");       //"Max CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), solverThread.MaxComError.ToSI() + "m"); //"Max CoM shift"
 
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label9"), solverThread.StatusString); //"Status"
 
@@ -92,7 +92,7 @@ namespace MuMech
                         thrusterStates += " ";
                     }
 
-                    firstRcsModule =  false;
+                    firstRcsModule = false;
                     thrusterStates += $"({pm.thrusterPower * 9:F0}:";
                     for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
@@ -130,7 +130,7 @@ namespace MuMech
                         thrusterStates += " ";
                     }
 
-                    firstRcsModule =  false;
+                    firstRcsModule = false;
                     thrusterStates += pm.thrusterPower.ToString("F1");
                 }
             }
@@ -215,7 +215,7 @@ namespace MuMech
             // better to not move at all than move in the wrong direction.
             if (throttles.Length != thrusters.Count)
             {
-                throttles    = new double[thrusters.Count];
+                throttles = new double[thrusters.Count];
                 cutThrottles = true;
             }
 
@@ -238,10 +238,10 @@ namespace MuMech
         {
             double wasteThreshold = overdrive * overdriveScale;
             var tuningParams = new RCSSolverTuningParams();
-            tuningParams.WasteThreshold  = wasteThreshold;
-            tuningParams.FactorTorque    = tuningParamFactorTorque;
+            tuningParams.WasteThreshold = wasteThreshold;
+            tuningParams.FactorTorque = tuningParamFactorTorque;
             tuningParams.FactorTranslate = tuningParamFactorTranslate;
-            tuningParams.FactorWaste     = tuningParamFactorWaste;
+            tuningParams.FactorWaste = tuningParamFactorWaste;
             solverThread.UpdateTuningParameters(tuningParams);
         }
 

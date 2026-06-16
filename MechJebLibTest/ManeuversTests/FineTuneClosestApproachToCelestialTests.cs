@@ -26,8 +26,7 @@ namespace MechJebLibTest.ManeuversTests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomLunarTransfers(int seed)
         {
             var rng = new Random(seed);

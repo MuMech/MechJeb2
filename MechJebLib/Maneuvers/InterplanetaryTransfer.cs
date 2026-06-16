@@ -131,13 +131,13 @@ namespace MechJebLib.Maneuvers
             Dual dt3 = x[2]; // coast time on heliocentric orbit (helio scale)
 
             var rsoiSph1 = new DualV3(_soi1, x[3], x[4]); // spherical position at soi1 boundary (source scale)
-            var vsoiSph1 = new DualV3(x[5], x[6], x[7]);  // spherical velocity at soi1 boundary (source scale)
+            var vsoiSph1 = new DualV3(x[5], x[6], x[7]); // spherical velocity at soi1 boundary (source scale)
 
             DualV3 rsoi1 = rsoiSph1.sph2cart;
             DualV3 vsoi1 = vsoiSph1.sph2cart;
 
             DualV3 rsoiSph2 = _soi2 == 0 ? new DualV3(0, 0, 0) : new DualV3(_soi2, x[8], x[9]); // spherical position at soi2 boundary (target scale)
-            var vsoiSph2 = new DualV3(x[10], x[11], x[12]);                                     // spherical velocity at soi2 boundary (target scale)
+            var vsoiSph2 = new DualV3(x[10], x[11], x[12]); // spherical velocity at soi2 boundary (target scale)
 
             DualV3 rsoi2 = rsoiSph2.sph2cart;
             DualV3 vsoi2 = vsoiSph2.sph2cart;

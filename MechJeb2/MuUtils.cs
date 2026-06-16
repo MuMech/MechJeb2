@@ -33,8 +33,8 @@ namespace MuMech
         }
 
         public static string PrettyPrint(Vector3d vector, string format = "F3") => "[" + PadPositive(vector.x, format) + ", " +
-                                                                                   PadPositive(vector.y, format) + ", " +
-                                                                                   PadPositive(vector.z, format) + " ]";
+            PadPositive(vector.y, format) + ", " +
+            PadPositive(vector.z, format) + " ]";
 
         public static string PrettyPrintSci(Vector3d vector, string format = "F3") => "[" + PadPositiveSci(vector.x, format) + ", " +
             PadPositiveSci(vector.y, format) + ", " +
@@ -153,8 +153,8 @@ namespace MuMech
     public class MovingAverage
     {
         private readonly double[] _store;
-        private readonly int      _storeSize;
-        private          int      _nextIndex;
+        private readonly int _storeSize;
+        private int _nextIndex;
 
         public double Value
         {
@@ -171,14 +171,14 @@ namespace MuMech
             set
             {
                 _store[_nextIndex] = value;
-                _nextIndex         = (_nextIndex + 1) % _storeSize;
+                _nextIndex = (_nextIndex + 1) % _storeSize;
             }
         }
 
         public MovingAverage(int size = 10, double startingValue = 0)
         {
             _storeSize = size;
-            _store     = new double[size];
+            _store = new double[size];
             Force(startingValue);
         }
 
@@ -200,8 +200,8 @@ namespace MuMech
     public class MovingAverage3d
     {
         private readonly Vector3d[] _store;
-        private readonly int        _storeSize;
-        private          int        _nextIndex;
+        private readonly int _storeSize;
+        private int _nextIndex;
 
         public Vector3d Value
         {
@@ -218,14 +218,14 @@ namespace MuMech
             set
             {
                 _store[_nextIndex] = value;
-                _nextIndex         = (_nextIndex + 1) % _storeSize;
+                _nextIndex = (_nextIndex + 1) % _storeSize;
             }
         }
 
         public MovingAverage3d(int size = 10, Vector3d startingValue = default)
         {
             _storeSize = size;
-            _store     = new Vector3d[size];
+            _store = new Vector3d[size];
             Force(startingValue);
         }
 

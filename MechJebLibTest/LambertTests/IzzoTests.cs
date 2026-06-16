@@ -26,8 +26,7 @@ namespace MechJebLibTest.LambertTests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void RandomMultipleRevolution(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
@@ -82,8 +81,7 @@ namespace MechJebLibTest.LambertTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void RandomMultipleRevolutionShortWay(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
@@ -138,8 +136,7 @@ namespace MechJebLibTest.LambertTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void RandomPositions(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
@@ -164,8 +161,7 @@ namespace MechJebLibTest.LambertTests
             rfShepperdRetrograde.ShouldEqual(rf, tol);
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void RandomPositionsComparedToGooding(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));

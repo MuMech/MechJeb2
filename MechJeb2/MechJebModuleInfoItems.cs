@@ -29,8 +29,8 @@ namespace MuMech
         {
             if (!Vessel.patchedConicsUnlocked() || !Vessel.patchedConicSolver.maneuverNodes.Any()) return "N/A";
 
-            ManeuverNode node     = Vessel.patchedConicSolver.maneuverNodes.First();
-            double       burnTime = node.GetBurnVector(node.patch).magnitude / VesselState.LimitedMaxThrustAcceleration;
+            ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes.First();
+            double burnTime = node.GetBurnVector(node.patch).magnitude / VesselState.LimitedMaxThrustAcceleration;
             return GuiUtils.TimeToDHMS(burnTime);
         }
 
@@ -150,9 +150,9 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_RCSTranslationEfficiency", InfoItem.Category.Misc)] //RCS translation efficiency
         public string RCSTranslationEfficiency()
         {
-            double          totalThrust     = RCSThrustNow();
-            double          effectiveThrust = 0;
-            FlightCtrlState s               = FlightInputHandler.state;
+            double totalThrust = RCSThrustNow();
+            double effectiveThrust = 0;
+            FlightCtrlState s = FlightInputHandler.state;
 
             // FlightCtrlState and a vessel have different coordinate systems.
             // See MechJebModuleRCSController for a comment explaining this.
@@ -183,11 +183,11 @@ namespace MuMech
 
                     for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
-                        float     force = pm.thrustForces[i];
-                        Transform t     = pm.thrusterTransforms[i];
+                        float force = pm.thrustForces[i];
+                        Transform t = pm.thrusterTransforms[i];
 
-                        Vector3 thrusterDir        = Quaternion.Inverse(Vessel.GetTransform().rotation) * -t.up;
-                        double  thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
+                        Vector3 thrusterDir = Quaternion.Inverse(Vessel.GetTransform().rotation) * -t.up;
+                        double thrusterEfficiency = Vector3.Dot(direction, thrusterDir.normalized);
 
                         effectiveThrust += thrusterEfficiency * pm.thrusterPower * force;
                     }
@@ -202,9 +202,9 @@ namespace MuMech
         public double RCSDeltaVVacuum()
         {
             // Use the average specific impulse of all RCS parts.
-            double totalIsp     = 0;
-            int    numThrusters = 0;
-            double gForRCS      = 9.81;
+            double totalIsp = 0;
+            int numThrusters = 0;
+            double gForRCS = 9.81;
 
             double monopropMass = Vessel.TotalResourceMass("MonoPropellant");
 
@@ -334,7 +334,7 @@ namespace MuMech
         public string MaxPartCount()
         {
             float editorFacilityLevel = ScenarioUpgradeableFacilities.GetFacilityLevel(EditorDriver.editorFacility.ToFacility());
-            int   maxPartCount        = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel, EditorDriver.editorFacility == EditorFacility.VAB);
+            int maxPartCount = GameVariables.Instance.GetPartCountLimit(editorFacilityLevel, EditorDriver.editorFacility == EditorFacility.VAB);
             if (maxPartCount < int.MaxValue)
                 return maxPartCount.ToString();
             return Localizer.Format("#MechJeb_InfoItems_UnlimitedText"); //"Unlimited"
@@ -393,9 +393,9 @@ namespace MuMech
 
             if (VesselState.AltitudeTrue < 1000.0)
             {
-                double a   = (Vessel.mainBody.transform.position - Vessel.transform.position).magnitude;
-                double b   = (Vessel.mainBody.transform.position - Core.Target.Transform.position).magnitude;
-                double c   = Vector3d.Distance(Vessel.transform.position, Core.Target.Position);
+                double a = (Vessel.mainBody.transform.position - Vessel.transform.position).magnitude;
+                double b = (Vessel.mainBody.transform.position - Core.Target.Transform.position).magnitude;
+                double c = Vector3d.Distance(Vessel.transform.position, Core.Target.Position);
                 double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
                 return GuiUtils.TimeToDHMS(ang * Vessel.mainBody.Radius / VesselState.SpeedSurfaceHorizontal);
             }
@@ -479,9 +479,9 @@ namespace MuMech
 
             if (o == null) return "N/A";
 
-            double smaCapture     = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
+            double smaCapture = (o.PeR + o.referenceBody.sphereOfInfluence) / 2;
             double velAtPeriapsis = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / o.semiMajorAxis));
-            double velCapture     = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
+            double velCapture = Math.Sqrt(o.referenceBody.gravParameter * (2 / o.PeR - 1 / smaCapture));
 
             return (velAtPeriapsis - velCapture).ToSI() + "m/s";
         }
@@ -810,9 +810,9 @@ namespace MuMech
 
             if (stats.VacStats.Count == 0 || stats.AtmoStats.Count == 0) return 0;
 
-            float vacTimeLeft  = (float)stats.VacStats[stats.VacStats.Count - 1].DeltaTime;
+            float vacTimeLeft = (float)stats.VacStats[stats.VacStats.Count - 1].DeltaTime;
             float atmoTimeLeft = (float)stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaTime;
-            float timeLeft     = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
+            float timeLeft = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
 
             return timeLeft;
         }
@@ -873,10 +873,10 @@ namespace MuMech
                 return;
             }
 
-            Vector3d relVel  = Core.Target.RelativeVelocity;
-            double   relVelX = Vector3d.Dot(relVel, Vessel.GetTransform().right);
-            double   relVelY = Vector3d.Dot(relVel, Vessel.GetTransform().forward);
-            double   relVelZ = Vector3d.Dot(relVel, Vessel.GetTransform().up);
+            Vector3d relVel = Core.Target.RelativeVelocity;
+            double relVelX = Vector3d.Dot(relVel, Vessel.GetTransform().right);
+            double relVelY = Vector3d.Dot(relVel, Vessel.GetTransform().forward);
+            double relVelZ = Vector3d.Dot(relVel, Vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocity")); //"Target-relative velocity:"
             GUILayout.Label("X: " + MuUtils.PadPositive(relVelX, "F2") + " m/s  [L/J]");
@@ -915,10 +915,10 @@ namespace MuMech
                 return;
             }
 
-            Vector3d sep  = Core.Target.RelativePosition;
-            double   sepX = Vector3d.Dot(sep, Vessel.GetTransform().right);
-            double   sepY = Vector3d.Dot(sep, Vessel.GetTransform().forward);
-            double   sepZ = Vector3d.Dot(sep, Vessel.GetTransform().up);
+            Vector3d sep = Core.Target.RelativePosition;
+            double sepX = Vector3d.Dot(sep, Vessel.GetTransform().right);
+            double sepY = Vector3d.Dot(sep, Vessel.GetTransform().forward);
+            double sepZ = Vector3d.Dot(sep, Vessel.GetTransform().up);
             GUILayout.BeginVertical();
             GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label5")); //"Separation from target:"
             GUILayout.Label("X: " + MuUtils.PadPositive(sepX, "F2") + " m  [L/J]");

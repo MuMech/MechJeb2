@@ -10,16 +10,12 @@ namespace MuMech
     public class OperationSemiMajor : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_Sa_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewSma = new EditableDoubleMult(800000, 1000);
 
-        private static readonly TimeReference[] _timeReferences =
-        {
-            TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
-        };
+        private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE };
 
         private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
@@ -42,8 +38,8 @@ namespace MuMech
             if (o.Radius(ut) > 2 * NewSma)
             {
                 throw new OperationException(Localizer.Format("#MechJeb_Sa_Exception", o.referenceBody.displayName.LocalizeRemoveGender()) + "(" +
-                                             o.referenceBody.Radius.ToSI(3) +
-                                             "m)"); //cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
+                    o.referenceBody.Radius.ToSI(3) +
+                    "m)"); //cannot make Semi-Major Axis less than twice the burn altitude plus the radius of <<1>>
             }
 
             return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVForSemiMajorAxis(o, ut, NewSma), ut) };

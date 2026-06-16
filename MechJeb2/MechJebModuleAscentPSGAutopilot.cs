@@ -103,8 +103,8 @@ namespace MuMech
                 ? Core.Target.TargetOrbit.LAN
                 : (double)AscentSettings.DesiredLan;
 
-            double inclination   = AscentSettings.DesiredInclination;
-            bool   attachAltFlag = !AscentSettings.OptimizeStageFlag || AscentSettings.AttachAltFlag;
+            double inclination = AscentSettings.DesiredInclination;
+            bool attachAltFlag = !AscentSettings.OptimizeStageFlag || AscentSettings.AttachAltFlag;
 
             // if we are launchingToPlane other code in MJ fixes the sign of the inclination to be correct
             // FIXME: can we just use autopilot.desiredInclination here and rely on the other code to update that value?
@@ -132,7 +132,7 @@ namespace MuMech
 
             if (VesselState.AltitudeBottom > AscentSettings.PitchStartHeight)
             {
-                _mode           = AscentMode.PITCHPROGRAM;
+                _mode = AscentMode.PITCHPROGRAM;
                 _pitchStartTime = MET;
                 return;
             }
@@ -143,7 +143,7 @@ namespace MuMech
 
         private void DrivePitchProgram()
         {
-            double dt    = MET - _pitchStartTime;
+            double dt = MET - _pitchStartTime;
             double theta = dt * AscentSettings.PitchRate;
             double pitch = 90 - theta;
 

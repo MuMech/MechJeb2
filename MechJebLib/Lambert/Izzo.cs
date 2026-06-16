@@ -240,7 +240,7 @@ namespace MechJebLib.Maths
 
                 // Single revolution
                 double t0 = SafeAcos(ll) + ll * Sqrt(1 - ll2); // Equation 19
-                double t1 = 2 * (1 - ll3) / 3.0;               // Equation 21
+                double t1 = 2 * (1 - ll3) / 3.0; // Equation 21
 
                 if (t >= t0)
                     return -(t - t0) / (t - t0 + 4);

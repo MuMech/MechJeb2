@@ -34,9 +34,9 @@ namespace MuMech
         {
             return deployablePartState switch
             {
-                DeployablePartState.EXTENDED => Localizer.Format("#MechJeb_SolarPanelDeploy"), //"Toggle solar panels (currently extended)"
+                DeployablePartState.EXTENDED  => Localizer.Format("#MechJeb_SolarPanelDeploy"), //"Toggle solar panels (currently extended)"
                 DeployablePartState.RETRACTED => Localizer.Format("#MechJeb_SolarPanelRetracted"), //"Toggle solar panels (currently retracted)"
-                _ => Localizer.Format("#MechJeb_SolarPanelToggle")
+                _                             => Localizer.Format("#MechJeb_SolarPanelToggle")
             };
         }
     }

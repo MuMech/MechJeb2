@@ -12,8 +12,8 @@ namespace MuMech
             : base(core)
         {
             WarpPaused = false;
-            Priority   = 100;
-            Enabled    = true;
+            Priority = 100;
+            Enabled = true;
         }
 
         private double warpIncreaseAttemptTime;
@@ -26,8 +26,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool activateSASOnWarp = true;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool useQuickWarp;
 
         public void useQuickWarpInfoItem() =>
@@ -242,7 +241,7 @@ namespace MuMech
             }
 
             if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate)
-                return false;                                                 //most recent warp change is not yet complete
+                return false; //most recent warp change is not yet complete
             if (VesselState.Time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
             warpIncreaseAttemptTime = VesselState.Time;
@@ -257,7 +256,7 @@ namespace MuMech
             //do a bunch of checks to see if we can increase the warp rate:
             if (TimeWarp.CurrentRateIndex + 1 == TimeWarp.fetch.physicsWarpRates.Length) return false; //already at max warp
             if (TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate)
-                return false;                                                 //most recent warp change is not yet complete
+                return false; //most recent warp change is not yet complete
             if (VesselState.Time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
             warpIncreaseAttemptTime = VesselState.Time;

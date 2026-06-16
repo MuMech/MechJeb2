@@ -105,11 +105,11 @@ namespace MuMech
             // Checkers are identified by the type name and version field name.
             FieldInfo[] fields =
                 getAllTypes()
-                    .Where(t => t.Name == "CompatibilityChecker")
-                    .Select(t => t.GetField("_version", BindingFlags.Static | BindingFlags.NonPublic))
-                    .Where(f => f != null)
-                    .Where(f => f.FieldType == typeof(int))
-                    .ToArray();
+                   .Where(t => t.Name == "CompatibilityChecker")
+                   .Select(t => t.GetField("_version", BindingFlags.Static | BindingFlags.NonPublic))
+                   .Where(f => f != null)
+                   .Where(f => f.FieldType == typeof(int))
+                   .ToArray();
 
             // Let the latest version of the checker execute.
             if (_version != fields.Max(f => (int)f.GetValue(null))) { return; }
@@ -123,10 +123,10 @@ namespace MuMech
             // A mod is incompatible if its compatibility checker has an IsCompatible method which returns false.
             string[] incompatible =
                 fields
-                    .Select(f => f.DeclaringType.GetMethod("IsCompatible", Type.EmptyTypes))
-                    .Where(m => m.IsStatic)
-                    .Where(m => m.ReturnType == typeof(bool))
-                    .Where(m =>
+                   .Select(f => f.DeclaringType.GetMethod("IsCompatible", Type.EmptyTypes))
+                   .Where(m => m.IsStatic)
+                   .Where(m => m.ReturnType == typeof(bool))
+                   .Where(m =>
                     {
                         try
                         {
@@ -140,17 +140,17 @@ namespace MuMech
                             return true;
                         }
                     })
-                    .Select(m => m.DeclaringType.Assembly.GetName().Name)
-                    .ToArray();
+                   .Select(m => m.DeclaringType.Assembly.GetName().Name)
+                   .ToArray();
 
             // A mod is incompatible with Unity if its compatibility checker has an IsUnityCompatible method which returns false.
             string[] incompatibleUnity =
                 fields
-                    .Select(f => f.DeclaringType.GetMethod("IsUnityCompatible", Type.EmptyTypes))
-                    .Where(m => m != null) // Mods without IsUnityCompatible() are assumed to be compatible.
-                    .Where(m => m.IsStatic)
-                    .Where(m => m.ReturnType == typeof(bool))
-                    .Where(m =>
+                   .Select(f => f.DeclaringType.GetMethod("IsUnityCompatible", Type.EmptyTypes))
+                   .Where(m => m != null) // Mods without IsUnityCompatible() are assumed to be compatible.
+                   .Where(m => m.IsStatic)
+                   .Where(m => m.ReturnType == typeof(bool))
+                   .Where(m =>
                     {
                         try
                         {
@@ -164,8 +164,8 @@ namespace MuMech
                             return true;
                         }
                     })
-                    .Select(m => m.DeclaringType.Assembly.GetName().Name)
-                    .ToArray();
+                   .Select(m => m.DeclaringType.Assembly.GetName().Name)
+                   .ToArray();
 
             Array.Sort(incompatible);
             Array.Sort(incompatibleUnity);
@@ -180,7 +180,7 @@ namespace MuMech
             if (incompatible.Length > 0 || incompatibleUnity.Length > 0)
             {
                 message += (message == string.Empty ? "Some" : "\n\nAdditionally, some") +
-                           " installed mods may be incompatible with this version of Kerbal Space Program. Features may be broken or disabled. Please check for updates to the listed mods.";
+                    " installed mods may be incompatible with this version of Kerbal Space Program. Features may be broken or disabled. Please check for updates to the listed mods.";
 
                 if (incompatible.Length > 0)
                 {

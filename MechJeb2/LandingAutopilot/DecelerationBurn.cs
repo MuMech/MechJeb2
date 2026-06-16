@@ -10,6 +10,7 @@ namespace MuMech
         public class DecelerationBurn : AutopilotStep
         {
             private bool _decelerationBurnTriggered;
+
             public DecelerationBurn(MechJebCore core) : base(core)
             {
             }
@@ -42,7 +43,7 @@ namespace MuMech
 
                     if (warpReady && Core.Node.Autowarp)
                         Core.Warp.WarpToUT(decelerationStartTime - 5);
-                    
+
                     else if (!MuUtils.PhysicsRunning())
                         Core.Warp.MinimumWarp();
                     return this;
@@ -55,14 +56,14 @@ namespace MuMech
 
                 Vector3d courseCorrection = Core.Landing.ComputeCourseCorrection(false);
                 double correctionAngle = courseCorrection.magnitude / (2.0 * VesselState.LimitedMaxThrustAcceleration);
-                correctionAngle     = Math.Min(0.1, correctionAngle);
+                correctionAngle = Math.Min(0.1, correctionAngle);
                 desiredThrustVector = (desiredThrustVector + correctionAngle * courseCorrection.normalized).normalized;
 
                 if (Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Up) > 0
                     || Vector3d.Dot(VesselState.Forward, desiredThrustVector) < 0.75)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
-                    Status                     = Localizer.Format("#MechJeb_LandingGuidance_Status5"); //"Braking"
+                    Status = Localizer.Format("#MechJeb_LandingGuidance_Status5"); //"Braking"
                 }
                 else
                 {
@@ -73,7 +74,7 @@ namespace MuMech
                     double desiredSpeedAfterDt = -Core.Landing.MaxAllowedSpeedAfterDt(VesselState.DeltaT);
                     double minAccel = -VesselState.LocalGravity * Math.Abs(Vector3d.Dot(VesselState.SurfaceVelocity.normalized, VesselState.Up));
                     double maxAccel = VesselState.MaxThrustAcceleration * Vector3d.Dot(VesselState.Forward, -VesselState.SurfaceVelocity.normalized) -
-                                      VesselState.LocalGravity * Math.Abs(Vector3d.Dot(VesselState.SurfaceVelocity.normalized, VesselState.Up));
+                        VesselState.LocalGravity * Math.Abs(Vector3d.Dot(VesselState.SurfaceVelocity.normalized, VesselState.Up));
                     const double SPEED_CORRECTION_TIME_CONSTANT = 0.3;
                     double speedError = desiredSpeed - controlledSpeed;
                     double desiredAccel = speedError / SPEED_CORRECTION_TIME_CONSTANT + (desiredSpeedAfterDt - desiredSpeed) / VesselState.DeltaT;

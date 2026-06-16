@@ -11,7 +11,6 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityToolbag;
 using Debug = UnityEngine.Debug;
-using File = KSP.IO.File;
 using Logger = MechJebLib.Utils.Logger;
 
 namespace MuMech
@@ -19,9 +18,9 @@ namespace MuMech
     public class MechJebCore : PartModule, IComparable<MechJebCore>
     {
         private readonly List<ComputerModule> _unorderedComputerModules = new List<ComputerModule>();
-        private readonly List<ComputerModule> _modulesToLoad            = new List<ComputerModule>();
+        private readonly List<ComputerModule> _modulesToLoad = new List<ComputerModule>();
 
-        private readonly Dictionary<Type, List<ComputerModule>>  _sortedModules        = new Dictionary<Type, List<ComputerModule>>();
+        private readonly Dictionary<Type, List<ComputerModule>> _sortedModules = new Dictionary<Type, List<ComputerModule>>();
         private readonly Dictionary<object, List<DisplayModule>> _sortedDisplayModules = new Dictionary<object, List<DisplayModule>>();
 
         // Reference to the parts base config. See Onload for explanation
@@ -33,38 +32,38 @@ namespace MuMech
 
         private bool _ready;
 
-        public MechJebModuleGuidanceController          Guidance;
-        public MechJebModulePSGGlueBall                 Glueball;
-        public MechJebModuleAttitudeController          Attitude;
-        public MechJebModuleStagingController           Staging;
-        public MechJebModuleThrustController            Thrust;
-        public MechJebModuleTargetController            Target;
-        public MechJebModuleWarpController              Warp;
-        public MechJebModuleRCSController               RCS;
-        public MechJebModuleRCSBalancer                 Rcsbal;
-        public MechJebModuleRoverController             Rover;
-        public MechJebModuleNodeExecutor                Node;
-        public MechJebModuleSolarPanelController        Solarpanel;
+        public MechJebModuleGuidanceController Guidance;
+        public MechJebModulePSGGlueBall Glueball;
+        public MechJebModuleAttitudeController Attitude;
+        public MechJebModuleStagingController Staging;
+        public MechJebModuleThrustController Thrust;
+        public MechJebModuleTargetController Target;
+        public MechJebModuleWarpController Warp;
+        public MechJebModuleRCSController RCS;
+        public MechJebModuleRCSBalancer Rcsbal;
+        public MechJebModuleRoverController Rover;
+        public MechJebModuleNodeExecutor Node;
+        public MechJebModuleSolarPanelController Solarpanel;
         public MechJebModuleDeployableAntennaController AntennaControl;
-        public MechJebModuleLandingAutopilot            Landing;
-        public MechJebModuleSettings                    Settings;
-        public MechJebModuleStageStats                  StageStats;
-        public MechJebModuleAscentSettings              AscentSettings;
-        public MechJebModuleSpinupController            Spinup;
-        public MechJebModuleHoverslamSimulation         Hoverslam;
-        public MechJebModuleSmartASS                    SmartASS;
-        public MechJebModuleAscentBaseAutopilot         Ascent => AscentSettings.AscentAutopilot;
+        public MechJebModuleLandingAutopilot Landing;
+        public MechJebModuleSettings Settings;
+        public MechJebModuleStageStats StageStats;
+        public MechJebModuleAscentSettings AscentSettings;
+        public MechJebModuleSpinupController Spinup;
+        public MechJebModuleHoverslamSimulation Hoverslam;
+        public MechJebModuleSmartASS SmartASS;
+        public MechJebModuleAscentBaseAutopilot Ascent => AscentSettings.AscentAutopilot;
 
         public readonly VesselState VesselState = new VesselState();
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb")]
-        [UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")] //DisabledEnabled
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")]
+         //DisabledEnabled
         public bool running = true;
 
         private Vessel _controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
-        public  string version = "";
-        private bool   _deactivateControl;
-        private float  _currentThrottle; // To maintain throttle when controls deactivated
+        public string version = "";
+        private bool _deactivateControl;
+        private float _currentThrottle; // To maintain throttle when controls deactivated
 
         [UsedImplicitly]
         public MechJebCore MasterMechJeb => vessel.GetMasterMechJeb();
@@ -170,7 +169,7 @@ namespace MuMech
 
             if (masterSmartASS is { Hidden: false })
             {
-                masterSmartASS.mode   = MechJebModuleSmartASS.Mode.ORBITAL;
+                masterSmartASS.mode = MechJebModuleSmartASS.Mode.ORBITAL;
                 masterSmartASS.target = smartassTarget;
 
                 masterSmartASS.Engage();
@@ -297,9 +296,9 @@ namespace MuMech
                 Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
         }
 
-        private        bool   _weLockedInputs;
-        private        float  _lastSettingsSaveTime;
-        private        bool   _wasMasterAndFocus;
+        private bool _weLockedInputs;
+        private float _lastSettingsSaveTime;
+        private bool _wasMasterAndFocus;
         private static Vessel _lastFocus;
 
         public bool someModuleAreLocked; // True if any module was locked by the R&D system
@@ -462,7 +461,7 @@ namespace MuMech
             {
                 vessel.OnFlyByWire -= OnFlyByWire; //just a safety precaution to avoid duplicates
                 vessel.OnFlyByWire += OnFlyByWire;
-                _controlledVessel  =  vessel;
+                _controlledVessel = vessel;
             }
 
             Logger.GlobalRegister(SafePrint);
@@ -552,7 +551,7 @@ namespace MuMech
                 OnLoad(null); // Force Global reload
 
                 _wasMasterAndFocus = true;
-                _lastFocus         = vessel;
+                _lastFocus = vessel;
             }
 
             if (vessel == null)
@@ -703,7 +702,7 @@ namespace MuMech
                     try
                     {
                         foreach (Type module in (from t in ass.GetTypes() where t.IsSubclassOf(typeof(ComputerModule)) && !t.IsAbstract select t)
-                                 .ToList())
+                                .ToList())
                         {
                             _moduleRegistry.Add(module);
                         }
@@ -711,7 +710,7 @@ namespace MuMech
                     catch (Exception e)
                     {
                         Debug.LogError("MechJeb moduleRegistry creation threw an exception in LoadComputerModules loading " + ass.FullName + ": " +
-                                       e);
+                            e);
                     }
                 }
             }
@@ -752,26 +751,26 @@ namespace MuMech
                 Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules: " + e);
             }
 
-            Attitude       = GetComputerModule<MechJebModuleAttitudeController>();
-            Staging        = GetComputerModule<MechJebModuleStagingController>();
-            Thrust         = GetComputerModule<MechJebModuleThrustController>();
-            Target         = GetComputerModule<MechJebModuleTargetController>();
-            Warp           = GetComputerModule<MechJebModuleWarpController>();
-            RCS            = GetComputerModule<MechJebModuleRCSController>();
-            Rcsbal         = GetComputerModule<MechJebModuleRCSBalancer>();
-            Rover          = GetComputerModule<MechJebModuleRoverController>();
-            Node           = GetComputerModule<MechJebModuleNodeExecutor>();
-            Solarpanel     = GetComputerModule<MechJebModuleSolarPanelController>();
+            Attitude = GetComputerModule<MechJebModuleAttitudeController>();
+            Staging = GetComputerModule<MechJebModuleStagingController>();
+            Thrust = GetComputerModule<MechJebModuleThrustController>();
+            Target = GetComputerModule<MechJebModuleTargetController>();
+            Warp = GetComputerModule<MechJebModuleWarpController>();
+            RCS = GetComputerModule<MechJebModuleRCSController>();
+            Rcsbal = GetComputerModule<MechJebModuleRCSBalancer>();
+            Rover = GetComputerModule<MechJebModuleRoverController>();
+            Node = GetComputerModule<MechJebModuleNodeExecutor>();
+            Solarpanel = GetComputerModule<MechJebModuleSolarPanelController>();
             AntennaControl = GetComputerModule<MechJebModuleDeployableAntennaController>();
-            Landing        = GetComputerModule<MechJebModuleLandingAutopilot>();
-            Settings       = GetComputerModule<MechJebModuleSettings>();
-            Guidance       = GetComputerModule<MechJebModuleGuidanceController>();
-            Glueball       = GetComputerModule<MechJebModulePSGGlueBall>();
-            StageStats     = GetComputerModule<MechJebModuleStageStats>();
+            Landing = GetComputerModule<MechJebModuleLandingAutopilot>();
+            Settings = GetComputerModule<MechJebModuleSettings>();
+            Guidance = GetComputerModule<MechJebModuleGuidanceController>();
+            Glueball = GetComputerModule<MechJebModulePSGGlueBall>();
+            StageStats = GetComputerModule<MechJebModuleStageStats>();
             AscentSettings = GetComputerModule<MechJebModuleAscentSettings>();
-            Spinup         = GetComputerModule<MechJebModuleSpinupController>();
-            Hoverslam      = GetComputerModule<MechJebModuleHoverslamSimulation>();
-            SmartASS       = GetComputerModule<MechJebModuleSmartASS>();
+            Spinup = GetComputerModule<MechJebModuleSpinupController>();
+            Hoverslam = GetComputerModule<MechJebModuleHoverslamSimulation>();
+            SmartASS = GetComputerModule<MechJebModuleSmartASS>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)
@@ -910,7 +909,7 @@ namespace MuMech
                 foreach (Assembly assembly in brokenAssembly)
                 {
                     Debug.LogError(assembly.GetName().Name + " " + assembly.GetName().Version + " " +
-                                   assembly.Location.Remove(0, Path.GetFullPath(KSPUtil.ApplicationRootPath).Length));
+                        assembly.Location.Remove(0, Path.GetFullPath(KSPUtil.ApplicationRootPath).Length));
                 }
             }
             catch (Exception e)
@@ -1096,20 +1095,20 @@ namespace MuMech
         private static void CheckFlightCtrlState(FlightCtrlState s)
         {
             if (float.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
-            if (float.IsNaN(s.yaw)) s.yaw                   = 0;
-            if (float.IsNaN(s.pitch)) s.pitch               = 0;
-            if (float.IsNaN(s.roll)) s.roll                 = 0;
-            if (float.IsNaN(s.X)) s.X                       = 0;
-            if (float.IsNaN(s.Y)) s.Y                       = 0;
-            if (float.IsNaN(s.Z)) s.Z                       = 0;
+            if (float.IsNaN(s.yaw)) s.yaw = 0;
+            if (float.IsNaN(s.pitch)) s.pitch = 0;
+            if (float.IsNaN(s.roll)) s.roll = 0;
+            if (float.IsNaN(s.X)) s.X = 0;
+            if (float.IsNaN(s.Y)) s.Y = 0;
+            if (float.IsNaN(s.Z)) s.Z = 0;
 
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
-            s.yaw          = Mathf.Clamp(s.yaw, -1, 1);
-            s.pitch        = Mathf.Clamp(s.pitch, -1, 1);
-            s.roll         = Mathf.Clamp(s.roll, -1, 1);
-            s.X            = Mathf.Clamp(s.X, -1, 1);
-            s.Y            = Mathf.Clamp(s.Y, -1, 1);
-            s.Z            = Mathf.Clamp(s.Z, -1, 1);
+            s.yaw = Mathf.Clamp(s.yaw, -1, 1);
+            s.pitch = Mathf.Clamp(s.pitch, -1, 1);
+            s.roll = Mathf.Clamp(s.roll, -1, 1);
+            s.X = Mathf.Clamp(s.X, -1, 1);
+            s.Y = Mathf.Clamp(s.Y, -1, 1);
+            s.Z = Mathf.Clamp(s.Z, -1, 1);
         }
 
         private void OnShowGUI() => ShowGui = true;

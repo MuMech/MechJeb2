@@ -10,7 +10,7 @@ namespace MuMech
     {
         public class LowDeorbitBurn : AutopilotStep
         {
-            private bool   _deorbitBurnTriggered;
+            private bool _deorbitBurnTriggered;
             private double _lowDeorbitBurnMaxThrottle;
 
             private bool _lowDeorbitEndConditionSet;
@@ -62,7 +62,7 @@ namespace MuMech
 
                 Status = Localizer.Format(_deorbitBurnTriggered
                     ? "#MechJeb_LandingGuidance_Status11"
-                    :                                     //"Executing low deorbit burn"
+                    : //"Executing low deorbit burn"
                     "#MechJeb_LandingGuidance_Status12"); //"Moving to low deorbit burn point"
 
                 //Warp toward deorbit burn if it hasn't been triggerd yet:
@@ -95,7 +95,7 @@ namespace MuMech
                         Vector3d.Distance(Core.Landing.LandingSite, VesselState.CoM) < MainBody.Radius + VesselState.AltitudeASL)
                     {
                         _lowDeorbitEndOnLandingSiteNearer = rangeToLandingSite > rangeToTarget;
-                        _lowDeorbitEndConditionSet        = true;
+                        _lowDeorbitEndConditionSet = true;
                     }
 
                     _lowDeorbitBurnMaxThrottle = 1;
@@ -112,7 +112,7 @@ namespace MuMech
 
                             double maxAllowedSpeedAfterDt = Core.Landing.MaxAllowedSpeedAfterDt(VesselState.DeltaT);
                             double speedAfterDt = VesselState.SpeedSurface +
-                                                  VesselState.DeltaT * Vector3d.Dot(VesselState.GravityForce, VesselState.SurfaceVelocity.normalized);
+                                VesselState.DeltaT * Vector3d.Dot(VesselState.GravityForce, VesselState.SurfaceVelocity.normalized);
                             double throttleToMaintainLandingSite;
                             if (VesselState.SpeedSurface < maxAllowedSpeed) throttleToMaintainLandingSite = 0;
                             else

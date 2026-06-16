@@ -37,9 +37,9 @@ namespace MechJebLibTest.FunctionsTests
             sma.ShouldEqual(1.0);
             ecc.ShouldEqual(0.0);
             inc.ShouldEqual(eps);
-            lan.ShouldEqual(0.0);  // ascending node still at +x̂
+            lan.ShouldEqual(0.0); // ascending node still at +x̂
             argp.ShouldEqual(0.0); // circular
-            nu.ShouldEqual(0.0);   // position at ascending node
+            nu.ShouldEqual(0.0); // position at ascending node
         }
 
         [Fact]

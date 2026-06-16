@@ -30,8 +30,7 @@ namespace MechJebLibTest.LambertTests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void RandomMultipleRevolution(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
@@ -92,8 +91,7 @@ namespace MechJebLibTest.LambertTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void RandomPositions(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));

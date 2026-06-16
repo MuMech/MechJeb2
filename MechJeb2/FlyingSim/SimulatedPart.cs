@@ -8,10 +8,10 @@ namespace MuMech
     {
         protected readonly DragCubeList cubes = new DragCubeList();
 
-        public  double totalMass;
-        public  bool   shieldedFromAirstream;
-        public  bool   noDrag;
-        public  bool   hasLiftModule;
+        public double totalMass;
+        public bool shieldedFromAirstream;
+        public bool noDrag;
+        public bool hasLiftModule;
         private double bodyLiftMultiplier;
 
         private ReentrySimulation.SimCurves simCurves;
@@ -64,11 +64,11 @@ namespace MuMech
         {
             Rigidbody rigidbody = p.rb;
 
-            totalMass             = rigidbody == null ? 0 : rigidbody.mass; // TODO : check if we need to use this or the one without the childMass
+            totalMass = rigidbody == null ? 0 : rigidbody.mass; // TODO : check if we need to use this or the one without the childMass
             shieldedFromAirstream = p.ShieldedFromAirstream;
 
-            noDrag             = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
-            hasLiftModule      = p.hasLiftModule;
+            noDrag = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
+            hasLiftModule = p.hasLiftModule;
             bodyLiftMultiplier = p.bodyLiftMultiplier * PhysicsGlobals.BodyLiftMultiplier;
 
             simCurves = _simCurves;
@@ -224,9 +224,9 @@ namespace MuMech
 
             for (int i = 0; i < 6; i++)
             {
-                dest.WeightedArea[i]  = source.WeightedArea[i];
-                dest.WeightedDrag[i]  = source.WeightedDrag[i];
-                dest.AreaOccluded[i]  = source.AreaOccluded[i];
+                dest.WeightedArea[i] = source.WeightedArea[i];
+                dest.WeightedDrag[i] = source.WeightedDrag[i];
+                dest.AreaOccluded[i] = source.AreaOccluded[i];
                 dest.WeightedDepth[i] = source.WeightedDepth[i];
             }
 
@@ -237,15 +237,15 @@ namespace MuMech
 
         protected static void CopyDragCube(DragCube source, DragCube dest)
         {
-            dest.Name   = source.Name;
+            dest.Name = source.Name;
             dest.Weight = source.Weight;
             dest.Center = source.Center;
-            dest.Size   = source.Size;
+            dest.Size = source.Size;
             for (int i = 0; i < source.Drag.Length; i++)
             {
-                dest.Drag[i]          = source.Drag[i];
-                dest.Area[i]          = source.Area[i];
-                dest.Depth[i]         = source.Depth[i];
+                dest.Drag[i] = source.Drag[i];
+                dest.Area[i] = source.Area[i];
+                dest.Depth[i] = source.Depth[i];
                 dest.DragModifiers[i] = source.DragModifiers[i];
             }
         }
@@ -264,7 +264,7 @@ namespace MuMech
                 if (cubes.Cubes[i].Name == name && cubes.Cubes[i].Weight != newWeight)
                 {
                     cubes.Cubes[i].Weight = newWeight;
-                    noChange              = false;
+                    noChange = false;
                 }
             }
 

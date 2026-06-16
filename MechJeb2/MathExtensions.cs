@@ -103,7 +103,7 @@ namespace MuMech
             double u2 = r.NextDouble();
 
             double rand_std_normal = Math.Sqrt(-2.0 * Math.Log(u1)) *
-                                     Math.Sin(2.0 * Math.PI * u2);
+                Math.Sin(2.0 * Math.PI * u2);
 
             double rand_normal = mu + sigma * rand_std_normal;
 
@@ -122,7 +122,7 @@ namespace MuMech
 
             if (dot < -0.9999999999) // Vectors are pointing in opposite directions (zero cross-product)
             {
-                var orthogonal = Vector3d.Cross(fromDirection, Math.Abs(fromDirection.x) < 1.0/Math.Sqrt(2.0) ? Vector3.right : Vector3.up);
+                var orthogonal = Vector3d.Cross(fromDirection, Math.Abs(fromDirection.x) < 1.0 / Math.Sqrt(2.0) ? Vector3.right : Vector3.up);
 
                 orthogonal.Normalize();
 
@@ -130,8 +130,8 @@ namespace MuMech
             }
 
             var cross = Vector3d.Cross(fromDirection, toDirection);
-            double   s     = Math.Sqrt((1 + dot) * 2);
-            double   invs  = 1 / s;
+            double s = Math.Sqrt((1 + dot) * 2);
+            double invs = 1 / s;
 
             return new QuaternionD(
                 cross.x * invs,
@@ -166,7 +166,7 @@ namespace MuMech
 
             if (test > 0.499999999 * unit) // North pole gimbal lock
             {
-                double yaw   = 2.0 * Math.Atan2(q.y, q.w);
+                double yaw = 2.0 * Math.Atan2(q.y, q.w);
 
                 return new Vector3d(
                     90,
@@ -177,7 +177,7 @@ namespace MuMech
 
             if (test < -0.499999999 * unit) // South pole gimbal lock
             {
-                double yaw   = -2.0 * Math.Atan2(q.y, q.w);
+                double yaw = -2.0 * Math.Atan2(q.y, q.w);
 
                 return new Vector3d(
                     270,
@@ -188,8 +188,8 @@ namespace MuMech
             else
             {
                 double pitch = Math.Asin(2.0 * test / unit);
-                double yaw   = Math.Atan2(2.0 * (q.x * q.z + q.w * q.y), sqw - sqx - sqy + sqz);
-                double roll  = Math.Atan2(2.0 * (q.x * q.y + q.w * q.z), sqw - sqx + sqy - sqz);
+                double yaw = Math.Atan2(2.0 * (q.x * q.z + q.w * q.y), sqw - sqx - sqy + sqz);
+                double roll = Math.Atan2(2.0 * (q.x * q.y + q.w * q.z), sqw - sqx + sqy - sqz);
 
                 // Convert to degrees
                 return new Vector3d(
@@ -213,12 +213,7 @@ namespace MuMech
             double cz = Math.Cos(z * 0.5);
             double sz = Math.Sin(z * 0.5);
 
-            var q = new QuaternionD {
-                w = cz * cx * cy + sz * sx * sy,
-                x = cz * sx * cy - sz * cx * sy,
-                y = cz * cx * sy + sz * sx * cy,
-                z = sz * cx * cy - cz * sx * sy
-            };
+            var q = new QuaternionD { w = cz * cx * cy + sz * sx * sy, x = cz * sx * cy - sz * cx * sy, y = cz * cx * sy + sz * sx * cy, z = sz * cx * cy - cz * sx * sy };
 
             return q;
         }
@@ -232,9 +227,9 @@ namespace MuMech
                 return current.normalized * Math.Max(0, current.magnitude - maxMagnitudeDelta);
 
             double currentMagnitude = current.magnitude;
-            double targetMagnitude  = target.magnitude;
+            double targetMagnitude = target.magnitude;
 
-            double angle      = Deg2Rad(Vector3d.Angle(current, target));
+            double angle = Deg2Rad(Vector3d.Angle(current, target));
             double deltaAngle = Math.Min(maxRadiansDelta, angle);
 
             double t = 0;

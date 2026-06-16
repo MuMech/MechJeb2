@@ -24,18 +24,18 @@ namespace MuMech
         {
             if (_btNormal == null)
             {
-                _btNormal                  = new GUIStyle(GUI.skin.button);
+                _btNormal = new GUIStyle(GUI.skin.button);
                 _btNormal.normal.textColor = _btNormal.focused.textColor = Color.white;
-                _btNormal.hover.textColor  = _btNormal.active.textColor  = Color.yellow;
+                _btNormal.hover.textColor = _btNormal.active.textColor = Color.yellow;
                 _btNormal.onNormal.textColor =
                     _btNormal.onFocused.textColor = _btNormal.onHover.textColor = _btNormal.onActive.textColor = Color.green;
                 _btNormal.padding = new RectOffset(0, 0, 0, 0);
 
-                _btActive           = new GUIStyle(_btNormal);
-                _btActive.active    = _btActive.onActive;
-                _btActive.normal    = _btActive.onNormal;
+                _btActive = new GUIStyle(_btNormal);
+                _btActive.active = _btActive.onActive;
+                _btActive.normal = _btActive.onNormal;
                 _btActive.onFocused = _btActive.focused;
-                _btActive.hover     = _btActive.onHover;
+                _btActive.hover = _btActive.onHover;
             }
         }
 
@@ -119,7 +119,7 @@ namespace MuMech
             GuiUtils.SimpleTextBox("Aref:", _ascentSettings.Aref, "m²", 40);
             GUILayout.EndHorizontal();
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel13, _ascentSettings.PitchStartHeight, "m",
-                40);                                                                                                     //Booster Pitch start:
+                40); //Booster Pitch start:
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel14, _ascentSettings.PitchRate, "°/s", 40); //Booster Pitch rate:
             GUILayout.EndVertical();
 

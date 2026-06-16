@@ -63,8 +63,7 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void EarthToMercuryRandom(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));

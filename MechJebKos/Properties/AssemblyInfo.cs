@@ -5,5 +5,6 @@
 
 // KSP load-order dependencies. The (major, minor) pair is a *minimum* version requirement;
 // KSP refuses to load this assembly unless a matching-or-newer KSPAssembly is present.
+
 [assembly: KSPAssemblyDependency("kOS", 1, 6)]
 [assembly: KSPAssemblyDependency("MechJeb2", 2, 16)]

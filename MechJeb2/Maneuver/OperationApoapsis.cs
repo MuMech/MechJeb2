@@ -9,17 +9,12 @@ namespace MuMech
     public class OperationApoapsis : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_Ap_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult NewApA = new EditableDoubleMult(200000, 1000);
 
-        private static readonly TimeReference[] _timeReferences =
-        {
-            TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING,
-            TimeReference.EQ_ASCENDING
-        };
+        private static readonly TimeReference[] _timeReferences = { TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING };
 
         private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 

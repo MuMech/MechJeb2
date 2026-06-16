@@ -12,20 +12,16 @@ namespace MuMech
         private static readonly string _name = Localizer.Format("#MechJeb_approach_title");
         public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult Periapsis = new EditableDoubleMult(200000, 1000);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble Inclination = new EditableDouble(90);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool InclinationFlag;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult InterceptDistance = new EditableDoubleMult(200);
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.COMPUTED, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING };
@@ -37,7 +33,7 @@ namespace MuMech
             if (target.Target is CelestialBody)
             {
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_approach_label1"), Periapsis, "km"); //Approximate final periapsis
-                GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°");         //Inclination
+                GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°"); //Inclination
             }
             else
             {
@@ -90,7 +86,7 @@ namespace MuMech
             // FIXME: add an explicit check that the current course intersects the SOI of the target body
 
             Vector3d dV;
-            double   dt1 = 0;
+            double dt1 = 0;
 
             if (targetBody is null)
                 dV = OrbitalManeuverCalculator.DeltaVAndTimeForCheapestCourseCorrection(o, ut, target.TargetOrbit, InterceptDistance, out ut);
@@ -114,7 +110,7 @@ namespace MuMech
                     ut = _timeSelector.ComputeManeuverTime(o, ut, target);
                 }
 
-                double dt  = _timeSelector.TimeReference == TimeReference.COMPUTED ? double.NaN : 0;
+                double dt = _timeSelector.TimeReference == TimeReference.COMPUTED ? double.NaN : 0;
                 double inc = InclinationFlag ? Inclination.Val : double.NaN;
 
                 (dV, dt1) = OrbitalManeuverCalculator.DeltaVAndTimeForCourseCorrectionToCelestial(o, ut, targetBody, targetBody.Radius + Periapsis, dt, inc);

@@ -34,14 +34,14 @@ namespace MuMech
 
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
 
-        public  double   Pitch;
-        public  double   Heading;
-        private V3       _inertial = V3.zero;       // inertial in right-handed non-rotating
-        private double   _throttle;
-        public  Vector3d Inertial  = Vector3d.zero; // inertial in rotating coordinates
-        public  double   Tgo;
-        public  double   Vgo;
-        public  double   StartCoast;
+        public double Pitch;
+        public double Heading;
+        private V3 _inertial = V3.zero; // inertial in right-handed non-rotating
+        private double _throttle;
+        public Vector3d Inertial = Vector3d.zero; // inertial in rotating coordinates
+        public double Tgo;
+        public double Vgo;
+        public double StartCoast;
 
         public Solution? Solution;
 
@@ -62,7 +62,7 @@ namespace MuMech
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             Core.Spinup.Users.Add(this);
-            Solution        = null;
+            Solution = null;
             _allowExecution = false;
         }
 
@@ -76,7 +76,7 @@ namespace MuMech
             Core.Staging.Users.Remove(this);
             Core.Spinup.Users.Remove(this);
             Solution = null;
-            Status   = PSGStatus.FINISHED;
+            Status = PSGStatus.FINISHED;
         }
 
         private bool _allowExecution;
@@ -208,7 +208,7 @@ namespace MuMech
             // FIXME: what exactly does KSP do to integrate over timesteps?
             Vector3d a0 = Vessel.acceleration_immediate;
 
-            double   dt = ticks * TimeWarp.fixedDeltaTime;
+            double dt = ticks * TimeWarp.fixedDeltaTime;
             Vector3d v1 = VesselState.OrbitalVelocity + a0 * dt;
             Vector3d x1 = VesselState.OrbitalPosition + VesselState.OrbitalVelocity * dt + 0.5 * a0 * dt * dt;
 
@@ -354,12 +354,12 @@ namespace MuMech
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, _inertial);
 
             Inertial = _inertial.V3ToWorldRotated();
-            Pitch    = Rad2Deg(pitch);
-            Heading  = Rad2Deg(heading);
+            Pitch = Rad2Deg(pitch);
+            Heading = Rad2Deg(heading);
         }
 
         private readonly List<Vector3d> _trajectory = new List<Vector3d>();
-        private readonly Orbit          _finalOrbit = new Orbit();
+        private readonly Orbit _finalOrbit = new Orbit();
 
         private void DrawTrajectory()
         {
@@ -440,9 +440,9 @@ namespace MuMech
         {
             Users.Clear();
             ThrustOff();
-            Status   = PSGStatus.FINISHED;
+            Status = PSGStatus.FINISHED;
             Solution = null;
-            Enabled  = false;
+            Enabled = false;
         }
 
         private void DoCoast()

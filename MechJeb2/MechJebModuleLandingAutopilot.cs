@@ -15,7 +15,7 @@ namespace MuMech
     public class MechJebModuleLandingAutopilot : AutopilotModule
     {
         private bool _deployedGears;
-        public  bool LandAtTarget;
+        public bool LandAtTarget;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble TouchdownSpeed = 0.5;
@@ -42,7 +42,7 @@ namespace MuMech
 
         //Landing prediction data:
         private MechJebModuleLandingPredictions _predictor;
-        public  ReentrySimulation.Result        Prediction => _predictor.Result;
+        public ReentrySimulation.Result Prediction => _predictor.Result;
 
         private ReentrySimulation.Result _errorPrediction => _predictor.GetErrorResult();
 
@@ -100,8 +100,8 @@ namespace MuMech
 
         private Vector3d _rotatedLandingSite => Prediction.WorldEndPosition(); // The position where the landing site will be when we land at it
 
-        public  IDescentSpeedPolicy DescentSpeedPolicy;
-        private double              _vesselAverageDrag;
+        public IDescentSpeedPolicy DescentSpeedPolicy;
+        private double _vesselAverageDrag;
 
         public MechJebModuleLandingAutopilot(MechJebCore core)
             : base(core)
@@ -164,8 +164,8 @@ namespace MuMech
 
             DescentSpeedPolicy = PickDescentSpeedPolicy();
 
-            _predictor.descentSpeedPolicy            = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
-            _predictor.decelEndAltitudeASL           = DecelerationEndAltitude();
+            _predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
+            _predictor.decelEndAltitudeASL = DecelerationEndAltitude();
             _predictor.parachuteSemiDeployMultiplier = _parachutePlan.Multiplier;
 
             // Consider lowering the langing gear
@@ -225,10 +225,7 @@ namespace MuMech
             var convertOrbitToActual = Quaternion.FromToRotation(orbitLandingPosition, actualLandingPosition);
 
             // Consider the effect small changes in the velocity in each of these three directions
-            Vector3d[] perturbationDirections =
-            {
-                VesselState.SurfaceVelocity.normalized, VesselState.RadialPlusSurface, VesselState.NormalPlusSurface
-            };
+            Vector3d[] perturbationDirections = { VesselState.SurfaceVelocity.normalized, VesselState.RadialPlusSurface, VesselState.NormalPlusSurface };
 
             // Compute the effect burns in these directions would
             // have on the landing position, where we approximate the landing position as the place
@@ -288,17 +285,17 @@ namespace MuMech
                 // detect and handle the case where radial+ burns actually bring the landing sign closer
                 // (e.g. when we are traveling close to straight up)
                 downrangeDirection = (deltas[0].magnitude * perturbationDirections[0]
-                                      + Math.Sign(Vector3d.Dot(deltas[0], deltas[1])) * deltas[1].magnitude * perturbationDirections[1]).normalized;
+                    + Math.Sign(Vector3d.Dot(deltas[0], deltas[1])) * deltas[1].magnitude * perturbationDirections[1]).normalized;
 
                 downrangeDelta = Vector3d.Dot(downrangeDirection, perturbationDirections[0]) * deltas[0]
-                                 + Vector3d.Dot(downrangeDirection, perturbationDirections[1]) * deltas[1];
+                    + Vector3d.Dot(downrangeDirection, perturbationDirections[1]) * deltas[1];
             }
             else
             {
                 // If we aren't allowed to burn prograde, downrange component of the landing
                 // position has to be controlled by radial+/- burns:
                 downrangeDirection = perturbationDirections[1];
-                downrangeDelta     = deltas[1];
+                downrangeDelta = deltas[1];
             }
 
             // Now solve a 2x2 system of linear equations to determine the linear combination
@@ -450,7 +447,7 @@ namespace MuMech
 
             //if (mainBody.RealMaxAtmosphereAltitude() > 0 && (ParachutesDeployable() || ParachutesDeployed()))
             return MainBody.RealMaxAtmosphereAltitude() > 0 &&
-                   landingSiteDragLength < 0.7 * MainBody.RealMaxAtmosphereAltitude(); // the ratio is totally arbitrary until I get something better
+                landingSiteDragLength < 0.7 * MainBody.RealMaxAtmosphereAltitude(); // the ratio is totally arbitrary until I get something better
         }
 
         // Get an average drag for the whole vessel. Far from precise but fast.
@@ -470,7 +467,7 @@ namespace MuMech
                 for (int f = 0; f < 6; f++)
                 {
                     partAreaDrag = p.DragCubes.WeightedDrag[f] *
-                                   p.DragCubes.AreaOccluded[f]; // * PhysicsGlobals.DragCurveValue(0.5, machNumber) but I ll assume it is 1 for now
+                        p.DragCubes.AreaOccluded[f]; // * PhysicsGlobals.DragCurveValue(0.5, machNumber) but I ll assume it is 1 for now
                 }
 
                 dragCoef += partAreaDrag / 6;
@@ -535,7 +532,7 @@ namespace MuMech
 
             string retVal = Localizer.Format("#MechJeb_ChuteMultiplier", _parachutePlan.Multiplier.ToString("F7")); //"'Chute Multiplier: " +
             retVal += Localizer.Format("#MechJeb_MultiplierQuality",
-                _parachutePlan.MultiplierQuality.ToString("F1"));                                         //"\nMultiplier Quality: " +  + "%"
+                _parachutePlan.MultiplierQuality.ToString("F1")); //"\nMultiplier Quality: " +  + "%"
             retVal += Localizer.Format("#MechJeb_Usingpredictions", _parachutePlan.MultiplierDataAmount); //"\nUsing " +  + " predictions"
 
             return retVal;
@@ -559,8 +556,8 @@ namespace MuMech
         public SafeDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
             _terrainRadius = terrainRadius;
-            _g             = g;
-            _thrust        = thrust;
+            _g = g;
+            _thrust = thrust;
         }
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
@@ -579,8 +576,8 @@ namespace MuMech
         public PoweredCoastDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
             _terrainRadius = (float)terrainRadius;
-            _g             = (float)g;
-            _thrust        = (float)thrust;
+            _g = (float)g;
+            _thrust = (float)thrust;
         }
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
@@ -605,8 +602,8 @@ namespace MuMech
         public GravityTurnDescentSpeedPolicy(double terrainRadius, double g, double thrust)
         {
             _terrainRadius = terrainRadius;
-            _g             = g;
-            _thrust        = thrust;
+            _g = g;
+            _thrust = thrust;
         }
 
         public double MaxAllowedSpeed(Vector3d pos, Vector3d vel)
@@ -621,7 +618,7 @@ namespace MuMech
             {
                 double test = (upperBound + lowerBound) / 2;
                 if (GravityTurnFallDistance(pos, test * vel.normalized) < maxFallDistance) lowerBound = test;
-                else upperBound                                                                       = test;
+                else upperBound = test;
             }
 
             return 0.95 * ((upperBound + lowerBound) / 2);
@@ -639,7 +636,7 @@ namespace MuMech
                 double dt = 1.0 / (STEPS - i) * (v.magnitude / _thrust);
                 Vector3d newV = v + dt * (thrustVec + gVec);
                 x += dt * (v + newV) / 2;
-                v =  newV;
+                v = newV;
             }
 
             double endRadius = x.magnitude;
@@ -662,12 +659,12 @@ namespace MuMech
         //  store the last error result so that we can check if any new error result is actually a new one, or the same one again.
         private ReentrySimulation.Result _lastErrorResult;
 
-        private readonly CelestialBody                 _body;
+        private readonly CelestialBody _body;
         private readonly MechJebModuleLandingAutopilot _autoPilot;
-        private          bool                          _parachutePresent;
-        private          double                        _maxSemiDeployHeight;
-        private          double                        _minSemiDeployHeight;
-        private          double                        _maxMultiplier;
+        private bool _parachutePresent;
+        private double _maxSemiDeployHeight;
+        private double _minSemiDeployHeight;
+        private double _maxMultiplier;
 
         // This is the correlation coefficient of the dataset, and is used to tell if the data set is providing helpful information or not.
         // It is exposed outside the class as a "quality percentage" where -1 -> 100% and 0 or more -> 0%
@@ -834,18 +831,18 @@ namespace MuMech
     {
         private readonly double[] _x;
         private readonly double[] _y;
-        private readonly int      _maxDataPoints;
-        private          int      _currentDataPoint;
-        private          double   _sumX;
-        private          double   _sumY;
-        private          double   _sumXx;
-        private          double   _sumXY;
-        private          double   _sumYy;
+        private readonly int _maxDataPoints;
+        private int _currentDataPoint;
+        private double _sumX;
+        private double _sumY;
+        private double _sumXx;
+        private double _sumXY;
+        private double _sumYy;
 
         public LinearRegression(int maxDataPoints)
         {
-            _maxDataPoints    = maxDataPoints;
-            DataSetSize       = 0;
+            _maxDataPoints = maxDataPoints;
+            DataSetSize = 0;
             _currentDataPoint = -1;
 
             _x = new double[maxDataPoints];
@@ -874,8 +871,8 @@ namespace MuMech
             _y[_currentDataPoint] = y;
 
             // Calculate the new totals
-            _sumX  = 0;
-            _sumY  = 0;
+            _sumX = 0;
+            _sumY = 0;
             _sumXx = 0;
             _sumXY = 0;
             _sumYy = 0;
@@ -885,9 +882,9 @@ namespace MuMech
                 double thisx = _x[i];
                 double thisy = _y[i];
 
-                _sumX  += thisx;
+                _sumX += thisx;
                 _sumXx += thisx * thisx;
-                _sumY  += thisy;
+                _sumY += thisy;
                 _sumYy += thisy * thisy;
                 _sumXY += thisx * thisy;
             }

@@ -6,8 +6,8 @@ namespace MuMech
     public class SimulatedVessel
     {
         public readonly List<SimulatedPart> parts = new List<SimulatedPart>();
-        private         int                 count;
-        public          double              totalMass;
+        private int count;
+        public double totalMass;
 
         private ReentrySimulation.SimCurves simCurves;
 
@@ -53,7 +53,7 @@ namespace MuMech
                     var mp = oParts[i].Modules[j] as ModuleParachute;
                     if (mp != null && v.mainBody.atmosphere)
                     {
-                        special       = true;
+                        special = true;
                         simulatedPart = SimulatedParachute.Borrow(mp, simCurves, startTime, limitChutesStage);
                     }
                 }

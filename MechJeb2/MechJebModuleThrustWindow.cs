@@ -7,7 +7,8 @@ namespace MuMech
 {
     public class MechJebModuleThrustWindow : DisplayModule
     {
-        [Persistent(pass = (int)Pass.LOCAL)] public bool autostageSavedState;
+        [Persistent(pass = (int)Pass.LOCAL)]
+        public bool autostageSavedState;
 
         public MechJebModuleThrustWindow(MechJebCore core) : base(core) { }
 

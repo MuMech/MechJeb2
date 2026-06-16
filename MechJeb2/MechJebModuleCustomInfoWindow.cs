@@ -22,8 +22,7 @@ namespace MuMech
         [Persistent(collectionIndex = "InfoItem", pass = (int)Pass.GLOBAL)]
         public List<InfoItem> items = new List<InfoItem>();
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool isCompact;
 
         public bool IsCompact
@@ -47,7 +46,7 @@ namespace MuMech
         private GUISkin localSkin;
 
         private TimeSpan refreshInterval = TimeSpan.FromSeconds(0.1);
-        private DateTime lastRefresh     = DateTime.MinValue;
+        private DateTime lastRefresh = DateTime.MinValue;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt refreshRate = 10;
@@ -114,7 +113,7 @@ namespace MuMech
 
             if (items.Count == 0)
                 GUILayout.Label(CachedLocalizer.Instance
-                                               .MechJebWindowEdCustomInfoWindowLabel1); //Add items to this window with the custom window editor.
+                   .MechJebWindowEdCustomInfoWindowLabel1); //Add items to this window with the custom window editor.
 
             RefreshRateGUI();
 
@@ -201,7 +200,7 @@ namespace MuMech
 
             for (int i = 3; i < lines.Length; i++)
             {
-                string   id    = lines[i].Trim();
+                string id = lines[i].Trim();
                 InfoItem match = registry.FirstOrDefault(item => item.id == id);
                 if (match != null) items.Add(match);
             }
@@ -216,19 +215,17 @@ namespace MuMech
 
     public class MechJebModuleCustomWindowEditor : DisplayModule
     {
-        public readonly List<InfoItem>                registry = new List<InfoItem>();
-        public          MechJebModuleCustomInfoWindow editedWindow;
-        private         int                           selectedItemIndex = -1;
+        public readonly List<InfoItem> registry = new List<InfoItem>();
+        public MechJebModuleCustomInfoWindow editedWindow;
+        private int selectedItemIndex = -1;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public InfoItem.Category itemCategory = InfoItem.Category.Orbit;
 
         // Bump this in order to invalidate all custom windows and force re-creating them for all users.
         private const int CUSTOM_WINDOWS_VERSION = 2;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public int CustomWindowsVersion = -1;
 
         // Set during OnLoad when customWindowsVersion is stale; read by MechJebCore.OnLoad to
@@ -236,15 +233,15 @@ namespace MuMech
         public bool RegenerateDefaultWindows { get; private set; }
 
         private static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
-        private                 int      presetIndex;
+        private int presetIndex;
 
         private bool editingBackground;
         private bool editingText;
 
-        private readonly Stopwatch _valueInfoItemStopwatch    = new Stopwatch();
-        private readonly Stopwatch _actionInfoItemStopwatch   = new Stopwatch();
-        private readonly Stopwatch _toggleInfoItemStopwatch   = new Stopwatch();
-        private readonly Stopwatch _generalInfoItemStopwatch  = new Stopwatch();
+        private readonly Stopwatch _valueInfoItemStopwatch = new Stopwatch();
+        private readonly Stopwatch _actionInfoItemStopwatch = new Stopwatch();
+        private readonly Stopwatch _toggleInfoItemStopwatch = new Stopwatch();
+        private readonly Stopwatch _generalInfoItemStopwatch = new Stopwatch();
         private readonly Stopwatch _editableInfoItemStopwatch = new Stopwatch();
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -254,7 +251,7 @@ namespace MuMech
             base.OnLoad(local, type, global);
 
             registry.Clear();
-            editedWindow             = null;
+            editedWindow = null;
             RegenerateDefaultWindows = false;
 
             _valueInfoItemStopwatch.Reset();
@@ -287,7 +284,7 @@ namespace MuMech
             // bumped version is actually persisted.
             if (!global.HasValue("customWindowsVersion") || CustomWindowsVersion < CUSTOM_WINDOWS_VERSION)
             {
-                CustomWindowsVersion     = CUSTOM_WINDOWS_VERSION;
+                CustomWindowsVersion = CUSTOM_WINDOWS_VERSION;
                 RegenerateDefaultWindows = true;
                 Profiler.EndSample();
                 return;
@@ -346,11 +343,11 @@ namespace MuMech
 
                 if (windowNode.HasNode("items"))
                 {
-                    ConfigNode   itemCollection = windowNode.GetNode("items");
-                    ConfigNode[] itemNodes      = itemCollection.GetNodes("InfoItem");
+                    ConfigNode itemCollection = windowNode.GetNode("items");
+                    ConfigNode[] itemNodes = itemCollection.GetNodes("InfoItem");
                     foreach (ConfigNode itemNode in itemNodes)
                     {
-                        string   id    = itemNode.GetValue("id");
+                        string id = itemNode.GetValue("id");
                         InfoItem match = registry.FirstOrDefault(item => item.id == id);
                         if (match != null) window.items.Add(match);
                     }
@@ -377,8 +374,8 @@ namespace MuMech
 
             foreach (MechJebModuleCustomInfoWindow window in Core.GetComputerModules<MechJebModuleCustomInfoWindow>())
             {
-                string name       = typeof(MechJebModuleCustomInfoWindow).Name;
-                var    windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.GLOBAL, null);
+                string name = typeof(MechJebModuleCustomInfoWindow).Name;
+                var windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.GLOBAL, null);
 
                 if (HighLogic.LoadedSceneIsEditor)
                     window.EnabledEditor = window.Enabled;
@@ -544,7 +541,7 @@ namespace MuMech
             else
             {
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button1"))) AddNewWindow();        //New window
+                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button1"))) AddNewWindow(); //New window
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button2"))) RemoveCurrentWindow(); //Delete window
                 GUILayout.EndHorizontal();
             }
@@ -572,14 +569,14 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label1")); //Show in:
                 editedWindow.ShowInFlight =
-                    GUILayout.Toggle(editedWindow.ShowInFlight, Localizer.Format("#MechJeb_WindowEd_checkbox1"), GuiUtils.LayoutWidth(60));    //Flight
+                    GUILayout.Toggle(editedWindow.ShowInFlight, Localizer.Format("#MechJeb_WindowEd_checkbox1"), GuiUtils.LayoutWidth(60)); //Flight
                 editedWindow.ShowInEditor = GUILayout.Toggle(editedWindow.ShowInEditor, Localizer.Format("#MechJeb_WindowEd_checkbox2")); //Editor
                 GUILayout.EndHorizontal();
 
 
                 GUILayout.BeginHorizontal();
                 editedWindow.IsOverlay = GUILayout.Toggle(editedWindow.IsOverlay, Localizer.Format("#MechJeb_WindowEd_checkbox3")); //Overlay
-                editedWindow.Locked = GUILayout.Toggle(editedWindow.Locked, Localizer.Format("#MechJeb_WindowEd_checkbox4"));       //Locked
+                editedWindow.Locked = GUILayout.Toggle(editedWindow.Locked, Localizer.Format("#MechJeb_WindowEd_checkbox4")); //Locked
                 editedWindow.IsCompact = GUILayout.Toggle(editedWindow.IsCompact, Localizer.Format("#MechJeb_WindowEd_checkbox5")); //Compact
                 GUILayout.EndHorizontal();
 
@@ -618,7 +615,7 @@ namespace MuMech
                 if (!(selectedItemIndex >= 0 && selectedItemIndex < editedWindow.items.Count)) selectedItemIndex = -1;
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button3")) && selectedItemIndex != -1)
-                    editedWindow.items.RemoveAt(selectedItemIndex);                                             //Remove
+                    editedWindow.items.RemoveAt(selectedItemIndex); //Remove
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button4")) && selectedItemIndex != -1) //"Move up"
                 {
                     if (selectedItemIndex > 0)
@@ -734,8 +731,8 @@ namespace MuMech
         public readonly string localizedName;
         public readonly string localizedTooltip;
         public readonly string description;
-        public readonly bool   showInEditor;
-        public readonly bool   showInFlight;
+        public readonly bool showInEditor;
+        public readonly bool showInFlight;
 
         public enum Category
         {
@@ -777,23 +774,23 @@ namespace MuMech
     {
         private readonly string units;
         private readonly string format;
-        private readonly float  width;
-        public const     string SI       = "SI";
-        public const     string TIME     = "TIME";
-        public const     string ANGLE    = "ANGLE";
-        public const     string ANGLE_NS = "ANGLE_NS";
-        public const     string ANGLE_EW = "ANGLE_EW";
-        private readonly int    siSigFigs;         //only used with the "SI" format
-        private readonly int    siMaxPrecision;    //only used with the "SI" format
-        private readonly int    timeDecimalPlaces; //only used with the "TIME" format
+        private readonly float width;
+        public const string SI = "SI";
+        public const string TIME = "TIME";
+        public const string ANGLE = "ANGLE";
+        public const string ANGLE_NS = "ANGLE_NS";
+        public const string ANGLE_EW = "ANGLE_EW";
+        private readonly int siSigFigs; //only used with the "SI" format
+        private readonly int siMaxPrecision; //only used with the "SI" format
+        private readonly int timeDecimalPlaces; //only used with the "TIME" format
 
-        private readonly        Func<object, object>                         getValue;
+        private readonly Func<object, object> getValue;
         private static readonly Dictionary<MemberInfo, Func<object, object>> _getterCache = new Dictionary<MemberInfo, Func<object, object>>();
-        private readonly        object                                       _obj;
+        private readonly object _obj;
 
         private string stringValue;
-        private int    cacheValidity = -1;
-        public  bool   externalRefresh;
+        private int cacheValidity = -1;
+        public bool externalRefresh;
 
         private readonly GUILayoutOption[] _widthOption;
         private readonly GUIContent _labelContent;
@@ -830,8 +827,8 @@ namespace MuMech
         {
             Profiler.BeginSample("ValueInfoItem.CompileAccessor");
 
-            Type objType       = obj.GetType();
-            var  dynamicMethod = new DynamicMethod("GetMemberValue", typeof(object), new[] { typeof(object) }, objType, true);
+            Type objType = obj.GetType();
+            var dynamicMethod = new DynamicMethod("GetMemberValue", typeof(object), new[] { typeof(object) }, objType, true);
 
             ILGenerator il = dynamicMethod.GetILGenerator();
 
@@ -932,7 +929,7 @@ namespace MuMech
 
     public class ActionInfoItem : InfoItem
     {
-        private readonly Action     action;
+        private readonly Action action;
         private readonly GUIContent _labelContent;
 
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
@@ -957,7 +954,7 @@ namespace MuMech
 
     public class ToggleInfoItem : InfoItem
     {
-        private readonly object     obj;
+        private readonly object obj;
         private readonly MemberInfo member;
         private readonly GUIContent _labelContent;
 
@@ -1021,10 +1018,10 @@ namespace MuMech
 
     public class EditableInfoItem : InfoItem
     {
-        public readonly  string     rightLabel;
-        public readonly  float      width;
-        public readonly  bool       expandWidth;
-        private readonly IEditable  val;
+        public readonly string rightLabel;
+        public readonly float width;
+        public readonly bool expandWidth;
+        private readonly IEditable val;
         private readonly GUIContent _labelContent;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
@@ -1058,12 +1055,12 @@ namespace MuMech
     [MeansImplicitUse]
     public abstract class InfoItemAttribute : Attribute
     {
-        public readonly string            name; //the name displayed in the info window
-        public          InfoItem.Category category;
-        public          string            description  = ""; //the description shown in the window editor list
-        public          string            tooltip      = ""; //localization key for the hover tooltip on the live item (empty = no tooltip)
-        public          bool              showInEditor = false;
-        public          bool              showInFlight = true;
+        public readonly string name; //the name displayed in the info window
+        public InfoItem.Category category;
+        public string description = ""; //the description shown in the window editor list
+        public string tooltip = ""; //localization key for the hover tooltip on the live item (empty = no tooltip)
+        public bool showInEditor = false;
+        public bool showInFlight = true;
 
         public InfoItemAttribute(string name, InfoItem.Category category)
         {
@@ -1077,12 +1074,12 @@ namespace MuMech
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
     public class ValueInfoItemAttribute : InfoItemAttribute
     {
-        public          string units             = "";
-        public          string format            = "";
-        public          int    siSigFigs         = 4;
-        public readonly int    siMaxPrecision    = -33;
-        public          int    timeDecimalPlaces = 0;
-        public          float  width             = -1;
+        public string units = "";
+        public string format = "";
+        public int siSigFigs = 4;
+        public readonly int siMaxPrecision = -33;
+        public int timeDecimalPlaces = 0;
+        public float width = -1;
 
         public ValueInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
@@ -1113,9 +1110,9 @@ namespace MuMech
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class EditableInfoItemAttribute : InfoItemAttribute
     {
-        public string rightLabel  = "";
-        public float  width       = 100;
-        public bool   expandWidth = false;
+        public string rightLabel = "";
+        public float width = 100;
+        public bool expandWidth = false;
 
         public EditableInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }

@@ -10,7 +10,7 @@ namespace MuMech
     public class OperationLongitude : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_la_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.PERIAPSIS };
 

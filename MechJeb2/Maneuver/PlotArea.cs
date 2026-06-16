@@ -27,11 +27,11 @@ namespace MuMech
 
         public PlotArea(double minx, double maxx, double miny, double maxy, Texture2D texture, AreaChanged callback)
         {
-            _minx     = minx;
-            _maxx     = maxx;
-            _miny     = miny;
-            _maxy     = maxy;
-            _texture  = texture;
+            _minx = minx;
+            _maxx = maxx;
+            _miny = miny;
+            _maxy = maxy;
+            _texture = texture;
             _callback = callback;
         }
 
@@ -107,7 +107,7 @@ namespace MuMech
                     case EventType.MouseDown:
                         if (Event.current.button == 0)
                         {
-                            _mouseDown    = true;
+                            _mouseDown = true;
                             SelectedPoint = HoveredPoint;
                         }
 

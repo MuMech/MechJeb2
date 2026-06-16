@@ -71,20 +71,20 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_HoverslamTerrainAltitude", InfoItem.Category.Hoverslam, format = "F1", units = "m", tooltip = "#MechJeb_HoverslamTerrainAltitude_tooltip")] //Terrain altitude
         public double TerrainAltitude;
 
-        [ToggleInfoItem("#MechJeb_HoverslamMapLandingPrediction", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamMapLandingPrediction_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Map landing prediction
+        [ToggleInfoItem("#MechJeb_HoverslamMapLandingPrediction", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamMapLandingPrediction_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+         //Map landing prediction
         public bool MapLandingPrediction = true;
 
-        [EditableInfoItem("#MechJeb_HoverslamSimRecalcInterval", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamSimRecalcInterval_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Simulation recalc interval
+        [EditableInfoItem("#MechJeb_HoverslamSimRecalcInterval", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamSimRecalcInterval_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+         //Simulation recalc interval
         public readonly EditableDouble SimRecalcInterval = new EditableDouble(1.0);
 
-        [EditableInfoItem("#MechJeb_HoverslamVerticalAuthority", InfoItem.Category.Hoverslam, width = 50, rightLabel = "%", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAuthority_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Vertical phase authority
+        [EditableInfoItem("#MechJeb_HoverslamVerticalAuthority", InfoItem.Category.Hoverslam, width = 50, rightLabel = "%", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAuthority_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+         //Vertical phase authority
         public readonly EditableDoubleMult VerticalAuthority = new EditableDoubleMult(0.5, 0.01);
 
-        [EditableInfoItem("#MechJeb_HoverslamVerticalAltitude", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAltitude_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Vertical phase altitude
+        [EditableInfoItem("#MechJeb_HoverslamVerticalAltitude", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAltitude_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+         //Vertical phase altitude
         public readonly EditableDouble VerticalAltitude = new EditableDouble(100);
 
         // TODO: VerticalAuthority needs better integration with the prediction.

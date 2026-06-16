@@ -32,8 +32,7 @@ namespace MechJebLibTest.ManeuversTests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void NextManeuverToReturnFromMoonRandomTest(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
@@ -51,7 +50,7 @@ namespace MechJebLibTest.ManeuversTests
             var moonV0 = new V3(577.012296778094, 761.848508254181, 297.464594270612);
             const double MOON_SOI = 66167158.6569544;
             const double MOON_SURFACE = 3474 * 1000; // 3,474 km
-            const double PER = 6.3781e6 + 60000;     // PeA = 60 km
+            const double PER = 6.3781e6 + 60000; // PeA = 60 km
             double incT = TAU * rng.NextDouble() - PI;
 
             // FIXME: weakly bound orbits give the algorithm problems.

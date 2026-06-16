@@ -16,20 +16,19 @@ namespace MuMech
         [ActionInfoItem("#MechJeb_HoverslamEngage", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamEngage_tooltip")] //Engage hoverslam
         public void ToggleEnabled() => Enabled = !Enabled;
 
-        [EditableInfoItem("#MechJeb_HoverslamIgnitionLead", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamIgnitionLead_tooltip")] //Ignition lead
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+        [EditableInfoItem("#MechJeb_HoverslamIgnitionLead", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamIgnitionLead_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Ignition lead
         public readonly EditableDouble IgnitionLead = new EditableDouble(0.0);
 
-        [EditableInfoItem("#MechJeb_HoverslamTouchdownSpeed", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m/s", expandWidth = true, tooltip = "#MechJeb_HoverslamTouchdownSpeed_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Touchdown speed
+        [EditableInfoItem("#MechJeb_HoverslamTouchdownSpeed", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m/s", expandWidth = true, tooltip = "#MechJeb_HoverslamTouchdownSpeed_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+        //Touchdown speed
         public readonly EditableDouble TouchdownSpeed = new EditableDouble(0);
 
-        [ToggleInfoItem("#MechJeb_HoverslamAutoWarp", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamAutoWarp_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Hoverslam auto-warp
+        [ToggleInfoItem("#MechJeb_HoverslamAutoWarp", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamAutoWarp_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+        //Hoverslam auto-warp
         public bool AutoWarp = true;
 
-        [ToggleInfoItem("#MechJeb_HoverslamHoldUpright", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamHoldUpright_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Hold upright after touchdown
+        [ToggleInfoItem("#MechJeb_HoverslamHoldUpright", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamHoldUpright_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+        //Hold upright after touchdown
         public bool HoldUpright;
 
         [ValueInfoItem("#MechJeb_HoverslamState", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamState_tooltip")] //Hoverslam state
@@ -37,8 +36,8 @@ namespace MuMech
 
         private const double DEFAULT_MIN_ON_TIME = 0.50;
 
-        [EditableInfoItem("#MechJeb_HoverslamPWMPulseWidth", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamPWMTimeWidth_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //PWM time width
+        [EditableInfoItem("#MechJeb_HoverslamPWMPulseWidth", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamPWMTimeWidth_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+        //PWM time width
         public readonly EditableDouble PWMPulseWidth = new EditableDouble(DEFAULT_MIN_ON_TIME);
 
         protected override void OnModuleEnabled()

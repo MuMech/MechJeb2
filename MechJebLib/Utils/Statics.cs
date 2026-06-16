@@ -545,7 +545,7 @@ namespace MechJebLib.Utils
             int exponent = (int)Floor(Log10(Abs(d) + offset));
 
             int index = d != 0 ? (int)Abs(Floor(exponent / 3.0)) : 0; // index of the SI prefix
-            if (index > 10) index = 10;                               // there's only 10 SI prefixes
+            if (index > 10) index = 10; // there's only 10 SI prefixes
 
             int siExponent = Sign(exponent) * index * 3; // the SI prefix exponent
 
@@ -569,8 +569,7 @@ namespace MechJebLib.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Print(string message) => Logger.Print(message);
 
-        [Conditional("DEBUG")]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Conditional("DEBUG"), MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void DebugPrint(string message) => Logger.Print(message);
 
         public static void CopyFrom(this double[] dest, double[] source)

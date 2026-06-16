@@ -198,7 +198,7 @@ namespace MechJebLibTest.MathsTests
             // elliptical orbit, distance well within the first arc
             const double distance = 100e+3;
             (V3 r, V3 v) = Astro.StateVectorsAtDistance(mu, r0, v0, distance);
-            Assert.Equal(1.0, (r - r0).magnitude / distance, 9);             // chord matches
+            Assert.Equal(1.0, (r - r0).magnitude / distance, 9); // chord matches
             Assert.Equal(1.0, Astro.SmaFromStateVectors(mu, r, v) / sma, 9); // still on the same orbit
 
             // circular orbit (mu = 1)
