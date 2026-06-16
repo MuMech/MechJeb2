@@ -224,6 +224,17 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public InfoItem.Category itemCategory = InfoItem.Category.Orbit;
 
+        // Bump this in order to invalidate all custom windows and force re-creating them for all users.
+        private const int CUSTOM_WINDOWS_VERSION = 2;
+
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int CustomWindowsVersion = -1;
+
+        // Set during OnLoad when customWindowsVersion is stale; read by MechJebCore.OnLoad to
+        // regenerate the default windows after every module has finished loading.
+        public bool RegenerateDefaultWindows { get; private set; }
+
         private static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
         private                 int      presetIndex;
 
@@ -243,7 +254,8 @@ namespace MuMech
             base.OnLoad(local, type, global);
 
             registry.Clear();
-            editedWindow = null;
+            editedWindow             = null;
+            RegenerateDefaultWindows = false;
 
             _valueInfoItemStopwatch.Reset();
             _actionInfoItemStopwatch.Reset();
@@ -263,6 +275,23 @@ namespace MuMech
             Print($"Registered {registry.Count} info items:  value:{_valueInfoItemStopwatch.ElapsedMilliseconds} ms action:{_actionInfoItemStopwatch.ElapsedMilliseconds} ms  toggle:{_toggleInfoItemStopwatch.ElapsedMilliseconds} ms  general:{_generalInfoItemStopwatch.ElapsedMilliseconds} ms  editable:{_editableInfoItemStopwatch.ElapsedMilliseconds} ms  total:{sw.ElapsedMilliseconds} ms");
 
             if (global == null) return;
+
+            // Saved windows reference info-item ids from an older MechJeb; drop them and let
+            // MechJebCore regenerate the default windows instead of loading orphaned ones.
+            //
+            // OnLoad runs several times per session (prefab pass, then editor/flight) and only the
+            // editor/flight pass writes the global file. base.OnLoad leaves customWindowsVersion at
+            // its previous in-memory value when the key is absent from the config, so a bump made in
+            // an earlier non-saving pass would otherwise suppress the regen in the pass that saves.
+            // Decide staleness from the key's presence on disk so we keep regenerating until the
+            // bumped version is actually persisted.
+            if (!global.HasValue("customWindowsVersion") || CustomWindowsVersion < CUSTOM_WINDOWS_VERSION)
+            {
+                CustomWindowsVersion     = CUSTOM_WINDOWS_VERSION;
+                RegenerateDefaultWindows = true;
+                Profiler.EndSample();
+                return;
+            }
 
             //Load custom info windows, which are stored in our ConfigNode:
             ConfigNode[] windowNodes = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
