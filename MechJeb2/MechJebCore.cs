@@ -897,9 +897,10 @@ namespace MuMech
 
                 LoadDelayedModules();
 
-                if (generateDefaultWindows)
+                MechJebModuleCustomWindowEditor windowEditor = GetComputerModule<MechJebModuleCustomWindowEditor>();
+                if (generateDefaultWindows || windowEditor.RegenerateDefaultWindows)
                 {
-                    GetComputerModule<MechJebModuleCustomWindowEditor>().AddDefaultWindows();
+                    windowEditor.AddDefaultWindows();
                 }
             }
             catch (ReflectionTypeLoadException ex)
