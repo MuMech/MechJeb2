@@ -120,7 +120,7 @@ namespace MuMech
             if (autopilot.Enabled)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label9", autopilot.status)); //"Status: <<1>>"
-                Vector3d error = Core.RCS.targetVelocity - VesselState.orbitalVelocity;
+                Vector3d error = Core.RCS.targetVelocity - VesselState.OrbitalVelocity;
                 double error_x = Vector3d.Dot(error, Vessel.GetTransform().right);
                 double error_y = Vector3d.Dot(error, Vessel.GetTransform().forward);
                 double error_z = Vector3d.Dot(error, Vessel.GetTransform().up);

@@ -183,7 +183,7 @@ namespace MuMech
                     // Removed the gravity since it also affect the target and we don't know the target pos here.
                     // Since the difference is negligable for docking it's removed
                     // TODO : add it back once we use the RCS Controler for other use than docking. Account for current acceleration beside gravity ?
-                    worldVelocityDelta = VesselState.orbitalVelocity - targetVelocity;
+                    worldVelocityDelta = VesselState.OrbitalVelocity - targetVelocity;
                     //worldVelocityDelta += TimeWarp.fixedDeltaTime * vesselState.gravityForce; //account for one frame's worth of gravity
                     //worldVelocityDelta -= TimeWarp.fixedDeltaTime * gravityForce = FlightGlobals.getGeeForceAtPosition(  Here be the target position  ); ; //account for one frame's worth of gravity
                     break;
@@ -219,10 +219,10 @@ namespace MuMech
                 {
                     Vector6.Direction dir = Vector6.Values[i];
                     double dirDv = Vector3d.Dot(velocityDelta, Vector6.Directions[(int)dir]);
-                    double dirAvail = VesselState.rcsThrustAvailable[dir];
+                    double dirAvail = VesselState.RCSThrustAvailable[dir];
                     if (dirAvail > 0 && Math.Abs(dirDv) > 0.001)
                     {
-                        double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / VesselState.mass);
+                        double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / VesselState.Mass);
                         if (dirAction > 0)
                         {
                             rcs += Vector6.Directions[(int)dir] * dirAction;
@@ -235,7 +235,7 @@ namespace MuMech
                 switch (controlType)
                 {
                     case ControlType.TARGET_VELOCITY:
-                        omega = Quaternion.Inverse(Vessel.GetTransform().rotation) * (Vessel.acceleration - VesselState.gravityForce);
+                        omega = Quaternion.Inverse(Vessel.GetTransform().rotation) * (Vessel.acceleration - VesselState.GravityForce);
                         break;
 
                     case ControlType.VELOCITY_TARGET_REL:

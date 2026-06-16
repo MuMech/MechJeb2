@@ -56,7 +56,7 @@ namespace MuMech
             _operationId = GuiUtils.ComboBox.Box(_operationId, _operationNames, this);
 
             // Compute orbit and universal time parameters for next maneuver
-            double UT = VesselState.time;
+            double UT = VesselState.Time;
             Orbit  o  = Orbit;
             if (anyNodeExists)
             {

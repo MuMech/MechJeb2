@@ -121,8 +121,8 @@ namespace MuMech
         private double MaxSpeedForDistance(double distance, Vector3d axis)
         {
             Vector3d localAxis = Vessel.ReferenceTransform.InverseTransformDirection(axis);
-            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * VesselState.rcsThrustAvailable.GetMagnitude(localAxis) * Core.RCS.rcsAccelFactor() /
-                                      VesselState.mass));
+            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * VesselState.RCSThrustAvailable.GetMagnitude(localAxis) * Core.RCS.rcsAccelFactor() /
+                                      VesselState.Mass));
         }
 
         public override void Drive(FlightCtrlState s)

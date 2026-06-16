@@ -270,7 +270,7 @@ namespace MuMech
 
             var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, patch.StartUT, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1);
             var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
-                VesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
+                VesselState.LimitedMaxThrustAcceleration, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
                 Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
@@ -427,7 +427,7 @@ namespace MuMech
                 //Remove node after finishing aerobraking:
                 if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
-                    if (aerobrakeNode.UT < VesselState.time && VesselState.altitudeASL > MainBody.RealMaxAtmosphereAltitude())
+                    if (aerobrakeNode.UT < VesselState.Time && VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
                     {
                         aerobrakeNode.RemoveSelf();
                         aerobrakeNode = null;
@@ -444,9 +444,9 @@ namespace MuMech
                     //Put the node at periapsis, unless we're past periapsis. In that case put the node at the current time.
                     double UT;
                     if (preAerobrakeOrbit == Orbit &&
-                        VesselState.altitudeASL < MainBody.RealMaxAtmosphereAltitude() && VesselState.speedVertical > 0)
+                        VesselState.AltitudeASL < MainBody.RealMaxAtmosphereAltitude() && VesselState.SpeedVertical > 0)
                     {
-                        UT = VesselState.time;
+                        UT = VesselState.Time;
                     }
                     else
                     {

@@ -130,14 +130,14 @@ namespace MuMech
                 return;
             }
 
-            if (VesselState.altitudeBottom > AscentSettings.PitchStartHeight)
+            if (VesselState.AltitudeBottom > AscentSettings.PitchStartHeight)
             {
                 _mode           = AscentMode.PITCHPROGRAM;
                 _pitchStartTime = MET;
                 return;
             }
 
-            double dh = AscentSettings.PitchStartHeight - VesselState.altitudeBottom;
+            double dh = AscentSettings.PitchStartHeight - VesselState.AltitudeBottom;
             Status = $"Vertical ascent {dh:F2}m to go";
         }
 
@@ -148,7 +148,7 @@ namespace MuMech
             double pitch = 90 - theta;
 
             // we need to initiate by at least 3 degrees, then transition to zerolift when srfvel catches up
-            if (VesselState.currentPitch > SrfvelPitch() && VesselState.currentPitch < 87)
+            if (VesselState.Pitch > SrfvelPitch() && VesselState.Heading < 87)
             {
                 _mode = AscentMode.ZEROLIFT;
                 return;
@@ -199,13 +199,13 @@ namespace MuMech
 
             if (!Core.Guidance.IsStable())
             {
-                double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.vesselPitch);
+                double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.Pitch);
                 AttitudeTo(pitch, SrfvelHeading());
                 Status = Localizer.Format("#MechJeb_Ascent_status16"); //"WARNING: Unstable Guidance"
             }
             else
             {
-                double ang = Vector3d.Angle(Core.Guidance.Inertial, VesselState.forward);
+                double ang = Vector3d.Angle(Core.Guidance.Inertial, VesselState.Forward);
                 // FIXME: should be able to set status color to yellow for ang > 2 and red for ang > 5 or so
                 Status = $"Stable Guidance: {ang:F}° deviation";
                 AttitudeTo(Core.Guidance.Inertial);

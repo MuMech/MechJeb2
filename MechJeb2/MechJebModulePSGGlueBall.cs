@@ -62,7 +62,7 @@ namespace MuMech
 
         public override void OnDestroy() => GameEvents.onStageActivate.Remove(HandleStageEvent);
 
-        private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
+        private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.Time + _ascentSettings.OptimizerPauseTime;
 
         private bool IsUnguided(int s) => _ascentSettings.UnguidedStages.Contains(s);
 
@@ -90,7 +90,7 @@ namespace MuMech
                 {
                     Core.Guidance.SetSolution(psg.Solution);
                     SuccessfulConverges += 1;
-                    _lastTime           =  VesselState.time;
+                    _lastTime           =  VesselState.Time;
                     Staleness           =  0;
                 }
                 else
@@ -126,9 +126,9 @@ namespace MuMech
         {
             // initialize the first time we hit SetTarget to avoid initial large staleness values
             if (_lastTime == 0)
-                _lastTime = VesselState.time;
+                _lastTime = VesselState.Time;
 
-            Staleness = VesselState.time - _lastTime;
+            Staleness = VesselState.Time - _lastTime;
 
             if (_ascent is { IsRunning: true })
                 return;
@@ -193,15 +193,15 @@ namespace MuMech
                 if (solutionIndex >= 0)
                 {
                     // check for prestaging as the current stage gets low
-                    if (Core.Guidance.Solution?.Tgo(VesselState.time, solutionIndex) < _ascentSettings.PreStageTime)
+                    if (Core.Guidance.Solution?.Tgo(VesselState.Time, solutionIndex) < _ascentSettings.PreStageTime)
                     {
-                        _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
+                        _blockOptimizerUntilTime = VesselState.Time + _ascentSettings.OptimizerPauseTime;
                         return;
                     }
                 }
             }
 
-            if (_blockOptimizerUntilTime > VesselState.time)
+            if (_blockOptimizerUntilTime > VesselState.Time)
                 return;
 
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
@@ -267,8 +267,8 @@ namespace MuMech
 
                         if (Core.Guidance.IsCoasting())
                         {
-                            maxt = Max(maxt - (VesselState.time - Core.Guidance.StartCoast), 0);
-                            mint = Max(mint - (VesselState.time - Core.Guidance.StartCoast), 0);
+                            maxt = Max(maxt - (VesselState.Time - Core.Guidance.StartCoast), 0);
+                            mint = Max(mint - (VesselState.Time - Core.Guidance.StartCoast), 0);
                         }
 
                         bool unguidedCoast = IsUnguided(kspStage);
@@ -291,7 +291,7 @@ namespace MuMech
             if (!_ascent.TryStartJob())
                 throw new Exception("[MechJebModulePSGGlueBall] could not start optimizer job");
 
-            _blockOptimizerUntilTime = VesselState.time + 1;
+            _blockOptimizerUntilTime = VesselState.Time + 1;
         }
 
         private bool IsCurrentCoastAfterStage(int kspStage)

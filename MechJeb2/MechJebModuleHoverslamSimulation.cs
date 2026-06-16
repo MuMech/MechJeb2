@@ -23,14 +23,14 @@ namespace MuMech
         {
             if (Orbit.PeA > 0 || Vessel.Landed) return "N/A";
 
-            double impactTime = VesselState.time;
+            double impactTime = VesselState.Time;
             try
             {
                 for (int iter = 0; iter < 10; iter++)
                 {
                     Vector3d impactPosition = Orbit.WorldPositionAtUT(impactTime);
                     double terrainRadius = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
-                    impactTime = Orbit.NextTimeOfRadius(VesselState.time, terrainRadius);
+                    impactTime = Orbit.NextTimeOfRadius(VesselState.Time, terrainRadius);
                 }
             }
             catch (ArgumentException)
@@ -42,7 +42,7 @@ namespace MuMech
                 return GuiUtils.TimeToDHMS(0, 1);
             }
 
-            return GuiUtils.TimeToDHMS(impactTime - VesselState.time, 1);
+            return GuiUtils.TimeToDHMS(impactTime - VesselState.Time, 1);
         }
 
         // TODO: this shows numbers like e.g. -1.2s in flight if the cycles/second is 1.0s -- not sure how to fix
@@ -108,14 +108,14 @@ namespace MuMech
         public double FinalThrustAccel;
         public double Lat;
         public double Lng;
-        public double IgnitionCountdown => IgnitionUT - VesselState.time;
-        public double LandingCountdown  => LandingUT - VesselState.time;
+        public double IgnitionCountdown => IgnitionUT - VesselState.Time;
+        public double LandingCountdown  => LandingUT - VesselState.Time;
         public double DeltaV;
         public double FinalDescentSpeed; // should be positive
         public Vector3d IgnitionAttitude;
         // ReSharper restore MemberCanBePrivate.Global
 
-        private double _lastCycleUT;
+        public double _lastCycleUT;
 
         private readonly HoverslamSimulation.HoverslamSimulationManager _manager = new HoverslamSimulation.HoverslamSimulationManager();
         private readonly HoverslamSimulation _hoverslam = new HoverslamSimulation();
@@ -198,13 +198,13 @@ namespace MuMech
         {
             double r = GetGroundRadius();
 
-            if (VesselState.mainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
+            if (VesselState.MainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
             {
                 Reset();
                 return;
             }
 
-            if (VesselState.time < _lastCycleUT + SimRecalcInterval * TimeWarp.CurrentRate)
+            if (VesselState.Time < _lastCycleUT + SimRecalcInterval * TimeWarp.CurrentRate)
                 return;
 
             Core.StageStats.RequestUpdate();
@@ -225,7 +225,7 @@ namespace MuMech
                 MainBody.GetLatLngAltAtUT(LandingUT, LandingPosition, out Lat, out Lng, out _);
                 TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, true);
                 Slope = MainBody.GetPQSSlopeDegrees(Lat, Lng);
-                DeltaV = CalculateDeltaV(LandingCountdown - (IgnitionUT < VesselState.time ? 0 : IgnitionCountdown));
+                DeltaV = CalculateDeltaV(LandingCountdown - (IgnitionUT < VesselState.Time ? 0 : IgnitionCountdown));
             }
 
             if (_hoverslam.IsFaulted && _hoverslam.ExceptionMessage != null)
@@ -291,7 +291,7 @@ namespace MuMech
             if (!_hoverslam.TryStartJob())
                 throw new Exception("[MechJebModuleHoverslamSimulation] could not start job");
 
-            _lastCycleUT = VesselState.time;
+            _lastCycleUT = VesselState.Time;
         }
     }
 }

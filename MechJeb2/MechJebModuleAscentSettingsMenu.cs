@@ -58,7 +58,7 @@ namespace MuMech
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Space(25);
-                    GUIStyle sl = _ascentSettings.LimitingAoA && VesselState.dynamicPressure < _ascentSettings.AOALimitFadeoutPressure
+                    GUIStyle sl = _ascentSettings.LimitingAoA && VesselState.DynamicPressure < _ascentSettings.AOALimitFadeoutPressure
                         ? GuiUtils.GreenLabel
                         : GuiUtils.Skin.label;
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel24, _ascentSettings.AOALimitFadeoutPressure, "Pa", 50,

@@ -121,7 +121,7 @@ namespace MuMech.AttitudeControllers
 
             _tfV = 0.05 * ratio;
 
-            Vector3d delayFactor = Vector3d.one + 2 * Ac.VesselState.torqueReactionSpeed;
+            Vector3d delayFactor = Vector3d.one + 2 * Ac.VesselState.TorqueReactionSpeed;
 
 
             _tfV.Scale(delayFactor);

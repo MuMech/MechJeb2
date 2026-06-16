@@ -37,21 +37,21 @@ namespace MuMech
                 }
 
                 // If we're off course, but already too low, skip the course correction
-                if (VesselState.altitudeASL < Core.Landing.DecelerationEndAltitude() + 5)
+                if (VesselState.AltitudeASL < Core.Landing.DecelerationEndAltitude() + 5)
                 {
                     return new DecelerationBurn(Core);
                 }
 
 
                 // If a parachute has already been deployed then we will not be able to control attitude anyway, so move back to the coast to deceleration step.
-                if (VesselState.parachuteDeployed)
+                if (VesselState.ParachuteDeployed)
                 {
                     Core.Thrust.TargetThrottle = 0;
                     return new CoastToDeceleration(Core);
                 }
 
                 // We are not in .90 anymore. Turning while under drag is a bad idea
-                if (VesselState.drag > 0.1)
+                if (VesselState.DragAcceleration > 0.1)
                 {
                     return new CoastToDeceleration(Core);
                 }

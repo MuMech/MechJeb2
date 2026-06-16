@@ -24,12 +24,12 @@ namespace MuMech
                 Vector3d currentRadialVector = Core.VesselState.CoM - Core.vessel.mainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
                 //this calculation seems like it might be be working right:
-                double timeToTarget = Orbit.TimeOfTrueAnomaly(Core.vessel.orbit.trueAnomaly * UtilMath.Rad2Deg + angleToTarget, VesselState.time) -
-                                      VesselState.time;
+                double timeToTarget = Orbit.TimeOfTrueAnomaly(Core.vessel.orbit.trueAnomaly * UtilMath.Rad2Deg + angleToTarget, VesselState.Time) -
+                                      VesselState.Time;
                 double planetRotationAngle = 360 * timeToTarget / MainBody.rotationPeriod;
                 var planetRotation = Quaternion.AngleAxis((float)planetRotationAngle, MainBody.angularVelocity);
                 Vector3d targetRadialVectorOnFlyover = planetRotation * targetRadialVector;
-                Vector3d horizontalToTarget = Vector3d.Exclude(VesselState.up, targetRadialVectorOnFlyover - currentRadialVector).normalized;
+                Vector3d horizontalToTarget = Vector3d.Exclude(VesselState.Up, targetRadialVectorOnFlyover - currentRadialVector).normalized;
                 return horizontalToTarget;
             }
 
@@ -37,7 +37,7 @@ namespace MuMech
             {
                 if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 2 )
                 {
-                    Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.maxThrustAccel))));
+                    Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.MaxThrustAcceleration))));
                 }
                 else if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
                 {
@@ -57,7 +57,7 @@ namespace MuMech
                                               MainBody.position;
                 Vector3d currentRadialVector = VesselState.CoM - MainBody.position;
                 double angleToTarget = Vector3d.Angle(targetRadialVector, currentRadialVector);
-                bool approaching = Vector3d.Dot(targetRadialVector - currentRadialVector, VesselState.orbitalVelocity) > 0;
+                bool approaching = Vector3d.Dot(targetRadialVector - currentRadialVector, VesselState.OrbitalVelocity) > 0;
 
                 if (!_planeChangeTriggered && approaching && angleToTarget > 80 && angleToTarget < 90)
                 {
@@ -68,13 +68,13 @@ namespace MuMech
                 if (_planeChangeTriggered)
                 {
                     Vector3d horizontalToTarget = ComputePlaneChange();
-                    Vector3d finalVelocity = Quaternion.FromToRotation(VesselState.horizontalOrbit, horizontalToTarget) * VesselState.orbitalVelocity;
+                    Vector3d finalVelocity = Quaternion.FromToRotation(VesselState.HorizontalOrbit, horizontalToTarget) * VesselState.OrbitalVelocity;
 
-                    Vector3d deltaV = finalVelocity - VesselState.orbitalVelocity;
+                    Vector3d deltaV = finalVelocity - VesselState.OrbitalVelocity;
                     //burn normal+ or normal- to avoid dropping the Pe:
-                    var burnDir = Vector3d.Exclude(VesselState.up, Vector3d.Exclude(VesselState.orbitalVelocity, deltaV));
-                    _planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, VesselState.orbitalVelocity) *
-                                         VesselState.speedOrbitHorizontal;
+                    var burnDir = Vector3d.Exclude(VesselState.Up, Vector3d.Exclude(VesselState.OrbitalVelocity, deltaV));
+                    _planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, VesselState.OrbitalVelocity) *
+                                         VesselState.SpeedOrbitalHorizontal;
                     Core.Attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, Core.Landing);
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status14",
                         _planeChangeDVLeft.ToString("F0")); //"Executing low orbit plane change of about " +  + " m/s"

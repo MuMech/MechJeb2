@@ -145,11 +145,11 @@ namespace MuMech
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel6, _ascentSettings.DesiredInclination, "º", 75, GuiUtils.Skin.label,
                 false);                                                                                        //Orbit inc.
             if (GUILayout.Button(new GUIContent(CachedLocalizer.Instance.MechJebAscentButton13, "Sets inclination to launch site latitude (for due-east launch). Lower inclinations require a costly plane change."), GuiUtils.ExpandWidth(false))) //Current
-                _ascentSettings.DesiredInclination.Val = Math.Round(VesselState.latitude, 3);
+                _ascentSettings.DesiredInclination.Val = Math.Round(VesselState.Latitude, 3);
             GUILayout.EndHorizontal();
 
             double inclination = Math.Abs(_ascentSettings.DesiredInclination);
-            double delta = Math.Abs(VesselState.latitude) - (inclination < 90.0 ? inclination : 180.0 - inclination);
+            double delta = Math.Abs(VesselState.Latitude) - (inclination < 90.0 ? inclination : 180.0 - inclination);
             if (2.001 < delta)
                 GUILayout.Label(Localizer.Format("#MechJeb_Ascent_label7", delta), GuiUtils.RedLabel); //inc {0:F1}º below current latitude
 
@@ -169,7 +169,7 @@ namespace MuMech
                 {
                     Solution solution = Core.Guidance.Solution;
                     for (int psgPhase = solution.Segments - 1; psgPhase >= 0; psgPhase--)
-                        GUILayout.Label($"{PhaseString(solution, VesselState.time, psgPhase)}");
+                        GUILayout.Label($"{PhaseString(solution, VesselState.Time, psgPhase)}");
                     GUILayout.Label(solution.TerminalString());
                 }
 
@@ -222,7 +222,7 @@ namespace MuMech
             if (Core.Node.Autowarp)
                 GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel33, _ascentSettings.WarpCountDown, "s", 35); //Launch countdown:
 
-            bool targetExists = Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == VesselState.mainBody;
+            bool targetExists = Core.Target.NormalTargetExists && Core.Target.TargetOrbit?.referenceBody == VesselState.MainBody;
             if (!_launchingWithAnyPlaneControl && !targetExists)
             {
                 _launchingToPlane = _launchingToMatchLan = false;
@@ -242,12 +242,12 @@ namespace MuMech
                     _launchingToPlane = true;
                     (double timeToPlane, double inclination) = Astro.MinimumTimeToPlane(
                         MainBody.rotationPeriod,
-                        VesselState.latitude,
-                        VesselState.celestialLongitude,
+                        VesselState.Latitude,
+                        VesselState.CelestialLongitude,
                         Core.Target.TargetOrbit.LAN - _ascentSettings.LaunchLANDifference,
                         Core.Target.TargetOrbit.inclination
                     );
-                    _autopilot.StartCountdown(VesselState.time + timeToPlane);
+                    _autopilot.StartCountdown(VesselState.Time + timeToPlane);
                     _ascentSettings.DesiredInclination.Val = inclination;
                 }
 
@@ -258,11 +258,11 @@ namespace MuMech
                         "º", width: LAN_WIDTH)) //Launch to target LAN
                 {
                     _launchingToMatchLan = true;
-                    _autopilot.StartCountdown(VesselState.time +
+                    _autopilot.StartCountdown(VesselState.Time +
                         Astro.TimeToPlane(
                             MainBody.rotationPeriod,
-                            VesselState.latitude,
-                            VesselState.celestialLongitude,
+                            VesselState.Latitude,
+                            VesselState.CelestialLongitude,
                             Core.Target.TargetOrbit.LAN - _ascentSettings.LaunchLANDifference,
                             _ascentSettings.DesiredInclination
                         )
@@ -276,11 +276,11 @@ namespace MuMech
                             width: LAN_WIDTH)) //Launch to LAN
                     {
                         _launchingToLan = true;
-                        _autopilot.StartCountdown(VesselState.time +
+                        _autopilot.StartCountdown(VesselState.Time +
                             Astro.TimeToPlane(
                                 MainBody.rotationPeriod,
-                                VesselState.latitude,
-                                VesselState.celestialLongitude,
+                                VesselState.Latitude,
+                                VesselState.CelestialLongitude,
                                 _ascentSettings.DesiredLan,
                                 _ascentSettings.DesiredInclination
                             )
@@ -335,7 +335,7 @@ namespace MuMech
             else if (_launchingToMatchLan) launchTimer   = CachedLocalizer.Instance.MechJebAscentLaunchingToTargetLAN; //Launching to target LAN
             else if (_launchingToLan) launchTimer        = CachedLocalizer.Instance.MechJebAscentLaunchingToManualLAN; //Launching to manual LAN
             else launchTimer                             = string.Empty;
-            if (_autopilot.TMinus > 3 * VesselState.deltaT)
+            if (_autopilot.TMinus > 3 * VesselState.DeltaT)
                 launchTimer += $": T-{GuiUtils.TimeToDHMS(_autopilot.TMinus, 1)}";
 
             autopilotStatus = CachedLocalizer.Instance.MechJebAscentLabel35 + _autopilot.Status;

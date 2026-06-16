@@ -54,7 +54,7 @@ namespace MuMech.AttitudeControllers
             {
                 _mass[i]      = _vessel.MOI[i] / _controlTorque[i];
                 _lqr[i].M     = _mass[i];
-                _lqr[i].Ts    = Ac.VesselState.deltaT;
+                _lqr[i].Ts    = Ac.VesselState.DeltaT;
                 _lqr[i].Grr   = 16;
                 _lqr[i].UMin  = -1;
                 _lqr[i].UMax  = 1;
