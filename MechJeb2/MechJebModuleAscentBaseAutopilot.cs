@@ -13,7 +13,7 @@ namespace MuMech
 
         protected MechJebModuleAscentSettings AscentSettings => Core.AscentSettings;
 
-        public  bool   TimedLaunch;
+        public bool TimedLaunch;
         private double _launchTime;
 
         public double CurrentMaxAoA;
@@ -21,7 +21,7 @@ namespace MuMech
         // useful to track time since launch event (works around bugs with physics starting early and vessel.launchTime being wildly off)
         // FIXME?: any time we lift off from a rock this should probably be set to that time?
         private double _launchStarted;
-        public  double LaunchLongitude;
+        public double LaunchLongitude;
 
         public double TMinus => _launchTime - VesselState.Time;
 
@@ -29,8 +29,8 @@ namespace MuMech
         private enum AscentMode { PRELAUNCH, ASCEND, CIRCULARIZE }
 
         private AscentMode _mode;
-        private bool       _placedCircularizeNode;
-        private double     _lastTMinus = 999;
+        private bool _placedCircularizeNode;
+        private double _lastTMinus = 999;
 
         // wiring for launchStarted
         private void OnLaunch(EventReport report)
@@ -52,7 +52,7 @@ namespace MuMech
             if (Vessel.situation == Vessel.Situations.LANDED || Vessel.situation == Vessel.Situations.PRELAUNCH ||
                 Vessel.situation == Vessel.Situations.SPLASHED)
             {
-                _launchStarted  = VesselState.Time;
+                _launchStarted = VesselState.Time;
                 LaunchLongitude = VesselState.CelestialLongitude;
             }
         }
@@ -176,7 +176,7 @@ namespace MuMech
             if (Vessel.LiftedOff() && !Vessel.Landed)
             {
                 Status = Localizer.Format("#MechJeb_Ascent_status4"); //"Vessel is not landed, skipping pre-launch"
-                _mode  = AscentMode.ASCEND;
+                _mode = AscentMode.ASCEND;
                 return;
             }
 
@@ -286,9 +286,9 @@ namespace MuMech
         protected abstract bool DriveAscent2();
 
         //data used by ThrottleToRaiseApoapsis
-        private          float         _raiseApoapsisLastThrottle;
-        private          double        _raiseApoapsisLastApR;
-        private          double        _raiseApoapsisLastUT;
+        private float _raiseApoapsisLastThrottle;
+        private double _raiseApoapsisLastApR;
+        private double _raiseApoapsisLastUT;
         private readonly MovingAverage _raiseApoapsisRatePerThrottle = new MovingAverage(3);
 
         //gives a throttle setting that reduces as we approach the desired apoapsis
@@ -306,7 +306,7 @@ namespace MuMech
                 //reduce throttle as apoapsis nears target
                 double instantRatePerThrottle =
                     (Orbit.ApR - _raiseApoapsisLastApR) / ((VesselState.Time - _raiseApoapsisLastUT) * _raiseApoapsisLastThrottle);
-                instantRatePerThrottle              = Math.Max(1.0, instantRatePerThrottle); //avoid problems from negative rates
+                instantRatePerThrottle = Math.Max(1.0, instantRatePerThrottle); //avoid problems from negative rates
                 _raiseApoapsisRatePerThrottle.Value = instantRatePerThrottle;
                 double desiredApRate = (finalApR - currentApR) / 1.0;
                 desiredThrottle = Mathf.Clamp((float)(desiredApRate / _raiseApoapsisRatePerThrottle), 0.05F, 1.0F);
@@ -318,8 +318,8 @@ namespace MuMech
 
             //record data for next frame
             _raiseApoapsisLastThrottle = desiredThrottle;
-            _raiseApoapsisLastApR      = Orbit.ApR;
-            _raiseApoapsisLastUT       = VesselState.Time;
+            _raiseApoapsisLastApR = Orbit.ApR;
+            _raiseApoapsisLastUT = VesselState.Time;
 
             return desiredThrottle;
         }
@@ -379,7 +379,7 @@ namespace MuMech
             AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
             if (AscentSettings.LimitingAoA)
             {
-                CurrentMaxAoA       = lim / VesselState.DynamicPressure * UtilMath.Rad2Deg;
+                CurrentMaxAoA = lim / VesselState.DynamicPressure * UtilMath.Rad2Deg;
                 desiredThrustVector = MathExtensions.RotateTowards(VesselState.SurfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
             }
 
@@ -389,7 +389,7 @@ namespace MuMech
         private Vector3d ApplyStockAOALimiter(Vector3d desiredThrustVector)
         {
             double fade = VesselState.DynamicPressure < AscentSettings.AOALimitFadeoutPressure ? AscentSettings.AOALimitFadeoutPressure / VesselState.DynamicPressure : 1;
-            CurrentMaxAoA              = Math.Min(fade * AscentSettings.MaxAoA, 180d);
+            CurrentMaxAoA = Math.Min(fade * AscentSettings.MaxAoA, 180d);
             AscentSettings.LimitingAoA = Vessel.altitude < MainBody.atmosphereDepth && Vector3d.Angle(VesselState.SurfaceVelocity, desiredThrustVector) > CurrentMaxAoA;
 
             if (AscentSettings.LimitingAoA)

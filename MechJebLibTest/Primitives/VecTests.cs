@@ -7,21 +7,9 @@ namespace MechJebLibTest.Primitives
 {
     public class VecTests
     {
-        [Theory]
-        [InlineData(0, 1)] // length 0 → bucket 0 → capacity 1
-        [InlineData(1, 1)]
-        [InlineData(2, 2)]
-        [InlineData(3, 4)]
-        [InlineData(4, 4)]
-        [InlineData(5, 8)]
-        [InlineData(7, 8)]
-        [InlineData(8, 8)]
-        [InlineData(9, 16)]
-        [InlineData(16, 16)]
-        [InlineData(17, 32)]
-        [InlineData(348, 512)] // ex1 z size: nxnu*(N-1) = 12*29
-        [InlineData(1024, 1024)]
-        [InlineData(1025, 2048)]
+        [Theory, InlineData(0, 1), InlineData(1, 1), InlineData(2, 2), InlineData(3, 4), InlineData(4, 4), InlineData(5, 8), InlineData(7, 8), InlineData(8, 8), InlineData(9, 16), InlineData(16, 16), InlineData(17, 32), InlineData(348, 512), InlineData(1024, 1024), InlineData(1025, 2048)]
+        // length 0 → bucket 0 → capacity 1
+        // ex1 z size: nxnu*(N-1) = 12*29
         public void Rent_GivesPowerOfTwoCapacity(int length, int expectedCapacity)
         {
             using var v = Vec.Rent(length);

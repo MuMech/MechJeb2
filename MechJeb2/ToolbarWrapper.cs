@@ -128,8 +128,8 @@ namespace MuMech
         /// <seealso cref="TexturePath" />
         string Text
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -140,8 +140,8 @@ namespace MuMech
         /// </remarks>
         Color TextColor
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -166,14 +166,14 @@ namespace MuMech
         /// <seealso cref="Text" />
         string TexturePath
         {
-            set;
             get;
+            set;
         }
 
         string BigTexturePath
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -184,8 +184,8 @@ namespace MuMech
         /// </remarks>
         string ToolTip
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -198,8 +198,8 @@ namespace MuMech
         /// </remarks>
         bool Visible
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -211,8 +211,8 @@ namespace MuMech
         /// </remarks>
         IVisibility Visibility
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -240,8 +240,8 @@ namespace MuMech
         /// </summary>
         bool Enabled
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -268,8 +268,8 @@ namespace MuMech
         /// </remarks>
         bool Important
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -278,8 +278,8 @@ namespace MuMech
         /// </summary>
         IDrawable Drawable
         {
-            set;
             get;
+            set;
         }
 
         /// <summary>
@@ -452,14 +452,14 @@ namespace MuMech
     {
         public bool Visible => (bool)visibleProperty.GetValue(realGameScenesVisibility, null);
 
-        private readonly object       realGameScenesVisibility;
+        private readonly object realGameScenesVisibility;
         private readonly PropertyInfo visibleProperty;
 
         public GameScenesVisibility(params GameScenes[] gameScenes)
         {
             Type gameScenesVisibilityType = ToolbarTypes.getType("Toolbar.GameScenesVisibility");
             realGameScenesVisibility = Activator.CreateInstance(gameScenesVisibilityType, gameScenes);
-            visibleProperty          = ToolbarTypes.getProperty(gameScenesVisibilityType, "Visible");
+            visibleProperty = ToolbarTypes.getProperty(gameScenesVisibilityType, "Visible");
         }
     }
 
@@ -481,23 +481,23 @@ namespace MuMech
             remove => onAnyOptionClickedEvent.RemoveEventHandler(realPopupMenuDrawable, value);
         }
 
-        private readonly object     realPopupMenuDrawable;
+        private readonly object realPopupMenuDrawable;
         private readonly MethodInfo updateMethod;
         private readonly MethodInfo drawMethod;
         private readonly MethodInfo addOptionMethod;
         private readonly MethodInfo addSeparatorMethod;
         private readonly MethodInfo destroyMethod;
-        private readonly EventInfo  onAnyOptionClickedEvent;
+        private readonly EventInfo onAnyOptionClickedEvent;
 
         public PopupMenuDrawable()
         {
             Type popupMenuDrawableType = ToolbarTypes.getType("Toolbar.PopupMenuDrawable");
-            realPopupMenuDrawable   = Activator.CreateInstance(popupMenuDrawableType, null);
-            updateMethod            = ToolbarTypes.getMethod(popupMenuDrawableType, "Update");
-            drawMethod              = ToolbarTypes.getMethod(popupMenuDrawableType, "Draw");
-            addOptionMethod         = ToolbarTypes.getMethod(popupMenuDrawableType, "AddOption");
-            addSeparatorMethod      = ToolbarTypes.getMethod(popupMenuDrawableType, "AddSeparator");
-            destroyMethod           = ToolbarTypes.getMethod(popupMenuDrawableType, "Destroy");
+            realPopupMenuDrawable = Activator.CreateInstance(popupMenuDrawableType, null);
+            updateMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "Update");
+            drawMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "Draw");
+            addOptionMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "AddOption");
+            addSeparatorMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "AddSeparator");
+            destroyMethod = ToolbarTypes.getMethod(popupMenuDrawableType, "Destroy");
             onAnyOptionClickedEvent = ToolbarTypes.getEvent(popupMenuDrawableType, "OnAnyOptionClicked");
         }
 
@@ -533,13 +533,13 @@ namespace MuMech
 
     public partial class ToolbarManager : IToolbarManager
     {
-        private static bool?           toolbarAvailable;
+        private static bool? toolbarAvailable;
         private static IToolbarManager instance_;
 
-        private readonly object                      realToolbarManager;
-        private readonly MethodInfo                  addMethod;
+        private readonly object realToolbarManager;
+        private readonly MethodInfo addMethod;
         private readonly Dictionary<object, IButton> buttons = new Dictionary<object, IButton>();
-        private readonly ToolbarTypes                types   = new ToolbarTypes();
+        private readonly ToolbarTypes types = new ToolbarTypes();
 
         private ToolbarManager(object realToolbarManager)
         {
@@ -559,18 +559,18 @@ namespace MuMech
 
     internal class Button : IButton
     {
-        private readonly object       realButton;
+        private readonly object realButton;
         private readonly ToolbarTypes types;
-        private readonly Delegate     realClickHandler;
-        private readonly Delegate     realMouseEnterHandler;
-        private readonly Delegate     realMouseLeaveHandler;
+        private readonly Delegate realClickHandler;
+        private readonly Delegate realMouseEnterHandler;
+        private readonly Delegate realMouseLeaveHandler;
 
         internal Button(object realButton, ToolbarTypes types)
         {
             this.realButton = realButton;
-            this.types      = types;
+            this.types = types;
 
-            realClickHandler      = attachEventHandler(types.button.onClickEvent, "clicked", realButton);
+            realClickHandler = attachEventHandler(types.button.onClickEvent, "clicked", realButton);
             realMouseEnterHandler = attachEventHandler(types.button.onMouseEnterEvent, "mouseEntered", realButton);
             realMouseLeaveHandler = attachEventHandler(types.button.onMouseLeaveEvent, "mouseLeft", realButton);
         }
@@ -585,42 +585,43 @@ namespace MuMech
 
         public string Text
         {
-            set => types.button.textProperty.SetValue(realButton, value, null);
             get => (string)types.button.textProperty.GetValue(realButton, null);
+            set => types.button.textProperty.SetValue(realButton, value, null);
         }
 
         public Color TextColor
         {
-            set => types.button.textColorProperty.SetValue(realButton, value, null);
             get => (Color)types.button.textColorProperty.GetValue(realButton, null);
+            set => types.button.textColorProperty.SetValue(realButton, value, null);
         }
 
         public string TexturePath
         {
-            set => types.button.texturePathProperty.SetValue(realButton, value, null);
             get => (string)types.button.texturePathProperty.GetValue(realButton, null);
+            set => types.button.texturePathProperty.SetValue(realButton, value, null);
         }
 
         public string BigTexturePath
         {
-            set => types.button.bigTexturePathProperty.SetValue(realButton, value, null);
             get => (string)types.button.bigTexturePathProperty.GetValue(realButton, null);
+            set => types.button.bigTexturePathProperty.SetValue(realButton, value, null);
         }
 
         public string ToolTip
         {
-            set => types.button.toolTipProperty.SetValue(realButton, value, null);
             get => (string)types.button.toolTipProperty.GetValue(realButton, null);
+            set => types.button.toolTipProperty.SetValue(realButton, value, null);
         }
 
         public bool Visible
         {
-            set => types.button.visibleProperty.SetValue(realButton, value, null);
             get => (bool)types.button.visibleProperty.GetValue(realButton, null);
+            set => types.button.visibleProperty.SetValue(realButton, value, null);
         }
 
         public IVisibility Visibility
         {
+            get => visibility_;
             set
             {
                 object functionVisibility = null;
@@ -632,7 +633,6 @@ namespace MuMech
                 types.button.visibilityProperty.SetValue(realButton, functionVisibility, null);
                 visibility_ = value;
             }
-            get => visibility_;
         }
 
         private IVisibility visibility_;
@@ -642,18 +642,19 @@ namespace MuMech
 
         public bool Enabled
         {
-            set => types.button.enabledProperty.SetValue(realButton, value, null);
             get => (bool)types.button.enabledProperty.GetValue(realButton, null);
+            set => types.button.enabledProperty.SetValue(realButton, value, null);
         }
 
         public bool Important
         {
-            set => types.button.importantProperty.SetValue(realButton, value, null);
             get => (bool)types.button.importantProperty.GetValue(realButton, null);
+            set => types.button.importantProperty.SetValue(realButton, value, null);
         }
 
         public IDrawable Drawable
         {
+            get => drawable_;
             set
             {
                 object functionDrawable = null;
@@ -666,7 +667,6 @@ namespace MuMech
                 types.button.drawableProperty.SetValue(realButton, functionDrawable, null);
                 drawable_ = value;
             }
-            get => drawable_;
         }
 
         private IDrawable drawable_;
@@ -718,7 +718,7 @@ namespace MuMech
         internal ClickEvent(object realEvent, IButton button)
         {
             Type type = realEvent.GetType();
-            Button      = button;
+            Button = button;
             MouseButton = (int)type.GetField("MouseButton", BindingFlags.Public | BindingFlags.Instance).GetValue(realEvent);
         }
     }
@@ -749,16 +749,16 @@ namespace MuMech
 
     internal class ToolbarTypes
     {
-        internal readonly Type        iToolbarManagerType;
-        internal readonly Type        functionVisibilityType;
-        internal readonly Type        functionDrawableType;
+        internal readonly Type iToolbarManagerType;
+        internal readonly Type functionVisibilityType;
+        internal readonly Type functionDrawableType;
         internal readonly ButtonTypes button;
 
         internal ToolbarTypes()
         {
-            iToolbarManagerType    = getType("Toolbar.IToolbarManager");
+            iToolbarManagerType = getType("Toolbar.IToolbarManager");
             functionVisibilityType = getType("Toolbar.FunctionVisibility");
-            functionDrawableType   = getType("Toolbar.FunctionDrawable");
+            functionDrawableType = getType("Toolbar.FunctionDrawable");
 
             Type iButtonType = getType("Toolbar.IButton");
             button = new ButtonTypes(iButtonType);
@@ -788,7 +788,7 @@ namespace MuMech
 
     internal class ButtonTypes
     {
-        internal readonly Type         iButtonType;
+        internal readonly Type iButtonType;
         internal readonly PropertyInfo textProperty;
         internal readonly PropertyInfo textColorProperty;
         internal readonly PropertyInfo texturePathProperty;
@@ -801,32 +801,32 @@ namespace MuMech
         internal readonly PropertyInfo enabledProperty;
         internal readonly PropertyInfo importantProperty;
         internal readonly PropertyInfo drawableProperty;
-        internal readonly EventInfo    onClickEvent;
-        internal readonly EventInfo    onMouseEnterEvent;
-        internal readonly EventInfo    onMouseLeaveEvent;
-        internal readonly MethodInfo   destroyMethod;
+        internal readonly EventInfo onClickEvent;
+        internal readonly EventInfo onMouseEnterEvent;
+        internal readonly EventInfo onMouseLeaveEvent;
+        internal readonly MethodInfo destroyMethod;
 
         internal ButtonTypes(Type iButtonType)
         {
             this.iButtonType = iButtonType;
 
-            textProperty               = ToolbarTypes.getProperty(iButtonType, "Text");
-            textColorProperty          = ToolbarTypes.getProperty(iButtonType, "TextColor");
-            texturePathProperty        = ToolbarTypes.getProperty(iButtonType, "TexturePath");
-            bigTexturePathProperty     = ToolbarTypes.getProperty(iButtonType, "BigTexturePath");
-            toolTipProperty            = ToolbarTypes.getProperty(iButtonType, "ToolTip");
-            visibleProperty            = ToolbarTypes.getProperty(iButtonType, "Visible");
-            visibilityProperty         = ToolbarTypes.getProperty(iButtonType, "Visibility");
+            textProperty = ToolbarTypes.getProperty(iButtonType, "Text");
+            textColorProperty = ToolbarTypes.getProperty(iButtonType, "TextColor");
+            texturePathProperty = ToolbarTypes.getProperty(iButtonType, "TexturePath");
+            bigTexturePathProperty = ToolbarTypes.getProperty(iButtonType, "BigTexturePath");
+            toolTipProperty = ToolbarTypes.getProperty(iButtonType, "ToolTip");
+            visibleProperty = ToolbarTypes.getProperty(iButtonType, "Visible");
+            visibilityProperty = ToolbarTypes.getProperty(iButtonType, "Visibility");
             effectivelyVisibleProperty = ToolbarTypes.getProperty(iButtonType, "EffectivelyVisible");
-            isHoveringProperty         = ToolbarTypes.getProperty(iButtonType, "IsHovering");
+            isHoveringProperty = ToolbarTypes.getProperty(iButtonType, "IsHovering");
 
-            enabledProperty   = ToolbarTypes.getProperty(iButtonType, "Enabled");
+            enabledProperty = ToolbarTypes.getProperty(iButtonType, "Enabled");
             importantProperty = ToolbarTypes.getProperty(iButtonType, "Important");
-            drawableProperty  = ToolbarTypes.getProperty(iButtonType, "Drawable");
-            onClickEvent      = ToolbarTypes.getEvent(iButtonType, "OnClick");
+            drawableProperty = ToolbarTypes.getProperty(iButtonType, "Drawable");
+            onClickEvent = ToolbarTypes.getEvent(iButtonType, "OnClick");
             onMouseEnterEvent = ToolbarTypes.getEvent(iButtonType, "OnMouseEnter");
             onMouseLeaveEvent = ToolbarTypes.getEvent(iButtonType, "OnMouseLeave");
-            destroyMethod     = ToolbarTypes.getMethod(iButtonType, "Destroy");
+            destroyMethod = ToolbarTypes.getMethod(iButtonType, "Destroy");
         }
     }
 

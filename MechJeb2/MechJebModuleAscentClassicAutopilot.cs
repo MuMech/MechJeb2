@@ -82,14 +82,14 @@ namespace MuMech
         private void DriveVerticalAscent()
         {
             if (!IsVerticalAscent(VesselState.AltitudeTrue, VesselState.SpeedSurface)) _mode = AscentMode.GRAVITY_TURN;
-            if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode                       = AscentMode.COAST_TO_APOAPSIS;
+            if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode = AscentMode.COAST_TO_APOAPSIS;
 
             VerticalHeadingTo(OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val));
 
             Core.Thrust.TargetThrottle = 1.0F;
 
-            if (!Vessel.LiftedOff() || Vessel.Landed) Status = Localizer.Format("#MechJeb_Ascent_status6");  //"Awaiting liftoff"
-            else Status                                      = Localizer.Format("#MechJeb_Ascent_status18"); //"Vertical ascent"
+            if (!Vessel.LiftedOff() || Vessel.Landed) Status = Localizer.Format("#MechJeb_Ascent_status6"); //"Awaiting liftoff"
+            else Status = Localizer.Format("#MechJeb_Ascent_status18"); //"Vertical ascent"
         }
 
         private double _desiredHeading;

@@ -22,8 +22,7 @@ namespace MuMech
     //double so that if you are not doing text input you can treat an EditableDouble like a double.
     public class EditableDoubleMult : IEditable
     {
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public double ValConfig;
 
         public virtual double Val
@@ -40,8 +39,7 @@ namespace MuMech
 
         protected bool Parsed;
 
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public string TextConfig;
 
         public virtual string Text
@@ -126,20 +124,16 @@ namespace MuMech
 
     public class EditableAngle
     {
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public readonly EditableDouble Degrees;
 
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public readonly EditableDouble Minutes;
 
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public readonly EditableDouble Seconds;
 
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public bool Negative;
 
         public EditableAngle(double angle)
@@ -178,8 +172,7 @@ namespace MuMech
 
     public class EditableInt : IEditable
     {
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public int ValConfig;
 
         public int Val
@@ -194,8 +187,7 @@ namespace MuMech
 
         private bool _parsed;
 
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public string TextConfig;
 
         public virtual string Text
@@ -226,8 +218,7 @@ namespace MuMech
         [Persistent]
         public readonly List<int> Val = new List<int>();
 
-        [UsedImplicitly]
-        [Persistent]
+        [UsedImplicitly, Persistent]
         public string TextConfig = "";
 
         public string Text
@@ -422,11 +413,11 @@ namespace MuMech
         public enum SkinType { DEFAULT, MECH_JEB1, COMPACT }
 
         public static GUISkin Skin;
-        public static float   Scale                      = 1;
-        public static int     ScaledScreenWidth          = 1;
-        public static int     ScaledScreenHeight         = 1;
-        public static bool    DontUseDropDownMenu        = false;
-        public static bool    ShowAdvancedWindowSettings = false;
+        public static float Scale = 1;
+        public static int ScaledScreenWidth = 1;
+        public static int ScaledScreenHeight = 1;
+        public static bool DontUseDropDownMenu = false;
+        public static bool ShowAdvancedWindowSettings = false;
         public static GUISkin DefaultSkin;
         public static GUISkin CompactSkin;
         public static GUISkin TransparentSkin;
@@ -540,18 +531,20 @@ namespace MuMech
 
 #nullable enable
         public static void SimpleTextBox(string? leftLabel, IEditable ed, string? rightLabel = null, float width = 100,
-                                         GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false,
-                                         string? leftLabelTooltip = null)
+            GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false,
+            string? leftLabelTooltip = null)
         {
             GUIContent? content = string.IsNullOrEmpty(leftLabel)
                 ? null
-                : string.IsNullOrEmpty(leftLabelTooltip) ? new GUIContent(leftLabel) : new GUIContent(leftLabel, leftLabelTooltip);
+                : string.IsNullOrEmpty(leftLabelTooltip)
+                    ? new GUIContent(leftLabel)
+                    : new GUIContent(leftLabel, leftLabelTooltip);
             SimpleTextBox(content, ed, rightLabel, width, leftLabelStyle, horizontalFraming, expandWidth);
         }
 
         // GUIContent overload for callers that already cache a content object (avoids per-frame allocations).
         public static void SimpleTextBox(GUIContent? leftLabelContent, IEditable ed, string? rightLabel = null, float width = 100,
-                                         GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false)
+            GUIStyle? leftLabelStyle = null, bool horizontalFraming = true, bool expandWidth = false)
         {
             Profiler.BeginSample("SimpleTextBox");
             if (horizontalFraming) GUILayout.BeginHorizontal();
@@ -578,7 +571,7 @@ namespace MuMech
         }
 
         public static void ToggledTextBox(ref bool toggle, string toggleText, IEditable ed, string? rightLabel = null, GUIStyle? toggleStyle = null,
-                                          float width = 100)
+            float width = 100)
         {
             Profiler.BeginSample("ToggledTextField");
             GUILayout.BeginHorizontal();
@@ -655,13 +648,13 @@ namespace MuMech
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
-            string ret                 = "";
-            bool   showSecondsDecimals = decimalPlaces > 0;
+            string ret = "";
+            bool showSecondsDecimals = decimalPlaces > 0;
 
             try
             {
-                string[] units     = { "y", "d", "h", "m", "s" };
-                long[]   intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
+                string[] units = { "y", "d", "h", "m", "s" };
+                long[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
 
                 if (seconds < 0)
                 {
@@ -671,7 +664,7 @@ namespace MuMech
 
                 for (int i = 0; i < units.Length; i++)
                 {
-                    long n     = (long)(seconds / intervals[i]);
+                    long n = (long)(seconds / intervals[i]);
                     bool first = ret.Length < 2;
                     if (!first || n != 0 || (i == units.Length - 1 && ret == ""))
                     {
@@ -698,8 +691,8 @@ namespace MuMech
 
         public static bool TryParseDHMS(string s, out double seconds)
         {
-            string[] units     = { "y", "d", "h", "m", "s" };
-            int[]    intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
+            string[] units = { "y", "d", "h", "m", "s" };
+            int[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
 
             s = s.Trim(' ');
             bool minus = s.StartsWith("-");
@@ -726,10 +719,10 @@ namespace MuMech
         private static double ArcDistance(Vector3 from, Vector3 to)
         {
             Vector3 position = FlightGlobals.ActiveVessel.mainBody.transform.position;
-            double  a        = (position - from).magnitude;
-            double  b        = (position - to).magnitude;
-            double  c        = Vector3d.Distance(from, to);
-            double  ang      = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
+            double a = (position - from).magnitude;
+            double b = (position - to).magnitude;
+            double c = Vector3d.Distance(from, to);
+            double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
             return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
 
@@ -757,10 +750,10 @@ namespace MuMech
         {
             Ray mouseRay = PlanetariumCamera.Camera.ScreenPointToRay(Input.mousePosition);
             mouseRay.origin = ScaledSpace.ScaledToLocalSpace(mouseRay.origin);
-            Vector3d relOrigin  = mouseRay.origin - body.position;
-            double   curRadius  = body.pqsController.radiusMax;
-            double   lastRadius = 0;
-            int      loops      = 0;
+            Vector3d relOrigin = mouseRay.origin - body.position;
+            double curRadius = body.pqsController.radiusMax;
+            double lastRadius = 0;
+            int loops = 0;
             while (loops < 50)
             {
                 if (PQS.LineSphereIntersection(relOrigin, mouseRay.direction, curRadius, out Vector3d relSurfacePosition))
@@ -813,8 +806,8 @@ namespace MuMech
 
             if (GUI.tooltip == current) return;
 
-            _tooltipChanged  = true;
-            _tooltipBeginDt  = DateTime.UtcNow;
+            _tooltipChanged = true;
+            _tooltipBeginDt = DateTime.UtcNow;
             _tooltipTexts[windowId] = GUI.tooltip;
         }
 
@@ -830,12 +823,7 @@ namespace MuMech
                 var bg = new Texture2D(1, 1, TextureFormat.ARGB32, false) { hideFlags = HideFlags.HideAndDontSave };
                 bg.SetPixel(0, 0, new Color(0.1f, 0.1f, 0.1f, 1f));
                 bg.Apply();
-                _tooltipStyle = new GUIStyle(GUI.skin.box)
-                {
-                    padding   = new RectOffset(3, 3, 3, 3),
-                    alignment = TextAnchor.MiddleCenter,
-                    wordWrap  = true
-                };
+                _tooltipStyle = new GUIStyle(GUI.skin.box) { padding = new RectOffset(3, 3, 3, 3), alignment = TextAnchor.MiddleCenter, wordWrap = true };
                 _tooltipStyle.normal.background = bg;
             }
 
@@ -843,11 +831,11 @@ namespace MuMech
             {
                 var c = new GUIContent(text);
                 _tooltipStyle.CalcMinMaxWidth(c, out _, out float width);
-                width        = Math.Min(width, TooltipMaxWidth);
+                width = Math.Min(width, TooltipMaxWidth);
                 float height = _tooltipStyle.CalcHeight(c, TooltipMaxWidth);
-                float mx     = Input.mousePosition.x / Scale;
-                float my     = (Screen.height - Input.mousePosition.y) / Scale;
-                _tooltipRect    = new Rect(
+                float mx = Input.mousePosition.x / Scale;
+                float my = (Screen.height - Input.mousePosition.y) / Scale;
+                _tooltipRect = new Rect(
                     Math.Min(ScaledScreenWidth - width, mx + 15),
                     Math.Min(ScaledScreenHeight - height, my + 10),
                     width, height);
@@ -872,7 +860,7 @@ namespace MuMech
             private static Rect _rect;
 
             // Identifier of the caller of the popup, null if nobody is waiting for a value
-            private static object   _popupOwner;
+            private static object _popupOwner;
             private static string[] _entries;
 
             private static bool _popupActive;
@@ -993,8 +981,8 @@ namespace MuMech
         public static string ToStringDecimal(double latitude, double longitude, bool newline = false, int precision = 3)
         {
             double clampedLongitude = MuUtils.ClampDegrees180(longitude);
-            double latitudeAbs      = Math.Abs(latitude);
-            double longitudeAbs     = Math.Abs(clampedLongitude);
+            double latitudeAbs = Math.Abs(latitude);
+            double longitudeAbs = Math.Abs(clampedLongitude);
             return latitudeAbs.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
                 + longitudeAbs.ToString("F" + precision) + "° " + (clampedLongitude > 0 ? "E" : "W");
         }
@@ -1029,11 +1017,11 @@ namespace MuMech
 
         private static Color _lastSetColor;
 
-        private const int TEXTURE_WIDTH  = 240;
+        private const int TEXTURE_WIDTH = 240;
         private const int TEXTURE_HEIGHT = 240;
 
-        private static float     _saturationSlider;
-        private static float     _alphaSlider;
+        private static float _saturationSlider;
+        private static float _alphaSlider;
         private static Texture2D _saturationTexture;
 
         private static void Init()
@@ -1049,7 +1037,7 @@ namespace MuMech
 
             _displayPicker.Apply();
 
-            float v    = 0.0F;
+            float v = 0.0F;
             float diff = 1.0f / TEXTURE_HEIGHT;
             _saturationTexture = new Texture2D(20, TEXTURE_HEIGHT);
             for (int i = 0; i < _saturationTexture.width; i++)
@@ -1097,7 +1085,7 @@ namespace MuMech
 
     public static class ColorPickerRGB
     {
-        private const int TEXTURE_WIDTH  = 240;
+        private const int TEXTURE_WIDTH = 240;
         private const int TEXTURE_HEIGHT = 10;
 
         private static Texture2D _rTexture;

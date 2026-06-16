@@ -27,9 +27,9 @@ namespace MuMech
             Priority = 200;
         }
 
-        public  float TransSpdAct;
+        public float TransSpdAct;
         private float _transPrevThrust;
-        public  bool  TransKillH = false;
+        public bool TransKillH = false;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitDynamicPressure;
@@ -55,16 +55,13 @@ namespace MuMech
                 GUILayout.Toggle(LimitToPreventOverheats, CachedLocalizer.Instance.MechJebAscentCheckbox12, s); //"Prevent engine overheats"
         }
 
-        [ToggleInfoItem("#MechJeb_SmoothThrottle", InfoItem.Category.Thrust)] //Smooth throttle
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [ToggleInfoItem("#MechJeb_SmoothThrottle", InfoItem.Category.Thrust), Persistent(pass = (int)Pass.GLOBAL)] //Smooth throttle
         public bool SmoothThrottle;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public double ThrottleSmoothingTime = 1.0;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitToPreventFlameout;
 
         [GeneralInfoItem("#MechJeb_PreventJetFlameout", InfoItem.Category.Thrust)] //Prevent jet flameout
@@ -100,15 +97,13 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble FlameoutSafetyPct = 5;
 
-        [ToggleInfoItem("#MechJeb_ManageAirIntakes", InfoItem.Category.Thrust)] //Manage air intakes
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [ToggleInfoItem("#MechJeb_ManageAirIntakes", InfoItem.Category.Thrust), Persistent(pass = (int)Pass.GLOBAL)] //Manage air intakes
         public bool ManageIntakes;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitAcceleration;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble MaxAcceleration = 40;
 
         [GeneralInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Thrust)] //Limit Acceleration
@@ -122,8 +117,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool LimitThrottle;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.LOCAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public readonly EditableDoubleMult MaxThrottle = new EditableDoubleMult(1, 0.01);
 
         [GeneralInfoItem("#MechJeb_LimitThrottle", InfoItem.Category.Thrust)] //Limit throttle
@@ -148,8 +142,7 @@ namespace MuMech
                 30); //"Keep limited throttle over"
         }
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.TYPE)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.TYPE)]
         public bool DifferentialThrottle;
 
         [GeneralInfoItem("#MechJeb_DifferentialThrottle", InfoItem.Category.Thrust)] //Differential throttle
@@ -173,12 +166,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool ElectricThrottle;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.LOCAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public readonly EditableDoubleMult ElectricThrottleLo = new EditableDoubleMult(0.05, 0.01);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.LOCAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public readonly EditableDoubleMult ElectricThrottleHi = new EditableDoubleMult(0.15, 0.01);
 
         [GeneralInfoItem("#MechJeb_ElectricLimit", InfoItem.Category.Thrust)] //Electric limit
@@ -216,10 +207,10 @@ namespace MuMech
 
         private PIDController _pid;
 
-        public  float LastThrottle;
-        private bool  _userCommandingRotation => _userCommandingRotationSmoothed > 0;
-        private int   _userCommandingRotationSmoothed;
-        private bool  _lastDisableThrusters;
+        public float LastThrottle;
+        private bool _userCommandingRotation => _userCommandingRotationSmoothed > 0;
+        private int _userCommandingRotationSmoothed;
+        private bool _lastDisableThrusters;
 
         public enum TMode
         {
@@ -239,7 +230,7 @@ namespace MuMech
             {
                 if (_tmode != value)
                 {
-                    _tmode        = value;
+                    _tmode = value;
                     _tmodeChanged = true;
                 }
             }
@@ -267,9 +258,9 @@ namespace MuMech
             if (Vessel == null || Vessel.ctrlState == null)
                 return;
 
-            TargetThrottle                = 0;
+            TargetThrottle = 0;
             Vessel.ctrlState.mainThrottle = 0;
-            Tmode                         = TMode.OFF;
+            Tmode = TMode.OFF;
             SetFlightGlobals(0);
         }
 
@@ -318,7 +309,7 @@ namespace MuMech
         private void SetTempLimit(float limit, LimitMode mode)
         {
             ThrottleLimit = limit;
-            Limiter       = mode;
+            Limiter = mode;
         }
 
         /* This is an API for limits which are not temporary (like the throttle limit set in the GUI)
@@ -333,18 +324,18 @@ namespace MuMech
             }
 
             ThrottleFixedLimit = limit;
-            Limiter            = mode;
+            Limiter = mode;
         }
 
         public override void Drive(FlightCtrlState s)
         {
             const float THRESHOLD = 0.1F;
             bool userCommandingRotation = !(Mathfx.Approx(s.pitch, s.pitchTrim, THRESHOLD)
-                                            && Mathfx.Approx(s.yaw, s.yawTrim, THRESHOLD)
-                                            && Mathfx.Approx(s.roll, s.rollTrim, THRESHOLD));
+                && Mathfx.Approx(s.yaw, s.yawTrim, THRESHOLD)
+                && Mathfx.Approx(s.roll, s.rollTrim, THRESHOLD));
             bool userCommandingTranslation = !(Math.Abs(s.X) < THRESHOLD
-                                               && Math.Abs(s.Y) < THRESHOLD
-                                               && Math.Abs(s.Z) < THRESHOLD);
+                && Math.Abs(s.Y) < THRESHOLD
+                && Math.Abs(s.Z) < THRESHOLD);
 
             if (userCommandingRotation && !userCommandingTranslation)
             {
@@ -380,9 +371,9 @@ namespace MuMech
                             if (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) > 5000 &&
                                 hsdir.magnitude > Math.Max(Math.Abs(spd), 100 * MainBody.GeeASL) * 2)
                             {
-                                Tmode       = TMode.DIRECT;
+                                Tmode = TMode.DIRECT;
                                 TransSpdAct = 100;
-                                rot         = -hsdir;
+                                rot = -hsdir;
                             }
                             else
                             {
@@ -422,10 +413,10 @@ namespace MuMech
                 else
                 {
                     bool useGimbal = VesselState.TorqueGimbal.Positive.x > VesselState.TorqueAvailable.x * 10 ||
-                                     VesselState.TorqueGimbal.Positive.z > VesselState.TorqueAvailable.z * 10;
+                        VesselState.TorqueGimbal.Positive.z > VesselState.TorqueAvailable.z * 10;
 
                     bool useDiffThrottle = VesselState.TorqueDifferentialThrottle.x > VesselState.TorqueAvailable.x * 10 ||
-                                           VesselState.TorqueDifferentialThrottle.z > VesselState.TorqueAvailable.z * 10;
+                        VesselState.TorqueDifferentialThrottle.z > VesselState.TorqueAvailable.z * 10;
 
                     if (Core.Attitude.attitudeError >= 2 && (useGimbal || (useDiffThrottle && Core.Thrust.DifferentialThrottle)))
                     {
@@ -445,7 +436,7 @@ namespace MuMech
             if (Users.Count > 1)
                 s.mainThrottle = TargetThrottle;
 
-            ThrottleLimit      = 1;
+            ThrottleLimit = 1;
             ThrottleFixedLimit = 1;
 
             Limiter = LimitMode.NONE;
@@ -548,7 +539,7 @@ namespace MuMech
             if (double.IsNaN(ThrottleFixedLimit)) ThrottleFixedLimit = 1.0F;
             ThrottleFixedLimit = Mathf.Clamp01(ThrottleFixedLimit);
 
-            VesselState.ThrottleLimit      = ThrottleLimit;
+            VesselState.ThrottleLimit = ThrottleLimit;
             VesselState.ThrottleFixedLimit = ThrottleFixedLimit;
 
             if (s.mainThrottle < ThrottleLimit) Limiter = LimitMode.NONE;
@@ -879,7 +870,7 @@ namespace MuMech
 
             if (mainThrottle == 0)
             {
-                torque       = Vector3d.zero;
+                torque = Vector3d.zero;
                 mainThrottle = 1;
             }
 
@@ -891,10 +882,10 @@ namespace MuMech
 
             for (int i = 0; i < nbEngines; i++)
             {
-                torque      -= VesselState.EngineWrappers[i].ConstantTorque;
+                torque -= VesselState.EngineWrappers[i].ConstantTorque;
                 torqueScale += VesselState.EngineWrappers[i].MaxVariableTorque.magnitude;
 
-                force      += Vector3d.Dot(mainThrottle * VesselState.EngineWrappers[i].MaxVariableForce, Vector3d.up) * Vector3d.up;
+                force += Vector3d.Dot(mainThrottle * VesselState.EngineWrappers[i].MaxVariableForce, Vector3d.up) * Vector3d.up;
                 forceScale += VesselState.EngineWrappers[i].MaxVariableForce.magnitude * 10;
             }
 
@@ -918,11 +909,11 @@ namespace MuMech
                 for (int j = 0; j < n; j++)
                 {
                     a[i, j] = Vector3d.Dot(engines[i].MaxVariableTorque, engines[j].MaxVariableTorque) / (torqueScale * torqueScale)
-                              + Vector3d.Dot(engines[i].MaxVariableForce, engines[j].MaxVariableForce) / (forceScale * forceScale);
+                        + Vector3d.Dot(engines[i].MaxVariableForce, engines[j].MaxVariableForce) / (forceScale * forceScale);
                 }
 
                 b[i] = -Vector3d.Dot(engines[i].MaxVariableTorque, torque) / (torqueScale * torqueScale)
-                       - Vector3d.Dot(engines[i].MaxVariableForce, force) / (forceScale * forceScale);
+                    - Vector3d.Dot(engines[i].MaxVariableForce, force) / (forceScale * forceScale);
 
                 boundL[i] = 0;
                 boundU[i] = mainThrottle;

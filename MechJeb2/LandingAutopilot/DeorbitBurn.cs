@@ -43,7 +43,7 @@ namespace MuMech
                 Vector3d horizontalDV =
                     OrbitalManeuverCalculator.DeltaVToChangePeriapsis(Orbit, VesselState.Time,
                         0.9 * MainBody
-                            .Radius); //Imagine we are going to deorbit now. Find the burn that would lower our periapsis to -10% of the planet's radius
+                           .Radius); //Imagine we are going to deorbit now. Find the burn that would lower our periapsis to -10% of the planet's radius
                 Orbit forwardDeorbitTrajectory = Orbit.PerturbedOrbit(VesselState.Time, horizontalDV); //Compute the orbit that would put us on
                 double freefallTime =
                     forwardDeorbitTrajectory.NextTimeOfRadius(VesselState.Time, MainBody.Radius) -
@@ -51,7 +51,7 @@ namespace MuMech
                 double planetRotationDuringFreefall =
                     360 * freefallTime / MainBody.rotationPeriod; //Find how many degrees the planet will rotate during that time
                 Vector3d currentTargetRadialVector = MainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) -
-                                                     MainBody.position; //Find the current vector from the planet center to the target landing site
+                    MainBody.position; //Find the current vector from the planet center to the target landing site
                 var freefallPlanetRotation =
                     Quaternion.AngleAxis((float)planetRotationDuringFreefall,
                         MainBody.angularVelocity); //Construct a quaternion representing the rotation of the planet found above
@@ -63,7 +63,7 @@ namespace MuMech
                     MainBody.position + freefallEndTargetRadialVector; //Then find the actual position of the target at that time
                 Vector3d freefallEndHorizontalToTarget =
                     Vector3d.Exclude(VesselState.Up, freefallEndTargetPosition - VesselState.CoM)
-                        .normalized; //Find a horizontal unit vector that points toward where the target will be when we hit the ground
+                       .normalized; //Find a horizontal unit vector that points toward where the target will be when we hit the ground
                 var currentHorizontalVelocity = Vector3d.Exclude(VesselState.Up, VesselState.OrbitalVelocity); //Find our current horizontal velocity
                 double finalHorizontalSpeed =
                     (currentHorizontalVelocity + horizontalDV).magnitude; //Find the desired horizontal speed after the deorbit burn

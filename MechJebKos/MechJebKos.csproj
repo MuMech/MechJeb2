@@ -53,20 +53,20 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\MechJeb2\MechJeb2.csproj" />
-        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj" />
-        <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj" />
+        <ProjectReference Include="..\MechJeb2\MechJeb2.csproj"/>
+        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj"/>
+        <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj"/>
     </ItemGroup>
 
     <Target Name="MechJebKosCopyBuild" AfterTargets="Build">
         <ItemGroup>
-            <_MechJebKosArtifacts Include="$(TargetDir)$(TargetName).dll" />
-            <_MechJebKosArtifacts Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+            <_MechJebKosArtifacts Include="$(TargetDir)$(TargetName).dll"/>
+            <_MechJebKosArtifacts Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')"/>
         </ItemGroup>
-        <MakeDir Directories="$(KspDir)/GameData/MechJeb2/Plugins" />
+        <MakeDir Directories="$(KspDir)/GameData/MechJeb2/Plugins"/>
         <Copy SourceFiles="@(_MechJebKosArtifacts)"
               DestinationFolder="$(KspDir)/GameData/MechJeb2/Plugins"
-              SkipUnchangedFiles="true" />
+              SkipUnchangedFiles="true"/>
     </Target>
 
 </Project>

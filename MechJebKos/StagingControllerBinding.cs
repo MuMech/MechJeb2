@@ -54,6 +54,5 @@ namespace MuMech.MechJebKos
             AddSuffix("IMMEDIATESTAGE", new NoArgsVoidSuffix(() => Module.ImmediateStage(),
                 "Stage immediately, bypassing the pre-delay."));
         }
-
     }
 }

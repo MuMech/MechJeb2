@@ -50,8 +50,8 @@ namespace MuMech
                 {
                     // if we have TWR < 1, just try as hard as we can to decelerate:
                     // (we need this special case because otherwise the calculations spit out NaN's)
-                    Core.Thrust.Tmode       = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
-                    Core.Thrust.TransKillH  = true;
+                    Core.Thrust.Tmode = MechJebModuleThrustController.TMode.KEEP_VERTICAL;
+                    Core.Thrust.TransKillH = true;
                     Core.Thrust.TransSpdAct = 0;
                 }
                 else if (minalt > 300)
@@ -60,14 +60,14 @@ namespace MuMech
                     {
                         // if we have positive vertical velocity, point up and follow min thrust limiter:
                         Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
-                        Core.Thrust.Tmode       = MechJebModuleThrustController.TMode.DIRECT;
+                        Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
                         Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
                     }
                     else if (VesselState.SurfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.Forward, -VesselState.SurfaceVelocity) > 45)
                     {
                         // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
                         Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
-                        Core.Thrust.Tmode       = MechJebModuleThrustController.TMode.DIRECT;
+                        Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
                         Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
                     }
                     else

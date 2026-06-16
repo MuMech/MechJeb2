@@ -22,11 +22,11 @@ namespace MuMech
         }
 
         private SpinupState _state;
-        private double      _startTime;
+        private double _startTime;
 
         protected override void OnModuleEnabled()
         {
-            _state     = SpinupState.INITIALIZED;
+            _state = SpinupState.INITIALIZED;
             _startTime = Math.Max(VesselState.Time, _startTime);
             Core.Attitude.Users.Add(this);
         }

@@ -92,11 +92,11 @@ namespace UnityToolbag
     public sealed class Future<T> : IFuture<T>
     {
         private volatile FutureState _state;
-        private          T           _value;
-        private          Exception   _error;
+        private T _value;
+        private Exception _error;
 
         private readonly List<FutureCallback<T>> _successCallbacks = new List<FutureCallback<T>>();
-        private readonly List<FutureCallback<T>> _errorCallbacks   = new List<FutureCallback<T>>();
+        private readonly List<FutureCallback<T>> _errorCallbacks = new List<FutureCallback<T>>();
 
         /// <summary>
         ///     Gets the state of the future.

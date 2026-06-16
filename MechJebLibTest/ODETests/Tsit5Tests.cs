@@ -50,8 +50,7 @@ namespace MechJebLibTest.ODETests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomSimpleOscillatorTest(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));

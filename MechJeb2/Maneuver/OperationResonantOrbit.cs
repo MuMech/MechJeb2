@@ -10,14 +10,12 @@ namespace MuMech
     public class OperationResonantOrbit : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_resonant_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt ResonanceNumerator = 2;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt ResonanceDenominator = 3;
 
         private readonly TimeSelector _timeSelector =

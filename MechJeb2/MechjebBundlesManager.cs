@@ -7,13 +7,13 @@ namespace MuMech
     public class MechJebBundlesManager : MonoBehaviour
     {
         private const string shaderBundle = "shaders.bundle";
-        private       string shaderPath;
+        private string shaderPath;
 
-        private const string diffuseAmbientName        = "Assets/Shaders/MJ_DiffuseAmbiant.shader";
+        private const string diffuseAmbientName = "Assets/Shaders/MJ_DiffuseAmbiant.shader";
         private const string diffuseAmbientIgnoreZName = "Assets/Shaders/MJ_DiffuseAmbiantIgnoreZ.shader";
 
-        public static Shader    diffuseAmbient;
-        public static Shader    diffuseAmbientIgnoreZ;
+        public static Shader diffuseAmbient;
+        public static Shader diffuseAmbientIgnoreZ;
         public static Texture2D comboBoxBackground;
 
         private void Awake()
@@ -52,7 +52,7 @@ namespace MuMech
             assetBundle.Unload(false);
             MechJebCore.Print("Loaded Shaders Bundles");
 
-            comboBoxBackground          = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+            comboBoxBackground = new Texture2D(16, 16, TextureFormat.RGBA32, false);
             comboBoxBackground.wrapMode = TextureWrapMode.Clamp;
 
             for (int x = 0; x < comboBoxBackground.width; x++)

@@ -4,16 +4,16 @@ namespace MuMech
 {
     public class PIDController : IConfigNode
     {
-        private          double _prevError;
-        public           double INTAccum, Kp, Ki, Kd;
+        private double _prevError;
+        public double INTAccum, Kp, Ki, Kd;
         private readonly double _max;
         private readonly double _min;
 
         public PIDController(double kp = 0, double ki = 0, double kd = 0, double max = double.MaxValue, double min = double.MinValue)
         {
-            Kp   = kp;
-            Ki   = ki;
-            Kd   = kd;
+            Kp = kp;
+            Ki = ki;
+            Kd = kd;
             _max = max;
             _min = min;
             Reset();
@@ -57,18 +57,18 @@ namespace MuMech
 
     public class PIDControllerV2 : IConfigNode
     {
-        private          Vector3d _intAccum;
-        private          Vector3d _derivativeAct;
-        private          Vector3d _propAct;
-        public           double   Kp, Ki, Kd;
-        private readonly double   _max;
-        private readonly double   _min;
+        private Vector3d _intAccum;
+        private Vector3d _derivativeAct;
+        private Vector3d _propAct;
+        public double Kp, Ki, Kd;
+        private readonly double _max;
+        private readonly double _min;
 
         public PIDControllerV2(double kp = 0, double ki = 0, double kd = 0, double max = double.MaxValue, double min = double.MinValue)
         {
-            Kp   = kp;
-            Ki   = ki;
-            Kd   = kd;
+            Kp = kp;
+            Ki = ki;
+            Kd = kd;
             _max = max;
             _min = min;
             Reset();
@@ -96,8 +96,8 @@ namespace MuMech
 
         public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d wlimit)
         {
-            _derivativeAct =  omega * Kd;
-            wlimit         *= Kd;
+            _derivativeAct = omega * Kd;
+            wlimit *= Kd;
 
             // integral actíon + Anti Windup
             _intAccum.x = Math.Abs(_derivativeAct.x) < 0.6 * _max ? _intAccum.x + error.x * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.x;
@@ -153,15 +153,15 @@ namespace MuMech
 
     public class PIDControllerV3 : IConfigNode
     {
-        public           Vector3d Kp, Ki, Kd, INTAccum, DerivativeAct, PropAct;
-        private readonly double   _max;
-        private readonly double   _min;
+        public Vector3d Kp, Ki, Kd, INTAccum, DerivativeAct, PropAct;
+        private readonly double _max;
+        private readonly double _min;
 
         public PIDControllerV3(Vector3d kp, Vector3d ki, Vector3d kd, double max = double.MaxValue, double min = double.MinValue)
         {
-            Kp   = kp;
-            Ki   = ki;
-            Kd   = kd;
+            Kp = kp;
+            Ki = ki;
+            Kd = kd;
             _max = max;
             _min = min;
             Reset();
@@ -170,7 +170,7 @@ namespace MuMech
         public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d wlimit)
         {
             DerivativeAct = Vector3d.Scale(omega, Kd);
-            wlimit        = Vector3d.Scale(wlimit, Kd);
+            wlimit = Vector3d.Scale(wlimit, Kd);
 
             // integral actíon + Anti Windup
             INTAccum.x = Math.Abs(DerivativeAct.x) < 0.6 * _max ? INTAccum.x + error.x * Ki.x * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.x;

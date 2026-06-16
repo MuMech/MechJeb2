@@ -10,15 +10,13 @@ namespace MuMech
     public class OperationEllipticize : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_both_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
         //change both Pe and Ap
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewApA = new EditableDoubleMult(200000, 1000);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult NewPeA = new EditableDoubleMult(100000, 1000);
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE };
@@ -46,13 +44,13 @@ namespace MuMech
             if (o.referenceBody.Radius + NewApA < o.Radius(ut))
             {
                 throw new OperationException(Localizer.Format("#MechJeb_both_Exception2") + "(" + burnAltitude +
-                                             ")"); //new apoapsis cannot be lower than the altitude of the burn
+                    ")"); //new apoapsis cannot be lower than the altitude of the burn
             }
 
             if (NewPeA < -o.referenceBody.Radius)
             {
                 throw new OperationException(Localizer.Format("#MechJeb_both_Exception3", o.referenceBody.displayName.LocalizeRemoveGender()) + "(-" +
-                                             o.referenceBody.Radius.ToSI(3) + "m)"); //"new periapsis cannot be lower than minus the radius of <<1>>"
+                    o.referenceBody.Radius.ToSI(3) + "m)"); //"new periapsis cannot be lower than minus the radius of <<1>>"
             }
 
             double newPeR = NewPeA + o.referenceBody.Radius;

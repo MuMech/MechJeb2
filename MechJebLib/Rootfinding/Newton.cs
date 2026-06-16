@@ -56,7 +56,7 @@ namespace MechJebLib.Rootfinding
             for (int i = 0; i < maxiter; i++)
             {
                 if (((c - b) * dfc - fc) * ((c - a) * dfc - fc) > 0.0 // jumping out of range
-                    || Abs(2.0 * fc) > Abs(dxold * dfc))              // not making enough progress
+                    || Abs(2.0 * fc) > Abs(dxold * dfc)) // not making enough progress
                 {
                     // bisection
                     dxold = dx;

@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using JetBrainsAnnotations::JetBrains.Annotations;
-using KSP.IO;
 using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -13,51 +12,51 @@ namespace MuMech
 {
     public class MechJebWaypoint
     {
-        private const float    DEFAULT_RADIUS = 5;
-        public        double   Latitude;
-        public        double   Longitude;
-        public        double   Altitude;
-        public        Vector3d Position;
-        public        float    Radius;
+        private const float DEFAULT_RADIUS = 5;
+        public double Latitude;
+        public double Longitude;
+        public double Altitude;
+        public Vector3d Position;
+        public float Radius;
 
         [UsedImplicitly]
         public string Name;
 
         public readonly Vessel Target;
-        public          float  MinSpeed;
-        public          float  MaxSpeed;
-        public          bool   Quicksave;
+        public float MinSpeed;
+        public float MaxSpeed;
+        public bool Quicksave;
 
         public CelestialBody Body => Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody;
 
         public MechJebWaypoint(double latitude, double longitude, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0,
             float maxSpeed = 0)
         {
-            Latitude  = latitude;
+            Latitude = latitude;
             Longitude = longitude;
-            Radius    = radius;
-            Name      = name ?? "";
-            MinSpeed  = minSpeed;
-            MaxSpeed  = maxSpeed;
+            Radius = radius;
+            Name = name ?? "";
+            MinSpeed = minSpeed;
+            MaxSpeed = maxSpeed;
             Update();
         }
 
         public MechJebWaypoint(Vector3d position, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0, float maxSpeed = 0)
         {
-            Latitude  = Body.GetLatitude(position);
+            Latitude = Body.GetLatitude(position);
             Longitude = Body.GetLongitude(position);
-            Radius    = radius;
-            Name      = name ?? "";
-            MinSpeed  = minSpeed;
-            MaxSpeed  = maxSpeed;
+            Radius = radius;
+            Name = name ?? "";
+            MinSpeed = minSpeed;
+            MaxSpeed = maxSpeed;
             Update();
         }
 
         public MechJebWaypoint(Vessel target, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0, float maxSpeed = 0)
         {
-            Target   = target;
-            Radius   = radius;
-            Name     = name ?? "";
+            Target = target;
+            Radius = radius;
+            Name = name ?? "";
             MinSpeed = minSpeed;
             MaxSpeed = maxSpeed;
             Update();
@@ -103,7 +102,7 @@ namespace MuMech
         }
 
         public string GetNameWithCoords() => (Name != "" ? Name : Target is null ? "Waypoint" : Target.vesselName) + " - " +
-                                             Coordinates.ToStringDMS(Latitude, Longitude);
+            Coordinates.ToStringDMS(Latitude, Longitude);
 
         //				((Latitude >= 0 ? "N " : "S ") + Math.Abs(Math.Round(Latitude, 3)) + ", " + (Longitude >= 0 ? "E " : "W ") + Math.Abs(Math.Round(Longitude, 3)));
         public void Update()
@@ -119,17 +118,17 @@ namespace MuMech
                     bool raycast = Physics.Raycast(rayPos, dir, out RaycastHit hit, (float)Body.Radius, 1 << 15, QueryTriggerInteraction.Ignore);
                     if (raycast)
                     {
-                        dir      = hit.point - Body.position;
+                        dir = hit.point - Body.position;
                         Position = Body.position + dir.normalized * (dir.magnitude + 0.5);
-//						Latitude = Body.GetLatitude(Position);
-//						Longitude = Body.GetLongitude(Position);
+                        //						Latitude = Body.GetLatitude(Position);
+                        //						Longitude = Body.GetLongitude(Position);
                     }
                 }
             }
             else
             {
-                Position  = Target.CoM;
-                Latitude  = Body.GetLatitude(Position);
+                Position = Target.CoM;
+                Latitude = Body.GetLatitude(Position);
                 Longitude = Body.GetLongitude(Position);
             }
 
@@ -216,132 +215,132 @@ namespace MuMech
             PLANE
         }
 
-        public                  WaypointMode                 Mode = WaypointMode.ROVER;
-        private                 MechJebModuleRoverController _ap;
-        private static readonly List<MechJebWaypointRoute>   _routes = new List<MechJebWaypointRoute>();
+        public WaypointMode Mode = WaypointMode.ROVER;
+        private MechJebModuleRoverController _ap;
+        private static readonly List<MechJebWaypointRoute> _routes = new List<MechJebWaypointRoute>();
 
-        [EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Moho Mapdist
+        [EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Moho Mapdist
         public readonly EditableDouble MohoMapdist = 5000;
 
-        [EditableInfoItem("#MechJeb_EveMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Eve Mapdist
+        [EditableInfoItem("#MechJeb_EveMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Eve Mapdist
         public readonly EditableDouble EveMapdist = 5000;
 
-        [EditableInfoItem("#MechJeb_GillyMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Gilly Mapdist
+        [EditableInfoItem("#MechJeb_GillyMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Gilly Mapdist
         public readonly EditableDouble GillyMapdist = -500;
 
-        [EditableInfoItem("#MechJeb_KerbinMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Kerbin Mapdist
+        [EditableInfoItem("#MechJeb_KerbinMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Kerbin Mapdist
         public readonly EditableDouble KerbinMapdist = 500;
 
-        [EditableInfoItem("#MechJeb_MunMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Mun Mapdist
+        [EditableInfoItem("#MechJeb_MunMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Mun Mapdist
         public readonly EditableDouble MunMapdist = 4000;
 
-        [EditableInfoItem("#MechJeb_MinmusMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Minmus Mapdist
+        [EditableInfoItem("#MechJeb_MinmusMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Minmus Mapdist
         public readonly EditableDouble MinmusMapdist = 3500;
 
-        [EditableInfoItem("#MechJeb_DunaMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Duna Mapdist
+        [EditableInfoItem("#MechJeb_DunaMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Duna Mapdist
         public readonly EditableDouble DunaMapdist = 5000;
 
-        [EditableInfoItem("#MechJeb_IkeMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Ike Mapdist
+        [EditableInfoItem("#MechJeb_IkeMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Ike Mapdist
         public readonly EditableDouble IkeMapdist = 4000;
 
-        [EditableInfoItem("#MechJeb_DresMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Dres Mapdist
+        [EditableInfoItem("#MechJeb_DresMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Dres Mapdist
         public readonly EditableDouble DresMapdist = 1500;
 
-        [EditableInfoItem("#MechJeb_EelooMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Eeloo Mapdist
+        [EditableInfoItem("#MechJeb_EelooMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Eeloo Mapdist
         public readonly EditableDouble EelooMapdist = 2000;
 
-        [EditableInfoItem("#MechJeb_JoolMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Jool Mapdist
+        [EditableInfoItem("#MechJeb_JoolMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Jool Mapdist
         public readonly EditableDouble JoolMapdist = 30000;
 
-        [EditableInfoItem("#MechJeb_TyloMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Tylo Mapdist
+        [EditableInfoItem("#MechJeb_TyloMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Tylo Mapdist
         public readonly EditableDouble TyloMapdist = 5000;
 
-        [EditableInfoItem("#MechJeb_LaytheMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Laythe Mapdist
+        [EditableInfoItem("#MechJeb_LaytheMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Laythe Mapdist
         public readonly EditableDouble LaytheMapdist = 1000;
 
-        [EditableInfoItem("#MechJeb_PolMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Pol Mapdist
+        [EditableInfoItem("#MechJeb_PolMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Pol Mapdist
         public readonly EditableDouble PolMapdist = 500;
 
-        [EditableInfoItem("#MechJeb_BopMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Bop Mapdist
+        [EditableInfoItem("#MechJeb_BopMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Bop Mapdist
         public readonly EditableDouble BopMapdist = 1000;
 
-        [EditableInfoItem("#MechJeb_VallMapdist", InfoItem.Category.Rover)]
-        [Persistent(pass = (int)Pass.GLOBAL)] // Vall Mapdist
+        [EditableInfoItem("#MechJeb_VallMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
+        // Vall Mapdist
         public readonly EditableDouble VallMapdist = 5000;
 
-        internal int    SelIndex     = -1;
-        private  int    _saveIndex   = -1;
-        private  string _tmpRadius   = "";
-        private  string _tmpMinSpeed = "";
-        private  string _tmpMaxSpeed = "";
-        private  string _tmpLat      = "";
-        private  string _tmpLon      = "";
+        internal int SelIndex = -1;
+        private int _saveIndex = -1;
+        private string _tmpRadius = "";
+        private string _tmpMinSpeed = "";
+        private string _tmpMaxSpeed = "";
+        private string _tmpLat = "";
+        private string _tmpLon = "";
 
         private const string COORD_REG_EX =
             @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
 
-        private Vector2  _scroll;
+        private Vector2 _scroll;
         private GUIStyle _styleActive;
         private GUIStyle _styleInactive;
         private GUIStyle _styleQuicksave;
-        private string   _titleAdd = "";
-        private string   _saveName = "";
-        private bool     _waitingForPick;
-        private Pages    _showPage = Pages.WAYPOINTS;
+        private string _titleAdd = "";
+        private string _saveName = "";
+        private bool _waitingForPick;
+        private Pages _showPage = Pages.WAYPOINTS;
 
         private enum Pages { WAYPOINTS, SETTINGS, ROUTES }
 
         private static MechJebRouteRenderer _renderer;
-        private        Rect[]               _waypointRects = Array.Empty<Rect>();
-        private        int                  _lastIndex     = -1;
-        private        int                  _settingPageIndex;
+        private Rect[] _waypointRects = Array.Empty<Rect>();
+        private int _lastIndex = -1;
+        private int _settingPageIndex;
 
         private readonly string[] _settingPages = { "Rover", "Waypoints" };
-//		private static LineRenderer redLine;
-//		private static LineRenderer greenLine;
+        //		private static LineRenderer redLine;
+        //		private static LineRenderer greenLine;
 
         public MechJebModuleWaypointWindow(MechJebCore core) : base(core) { }
 
         public override void OnStart(PartModule.StartState state)
         {
             Hidden = true;
-            _ap    = Core.GetComputerModule<MechJebModuleRoverController>();
+            _ap = Core.GetComputerModule<MechJebModuleRoverController>();
             if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
-                _renderer         = MechJebRouteRenderer.AttachToMapView(Core);
+                _renderer = MechJebRouteRenderer.AttachToMapView(Core);
                 _renderer.enabled = Enabled;
             }
 
-//			GameObject obj = new GameObject("LineRenderer");
-//			redLine = obj.AddComponent<LineRenderer>();
-//			redLine.useWorldSpace = true;
-//			redLine.material = renderer.material;
-//			redLine.SetWidth(10.0f, 10.0f);
-//			redLine.SetColors(Color.red, Color.red);
-//			redLine.SetVertexCount(2);
-//			GameObject obj2 = new GameObject("LineRenderer");
-//			greenLine = obj2.AddComponent<LineRenderer>();
-//			greenLine.useWorldSpace = true;
-//			greenLine.material = renderer.material;
-//			greenLine.SetWidth(10.0f, 10.0f);
-//			greenLine.SetColors(Color.green, Color.green);
-//			greenLine.SetVertexCount(2);
-//			MechJebRouteRenderer.NewLineRenderer(ref greenLine);
+            //			GameObject obj = new GameObject("LineRenderer");
+            //			redLine = obj.AddComponent<LineRenderer>();
+            //			redLine.useWorldSpace = true;
+            //			redLine.material = renderer.material;
+            //			redLine.SetWidth(10.0f, 10.0f);
+            //			redLine.SetColors(Color.red, Color.red);
+            //			redLine.SetVertexCount(2);
+            //			GameObject obj2 = new GameObject("LineRenderer");
+            //			greenLine = obj2.AddComponent<LineRenderer>();
+            //			greenLine.useWorldSpace = true;
+            //			greenLine.material = renderer.material;
+            //			greenLine.SetWidth(10.0f, 10.0f);
+            //			greenLine.SetColors(Color.green, Color.green);
+            //			greenLine.SetVertexCount(2);
+            //			MechJebRouteRenderer.NewLineRenderer(ref greenLine);
             base.OnStart(state);
         }
 
@@ -427,8 +426,8 @@ namespace MuMech
                 {
                     Vector3d surfacePoint = body.position + relSurfacePosition;
                     double alt = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(body.GetLongitude(surfacePoint), Vector3d.down) *
-                                                                     QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) *
-                                                                     Vector3d.right);
+                        QuaternionD.AngleAxis(body.GetLatitude(surfacePoint), Vector3d.forward) *
+                        Vector3d.right);
                     double error = Math.Abs(curRadius - alt);
                     if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
                     {
@@ -436,7 +435,7 @@ namespace MuMech
                     }
 
                     lastRadius = curRadius;
-                    curRadius  = alt;
+                    curRadius = alt;
                     loops++;
                 }
                 else
@@ -453,44 +452,44 @@ namespace MuMech
 
             return null;
 
-//			var cam = FlightCamera.fetch.mainCamera;
-//			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-////			greenLine.SetPosition(0, ray.origin);
-////			greenLine.SetPosition(1, (Vector3d)ray.direction * body.Radius / 2);
-////			if (Physics.Raycast(ray, out raycast, (float)body.Radius * 4f, ~(1 << 1))) {
-//				Vector3d hit;
-//				//body.pqsController.RayIntersection(ray.origin, ray.direction, out hit);
-//				PQS.LineSphereIntersection(ray.origin - body.position, ray.direction, body.Radius, out hit);
-//				if (hit != Vector3d.zero) {
-//					hit = body.position + hit;
-//					Vector3d start = ray.origin;
-//					Vector3d end = hit;
-//					Vector3d point = Vector3d.zero;
-//					for (int i = 0; i < 16; i++) {
-//						point = (start + end) / 2;
-//						//var lat = body.GetLatitude(point);
-//						//var lon = body.GetLongitude(point);
-//						//var surf = body.GetWorldSurfacePosition(lat, lon, body.TerrainAltitude(lat, lon));
-//						var alt = body.GetAltitude(point) - body.TerrainAltitude(point);
-//						//Debug.Log(alt);
-//						if (alt > 0) {
-//							start = point;
-//						}
-//						else if (alt < 0) {
-//							end = point;
-//						}
-//						else {
-//							break;
-//						}
-//					}
-//					hit = point;
-////					redLine.SetPosition(0, ray.origin);
-////					redLine.SetPosition(1, hit);
-//					return new Coordinates(body.GetLatitude(hit), MuUtils.ClampDegrees180(body.GetLongitude(hit)));
-//				}
-//				else {
-//					return null;
-//				}
+            //			var cam = FlightCamera.fetch.mainCamera;
+            //			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            ////			greenLine.SetPosition(0, ray.origin);
+            ////			greenLine.SetPosition(1, (Vector3d)ray.direction * body.Radius / 2);
+            ////			if (Physics.Raycast(ray, out raycast, (float)body.Radius * 4f, ~(1 << 1))) {
+            //				Vector3d hit;
+            //				//body.pqsController.RayIntersection(ray.origin, ray.direction, out hit);
+            //				PQS.LineSphereIntersection(ray.origin - body.position, ray.direction, body.Radius, out hit);
+            //				if (hit != Vector3d.zero) {
+            //					hit = body.position + hit;
+            //					Vector3d start = ray.origin;
+            //					Vector3d end = hit;
+            //					Vector3d point = Vector3d.zero;
+            //					for (int i = 0; i < 16; i++) {
+            //						point = (start + end) / 2;
+            //						//var lat = body.GetLatitude(point);
+            //						//var lon = body.GetLongitude(point);
+            //						//var surf = body.GetWorldSurfacePosition(lat, lon, body.TerrainAltitude(lat, lon));
+            //						var alt = body.GetAltitude(point) - body.TerrainAltitude(point);
+            //						//Debug.Log(alt);
+            //						if (alt > 0) {
+            //							start = point;
+            //						}
+            //						else if (alt < 0) {
+            //							end = point;
+            //						}
+            //						else {
+            //							break;
+            //						}
+            //					}
+            //					hit = point;
+            ////					redLine.SetPosition(0, ray.origin);
+            ////					redLine.SetPosition(1, hit);
+            //					return new Coordinates(body.GetLatitude(hit), MuUtils.ClampDegrees180(body.GetLongitude(hit)));
+            //				}
+            //				else {
+            //					return null;
+            //				}
         }
 
         private static string LatToString(double lat)
@@ -545,11 +544,11 @@ namespace MuMech
             float nsew = 1;
             if (match.Groups[5] != null)
             {
-                if (match.Groups[5].Value.ToUpper() == "N" || match.Groups[5].Value.ToUpper() == "E") { nsew      = 1; }
+                if (match.Groups[5].Value.ToUpper() == "N" || match.Groups[5].Value.ToUpper() == "E") { nsew = 1; }
                 else if (match.Groups[5].Value.ToUpper() == "S" || match.Groups[5].Value.ToUpper() == "W") { nsew = -1; }
                 else if (match.Groups[1] != null)
                 {
-                    if (match.Groups[1].Value.ToUpper() == "N" || match.Groups[1].Value.ToUpper() == "E") { nsew      = 1; }
+                    if (match.Groups[1].Value.ToUpper() == "N" || match.Groups[1].Value.ToUpper() == "E") { nsew = 1; }
                     else if (match.Groups[1].Value.ToUpper() == "S" || match.Groups[1].Value.ToUpper() == "W") { nsew = -1; }
                 }
             }
@@ -560,7 +559,7 @@ namespace MuMech
             if (h < 0)
             {
                 nsew *= -1;
-                h    *= -1;
+                h *= -1;
             }
 
             float m = 0;
@@ -651,12 +650,12 @@ namespace MuMech
                             }
                             else
                             {
-                                SelIndex     = i;
-                                _tmpRadius   = wp.Radius.ToString();
+                                SelIndex = i;
+                                _tmpRadius = wp.Radius.ToString();
                                 _tmpMinSpeed = wp.MinSpeed.ToString();
                                 _tmpMaxSpeed = wp.MaxSpeed.ToString();
-                                _tmpLat      = LatToString(wp.Latitude);
-                                _tmpLon      = LonToString(wp.Longitude);
+                                _tmpLat = LatToString(wp.Latitude);
+                                _tmpLon = LonToString(wp.Longitude);
                             }
                         }
                     }
@@ -716,11 +715,11 @@ namespace MuMech
                         GUILayout.BeginHorizontal();
 
                         GUILayout.Label("Lat ", GuiUtils.LayoutNoExpandWidth);
-                        _tmpLat     = GUILayout.TextField(_tmpLat, GuiUtils.LayoutWidth(125));
+                        _tmpLat = GUILayout.TextField(_tmpLat, GuiUtils.LayoutWidth(125));
                         wp.Latitude = ParseCoord(_tmpLat);
 
                         GUILayout.Label(" -  Lon ", GuiUtils.LayoutNoExpandWidth);
-                        _tmpLon      = GUILayout.TextField(_tmpLon, GuiUtils.LayoutWidth(125));
+                        _tmpLon = GUILayout.TextField(_tmpLon, GuiUtils.LayoutWidth(125));
                         wp.Longitude = ParseCoord(_tmpLon, true);
 
                         GUILayout.EndHorizontal();
@@ -818,13 +817,13 @@ namespace MuMech
             if (GUILayout.Button("Routes"))
             {
                 _showPage = Pages.ROUTES;
-                _scroll   = Vector2.zero;
+                _scroll = Vector2.zero;
             }
 
             if (GUILayout.Button("Settings"))
             {
                 _showPage = Pages.SETTINGS;
-                _scroll   = Vector2.zero;
+                _scroll = Vector2.zero;
             }
 
             GUILayout.EndHorizontal();
@@ -859,7 +858,7 @@ namespace MuMech
                     ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
                     ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
                     ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
-//					ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
+                    //					ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
                     ed.registry.Find(i => i.id == "Editable:RoverController.tractionLimit").DrawItem();
                     ed.registry.Find(i => i.id == "Toggle:RoverController.LimitAcceleration").DrawItem();
                     GUILayout.EndVertical();
@@ -909,15 +908,15 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Waypoints"))
             {
-                _showPage  = Pages.WAYPOINTS;
-                _scroll    = Vector2.zero;
+                _showPage = Pages.WAYPOINTS;
+                _scroll = Vector2.zero;
                 _lastIndex = -1;
             }
 
             if (GUILayout.Button("Routes"))
             {
                 _showPage = Pages.ROUTES;
-                _scroll   = Vector2.zero;
+                _scroll = Vector2.zero;
             }
 
             if (GUILayout.Button("Help"))
@@ -999,15 +998,15 @@ namespace MuMech
 
             if (GUILayout.Button("Waypoints"))
             {
-                _showPage  = Pages.WAYPOINTS;
-                _scroll    = Vector2.zero;
+                _showPage = Pages.WAYPOINTS;
+                _scroll = Vector2.zero;
                 _lastIndex = -1;
             }
 
             if (GUILayout.Button("Settings"))
             {
                 _showPage = Pages.SETTINGS;
-                _scroll   = Vector2.zero;
+                _scroll = Vector2.zero;
             }
 
             GUILayout.EndHorizontal();
@@ -1034,10 +1033,7 @@ namespace MuMech
                 help.Enabled = help.SelTopic > -1 || help.Enabled;
             }
 
-            _styleInactive ??= new GUIStyle(GuiUtils.Skin != null ? GuiUtils.Skin.button : GuiUtils.DefaultSkin.button)
-            {
-                alignment = TextAnchor.UpperLeft
-            };
+            _styleInactive ??= new GUIStyle(GuiUtils.Skin != null ? GuiUtils.Skin.button : GuiUtils.DefaultSkin.button) { alignment = TextAnchor.UpperLeft };
 
             if (_styleActive == null)
             {
@@ -1072,7 +1068,7 @@ namespace MuMech
             {
                 if (MapView.MapIsEnabled)
                 {
-                    if (Core.Target.pickingPositionTarget == false)
+                    if (!Core.Target.pickingPositionTarget)
                     {
                         if (Core.Target.PositionTargetExists)
                         {
@@ -1080,8 +1076,8 @@ namespace MuMech
                             {
                                 _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
                                 _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                                _tmpLat    = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                                _tmpLon    = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                                _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
+                                _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
                             }
                             else
                             {
@@ -1110,8 +1106,8 @@ namespace MuMech
                                 {
                                     _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
                                     _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                                    _tmpLat    = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                                    _tmpLon    = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                                    _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
+                                    _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
                                 }
                                 else
                                 {
@@ -1133,10 +1129,10 @@ namespace MuMech
             if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { MechJebRouteRenderer.AttachToMapView(Core); }
 
             _ap.Waypoints.ForEach(wp => wp.Update());
-//			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
-//			greenLine.SetPosition(0, vessel.CoM);
-//			greenLine.SetPosition(1, vessel.CoM + ap.norm * 5);
-//			greenLine.SetWidth(scale + 0.1f, scale + 0.1f);
+            //			float scale = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, vessel.CoM) / 900f;
+            //			greenLine.SetPosition(0, vessel.CoM);
+            //			greenLine.SetPosition(1, vessel.CoM + ap.norm * 5);
+            //			greenLine.SetWidth(scale + 0.1f, scale + 0.1f);
             base.OnFixedUpdate();
         }
     }
@@ -1144,11 +1140,11 @@ namespace MuMech
     [UsedImplicitly]
     public class MechJebModuleWaypointHelpWindow : DisplayModule
     {
-        public          int      SelTopic;
-        public readonly string[] Topics       = { "Rover Controller", "Waypoints", "Routes", "Settings" };
-        private         string   _selSubTopic = "";
-        private         GUIStyle _btnActive;
-        private         GUIStyle _btnInactive;
+        public int SelTopic;
+        public readonly string[] Topics = { "Rover Controller", "Waypoints", "Routes", "Settings" };
+        private string _selSubTopic = "";
+        private GUIStyle _btnActive;
+        private GUIStyle _btnInactive;
 
         private void HelpTopic(string title, string text)
         {
@@ -1156,7 +1152,7 @@ namespace MuMech
             if (GUILayout.Button(title, _selSubTopic == title ? _btnActive : _btnInactive))
             {
                 _selSubTopic = _selSubTopic != title ? title : "";
-                WindowPos    = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
+                WindowPos = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
             }
 
             if (_selSubTopic == title)
@@ -1185,7 +1181,7 @@ namespace MuMech
 
             if (_btnActive == null)
             {
-                _btnActive                  = new GUIStyle(_btnInactive);
+                _btnActive = new GUIStyle(_btnInactive);
                 _btnActive.active.textColor = _btnActive.hover.textColor = _btnActive.focused.textColor = _btnActive.normal.textColor = Color.green;
             }
 
@@ -1227,10 +1223,10 @@ namespace MuMech
 
                 case "Waypoints":
                     HelpTopic("Adding Waypoints", "Adds a new waypoint to the route at the end or before the currently selected waypoint, " +
-                                                  "simply click the terrain or somewhere on the body in Mapview." +
-                                                  "\n\nAlt clicking will reverse the route for easier going back and holding Alt while clicking the terrain or body in Mapview will allow to add more waypoints without having to click the button again.");
+                        "simply click the terrain or somewhere on the body in Mapview." +
+                        "\n\nAlt clicking will reverse the route for easier going back and holding Alt while clicking the terrain or body in Mapview will allow to add more waypoints without having to click the button again.");
                     HelpTopic("Removing Waypoints", "Removes the currently selected waypoint." +
-                                                    "\n\nAlt clicking will remove all waypoints.");
+                        "\n\nAlt clicking will remove all waypoints.");
                     HelpTopic("Reordering Waypoints",
                         "'Up' and 'Down' will move the selected waypoint up or down in the list, Alt clicking will move it to the top or bottom respectively.");
                     HelpTopic("Waypoint Radius",
@@ -1238,22 +1234,22 @@ namespace MuMech
                         "\n\nA radius of 5m (default) simply means that when you're 5m from the waypoint away the autopilot will jump to the next or turn off if it was the last." +
                         "\n\nThe 'A' button behind the textfield will set the entered radius for all waypoints.");
                     HelpTopic("Speedlimits", "The two speed textfields represent the minimum and maximum speed for the waypoint." +
-                                             "\n\nThe maximum speed is the speed the autopilot tries to reach to get to the waypoint." +
-                                             "\n\nThe minimum speed was before used to set the speed with which the autopilot will go through the waypoint, but that got reworked now to be based on the next waypoint's max. speed and the turn needed at the waypoint." +
-                                             "\n\nI have no idea what this will currently do if set so better just leave it at 0..." +
-                                             "\n\nThe 'A' buttons set their respective speed for all waypoints.");
+                        "\n\nThe maximum speed is the speed the autopilot tries to reach to get to the waypoint." +
+                        "\n\nThe minimum speed was before used to set the speed with which the autopilot will go through the waypoint, but that got reworked now to be based on the next waypoint's max. speed and the turn needed at the waypoint." +
+                        "\n\nI have no idea what this will currently do if set so better just leave it at 0..." +
+                        "\n\nThe 'A' buttons set their respective speed for all waypoints.");
                     HelpTopic("Quicksaving at a Waypoint", "Clicking the 'QS' button will turn on QuickSave for that waypoint." +
-                                                           "\n\nThis will make the autopilot stop and try to quicksave at that waypoint and then continue. A QuickSave waypoint has yellow text instead of white." +
-                                                           "\n\nSmall sideeffect: leaving the throttle up will prevent the saving from occurring effectively pausing the autopilot at that point until interefered with. (Discovered by Greys)" +
-                                                           "\n\nAlt clicking will toggle QS for all waypoints including the clicked one.");
+                        "\n\nThis will make the autopilot stop and try to quicksave at that waypoint and then continue. A QuickSave waypoint has yellow text instead of white." +
+                        "\n\nSmall sideeffect: leaving the throttle up will prevent the saving from occurring effectively pausing the autopilot at that point until interefered with. (Discovered by Greys)" +
+                        "\n\nAlt clicking will toggle QS for all waypoints including the clicked one.");
                     HelpTopic("Changing the current target Waypoint",
                         "Alt clicking a waypoint will mark it as the current target waypoint. The active waypoint has a green tinted background.");
                     break;
 
                 case "Routes":
                     HelpTopic("Routes Help", "The empty textfield is for saving routes, enter a name there before clicking 'Save'." +
-                                             "\n\nTo load a route simply select one from the list and click 'Load'." +
-                                             "\n\nTo delete a route simply select it and a 'Delete' button will appear right of it.");
+                        "\n\nTo load a route simply select one from the list and click 'Load'." +
+                        "\n\nTo delete a route simply select it and a 'Delete' button will appear right of it.");
                     break;
 
                 case "Settings":
@@ -1263,10 +1259,10 @@ namespace MuMech
                         "'Safe Turn Speed' tells the autopilot which speed the rover can usually go full turn through corners without tipping over." +
                         "\n\nGiven how differently terrain can be and other influences you can just leave it at 3 m/s but if you're impatient or just want to experiment feel free to test around. Saved per vessel type (same named vessels will share the setting).");
                     HelpTopic("Traction and Braking", "'Traction' shows in % how many wheels have ground contact." +
-                                                      "\n'Traction Brake Limit' defines what traction is atleast needed for the autopilot to still apply the brakes (given 'Stability Control' is active) even if you hold the brake down." +
-                                                      "\nThis means the default setting of 75 will make it brake only if atleast 3 wheels have ground contact." +
-                                                      "\n'Traction Brake Limit' is saved per vessel type." +
-                                                      "\n\nIf you have 'Stability Control' off then it won't take care of your brake and you can flip as much as you want.");
+                        "\n'Traction Brake Limit' defines what traction is atleast needed for the autopilot to still apply the brakes (given 'Stability Control' is active) even if you hold the brake down." +
+                        "\nThis means the default setting of 75 will make it brake only if atleast 3 wheels have ground contact." +
+                        "\n'Traction Brake Limit' is saved per vessel type." +
+                        "\n\nIf you have 'Stability Control' off then it won't take care of your brake and you can flip as much as you want.");
                     HelpTopic("Changing the route height in Mapview",
                         "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
                     break;
@@ -1278,17 +1274,17 @@ namespace MuMech
 
     public class MechJebRouteRenderer : MonoBehaviour
     {
-        private static readonly Material                     _material = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
-        public                  MechJebModuleRoverController AP;
-        private                 LineRenderer                 _pastPath;
-        private                 LineRenderer                 _currPath;
-        private                 LineRenderer                 _nextPath;
-        private                 LineRenderer                 _selWp;
-        private readonly        Color                        _pastPathColor = new Color(0f, 0f, 1f, 0.5f);
-        private readonly        Color                        _currPathColor = new Color(0f, 1f, 0f, 0.5f);
-        private readonly        Color                        _nextPathColor = new Color(1f, 1f, 0f, 0.5f);
-        private readonly        Color                        _selWpColor    = new Color(1f, 0f, 0f, 0.5f);
-        private                 double                       _addHeight;
+        private static readonly Material _material = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
+        public MechJebModuleRoverController AP;
+        private LineRenderer _pastPath;
+        private LineRenderer _currPath;
+        private LineRenderer _nextPath;
+        private LineRenderer _selWp;
+        private readonly Color _pastPathColor = new Color(0f, 0f, 1f, 0.5f);
+        private readonly Color _currPathColor = new Color(0f, 1f, 0f, 0.5f);
+        private readonly Color _nextPathColor = new Color(1f, 1f, 0f, 0.5f);
+        private readonly Color _selWpColor = new Color(1f, 0f, 0f, 0.5f);
+        private double _addHeight;
 
         public static MechJebRouteRenderer AttachToMapView(MechJebCore core)
         {
@@ -1307,11 +1303,11 @@ namespace MuMech
             if (line != null) { return false; }
 
             var obj = new GameObject("LineRenderer");
-            line               = obj.AddComponent<LineRenderer>();
+            line = obj.AddComponent<LineRenderer>();
             line.useWorldSpace = true;
-            line.material      = _material;
-            line.startWidth    = 10.0f;
-            line.endWidth      = 10.0f;
+            line.material = _material;
+            line.startWidth = 10.0f;
+            line.endWidth = 10.0f;
             line.positionCount = 2;
             return true;
         }
@@ -1325,8 +1321,8 @@ namespace MuMech
             double lat = body.GetLatitude(position);
             double lon = body.GetLongitude(position);
             return ScaledSpace.LocalToScaledSpace(body.position +
-                                                  (body.Radius + heightOffset + body.TerrainAltitude(lat, lon)) *
-                                                  body.GetSurfaceNVector(lat, lon));
+                (body.Radius + heightOffset + body.TerrainAltitude(lat, lon)) *
+                body.GetSurfaceNVector(lat, lon));
         }
 
         public new bool enabled
@@ -1348,25 +1344,25 @@ namespace MuMech
             if (NewLineRenderer(ref _pastPath))
             {
                 _pastPath.startColor = _pastPathColor;
-                _pastPath.endColor   = _pastPathColor;
+                _pastPath.endColor = _pastPathColor;
             }
 
             if (NewLineRenderer(ref _currPath))
             {
                 _currPath.startColor = _currPathColor;
-                _currPath.endColor   = _currPathColor;
+                _currPath.endColor = _currPathColor;
             }
 
             if (NewLineRenderer(ref _nextPath))
             {
                 _nextPath.startColor = _nextPathColor;
-                _nextPath.endColor   = _nextPathColor;
+                _nextPath.endColor = _nextPathColor;
             }
 
             if (NewLineRenderer(ref _selWp))
             {
                 _selWp.startColor = _selWpColor;
-                _selWp.endColor   = _selWpColor;
+                _selWp.endColor = _selWpColor;
             }
 
             //Debug.Log(ap.vessel.vesselName);
@@ -1400,11 +1396,11 @@ namespace MuMech
                 //float width = (MapView.MapIsEnabled ? (float)mainBody.Radius / 10000 : 1);
 
                 _pastPath.startWidth = width;
-                _pastPath.endWidth   = width;
+                _pastPath.endWidth = width;
                 _currPath.startWidth = width;
-                _currPath.endWidth   = width;
+                _currPath.endWidth = width;
                 _nextPath.startWidth = width;
-                _nextPath.endWidth   = width;
+                _nextPath.endWidth = width;
                 _selWp.gameObject.layer = _pastPath.gameObject.layer =
                     _currPath.gameObject.layer = _nextPath.gameObject.layer = MapView.MapIsEnabled ? 9 : 0;
 
@@ -1414,64 +1410,64 @@ namespace MuMech
                 {
                     float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Waypoints[sel].Position) / 600f + 0.1f;
                     _selWp.startWidth = 0;
-                    _selWp.endWidth   = w * 10f;
+                    _selWp.endWidth = w * 10f;
                     _selWp.SetPosition(0, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f));
                     _selWp.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[sel].Position, targetHeight + 3f + w * 15f));
                 }
 
                 if (AP.WaypointIndex > 0)
                 {
-//					Debug.Log("drawing pastPath");
-                    _pastPath.enabled       = true;
+                    //					Debug.Log("drawing pastPath");
+                    _pastPath.enabled = true;
                     _pastPath.positionCount = AP.WaypointIndex + 1;
                     for (int i = 0; i < AP.WaypointIndex; i++)
                     {
-//						Debug.Log("vert " + i.ToString());
+                        //						Debug.Log("vert " + i.ToString());
                         _pastPath.SetPosition(i, RaisePositionOverTerrain(AP.Waypoints[i].Position, targetHeight));
                     }
 
                     _pastPath.SetPosition(AP.WaypointIndex, RaisePositionOverTerrain(AP.Vessel.CoM, targetHeight));
-//					Debug.Log("pastPath drawn");
+                    //					Debug.Log("pastPath drawn");
                 }
                 else
                 {
-//					Debug.Log("no pastPath");
+                    //					Debug.Log("no pastPath");
                     _pastPath.enabled = false;
                 }
 
                 if (AP.WaypointIndex > -1)
                 {
-//					Debug.Log("drawing currPath");
+                    //					Debug.Log("drawing currPath");
                     _currPath.enabled = true;
                     _currPath.SetPosition(0, RaisePositionOverTerrain(AP.Vessel.CoM, targetHeight));
                     _currPath.SetPosition(1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex].Position, targetHeight));
-//					Debug.Log("currPath drawn");
+                    //					Debug.Log("currPath drawn");
                 }
                 else
                 {
-//					Debug.Log("no currPath");
+                    //					Debug.Log("no currPath");
                     _currPath.enabled = false;
                 }
 
                 int nextCount = AP.Waypoints.Count - AP.WaypointIndex;
                 if (nextCount > 1)
                 {
-//					Debug.Log("drawing nextPath of " + nextCount + " verts");
-                    _nextPath.enabled       = true;
+                    //					Debug.Log("drawing nextPath of " + nextCount + " verts");
+                    _nextPath.enabled = true;
                     _nextPath.positionCount = nextCount;
                     _nextPath.SetPosition(0,
                         RaisePositionOverTerrain(AP.WaypointIndex == -1 ? AP.Vessel.CoM : (Vector3)AP.Waypoints[AP.WaypointIndex].Position,
                             targetHeight));
                     for (int i = 0; i < nextCount - 1; i++)
                     {
-//						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
+                        //						Debug.Log("vert " + i.ToString() + " (" + (ap.WaypointIndex + 1 + i).ToString() + ")");
                         _nextPath.SetPosition(i + 1, RaisePositionOverTerrain(AP.Waypoints[AP.WaypointIndex + 1 + i].Position, targetHeight));
                     }
-//					Debug.Log("nextPath drawn");
+                    //					Debug.Log("nextPath drawn");
                 }
                 else
                 {
-//					Debug.Log("no nextPath");
+                    //					Debug.Log("no nextPath");
                     _nextPath.enabled = false;
                 }
             }

@@ -13,17 +13,7 @@ namespace MechJebLibTest.RootfindingTests
 {
     public class BrentRootTests
     {
-        [Theory]
-        [InlineData(2.0)]
-        [InlineData(2.1)]
-        [InlineData(2.2)]
-        [InlineData(2.3)]
-        [InlineData(2.4)]
-        [InlineData(2.5)]
-        [InlineData(2.6)]
-        [InlineData(2.7)]
-        [InlineData(2.8)]
-        [InlineData(2.9)]
+        [Theory, InlineData(2.0), InlineData(2.1), InlineData(2.2), InlineData(2.3), InlineData(2.4), InlineData(2.5), InlineData(2.6), InlineData(2.7), InlineData(2.8), InlineData(2.9)]
         public void Test(double a0)
         {
             double ans = BrentRoot.Solve((t, o) => t * t * t - a0, 0.0, 2.0, null);

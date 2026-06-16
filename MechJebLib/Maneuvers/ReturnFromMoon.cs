@@ -82,10 +82,10 @@ namespace MechJebLib.Maneuvers
             if (x.Any(v => !IsFinite(v.M)))
                 throw new Exception("invalid value");
 
-            Dual tBurn = x[0];  // moon scaled
+            Dual tBurn = x[0]; // moon scaled
             Dual tCoast = x[1]; // moon scaled
 
-            DualV3 rSoi = new DualV3(_soi, x[2], x[3]).sph2cart;    // moon scaled
+            DualV3 rSoi = new DualV3(_soi, x[2], x[3]).sph2cart; // moon scaled
             DualV3 vSoiPos = new DualV3(x[4], x[5], x[6]).sph2cart; // moon scaled
 
             // All moon scaled

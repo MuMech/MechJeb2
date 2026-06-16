@@ -22,9 +22,9 @@ namespace MechJebLib.Lambert
     /// </summary>
     public enum TransferGeometry
     {
-        ShortWay,  // absolute: transfer angle in [0, pi]
-        LongWay,   // absolute: transfer angle in [pi, 2pi]
-        Prograde,  // relative to v1: arc that goes with v1's angular momentum
+        ShortWay, // absolute: transfer angle in [0, pi]
+        LongWay, // absolute: transfer angle in [pi, 2pi]
+        Prograde, // relative to v1: arc that goes with v1's angular momentum
         Retrograde // relative to v1: arc that opposes v1's angular momentum
     }
 

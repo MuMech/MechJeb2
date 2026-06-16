@@ -46,11 +46,7 @@ namespace MechJebLibTest.Primitives
 
         // ---------- Scal ----------
 
-        [Theory]
-        [InlineData(2.0, new[] { 1.0, -2.0, 3.0 }, new[] { 2.0, -4.0, 6.0 })]
-        [InlineData(0.0, new[] { 1.0, -2.0, 3.0 }, new[] { 0.0, 0.0, 0.0 })]
-        [InlineData(1.0, new[] { 1.0, -2.0, 3.0 }, new[] { 1.0, -2.0, 3.0 })]
-        [InlineData(-1.0, new[] { 1.0, -2.0, 3.0 }, new[] { -1.0, 2.0, -3.0 })]
+        [Theory, InlineData(2.0, new[] { 1.0, -2.0, 3.0 }, new[] { 2.0, -4.0, 6.0 }), InlineData(0.0, new[] { 1.0, -2.0, 3.0 }, new[] { 0.0, 0.0, 0.0 }), InlineData(1.0, new[] { 1.0, -2.0, 3.0 }, new[] { 1.0, -2.0, 3.0 }), InlineData(-1.0, new[] { 1.0, -2.0, 3.0 }, new[] { -1.0, 2.0, -3.0 })]
         public void Scal_ScalesByAlpha(double a, double[] input, double[] expected)
         {
             VecOps.Scal(a, input, input.Length);
@@ -906,27 +902,15 @@ namespace MechJebLibTest.Primitives
             Assert.Equal(1.0 / Math.Sqrt(2.0), s, 12);
         }
 
-        [Theory]
-        [InlineData(3.0, 4.0)]
-        [InlineData(-3.0, 4.0)]
-        [InlineData(3.0, -4.0)]
-        [InlineData(-3.0, -4.0)]
-        [InlineData(0.1, 1e-6)]
-        [InlineData(1e6, 1e-6)]
-        [InlineData(1.0, 1.0)]
+        [Theory, InlineData(3.0, 4.0), InlineData(-3.0, 4.0), InlineData(3.0, -4.0), InlineData(-3.0, -4.0), InlineData(0.1, 1e-6), InlineData(1e6, 1e-6), InlineData(1.0, 1.0)]
         public void Rotg_CSquaredPlusSSquared_IsOne(double a, double b)
         {
             VecOps.Rotg(a, b, out double c, out double s, out _);
             Assert.Equal(1.0, c * c + s * s, 12);
         }
 
-        [Theory]
-        [InlineData(3.0, 4.0)]
-        [InlineData(-3.0, 4.0)]
-        [InlineData(3.0, -4.0)]
-        [InlineData(-3.0, -4.0)]
-        [InlineData(7.0, 24.0)] // |r| = 25
-        [InlineData(1e6, 1.0)]
+        [Theory, InlineData(3.0, 4.0), InlineData(-3.0, 4.0), InlineData(3.0, -4.0), InlineData(-3.0, -4.0), InlineData(7.0, 24.0), InlineData(1e6, 1.0)]
+        // |r| = 25
         public void Rotg_ConstructedRotation_ZerosOutB(double a, double b)
         {
             VecOps.Rotg(a, b, out double c, out double s, out double r);

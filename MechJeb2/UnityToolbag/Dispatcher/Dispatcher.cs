@@ -17,9 +17,9 @@ namespace UnityToolbag
         // to track the instance so we can use that on the other threads.
         private static bool _instanceExists;
 
-        private static          Thread _mainThread;
+        private static Thread _mainThread;
         private static readonly object _lockObject = new object();
-        private static readonly Queue  _actions    = new Queue();
+        private static readonly Queue _actions = new Queue();
 
         /// <summary>
         ///     Gets a value indicating whether or not the current thread is the game's main thread.
@@ -88,9 +88,9 @@ namespace UnityToolbag
             }
             else
             {
-                _instance       = this;
+                _instance = this;
                 _instanceExists = true;
-                _mainThread     = Thread.CurrentThread;
+                _mainThread = Thread.CurrentThread;
                 DontDestroyOnLoad(this);
             }
         }
@@ -99,7 +99,7 @@ namespace UnityToolbag
         {
             if (_instance == this)
             {
-                _instance       = null;
+                _instance = null;
                 _instanceExists = false;
             }
         }

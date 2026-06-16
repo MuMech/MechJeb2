@@ -6,7 +6,8 @@ namespace MuMech
 {
     public class MechJebModuleAttitudeAdjustment : DisplayModule
     {
-        [Persistent(pass = (int)Pass.GLOBAL)] public bool showInfos;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool showInfos;
 
         public MechJebModuleAttitudeAdjustment(MechJebCore core) : base(core) { }
 

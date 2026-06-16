@@ -10,16 +10,12 @@ namespace MuMech
     public class OperationPeriapsis : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_Pe_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult NewPeA = new EditableDoubleMult(100000, 1000);
 
-        private static readonly TimeReference[] _timeReferences =
-        {
-            TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
-        };
+        private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE };
 
         private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
@@ -36,13 +32,10 @@ namespace MuMech
             if (NewPeA < -o.referenceBody.Radius)
             {
                 throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception2", o.referenceBody.displayName.LocalizeRemoveGender()) + "(-" +
-                                             o.referenceBody.Radius.ToSI(3) + "m)"); //new periapsis cannot be lower than minus the radius of <<1>>
+                    o.referenceBody.Radius.ToSI(3) + "m)"); //new periapsis cannot be lower than minus the radius of <<1>>
             }
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, ut, NewPeA + o.referenceBody.Radius), ut)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, ut, NewPeA + o.referenceBody.Radius), ut) };
         }
     }
 }

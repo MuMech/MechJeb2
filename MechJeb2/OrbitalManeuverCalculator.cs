@@ -343,7 +343,7 @@ namespace MuMech
             double burn_longitude = o.referenceBody.GetLongitude(pos) + o.referenceBody.rotationAngle;
 
             const double target_latitude = 0; // Equator
-            double target_longitude = 0;      // Prime Meridian
+            double target_longitude = 0; // Prime Meridian
 
             // Select the location of either the descending or ascending node.
             // If the descending node is closer than the ascending node, or there is no ascending node, target the reverse of the newLAN

@@ -29,8 +29,7 @@ namespace MechJebLibTest.ManeuversTests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void ChangeOrbitalElementTest(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));

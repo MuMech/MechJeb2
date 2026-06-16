@@ -116,7 +116,7 @@ namespace MuMech
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3d North(this Orbit o, double ut) =>
             Vector3d.Exclude(o.Up(ut), o.referenceBody.transform.up * (float)o.referenceBody.Radius - o.WorldBCIPositionAtUT(ut))
-                .normalized;
+               .normalized;
 
         //normalized vector parallel to the planet's surface and pointing in the eastward direction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -149,16 +149,16 @@ namespace MuMech
         //hyperbolic eccentricity it may not find the actual closest approach.
         public static double NextClosestApproachTime(this Orbit a, Orbit b, double ut)
         {
-            double closestApproachTime     = ut;
+            double closestApproachTime = ut;
             double closestApproachDistance = double.MaxValue;
-            double minTime                 = ut;
-            double interval                = a.period;
+            double minTime = ut;
+            double interval = a.period;
             if (a.eccentricity > 1)
             {
                 interval = 100 / a.meanMotion; //this should be an interval of time that covers a large chunk of the hyperbolic arc
             }
 
-            double    maxTime       = ut + interval;
+            double maxTime = ut + interval;
             const int NUM_DIVISIONS = 20;
 
             for (int iter = 0; iter < 8; iter++)
@@ -166,12 +166,12 @@ namespace MuMech
                 double dt = (maxTime - minTime) / NUM_DIVISIONS;
                 for (int i = 0; i < NUM_DIVISIONS; i++)
                 {
-                    double t        = minTime + i * dt;
+                    double t = minTime + i * dt;
                     double distance = a.Separation(b, t);
                     if (distance < closestApproachDistance)
                     {
                         closestApproachDistance = distance;
-                        closestApproachTime     = t;
+                        closestApproachTime = t;
                     }
                 }
 
@@ -194,7 +194,7 @@ namespace MuMech
         {
             // We use ObtAtEpoch and not meanAnomalyAtEpoch because somehow meanAnomalyAtEpoch
             // can be wrong when using the RealSolarSystem mod. ObtAtEpoch is always correct.
-            double ret                  = (o.ObTAtEpoch + (ut - o.epoch)) * o.meanMotion;
+            double ret = (o.ObTAtEpoch + (ut - o.epoch)) * o.meanMotion;
             if (o.eccentricity < 1) ret = MuUtils.ClampRadiansTwoPi(ret);
             return ret;
         }
@@ -206,8 +206,8 @@ namespace MuMech
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double UTAtMeanAnomaly(this Orbit o, double meanAnomaly, double ut)
         {
-            double currentMeanAnomaly              = o.MeanAnomalyAtUT(ut);
-            double meanDifference                  = meanAnomaly - currentMeanAnomaly;
+            double currentMeanAnomaly = o.MeanAnomalyAtUT(ut);
+            double meanDifference = meanAnomaly - currentMeanAnomaly;
             if (o.eccentricity < 1) meanDifference = MuUtils.ClampRadiansTwoPi(meanDifference);
             return ut + meanDifference / o.meanMotion;
         }
@@ -327,7 +327,7 @@ namespace MuMech
         {
             Vector3d vectorToAN = Quaternion.AngleAxis(-(float)o.LAN, Planetarium.up) * Planetarium.right;
             Vector3d vectorToPe = Quaternion.AngleAxis((float)o.argumentOfPeriapsis, o.OrbitNormal()) * vectorToAN;
-            Vector3d ret        = -o.ApR * vectorToPe;
+            Vector3d ret = -o.ApR * vectorToPe;
             if (double.IsNaN(ret.x))
             {
                 Debug.LogError("OrbitExtensions.WorldBCIPositionAtApoapsis got a NaN result!");
@@ -346,10 +346,10 @@ namespace MuMech
         //The returned value is always between 0 and 360.
         public static double TrueAnomalyFromVector(this Orbit o, Vector3d vec)
         {
-            Vector3d oNormal     = o.OrbitNormal();
-            var      projected   = Vector3d.Exclude(oNormal, vec);
-            Vector3d vectorToPe  = o.WorldBCIPositionAtPeriapsis();
-            double   angleFromPe = Vector3d.Angle(vectorToPe, projected);
+            Vector3d oNormal = o.OrbitNormal();
+            var projected = Vector3d.Exclude(oNormal, vec);
+            Vector3d vectorToPe = o.WorldBCIPositionAtPeriapsis();
+            double angleFromPe = Vector3d.Angle(vectorToPe, projected);
 
             //If the vector points to the infalling part of the orbit then we need to do 360 minus the
             //angle from Pe to get the true anomaly. Test this by taking the the cross product of the
@@ -377,8 +377,8 @@ namespace MuMech
 
             if (ecc < 1) //elliptical orbits
             {
-                double cosE                = (ecc + Cos(trueAnomaly)) / (1 + ecc * Cos(trueAnomaly));
-                double sinE                = Sqrt(1 - cosE * cosE);
+                double cosE = (ecc + Cos(trueAnomaly)) / (1 + ecc * Cos(trueAnomaly));
+                double sinE = Sqrt(1 - cosE * cosE);
                 if (trueAnomaly > PI) sinE *= -1;
 
                 return MuUtils.ClampRadiansTwoPi(Atan2(sinE, cosE));
@@ -390,7 +390,7 @@ namespace MuMech
                 throw new ArgumentException("OrbitExtensions.GetEccentricAnomalyAtTrueAnomaly: True anomaly of " + trueAnomaly +
                     " radians is not attained by orbit with eccentricity " + o.eccentricity);
 
-            double eanom                = MuUtils.Acosh(coshE);
+            double eanom = MuUtils.Acosh(coshE);
             if (trueAnomaly > PI) eanom *= -1;
 
             return eanom;
@@ -471,17 +471,17 @@ namespace MuMech
         public static double SynodicPeriod(this Orbit a, Orbit b)
         {
             int sign = Vector3d.Dot(a.OrbitNormal(), b.OrbitNormal()) > 0 ? 1 : -1; //detect relative retrograde motion
-            return Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period));             //period after which the phase angle repeats
+            return Abs(1.0 / (1.0 / a.period - sign * 1.0 / b.period)); //period after which the phase angle repeats
         }
 
         //Computes the phase angle between two orbiting objects.
         //This only makes sense if a.referenceBody == b.referenceBody.
         public static double PhaseAngle(this Orbit a, Orbit b, double ut)
         {
-            Vector3d normalA    = a.OrbitNormal();
-            Vector3d posA       = a.WorldBCIPositionAtUT(ut);
-            var      projectedB = Vector3d.Exclude(normalA, b.WorldBCIPositionAtUT(ut));
-            double   angle      = Vector3d.Angle(posA, projectedB);
+            Vector3d normalA = a.OrbitNormal();
+            Vector3d posA = a.WorldBCIPositionAtUT(ut);
+            var projectedB = Vector3d.Exclude(normalA, b.WorldBCIPositionAtUT(ut));
+            double angle = Vector3d.Angle(posA, projectedB);
             if (Vector3d.Dot(Vector3d.Cross(normalA, posA), projectedB) < 0)
             {
                 angle = 360 - angle;
@@ -512,8 +512,8 @@ namespace MuMech
 
             double trueAnomaly1 = o.TrueAnomalyAtRadius(radius);
             double trueAnomaly2 = 2 * PI - trueAnomaly1;
-            double time1        = o.TimeOfTrueAnomaly(trueAnomaly1, ut);
-            double time2        = o.TimeOfTrueAnomaly(trueAnomaly2, ut);
+            double time1 = o.TimeOfTrueAnomaly(trueAnomaly1, ut);
+            double time2 = o.TimeOfTrueAnomaly(trueAnomaly2, ut);
             if (time2 < time1 && time2 > ut) return time2;
             return time1;
         }

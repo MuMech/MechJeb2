@@ -10,20 +10,20 @@ namespace MuMech
 
         [NonSerialized]
         public string MechJebAscentButton1,
-            MechJebAscentButton2,
-            MechJebAscentButton3,
-            MechJebAscentButton4,
-            MechJebAscentButton5,
-            MechJebAscentButton6,
-            MechJebAscentButton7,
-            MechJebAscentButton8,
-            MechJebAscentButton9,
-            MechJebAscentButton10,
-            MechJebAscentButton11,
-            MechJebAscentButton12,
-            MechJebAscentButton13,
-            MechJebAscentButton15,
-            MechJebAscentButton17;
+                      MechJebAscentButton2,
+                      MechJebAscentButton3,
+                      MechJebAscentButton4,
+                      MechJebAscentButton5,
+                      MechJebAscentButton6,
+                      MechJebAscentButton7,
+                      MechJebAscentButton8,
+                      MechJebAscentButton9,
+                      MechJebAscentButton10,
+                      MechJebAscentButton11,
+                      MechJebAscentButton12,
+                      MechJebAscentButton13,
+                      MechJebAscentButton15,
+                      MechJebAscentButton17;
 
         [NonSerialized]
         public string
@@ -76,10 +76,10 @@ namespace MuMech
 
         [NonSerialized]
         public string MechJebAscentLaunchToTargetLan,
-            MechJebAscentWarnInvalidTarget,
-            MechJebAscentLaunchToLan,
-            MechJebAscentLaunchingToTargetLAN,
-            MechJebAscentLaunchingToManualLAN;
+                      MechJebAscentWarnInvalidTarget,
+                      MechJebAscentLaunchToLan,
+                      MechJebAscentLaunchingToTargetLAN,
+                      MechJebAscentLaunchingToManualLAN;
 
         [NonSerialized]
         public string MechJebAscentMsg2;
@@ -89,29 +89,29 @@ namespace MuMech
 
         [NonSerialized]
         public string MechJebAscentCheckbox2,
-            MechJebAscentCheckbox3,
-            MechJebAscentCheckbox4,
-            MechJebAscentCheckbox5,
-            MechJebAscentCheckbox6,
-            MechJebAscentCheckbox7,
-            MechJebAscentCheckbox8,
-            MechJebAscentCheckbox9,
-            MechJebAscentCheckbox10,
-            MechJebAscentCheckbox11,
-            MechJebAscentCheckbox12,
-            MechJebAscentCheckbox13,
-            MechJebAscentCheckbox14,
-            MechJebAscentCheckbox15,
-            MechJebAscentCheckbox16,
-            MechJebAscentCheckbox17,
-            MechJebAscentCheckbox18,
-            MechJebAscentCheckbox19,
-            MechJebAscentCheckbox20;
+                      MechJebAscentCheckbox3,
+                      MechJebAscentCheckbox4,
+                      MechJebAscentCheckbox5,
+                      MechJebAscentCheckbox6,
+                      MechJebAscentCheckbox7,
+                      MechJebAscentCheckbox8,
+                      MechJebAscentCheckbox9,
+                      MechJebAscentCheckbox10,
+                      MechJebAscentCheckbox11,
+                      MechJebAscentCheckbox12,
+                      MechJebAscentCheckbox13,
+                      MechJebAscentCheckbox14,
+                      MechJebAscentCheckbox15,
+                      MechJebAscentCheckbox16,
+                      MechJebAscentCheckbox17,
+                      MechJebAscentCheckbox18,
+                      MechJebAscentCheckbox19,
+                      MechJebAscentCheckbox20;
 
         [NonSerialized]
         public string MechJebAscentStatus9,
-            MechJebAscentStatus10,
-            MechJebAscentStatus11;
+                      MechJebAscentStatus10,
+                      MechJebAscentStatus11;
 
         [NonSerialized]
         public string MechJebNavBallGuidanceBtn1, MechJebNavBallGuidanceBtn2;
@@ -133,19 +133,19 @@ namespace MuMech
 
         [NonSerialized]
         public string MechJebInfoItemsStatsColumn0,
-            MechJebInfoItemsStatsColumn1,
-            MechJebInfoItemsStatsColumn2,
-            MechJebInfoItemsStatsColumn3,
-            MechJebInfoItemsStatsColumn4,
-            MechJebInfoItemsStatsColumn5,
-            MechJebInfoItemsStatsColumn6,
-            MechJebInfoItemsStatsColumn7,
-            MechJebInfoItemsStatsColumn8,
-            MechJebInfoItemsStatsColumn9,
-            MechJebInfoItemsStatsColumn10,
-            MechJebInfoItemsStatsColumn11,
-            MechJebInfoItemsStatsColumn12,
-            MechJebInfoItemsStatsColumn13;
+                      MechJebInfoItemsStatsColumn1,
+                      MechJebInfoItemsStatsColumn2,
+                      MechJebInfoItemsStatsColumn3,
+                      MechJebInfoItemsStatsColumn4,
+                      MechJebInfoItemsStatsColumn5,
+                      MechJebInfoItemsStatsColumn6,
+                      MechJebInfoItemsStatsColumn7,
+                      MechJebInfoItemsStatsColumn8,
+                      MechJebInfoItemsStatsColumn9,
+                      MechJebInfoItemsStatsColumn10,
+                      MechJebInfoItemsStatsColumn11,
+                      MechJebInfoItemsStatsColumn12,
+                      MechJebInfoItemsStatsColumn13;
 
         [NonSerialized]
         public string MechJebAscentTitle, MechJebWindowEdTitle;
@@ -166,15 +166,15 @@ namespace MuMech
 
         private void UpdateCachedStrings()
         {
-            MechJebAscentButton1  = Localizer.Format("#MechJeb_Ascent_button1");
-            MechJebAscentButton2  = Localizer.Format("#MechJeb_Ascent_button2");
-            MechJebAscentButton3  = Localizer.Format("#MechJeb_Ascent_button3");
-            MechJebAscentButton4  = Localizer.Format("#MechJeb_Ascent_button4");
-            MechJebAscentButton5  = Localizer.Format("#MechJeb_Ascent_button5");
-            MechJebAscentButton6  = Localizer.Format("#MechJeb_Ascent_button6");
-            MechJebAscentButton7  = Localizer.Format("#MechJeb_Ascent_button7");
-            MechJebAscentButton8  = Localizer.Format("#MechJeb_Ascent_button8");
-            MechJebAscentButton9  = Localizer.Format("#MechJeb_Ascent_button9");
+            MechJebAscentButton1 = Localizer.Format("#MechJeb_Ascent_button1");
+            MechJebAscentButton2 = Localizer.Format("#MechJeb_Ascent_button2");
+            MechJebAscentButton3 = Localizer.Format("#MechJeb_Ascent_button3");
+            MechJebAscentButton4 = Localizer.Format("#MechJeb_Ascent_button4");
+            MechJebAscentButton5 = Localizer.Format("#MechJeb_Ascent_button5");
+            MechJebAscentButton6 = Localizer.Format("#MechJeb_Ascent_button6");
+            MechJebAscentButton7 = Localizer.Format("#MechJeb_Ascent_button7");
+            MechJebAscentButton8 = Localizer.Format("#MechJeb_Ascent_button8");
+            MechJebAscentButton9 = Localizer.Format("#MechJeb_Ascent_button9");
             MechJebAscentButton10 = Localizer.Format("#MechJeb_Ascent_button10");
             MechJebAscentButton11 = Localizer.Format("#MechJeb_Ascent_button11");
             MechJebAscentButton12 = Localizer.Format("#MechJeb_Ascent_button12");
@@ -189,8 +189,8 @@ namespace MuMech
             MechJebAscentLabel5 = Localizer.Format("#MechJeb_Ascent_label5");
             MechJebAscentLabel6 = Localizer.Format("#MechJeb_Ascent_label6");
             //MechJeb_Ascent_label7 = Localizer.Format("#MechJeb_Ascent_label7");
-            MechJebAscentLabel8  = Localizer.Format("#MechJeb_Ascent_label8");
-            MechJebAscentLabel9  = Localizer.Format("#MechJeb_Ascent_label9");
+            MechJebAscentLabel8 = Localizer.Format("#MechJeb_Ascent_label8");
+            MechJebAscentLabel9 = Localizer.Format("#MechJeb_Ascent_label9");
             MechJebAscentLabel10 = Localizer.Format("#MechJeb_Ascent_label10");
             MechJebAscentLabel11 = Localizer.Format("#MechJeb_Ascent_label11");
             MechJebAscentLabel12 = Localizer.Format("#MechJeb_Ascent_label12");
@@ -227,14 +227,14 @@ namespace MuMech
 
             MechJebAscentLabel44 = Localizer.Format("#MechJeb_Ascent_label44");
 
-            MechJebAscentCheckbox2  = Localizer.Format("#MechJeb_Ascent_checkbox2");
-            MechJebAscentCheckbox3  = Localizer.Format("#MechJeb_Ascent_checkbox3");
-            MechJebAscentCheckbox4  = Localizer.Format("#MechJeb_Ascent_checkbox4");
-            MechJebAscentCheckbox5  = Localizer.Format("#MechJeb_Ascent_checkbox5");
-            MechJebAscentCheckbox6  = Localizer.Format("#MechJeb_Ascent_checkbox6");
-            MechJebAscentCheckbox7  = Localizer.Format("#MechJeb_Ascent_checkbox7");
-            MechJebAscentCheckbox8  = Localizer.Format("#MechJeb_Ascent_checkbox8");
-            MechJebAscentCheckbox9  = Localizer.Format("#MechJeb_Ascent_checkbox9");
+            MechJebAscentCheckbox2 = Localizer.Format("#MechJeb_Ascent_checkbox2");
+            MechJebAscentCheckbox3 = Localizer.Format("#MechJeb_Ascent_checkbox3");
+            MechJebAscentCheckbox4 = Localizer.Format("#MechJeb_Ascent_checkbox4");
+            MechJebAscentCheckbox5 = Localizer.Format("#MechJeb_Ascent_checkbox5");
+            MechJebAscentCheckbox6 = Localizer.Format("#MechJeb_Ascent_checkbox6");
+            MechJebAscentCheckbox7 = Localizer.Format("#MechJeb_Ascent_checkbox7");
+            MechJebAscentCheckbox8 = Localizer.Format("#MechJeb_Ascent_checkbox8");
+            MechJebAscentCheckbox9 = Localizer.Format("#MechJeb_Ascent_checkbox9");
             MechJebAscentCheckbox10 = Localizer.Format("#MechJeb_Ascent_checkbox10");
             MechJebAscentCheckbox11 = Localizer.Format("#MechJeb_Ascent_checkbox11");
             MechJebAscentCheckbox12 = Localizer.Format("#MechJeb_Ascent_checkbox12");
@@ -247,41 +247,41 @@ namespace MuMech
             MechJebAscentCheckbox19 = Localizer.Format("#MechJeb_Ascent_checkbox19");
             MechJebAscentCheckbox20 = Localizer.Format("#MechJeb_Ascent_checkbox20");
 
-            MechJebAscentStatus9  = Localizer.Format("#MechJeb_Ascent_status9");
+            MechJebAscentStatus9 = Localizer.Format("#MechJeb_Ascent_status9");
             MechJebAscentStatus10 = Localizer.Format("#MechJeb_Ascent_status10");
             MechJebAscentStatus11 = Localizer.Format("#MechJeb_Ascent_status11");
 
 
-            MechJebAscentAttachAlt            = Localizer.Format("#MechJeb_Ascent_attachAlt");
-            MechJebAscentWarnAttachAltHigh    = Localizer.Format("#MechJeb_Ascent_warnAttachAltHigh");
-            MechJebAscentWarnAttachAltLow     = Localizer.Format("#MechJeb_Ascent_warnAttachAltLow");
-            MechJebAscentLaunchToTargetLan    = Localizer.Format("#MechJeb_Ascent_LaunchToTargetLan");
-            MechJebAscentWarnInvalidTarget    = Localizer.Format("#MechJeb_Ascent_warnInvalidTarget");
-            MechJebAscentLaunchToLan          = Localizer.Format("#MechJeb_Ascent_LaunchToLan");
+            MechJebAscentAttachAlt = Localizer.Format("#MechJeb_Ascent_attachAlt");
+            MechJebAscentWarnAttachAltHigh = Localizer.Format("#MechJeb_Ascent_warnAttachAltHigh");
+            MechJebAscentWarnAttachAltLow = Localizer.Format("#MechJeb_Ascent_warnAttachAltLow");
+            MechJebAscentLaunchToTargetLan = Localizer.Format("#MechJeb_Ascent_LaunchToTargetLan");
+            MechJebAscentWarnInvalidTarget = Localizer.Format("#MechJeb_Ascent_warnInvalidTarget");
+            MechJebAscentLaunchToLan = Localizer.Format("#MechJeb_Ascent_LaunchToLan");
             MechJebAscentLaunchingToTargetLAN = Localizer.Format("#MechJeb_Ascent_LaunchingToTargetLAN");
             MechJebAscentLaunchingToManualLAN = Localizer.Format("#MechJeb_Ascent_LaunchingToManualLAN");
 
-            MechJebAscentMsg2       = Localizer.Format("#MechJeb_Ascent_msg2");
+            MechJebAscentMsg2 = Localizer.Format("#MechJeb_Ascent_msg2");
             MechJebAscentHotStaging = Localizer.Format("#MechJeb_Ascent_hotStaging");
             MechJebAscentDropSolids = Localizer.Format("#MechJeb_Ascent_dropSolids");
-            MechJebAscentLeadTime   = Localizer.Format("#MechJeb_Ascent_leadTime");
+            MechJebAscentLeadTime = Localizer.Format("#MechJeb_Ascent_leadTime");
 
             MechJebInfoItemsUnlimitedText = Localizer.Format("#MechJeb_InfoItems_UnlimitedText");
-            MechJebInfoItemsLabel1        = Localizer.Format("#MechJeb_InfoItems_label1");
+            MechJebInfoItemsLabel1 = Localizer.Format("#MechJeb_InfoItems_label1");
 
             MechJebInfoItemsButton5 = Localizer.Format("#MechJeb_InfoItems_button5");
             MechJebInfoItemsButton6 = Localizer.Format("#MechJeb_InfoItems_button6");
 
-            MechJebInfoItemsStatsColumn0  = Localizer.Format("#MechJeb_InfoItems_StatsColumn0");
-            MechJebInfoItemsStatsColumn1  = Localizer.Format("#MechJeb_InfoItems_StatsColumn1");
-            MechJebInfoItemsStatsColumn2  = Localizer.Format("#MechJeb_InfoItems_StatsColumn2");
-            MechJebInfoItemsStatsColumn3  = Localizer.Format("#MechJeb_InfoItems_StatsColumn3");
-            MechJebInfoItemsStatsColumn4  = Localizer.Format("#MechJeb_InfoItems_StatsColumn4");
-            MechJebInfoItemsStatsColumn5  = Localizer.Format("#MechJeb_InfoItems_StatsColumn5");
-            MechJebInfoItemsStatsColumn6  = Localizer.Format("#MechJeb_InfoItems_StatsColumn6");
-            MechJebInfoItemsStatsColumn7  = Localizer.Format("#MechJeb_InfoItems_StatsColumn7");
-            MechJebInfoItemsStatsColumn8  = Localizer.Format("#MechJeb_InfoItems_StatsColumn8");
-            MechJebInfoItemsStatsColumn9  = Localizer.Format("#MechJeb_InfoItems_StatsColumn9");
+            MechJebInfoItemsStatsColumn0 = Localizer.Format("#MechJeb_InfoItems_StatsColumn0");
+            MechJebInfoItemsStatsColumn1 = Localizer.Format("#MechJeb_InfoItems_StatsColumn1");
+            MechJebInfoItemsStatsColumn2 = Localizer.Format("#MechJeb_InfoItems_StatsColumn2");
+            MechJebInfoItemsStatsColumn3 = Localizer.Format("#MechJeb_InfoItems_StatsColumn3");
+            MechJebInfoItemsStatsColumn4 = Localizer.Format("#MechJeb_InfoItems_StatsColumn4");
+            MechJebInfoItemsStatsColumn5 = Localizer.Format("#MechJeb_InfoItems_StatsColumn5");
+            MechJebInfoItemsStatsColumn6 = Localizer.Format("#MechJeb_InfoItems_StatsColumn6");
+            MechJebInfoItemsStatsColumn7 = Localizer.Format("#MechJeb_InfoItems_StatsColumn7");
+            MechJebInfoItemsStatsColumn8 = Localizer.Format("#MechJeb_InfoItems_StatsColumn8");
+            MechJebInfoItemsStatsColumn9 = Localizer.Format("#MechJeb_InfoItems_StatsColumn9");
             MechJebInfoItemsStatsColumn10 = Localizer.Format("#MechJeb_InfoItems_StatsColumn10");
             MechJebInfoItemsStatsColumn11 = Localizer.Format("#MechJeb_InfoItems_StatsColumn11");
             MechJebInfoItemsStatsColumn12 = Localizer.Format("#MechJeb_InfoItems_StatsColumn12");
@@ -293,8 +293,8 @@ namespace MuMech
             MechJebNavBallGuidanceBtn1 = Localizer.Format("#MechJeb_NavBallGuidance_btn1");
             MechJebNavBallGuidanceBtn2 = Localizer.Format("#MechJeb_NavBallGuidance_btn2");
 
-            MechJebAscentTitle                    = Localizer.Format("#MechJeb_Ascent_title");
-            MechJebWindowEdTitle                  = Localizer.Format("#MechJeb_WindowEd_title");
+            MechJebAscentTitle = Localizer.Format("#MechJeb_Ascent_title");
+            MechJebWindowEdTitle = Localizer.Format("#MechJeb_WindowEd_title");
             MechJebWindowEdCustomInfoWindowLabel1 = Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Label1");
         }
     }

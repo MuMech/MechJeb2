@@ -13,16 +13,18 @@ namespace MuMech
 
         private static readonly string[] warpTargetStrings = { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") }; //"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""hoverslam burn""atmospheric entry"
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public WarpTarget warpTarget = WarpTarget.Periapsis;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public WarpTarget warpTarget = WarpTarget.Periapsis;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public readonly EditableTime leadTime = 0;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public readonly EditableTime leadTime = 0;
 
-        public           bool         warping;
+        public bool warping;
         private readonly EditableTime timeOffset = 0;
 
         private double targetUT;
 
-        [UsedImplicitly] [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        [UsedImplicitly, Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble phaseAngle = 0;
 
         protected override void WindowGUI(int windowID)
@@ -101,8 +103,8 @@ namespace MuMech
                                     reference = Orbit.referenceBody.orbit;
                                 // From Kerbal Alarm Clock
                                 double angleChangePerSec = 360 / Core.Target.TargetOrbit.period - 360 / reference.period;
-                                double currentAngle      = reference.PhaseAngle(Core.Target.TargetOrbit, VesselState.Time);
-                                double angleDigff        = currentAngle - phaseAngle;
+                                double currentAngle = reference.PhaseAngle(Core.Target.TargetOrbit, VesselState.Time);
+                                double angleDigff = currentAngle - phaseAngle;
                                 if (angleDigff > 0 && angleChangePerSec > 0)
                                     angleDigff -= 360;
                                 if (angleDigff < 0 && angleChangePerSec < 0)

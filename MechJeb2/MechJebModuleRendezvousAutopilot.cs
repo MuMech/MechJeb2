@@ -157,7 +157,7 @@ namespace MuMech
                     double highPhasingRadius = Core.Target.TargetOrbit.semiMajorAxis * axisRatio;
 
                     bool useLowPhasingRadius = lowPhasingRadius > MainBody.Radius + MainBody.RealMaxAtmosphereAltitude() + 3000 &&
-                                               Orbit.semiMajorAxis < Core.Target.TargetOrbit.semiMajorAxis;
+                        Orbit.semiMajorAxis < Core.Target.TargetOrbit.semiMajorAxis;
                     double phasingOrbitRadius = useLowPhasingRadius ? lowPhasingRadius : highPhasingRadius;
 
                     if (Orbit.ApR < phasingOrbitRadius)
@@ -189,7 +189,7 @@ namespace MuMech
 
                     status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"), maxPhasingOrbits.Text,
                         (phasingOrbitRadius - MainBody.Radius)
-                        .ToSI(0)); //"Next intercept window would be <<1>> orbits away, which is more than the maximum of <<2>> phasing orbits. Increasing phasing rate by establishing new phasing orbit at <<3>>m
+                       .ToSI(0)); //"Next intercept window would be <<1>> orbits away, which is more than the maximum of <<2>> phasing orbits. Increasing phasing rate by establishing new phasing orbit at <<3>>m
                 }
             }
             else if (Orbit.RelativeInclination(Core.Target.TargetOrbit) < 0.05)
@@ -200,11 +200,11 @@ namespace MuMech
                 if (Orbit.eccentricity > 1) circularizeAtPe = true;
                 else
                     circularizeAtPe = Math.Abs(Orbit.PeR - Core.Target.TargetOrbit.semiMajorAxis) <
-                                      Math.Abs(Orbit.ApR - Core.Target.TargetOrbit.semiMajorAxis);
+                        Math.Abs(Orbit.ApR - Core.Target.TargetOrbit.semiMajorAxis);
 
                 double UT;
                 if (circularizeAtPe) UT = Math.Max(VesselState.Time, Orbit.NextPeriapsisTime(VesselState.Time));
-                else UT                 = Orbit.NextApoapsisTime(VesselState.Time);
+                else UT = Orbit.NextApoapsisTime(VesselState.Time);
 
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(Orbit, UT);
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);
@@ -242,7 +242,7 @@ namespace MuMech
                 double UT;
                 Vector3d dV;
                 if (ascending)
-                    dV  = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
                 else dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
 
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);

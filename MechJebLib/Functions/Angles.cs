@@ -15,8 +15,7 @@ namespace MechJebLib.Functions
 {
     public static class Angles
     {
-        [UsedImplicitly]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [UsedImplicitly, MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double KeplerEquation(double E, double M, double ecc)
         {
             Check.Finite(E);
@@ -26,8 +25,7 @@ namespace MechJebLib.Functions
             return MFromE(E, ecc) - M;
         }
 
-        [UsedImplicitly]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [UsedImplicitly, MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double KeplerEquationPrime(double E, double M, double ecc)
         {
             Check.Finite(E);
@@ -60,8 +58,7 @@ namespace MechJebLib.Functions
             throw new Exception($"NewtonElliptic({E0}, {M}, {ecc}): Maximum iterations exceeded");
         }
 
-        [UsedImplicitly]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [UsedImplicitly, MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double KeplerEquationHyper(double F, double M, double ecc)
         {
             Check.Finite(F);
@@ -71,8 +68,7 @@ namespace MechJebLib.Functions
             return MFromF(F, ecc) - M;
         }
 
-        [UsedImplicitly]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [UsedImplicitly, MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double KeplerEquationPrimeHyper(double F, double M, double ecc)
         {
             Check.Finite(F);

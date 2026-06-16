@@ -166,7 +166,7 @@ namespace MechJebLib.PSG
             NumVars = idx - start;
 
             NumConstraints += (n - 1) * 6 * 2; // dynamical constraints for r, v
-            NumConstraints += 1;               // staging constraint
+            NumConstraints += 1; // staging constraint
             if (!phase.GuidedCoast)
                 NumConstraints += phase.Unguided ? 1 : k; // control magnitude constraint
             //if (phase.Unguided)

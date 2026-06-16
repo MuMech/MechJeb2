@@ -283,7 +283,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             GUILayout.Label(Localizer.Format("#MechJeb_adv_label3") + " " + departure); //Departure in
-            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + " " + duration);  //Transit duration
+            GUILayout.Label(Localizer.Format("#MechJeb_adv_label4") + " " + duration); //Transit duration
 
             _lastTargetCelestial = targetCelestial;
         }

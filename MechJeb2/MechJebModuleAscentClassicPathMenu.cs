@@ -14,17 +14,17 @@ namespace MuMech
             Hidden = true;
         }
 
-        private                 MechJebModuleAscentSettings         _ascentSettings;
-        private                 MechJebModuleAscentClassicAutopilot _path;
-        private static readonly Texture2D                           _pathTexture = new Texture2D(400, 100);
-        private                 MechJebModuleFlightRecorder         _recorder;
-        private                 double                              _lastMaxAtmosphereAltitude = -1;
+        private MechJebModuleAscentSettings _ascentSettings;
+        private MechJebModuleAscentClassicAutopilot _path;
+        private static readonly Texture2D _pathTexture = new Texture2D(400, 100);
+        private MechJebModuleFlightRecorder _recorder;
+        private double _lastMaxAtmosphereAltitude = -1;
 
         public override void OnStart(PartModule.StartState state)
         {
-            _recorder       = Core.GetComputerModule<MechJebModuleFlightRecorder>();
+            _recorder = Core.GetComputerModule<MechJebModuleFlightRecorder>();
             _ascentSettings = Core.GetComputerModule<MechJebModuleAscentSettings>();
-            _path           = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
+            _path = Core.GetComputerModule<MechJebModuleAscentClassicAutopilot>();
         }
 
         protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(300), GUILayout.Height(100) };
@@ -63,7 +63,7 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label3"), GuiUtils.LayoutNoExpandWidth); //"Turn start when Altitude is "
                 GUILayout.Label(_ascentSettings.AutoTurnStartAltitude.ToSI(2) + "m ", GuiUtils.LayoutNoExpandWidth);
-                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GuiUtils.LayoutNoExpandWidth);      //"or Velocity reach "
+                GUILayout.Label(Localizer.Format("#MechJeb_AscentPathEd_label4"), GuiUtils.LayoutNoExpandWidth); //"or Velocity reach "
                 GUILayout.Label(_ascentSettings.AutoTurnStartVelocity.ToSI(3) + "m/s", GuiUtils.LayoutNoExpandWidth); //
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
@@ -164,7 +164,7 @@ namespace MuMech
             {
                 float desiredAngle = (float)(alt < path.VerticalAscentEnd() ? 90 : path.FlightPathAngle(alt, 0));
 
-                alt       += scaleY * Mathf.Sin(desiredAngle * Mathf.Deg2Rad);
+                alt += scaleY * Mathf.Sin(desiredAngle * Mathf.Deg2Rad);
                 downrange += scaleX * Mathf.Cos(desiredAngle * Mathf.Deg2Rad);
 
                 p2.x = r.xMin + downrange / scaleX;
@@ -185,7 +185,7 @@ namespace MuMech
                 return;
 
             float scale = (float)((_ascentSettings.AutoPath ? _ascentSettings.AutoTurnEndAltitude : _ascentSettings.TurnEndAltitude) /
-                                  r.height); //meters per pixel
+                r.height); //meters per pixel
 
             int t = 1;
 

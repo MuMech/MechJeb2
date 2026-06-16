@@ -104,8 +104,8 @@ namespace MuMech
 
         public static bool IsUnfiredDecoupler(this PartModule m, out Part decoupledPart)
         {
-            if (m is ModuleDecouplerBase @base && IsUnfiredDecoupler(@base, out decoupledPart)) return true;
-            if (m is ModuleDockingNode node && IsUnfiredDecoupler(node, out decoupledPart)) return true;
+            if (m is ModuleDecouplerBase @base && @base.IsUnfiredDecoupler(out decoupledPart)) return true;
+            if (m is ModuleDockingNode node && node.IsUnfiredDecoupler(out decoupledPart)) return true;
             if (ReflectionUtils.IsLoadedProceduralFairing && m.moduleName == "ProceduralFairingDecoupler" &&
                 m.IsUnfiredProceduralFairingDecoupler(out decoupledPart)) return true;
             decoupledPart = null;

@@ -28,7 +28,7 @@ namespace MuMech
             {
                 MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
                 help.SelTopic = ((IList)help.Topics).IndexOf("Controller");
-                help.Enabled  = help.SelTopic > -1 || help.Enabled;
+                help.Enabled = help.SelTopic > -1 || help.Enabled;
             }
 
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
@@ -74,7 +74,7 @@ namespace MuMech
             GUILayout.Label("Index " + (autopilot.WaypointIndex + 1) + " of " + autopilot.Waypoints.Count, GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
 
-//			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
+            //			GUILayout.Label("Debug1: " + autopilot.debug1.ToString("F3"));
 
             GUILayout.BeginHorizontal();
             if (Core.Target != null && Core.Target.Target != null)
@@ -84,7 +84,7 @@ namespace MuMech
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button1"))) // "To Target"
                 {
                     Core.GetComputerModule<MechJebModuleWaypointWindow>().SelIndex = -1;
-                    autopilot.WaypointIndex                                        = 0;
+                    autopilot.WaypointIndex = 0;
                     autopilot.Waypoints.Clear();
                     if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
                     else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
@@ -111,7 +111,7 @@ namespace MuMech
                     if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button3")))
                     {
                         // "Drive"
-                        autopilot.WaypointIndex  = Mathf.Max(0, alt ? 0 : autopilot.WaypointIndex);
+                        autopilot.WaypointIndex = Mathf.Max(0, alt ? 0 : autopilot.WaypointIndex);
                         autopilot.ControlHeading = autopilot.ControlSpeed = true;
                         // autopilot.LoopWaypoints = alt;
                     }
@@ -160,7 +160,7 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Core.GetComputerModule<MechJebModuleWaypointWindow>().Enabled     = false;
+            Core.GetComputerModule<MechJebModuleWaypointWindow>().Enabled = false;
             Core.GetComputerModule<MechJebModuleWaypointHelpWindow>().Enabled = false;
             base.OnModuleDisabled();
         }

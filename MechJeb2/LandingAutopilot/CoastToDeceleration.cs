@@ -104,7 +104,7 @@ namespace MuMech
                             : VesselState.Time;
                         Vector3d decelerationStartAttitude = -Orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
                         decelerationStartAttitude += MainBody.getRFrmVel(Orbit.WorldPositionAtUT(decelerationStartTime));
-                        decelerationStartAttitude =  decelerationStartAttitude.normalized;
+                        decelerationStartAttitude = decelerationStartAttitude.normalized;
                         Core.Attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
                     }
                     else

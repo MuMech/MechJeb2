@@ -10,11 +10,7 @@ namespace MuMech
 {
     public class MechJebModuleTranslatron : DisplayModule
     {
-        protected static readonly string[] trans_texts =
-        {
-            Localizer.Format("#MechJeb_Translatron_off"), Localizer.Format("#MechJeb_Translatron_KEEP_OBT"),
-            Localizer.Format("#MechJeb_Translatron_KEEP_SURF"), Localizer.Format("#MechJeb_Translatron_KEEP_VERT")
-        };
+        protected static readonly string[] trans_texts = { Localizer.Format("#MechJeb_Translatron_off"), Localizer.Format("#MechJeb_Translatron_KEEP_OBT"), Localizer.Format("#MechJeb_Translatron_KEEP_SURF"), Localizer.Format("#MechJeb_Translatron_KEEP_VERT") };
         //protected static string[] trans_texts = { "OFF", "KEEP\nOBT", "KEEP\nSURF", "KEEP\nVERT" };
 
         public enum AbortStage
@@ -28,7 +24,7 @@ namespace MuMech
         }
 
         protected AbortStage abort = AbortStage.OFF;
-        protected double     burnUpTime;
+        protected double burnUpTime;
 
         protected bool autoMode;
 
@@ -49,9 +45,9 @@ namespace MuMech
         {
             if (buttonStyle == null)
             {
-                buttonStyle                  = new GUIStyle(GUI.skin.button);
+                buttonStyle = new GUIStyle(GUI.skin.button);
                 buttonStyle.normal.textColor = buttonStyle.focused.textColor = Color.white;
-                buttonStyle.hover.textColor  = buttonStyle.active.textColor  = Color.yellow;
+                buttonStyle.hover.textColor = buttonStyle.active.textColor = Color.yellow;
                 buttonStyle.onNormal.textColor =
                     buttonStyle.onFocused.textColor = buttonStyle.onHover.textColor = buttonStyle.onActive.textColor = Color.green;
                 buttonStyle.padding = new RectOffset(8, 8, 8, 8);
@@ -64,7 +60,7 @@ namespace MuMech
                 if (!autoMode)
                 {
                     WindowPos = new Rect(WindowPos.x, WindowPos.y, 10, 10);
-                    autoMode  = true;
+                    autoMode = true;
                 }
 
                 buttonStyle.normal.textColor = Color.red;
@@ -77,7 +73,7 @@ namespace MuMech
                 if (autoMode)
                 {
                     WindowPos = new Rect(WindowPos.x, WindowPos.y, 10, 10);
-                    autoMode  = false;
+                    autoMode = false;
                 }
 
                 var newMode = (MechJebModuleThrustController.TMode)GUILayout.SelectionGrid((int)Core.Thrust.Tmode, trans_texts, 2, buttonStyle);
@@ -96,26 +92,26 @@ namespace MuMech
                 if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                 {
                     trans_spd -= val;
-                    change    =  true;
+                    change = true;
                 }
 
                 if (GUILayout.Button("0", GuiUtils.LayoutNoExpandWidth))
                 {
                     trans_spd = 0;
-                    change    = true;
+                    change = true;
                 }
 
                 if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
                 {
                     trans_spd += val;
-                    change    =  true;
+                    change = true;
                 }
 
                 GUILayout.EndHorizontal();
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Trans_spd_act") + ":", buttonStyle, GuiUtils.LayoutExpandWidth) || change)
                 {
-                    Core.Thrust.TransSpdAct    = (float)trans_spd.Val;
+                    Core.Thrust.TransSpdAct = (float)trans_spd.Val;
                     GUIUtility.keyboardControl = 0;
                 }
             }
@@ -152,7 +148,7 @@ namespace MuMech
             if (Core.Thrust.Tmode != oldMode)
             {
                 Core.Thrust.TransSpdAct = Convert.ToInt16(trans_spd);
-                WindowPos               = new Rect(WindowPos.x, WindowPos.y, 10, 10);
+                WindowPos = new Rect(WindowPos.x, WindowPos.y, 10, 10);
                 if (Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF)
                 {
                     Core.Thrust.Users.Remove(this);
@@ -247,11 +243,11 @@ namespace MuMech
                     case AbortStage.THRUSTOFF:
                         FlightInputHandler.SetNeutralControls();
                         s.mainThrottle = 0;
-                        abort          = AbortStage.DECOUPLE;
+                        abort = AbortStage.DECOUPLE;
                         break;
                     case AbortStage.DECOUPLE:
                         recursiveDecouple();
-                        abort      = AbortStage.BURNUP;
+                        abort = AbortStage.BURNUP;
                         burnUpTime = Planetarium.GetUniversalTime();
                         break;
                     case AbortStage.BURNUP:

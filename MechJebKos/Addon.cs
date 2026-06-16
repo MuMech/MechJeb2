@@ -18,12 +18,13 @@ namespace MuMech.MechJebKos
     // local to a single vessel: everything resolves through shared.Vessel and we never reach
     // for FlightGlobals.activeVessel or a global singleton. Cross-vessel coordination is left
     // to kOS itself.
-    [kOSAddon("MechJeb")]
-    [KOSNomenclature("MechJebAddon")]
-    [UsedImplicitly]
+    [kOSAddon("MechJeb"), KOSNomenclature("MechJebAddon"), UsedImplicitly]
     public class Addon : kOS.Suffixed.Addon
     {
-        public Addon(SharedObjects shared) : base(shared) => RegisterInitializer(InitializeSuffixes);
+        public Addon(SharedObjects shared) : base(shared)
+        {
+            RegisterInitializer(InitializeSuffixes);
+        }
 
         // never cached, it can be updated dyanmically
         private MechJebCore? _core => shared.Vessel.GetMasterMechJeb();
@@ -40,7 +41,7 @@ namespace MuMech.MechJebKos
             var hoverslamAutopilot = new HoverslamAutopilotBinding(() => _core);
             var hoverslamSimulation = new HoverslamSimulationBinding(() => _core);
 
-            AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() =>  _core?.running ?? false,
+            AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
             AddSuffix("NODEEXECUTOR", new NoArgsSuffix<NodeExecutorBinding>(() => nodeExecutor,
                 "The maneuver node executor."));
