@@ -30,7 +30,7 @@ namespace MuMech
             double radius = o.Radius(ut);
 
             //sanitize inputs
-            newPeR = MuUtils.Clamp(newPeR, 0 + 1, radius - 1);
+            newPeR = Clamp(newPeR, 0 + 1, radius - 1);
             newApR = Max(newApR, radius + 1);
 
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
@@ -47,7 +47,7 @@ namespace MuMech
             double radius = o.Radius(ut);
 
             //sanitize input
-            newPeR = MuUtils.Clamp(newPeR, 0 + 1, radius - 1);
+            newPeR = Clamp(newPeR, 0 + 1, radius - 1);
 
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 

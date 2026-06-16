@@ -3,6 +3,7 @@ using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech.AttitudeControllers
 {
@@ -75,7 +76,7 @@ namespace MuMech.AttitudeControllers
             double roll = ea[2] * UtilMath.Deg2Rad;
 
             // law of cosines for the "distance" of the miss in radians
-            _phiTotal = Math.Acos(MuUtils.Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
+            _phiTotal = Math.Acos(Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
 
             // this is the initial direction of the great circle route of the requested transform
             // (pitch is latitude, yaw is -longitude, and we are "navigating" from 0,0)
@@ -84,9 +85,9 @@ namespace MuMech.AttitudeControllers
 
             // we assemble phi in the pitch, roll, yaw basis that vessel.MOI uses (right handed basis)
             var phi = new Vector3d(
-                MuUtils.ClampRadiansPi(temp[0]), // pitch distance around the geodesic
-                MuUtils.ClampRadiansPi(roll),
-                MuUtils.ClampRadiansPi(temp[1]) // yaw distance around the geodesic
+                ClampPi(temp[0]), // pitch distance around the geodesic
+                ClampPi(roll),
+                ClampPi(temp[1]) // yaw distance around the geodesic
             );
 
             phi.Scale(Ac.AxisControl);

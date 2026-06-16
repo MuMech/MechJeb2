@@ -3,6 +3,7 @@ using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -146,7 +147,7 @@ namespace MuMech
             }
             else desiredRate = 1.0 * (UT - (VesselState.Time + Time.fixedDeltaTime * TimeWarp.CurrentRateIndex));
 
-            desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
+            desiredRate = Clamp(desiredRate, 1, maxRate);
 
             if (!Vessel.LandedOrSplashed &&
                 VesselState.AltitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, MainBody))

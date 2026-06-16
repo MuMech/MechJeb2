@@ -2,6 +2,8 @@ extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
+
 
 namespace MuMech
 {
@@ -128,13 +130,13 @@ namespace MuMech
                 double fpaError = _desiredPitch - actualFlightPathAngle;
 
                 double difficulty = VesselState.SurfaceVelocity.magnitude * 0.02 / VesselState.ThrustAccel(Core.Thrust.TargetThrottle);
-                difficulty = MuUtils.Clamp(difficulty, 0.1, 1.0);
+                difficulty = Clamp(difficulty, 0.1, 1.0);
 
                 double steerOffset = AscentSettings.CorrectiveSteeringGain * difficulty * fpaError;
 
-                double steerAngle = MuUtils.Clamp(Math.Asin(steerOffset), -Math.PI / 6, Math.PI / 6);
+                double steerAngle = Clamp(Math.Asin(steerOffset), -Math.PI / 6, Math.PI / 6);
 
-                _desiredPitch = MuUtils.Clamp(_desiredPitch + steerAngle, -Math.PI / 2, Math.PI / 2);
+                _desiredPitch = Clamp(_desiredPitch + steerAngle, -Math.PI / 2, Math.PI / 2);
             }
 
             _desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val);

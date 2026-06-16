@@ -44,20 +44,6 @@ namespace MuMech
             "[" + PadPositive(quaternion.x, format) + ", " + PadPositive(quaternion.y, format) + ", " + PadPositive(quaternion.z, format) +
             ", " + PadPositive(quaternion.w, format) + "]";
 
-        //acosh(x) = log(x + sqrt(x^2 - 1))
-        public static double Acosh(double x) => Math.Log(x + Math.Sqrt(x * x - 1));
-
-        //since there doesn't seem to be a Math.Clamp?
-        public static double Clamp(double x, double min, double max)
-        {
-            if (x < min) return min;
-            if (x > max) return max;
-            return x;
-        }
-
-        //clamp to [0,1]
-        public static double Clamp01(double x) => Clamp(x, 0, 1);
-
         //keeps angles in the range 0 to 360
         public static double ClampDegrees360(double angle)
         {
@@ -71,20 +57,6 @@ namespace MuMech
         {
             angle = ClampDegrees360(angle);
             if (angle > 180) angle -= 360;
-            return angle;
-        }
-
-        public static double ClampRadiansTwoPi(double angle)
-        {
-            angle = angle % (2 * Math.PI);
-            if (angle < 0) return angle + 2 * Math.PI;
-            return angle;
-        }
-
-        public static double ClampRadiansPi(double angle)
-        {
-            angle = ClampRadiansTwoPi(angle);
-            if (angle > Math.PI) angle -= 2 * Math.PI;
             return angle;
         }
 
