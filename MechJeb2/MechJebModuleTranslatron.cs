@@ -255,11 +255,11 @@ namespace MuMech
                         burnUpTime = Planetarium.GetUniversalTime();
                         break;
                     case AbortStage.BURNUP:
-                        if (Planetarium.GetUniversalTime() - burnUpTime < 2 || VesselState.speedVertical < 10)
+                        if (Planetarium.GetUniversalTime() - burnUpTime < 2 || VesselState.SpeedVertical < 10)
                         {
                             Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
                             Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
-                            double int_error = Math.Abs(Vector3d.Angle(VesselState.up, VesselState.forward));
+                            double int_error = Math.Abs(Vector3d.Angle(VesselState.Up, VesselState.Forward));
                             Core.Thrust.TransSpdAct = int_error < 90 ? 100 : 0;
                         }
                         else

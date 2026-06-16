@@ -113,7 +113,7 @@ namespace MuMech
 
         public void WarpToUT(double UT, double maxRate = -1)
         {
-            if (UT <= VesselState.time)
+            if (UT <= VesselState.Time)
             {
                 warpToUT = 0.0;
                 return;
@@ -130,7 +130,7 @@ namespace MuMech
                 {
                     for (int i = 0; i < TimeWarp.fetch.warpRates.Length; i++)
                     {
-                        if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= Orbit.EndUT - VesselState.time)
+                        if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= Orbit.EndUT - VesselState.Time)
                             desiredRate = TimeWarp.fetch.warpRates[i] + 0.1;
                         else break;
                     }
@@ -139,18 +139,18 @@ namespace MuMech
                 {
                     for (int i = 0; i < TimeWarp.fetch.warpRates.Length; i++)
                     {
-                        if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= UT - VesselState.time)
+                        if (i * Time.fixedDeltaTime * TimeWarp.fetch.warpRates[i] <= UT - VesselState.Time)
                             desiredRate = TimeWarp.fetch.warpRates[i] + 0.1;
                         else break;
                     }
                 }
             }
-            else desiredRate = 1.0 * (UT - (VesselState.time + Time.fixedDeltaTime * TimeWarp.CurrentRateIndex));
+            else desiredRate = 1.0 * (UT - (VesselState.Time + Time.fixedDeltaTime * TimeWarp.CurrentRateIndex));
 
             desiredRate = MuUtils.Clamp(desiredRate, 1, maxRate);
 
             if (!Vessel.LandedOrSplashed &&
-                VesselState.altitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, MainBody))
+                VesselState.AltitudeASL < TimeWarp.fetch.GetAltitudeLimit(1, MainBody))
             {
                 //too low to use any regular warp rates. Use physics warp at a max of x2:
                 WarpPhysicsAtRate((float)Math.Min(desiredRate, 2));
@@ -243,9 +243,9 @@ namespace MuMech
 
             if (TimeWarp.fetch.warpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate)
                 return false;                                                 //most recent warp change is not yet complete
-            if (VesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
+            if (VesselState.Time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
-            warpIncreaseAttemptTime = VesselState.time;
+            warpIncreaseAttemptTime = VesselState.Time;
             SetTimeWarpRate(TimeWarp.CurrentRateIndex + 1, instant);
             return true;
         }
@@ -258,9 +258,9 @@ namespace MuMech
             if (TimeWarp.CurrentRateIndex + 1 == TimeWarp.fetch.physicsWarpRates.Length) return false; //already at max warp
             if (TimeWarp.fetch.physicsWarpRates[TimeWarp.CurrentRateIndex] != TimeWarp.CurrentRate)
                 return false;                                                 //most recent warp change is not yet complete
-            if (VesselState.time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
+            if (VesselState.Time - warpIncreaseAttemptTime < 2) return false; //we increased warp too recently
 
-            warpIncreaseAttemptTime = VesselState.time;
+            warpIncreaseAttemptTime = VesselState.Time;
             SetTimeWarpRate(TimeWarp.CurrentRateIndex + 1, instant);
             return true;
         }

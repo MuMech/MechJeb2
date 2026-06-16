@@ -49,7 +49,7 @@ namespace MuMech
                 }
 
                 double maxAllowedSpeed = Core.Landing.MaxAllowedSpeed();
-                if (VesselState.speedSurface > 0.9 * maxAllowedSpeed)
+                if (VesselState.SpeedSurface > 0.9 * maxAllowedSpeed)
                 {
                     Core.Warp.MinimumWarp();
                     if (Core.Landing.RCSAdjustment)
@@ -64,8 +64,8 @@ namespace MuMech
                     double currentError = Vector3d.Distance(Core.Target.GetPositionTargetPosition(), Core.Landing.LandingSite);
                     if (currentError > 1000)
                     {
-                        if (!VesselState.parachuteDeployed &&
-                            VesselState.drag <=
+                        if (!VesselState.ParachuteDeployed &&
+                            VesselState.DragAcceleration <=
                             0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
                             Core.Warp.MinimumWarp();
@@ -83,7 +83,7 @@ namespace MuMech
                 }
 
                 // If we're already low, skip directly to the Deceleration burn
-                if (VesselState.altitudeASL < Core.Landing.DecelerationEndAltitude() + 5)
+                if (VesselState.AltitudeASL < Core.Landing.DecelerationEndAltitude() + 5)
                 {
                     Core.Warp.MinimumWarp();
                     if (Core.Landing.RCSAdjustment)
@@ -97,11 +97,11 @@ namespace MuMech
 
                 if (Core.Landing.PredictionReady)
                 {
-                    if (VesselState.drag < 0.01)
+                    if (VesselState.DragAcceleration < 0.01)
                     {
                         double decelerationStartTime = Core.Landing.Prediction.Trajectory.Any()
                             ? Core.Landing.Prediction.Trajectory.First().UT
-                            : VesselState.time;
+                            : VesselState.Time;
                         Vector3d decelerationStartAttitude = -Orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
                         decelerationStartAttitude += MainBody.getRFrmVel(Orbit.WorldPositionAtUT(decelerationStartTime));
                         decelerationStartAttitude =  decelerationStartAttitude.normalized;
@@ -118,8 +118,8 @@ namespace MuMech
                 {
                     // Make sure if we're hovering that we don't go straight into too fast of a warp
                     // (g * 5 is average velocity falling for 10 seconds from a hover)
-                    double velocityGuess = Math.Max(Math.Abs(VesselState.speedVertical), VesselState.localg * 5);
-                    Core.Warp.WarpRegularAtRate((float)(VesselState.altitudeASL / (10 * velocityGuess)));
+                    double velocityGuess = Math.Max(Math.Abs(VesselState.SpeedVertical), VesselState.LocalGravity * 5);
+                    Core.Warp.WarpRegularAtRate((float)(VesselState.AltitudeASL / (10 * velocityGuess)));
                 }
                 else
                 {

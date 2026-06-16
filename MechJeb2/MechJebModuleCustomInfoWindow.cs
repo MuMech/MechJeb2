@@ -1108,18 +1108,18 @@ namespace MuMech
                     @"--- MechJeb Custom Window ---
 Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname1") + @"
 Show in: flight
-Value:VesselState.speedOrbital
-Value:VesselState.orbitApA
-Value:VesselState.orbitPeA
-Value:VesselState.orbitPeriod
-Value:VesselState.orbitTimeToAp
-Value:VesselState.orbitTimeToPe
-Value:VesselState.orbitSemiMajorAxis
-Value:VesselState.orbitInclination
-Value:VesselState.orbitEccentricity
-Value:VesselState.orbitLAN
-Value:VesselState.orbitArgumentOfPeriapsis
-Value:VesselState.angleToPrograde
+Value:VesselState.SpeedOrbital
+Value:VesselState.OrbitApA
+Value:VesselState.OrbitPeA
+Value:VesselState.OrbitPeriod
+Value:VesselState.OrbitTimeToAp
+Value:VesselState.OrbitTimeToPe
+Value:VesselState.OrbitSemiMajorAxis
+Value:VesselState.OrbitInclination
+Value:VesselState.OrbitEccentricity
+Value:VesselState.OrbitLAN
+Value:VesselState.OrbitArgumentOfPeriapsis
+Value:VesselState.AngleToPrograde
 Value:InfoItems.RelativeInclinationToTarget
 -----------------------------" //Orbit Info
             },
@@ -1130,14 +1130,14 @@ Value:InfoItems.RelativeInclinationToTarget
                     @"--- MechJeb Custom Window ---
 Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname2") + @"
 Show in: flight
-Value:VesselState.altitudeASL
-Value:VesselState.altitudeTrue
-Value:VesselState.vesselPitch
-Value:VesselState.vesselHeading
-Value:VesselState.vesselRoll
-Value:VesselState.speedSurface
-Value:VesselState.speedVertical
-Value:VesselState.speedSurfaceHorizontal
+Value:VesselState.AltitudeASL
+Value:VesselState.AltitudeTrue
+Value:VesselState.Pitch
+Value:VesselState.Heading
+Value:VesselState.Roll
+Value:VesselState.SpeedSurface
+Value:VesselState.SpeedVertical
+Value:VesselState.SpeedSurfaceHorizontal
 Value:InfoItems.GetCoordinateString
 Value:InfoItems.CurrentBiome
 -----------------------------" //Surface Info
@@ -1210,10 +1210,9 @@ Value:InfoItems.SynodicPeriod
                     @"--- MechJeb Custom Window ---
 Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname7") + @"
 Show in: flight
-Value:VesselState.altitudeTrue
-Value:VesselState.speedVertical
-Value:VesselState.speedSurfaceHorizontal
-Value:InfoItems.TimeToImpact
+Value:VesselState.AltitudeTrue
+Value:VesselState.SpeedVertical
+Value:VesselState.SpeedSurfaceHorizontal
 Value:InfoItems.SurfaceTWR
 Action:TargetController.PickPositionTargetOnMap
 Value:InfoItems.TargetDistance
@@ -1250,7 +1249,7 @@ Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname9") + @"
 Show in: flight
 Action:FlightRecorder.Mark
 Value:FlightRecorder.TimeSinceMark
-Value:VesselState.time
+Value:VesselState.Time
 -----------------------------" //Stopwatch
             },
             new Preset
@@ -1275,16 +1274,19 @@ Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname11") + @"
 Show in: flight
 Value:VesselState.AoA
 Value:VesselState.AoS
-Value:VesselState.displacementAngle
-Value:VesselState.mach
-Value:VesselState.dynamicPressure
-Value:VesselState.maxDynamicPressure
-Value:VesselState.intakeAir
-Value:VesselState.intakeAirAllIntakes
-Value:VesselState.intakeAirNeeded
-Value:VesselState.atmosphericDensityGrams
+Value:VesselState.AoD
+Value:VesselState.Mach
+Value:VesselState.DynamicPressure
+Value:VesselState.MaxDynamicPressure
+Value:VesselState.DragForce
+Value:VesselState.LiftForce
+Value:VesselState.DragCoefficient
+Value:VesselState.AreaDrag
+Value:VesselState.IntakeAir
+Value:VesselState.IntakeAirAllIntakes
+Value:VesselState.IntakeAirNeeded
+Value:VesselState.AtmosphericDensityInGrams
 Value:InfoItems.AtmosphericPressure
-Value:InfoItems.AtmosphericDrag
 Value:VesselState.TerminalVelocity
 -----------------------------" //Atmosphere Info
             },

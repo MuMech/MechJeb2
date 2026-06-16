@@ -44,9 +44,9 @@ namespace MuMech
 
                 // TODO perhaps we should pop the parachutes at this point, or at least consider it depending on the altitude.
 
-                double minalt = Math.Min(VesselState.altitudeBottom, Math.Min(VesselState.altitudeASL, VesselState.altitudeTrue));
+                double minalt = Math.Min(VesselState.AltitudeBottom, Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue));
 
-                if (VesselState.limitedMaxThrustAccel < VesselState.gravityForce.magnitude)
+                if (VesselState.LimitedMaxThrustAcceleration < VesselState.GravityForce.magnitude)
                 {
                     // if we have TWR < 1, just try as hard as we can to decelerate:
                     // (we need this special case because otherwise the calculations spit out NaN's)
@@ -56,14 +56,14 @@ namespace MuMech
                 }
                 else if (minalt > 300)
                 {
-                    if (VesselState.surfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.surfaceVelocity, VesselState.up) < 80)
+                    if (VesselState.SurfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.SurfaceVelocity, VesselState.Up) < 80)
                     {
                         // if we have positive vertical velocity, point up and follow min thrust limiter:
                         Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
                         Core.Thrust.Tmode       = MechJebModuleThrustController.TMode.DIRECT;
                         Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
                     }
-                    else if (VesselState.surfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.forward, -VesselState.surfaceVelocity) > 45)
+                    else if (VesselState.SurfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.Forward, -VesselState.SurfaceVelocity) > 45)
                     {
                         // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
                         Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
@@ -78,23 +78,23 @@ namespace MuMech
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
 
                         //core.thrust.trans_spd_act = (float)Math.Sqrt((vesselState.maxThrustAccel - vesselState.gravityForce.magnitude) * 2 * minalt) * 0.90F;
-                        Vector3d estimatedLandingPosition = VesselState.CoM + VesselState.surfaceVelocity.sqrMagnitude /
-                            (2 * VesselState.limitedMaxThrustAccel) * VesselState.surfaceVelocity.normalized;
+                        Vector3d estimatedLandingPosition = VesselState.CoM + VesselState.SurfaceVelocity.sqrMagnitude /
+                            (2 * VesselState.LimitedMaxThrustAcceleration) * VesselState.SurfaceVelocity.normalized;
                         double terrainRadius = MainBody.Radius + MainBody.TerrainAltitude(estimatedLandingPosition);
                         _aggressivePolicy =
                             new GravityTurnDescentSpeedPolicy(terrainRadius, MainBody.GeeASL * 9.81,
-                                VesselState.limitedMaxThrustAccel); // this constant policy creation is wastefull...
+                                VesselState.LimitedMaxThrustAcceleration); // this constant policy creation is wastefull...
                         Core.Thrust.TransSpdAct =
-                            (float)_aggressivePolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.surfaceVelocity);
+                            (float)_aggressivePolicy.MaxAllowedSpeed(VesselState.CoM - MainBody.position, VesselState.SurfaceVelocity);
                     }
                 }
                 else
                 {
                     // last 300 meters:
-                    float desiredSpeed = -Mathf.Lerp(0, (float)Math.Sqrt((VesselState.limitedMaxThrustAccel - VesselState.localg) * 2 * 300) * 0.90F, (float)minalt / 300);
-                    if (VesselState.speedSurfaceHorizontal < 5)
+                    float desiredSpeed = -Mathf.Lerp(0, (float)Math.Sqrt((VesselState.LimitedMaxThrustAcceleration - VesselState.LocalGravity) * 2 * 300) * 0.90F, (float)minalt / 300);
+                    if (VesselState.SpeedSurfaceHorizontal < 5)
                     {
-                        if (desiredSpeed < VesselState.speedVertical && !_finalThrottleUpTriggered)
+                        if (desiredSpeed < VesselState.SpeedVertical && !_finalThrottleUpTriggered)
                         {
                             // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
                             Core.Thrust.Tmode = MechJebModuleThrustController.TMode.OFF;
@@ -124,7 +124,7 @@ namespace MuMech
                 }
 
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status9",
-                    VesselState.altitudeBottom.ToString("F0")); //"Final descent: " +  + "m above terrain"
+                    VesselState.AltitudeBottom.ToString("F0")); //"Final descent: " +  + "m above terrain"
 
                 // ComputeCourseCorrection doesn't work close to the ground
                 /* if (core.landing.landAtTarget)

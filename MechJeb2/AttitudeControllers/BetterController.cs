@@ -233,7 +233,7 @@ namespace MuMech.AttitudeControllers
                     _controlTorque[i] = 0;
 
             // needed to stop wiggling at higher phys warp
-            double warpFactor = Ac.VesselState.deltaT / 0.02;
+            double warpFactor = Ac.VesselState.DeltaT / 0.02;
 
             // see https://archive.is/NqoUm and the "Alt Hold Controller", the acceleration PID is not implemented, so we only
             // have the first two PIDs in the cascade.
@@ -270,7 +270,7 @@ namespace MuMech.AttitudeControllers
                         _posPID[i].N                = PosN.Val;
                         _posPID[i].B                = PosB.Val;
                         _posPID[i].C                = PosC.Val;
-                        _posPID[i].Ts               = Ac.VesselState.deltaT;
+                        _posPID[i].Ts               = Ac.VesselState.DeltaT;
                         _posPID[i].SmoothIn         = MuUtils.Clamp01(PosSmoothIn);
                         _posPID[i].SmoothOut        = MuUtils.Clamp01(PosSmoothOut);
                         _posPID[i].MinOutput        = -maxOmega;
@@ -301,7 +301,7 @@ namespace MuMech.AttitudeControllers
                 _velPID[i].N                = VelN;
                 _velPID[i].B                = VelB;
                 _velPID[i].C                = VelC;
-                _velPID[i].Ts               = Ac.VesselState.deltaT;
+                _velPID[i].Ts               = Ac.VesselState.DeltaT;
                 _velPID[i].SmoothIn         = MuUtils.Clamp01(VelSmoothIn);
                 _velPID[i].SmoothOut        = MuUtils.Clamp01(VelSmoothOut);
                 _velPID[i].MinOutput        = -_maxAlpha[i];
@@ -540,7 +540,7 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Response Speed", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(Ac.VesselState.torqueResponseSpeed), GuiUtils.LayoutNoExpandWidth);
+            GUILayout.Label(MuUtils.PrettyPrint(Ac.VesselState.TorqueResponseSpeed), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
         }
     }

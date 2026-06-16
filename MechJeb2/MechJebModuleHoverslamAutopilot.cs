@@ -74,9 +74,9 @@ namespace MuMech
         private Vector3d _lastAdjV;
         private Vector3d _adjV;
 
-        private void UpdateAdjV() => _adjV = VesselState.surfaceVelocity + Core.Hoverslam.FinalDescentSpeed * VesselState.up;
+        private void UpdateAdjV() => _adjV = VesselState.SurfaceVelocity + Core.Hoverslam.FinalDescentSpeed * VesselState.Up;
 
-        private bool AlignedForBurn() => SafeAcos(Vector3d.Dot(VesselState.forward, Core.Hoverslam.IgnitionAttitude)) < Deg2Rad(1) && Vessel.angularVelocity.magnitude < 0.001;
+        private bool AlignedForBurn() => SafeAcos(Vector3d.Dot(VesselState.Forward, Core.Hoverslam.IgnitionAttitude)) < Deg2Rad(1) && Vessel.angularVelocity.magnitude < 0.001;
 
         private State DetermineState(State desired)
         {
@@ -94,7 +94,7 @@ namespace MuMech
                 desired = State.Vertical;
             if (desired == State.Burn || desired == State.Vertical)
             {
-                if (Vector3d.Dot(VesselState.surfaceVelocity, VesselState.up) >= 0.0)
+                if (Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Up) >= 0.0)
                     desired = State.Finished;
                 if (!Vessel.VesselOffGround())
                     desired = State.Finished;
@@ -147,7 +147,7 @@ namespace MuMech
         private void TickAligning()
         {
             Core.Attitude.attitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
-            if (!MuUtils.PhysicsRunning() && VesselState.time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
+            if (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
                 Core.Warp.MinimumWarp(true);
         }
 
@@ -158,7 +158,7 @@ namespace MuMech
             Core.Attitude.attitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
             if (AutoWarp)
                 Core.Warp.WarpToUT(Core.Hoverslam.IgnitionUT);
-            else if (!MuUtils.PhysicsRunning() && VesselState.time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
+            else if (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
                 Core.Warp.MinimumWarp(true);
         }
 
@@ -176,19 +176,19 @@ namespace MuMech
 
         private void TickFinalDescent()
         {
-            if (Vector3d.Dot(VesselState.surfaceVelocity, VesselState.up) >= -1.0)
+            if (Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Up) >= -1.0)
                 Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
 
-            double v2 = VesselState.surfaceVelocity.sqrMagnitude;
+            double v2 = VesselState.SurfaceVelocity.sqrMagnitude;
             double g = Vessel.graviticAcceleration.magnitude;
-            double h = VesselState.altitudeBottom;
+            double h = VesselState.AltitudeBottom;
             double vf = TouchdownSpeed;
 
             double accel = g + 0.5 * (v2 - vf * vf) / h;
 
             _pwm.MinOnTime = PWMPulseWidth;
             _pwm.MinOffTime = TimeWarp.fixedDeltaTime;
-            Core.Thrust.TargetThrottle = _pwm.ThrottleCommand(accel, VesselState.minThrustAccel, VesselState.maxThrustAccel, TimeWarp.fixedDeltaTime);
+            Core.Thrust.TargetThrottle = _pwm.ThrottleCommand(accel, VesselState.MinThrustAcceleration, VesselState.MaxThrustAcceleration, TimeWarp.fixedDeltaTime);
         }
 
         private void OnEnterFinished()

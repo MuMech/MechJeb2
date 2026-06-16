@@ -27,7 +27,7 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             _state     = SpinupState.INITIALIZED;
-            _startTime = Math.Max(VesselState.time, _startTime);
+            _startTime = Math.Max(VesselState.Time, _startTime);
             Core.Attitude.Users.Add(this);
         }
 
@@ -48,7 +48,7 @@ namespace MuMech
         private void HandleStageEvent(int data) =>
             // wait a second to enable after staging because aerodynamics may kick us,
             // but on the first tick we may think we are stable
-            _startTime = VesselState.time + 1.0;
+            _startTime = VesselState.Time + 1.0;
 
         public override void Drive(FlightCtrlState s)
         {
@@ -57,7 +57,7 @@ namespace MuMech
 
             Core.Staging.AutoStageLimitRequest(Vessel.currentStage, this);
 
-            if (VesselState.time < _startTime)
+            if (VesselState.Time < _startTime)
                 return;
 
             if (_state == SpinupState.STARTING)

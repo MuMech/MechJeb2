@@ -65,7 +65,7 @@ namespace MuMech
             else
                 ut -= halfBurnTIme; // already takes spoolup into account
 
-            return GuiUtils.TimeToDHMS(ut - VesselState.time);
+            return GuiUtils.TimeToDHMS(ut - VesselState.Time);
         }
 
         public void ExecuteOneNode(object controller)
@@ -160,14 +160,14 @@ namespace MuMech
             // (in particular this avoids single-tick sequencing problems with MJ seeing 100% ullage
             // but RF running later in the same tick and decrementing the ullage while allowing
             // the engine to fire, and just generally assures that ullage is pretty stable before firing).
-            if (VesselState.time >= _ignitionUT - MIN_RCS_TIME)
+            if (VesselState.Time >= _ignitionUT - MIN_RCS_TIME)
                 _ullageUntil = _ignitionUT;
 
-            if (VesselState.lowestUllage >= 1.0 && VesselState.time > _ullageUntil)
+            if (VesselState.LowestUllage >= 1.0 && VesselState.Time > _ullageUntil)
                 return;
 
-            if (VesselState.lowestUllage < 1.0)
-                _ullageUntil = VesselState.time + MIN_RCS_TIME;
+            if (VesselState.LowestUllage < 1.0)
+                _ullageUntil = VesselState.Time + MIN_RCS_TIME;
 
             if (!Vessel.hasEnabledRCSModules())
                 return;
@@ -194,10 +194,10 @@ namespace MuMech
             // note that in principia after our node disappears this value will change to -1
             _ignitionUT = CalculateIgnitionUT();
 
-            if (VesselState.time >= _ignitionUT - LeadTime && State != States.BURN)
+            if (VesselState.Time >= _ignitionUT - LeadTime && State != States.BURN)
                 State = States.LEAD;
 
-            if (VesselState.time >= _ignitionUT && Aligned())
+            if (VesselState.Time >= _ignitionUT && Aligned())
                 State = States.BURN;
 
             switch (State)
@@ -230,7 +230,7 @@ namespace MuMech
                 return;
             }
 
-            double timeToBurn = _ignitionUT - VesselState.time;
+            double timeToBurn = _ignitionUT - VesselState.Time;
 
             if (timeToBurn > 600)
             {
@@ -287,7 +287,7 @@ namespace MuMech
 
             if (!RCSOnly)
             {
-                double timeConstant = _dvLeft > 10 || VesselState.minThrustAccel > 0.25 * VesselState.maxThrustAccel ? 0.5 : 2;
+                double timeConstant = _dvLeft > 10 || VesselState.MinThrustAcceleration > 0.25 * VesselState.MaxThrustAcceleration ? 0.5 : 2;
                 Core.Thrust.ThrustForDv(_dvLeft, timeConstant);
             }
         }
@@ -338,7 +338,7 @@ namespace MuMech
         private double AngleFromNode()
         {
             //Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
-            Vector3d fwd = VesselState.forward;
+            Vector3d fwd = VesselState.Forward;
             Vector3d dir = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
             return SafeAcos(Vector3d.Dot(fwd, dir));
         }
@@ -347,7 +347,7 @@ namespace MuMech
         private double AngleFromDirection()
         {
             //Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
-            Vector3d fwd = VesselState.forward;
+            Vector3d fwd = VesselState.Forward;
             Vector3d dir = _worldDirection.normalized;
             return SafeAcos(Vector3d.Dot(fwd, dir));
         }
@@ -363,7 +363,7 @@ namespace MuMech
 
             // if we're burning the node may disappear in principia, if there's a subsequent node it will
             // appear at a future time, but we don't want to return that (yet anyway).
-            if (State == States.BURN && node.UT > VesselState.time)
+            if (State == States.BURN && node.UT > VesselState.Time)
                 return null;
 
             return node;
@@ -382,7 +382,7 @@ namespace MuMech
                 return _direction;
 
             // FIXME: need to deal with RCS forward thrust accel here if we're RCSOnly
-            if (!_isLoadedPrincipia && _dvLeft < VesselState.maxThrustAccel)
+            if (!_isLoadedPrincipia && _dvLeft < VesselState.MaxThrustAcceleration)
                 return _direction;
 
             return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
@@ -470,7 +470,7 @@ namespace MuMech
                 // TODO: Be smarter about throttle limits on future stages.
                 if (mjPhase == stats.VacStats.Count - 1)
                 {
-                    stageAvgAccel *= VesselState.throttleFixedLimit;
+                    stageAvgAccel *= VesselState.ThrottleFixedLimit;
                 }
 
                 halfBurnTime += Min(halfDvLeft, stageBurnDv) / stageAvgAccel;

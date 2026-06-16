@@ -229,12 +229,12 @@ namespace MuMech
         [ActionInfoItem("MARK", InfoItem.Category.Recorder)]
         public void Mark()
         {
-            MarkUT             = VesselState.time;
+            MarkUT             = VesselState.Time;
             DeltaVExpended     = DragLosses = GravityLosses = SteeringLosses = 0;
-            MarkLatitude       = VesselState.latitude;
-            MarkLongitude      = VesselState.longitude;
-            MarkLAN            = VesselState.orbitLAN;
-            MarkAltitude       = VesselState.altitudeASL;
+            MarkLatitude       = VesselState.Latitude;
+            MarkLongitude      = VesselState.Longitude;
+            MarkLAN            = VesselState.OrbitLAN;
+            MarkAltitude       = VesselState.AltitudeASL;
             MarkBodyIndex      = FlightGlobals.Bodies.IndexOf(MainBody);
             MaxDragGees        = 0;
             TimeSinceMark      = 0;
@@ -269,7 +269,7 @@ namespace MuMech
         {
             if (MarkUT == 0) Mark();
 
-            TimeSinceMark = VesselState.time - MarkUT;
+            TimeSinceMark = VesselState.Time - MarkUT;
 
             if (Vessel.situation == Vessel.Situations.PRELAUNCH)
             {
@@ -277,13 +277,13 @@ namespace MuMech
                 return;
             }
 
-            GravityLosses  += VesselState.deltaT * Vector3d.Dot(-VesselState.orbitalVelocity.normalized, VesselState.gravityForce);
-            DragLosses     += VesselState.deltaT * VesselState.drag;
-            DeltaVExpended += VesselState.deltaT * VesselState.currentThrustAccel;
-            SteeringLosses += VesselState.deltaT * VesselState.currentThrustAccel *
-                              (1 - Vector3d.Dot(VesselState.orbitalVelocity.normalized, VesselState.forward));
+            GravityLosses  += VesselState.DeltaT * Vector3d.Dot(-VesselState.OrbitalVelocity.normalized, VesselState.GravityForce);
+            DragLosses     += VesselState.DeltaT * VesselState.DragAcceleration;
+            DeltaVExpended += VesselState.DeltaT * VesselState.CurrentThrustAcceleration;
+            SteeringLosses += VesselState.DeltaT * VesselState.CurrentThrustAcceleration *
+                              (1 - Vector3d.Dot(VesselState.OrbitalVelocity.normalized, VesselState.Forward));
 
-            MaxDragGees = Math.Max(MaxDragGees, VesselState.drag / 9.81);
+            MaxDragGees = Math.Max(MaxDragGees, VesselState.DragAcceleration / 9.81);
 
             if (_paused)
                 return;
@@ -292,9 +292,9 @@ namespace MuMech
 
             //historyIdx = Mathf.Min(Mathf.FloorToInt((float)(timeSinceMark / precision)), history.Length - 1);
 
-            if (VesselState.time >= _lastRecordTime + Precision && HistoryIdx < History.Length - 1)
+            if (VesselState.Time >= _lastRecordTime + Precision && HistoryIdx < History.Length - 1)
             {
-                _lastRecordTime = VesselState.time;
+                _lastRecordTime = VesselState.Time;
                 HistoryIdx++;
                 Record(HistoryIdx);
                 //if (TimeWarp.WarpMode == TimeWarp.Modes.HIGH)
@@ -309,15 +309,15 @@ namespace MuMech
         private void Record(int idx)
         {
             History[idx].TimeSinceMark  = TimeSinceMark;
-            History[idx].AltitudeASL    = VesselState.altitudeASL;
+            History[idx].AltitudeASL    = VesselState.AltitudeASL;
             History[idx].DownRange      = GroundDistanceFromMark();
-            History[idx].SpeedSurface   = VesselState.speedSurface;
-            History[idx].SpeedOrbital   = VesselState.speedOrbital;
+            History[idx].SpeedSurface   = VesselState.SpeedSurface;
+            History[idx].SpeedOrbital   = VesselState.SpeedOrbital;
             History[idx].Acceleration   = Vessel.geeForce;
-            History[idx].Q              = VesselState.dynamicPressure;
-            History[idx].AltitudeTrue   = VesselState.altitudeTrue;
-            History[idx].Pitch          = VesselState.vesselPitch;
-            History[idx].Mass           = VesselState.mass;
+            History[idx].Q              = VesselState.DynamicPressure;
+            History[idx].AltitudeTrue   = VesselState.AltitudeTrue;
+            History[idx].Pitch          = VesselState.Pitch;
+            History[idx].Mass           = VesselState.Mass;
             History[idx].GravityLosses  = GravityLosses;
             History[idx].DragLosses     = DragLosses;
             History[idx].SteeringLosses = SteeringLosses;
@@ -334,7 +334,7 @@ namespace MuMech
 
             History[idx].AoA = VesselState.AoA;
             History[idx].AoS = VesselState.AoS;
-            History[idx].AoD = VesselState.displacementAngle;
+            History[idx].AoD = VesselState.AoD;
             for (int t = 0; t < _typeCount; t++)
             {
                 double current = History[idx][(RecordType)t];

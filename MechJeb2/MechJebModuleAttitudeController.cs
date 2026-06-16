@@ -173,42 +173,42 @@ namespace MuMech
                 return rotRef;
             }
 
-            Vector3d thrustForward = VesselState.thrustForward;
+            Vector3d thrustForward = VesselState.ThrustForward;
 
             // the off-axis thrust modifications get into a fight with the differential throttle so do not use them when diffthrottle is used
             if (Core.Thrust.DifferentialThrottle)
-                thrustForward = VesselState.forward;
+                thrustForward = VesselState.Forward;
 
             switch (reference)
             {
                 case AttitudeReference.INERTIAL_COT:
-                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.forward);
+                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.Forward);
                     break;
                 case AttitudeReference.ORBIT:
-                    rotRef = QuaternionD.LookRotation(VesselState.orbitalVelocity.normalized, VesselState.up);
+                    rotRef = QuaternionD.LookRotation(VesselState.OrbitalVelocity.normalized, VesselState.Up);
                     break;
                 case AttitudeReference.ORBIT_HORIZONTAL:
-                    rotRef = QuaternionD.LookRotation(Vector3d.Exclude(VesselState.up, VesselState.orbitalVelocity.normalized), VesselState.up);
+                    rotRef = QuaternionD.LookRotation(Vector3d.Exclude(VesselState.Up, VesselState.OrbitalVelocity.normalized), VesselState.Up);
                     break;
                 case AttitudeReference.SURFACE_NORTH:
-                    rotRef = VesselState.rotationSurface;
+                    rotRef = VesselState.RotationSurface;
                     break;
                 case AttitudeReference.SURFACE_NORTH_COT:
-                    rotRef = VesselState.rotationSurface;
-                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.forward) * rotRef;
+                    rotRef = VesselState.RotationSurface;
+                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.Forward) * rotRef;
                     break;
                 case AttitudeReference.SURFACE_VELOCITY:
-                    rotRef = QuaternionD.LookRotation(VesselState.surfaceVelocity.normalized, VesselState.up);
+                    rotRef = QuaternionD.LookRotation(VesselState.SurfaceVelocity.normalized, VesselState.Up);
                     break;
                 case AttitudeReference.TARGET:
                     fwd = (Core.Target.Position - Vessel.GetTransform().position).normalized;
-                    up  = Vector3d.Cross(fwd, VesselState.normalPlus);
+                    up  = Vector3d.Cross(fwd, VesselState.NormalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = QuaternionD.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.RELATIVE_VELOCITY:
                     fwd = Core.Target.RelativeVelocity.normalized;
-                    up  = Vector3d.Cross(fwd, VesselState.normalPlus);
+                    up  = Vector3d.Cross(fwd, VesselState.NormalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = QuaternionD.LookRotation(fwd, up);
                     break;
@@ -221,16 +221,16 @@ namespace MuMech
                     break;
                 case AttitudeReference.MANEUVER_NODE:
                     fwd = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit);
-                    up  = Vector3d.Cross(fwd, VesselState.normalPlus);
+                    up  = Vector3d.Cross(fwd, VesselState.NormalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = QuaternionD.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.MANEUVER_NODE_COT:
                     fwd = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit);
-                    up  = Vector3d.Cross(fwd, VesselState.normalPlus);
+                    up  = Vector3d.Cross(fwd, VesselState.NormalPlus);
                     Vector3.OrthoNormalize(ref fwd, ref up);
                     rotRef = QuaternionD.LookRotation(fwd, up);
-                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.forward) * rotRef;
+                    rotRef = MathExtensions.FromToRotation(thrustForward, VesselState.Forward) * rotRef;
                     break;
                 case AttitudeReference.SUN:
                     Orbit baseOrbit = Vessel.mainBody == Planetarium.fetch.Sun ? Vessel.orbit : Orbit.TopParentOrbit();
@@ -239,7 +239,7 @@ namespace MuMech
                     rotRef = QuaternionD.LookRotation(fwd, up);
                     break;
                 case AttitudeReference.SURFACE_HORIZONTAL:
-                    rotRef = QuaternionD.LookRotation(Vector3d.Exclude(VesselState.up, VesselState.surfaceVelocity.normalized), VesselState.up);
+                    rotRef = QuaternionD.LookRotation(Vector3d.Exclude(VesselState.Up, VesselState.SurfaceVelocity.normalized), VesselState.Up);
                     break;
             }
 
@@ -295,7 +295,7 @@ namespace MuMech
         //angle in degrees between the vessel's current pointing direction and the attitude target, ignoring roll
         public double attitudeAngleFromTarget() =>
             Enabled
-                ? Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, VesselState.forward))
+                ? Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, VesselState.Forward))
                 : 0;
 
         public Vector3d targetAttitude()
@@ -313,16 +313,16 @@ namespace MuMech
             if (useSAS)
                 return;
 
-            torque = VesselState.torqueAvailable;
+            torque = VesselState.TorqueAvailable;
             if (Core.Thrust.DifferentialThrottle &&
                 Core.Thrust.DifferentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.SUCCESS)
-                torque += VesselState.torqueDiffThrottle * Vessel.ctrlState.mainThrottle / 2.0;
+                torque += VesselState.TorqueDifferentialThrottle * Vessel.ctrlState.mainThrottle / 2.0;
 
             // Inertia is a bad name. It's the "angular distance to stop"
             inertia = 0.5 * Vector3d.Scale(
-                VesselState.angularMomentum.Sign(),
+                VesselState.AngularMomentum.Sign(),
                 Vector3d.Scale(
-                    Vector3d.Scale(VesselState.angularMomentum, VesselState.angularMomentum),
+                    Vector3d.Scale(VesselState.AngularMomentum, VesselState.AngularMomentum),
                     Vector3d.Scale(torque, VesselState.MoI).InvertNoNaN()
                 )
             );
@@ -385,7 +385,7 @@ namespace MuMech
                 // Feed the control torque to the differential throttle
                 if (Core.Thrust.DifferentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.SUCCESS)
                     Core.Thrust.DifferentialThrottleDemandedTorque =
-                        -Vector3d.Scale(act, VesselState.torqueDiffThrottle * Vessel.ctrlState.mainThrottle);
+                        -Vector3d.Scale(act, VesselState.TorqueDifferentialThrottle * Vessel.ctrlState.mainThrottle);
             }
         }
 

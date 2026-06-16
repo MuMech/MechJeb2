@@ -142,8 +142,8 @@ namespace MuMech
             {
                 _vesselManagerVac.DVLinearThrust = DVLinearThrust;
                 _vesselManagerVac.SetConditions(0, 0, 0);
-                _vesselManagerVac.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
-                    VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
+                _vesselManagerVac.SetInitial(VesselState.Time, VesselState.OrbitalPosition.WorldToV3Rotated(),
+                    VesselState.OrbitalVelocity.WorldToV3Rotated(), VesselState.Forward.WorldToV3Rotated());
                 if (!_vesselManagerVac.TryStartFuelFlowSimulationJob())
                     throw new Exception("[MechJebModuleStageStats] could not start vac stats job");
             }
@@ -152,8 +152,8 @@ namespace MuMech
             {
                 _vesselManagerAtmo.DVLinearThrust = DVLinearThrust;
                 _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
-                _vesselManagerAtmo.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
-                    VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
+                _vesselManagerAtmo.SetInitial(VesselState.Time, VesselState.OrbitalPosition.WorldToV3Rotated(),
+                    VesselState.OrbitalVelocity.WorldToV3Rotated(), VesselState.Forward.WorldToV3Rotated());
                 if (!_vesselManagerAtmo.TryStartFuelFlowSimulationJob())
                     throw new Exception("[MechJebModuleStageStats] could not start atmo stats job");
             }

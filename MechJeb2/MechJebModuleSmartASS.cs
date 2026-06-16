@@ -490,7 +490,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
-                                srfVelRol = -VesselState.vesselRoll;
+                                srfVelRol = -VesselState.Roll;
                                 changed = true;
                             }
 

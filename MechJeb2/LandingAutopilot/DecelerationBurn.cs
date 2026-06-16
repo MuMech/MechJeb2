@@ -16,7 +16,7 @@ namespace MuMech
 
             public override AutopilotStep OnFixedUpdate()
             {
-                if (VesselState.altitudeASL < Core.Landing.DecelerationEndAltitude() + 5)
+                if (VesselState.AltitudeASL < Core.Landing.DecelerationEndAltitude() + 5)
                 {
                     Core.Warp.MinimumWarp();
 
@@ -26,8 +26,8 @@ namespace MuMech
                 }
 
                 double decelerationStartTime =
-                    Core.Landing.Prediction.Trajectory.Any() ? Core.Landing.Prediction.Trajectory.First().UT : VesselState.time;
-                if (decelerationStartTime - VesselState.time > 5 && !_decelerationBurnTriggered)
+                    Core.Landing.Prediction.Trajectory.Any() ? Core.Landing.Prediction.Trajectory.First().UT : VesselState.Time;
+                if (decelerationStartTime - VesselState.Time > 5 && !_decelerationBurnTriggered)
                 {
                     Core.Thrust.ThrustOff();
 
@@ -51,15 +51,15 @@ namespace MuMech
                 if (!_decelerationBurnTriggered)
                     _decelerationBurnTriggered = true;
 
-                Vector3d desiredThrustVector = -VesselState.surfaceVelocity.normalized;
+                Vector3d desiredThrustVector = -VesselState.SurfaceVelocity.normalized;
 
                 Vector3d courseCorrection = Core.Landing.ComputeCourseCorrection(false);
-                double correctionAngle = courseCorrection.magnitude / (2.0 * VesselState.limitedMaxThrustAccel);
+                double correctionAngle = courseCorrection.magnitude / (2.0 * VesselState.LimitedMaxThrustAcceleration);
                 correctionAngle     = Math.Min(0.1, correctionAngle);
                 desiredThrustVector = (desiredThrustVector + correctionAngle * courseCorrection.normalized).normalized;
 
-                if (Vector3d.Dot(VesselState.surfaceVelocity, VesselState.up) > 0
-                    || Vector3d.Dot(VesselState.forward, desiredThrustVector) < 0.75)
+                if (Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Up) > 0
+                    || Vector3d.Dot(VesselState.Forward, desiredThrustVector) < 0.75)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
                     Status                     = Localizer.Format("#MechJeb_LandingGuidance_Status5"); //"Braking"
@@ -67,16 +67,16 @@ namespace MuMech
                 else
                 {
                     double controlledSpeed =
-                        VesselState.speedSurface *
-                        Math.Sign(Vector3d.Dot(VesselState.surfaceVelocity, VesselState.up)); //positive if we are ascending, negative if descending
+                        VesselState.SpeedSurface *
+                        Math.Sign(Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Up)); //positive if we are ascending, negative if descending
                     double desiredSpeed = -Core.Landing.MaxAllowedSpeed();
-                    double desiredSpeedAfterDt = -Core.Landing.MaxAllowedSpeedAfterDt(VesselState.deltaT);
-                    double minAccel = -VesselState.localg * Math.Abs(Vector3d.Dot(VesselState.surfaceVelocity.normalized, VesselState.up));
-                    double maxAccel = VesselState.maxThrustAccel * Vector3d.Dot(VesselState.forward, -VesselState.surfaceVelocity.normalized) -
-                                      VesselState.localg * Math.Abs(Vector3d.Dot(VesselState.surfaceVelocity.normalized, VesselState.up));
+                    double desiredSpeedAfterDt = -Core.Landing.MaxAllowedSpeedAfterDt(VesselState.DeltaT);
+                    double minAccel = -VesselState.LocalGravity * Math.Abs(Vector3d.Dot(VesselState.SurfaceVelocity.normalized, VesselState.Up));
+                    double maxAccel = VesselState.MaxThrustAcceleration * Vector3d.Dot(VesselState.Forward, -VesselState.SurfaceVelocity.normalized) -
+                                      VesselState.LocalGravity * Math.Abs(Vector3d.Dot(VesselState.SurfaceVelocity.normalized, VesselState.Up));
                     const double SPEED_CORRECTION_TIME_CONSTANT = 0.3;
                     double speedError = desiredSpeed - controlledSpeed;
-                    double desiredAccel = speedError / SPEED_CORRECTION_TIME_CONSTANT + (desiredSpeedAfterDt - desiredSpeed) / VesselState.deltaT;
+                    double desiredAccel = speedError / SPEED_CORRECTION_TIME_CONSTANT + (desiredSpeedAfterDt - desiredSpeed) / VesselState.DeltaT;
                     if (maxAccel - minAccel > 0)
                         Core.Thrust.RequestActiveThrottle(Mathf.Clamp((float)((desiredAccel - minAccel) / (maxAccel - minAccel)), 0.0f, 1.0f));
                     else Core.Thrust.RequestActiveThrottle(0);

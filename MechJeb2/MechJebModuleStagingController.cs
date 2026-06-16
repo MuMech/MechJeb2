@@ -267,7 +267,7 @@ namespace MuMech
             // if autostage enabled, and if we've already staged at least once, and if there are stages left,
             // and if we are allowed to continue staging, and if we didn't just fire the previous stage
             if (_waitingForFirstStaging || Vessel.currentStage <= 0 || Vessel.currentStage <= AutostageLimit ||
-                VesselState.time - _lastStageTime < AutostagePostDelay)
+                VesselState.Time - _lastStageTime < AutostagePostDelay)
             {
                 return;
             }
@@ -339,7 +339,7 @@ namespace MuMech
             }
 
             // only release launch clamps if we're at nearly full thrust and no failed engines
-            if ((VesselState.thrustCurrent / VesselState.thrustAvailable < ClampAutoStageThrustPct || AnyFailedEngines(_allModuleEngines)) &&
+            if ((VesselState.ThrustCurrent / VesselState.ThrustAvailable < ClampAutoStageThrustPct || AnyFailedEngines(_allModuleEngines)) &&
                 InverseStageReleasesClamps(Vessel.currentStage - 1))
             {
                 // continually reset the PIDs while we have launch clamps to avoid integral windup
@@ -357,17 +357,17 @@ namespace MuMech
                 return false;
             }
 
-            if (Core.VesselState.dynamicPressure > FairingMaxDynamicPressure)
+            if (Core.VesselState.DynamicPressure > FairingMaxDynamicPressure)
             {
                 return true;
             }
 
-            if (Core.VesselState.altitudeASL < FairingMinAltitude)
+            if (Core.VesselState.AltitudeASL < FairingMinAltitude)
             {
                 return true;
             }
 
-            if (Core.VesselState.freeMolecularAerothermalFlux > FairingMaxAerothermalFlux)
+            if (Core.VesselState.FreeMolecularAerothermalFlux > FairingMaxAerothermalFlux)
             {
                 return true;
             }
@@ -381,7 +381,7 @@ namespace MuMech
             if (InverseStageFiresDecoupler(Vessel.currentStage - 1))
             {
                 //if we decouple things, delay the next stage a bit to avoid exploding the debris
-                _lastStageTime = VesselState.time;
+                _lastStageTime = VesselState.Time;
             }
 
             if (!Vessel.isActiveVessel)
@@ -423,10 +423,10 @@ namespace MuMech
             if (!_countingDown)
             {
                 _countingDown        = true;
-                _stageCountdownStart = VesselState.time;
+                _stageCountdownStart = VesselState.Time;
             }
 
-            if (VesselState.time - _stageCountdownStart >= AutostagePreDelay)
+            if (VesselState.Time - _stageCountdownStart >= AutostagePreDelay)
             {
                 ImmediateStage();
             }

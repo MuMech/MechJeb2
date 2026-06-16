@@ -225,7 +225,7 @@ namespace MuMech
             MechJebWaypoint wp = WaypointIndex > -1 && WaypointIndex < Waypoints.Count ? Waypoints[WaypointIndex] : null;
 
             bool brake = Vessel.ActionGroups[KSPActionGroup.Brakes]; // keep brakes locked if they are
-            curSpeed = Vector3d.Dot(VesselState.surfaceVelocity, VesselState.forward);
+            curSpeed = Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Forward);
 
             CalculateTraction();
             speedIntAcc = speedPID.INTAccum;
@@ -325,7 +325,7 @@ namespace MuMech
             {
                 headingPID.INTAccum = Mathf.Clamp((float)headingPID.INTAccum, -1, 1);
 
-                double instantaneousHeading = VesselState.rotationVesselSurface.eulerAngles.y;
+                double instantaneousHeading = VesselState.RotationVesselSurface.eulerAngles.y;
                 headingErr = MuUtils.ClampDegrees180(instantaneousHeading - heading);
                 if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != Vessel)
                 {
@@ -350,7 +350,7 @@ namespace MuMech
             {
                 speedPID.INTAccum = Mathf.Clamp((float)speedPID.INTAccum, -5, 5);
 
-                speedErr = (WaypointIndex == -1 ? speed.Val : tgtSpeed) - Vector3d.Dot(VesselState.surfaceVelocity, VesselState.forward);
+                speedErr = (WaypointIndex == -1 ? speed.Val : tgtSpeed) - Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Forward);
                 if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != Vessel)
                 {
                     float act = (float)speedPID.Compute(speedErr);
@@ -370,7 +370,7 @@ namespace MuMech
 
             if (StabilityControl)
             {
-                Physics.Raycast(Vessel.CoM + VesselState.surfaceVelocity * terrainLookAhead + VesselState.up * 100, -VesselState.up,
+                Physics.Raycast(Vessel.CoM + VesselState.SurfaceVelocity * terrainLookAhead + VesselState.Up * 100, -VesselState.Up,
                     out RaycastHit hit, 500,
                     1 << 15, QueryTriggerInteraction.Ignore);
                 Vector3 norm = hit.normal;
@@ -383,13 +383,13 @@ namespace MuMech
                 float fSpeed = (float)curSpeed;
                 Vector3 fwd = traction > 0
                     ? // V when the speed is low go for the vessels forward, else with a bit of velocity
-                    VesselState.forward * 4 - Vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed)
+                    VesselState.Forward * 4 - Vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed)
                     :                            // and then add the steering
-                    VesselState.surfaceVelocity; // in the air so follow velocity
+                    VesselState.SurfaceVelocity; // in the air so follow velocity
                 Vector3.OrthoNormalize(ref norm, ref fwd);
                 var quat = Quaternion.LookRotation(fwd, norm);
 
-                if (VesselState.torqueAvailable.sqrMagnitude > 0)
+                if (VesselState.TorqueAvailable.sqrMagnitude > 0)
                     Core.Attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
             }
 

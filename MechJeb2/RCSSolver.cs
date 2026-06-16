@@ -489,7 +489,7 @@ namespace MuMech
                 ComErrorThreshold = (Math.Max(state.MoI.magnitude, 2.34) - 1) / 542;
 
                 Vector3 comState = state.CoM;
-                Vector3 rootPos = state.rootPartPos;
+                Vector3 rootPos = state.RootPartPosition;
                 Vector3 com = WorldToVessel(vessel, comState - rootPos);
                 double thisComErr = (_lastCoM - com).magnitude;
                 MaxComError     = Math.Max(MaxComError, thisComErr);

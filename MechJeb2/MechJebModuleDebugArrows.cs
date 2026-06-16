@@ -151,7 +151,7 @@ namespace MuMech
 
 
             Vector3d frameVel =
-                (VesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - Vessel.orbit.GetRotFrameVel(Vessel.orbit.referenceBody).xzy) *
+                (VesselState.OrbitalVelocity - Krakensbane.GetFrameVelocity() - Vessel.orbit.GetRotFrameVel(Vessel.orbit.referenceBody).xzy) *
                 Time.fixedDeltaTime;
             Vector3d instantCoM = VesselState.CoM + frameVel;
 
@@ -166,14 +166,14 @@ namespace MuMech
                 comSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            colSphere.State(colSphereActive && VesselState.CoLScalar > 0 && Core.ShowGui);
+            colSphere.State(colSphereActive && VesselState.CoLMagnitude > 0 && Core.ShowGui);
             if (colSphereActive)
             {
                 colSphere.Set(VesselState.CoL + frameVel);
                 colSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            cotSphere.State(cotSphereActive && VesselState.CoTScalar > 0 && Core.ShowGui);
+            cotSphere.State(cotSphereActive && VesselState.CoTMagnitude > 0 && Core.ShowGui);
             if (cotSphereActive)
             {
                 cotSphere.Set(VesselState.CoT + frameVel);
@@ -196,11 +196,11 @@ namespace MuMech
                 obtVelocityArrow.SeeThrough(seeThrough);
             }
 
-            dotArrow.State(dotArrowActive && VesselState.thrustCurrent > 0 && Core.ShowGui);
+            dotArrow.State(dotArrowActive && VesselState.ThrustCurrent > 0 && Core.ShowGui);
             if (dotArrowActive)
             {
                 dotArrow.Set(VesselState.CoT + frameVel, VesselState.DoT);
-                dotArrow.SetLength((float)Math.Log10(VesselState.thrustCurrent + 1));
+                dotArrow.SetLength((float)Math.Log10(VesselState.ThrustCurrent + 1));
                 dotArrow.SeeThrough(seeThrough);
             }
 
