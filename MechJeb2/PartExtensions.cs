@@ -20,7 +20,7 @@ namespace MuMech
 
         public static bool UnstableUllage(this Part p)
         {
-            if (!ReflectionUtils.IsLoadedRealFuels) // stock doesn't have this concept
+            if (!VesselState.IsRealFuelsCorrectlyInitialized) // stock doesn't have this concept
                 return false;
 
             ModuleEngines eng = p.FindModuleImplementing<ModuleEngines>();
@@ -31,26 +31,18 @@ namespace MuMech
             if (eng.finalThrust > 0 || eng.requestedThrottle > 0 || eng.getFlameoutState || eng.EngineIgnited)
                 return false;
 
-            try
-            {
-                if (!VesselState.RFModuleEnginesRFType.IsInstanceOfType(eng))
-                    return false;
-                if (VesselState.RFignitedField.GetValue(eng) is bool ignited && ignited)
-                    return false;
-                if (VesselState.RFignitionsField.GetValue(eng) is int ignitions && ignitions == 0)
-                    return false;
-                if (VesselState.RFullageField.GetValue(eng) is bool ullage && !ullage)
-                    return false;
-                if (VesselState.RFullageSetField.GetValue(eng) is object ullageSet)
-                    if (VesselState.RFGetUllageStabilityMethod.Invoke(ullageSet, Array.Empty<object>()) is double propellantStability)
-                        if (propellantStability < 0.996)
-                            return true;
-            }
-            catch (ArgumentException)
-            {
-            }
+            if (!VesselState.RFModuleEnginesRFType.IsInstance(eng))
+                return false;
+            if (VesselState.RFignitedField.GetValue<bool>(eng))
+                return false;
+            if (VesselState.RFignitionsField.GetValue<int>(eng) is 0)
+                return false;
+            if (!VesselState.RFullageField.GetValue<bool>(eng))
+                return false;
+            object ullageSet = VesselState.RFullageSetField.GetValue<object>(eng);
+            double propellantStability = (double)VesselState.RFGetUllageStabilityMethod.Invoke(ullageSet, Array.Empty<object>());
 
-            return false;
+            return propellantStability < 0.996;
         }
 
         public static bool IsDecoupler(this Part p) =>
