@@ -33,7 +33,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             {
                 if (ReflectionUtils.IsAssemblyLoaded("ProceduralFairings"))
                 {
-                    _pfDecoupled = ReflectionUtils.GetFieldByReflection("ProceduralFairings", "ProceduralFairings.ProceduralFairingDecoupler",
+                    _pfDecoupled = ReflectionUtils.GetFieldByReflection("ProceduralFairings", "Keramzit.ProceduralFairingDecoupler",
                         "decoupled");
                     if (_pfDecoupled == null)
                         Debug.Log("MechJeb BUG: ProceduralFairings loaded, but ProceduralFairings.ProceduralFairingDecoupler has no decoupled field");
