@@ -58,7 +58,6 @@ namespace MuMech
         {
             VERTICAL_ASCENT,
             PITCHPROGRAM,
-            ZEROLIFT,
             GUIDANCE,
             EXIT
         }
@@ -75,10 +74,6 @@ namespace MuMech
 
                 case AscentMode.PITCHPROGRAM:
                     DrivePitchProgram();
-                    break;
-
-                case AscentMode.ZEROLIFT:
-                    DriveZeroLift();
                     break;
 
                 case AscentMode.GUIDANCE:
@@ -147,13 +142,6 @@ namespace MuMech
             double theta = dt * AscentSettings.PitchRate;
             double pitch = 90 - theta;
 
-            // we need to initiate by at least 3 degrees, then transition to zerolift when srfvel catches up
-            if (VesselState.Pitch > SrfvelPitch() && VesselState.Heading < 87)
-            {
-                _mode = AscentMode.ZEROLIFT;
-                return;
-            }
-
             Status = Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}"); //Pitch program <<1>>° to guidance
 
             if (CheckForGuidanceTransition(pitch))
@@ -172,21 +160,6 @@ namespace MuMech
             if (pitch <= Core.Guidance.Pitch && Core.Guidance.IsStable()) return true;
 
             return false;
-        }
-
-        private void DriveZeroLift()
-        {
-            double pitch = SrfvelPitch();
-
-            Status = Localizer.Format("#MechJeb_Ascent_status14", $"{pitch - Core.Guidance.Pitch:F}"); //Gravity Turn <<1>>° to guidance
-
-            if (CheckForGuidanceTransition(pitch))
-            {
-                _mode = AscentMode.GUIDANCE;
-                return;
-            }
-
-            AttitudeTo(pitch, Core.Guidance.Heading);
         }
 
         private void DriveGuidance()
