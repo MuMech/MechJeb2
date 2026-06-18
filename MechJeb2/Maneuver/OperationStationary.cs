@@ -10,8 +10,11 @@ namespace MuMech
     [UsedImplicitly]
     public class OperationStationaryOrbit : Operation
     {
-        [Persistent] public double targetLongitude = 0;
-        [Persistent] public double targetLatitude = 0;
+        [Persistent]
+        public double targetLongitude;
+
+        [Persistent]
+        public double targetLatitude;
 
         public override string GetName() => Localizer.Format("#MechJeb_stationary_title"); //stationary orbit
 
@@ -47,6 +50,7 @@ namespace MuMech
             {
                 MoveByMeter(ref targetController.targetLongitude, 10, asl, o);
             }
+
             GUILayout.EndHorizontal();
 
             if (targetController.targetBody != null)
@@ -71,9 +75,9 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_stationary_Exception1", o.referenceBody.displayName.LocalizeRemoveGender()));
             }
 
-            double currentBodyRotationRad = (o.referenceBody.rotationAngle + (360.0 * (ut / o.referenceBody.rotationPeriod))) * Math.PI / 180.0;
+            double currentBodyRotationRad = (o.referenceBody.rotationAngle + 360.0 * (ut / o.referenceBody.rotationPeriod)) * Math.PI / 180.0;
 
-            double targMNA = (targetLongitude * Math.PI / 180.0) + currentBodyRotationRad;
+            double targMNA = targetLongitude * Math.PI / 180.0 + currentBodyRotationRad;
             targMNA = (targMNA % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
             double syncAlt = syncSMA - o.referenceBody.Radius;
             Vector3d targetWorldPos = o.referenceBody.GetWorldSurfacePosition(0, targetLongitude, syncAlt);
@@ -82,19 +86,15 @@ namespace MuMech
             Vector3d velDir = Vector3d.Cross(o.referenceBody.angularVelocity, radiusVector).normalized;
             Vector3d targetVelocity = velDir * velMag;
 
-            Orbit targOrbit = new Orbit();
+            var targOrbit = new Orbit();
             targOrbit.UpdateFromStateVectors(radiusVector, targetVelocity, o.referenceBody, ut);
             targOrbit.eccentricity = 0;
             targOrbit.inclination = 0;
             targOrbit.Init();
             (Vector3d dV1, double ut1, Vector3d dV2, double ut2) =
-                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targOrbit, ut, 0, false, false, true, true);
+                OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(o, targOrbit, ut, 0, false, false);
 
-            return new List<ManeuverParameters>
-            {
-                new ManeuverParameters(dV1, ut1),
-                new ManeuverParameters(dV2, ut2)
-            };
+            return new List<ManeuverParameters> { new ManeuverParameters(dV1, ut1), new ManeuverParameters(dV2, ut2) };
         }
     }
 }

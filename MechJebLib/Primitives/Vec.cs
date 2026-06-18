@@ -16,7 +16,7 @@ namespace MechJebLib.Primitives
             for (int k = 0; k < Bucket.COUNT; k++)
             {
                 int capacity = Bucket.SizeFor(k);
-                int k1       = k;
+                int k1 = k;
                 arr[k] = new ObjectPool<Vec>(
                     () => new Vec(new double[capacity], k1),
                     v => v.Length = 0);
@@ -52,7 +52,7 @@ namespace MechJebLib.Primitives
         {
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
             int bucket = Bucket.IndexFor(length);
-            Vec v      = _pools[bucket].Borrow();
+            Vec v = _pools[bucket].Borrow();
             v.Length = length;
             if (zero) Array.Clear(v.Data, 0, length);
             return v;

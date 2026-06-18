@@ -99,17 +99,17 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool camTrajectory = false;
 
-        public bool deployChutes     = false;
-        public int  limitChutesStage = 0;
+        public bool deployChutes = false;
+        public int limitChutesStage = 0;
 
         //simulation inputs:
         public double
             decelEndAltitudeASL =
                 0; // The altitude at which we need to have killed velocity - NOTE that this is not the same as the height of the predicted landing site.
 
-        public IDescentSpeedPolicy descentSpeedPolicy            = null;  //simulate this descent speed policy
-        public double              parachuteSemiDeployMultiplier = 3;     // this will get updated by the autopilot.
-        public bool                runErrorSimulations           = false; // This will be set by the autopilot to turn error simulations on or off.
+        public IDescentSpeedPolicy descentSpeedPolicy = null; //simulate this descent speed policy
+        public double parachuteSemiDeployMultiplier = 3; // this will get updated by the autopilot.
+        public bool runErrorSimulations = false; // This will be set by the autopilot to turn error simulations on or off.
 
         //internal data:
 
@@ -117,13 +117,13 @@ namespace MuMech
             errorSimulationRunning; // the predictor can run two types of simulation - 1) simulations of the current situation. 2) simulations of the current situation with deliberate error introduced into the parachute multiplier to aid the statistical analysis of these results.
 
         protected readonly Stopwatch errorStopwatch = new Stopwatch();
-        protected          long      millisecondsBetweenErrorSimulations;
+        protected long millisecondsBetweenErrorSimulations;
 
         public bool SimulationRunning { get; private set; }
 
         protected readonly Stopwatch stopwatch = new Stopwatch();
-        public             double    SimulationRunningTime => SimulationRunning ? stopwatch.ElapsedMilliseconds / 1000d : 0;
-        protected          long      millisecondsBetweenSimulations;
+        public double SimulationRunningTime => SimulationRunning ? stopwatch.ElapsedMilliseconds / 1000d : 0;
+        protected long millisecondsBetweenSimulations;
 
         protected ReentrySimulation.Result result;
         protected ReentrySimulation.Result errorResult;
@@ -144,7 +144,7 @@ namespace MuMech
         private readonly Queue readyResults = new Queue();
 
         private Random random;
-        public  double maxOrbits = 1;
+        public double maxOrbits = 1;
 
         private double lastSimTime;
         private double lastSimSteps;
@@ -270,7 +270,7 @@ namespace MuMech
 
             var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, patch.StartUT, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1);
             var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
-                VesselState.limitedMaxThrustAccel, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
+                VesselState.LimitedMaxThrustAcceleration, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
                 Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
@@ -296,7 +296,7 @@ namespace MuMech
                     //see how long the simulation took
                     errorStopwatch.Stop();
                     long millisecondsToCompletion = errorStopwatch.ElapsedMilliseconds;
-                    lastErrorSimTime  = millisecondsToCompletion * 0.001;
+                    lastErrorSimTime = millisecondsToCompletion * 0.001;
                     lastErrorSimSteps = newResult.Steps;
 
                     errorStopwatch.Reset();
@@ -318,8 +318,8 @@ namespace MuMech
 
                     //set the delay before the next simulation
                     millisecondsBetweenSimulations = Math.Min(Math.Max(2 * millisecondsToCompletion, 200), 5);
-                    lastSimTime                    = millisecondsToCompletion * 0.001;
-                    lastSimSteps                   = newResult.Steps;
+                    lastSimTime = millisecondsToCompletion * 0.001;
+                    lastSimSteps = newResult.Steps;
                     // Do not wait for too long before running another simulation, but also give the processor a rest.
 
                     // How long should we set the max_dt to be in the future? Calculate for interationsPerSecond runs per second. If we do not enter the atmosphere, however do not do so as we will complete so quickly, it is not a good guide to how long the reentry simulation takes.
@@ -427,7 +427,7 @@ namespace MuMech
                 //Remove node after finishing aerobraking:
                 if (aerobrakeNode != null && Vessel.patchedConicSolver.maneuverNodes.Contains(aerobrakeNode))
                 {
-                    if (aerobrakeNode.UT < VesselState.time && VesselState.altitudeASL > MainBody.RealMaxAtmosphereAltitude())
+                    if (aerobrakeNode.UT < VesselState.Time && VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
                     {
                         aerobrakeNode.RemoveSelf();
                         aerobrakeNode = null;
@@ -444,9 +444,9 @@ namespace MuMech
                     //Put the node at periapsis, unless we're past periapsis. In that case put the node at the current time.
                     double UT;
                     if (preAerobrakeOrbit == Orbit &&
-                        VesselState.altitudeASL < MainBody.RealMaxAtmosphereAltitude() && VesselState.speedVertical > 0)
+                        VesselState.AltitudeASL < MainBody.RealMaxAtmosphereAltitude() && VesselState.SpeedVertical > 0)
                     {
-                        UT = VesselState.time;
+                        UT = VesselState.Time;
                     }
                     else
                     {

@@ -19,10 +19,10 @@ namespace MuMech
         public static Vector3d GetCurrentSurfacePositionFromUT(this CelestialBody body, double ut, Vector3d localPosition)
         {
             double deltaT = ut - Planetarium.GetUniversalTime();
-            double theta  = 360.0 / body.rotationPeriod * deltaT;
+            double theta = 360.0 / body.rotationPeriod * deltaT;
 
-            var      derotation = QuaternionD.AngleAxis(-theta, new Vector3d(0, -1, 0));
-            Vector3d derotated  = derotation * localPosition;
+            var derotation = QuaternionD.AngleAxis(-theta, new Vector3d(0, -1, 0));
+            Vector3d derotated = derotation * localPosition;
             return derotated;
         }
 
@@ -86,14 +86,14 @@ namespace MuMech
         {
             double epsilon = sampleRadiusMeters / (body.Radius * Math.PI / 180.0);
 
-            double hN = body.TerrainAltitude(latitude + epsilon, longitude, allowNegative: true);
-            double hS = body.TerrainAltitude(latitude - epsilon, longitude, allowNegative: true);
-            double hE = body.TerrainAltitude(latitude, longitude + epsilon, allowNegative: true);
-            double hW = body.TerrainAltitude(latitude, longitude - epsilon, allowNegative: true);
+            double hN = body.TerrainAltitude(latitude + epsilon, longitude, true);
+            double hS = body.TerrainAltitude(latitude - epsilon, longitude, true);
+            double hE = body.TerrainAltitude(latitude, longitude + epsilon, true);
+            double hW = body.TerrainAltitude(latitude, longitude - epsilon, true);
 
             double metersPerDeg = body.Radius * Math.PI / 180.0;
-            double dhdx         = (hE - hW) / (2.0 * epsilon * metersPerDeg);
-            double dhdy         = (hN - hS) / (2.0 * epsilon * metersPerDeg);
+            double dhdx = (hE - hW) / (2.0 * epsilon * metersPerDeg);
+            double dhdy = (hN - hS) / (2.0 * epsilon * metersPerDeg);
 
             return (float)(Math.Atan(Math.Sqrt(dhdx * dhdx + dhdy * dhdy)) * 180.0 / Math.PI);
         }

@@ -7,10 +7,10 @@ namespace MuMech.AttitudeControllers
 {
     internal class KosAttitudeController : BaseAttitudeController
     {
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble MaxStoppingTime = new EditableDouble(2);
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult RollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
         //public double RollControlRange {
         //    get { return this.rollControlRange; }
@@ -18,22 +18,22 @@ namespace MuMech.AttitudeControllers
         //}
 
         private readonly TorquePI _pitchPI = new TorquePI();
-        private readonly TorquePI _yawPI   = new TorquePI();
-        private readonly TorquePI _rollPI  = new TorquePI();
+        private readonly TorquePI _yawPI = new TorquePI();
+        private readonly TorquePI _rollPI = new TorquePI();
 
         private readonly KosPIDLoop _pitchRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
-        private readonly KosPIDLoop _yawRatePI   = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
-        private readonly KosPIDLoop _rollRatePI  = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
+        private readonly KosPIDLoop _yawRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
+        private readonly KosPIDLoop _rollRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
 
-        private Vector3d _actuation    = Vector3d.zero;
+        private Vector3d _actuation = Vector3d.zero;
         private Vector3d _targetTorque = Vector3d.zero;
-        private Vector3d _omega        = Vector3d.zero;
+        private Vector3d _omega = Vector3d.zero;
 
         /* error */
         private double _phiTotal;
 
         /* error in pitch, roll, yaw */
-        private Vector3d _phiVector   = Vector3d.zero;
+        private Vector3d _phiVector = Vector3d.zero;
         private Vector3d _targetOmega = Vector3d.zero;
 
         /* max angular rotation */
@@ -53,29 +53,29 @@ namespace MuMech.AttitudeControllers
             UpdateControl();
 
             deltaEuler = _phiVector * Mathf.Rad2Deg;
-            act        = _actuation;
+            act = _actuation;
         }
 
         /* temporary state vectors */
         private QuaternionD _vesselRotation;
-        private Vector3d    _vesselForward;
-        private Vector3d    _vesselTop;
-        private Vector3d    _vesselStarboard;
-        private Vector3d    _targetForward;
-        private Vector3d    _targetTop;
+        private Vector3d _vesselForward;
+        private Vector3d _vesselTop;
+        private Vector3d _vesselStarboard;
+        private Vector3d _targetForward;
+        private Vector3d _targetTop;
 
         /* private Vector3d targetStarboard; */
 
         private void UpdateStateVectors()
         {
             /* FIXME: may get called more than once per tick */
-            _vesselRotation  = (QuaternionD)Ac.Vessel.ReferenceTransform.rotation * MathExtensions.Euler(-90, 0, 0);
-            _vesselForward   = _vesselRotation * Vector3d.forward;
-            _vesselTop       = _vesselRotation * Vector3d.up;
+            _vesselRotation = (QuaternionD)Ac.Vessel.ReferenceTransform.rotation * MathExtensions.Euler(-90, 0, 0);
+            _vesselForward = _vesselRotation * Vector3d.forward;
+            _vesselTop = _vesselRotation * Vector3d.up;
             _vesselStarboard = _vesselRotation * Vector3d.right;
 
             _targetForward = Ac.RequestedAttitude * Vector3d.forward;
-            _targetTop     = Ac.RequestedAttitude * Vector3d.up;
+            _targetTop = Ac.RequestedAttitude * Vector3d.up;
             /* targetStarboard = target * Vector3d.right; */
 
             _omega = -Ac.Vessel.angularVelocity;

@@ -53,9 +53,9 @@ namespace MechJebLib.Maneuvers
 
             // radial/transverse as used in RSW, see Vallado
             double vtransverse = l / rm;
-            double vradial     = Sqrt(Abs(2 * ke - vtransverse * vtransverse));
+            double vradial = Sqrt(Abs(2 * ke - vtransverse * vtransverse));
 
-            V3 radialhat     = r.normalized;
+            V3 radialhat = r.normalized;
             V3 transversehat = V3.Cross(V3.Cross(radialhat, v), radialhat).normalized;
 
             V3 one = vtransverse * transversehat + vradial * radialhat - v;
@@ -99,7 +99,7 @@ namespace MechJebLib.Maneuvers
             Check.Finite(v);
 
             double dt = Astro.TimeToNextApoapsis(mu, r, v);
-            V3     dv = DeltaVToCircularizeAfterTime(mu, r, v, dt);
+            V3 dv = DeltaVToCircularizeAfterTime(mu, r, v, dt);
 
             Check.Finite(dv);
             Check.Finite(dt);
@@ -120,19 +120,19 @@ namespace MechJebLib.Maneuvers
             // calculate the velocity needed to change both the apoapsis and the inclination,
             // (this handles engaging the ascent guidance randomly during flight and picks the least expensive
             // north/south option)
-            V3 dvapo  = DeltaVToChangeApoapsisPrograde(mu, r, v, desiredApoapsis);
+            V3 dvapo = DeltaVToChangeApoapsisPrograde(mu, r, v, desiredApoapsis);
             V3 dvinc1 = DeltaVToChangeInclination(r, v + dvapo, newInc);
             V3 dvinc2 = DeltaVToChangeInclination(r, v + dvapo, -newInc);
-            V3 dv1    = dvapo + dvinc1;
-            V3 dv2    = dvapo + dvinc2;
+            V3 dv1 = dvapo + dvinc1;
+            V3 dv2 = dvapo + dvinc2;
 
             V3 dv = dv1.magnitude < dv2.magnitude ? dv1 : dv2;
 
             // if the surface horizontal velocity is very small and the dv magnitudes are nearly equal, then
             // assume we are doing vertical rise from launch and the sign of newInc determines if we take the
             // northward or southward going track.
-            V3 rhat   = r.normalized;
-            V3 vsurf  = v - V3.Cross(rotFreq * V3.northpole, r);
+            V3 rhat = r.normalized;
+            V3 vsurf = v - V3.Cross(rotFreq * V3.northpole, r);
             V3 vhoriz = vsurf - V3.Dot(vsurf, rhat) * rhat;
             if (vhoriz.magnitude / dvinc1.magnitude < 0.05 && Abs(dv1.magnitude - dv2.magnitude) / dv1.magnitude < 0.05)
                 dv = dv1;

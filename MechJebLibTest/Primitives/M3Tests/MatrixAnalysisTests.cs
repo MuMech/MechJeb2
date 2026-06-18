@@ -238,7 +238,7 @@ namespace MechJebLibTest.Primitives.M3Tests
             var p = M3.Rotate(Q3.AngleAxis(0.5, new V3(1, 1, 1).normalized));
 
             double originalTrace = m.trace;
-            double similarTrace  = (p * m * p.transpose).trace;
+            double similarTrace = (p * m * p.transpose).trace;
 
             originalTrace.ShouldEqual(similarTrace, 1e-13);
         }
@@ -257,7 +257,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         {
             var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-            M3 symmetric     = (m + m.transpose) / 2;
+            M3 symmetric = (m + m.transpose) / 2;
             M3 skewSymmetric = (m - m.transpose) / 2;
 
             symmetric.isSymmetric.ShouldBeTrue();

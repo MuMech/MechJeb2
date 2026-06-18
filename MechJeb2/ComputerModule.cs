@@ -27,12 +27,10 @@ namespace MuMech
         [UsedImplicitly]
         public int Priority;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.LOCAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public string unlockParts = "";
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.LOCAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public string unlockTechs = "";
 
         public bool UnlockChecked;
@@ -48,7 +46,7 @@ namespace MuMech
             {
                 if (value == _enabled) return;
 
-                Dirty    = true;
+                Dirty = true;
                 _enabled = value;
 
                 if (_enabled)
@@ -79,7 +77,7 @@ namespace MuMech
 
         protected ComputerModule(MechJebCore core)
         {
-            Core         = core;
+            Core = core;
             ProfilerName = GetType().Name;
 
             Users = new UserPool(this);
@@ -239,7 +237,7 @@ namespace MuMech
 
             if (!unlock)
             {
-                Enabled                  = false;
+                Enabled = false;
                 Core.someModuleAreLocked = true;
             }
         }
@@ -258,8 +256,8 @@ namespace MuMech
     [Flags]
     public enum Pass
     {
-        LOCAL  = 1,
-        TYPE   = 2,
+        LOCAL = 1,
+        TYPE = 2,
         GLOBAL = 4
     }
 
@@ -267,7 +265,7 @@ namespace MuMech
     {
         public delegate void OnEvent();
 
-        private readonly List<OnEvent>            _events     = new List<OnEvent>();
+        private readonly List<OnEvent> _events = new List<OnEvent>();
         private readonly Dictionary<OnEvent, int> _eventIndex = new Dictionary<OnEvent, int>();
 
         public void Add(OnEvent evt)

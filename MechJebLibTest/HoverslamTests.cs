@@ -21,14 +21,14 @@ namespace MechJebLibTest
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            double mu    = 4.9028e12;
+            double mu = 4.9028e12;
             double rbody = 1737400;
-            double t0    = 0;
-            var    r0    = new V3(rbody + 15000, 0, 0);
-            V3     w     = 2.6617e-6 * V3.northpole;
-            var    v0    = V3.Cross(w, r0);
+            double t0 = 0;
+            var r0 = new V3(rbody + 15000, 0, 0);
+            V3 w = 2.6617e-6 * V3.northpole;
+            var v0 = V3.Cross(w, r0);
 
-            var manager   = new HoverslamSimulation.HoverslamSimulationManager();
+            var manager = new HoverslamSimulation.HoverslamSimulationManager();
             var hoverslam = new HoverslamSimulation();
 
             manager.AddStage(15095, 15095 - 8200, 45040, 311, 0, 0)
@@ -49,14 +49,14 @@ namespace MechJebLibTest
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var    r0     = new V3(277180.537135037, 68093.9480158941, -0.0292773955469599);
-            var    v0     = new V3(-89.2646837517975, 208.578761949662, -0.000384582381211831);
-            double t0     = 103226.904130211;
-            double mu     = 65138397520.7807;
-            var    w      = new V3(0, 0, 4.52078533000628E-05);
+            var r0 = new V3(277180.537135037, 68093.9480158941, -0.0292773955469599);
+            var v0 = new V3(-89.2646837517975, 208.578761949662, -0.000384582381211831);
+            double t0 = 103226.904130211;
+            double mu = 65138397520.7807;
+            var w = new V3(0, 0, 4.52078533000628E-05);
             double height = 203258.308103023;
 
-            var manager   = new HoverslamSimulation.HoverslamSimulationManager(false);
+            var manager = new HoverslamSimulation.HoverslamSimulationManager(false);
             var hoverslam = new HoverslamSimulation();
 
             manager.Initial(r0, v0, t0, mu, w)
@@ -94,14 +94,14 @@ namespace MechJebLibTest
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var    r0     = new V3(-2118481.777241, -1066356.47144701, -4.04795492273187E-07);
-            var    v0     = new V3(255.065239081993, 74.1893623591615, 8.88384130349409E-11);
-            double t0     = 103527.484130273;
-            double mu     = 65138397520.7807;
-            var    w      = new V3(0, 0, 4.52078533000628E-05);
+            var r0 = new V3(-2118481.777241, -1066356.47144701, -4.04795492273187E-07);
+            var v0 = new V3(255.065239081993, 74.1893623591615, 8.88384130349409E-11);
+            double t0 = 103527.484130273;
+            double mu = 65138397520.7807;
+            var w = new V3(0, 0, 4.52078533000628E-05);
             double height = 203258.308103023;
 
-            var manager   = new HoverslamSimulation.HoverslamSimulationManager();
+            var manager = new HoverslamSimulation.HoverslamSimulationManager();
             var hoverslam = new HoverslamSimulation();
 
             manager.Initial(r0, v0, t0, mu, w)
@@ -122,15 +122,15 @@ namespace MechJebLibTest
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var    r0           = new V3(276714.567061612, 53069.6146485938, 0.00770833757526462);
-            var    v0           = new V3(-116.600502880196, 177.393895536045, 7.72615181983542E-05);
-            double t0           = 104033.944130376;
-            double mu           = 65138397520.7807;
-            var    w            = new V3(0, 0, 4.52078533000628E-05);
-            double height       = 203079.078627833;
+            var r0 = new V3(276714.567061612, 53069.6146485938, 0.00770833757526462);
+            var v0 = new V3(-116.600502880196, 177.393895536045, 7.72615181983542E-05);
+            double t0 = 104033.944130376;
+            double mu = 65138397520.7807;
+            var w = new V3(0, 0, 4.52078533000628E-05);
+            double height = 203079.078627833;
             double descentSpeed = 111.496373594304;
 
-            var manager   = new HoverslamSimulation.HoverslamSimulationManager();
+            var manager = new HoverslamSimulation.HoverslamSimulationManager();
             var hoverslam = new HoverslamSimulation();
 
             manager.Initial(r0, v0, t0, mu, w)
@@ -152,15 +152,15 @@ namespace MechJebLibTest
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var    r0           = new V3(277354.901930395, 52073.8040485903, 0.00727448590091598);
-            var    v0           = new V3(-112.093343687681, 178.249208847387, 7.73831475858213E-05);
-            double t0           = 104028.344130375;
-            double mu           = 65138397520.7807;
-            var    w            = new V3(0, 0, 4.52078533000628E-05);
-            double height       = 203079.452561372;
+            var r0 = new V3(277354.901930395, 52073.8040485903, 0.00727448590091598);
+            var v0 = new V3(-112.093343687681, 178.249208847387, 7.73831475858213E-05);
+            double t0 = 104028.344130375;
+            double mu = 65138397520.7807;
+            var w = new V3(0, 0, 4.52078533000628E-05);
+            double height = 203079.452561372;
             double descentSpeed = 111.503169115681;
 
-            var manager   = new HoverslamSimulation.HoverslamSimulationManager();
+            var manager = new HoverslamSimulation.HoverslamSimulationManager();
             var hoverslam = new HoverslamSimulation();
 
             manager.Initial(r0, v0, t0, mu, w)

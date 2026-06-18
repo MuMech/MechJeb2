@@ -33,34 +33,34 @@ namespace MuMech
                 // No point in copying those again if we already have them loaded
                 if (!_loaded)
                 {
-                    _dragCurveCd         = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
-                    _dragCurveCdPower    = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
+                    _dragCurveCd = new FloatCurve(PhysicsGlobals.DragCurveCd.Curve.keys);
+                    _dragCurveCdPower = new FloatCurve(PhysicsGlobals.DragCurveCdPower.Curve.keys);
                     _dragCurveMultiplier = new FloatCurve(PhysicsGlobals.DragCurveMultiplier.Curve.keys);
 
                     _dragCurveSurface = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveSurface.Curve.keys);
-                    _dragCurveTail    = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTail.Curve.keys);
-                    _dragCurveTip     = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
+                    _dragCurveTail = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTail.Curve.keys);
+                    _dragCurveTip = new FloatCurve(PhysicsGlobals.SurfaceCurves.dragCurveTip.Curve.keys);
 
-                    _liftCurve     = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
-                    LiftMachCurve  = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
-                    _dragCurve     = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragCurve.Curve.keys);
+                    _liftCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftCurve.Curve.keys);
+                    LiftMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.liftMachCurve.Curve.keys);
+                    _dragCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragCurve.Curve.keys);
                     _dragMachCurve = new FloatCurve(PhysicsGlobals.BodyLiftCurve.dragMachCurve.Curve.keys);
 
                     DragCurvePseudoReynolds = new FloatCurve(PhysicsGlobals.DragCurvePseudoReynolds.Curve.keys);
 
                     SpaceTemperature = PhysicsGlobals.SpaceTemperature;
-                    _loaded          = true;
+                    _loaded = true;
                 }
 
                 if (newBody != _body)
                 {
-                    _body                             = newBody;
-                    AtmospherePressureCurve           = new FloatCurve(newBody.atmospherePressureCurve.Curve.keys);
+                    _body = newBody;
+                    AtmospherePressureCurve = new FloatCurve(newBody.atmospherePressureCurve.Curve.keys);
                     AtmosphereTemperatureSunMultCurve = new FloatCurve(newBody.atmosphereTemperatureSunMultCurve.Curve.keys);
-                    LatitudeTemperatureBiasCurve      = new FloatCurve(newBody.latitudeTemperatureBiasCurve.Curve.keys);
-                    LatitudeTemperatureSunMultCurve   = new FloatCurve(newBody.latitudeTemperatureSunMultCurve.Curve.keys);
-                    AtmosphereTemperatureCurve        = new FloatCurve(newBody.atmosphereTemperatureCurve.Curve.keys);
-                    AxialTemperatureSunMultCurve      = new FloatCurve(newBody.axialTemperatureSunMultCurve.Curve.keys);
+                    LatitudeTemperatureBiasCurve = new FloatCurve(newBody.latitudeTemperatureBiasCurve.Curve.keys);
+                    LatitudeTemperatureSunMultCurve = new FloatCurve(newBody.latitudeTemperatureSunMultCurve.Curve.keys);
+                    AtmosphereTemperatureCurve = new FloatCurve(newBody.atmosphereTemperatureCurve.Curve.keys);
+                    AxialTemperatureSunMultCurve = new FloatCurve(newBody.axialTemperatureSunMultCurve.Curve.keys);
                 }
             }
 
@@ -90,19 +90,19 @@ namespace MuMech
 
             public void CopyTo(DragCubeList dest)
             {
-                dest.DragCurveCd         = _dragCurveCd;
-                dest.DragCurveCdPower    = _dragCurveCdPower;
+                dest.DragCurveCd = _dragCurveCd;
+                dest.DragCurveCdPower = _dragCurveCdPower;
                 dest.DragCurveMultiplier = _dragCurveMultiplier;
 
-                dest.BodyLiftCurve.liftCurve     = _liftCurve;
-                dest.BodyLiftCurve.dragCurve     = _dragCurve;
+                dest.BodyLiftCurve.liftCurve = _liftCurve;
+                dest.BodyLiftCurve.dragCurve = _dragCurve;
                 dest.BodyLiftCurve.dragMachCurve = _dragMachCurve;
                 dest.BodyLiftCurve.liftMachCurve = LiftMachCurve;
 
                 dest.SurfaceCurves.dragCurveMultiplier = _dragCurveMultiplier;
-                dest.SurfaceCurves.dragCurveSurface    = _dragCurveSurface;
-                dest.SurfaceCurves.dragCurveTail       = _dragCurveTail;
-                dest.SurfaceCurves.dragCurveTip        = _dragCurveTip;
+                dest.SurfaceCurves.dragCurveSurface = _dragCurveSurface;
+                dest.SurfaceCurves.dragCurveTail = _dragCurveTail;
+                dest.SurfaceCurves.dragCurveTip = _dragCurveTip;
             }
         }
     }

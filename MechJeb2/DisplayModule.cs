@@ -8,6 +8,7 @@ namespace MuMech
 {
     public class DisplayModule : ComputerModule
     {
+        // this means Hidden in the drop-down menu because the tech isn't unlocked.
         public bool Hidden;
 
         public Rect WindowPos
@@ -30,7 +31,7 @@ namespace MuMech
                 {
                     if (WindowVector != newPos)
                     {
-                        Dirty        = true;
+                        Dirty = true;
                         WindowVector = newPos;
                     }
                 }
@@ -38,7 +39,7 @@ namespace MuMech
                 {
                     if (WindowVectorEditor != newPos)
                     {
-                        Dirty              = true;
+                        Dirty = true;
                         WindowVectorEditor = newPos;
                     }
                 }
@@ -46,17 +47,14 @@ namespace MuMech
         }
 
         // Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public Vector4 WindowVector = new Vector4(10, 40, 0, 0);
 
         // Persistence is via a Vector4 since ConfigNode doesn't know how to serialize Rects
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public Vector4 WindowVectorEditor = new Vector4(10, 40, 0, 0);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         // ReSharper disable once InconsistentNaming
         public bool showInFlight = true;
 
@@ -68,13 +66,12 @@ namespace MuMech
                 if (showInFlight != value)
                 {
                     showInFlight = value;
-                    Dirty        = true;
+                    Dirty = true;
                 }
             }
         }
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         // ReSharper disable once InconsistentNaming
         public bool showInEditor;
 
@@ -85,12 +82,11 @@ namespace MuMech
             {
                 if (showInEditor == value) return;
                 showInEditor = value;
-                Dirty        = true;
+                Dirty = true;
             }
         }
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool IsOverlayConfig;
 
         public bool IsOverlay
@@ -100,12 +96,11 @@ namespace MuMech
             {
                 if (IsOverlayConfig == value) return;
                 IsOverlayConfig = value;
-                Dirty           = true;
+                Dirty = true;
             }
         }
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool LockedConfig;
 
         public bool Locked
@@ -115,7 +110,7 @@ namespace MuMech
             {
                 if (LockedConfig == value) return;
                 LockedConfig = value;
-                Dirty        = true;
+                Dirty = true;
             }
         }
 
@@ -127,7 +122,7 @@ namespace MuMech
         public bool ShowInCurrentScene => HighLogic.LoadedSceneIsEditor ? showInEditor : showInFlight;
 
         private readonly int _id;
-        private static   int _nextID = 72190852;
+        private static int _nextID = 72190852;
 
         protected DisplayModule(MechJebCore core)
             : base(core)
@@ -145,18 +140,18 @@ namespace MuMech
                 Enabled = false;
             }
 
-//            if (GUI.Button(new Rect(windowPos.width - 40, 2, 20, 16), (locked ? "X" : "O"))) // lock button needs an icon, letters look crap
-//            {
-//                locked = !locked;
-//            }
+            //            if (GUI.Button(new Rect(windowPos.width - 40, 2, 20, 16), (locked ? "X" : "O"))) // lock button needs an icon, letters look crap
+            //            {
+            //                locked = !locked;
+            //            }
 
             bool allowDrag = !LockedConfig;
-            if (!LockedConfig && !IsOverlayConfig && Core.Settings.useTitlebarDragging)
+            if (!LockedConfig && !IsOverlayConfig && Core.Settings.UseTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.Scale;
                 float y = Mouse.screenPos.y / GuiUtils.Scale;
                 allowDrag = x >= WindowPos.xMin + 3 && x <= WindowPos.xMin + WindowPos.width - 3 &&
-                            y >= WindowPos.yMin + 3 && y <= WindowPos.yMin + 17;
+                    y >= WindowPos.yMin + 3 && y <= WindowPos.yMin + 17;
             }
 
             if (draggable && allowDrag)
@@ -220,7 +215,7 @@ namespace MuMech
                 global.AddValue("enabledEditor", EnabledEditor);
                 global.AddValue("enabledFlight", EnabledFlight);
             }
-//            if (global != null) global.AddValue("locked", locked);
+            //            if (global != null) global.AddValue("locked", locked);
         }
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -233,7 +228,7 @@ namespace MuMech
                 if (bool.TryParse(global.GetValue("enabledEditor"), out bool loadedEnabled))
                 {
                     EnabledEditor = loadedEnabled;
-                    useOldConfig  = false;
+                    useOldConfig = false;
                     if (HighLogic.LoadedSceneIsEditor)
                         Enabled = loadedEnabled;
                 }
@@ -244,7 +239,7 @@ namespace MuMech
                 if (bool.TryParse(global.GetValue("enabledFlight"), out bool loadedEnabled))
                 {
                     EnabledFlight = loadedEnabled;
-                    useOldConfig  = false;
+                    useOldConfig = false;
                     if (HighLogic.LoadedSceneIsFlight)
                         Enabled = loadedEnabled;
                 }

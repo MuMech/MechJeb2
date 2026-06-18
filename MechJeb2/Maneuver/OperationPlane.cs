@@ -9,12 +9,9 @@ namespace MuMech
     public class OperationPlane : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_match_planes_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        private static readonly TimeReference[] _timeReferences =
-        {
-            TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING
-        };
+        private static readonly TimeReference[] _timeReferences = { TimeReference.REL_HIGHEST_AD, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING };
 
         private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 

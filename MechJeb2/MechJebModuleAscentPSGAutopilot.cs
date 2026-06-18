@@ -58,7 +58,6 @@ namespace MuMech
         {
             VERTICAL_ASCENT,
             PITCHPROGRAM,
-            ZEROLIFT,
             GUIDANCE,
             EXIT
         }
@@ -75,10 +74,6 @@ namespace MuMech
 
                 case AscentMode.PITCHPROGRAM:
                     DrivePitchProgram();
-                    break;
-
-                case AscentMode.ZEROLIFT:
-                    DriveZeroLift();
                     break;
 
                 case AscentMode.GUIDANCE:
@@ -103,8 +98,8 @@ namespace MuMech
                 ? Core.Target.TargetOrbit.LAN
                 : (double)AscentSettings.DesiredLan;
 
-            double inclination   = AscentSettings.DesiredInclination;
-            bool   attachAltFlag = !AscentSettings.OptimizeStageFlag || AscentSettings.AttachAltFlag;
+            double inclination = AscentSettings.DesiredInclination;
+            bool attachAltFlag = !AscentSettings.OptimizeStageFlag || AscentSettings.AttachAltFlag;
 
             // if we are launchingToPlane other code in MJ fixes the sign of the inclination to be correct
             // FIXME: can we just use autopilot.desiredInclination here and rely on the other code to update that value?
@@ -130,29 +125,22 @@ namespace MuMech
                 return;
             }
 
-            if (VesselState.altitudeBottom > AscentSettings.PitchStartHeight)
+            if (VesselState.AltitudeBottom > AscentSettings.PitchStartHeight)
             {
-                _mode           = AscentMode.PITCHPROGRAM;
+                _mode = AscentMode.PITCHPROGRAM;
                 _pitchStartTime = MET;
                 return;
             }
 
-            double dh = AscentSettings.PitchStartHeight - VesselState.altitudeBottom;
+            double dh = AscentSettings.PitchStartHeight - VesselState.AltitudeBottom;
             Status = $"Vertical ascent {dh:F2}m to go";
         }
 
         private void DrivePitchProgram()
         {
-            double dt    = MET - _pitchStartTime;
+            double dt = MET - _pitchStartTime;
             double theta = dt * AscentSettings.PitchRate;
             double pitch = 90 - theta;
-
-            // we need to initiate by at least 3 degrees, then transition to zerolift when srfvel catches up
-            if (VesselState.currentPitch > SrfvelPitch() && VesselState.currentPitch < 87)
-            {
-                _mode = AscentMode.ZEROLIFT;
-                return;
-            }
 
             Status = Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}"); //Pitch program <<1>>° to guidance
 
@@ -174,21 +162,6 @@ namespace MuMech
             return false;
         }
 
-        private void DriveZeroLift()
-        {
-            double pitch = SrfvelPitch();
-
-            Status = Localizer.Format("#MechJeb_Ascent_status14", $"{pitch - Core.Guidance.Pitch:F}"); //Gravity Turn <<1>>° to guidance
-
-            if (CheckForGuidanceTransition(pitch))
-            {
-                _mode = AscentMode.GUIDANCE;
-                return;
-            }
-
-            AttitudeTo(pitch, Core.Guidance.Heading);
-        }
-
         private void DriveGuidance()
         {
             if (Core.Guidance.Status == PSGStatus.FINISHED)
@@ -199,13 +172,13 @@ namespace MuMech
 
             if (!Core.Guidance.IsStable())
             {
-                double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.vesselPitch);
+                double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.Pitch);
                 AttitudeTo(pitch, SrfvelHeading());
                 Status = Localizer.Format("#MechJeb_Ascent_status16"); //"WARNING: Unstable Guidance"
             }
             else
             {
-                double ang = Vector3d.Angle(Core.Guidance.Inertial, VesselState.forward);
+                double ang = Vector3d.Angle(Core.Guidance.Inertial, VesselState.Forward);
                 // FIXME: should be able to set status color to yellow for ang > 2 and red for ang > 5 or so
                 Status = $"Stable Guidance: {ang:F}° deviation";
                 AttitudeTo(Core.Guidance.Inertial);

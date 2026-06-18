@@ -39,7 +39,7 @@ namespace MuMech
 
             bool onAxisNodeExists = false;
             foreach (ITargetable node in Vessel.GetTargetables()
-                         .Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
+                        .Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
             {
                 if (Vector3d.Angle(node.GetTransform().forward, Vessel.ReferenceTransform.up) < 2)
                 {
@@ -55,7 +55,7 @@ namespace MuMech
             }
 
             bool active = GUILayout.Toggle(autopilot.Enabled, Localizer.Format("#MechJeb_Docking_checkbox1")); // "Autopilot enabled"
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_label5"), autopilot.speedLimit, "m/s");  //"Speed limit"
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_Docking_label5"), autopilot.speedLimit, "m/s"); //"Speed limit"
 
             autopilot.overrideSafeDistance =
                 GUILayout.Toggle(autopilot.overrideSafeDistance, Localizer.Format("#MechJeb_Docking_checkbox2")); //"Override Safe Distance"
@@ -120,7 +120,7 @@ namespace MuMech
             if (autopilot.Enabled)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label9", autopilot.status)); //"Status: <<1>>"
-                Vector3d error = Core.RCS.targetVelocity - VesselState.orbitalVelocity;
+                Vector3d error = Core.RCS.targetVelocity - VesselState.OrbitalVelocity;
                 double error_x = Vector3d.Dot(error, Vessel.GetTransform().right);
                 double error_y = Vector3d.Dot(error, Vessel.GetTransform().forward);
                 double error_z = Vector3d.Dot(error, Vessel.GetTransform().up);
@@ -130,7 +130,7 @@ namespace MuMech
 
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label13", autopilot.zSep.ToString("F2")) + "m"); //Distance Dock: <<1>>
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label14", autopilot.lateralSep.magnitude.ToString("F2")) +
-                                "m"); //Distance Dock Axis: <<1>>
+                    "m"); //Distance Dock Axis: <<1>>
             }
 
             GUILayout.EndVertical();

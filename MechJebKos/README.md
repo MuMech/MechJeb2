@@ -1,0 +1,3 @@
+- To build this use the Release-kOS target instead of Release.
+- This is HEAVILY EXPERIMENTAL, I can almost promise I'll break your scripts with API changes.
+- No documentation. For now, you need to be able to read the code and figure out the API yourself.

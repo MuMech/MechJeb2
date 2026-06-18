@@ -88,7 +88,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ToStringWithRoundTripFormat()
         {
-            var    v      = new V3(1.0 / 3.0, 2.0 / 3.0, 4.0 / 3.0);
+            var v = new V3(1.0 / 3.0, 2.0 / 3.0, 4.0 / 3.0);
             string result = v.ToString("R");
 
             result.ShouldContain("0.33333333333333331");
@@ -127,7 +127,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ToStringWithCustomFormatProvider()
         {
-            var v             = new V3(1234.5, 6789.25, 10000.125);
+            var v = new V3(1234.5, 6789.25, 10000.125);
             var germanCulture = new CultureInfo("de-DE");
 
             string result = v.ToString("F2", germanCulture);
@@ -137,7 +137,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ToStringWithFrenchCulture()
         {
-            var v             = new V3(1234.5, 6789.25, 10000.125);
+            var v = new V3(1234.5, 6789.25, 10000.125);
             var frenchCulture = new CultureInfo("fr-FR");
 
             string result = v.ToString("F2", frenchCulture);
@@ -186,7 +186,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ToStringConsistentBracketFormat()
         {
-            var    v      = new V3(1, 2, 3);
+            var v = new V3(1, 2, 3);
             string result = v.ToString();
 
             result.ShouldStartWith("[");
@@ -198,7 +198,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ToStringWithScientificNotation()
         {
-            var    v      = new V3(1.23e-10, 4.56e20, 7.89e5);
+            var v = new V3(1.23e-10, 4.56e20, 7.89e5);
             string result = v.ToString();
 
             result.ShouldContain("1.2299999999999999E-10");
@@ -209,7 +209,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ToStringAlwaysUsesCommaSeparator()
         {
-            var v             = new V3(1, 2, 3);
+            var v = new V3(1, 2, 3);
             var germanCulture = new CultureInfo("de-DE");
 
             string result = v.ToString("G", germanCulture);

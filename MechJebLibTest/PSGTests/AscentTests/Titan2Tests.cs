@@ -33,14 +33,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void FlightPathAngle4Elliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 4306022;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
@@ -51,7 +51,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -80,14 +80,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void FlightPathAngle3EnergyElliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 4306022;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
@@ -98,7 +98,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -126,14 +126,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void FlightPathAngle5Elliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 4306022;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
@@ -144,7 +144,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -172,14 +172,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void FlightPathAngle4EnergyElliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 4306022;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4)
@@ -190,7 +190,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -218,14 +218,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void Kepler3Elliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 4306022;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
@@ -236,7 +236,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -264,14 +264,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void Kepler4Elliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 4306022;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
@@ -282,7 +282,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -310,14 +310,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void Kepler5Elliptical()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 4306022;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
@@ -328,7 +328,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -414,14 +414,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void Circular()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 185e+3;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
@@ -432,7 +432,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -469,7 +469,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent2.Run();
 
-            Optimizer      psg2      = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
         }
 
@@ -477,14 +477,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void CircularOptimizedBooster()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 185e+3;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
@@ -495,7 +495,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -527,14 +527,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void CircularCoast()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 185e+3;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
@@ -546,7 +546,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -588,7 +588,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent2.Run();
 
-            Optimizer      psg2      = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
         }
 
@@ -596,14 +596,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void CircularCoastOptimizedBooster()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 185e+3;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
@@ -615,7 +615,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
@@ -651,14 +651,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void CircularCoastWithinStage()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(5593203.65707947, 0, 3050526.81522927);
-            var    v0    = new V3(0, 407.862893197274, 0);
-            double t0    = 0;
-            double PeR   = 6.371e+6 + 185e+3;
-            double ApR   = 6.371e+6 + 185e+3;
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
             double rbody = 6.371e+6;
-            double incT  = Deg2Rad(28.608);
-            double mu    = 3.986004418e+14;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
 
             Ascent ascent = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
@@ -671,7 +671,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -715,7 +715,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent2.Run();
 
-            Optimizer      psg2      = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
 
             solution2.Vgo(0).ShouldEqual(8101.193073142621, 1e-3);

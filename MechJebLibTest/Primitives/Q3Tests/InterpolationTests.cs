@@ -35,8 +35,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var a = Q3.AngleAxis(0, V3.up);
             var b = Q3.AngleAxis(PI / 2, V3.up);
 
-            var    result = Q3.Lerp(a, b, 0.5);
-            double angle  = Q3.Angle(a, result);
+            var result = Q3.Lerp(a, b, 0.5);
+            double angle = Q3.Angle(a, result);
 
             angle.ShouldEqual(PI / 4, 1e-10);
         }
@@ -68,8 +68,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
 
             for (double t = 0; t <= 1; t += 0.1)
             {
-                var    result = Q3.Lerp(a, b, t);
-                double mag    = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+                var result = Q3.Lerp(a, b, t);
+                double mag = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
                 mag.ShouldEqual(1.0, 1e-14);
             }
         }
@@ -80,8 +80,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var a = Q3.AngleAxis(0, V3.up);
             var b = Q3.AngleAxis(1e-8, V3.up);
 
-            var    result = Q3.Lerp(a, b, 0.5);
-            double angle  = Q3.Angle(a, result);
+            var result = Q3.Lerp(a, b, 0.5);
+            double angle = Q3.Angle(a, result);
 
             angle.ShouldEqual(0.5e-8, 1e-16);
         }
@@ -106,8 +106,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var a = Q3.AngleAxis(PI / 4, V3.xaxis);
             var b = Q3.AngleAxis(PI / 4, V3.yaxis);
 
-            var    result = Q3.Lerp(a, b, 0.5);
-            double mag    = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+            var result = Q3.Lerp(a, b, 0.5);
+            double mag = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
 
             mag.ShouldEqual(1.0, 1e-14);
         }
@@ -136,8 +136,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var a = Q3.AngleAxis(0, V3.up);
             var b = Q3.AngleAxis(PI / 2, V3.up);
 
-            var    result = Q3.Slerp(a, b, 0.5);
-            double angle  = Q3.Angle(a, result);
+            var result = Q3.Slerp(a, b, 0.5);
+            double angle = Q3.Angle(a, result);
 
             angle.ShouldEqual(PI / 4, 1e-14);
         }
@@ -171,8 +171,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
 
             for (double t = 0; t <= 1; t += 0.1)
             {
-                var    result = Q3.Slerp(a, b, t);
-                double angle  = Q3.Angle(a, result);
+                var result = Q3.Slerp(a, b, t);
+                double angle = Q3.Angle(a, result);
                 angle.ShouldEqual(t * totalAngle, 1e-14);
             }
         }
@@ -185,8 +185,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
 
             for (double t = 0; t <= 1; t += 0.1)
             {
-                var    result = Q3.Slerp(a, b, t);
-                double mag    = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+                var result = Q3.Slerp(a, b, t);
+                double mag = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
                 mag.ShouldEqual(1.0, 1e-14);
             }
         }
@@ -205,11 +205,11 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void SlerpNearlyIdenticalQuaternionsFallsBackToLerp()
         {
-            Q3  a = Q3.identity;
+            Q3 a = Q3.identity;
             var b = Q3.AngleAxis(1e-10, V3.up);
 
-            var    result = Q3.Slerp(a, b, 0.5);
-            double mag    = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+            var result = Q3.Slerp(a, b, 0.5);
+            double mag = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
 
             mag.ShouldEqual(1.0, 1e-14);
         }
@@ -220,8 +220,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var a = Q3.AngleAxis(0, V3.up);
             var b = Q3.AngleAxis(1e-6, V3.up);
 
-            var    result = Q3.Slerp(a, b, 0.5);
-            double angle  = Q3.Angle(a, result);
+            var result = Q3.Slerp(a, b, 0.5);
+            double angle = Q3.Angle(a, result);
 
             angle.ShouldEqual(0.5e-6, 1e-12);
         }
@@ -232,7 +232,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var a = Q3.AngleAxis(0, V3.up);
             var b = Q3.AngleAxis(PI, V3.up);
 
-            var    result     = Q3.Slerp(a, b, 0.5);
+            var result = Q3.Slerp(a, b, 0.5);
             double angleFromA = Q3.Angle(a, result);
 
             angleFromA.ShouldEqual(PI / 2, 1e-14);
@@ -255,14 +255,14 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void SlerpPreservesRotationEffect()
         {
-            var a          = Q3.AngleAxis(0, V3.up);
-            var b          = Q3.AngleAxis(PI / 2, V3.up);
-            V3  testVector = V3.forward;
+            var a = Q3.AngleAxis(0, V3.up);
+            var b = Q3.AngleAxis(PI / 2, V3.up);
+            V3 testVector = V3.forward;
 
-            V3  rotatedByA   = a * testVector;
-            V3  rotatedByB   = b * testVector;
-            var mid          = Q3.Slerp(a, b, 0.5);
-            V3  rotatedByMid = mid * testVector;
+            V3 rotatedByA = a * testVector;
+            V3 rotatedByB = b * testVector;
+            var mid = Q3.Slerp(a, b, 0.5);
+            V3 rotatedByMid = mid * testVector;
 
             var expectedMid = V3.Slerp(rotatedByA, rotatedByB, 0.5);
 
@@ -283,14 +283,14 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void SlerpVsLerpForSmallAngles()
         {
-            Q3  a = Q3.identity;
+            Q3 a = Q3.identity;
             var b = Q3.AngleAxis(0.01, V3.up);
 
             var slerpResult = Q3.Slerp(a, b, 0.5);
-            var lerpResult  = Q3.Lerp(a, b, 0.5);
+            var lerpResult = Q3.Lerp(a, b, 0.5);
 
             double slerpAngle = Q3.Angle(a, slerpResult);
-            double lerpAngle  = Q3.Angle(a, lerpResult);
+            double lerpAngle = Q3.Angle(a, lerpResult);
 
             slerpAngle.ShouldEqual(lerpAngle, 1e-6);
         }
@@ -298,14 +298,14 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void SlerpVsLerpForLargeAngles()
         {
-            Q3  a = Q3.identity;
+            Q3 a = Q3.identity;
             var b = Q3.AngleAxis(PI / 2, V3.up);
 
             var slerpResult = Q3.Slerp(a, b, 0.5);
-            var lerpResult  = Q3.Lerp(a, b, 0.5);
+            var lerpResult = Q3.Lerp(a, b, 0.5);
 
             double slerpAngle = Q3.Angle(a, slerpResult);
-            double lerpAngle  = Q3.Angle(a, lerpResult);
+            double lerpAngle = Q3.Angle(a, lerpResult);
 
             slerpAngle.ShouldEqual(PI / 4, 1e-14);
             (Abs(slerpAngle - lerpAngle) < 0.01).ShouldBeTrue();
@@ -327,8 +327,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var a = Q3.AngleAxis(PI / 4, V3.xaxis);
             var b = Q3.AngleAxis(PI / 4, V3.zaxis);
 
-            var    result = Q3.Slerp(a, b, 0.5);
-            double mag    = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+            var result = Q3.Slerp(a, b, 0.5);
+            double mag = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
 
             mag.ShouldEqual(1.0, 1e-14);
 
@@ -341,10 +341,10 @@ namespace MechJebLibTest.Primitives.Q3Tests
         private void SlerpNegativeDotProductHandling()
         {
             var a = Q3.AngleAxis(0.1, V3.up);
-            Q3  b = -a;
+            Q3 b = -a;
 
-            var    result = Q3.Slerp(a, b, 0.5);
-            double mag    = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+            var result = Q3.Slerp(a, b, 0.5);
+            double mag = Sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
 
             mag.ShouldEqual(1.0, 1e-14);
         }
@@ -352,15 +352,15 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void SlerpContinuityAcrossThreshold()
         {
-            Q3  a     = Q3.identity;
+            Q3 a = Q3.identity;
             var bNear = Q3.AngleAxis(1e-9, V3.up);
-            var bFar  = Q3.AngleAxis(1e-7, V3.up);
+            var bFar = Q3.AngleAxis(1e-7, V3.up);
 
             var resultNear = Q3.Slerp(a, bNear, 0.5);
-            var resultFar  = Q3.Slerp(a, bFar, 0.5);
+            var resultFar = Q3.Slerp(a, bFar, 0.5);
 
             double angleNear = Q3.Angle(a, resultNear);
-            double angleFar  = Q3.Angle(a, resultFar);
+            double angleFar = Q3.Angle(a, resultFar);
 
             angleNear.ShouldEqual(0.5e-9, 1e-16);
             angleFar.ShouldEqual(0.5e-7, 1e-14);

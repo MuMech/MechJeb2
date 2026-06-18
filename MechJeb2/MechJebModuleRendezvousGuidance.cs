@@ -36,14 +36,14 @@ namespace MuMech
 
             const double leadTime = 30;
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label4"),
-                Core.Target.TargetOrbit.PeA.ToSI(3) + "m x " + Core.Target.TargetOrbit.ApA.ToSI(3) + "m");                          //"Target orbit"
+                Core.Target.TargetOrbit.PeA.ToSI(3) + "m x " + Core.Target.TargetOrbit.ApA.ToSI(3) + "m"); //"Target orbit"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label5"), Orbit.PeA.ToSI(3) + "m x " + Orbit.ApA.ToSI(3) + "m"); //"Current orbit"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label6"),
                 Orbit.RelativeInclination(Core.Target.TargetOrbit).ToString("F2") + "º"); //"Relative inclination"
 
-            double closestApproachTime = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.time);
+            double closestApproachTime = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label7"),
-                GuiUtils.TimeToDHMS(closestApproachTime - VesselState.time)); //"Time until closest approach"
+                GuiUtils.TimeToDHMS(closestApproachTime - VesselState.Time)); //"Time until closest approach"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label8"),
                 Orbit.Separation(Core.Target.TargetOrbit, closestApproachTime).ToSI() + "m"); //"Separation at closest approach"
 
@@ -56,11 +56,11 @@ namespace MuMech
                 Vector3d dV;
                 if (Orbit.AscendingNodeExists(Core.Target.TargetOrbit))
                 {
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(Orbit, Core.Target.TargetOrbit, VesselState.time, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
                 }
                 else
                 {
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(Orbit, Core.Target.TargetOrbit, VesselState.time, out UT);
+                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
                 }
 
                 Vessel.RemoveAllManeuverNodes();
@@ -76,7 +76,7 @@ namespace MuMech
                 Vessel.RemoveAllManeuverNodes();
                 if (Orbit.ApR < phasingOrbitRadius)
                 {
-                    double UT1 = VesselState.time + leadTime;
+                    double UT1 = VesselState.Time + leadTime;
                     Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(Orbit, UT1, phasingOrbitRadius);
                     Vessel.PlaceManeuverNode(Orbit, dV1, UT1);
                     Orbit transferOrbit = Vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
@@ -86,7 +86,7 @@ namespace MuMech
                 }
                 else if (Orbit.PeR > phasingOrbitRadius)
                 {
-                    double UT1 = VesselState.time + leadTime;
+                    double UT1 = VesselState.Time + leadTime;
                     Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(Orbit, UT1, phasingOrbitRadius);
                     Vessel.PlaceManeuverNode(Orbit, dV1, UT1);
                     Orbit transferOrbit = Vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
@@ -96,7 +96,7 @@ namespace MuMech
                 }
                 else
                 {
-                    double UT = Orbit.NextTimeOfRadius(VesselState.time, phasingOrbitRadius);
+                    double UT = Orbit.NextTimeOfRadius(VesselState.Time, phasingOrbitRadius);
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(Orbit, UT);
                     Vessel.PlaceManeuverNode(Orbit, dV, UT);
                 }
@@ -109,7 +109,7 @@ namespace MuMech
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button3"))) //"Intercept with Hohmann transfer"
             {
                 (Vector3d dV, double UT, _, _) =
-                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.time, coplanar: false);
+                    OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.Time, coplanar: false);
                 Vessel.RemoveAllManeuverNodes();
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);
             }
@@ -124,7 +124,7 @@ namespace MuMech
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button5"))) //"Get closer"
             {
-                double UT = VesselState.time;
+                double UT = VesselState.Time;
                 (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, 100, 10);
                 Vessel.RemoveAllManeuverNodes();
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);

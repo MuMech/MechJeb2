@@ -22,10 +22,10 @@ namespace MechJebLib.Lambert
     /// </summary>
     public enum TransferGeometry
     {
-        ShortWay,   // absolute: transfer angle in [0, pi]
-        LongWay,    // absolute: transfer angle in [pi, 2pi]
-        Prograde,   // relative to v1: arc that goes with v1's angular momentum
-        Retrograde, // relative to v1: arc that opposes v1's angular momentum
+        ShortWay, // absolute: transfer angle in [0, pi]
+        LongWay, // absolute: transfer angle in [pi, 2pi]
+        Prograde, // relative to v1: arc that goes with v1's angular momentum
+        Retrograde // relative to v1: arc that opposes v1's angular momentum
     }
 
     public static class Gooding
@@ -35,15 +35,15 @@ namespace MechJebLib.Lambert
         /// </summary>
         /// <param name="mu">Gravitational parameter of central body</param>
         /// <param name="r1">Position at t0</param>
-        /// <param name="v1">Velocity at t0 (only used to define the orbit plane for Prograde/Retrograde)</param>
         /// <param name="r2">Position at t1</param>
         /// <param name="tof">Time of flight (t1 - t0), must be positive</param>
-        /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
         /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
+        /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
+        /// <param name="h">Axis to use for prograde/retrograde (does not need to be normalized)</param>
         /// <returns>Initial and Final velocity vector of transfer orbit</returns>
         /// <exception cref="Exception"></exception>
-        public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 v1, V3 r2, double tof, int nrev,
-            TransferGeometry direction = TransferGeometry.Prograde)
+        public static (V3 Vi, V3 Vf) Solve(double mu, V3 r1, V3 r2, double tof,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null)
         {
             /* most of this function lifted from https://www.mathworks.com/matlabcentral/fileexchange/39530-lambert-s-problem/content/glambert.m */
 
@@ -61,36 +61,24 @@ namespace MechJebLib.Lambert
             V3 ux1 = r1.normalized;
             V3 ux2 = r2.normalized;
 
-            V3 uz1 = V3.Cross(ux1, ux2).normalized;
+            V3 uz1 = V3.Cross(ux1, ux2).safeNormalized;
 
             /* calculate the minimum transfer angle (radians) */
 
             double theta = SafeAcos(V3.Dot(ux1, ux2));
 
-            // a single boolean ultimately decides everything: flip to the long way (theta -> TAU - theta, uz1 -> -uz1) or not
-            bool flip;
-            switch (direction)
+            bool flip = direction == TransferGeometry.LongWay || direction == TransferGeometry.Retrograde;
+            if (direction == TransferGeometry.Prograde || direction == TransferGeometry.Retrograde)
             {
-                case TransferGeometry.ShortWay:
-                    flip = false;
-                    break;
-                case TransferGeometry.LongWay:
-                    flip = true;
-                    break;
-                default:
-                    /* angle between the orbit normal of the initial orbit and the short-way transfer normal */
-                    V3     ur1xv1          = V3.Cross(r1, v1).normalized;
-                    double angle_to_on     = SafeAcos(V3.Dot(ur1xv1, uz1));
-                    bool   shortIsPrograde = angle_to_on < 0.5 * PI;
-                    bool   wantPrograde    = direction == TransferGeometry.Prograde;
-                    flip = wantPrograde ^ shortIsPrograde;
-                    break;
+                if (h == null)
+                    throw new Exception("Prograde or Retrograde directions require a normal vector");
+                flip ^= V3.Dot(uz1, h.Value) < 0;
             }
 
             if (flip)
             {
                 theta = TAU - theta;
-                uz1   = -uz1;
+                uz1 = -uz1;
             }
 
             V3 uz2 = uz1;
@@ -103,7 +91,7 @@ namespace MechJebLib.Lambert
 
             double VR11, VT11, VR12, VT12;
             double VR21, VT21, VR22, VT22;
-            int    n;
+            int n;
 
             (n, VR11, VT11, VR12, VT12, VR21, VT21, VR22, VT22) = VLAMB(mu, r1.magnitude, r2.magnitude, theta, tof);
 
@@ -157,19 +145,19 @@ namespace MechJebLib.Lambert
             Check.Finite(TH);
             Check.Finite(TDELT);
 
-            double VR11   = 0.0, VT11 = 0.0, VR12 = 0.0, VT12 = 0.0;
-            double VR21   = 0.0, VT21 = 0.0, VR22 = 0.0, VT22 = 0.0;
-            int    M      = Convert.ToInt32(Floor(TH / (2.0 * PI)));
-            double THR2   = TH / 2.0 - M * PI;
-            double DR     = R1 - R2;
-            double R1R2   = R1 * R2;
+            double VR11 = 0.0, VT11 = 0.0, VR12 = 0.0, VT12 = 0.0;
+            double VR21 = 0.0, VT21 = 0.0, VR22 = 0.0, VT22 = 0.0;
+            int M = Convert.ToInt32(Floor(TH / (2.0 * PI)));
+            double THR2 = TH / 2.0 - M * PI;
+            double DR = R1 - R2;
+            double R1R2 = R1 * R2;
             double R1R2TH = 4.0 * R1R2 * Pow(Sin(THR2), 2);
-            double CSQ    = Pow(DR, 2) + R1R2TH;
-            double C      = Sqrt(CSQ);
-            double S      = (R1 + R2 + C) / 2.0;
-            double GMS    = Sqrt(GM * S / 2.0);
+            double CSQ = Pow(DR, 2) + R1R2TH;
+            double C = Sqrt(CSQ);
+            double S = (R1 + R2 + C) / 2.0;
+            double GMS = Sqrt(GM * S / 2.0);
             double QSQFM1 = C / S;
-            double Q      = Sqrt(R1R2) * Cos(THR2) / S;
+            double Q = Sqrt(R1R2) * Cos(THR2) / S;
             double RHO;
             double SIG;
             if (C != 0.0)
@@ -230,24 +218,24 @@ namespace MechJebLib.Lambert
             Check.Finite(QSQFM1);
             Check.Finite(TIN);
 
-            const double TOL  = 3e-7;
-            const double C0   = 1.7;
-            const double C1   = 0.5;
-            const double C2   = 0.03;
-            const double C3   = 0.15;
-            const double C41  = 1.0;
-            const double C42  = 0.24;
-            double       THR2 = Atan2(QSQFM1, 2.0 * Q) / PI;
-            double       T, T0, DT, D2T, D3T;
-            double       D2T2 = 0.0;
-            double       TMIN = 0.0;
-            double       TDIFF;
-            double       TDIFFM = 0.0;
-            double       XM     = 0.0;
-            double       W;
-            double       X   = 0.0;
-            double       XPL = 0.0;
-            int          N;
+            const double TOL = 3e-7;
+            const double C0 = 1.7;
+            const double C1 = 0.5;
+            const double C2 = 0.03;
+            const double C3 = 0.15;
+            const double C41 = 1.0;
+            const double C42 = 0.24;
+            double THR2 = Atan2(QSQFM1, 2.0 * Q) / PI;
+            double T, T0, DT, D2T, D3T;
+            double D2T2 = 0.0;
+            double TMIN = 0.0;
+            double TDIFF;
+            double TDIFFM = 0.0;
+            double XM = 0.0;
+            double W;
+            double X = 0.0;
+            double XPL = 0.0;
+            int N;
             if (M == 0)
             {
                 /* "SINGLE-REV STARTER FROM T (AT X = 0) & BILINEAR (USUALLY)" -- Gooding */
@@ -273,7 +261,7 @@ namespace MechJebLib.Lambert
             }
             else
             {
-                /* "WITH MUTIREVS, FIRST GET T(MIN) AS BASIS FOR STARTER */
+                /* "WITH MUTIREVS, FIRST GET T(MIN) AS BASIS FOR STARTER" */
                 XM = 1.0 / (1.5 * (M + 0.5) * PI);
                 if (THR2 < 0.5)
                     XM = Pow(2.0 * THR2, 1.0 / 8.0) * XM;
@@ -310,7 +298,7 @@ namespace MechJebLib.Lambert
                     X = XM;
                     N = 1;
                     return (N, X, XPL);
-                    /* "EXIT IF UNIQUE SOLUTION ALREADY FROM X(TMIN) -- Gooding */
+                    /* "EXIT IF UNIQUE SOLUTION ALREADY FROM X(TMIN)" -- Gooding */
                 }
 
                 N = 3;
@@ -385,17 +373,17 @@ namespace MechJebLib.Lambert
             Check.Finite(M);
             Check.Finite(N);
 
-            const double SW  = 0.4;
-            bool         LM1 = N == -1;
-            bool         L1  = N >= 1;
-            bool         L2  = N >= 2;
-            bool         L3  = N == 3;
-            double       QSQ = Q * Q;
-            double       XSQ = X * X;
-            double       U   = (1.0 - X) * (1.0 + X);
-            double       T   = 0.0;
+            const double SW = 0.4;
+            bool LM1 = N == -1;
+            bool L1 = N >= 1;
+            bool L2 = N >= 2;
+            bool L3 = N == 3;
+            double QSQ = Q * Q;
+            double XSQ = X * X;
+            double U = (1.0 - X) * (1.0 + X);
+            double T = 0.0;
 
-            double DT  = 0.0;
+            double DT = 0.0;
             double D2T = 0.0;
             double D3T = 0.0;
 
@@ -410,12 +398,12 @@ namespace MechJebLib.Lambert
             if (LM1 || M > 0.0 || X < 0.0 || Abs(U) > SW)
             {
                 /* "DIRECT COMPUTATION (NOT SERIES)" -- Gooding */
-                double Y  = Sqrt(Abs(U));
-                double Z  = Sqrt(QSQFM1 + QSQ * XSQ);
+                double Y = Sqrt(Abs(U));
+                double Z = Sqrt(QSQFM1 + QSQ * XSQ);
                 double QX = Q * X;
 
-                double A  = 0.0;
-                double B  = 0.0;
+                double A = 0.0;
+                double B = 0.0;
                 double AA = 0.0;
                 double BB = 0.0;
 
@@ -468,8 +456,8 @@ namespace MechJebLib.Lambert
                         }
                         else
                         {
-                            double FG1   = F / (G + 1.0);
-                            double TERM  = 2.0 * FG1;
+                            double FG1 = F / (G + 1.0);
+                            double TERM = 2.0 * FG1;
                             double FG1SQ = FG1 * FG1;
                             T = TERM;
                             double TWOI1 = 1.0;
@@ -487,7 +475,7 @@ namespace MechJebLib.Lambert
                     T = 2.0 * (T / Y + B) / U;
                     if (L1 && Z != 0.0)
                     {
-                        double QZ  = Q / Z;
+                        double QZ = Q / Z;
                         double QZ2 = QZ * QZ;
                         QZ *= QZ2;
                         DT = (3.0 * X * T - 4.0 * (A + QX * QSQFM1) / Z) / U;
@@ -523,9 +511,9 @@ namespace MechJebLib.Lambert
                     U2I = 1.0;
                 if (L3)
                     U3I = 1.0;
-                double TERM  = 4.0;
-                double TQ    = Q * QSQFM1;
-                int    I     = 0;
+                double TERM = 4.0;
+                double TQ = Q * QSQFM1;
+                int I = 0;
                 double TQSUM = 0.0;
                 if (Q < 0.5)
                     TQSUM = 1.0 - Q * QSQ;
@@ -549,7 +537,7 @@ namespace MechJebLib.Lambert
                     TQ *= QSQ;
                     TQSUM += TQ;
                     TOLD = T;
-                    double TTERM  = TERM / (2.0 * P + 3.0);
+                    double TTERM = TERM / (2.0 * P + 3.0);
                     double TQTERM = TTERM * TQSUM;
                     T -= U0I * ((1.5 * P + 0.25) * TQTERM / (P * P - 0.25) - TTMOLD * TQ);
                     TTMOLD = TTERM;

@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using KSP.UI;
 using KSP.UI.Screens;
@@ -198,13 +199,12 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     if (!TryBuildModule(part, kspModule, out SimPartModule? m))
                         continue;
 
-                    part.Modules.Add(m!);
-                    _inversePartModuleMapping.Add(m!, kspModule);
+                    part.Modules.Add(m);
+                    _inversePartModuleMapping.Add(m, kspModule);
                 }
             }
 
-            // FIXME: needs [NotNullWhen(returnValue: true)]
-            private bool TryBuildModule(SimPart part, PartModule kspModule, out SimPartModule? m)
+            private bool TryBuildModule(SimPart part, PartModule kspModule, [NotNullWhen(true)] out SimPartModule? m)
             {
                 m = kspModule switch
                 {

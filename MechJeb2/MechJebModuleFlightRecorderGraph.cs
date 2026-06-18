@@ -13,18 +13,18 @@ namespace MuMech
 
         public struct graphState
         {
-            public double   minimum;
-            public double   maximum;
+            public double minimum;
+            public double maximum;
             public string[] labels;
             public double[] labelsPos;
-            public int      labelsActive;
-            public bool     display;
+            public int labelsActive;
+            public bool display;
 
             public void Reset()
             {
-                minimum   = 0;
-                maximum   = 0;
-                labels    = new string[ScaleTicks];
+                minimum = 0;
+                maximum = 0;
+                labels = new string[ScaleTicks];
                 labelsPos = new double[ScaleTicks];
             }
         }
@@ -58,15 +58,15 @@ namespace MuMech
 
         public bool ascentPath = false;
 
-        private static          Texture2D     backgroundTexture;
-        private                 CelestialBody oldMainBody;
-        private static readonly int           typeCount = Enum.GetValues(typeof(MechJebModuleFlightRecorder.RecordType)).Length;
+        private static Texture2D backgroundTexture;
+        private CelestialBody oldMainBody;
+        private static readonly int typeCount = Enum.GetValues(typeof(MechJebModuleFlightRecorder.RecordType)).Length;
 
         private readonly graphState[] graphStates;
-        private          double       lastMaximumAltitude;
-        private readonly double       precision = 0.2;
+        private double lastMaximumAltitude;
+        private readonly double precision = 0.2;
 
-        private int width  = 512;
+        private int width = 512;
         private int height = 256;
 
         private bool paused;
@@ -80,7 +80,7 @@ namespace MuMech
         public MechJebModuleFlightRecorderGraph(MechJebCore core)
             : base(core)
         {
-            Priority    = 2000;
+            Priority = 2000;
             graphStates = new graphState[typeCount];
         }
 
@@ -89,8 +89,8 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor)
                 return;
 
-            width    = 128 * hSize;
-            height   = 128 * vSize;
+            width = 128 * hSize;
+            height = 128 * vSize;
             recorder = Core.GetComputerModule<MechJebModuleFlightRecorder>();
             ResetScale();
         }
@@ -215,10 +215,10 @@ namespace MuMech
                 vSize++;
             }
 
-            timeScale      = Mathf.Clamp(timeScale, 0, 20);
+            timeScale = Mathf.Clamp(timeScale, 0, 20);
             downrangeScale = Mathf.Clamp(downrangeScale, 0, 20);
-            hSize          = Mathf.Clamp(hSize, 1, 20);
-            vSize          = Mathf.Clamp(vSize, 1, 10);
+            hSize = Mathf.Clamp(hSize, 1, 20);
+            vSize = Mathf.Clamp(vSize, 1, 10);
 
             bool oldRealAtmo = realAtmo;
 
@@ -512,7 +512,7 @@ namespace MuMech
 
             if (follow)
                 hPos = rightValue - visibleX;
-            hPos   = GUILayout.HorizontalScrollbar(hPos, visibleX, 0, rightValue);
+            hPos = GUILayout.HorizontalScrollbar(hPos, visibleX, 0, rightValue);
             follow = GUILayout.Toggle(follow, "", GuiUtils.LayoutNoExpandWidth);
 
             GUILayout.EndHorizontal();
@@ -563,7 +563,7 @@ namespace MuMech
                 //if (ascentPath)
                 //    MechJebModuleAscentPathEditor.DrawnPath(r, (float)hScale, (float)graphStates[(int)recordType.AltitudeASL].scale, path, Color.gray);
 
-                width  = 128 * hSize;
+                width = 128 * hSize;
                 height = 128 * vSize;
             }
 
@@ -655,8 +655,8 @@ namespace MuMech
                 if (rec.CurrentStage != lastStage)
                 {
                     lastStage = rec.CurrentStage;
-                    p1.x      = r.xMin + (float)((downRange ? rec.DownRange : rec.TimeSinceMark) / scaleX);
-                    p2.x      = p1.x;
+                    p1.x = r.xMin + (float)((downRange ? rec.DownRange : rec.TimeSinceMark) / scaleX);
+                    p2.x = p1.x;
 
                     if (r.Contains(p1))
                     {
@@ -679,20 +679,20 @@ namespace MuMech
 
                 if (graphStates[t].maximum < recorder.Maximums[t])
                 {
-                    change                 = true;
+                    change = true;
                     graphStates[t].maximum = recorder.Maximums[t] + Math.Abs(recorder.Maximums[t] * 0.2);
                 }
 
                 if (graphStates[t].minimum > recorder.Minimums[t])
                 {
-                    change                 = true;
+                    change = true;
                     graphStates[t].minimum = recorder.Minimums[t] - Math.Abs(recorder.Minimums[t] * 0.2);
                 }
 
                 if (graphStates[t].labels == null)
                 {
-                    change                   = true;
-                    graphStates[t].labels    = new string[ScaleTicks];
+                    change = true;
+                    graphStates[t].labels = new string[ScaleTicks];
                     graphStates[t].labelsPos = new double[ScaleTicks];
                 }
 
@@ -711,15 +711,15 @@ namespace MuMech
                     int i = 0;
                     while (currX <= maximum + 0.5 * step)
                     {
-                        graphStates[t].labels[i]    =  currX.ToString("F" + digit);
-                        graphStates[t].labelsPos[i] =  currX;
-                        currX                       += step;
+                        graphStates[t].labels[i] = currX.ToString("F" + digit);
+                        graphStates[t].labelsPos[i] = currX;
+                        currX += step;
                         i++;
                     }
 
                     graphStates[t].labelsActive = i;
-                    graphStates[t].minimum      = minimum;
-                    graphStates[t].maximum      = maximum;
+                    graphStates[t].minimum = minimum;
+                    graphStates[t].maximum = maximum;
                 }
             }
         }
@@ -727,40 +727,40 @@ namespace MuMech
         private void ResetScale()
         {
             // Avoid min = max and set sane minimums
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].minimum     = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DOWN_RANGE].minimum       = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].minimum     = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].minimum    = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].minimum    = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].minimum             = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].minimum                = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].minimum             = -5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].minimum             = -5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].minimum             = 0; // is never negative
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].minimum    = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].minimum            = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DOWN_RANGE].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].minimum = -5;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].minimum = -5;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].minimum = 0; // is never negative
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].minimum = 0;
             graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].minimum   = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].minimum      = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].minimum  = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].minimum = 0;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].minimum = 0;
 
             graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].maximum =
                 MainBody != null && MainBody.atmosphere ? MainBody.RealMaxAtmosphereAltitude() : 10000.0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DOWN_RANGE].maximum       = 500;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].maximum     = 2;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].maximum    = 300;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].maximum    = 300;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].maximum             = 5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].maximum                = 1000;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].maximum             = 5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].maximum             = 5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].maximum             = 5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].maximum    = 100;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].maximum            = 90;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DOWN_RANGE].maximum = 500;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].maximum = 2;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].maximum = 300;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].maximum = 300;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].maximum = 5;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].maximum = 1000;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].maximum = 5;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].maximum = 5;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].maximum = 5;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].maximum = 100;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].maximum = 90;
             graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].maximum = 100;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].maximum   = 100;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].maximum      = 100;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].maximum  = 100;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].maximum = 100;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].maximum = 100;
+            graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].maximum = 100;
         }
 
         private double heckbertNiceNum(double x, bool round)

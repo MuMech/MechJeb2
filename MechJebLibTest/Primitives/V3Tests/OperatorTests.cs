@@ -155,8 +155,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ComponentWiseDivisionByZeroProducesInfinity()
         {
-            var v      = new V3(1, -2, 3);
-            V3  result = v / V3.zero;
+            var v = new V3(1, -2, 3);
+            V3 result = v / V3.zero;
 
             result.x.ShouldBePositiveInfinity();
             result.y.ShouldBeNegativeInfinity();
@@ -238,7 +238,7 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ScalarMultiplicationIsCommutative()
         {
-            var          v = new V3(1.5, -2.7, 3.2);
+            var v = new V3(1.5, -2.7, 3.2);
             const double S = 3.14;
 
             (v * S).ShouldEqual(S * v);
@@ -271,8 +271,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ScalarDivisionByZeroProducesInfinity()
         {
-            var v      = new V3(1, -2, 3);
-            V3  result = v / 0;
+            var v = new V3(1, -2, 3);
+            V3 result = v / 0;
 
             result.x.ShouldBePositiveInfinity();
             result.y.ShouldBeNegativeInfinity();
@@ -298,8 +298,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void ScalarDivisionLeftWithZeroComponentProducesInfinity()
         {
-            var v      = new V3(2, 0, -4);
-            V3  result = 8 / v;
+            var v = new V3(2, 0, -4);
+            V3 result = 8 / v;
 
             result.x.ShouldEqual(4);
             result.y.ShouldBePositiveInfinity();
@@ -400,9 +400,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void DistributivePropertyScalarOverAddition()
         {
-            var          v1 = new V3(1, 2, 3);
-            var          v2 = new V3(4, 5, 6);
-            const double S  = 3;
+            var v1 = new V3(1, 2, 3);
+            var v2 = new V3(4, 5, 6);
+            const double S = 3;
 
             (S * (v1 + v2)).ShouldEqual(S * v1 + S * v2);
         }

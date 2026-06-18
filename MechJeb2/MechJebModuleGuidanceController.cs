@@ -34,14 +34,14 @@ namespace MuMech
 
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
 
-        public  double   Pitch;
-        public  double   Heading;
-        private V3       _inertial = V3.zero;       // inertial in right-handed non-rotating
-        private double   _throttle;
-        public  Vector3d Inertial  = Vector3d.zero; // inertial in rotating coordinates
-        public  double   Tgo;
-        public  double   Vgo;
-        public  double   StartCoast;
+        public double Pitch;
+        public double Heading;
+        private V3 _inertial = V3.zero; // inertial in right-handed non-rotating
+        private double _throttle;
+        public Vector3d Inertial = Vector3d.zero; // inertial in rotating coordinates
+        public double Tgo;
+        public double Vgo;
+        public double StartCoast;
 
         public Solution? Solution;
 
@@ -62,7 +62,7 @@ namespace MuMech
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
             Core.Spinup.Users.Add(this);
-            Solution        = null;
+            Solution = null;
             _allowExecution = false;
         }
 
@@ -76,7 +76,7 @@ namespace MuMech
             Core.Staging.Users.Remove(this);
             Core.Spinup.Users.Remove(this);
             Solution = null;
-            Status   = PSGStatus.FINISHED;
+            Status = PSGStatus.FINISHED;
         }
 
         private bool _allowExecution;
@@ -105,7 +105,7 @@ namespace MuMech
 
             // RO/RF: if we are spooling up engines, then flush the PID integrators to prevent windup
             if (Status == PSGStatus.BURNING || Status == PSGStatus.TERMINAL)
-                if (VesselState.thrustCurrent < VesselState.thrustMinimum * 0.98)
+                if (VesselState.ThrustCurrent < VesselState.ThrustMinimum * 0.98)
                     Core.Attitude.Controller.Reset();
 
             HandleTerminal();
@@ -125,7 +125,7 @@ namespace MuMech
             // We might have wonky transforms and have a tiny bit of fore RCS, so require at least 10% of the max RCS thrust to be
             // in the pointy direction (which should be "up" / y-axis per KSP/Unity semantics).
             bool hasRCS = Vessel.hasEnabledRCSModules() &&
-                VesselState.rcsThrustAvailable.Up > 0.1 * VesselState.rcsThrustAvailable.MaxMagnitude();
+                VesselState.RCSThrustAvailable.Up > 0.1 * VesselState.RCSThrustAvailable.MaxMagnitude();
 
             return hasRCS && Status != PSGStatus.TERMINAL_RCS && Vessel.currentStage == Solution.TerminalKSPStage();
         }
@@ -150,8 +150,8 @@ namespace MuMech
 
             // this handles termination of thrust for final stages of "fixed" burntime rockets (due to residuals Tgo may go less than zero so we
             // wait for natural termination of thrust).   no support for RCS terminal trim.
-            if (Solution.OptimizeKSPStage() < 0 && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.time) <= 0 &&
-                VesselState.thrustAvailable == 0)
+            if (Solution.OptimizeKSPStage() < 0 && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.Time) <= 0 &&
+                VesselState.ThrustAvailable == 0)
             {
                 Done();
                 return;
@@ -169,7 +169,7 @@ namespace MuMech
 
             // We should either be in an non-upper stage optimized stage, or we should be within 10 seconds of the whole
             // burntime in order to enter terminal guidance.
-            if (Vessel.currentStage != Solution.OptimizeKSPStage() && Solution.Tgo(VesselState.time) > 10)
+            if (Vessel.currentStage != Solution.OptimizeKSPStage() && Solution.Tgo(VesselState.Time) > 10)
                 return;
 
             // The includeCoast: false flag here is to skip a coast which is in the past in the Solution when
@@ -186,7 +186,7 @@ namespace MuMech
                 return;
 
             // Only enter terminal guidance within 10 seconds of the current stage
-            if (Solution.Tgo(VesselState.time, solutionIndex) > 10)
+            if (Solution.Tgo(VesselState.Time, solutionIndex) > 10)
                 return;
 
             if (Status != PSGStatus.TERMINAL_RCS)
@@ -208,20 +208,20 @@ namespace MuMech
             // FIXME: what exactly does KSP do to integrate over timesteps?
             Vector3d a0 = Vessel.acceleration_immediate;
 
-            double   dt = ticks * TimeWarp.fixedDeltaTime;
-            Vector3d v1 = VesselState.orbitalVelocity + a0 * dt;
-            Vector3d x1 = VesselState.orbitalPosition + VesselState.orbitalVelocity * dt + 0.5 * a0 * dt * dt;
+            double dt = ticks * TimeWarp.fixedDeltaTime;
+            Vector3d v1 = VesselState.OrbitalVelocity + a0 * dt;
+            Vector3d x1 = VesselState.OrbitalPosition + VesselState.OrbitalVelocity * dt + 0.5 * a0 * dt * dt;
 
             bool shouldEndTerminal = false;
 
             // this handles ending TERMINAL guidance (but not TERMINAL_RCS) due to thrust fault in the last stage
-            if (Status == PSGStatus.TERMINAL && VesselState.thrustCurrent == 0 && Vessel.currentStage < Solution.TerminalKSPStage())
+            if (Status == PSGStatus.TERMINAL && VesselState.ThrustCurrent == 0 && Vessel.currentStage < Solution.TerminalKSPStage())
             {
                 Debug.Log("[MechJebModuleGuidanceController] no thrust in last stage.");
                 shouldEndTerminal = true;
             }
 
-            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.time))
+            if (Solution.TerminalGuidanceSatisfied(x1.WorldToV3Rotated(), v1.WorldToV3Rotated(), VesselState.Time))
                 shouldEndTerminal = true;
 
             if (shouldEndTerminal)
@@ -299,17 +299,17 @@ namespace MuMech
             // of autostaging to the top of the rocket.  If we don't, then when we cut the engines and do the
             // RCS trim, autostaging will stage off the spent engine if there's no relights.  This is unwanted
             // since the insertion stage may still have RCS which is necessary to complete the mission.
-            if (coastStage >= 0 && Vessel.currentStage >= coastStage && Solution.WillCoast(VesselState.time))
+            if (coastStage >= 0 && Vessel.currentStage >= coastStage && Solution.WillCoast(VesselState.Time))
                 Core.Staging.AutoStageLimitRequest(coastStage, this);
             else
                 Core.Staging.AutoStageLimitRequest(Solution.TerminalKSPStage(), this);
 
-            if (Solution.Coast(VesselState.time))
+            if (Solution.Coast(VesselState.Time))
             {
                 if (!IsCoasting())
                     DoCoast();
 
-                if (Solution.StageTimeLeft(VesselState.time) < UllageLeadTime)
+                if (Solution.StageTimeLeft(VesselState.Time) < UllageLeadTime)
                     RCSOn();
 
                 ThrustOff();
@@ -334,32 +334,32 @@ namespace MuMech
 
             // if we're not flying yet, continuously update the t0 of the solution
             if (IsGrounded())
-                Solution.T0 = VesselState.time;
+                Solution.T0 = VesselState.Time;
 
             if (Status != PSGStatus.TERMINAL_RCS)
             {
                 // don't update vgo/tgo if we're in RCS
-                Tgo = Solution.Tgo(VesselState.time);
-                Vgo = Solution.Vgo(VesselState.time);
+                Tgo = Solution.Tgo(VesselState.Time);
+                Vgo = Solution.Vgo(VesselState.Time);
             }
 
-            V3 r0 = VesselState.orbitalPosition.WorldToV3Rotated();
+            V3 r0 = VesselState.OrbitalPosition.WorldToV3Rotated();
 
             // lock the inertial heading at tgo < 2.0 for any staging event or terminal burnout
             // (2 seconds is to hopefully allow for variance due to residuals, it may be less)
             int idx = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
-            if (IsGrounded() || Solution.Tgo(VesselState.time, idx) > 2.0)
-                (_inertial, _throttle) = Solution.InertialGuidance(VesselState.time);
+            if (IsGrounded() || Solution.Tgo(VesselState.Time, idx) > 2.0)
+                (_inertial, _throttle) = Solution.InertialGuidance(VesselState.Time);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, _inertial);
 
             Inertial = _inertial.V3ToWorldRotated();
-            Pitch    = Rad2Deg(pitch);
-            Heading  = Rad2Deg(heading);
+            Pitch = Rad2Deg(pitch);
+            Heading = Rad2Deg(heading);
         }
 
         private readonly List<Vector3d> _trajectory = new List<Vector3d>();
-        private readonly Orbit          _finalOrbit = new Orbit();
+        private readonly Orbit _finalOrbit = new Orbit();
 
         private void DrawTrajectory()
         {
@@ -416,7 +416,7 @@ namespace MuMech
             }
 
             // if we still have a coast to do in this stage, start the coast
-            if (Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.time))
+            if (Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.Time))
             {
                 ThrustOff();
                 DoCoast();
@@ -440,14 +440,14 @@ namespace MuMech
         {
             Users.Clear();
             ThrustOff();
-            Status   = PSGStatus.FINISHED;
+            Status = PSGStatus.FINISHED;
             Solution = null;
-            Enabled  = false;
+            Enabled = false;
         }
 
         private void DoCoast()
         {
-            StartCoast = VesselState.time;
+            StartCoast = VesselState.Time;
             // force RCS on at the state transition
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
@@ -470,7 +470,7 @@ namespace MuMech
             if (Solution == null)
                 return false;
 
-            return !Solution.WillCoast(VesselState.time);
+            return !Solution.WillCoast(VesselState.Time);
         }
     }
 }

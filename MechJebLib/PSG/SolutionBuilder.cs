@@ -27,15 +27,15 @@ namespace MechJebLib.PSG
 
         private void AnalyzeStages()
         {
-            int  optimizedShutdownIndex = -1;
-            int  terminalStageIndex     = -1;
-            bool pruningStages          = false;
+            int optimizedShutdownIndex = -1;
+            int terminalStageIndex = -1;
+            bool pruningStages = false;
 
             for (int p = 0; p < _phases.Count; p++)
             {
-                Phase      phase     = _phases[p];
+                Phase phase = _phases[p];
                 PhaseProxy thisPhase = _vars[p];
-                double     bt        = thisPhase.Bt();
+                double bt = thisPhase.Bt();
 
                 // is there unburned propellant going to be left in this stage?
                 bool freeBurntimeLeft = phase.Bt - bt > 1e-3;
@@ -73,26 +73,26 @@ namespace MechJebLib.PSG
 
             for (int p = 0; p < _phases.Count; p++)
             {
-                Phase      phase       = _phases[p];
-                PhaseProxy thisPhase   = _vars[p];
-                var        interpolant = Hn.Get(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+                Phase phase = _phases[p];
+                PhaseProxy thisPhase = _vars[p];
+                var interpolant = Hn.Get(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
                 double bt = thisPhase.Bt();
-                double h  = bt / (_n - 1);
+                double h = bt / (_n - 1);
                 double m0 = thisPhase.M[0];
 
                 using var outTangent = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-                using var inTangent  = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+                using var inTangent = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
                 for (int n = 0; n < _n - 1; n++)
                 {
-                    double    dt1    = n * h;
+                    double dt1 = n * h;
                     using Vec array1 = InterpolantValues(thisPhase, 2 * n, phase, dv, m0, dt1);
 
-                    double    dt2    = (n + 0.5) * h;
+                    double dt2 = (n + 0.5) * h;
                     using Vec array2 = InterpolantValues(thisPhase, 2 * n + 1, phase, dv, m0, dt2);
 
-                    double    dt3    = (n + 1.0) * h;
+                    double dt3 = (n + 1.0) * h;
                     using Vec array3 = InterpolantValues(thisPhase, 2 * n + 2, phase, dv, m0, dt3);
 
                     outTangent.CopyFrom(array1).Scal(-3.0 / h);

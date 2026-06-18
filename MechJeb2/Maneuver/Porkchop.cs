@@ -17,23 +17,23 @@ namespace MuMech
             var colours = new Gradient();
             var colourKeys = new GradientColorKey[6];
             colourKeys[0].color = new Color(0.25f, 0.25f, 1.0f);
-            colourKeys[0].time  = 0.0f;
+            colourKeys[0].time = 0.0f;
             colourKeys[1].color = new Color(0.5f, 0.5f, 1.0f);
-            colourKeys[1].time  = 0.01f;
+            colourKeys[1].time = 0.01f;
             colourKeys[2].color = new Color(0.5f, 1.0f, 1.0f);
-            colourKeys[2].time  = 0.25f;
+            colourKeys[2].time = 0.25f;
             colourKeys[3].color = new Color(0.5f, 1.0f, 0.5f);
-            colourKeys[3].time  = 0.5f;
+            colourKeys[3].time = 0.5f;
             colourKeys[4].color = new Color(1.0f, 1.0f, 0.5f);
-            colourKeys[4].time  = 0.75f;
+            colourKeys[4].time = 0.75f;
             colourKeys[5].color = new Color(1.0f, 0.5f, 0.5f);
-            colourKeys[5].time  = 1.0f;
+            colourKeys[5].time = 1.0f;
 
             var alphaKeys = new GradientAlphaKey[2];
             alphaKeys[0].alpha = 1.0f;
-            alphaKeys[0].time  = 0.0f;
+            alphaKeys[0].time = 0.0f;
             alphaKeys[1].alpha = 1.0f;
-            alphaKeys[1].time  = 1.0f;
+            alphaKeys[1].time = 1.0f;
 
             colours.SetKeys(colourKeys, alphaKeys);
 

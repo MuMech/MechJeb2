@@ -9,12 +9,9 @@ namespace MuMech
     public class OperationCircularize : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_Maneu_circularize_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        private static readonly TimeReference[] _timeReferences =
-        {
-            TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
-        };
+        private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE };
 
         private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 

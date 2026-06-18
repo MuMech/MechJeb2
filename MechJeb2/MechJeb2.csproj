@@ -97,17 +97,17 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\alglib\alglib.csproj" />
-        <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj" />
-        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj" />
+        <ProjectReference Include="..\alglib\alglib.csproj"/>
+        <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj"/>
+        <ProjectReference Include="..\MechJebLib\MechJebLib.csproj"/>
     </ItemGroup>
 
     <Target Name="MechJebCopyBuild" AfterTargets="Build" Condition=" '$(OS)' == 'Windows_NT' ">
-        <Exec Command="call &quot;$(ProjectDir)copy_build.bat&quot; &quot;$(TargetPath)&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(ProjectDir)&quot;" />
+        <Exec Command="call &quot;$(ProjectDir)copy_build.bat&quot; &quot;$(TargetPath)&quot; &quot;$(TargetDir)&quot; &quot;$(TargetName)&quot; &quot;$(ProjectDir)&quot;"/>
     </Target>
 
     <Target Name="MechJebCopyBuild" AfterTargets="Build" Condition=" '$(OS)' != 'Windows_NT' ">
-        <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)' '$(KspDir)'" />
+        <Exec Command="'$(ProjectDir)/copy_build.sh' '$(TargetPath)' '$(TargetDir)' '$(TargetName)' '$(ProjectDir)' '$(KspDir)'"/>
     </Target>
 
 </Project>

@@ -78,7 +78,7 @@ namespace MuMech
             return default;
         }
 
-        private static          float                         lastFixedTime;
+        private static float lastFixedTime;
         private static readonly Dictionary<Guid, MechJebCore> masterMechJeb = new Dictionary<Guid, MechJebCore>();
 
         public static MechJebCore GetMasterMechJeb(this Vessel vessel)
@@ -248,7 +248,7 @@ namespace MuMech
             //See if any maneuver nodes occur during this patch. If there is one
             //return the patch that follows it
             Slinq<ManeuverNode, PredicateContext<ManeuverNode, IListContext<ManeuverNode>, Orbit>> nodes = vessel.patchedConicSolver.maneuverNodes
-                .Slinq().Where((n, p) => n.patch == p && n != ignoreNode, patch);
+               .Slinq().Where((n, p) => n.patch == p && n != ignoreNode, patch);
             // Slinq is nice but you can only enumerate it once
             ManeuverNode first = nodes.FirstOrDefault();
             if (first != null) return first.nextPatch;
@@ -367,12 +367,12 @@ namespace MuMech
         public static void UpdateNode(this ManeuverNode node, Vector3d dV, double ut)
         {
             node.DeltaV = dV;
-            node.UT     = ut;
+            node.UT = ut;
             node.solver.UpdateFlightPlan();
             if (node.attachedGizmo == null)
                 return;
             node.attachedGizmo.patchBefore = node.patch;
-            node.attachedGizmo.patchAhead  = node.nextPatch;
+            node.attachedGizmo.patchAhead = node.nextPatch;
         }
 
         public static Vector3d WorldDeltaV(this ManeuverNode node) =>

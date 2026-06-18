@@ -278,8 +278,8 @@ namespace MechJebLib.ODE
 
         private bool IsActiveEvent(Event e)
         {
-            bool up     = e.LastValue <= 0 && e.NewValue >= 0;
-            bool down   = e.LastValue >= 0 && e.NewValue <= 0;
+            bool up = e.LastValue <= 0 && e.NewValue >= 0;
+            bool down = e.LastValue >= 0 && e.NewValue <= 0;
             bool either = up || down;
             return (up && e.Direction > 0) || (down && e.Direction < 0) || (either && e.Direction == 0);
         }

@@ -17,18 +17,18 @@ namespace MuMech
         public readonly bool DVLinearThrust = true;
 
         public CelestialBody EditorBody;
-        public bool          LiveSLT = true;
-        public double        AltSLT  = 0;
-        public double        Mach    = 0;
+        public bool LiveSLT = true;
+        public double AltSLT = 0;
+        public double Mach = 0;
 
         private int _vabRebuildTimer = 1;
 
         public readonly List<FuelStats> AtmoStats = new List<FuelStats>();
-        public readonly List<FuelStats> VacStats  = new List<FuelStats>();
-        public          double          AtmoT, VacT;
-        public          V3              AtmoR, VacR;
-        public          V3              AtmoV, VacV;
-        public          V3              AtmoU, VacU;
+        public readonly List<FuelStats> VacStats = new List<FuelStats>();
+        public double AtmoT, VacT;
+        public V3 AtmoR, VacR;
+        public V3 AtmoV, VacV;
+        public V3 AtmoU, VacU;
 
         public MechJebModuleStageStats(MechJebCore core) : base(core)
         {
@@ -46,17 +46,17 @@ namespace MuMech
         }
 
         private readonly SimVesselManager _vesselManagerAtmo = new SimVesselManager();
-        private readonly SimVesselManager _vesselManagerVac  = new SimVesselManager();
+        private readonly SimVesselManager _vesselManagerVac = new SimVesselManager();
 
         public override void OnFixedUpdate() => GetResults();
 
         public override void OnUpdate() => GetResults();
 
         private static ProfilerMarker _newRunSimulationProfile = new ProfilerMarker("RunSimulation");
-        private static ProfilerMarker _newBuildProfile         = new ProfilerMarker("Build");
-        private static ProfilerMarker _newUpdateProfile        = new ProfilerMarker("Update");
-        private static ProfilerMarker _newVacProfile           = new ProfilerMarker("Vac");
-        private static ProfilerMarker _newAtmoProfile          = new ProfilerMarker("Atmo");
+        private static ProfilerMarker _newBuildProfile = new ProfilerMarker("Build");
+        private static ProfilerMarker _newUpdateProfile = new ProfilerMarker("Update");
+        private static ProfilerMarker _newVacProfile = new ProfilerMarker("Vac");
+        private static ProfilerMarker _newAtmoProfile = new ProfilerMarker("Atmo");
 
         private void GetResults()
         {
@@ -142,8 +142,8 @@ namespace MuMech
             {
                 _vesselManagerVac.DVLinearThrust = DVLinearThrust;
                 _vesselManagerVac.SetConditions(0, 0, 0);
-                _vesselManagerVac.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
-                    VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
+                _vesselManagerVac.SetInitial(VesselState.Time, VesselState.OrbitalPosition.WorldToV3Rotated(),
+                    VesselState.OrbitalVelocity.WorldToV3Rotated(), VesselState.Forward.WorldToV3Rotated());
                 if (!_vesselManagerVac.TryStartFuelFlowSimulationJob())
                     throw new Exception("[MechJebModuleStageStats] could not start vac stats job");
             }
@@ -152,8 +152,8 @@ namespace MuMech
             {
                 _vesselManagerAtmo.DVLinearThrust = DVLinearThrust;
                 _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
-                _vesselManagerAtmo.SetInitial(VesselState.time, VesselState.orbitalPosition.WorldToV3Rotated(),
-                    VesselState.orbitalVelocity.WorldToV3Rotated(), VesselState.forward.WorldToV3Rotated());
+                _vesselManagerAtmo.SetInitial(VesselState.Time, VesselState.OrbitalPosition.WorldToV3Rotated(),
+                    VesselState.OrbitalVelocity.WorldToV3Rotated(), VesselState.Forward.WorldToV3Rotated());
                 if (!_vesselManagerAtmo.TryStartFuelFlowSimulationJob())
                     throw new Exception("[MechJebModuleStageStats] could not start atmo stats job");
             }
@@ -225,13 +225,13 @@ namespace MuMech
 
         private void OnPartCrossfeedStateChange(Part data)
         {
-            _vesselModified  = true;
+            _vesselModified = true;
             _vabRebuildTimer = 2;
         }
 
         private void OnEditorShipModified(ShipConstruct data)
         {
-            _vesselModified  = true;
+            _vesselModified = true;
             _vabRebuildTimer = 2;
         }
 

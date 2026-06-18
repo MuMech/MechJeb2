@@ -89,8 +89,8 @@ namespace MechJebLib.Primitives
         public static int Iamax(double[] x, int n)
         {
             if (n <= 0) return -1;
-            int    idx = 0;
-            double m   = Math.Abs(x[0]);
+            int idx = 0;
+            double m = Math.Abs(x[0]);
             for (int i = 1; i < n; i++)
             {
                 double a = Math.Abs(x[i]);
@@ -180,8 +180,8 @@ namespace MechJebLib.Primitives
         // by value, and r is delivered as an explicit out.
         public static void Rotg(double a, double b, out double c, out double s, out double r)
         {
-            double absA  = Math.Abs(a);
-            double absB  = Math.Abs(b);
+            double absA = Math.Abs(a);
+            double absB = Math.Abs(b);
             double scale = absA + absB;
             if (scale == 0.0)
             {
@@ -304,13 +304,13 @@ namespace MechJebLib.Primitives
         public static void CubicHermiteInterpolant(double x1, double[] y1, double[] yp1,
             double x2, double[] y2, double[] yp2, double x, double[] y, int n)
         {
-            double dx    = x2 - x1;
-            double t     = (x - x1) / dx;
-            double t2    = t * t;
-            double t3    = t2 * t;
-            double h00   = 2 * t3 - 3 * t2 + 1;
+            double dx = x2 - x1;
+            double t = (x - x1) / dx;
+            double t2 = t * t;
+            double t3 = t2 * t;
+            double h00 = 2 * t3 - 3 * t2 + 1;
             double h10dx = (t3 - 2 * t2 + t) * dx;
-            double h01   = -2 * t3 + 3 * t2;
+            double h01 = -2 * t3 + 3 * t2;
             double h11dx = (t3 - t2) * dx;
             for (int i = 0; i < n; i++)
                 y[i] = h00 * y1[i] + h10dx * yp1[i] + h01 * y2[i] + h11dx * yp2[i];

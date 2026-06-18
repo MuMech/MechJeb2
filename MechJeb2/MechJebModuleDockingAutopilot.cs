@@ -9,8 +9,8 @@ namespace MuMech
     {
         public string status = "";
 
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")] //Docking speed limit
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")]
+        //Docking speed limit
         public EditableDouble speedLimit = 1;
 
         [Persistent(pass = (int)Pass.LOCAL)]
@@ -32,7 +32,7 @@ namespace MuMech
         public EditableDouble overridenTargetSize = 10;
 
         public float safeDistance = 10;
-        public float targetSize   = 5;
+        public float targetSize = 5;
 
         public bool drawBoundingBox;
 
@@ -50,15 +50,15 @@ namespace MuMech
         }
 
         private Vector3d zAxis;
-        public  double   zSep;
-        public  Vector3d lateralSep;
-        public  double   relativeZ;
-        public  double   relativeLateral;
+        public double zSep;
+        public Vector3d lateralSep;
+        public double relativeZ;
+        public double relativeLateral;
 
         private ITargetable lastTarget;
 
-        private const float  dockingcorridorRadius = 1;
-        private       double acquireRange          = 0.25;
+        private const float dockingcorridorRadius = 1;
+        private double acquireRange = 0.25;
 
         public Box3d vesselBoundingBox;
         public Box3d targetBoundingBox;
@@ -99,7 +99,7 @@ namespace MuMech
         {
             Core.RCS.Users.Remove(this);
             Core.Attitude.attitudeDeactivate();
-            dockingStep     = DockingStep.OFF;
+            dockingStep = DockingStep.OFF;
             drawBoundingBox = false;
         }
 
@@ -107,7 +107,7 @@ namespace MuMech
         {
             if (speedLimit != 0)
             {
-                if (s > speedLimit) s  = speedLimit;
+                if (s > speedLimit) s = speedLimit;
                 if (s < -speedLimit) s = -speedLimit;
             }
 
@@ -121,8 +121,8 @@ namespace MuMech
         private double MaxSpeedForDistance(double distance, Vector3d axis)
         {
             Vector3d localAxis = Vessel.ReferenceTransform.InverseTransformDirection(axis);
-            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * VesselState.rcsThrustAvailable.GetMagnitude(localAxis) * Core.RCS.rcsAccelFactor() /
-                                      VesselState.mass));
+            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * VesselState.RCSThrustAvailable.GetMagnitude(localAxis) * Core.RCS.rcsAccelFactor() /
+                VesselState.Mass));
         }
 
         public override void Drive(FlightCtrlState s)
@@ -161,7 +161,7 @@ namespace MuMech
                     break;
 
                 case DockingStep.WRONG_SIDE_LATERAL:
-                    zApproachSpeed   = 0;
+                    zApproachSpeed = 0;
                     latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, -lateralSep);
                     status = Localizer.Format("#MechJeb_Docking_status2",
                         latApproachSpeed.ToString("F2")); //Moving away from docking axis at <<1>> m/s to avoid hitting target on backing up
@@ -185,8 +185,8 @@ namespace MuMech
                         latApproachSpeed = 0;
 
                     zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, -zAxis);
-                    align          = false;
-                    status         = Localizer.Format("#MechJeb_Docking_status4", zApproachSpeed.ToString("F2")); //"Backing up at " +  + " m/s"
+                    align = false;
+                    status = Localizer.Format("#MechJeb_Docking_status4", zApproachSpeed.ToString("F2")); //"Backing up at " +  + " m/s"
                     break;
 
                 case DockingStep.MOVING_TO_START:
@@ -200,13 +200,13 @@ namespace MuMech
                     break;
 
                 case DockingStep.DOCKING:
-                    timeToAxis       = Math.Abs(lateralSep.magnitude / latApproachSpeed);
+                    timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed);
                     timeToTargetSize = Math.Abs(zSep / zApproachSpeed);
 
                     if ((zSep <= lateralSep.magnitude * 10 || timeToTargetSize <= timeToAxis * 10) && timeToAxis > 0 && timeToTargetSize > 0)
                     {
-                        zApproachSpeed   *= Math.Min(timeToTargetSize / timeToAxis, 1);
-                        latApproachSpeed =  FixSpeed(latApproachSpeed * 2);
+                        zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
+                        latApproachSpeed = FixSpeed(latApproachSpeed * 2);
                     }
 
                     status = Localizer.Format("#MechJeb_Docking_status6", zApproachSpeed.ToString("F2"),
@@ -233,7 +233,7 @@ namespace MuMech
 
             Vector3d adjustment = -lateralSep.normalized * latApproachSpeed + zApproachSpeed * zAxis;
             Core.RCS.SetTargetWorldVelocity(targetVel + adjustment);
-            MechJebModuleDebugArrows.debugVector  = adjustment;
+            MechJebModuleDebugArrows.debugVector = adjustment;
             MechJebModuleDebugArrows.debugVector2 = -Core.Target.RelativePosition;
         }
 
@@ -313,10 +313,10 @@ namespace MuMech
         private void UpdateDistance()
         {
             Vector3d separation = Core.Target.RelativePosition;
-            zAxis           = Core.Target.DockingAxis.normalized;
-            zSep            = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
-            lateralSep      = Vector3d.Exclude(zAxis, separation);
-            relativeZ       = Vector3d.Dot(Core.Target.RelativeVelocity, zAxis);
+            zAxis = Core.Target.DockingAxis.normalized;
+            zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
+            lateralSep = Vector3d.Exclude(zAxis, separation);
+            relativeZ = Vector3d.Dot(Core.Target.RelativeVelocity, zAxis);
             relativeLateral = Vector3d.Dot(lateralSep, Core.Target.RelativeVelocity);
         }
 

@@ -13,16 +13,18 @@ namespace MuMech
 
         private static readonly string[] warpTargetStrings = { Localizer.Format("#MechJeb_WarpHelper_Combobox_text1"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text2"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text3"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text4"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text5"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text6"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text7"), Localizer.Format("#MechJeb_WarpHelper_Combobox_text8") }; //"periapsis""apoapsis""maneuver node""SoI transition""Time""Phase angle""hoverslam burn""atmospheric entry"
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public WarpTarget warpTarget = WarpTarget.Periapsis;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public WarpTarget warpTarget = WarpTarget.Periapsis;
 
-        [Persistent(pass = (int)Pass.GLOBAL)] public readonly EditableTime leadTime = 0;
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public readonly EditableTime leadTime = 0;
 
-        public           bool         warping;
+        public bool warping;
         private readonly EditableTime timeOffset = 0;
 
         private double targetUT;
 
-        [UsedImplicitly] [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        [UsedImplicitly, Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble phaseAngle = 0;
 
         protected override void WindowGUI(int windowID)
@@ -71,11 +73,11 @@ namespace MuMech
                     switch (warpTarget)
                     {
                         case WarpTarget.Periapsis:
-                            targetUT = Orbit.NextPeriapsisTime(VesselState.time);
+                            targetUT = Orbit.NextPeriapsisTime(VesselState.Time);
                             break;
 
                         case WarpTarget.Apoapsis:
-                            if (Orbit.eccentricity < 1) targetUT = Orbit.NextApoapsisTime(VesselState.time);
+                            if (Orbit.eccentricity < 1) targetUT = Orbit.NextApoapsisTime(VesselState.Time);
                             break;
 
                         case WarpTarget.SoI:
@@ -88,7 +90,7 @@ namespace MuMech
                             break;
 
                         case WarpTarget.Time:
-                            targetUT = VesselState.time + timeOffset;
+                            targetUT = VesselState.Time + timeOffset;
                             break;
 
                         case WarpTarget.PhaseAngleT:
@@ -101,14 +103,14 @@ namespace MuMech
                                     reference = Orbit.referenceBody.orbit;
                                 // From Kerbal Alarm Clock
                                 double angleChangePerSec = 360 / Core.Target.TargetOrbit.period - 360 / reference.period;
-                                double currentAngle      = reference.PhaseAngle(Core.Target.TargetOrbit, VesselState.time);
-                                double angleDigff        = currentAngle - phaseAngle;
+                                double currentAngle = reference.PhaseAngle(Core.Target.TargetOrbit, VesselState.Time);
+                                double angleDigff = currentAngle - phaseAngle;
                                 if (angleDigff > 0 && angleChangePerSec > 0)
                                     angleDigff -= 360;
                                 if (angleDigff < 0 && angleChangePerSec < 0)
                                     angleDigff += 360;
                                 double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
-                                targetUT = VesselState.time + TimeToTarget;
+                                targetUT = VesselState.Time + TimeToTarget;
                             }
 
                             break;
@@ -116,8 +118,8 @@ namespace MuMech
                         case WarpTarget.AtmosphericEntry:
                             try
                             {
-                                targetUT = Vessel.orbit.NextTimeOfRadius(VesselState.time,
-                                    VesselState.mainBody.Radius + VesselState.mainBody.RealMaxAtmosphereAltitude());
+                                targetUT = Vessel.orbit.NextTimeOfRadius(VesselState.Time,
+                                    VesselState.MainBody.Radius + VesselState.MainBody.RealMaxAtmosphereAltitude());
                             }
                             catch
                             {
@@ -139,7 +141,7 @@ namespace MuMech
                             break;
 
                         default:
-                            targetUT = VesselState.time;
+                            targetUT = VesselState.Time;
                             break;
                     }
                 }
@@ -178,7 +180,7 @@ namespace MuMech
 
             double target = targetUT - leadTime;
 
-            if (target < VesselState.time + 1)
+            if (target < VesselState.Time + 1)
             {
                 Core.Warp.MinimumWarp(true);
                 warping = false;

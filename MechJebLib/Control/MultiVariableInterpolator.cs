@@ -61,7 +61,7 @@ namespace MechJebLib.Control
             if (target < values[1]) return 0;
             if (target > values[values.Length - 2]) return values.Length - 2;
 
-            int left  = 1;
+            int left = 1;
             int right = values.Length - 2;
 
             while (left <= right)

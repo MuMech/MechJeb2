@@ -8,43 +8,35 @@ namespace MuMech
 {
     public class MechJebModuleNodeEditor : DisplayModule
     {
-        private EditableDouble prograde   = 0;
+        private EditableDouble prograde = 0;
         private EditableDouble radialPlus = 0;
         private EditableDouble normalPlus = 0;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble progradeDelta = 0;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble radialPlusDelta = 0;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble normalPlusDelta = 0;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableTime timeOffset = 0;
 
-        private ManeuverNode  node;
+        private ManeuverNode node;
         private ManeuverGizmo gizmo;
 
         private enum Snap { PERIAPSIS, APOAPSIS, REL_ASCENDING, REL_DESCENDING, EQ_ASCENDING, EQ_DESCENDING }
 
-        private static readonly int  numSnaps = Enum.GetNames(typeof(Snap)).Length;
-        private                 Snap snap     = Snap.PERIAPSIS;
+        private static readonly int numSnaps = Enum.GetNames(typeof(Snap)).Length;
+        private Snap snap = Snap.PERIAPSIS;
 
-        private readonly string[] snapStrings =
-        {
-            Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"),
-            Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6")
-        }; //"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
+        private readonly string[] snapStrings = { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") }; //"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
 
         private void GizmoUpdateHandler(Vector3d dV, double UT)
         {
-            prograde   = dV.z;
+            prograde = dV.z;
             radialPlus = dV.x;
             normalPlus = dV.y;
         }
@@ -93,7 +85,7 @@ namespace MuMech
 
             if (node != oldNode)
             {
-                prograde   = node.DeltaV.z;
+                prograde = node.DeltaV.z;
                 radialPlus = node.DeltaV.x;
                 normalPlus = node.DeltaV.y;
             }

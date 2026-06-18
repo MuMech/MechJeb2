@@ -33,8 +33,8 @@ namespace MuMech
         }
 
         public static string PrettyPrint(Vector3d vector, string format = "F3") => "[" + PadPositive(vector.x, format) + ", " +
-                                                                                   PadPositive(vector.y, format) + ", " +
-                                                                                   PadPositive(vector.z, format) + " ]";
+            PadPositive(vector.y, format) + ", " +
+            PadPositive(vector.z, format) + " ]";
 
         public static string PrettyPrintSci(Vector3d vector, string format = "F3") => "[" + PadPositiveSci(vector.x, format) + ", " +
             PadPositiveSci(vector.y, format) + ", " +
@@ -43,20 +43,6 @@ namespace MuMech
         public static string PrettyPrint(Quaternion quaternion, string format = "F3") =>
             "[" + PadPositive(quaternion.x, format) + ", " + PadPositive(quaternion.y, format) + ", " + PadPositive(quaternion.z, format) +
             ", " + PadPositive(quaternion.w, format) + "]";
-
-        //acosh(x) = log(x + sqrt(x^2 - 1))
-        public static double Acosh(double x) => Math.Log(x + Math.Sqrt(x * x - 1));
-
-        //since there doesn't seem to be a Math.Clamp?
-        public static double Clamp(double x, double min, double max)
-        {
-            if (x < min) return min;
-            if (x > max) return max;
-            return x;
-        }
-
-        //clamp to [0,1]
-        public static double Clamp01(double x) => Clamp(x, 0, 1);
 
         //keeps angles in the range 0 to 360
         public static double ClampDegrees360(double angle)
@@ -71,20 +57,6 @@ namespace MuMech
         {
             angle = ClampDegrees360(angle);
             if (angle > 180) angle -= 360;
-            return angle;
-        }
-
-        public static double ClampRadiansTwoPi(double angle)
-        {
-            angle = angle % (2 * Math.PI);
-            if (angle < 0) return angle + 2 * Math.PI;
-            return angle;
-        }
-
-        public static double ClampRadiansPi(double angle)
-        {
-            angle = ClampRadiansTwoPi(angle);
-            if (angle > Math.PI) angle -= 2 * Math.PI;
             return angle;
         }
 
@@ -153,8 +125,8 @@ namespace MuMech
     public class MovingAverage
     {
         private readonly double[] _store;
-        private readonly int      _storeSize;
-        private          int      _nextIndex;
+        private readonly int _storeSize;
+        private int _nextIndex;
 
         public double Value
         {
@@ -171,14 +143,14 @@ namespace MuMech
             set
             {
                 _store[_nextIndex] = value;
-                _nextIndex         = (_nextIndex + 1) % _storeSize;
+                _nextIndex = (_nextIndex + 1) % _storeSize;
             }
         }
 
         public MovingAverage(int size = 10, double startingValue = 0)
         {
             _storeSize = size;
-            _store     = new double[size];
+            _store = new double[size];
             Force(startingValue);
         }
 
@@ -200,8 +172,8 @@ namespace MuMech
     public class MovingAverage3d
     {
         private readonly Vector3d[] _store;
-        private readonly int        _storeSize;
-        private          int        _nextIndex;
+        private readonly int _storeSize;
+        private int _nextIndex;
 
         public Vector3d Value
         {
@@ -218,14 +190,14 @@ namespace MuMech
             set
             {
                 _store[_nextIndex] = value;
-                _nextIndex         = (_nextIndex + 1) % _storeSize;
+                _nextIndex = (_nextIndex + 1) % _storeSize;
             }
         }
 
         public MovingAverage3d(int size = 10, Vector3d startingValue = default)
         {
             _storeSize = size;
-            _store     = new Vector3d[size];
+            _store = new Vector3d[size];
             Force(startingValue);
         }
 

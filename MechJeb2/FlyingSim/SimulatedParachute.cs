@@ -22,7 +22,7 @@ namespace MuMech
         //double targetASLAtSemiDeploy = 0;
         //double targetASLAtFullDeploy = 0;
         private float deployLevel;
-        public  bool  deploying;
+        public bool deploying;
 
         private bool willDeploy;
 
@@ -56,7 +56,7 @@ namespace MuMech
 
         private void Init(ModuleParachute mp, double startTime, int limitChutesStage)
         {
-            para  = mp;
+            para = mp;
             state = mp.deploymentState;
 
             willDeploy = limitChutesStage != -1 && para.part.inverseStage >= limitChutesStage;
@@ -162,7 +162,7 @@ namespace MuMech
                         // Immediately check to see if the parachute should be semi deployed, rather than waiting for another iteration.
                         if (pressure >= para.minAirPressureToOpen)
                         {
-                            state        = ModuleParachute.deploymentStates.SEMIDEPLOYED;
+                            state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                             openningTime = time;
                             //semiDeployAGL = altATGL;
                             //semiDeployASL = altASL;
@@ -174,7 +174,7 @@ namespace MuMech
                 case ModuleParachute.deploymentStates.ACTIVE:
                     if (pressure >= para.minAirPressureToOpen)
                     {
-                        state        = ModuleParachute.deploymentStates.SEMIDEPLOYED;
+                        state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                         openningTime = time;
                         //semiDeployAGL = altATGL;
                         //semiDeployASL = altASL;
@@ -185,7 +185,7 @@ namespace MuMech
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     if (altATGL < para.deployAltitude)
                     {
-                        state        = ModuleParachute.deploymentStates.DEPLOYED;
+                        state = ModuleParachute.deploymentStates.DEPLOYED;
                         openningTime = time;
                         //fullDeployAGL = altATGL;
                         //fullDeployASL = altASL;

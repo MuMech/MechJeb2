@@ -23,14 +23,14 @@ namespace MuMech
         {
             if (Orbit.PeA > 0 || Vessel.Landed) return "N/A";
 
-            double impactTime = VesselState.time;
+            double impactTime = VesselState.Time;
             try
             {
                 for (int iter = 0; iter < 10; iter++)
                 {
                     Vector3d impactPosition = Orbit.WorldPositionAtUT(impactTime);
-                    double   terrainRadius  = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
-                    impactTime = Orbit.NextTimeOfRadius(VesselState.time, terrainRadius);
+                    double terrainRadius = MainBody.Radius + MainBody.TerrainAltitude(impactPosition);
+                    impactTime = Orbit.NextTimeOfRadius(VesselState.Time, terrainRadius);
                 }
             }
             catch (ArgumentException)
@@ -42,7 +42,7 @@ namespace MuMech
                 return GuiUtils.TimeToDHMS(0, 1);
             }
 
-            return GuiUtils.TimeToDHMS(impactTime - VesselState.time, 1);
+            return GuiUtils.TimeToDHMS(impactTime - VesselState.Time, 1);
         }
 
         // TODO: this shows numbers like e.g. -1.2s in flight if the cycles/second is 1.0s -- not sure how to fix
@@ -57,8 +57,7 @@ namespace MuMech
         // TODO: This counts down even if you don't ignite and i'm not entirely certain what to do about it
         // TODO: this doesn't account for planned vertical descent deltaV
         [ValueInfoItem("#MechJeb_HoverslamDeltaV", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamDeltaV_tooltip")] //Hoverslam Δv
-        public string HoverslamDeltaV() =>
-            IsFinite(LandingUT) ? DeltaV(LandingCountdown - (IgnitionUT < VesselState.time ? 0 : IgnitionCountdown)).ToSI() + "m/s" : "N/A";
+        public string HoverslamDeltaV() => IsFinite(DeltaV) ? DeltaV.ToSI() + "m/s" : "N/A";
 
         [ValueInfoItem("#MechJeb_HoverslamCoordinates", InfoItem.Category.Hoverslam, width = 90, tooltip = "#MechJeb_HoverslamCoordinates_tooltip")] //Coordinates
         public string HoverslamCoordinates() => Coordinates.ToStringDMS(Lat, Lng, true);
@@ -72,20 +71,20 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_HoverslamTerrainAltitude", InfoItem.Category.Hoverslam, format = "F1", units = "m", tooltip = "#MechJeb_HoverslamTerrainAltitude_tooltip")] //Terrain altitude
         public double TerrainAltitude;
 
-        [ToggleInfoItem("#MechJeb_HoverslamMapLandingPrediction", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamMapLandingPrediction_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Map landing prediction
+        [ToggleInfoItem("#MechJeb_HoverslamMapLandingPrediction", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamMapLandingPrediction_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+         //Map landing prediction
         public bool MapLandingPrediction = true;
 
-        [EditableInfoItem("#MechJeb_HoverslamSimRecalcInterval", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamSimRecalcInterval_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Simulation recalc interval
+        [EditableInfoItem("#MechJeb_HoverslamSimRecalcInterval", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamSimRecalcInterval_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+         //Simulation recalc interval
         public readonly EditableDouble SimRecalcInterval = new EditableDouble(1.0);
 
-        [EditableInfoItem("#MechJeb_HoverslamVerticalAuthority", InfoItem.Category.Hoverslam, width = 50, rightLabel = "%", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAuthority_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Vertical phase authority
+        [EditableInfoItem("#MechJeb_HoverslamVerticalAuthority", InfoItem.Category.Hoverslam, width = 50, rightLabel = "%", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAuthority_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+         //Vertical phase authority
         public readonly EditableDoubleMult VerticalAuthority = new EditableDoubleMult(0.5, 0.01);
 
-        [EditableInfoItem("#MechJeb_HoverslamVerticalAltitude", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAltitude_tooltip")]
-        [Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //Vertical phase altitude
+        [EditableInfoItem("#MechJeb_HoverslamVerticalAltitude", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAltitude_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
+         //Vertical phase altitude
         public readonly EditableDouble VerticalAltitude = new EditableDouble(100);
 
         // TODO: VerticalAuthority needs better integration with the prediction.
@@ -109,13 +108,14 @@ namespace MuMech
         public double FinalThrustAccel;
         public double Lat;
         public double Lng;
-        public double IgnitionCountdown => IgnitionUT - VesselState.time;
-        public double LandingCountdown  => LandingUT - VesselState.time;
+        public double IgnitionCountdown => IgnitionUT - VesselState.Time;
+        public double LandingCountdown  => LandingUT - VesselState.Time;
+        public double DeltaV;
         public double FinalDescentSpeed; // should be positive
         public Vector3d IgnitionAttitude;
         // ReSharper restore MemberCanBePrivate.Global
 
-        private double _lastCycleUT;
+        public double _lastCycleUT;
 
         private readonly HoverslamSimulation.HoverslamSimulationManager _manager = new HoverslamSimulation.HoverslamSimulationManager();
         private readonly HoverslamSimulation _hoverslam = new HoverslamSimulation();
@@ -147,9 +147,11 @@ namespace MuMech
 
         private void Reset()
         {
-            LandingPosition = Vector3d.zero;
+            LandingPosition = new Vector3d(double.NaN, double.NaN, double.NaN);
             IgnitionUT = double.NaN;
             LandingUT = double.NaN;
+            DeltaV = double.NaN;
+            IgnitionAttitude = new Vector3d(double.NaN, double.NaN, double.NaN);
             Lat = 0;
             Lng = 0;
             FinalThrustAccel = -1;
@@ -157,12 +159,12 @@ namespace MuMech
             _lastCycleUT = 0;
         }
 
-        private double DeltaV(double burnTime)
+        private double CalculateDeltaV(double burnTime)
         {
             Core.StageStats.RequestUpdate();
 
-            int    lastNonZeroIndex = -1;
-            double dv               = 0;
+            int lastNonZeroIndex = -1;
+            double dv = 0;
 
             for (int mjPhase = _vacStats.Count - 1; mjPhase >= 0 && burnTime > 0; mjPhase--)
             {
@@ -196,13 +198,13 @@ namespace MuMech
         {
             double r = GetGroundRadius();
 
-            if (VesselState.mainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
+            if (VesselState.MainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
             {
                 Reset();
                 return;
             }
 
-            if (VesselState.time < _lastCycleUT + SimRecalcInterval * TimeWarp.CurrentRate)
+            if (VesselState.Time < _lastCycleUT + SimRecalcInterval * TimeWarp.CurrentRate)
                 return;
 
             Core.StageStats.RequestUpdate();
@@ -223,6 +225,7 @@ namespace MuMech
                 MainBody.GetLatLngAltAtUT(LandingUT, LandingPosition, out Lat, out Lng, out _);
                 TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, true);
                 Slope = MainBody.GetPQSSlopeDegrees(Lat, Lng);
+                DeltaV = CalculateDeltaV(LandingCountdown - (IgnitionUT < VesselState.Time ? 0 : IgnitionCountdown));
             }
 
             if (_hoverslam.IsFaulted && _hoverslam.ExceptionMessage != null)
@@ -236,7 +239,7 @@ namespace MuMech
             V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
             bool noBurnableStages = true;
-            int  lastKSPStage     = -1;
+            int lastKSPStage = -1;
 
             for (int mjPhase = _vacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
@@ -288,7 +291,7 @@ namespace MuMech
             if (!_hoverslam.TryStartJob())
                 throw new Exception("[MechJebModuleHoverslamSimulation] could not start job");
 
-            _lastCycleUT = VesselState.time;
+            _lastCycleUT = VesselState.Time;
         }
     }
 }

@@ -7,16 +7,12 @@ namespace MuMech
     public class OperationEccentricity : Operation
     {
         private static readonly string _name = "change eccentricity";
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult NewEcc = new EditableDouble(0);
 
-        private static readonly TimeReference[] _timeReferences =
-        {
-            TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
-        };
+        private static readonly TimeReference[] _timeReferences = { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE };
 
         private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 

@@ -30,10 +30,10 @@ namespace MuMech
         public int MaxLmIterations;
         public int LastLmIterations;
 
-        public  Exception? Exception;
-        public  double     Staleness;
-        public  double     LastInfeasibility;
-        private double     _lastTime;
+        public Exception? Exception;
+        public double Staleness;
+        public double LastInfeasibility;
+        private double _lastTime;
 
         public MechJebModulePSGGlueBall(MechJebCore core) : base(core) { }
 
@@ -44,10 +44,10 @@ namespace MuMech
         protected override void OnModuleEnabled()
         {
             Debug.Log("Enabling PSG GlueBall");
-            SuccessfulConverges = LastLmStatus      = MaxLmIterations = 0;
-            LastLmStatus        = LastLmIterations  = 0;
-            Staleness           = LastInfeasibility = _lastTime = 0;
-            _ascent             = null;
+            SuccessfulConverges = LastLmStatus = MaxLmIterations = 0;
+            LastLmStatus = LastLmIterations = 0;
+            Staleness = LastInfeasibility = _lastTime = 0;
+            _ascent = null;
         }
 
         protected override void OnModuleDisabled()
@@ -62,7 +62,7 @@ namespace MuMech
 
         public override void OnDestroy() => GameEvents.onStageActivate.Remove(HandleStageEvent);
 
-        private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
+        private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.Time + _ascentSettings.OptimizerPauseTime;
 
         private bool IsUnguided(int s) => _ascentSettings.UnguidedStages.Contains(s);
 
@@ -79,8 +79,8 @@ namespace MuMech
                 if (psg == null)
                     return;
 
-                LastLmStatus      = psg.TerminationType;
-                LastLmIterations  = psg.Iterations;
+                LastLmStatus = psg.TerminationType;
+                LastLmIterations = psg.Iterations;
                 LastInfeasibility = psg.PrimalFeasibility;
 
                 if (LastLmIterations > MaxLmIterations)
@@ -90,8 +90,8 @@ namespace MuMech
                 {
                     Core.Guidance.SetSolution(psg.Solution);
                     SuccessfulConverges += 1;
-                    _lastTime           =  VesselState.time;
-                    Staleness           =  0;
+                    _lastTime = VesselState.Time;
+                    Staleness = 0;
                 }
                 else
                 {
@@ -126,9 +126,9 @@ namespace MuMech
         {
             // initialize the first time we hit SetTarget to avoid initial large staleness values
             if (_lastTime == 0)
-                _lastTime = VesselState.time;
+                _lastTime = VesselState.Time;
 
-            Staleness = VesselState.time - _lastTime;
+            Staleness = VesselState.Time - _lastTime;
 
             if (_ascent is { IsRunning: true })
                 return;
@@ -158,8 +158,8 @@ namespace MuMech
 
                 for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
                 {
-                    double dv       = Core.StageStats.VacStats[mjPhase].DeltaV;
-                    int    kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
+                    double dv = Core.StageStats.VacStats[mjPhase].DeltaV;
+                    int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
 
                     // Stop if we've reached the LastStage
                     if (kspStage < _ascentSettings.LastStage)
@@ -193,21 +193,21 @@ namespace MuMech
                 if (solutionIndex >= 0)
                 {
                     // check for prestaging as the current stage gets low
-                    if (Core.Guidance.Solution?.Tgo(VesselState.time, solutionIndex) < _ascentSettings.PreStageTime)
+                    if (Core.Guidance.Solution?.Tgo(VesselState.Time, solutionIndex) < _ascentSettings.PreStageTime)
                     {
-                        _blockOptimizerUntilTime = VesselState.time + _ascentSettings.OptimizerPauseTime;
+                        _blockOptimizerUntilTime = VesselState.Time + _ascentSettings.OptimizerPauseTime;
                         return;
                     }
                 }
             }
 
-            if (_blockOptimizerUntilTime > VesselState.time)
+            if (_blockOptimizerUntilTime > VesselState.Time)
                 return;
 
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
-                .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
+               .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
                   , MainBody.gravParameter, MainBody.Radius)
-                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), 0, fpa, attachAltFlag, lanflag, false);
+               .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), 0, fpa, attachAltFlag, lanflag, false);
 
             if (MainBody.atmosphere)
             {
@@ -217,12 +217,12 @@ namespace MuMech
                 double rho0 = MainBody.atmDensityASL;
                 double rho1 = MainBody.GetDensity(MainBody.GetPressure(r1), MainBody.GetTemperature(r1));
 
-                double h0        = r1 / Log(rho0 / rho1);
-                double cd        = _ascentSettings.Cd;
-                double aRef      = _ascentSettings.Aref;
+                double h0 = r1 / Log(rho0 / rho1);
+                double cd = _ascentSettings.Cd;
+                double aRef = _ascentSettings.Aref;
                 double qAlphaMax = _ascentSettings.LimitQa;
-                double qMax      = Core.Thrust.LimitDynamicPressure ? Core.Thrust.MaxDynamicPressure.Val : 0.0;
-                V3     w         = 2 * PI / MainBody.rotationPeriod * V3.northpole;
+                double qMax = Core.Thrust.LimitDynamicPressure ? Core.Thrust.MaxDynamicPressure.Val : 0.0;
+                V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
                 ascentBuilder.AerodynamicConstants(cd, aRef, rho0, qAlphaMax, qMax, h0, w);
             }
@@ -234,10 +234,10 @@ namespace MuMech
 
             for (int mjPhase = Core.StageStats.VacStats.Count - 1; mjPhase >= 0; mjPhase--)
             {
-                FuelStats fuelStats   = Core.StageStats.VacStats[mjPhase];
-                int       kspStage    = Core.StageStats.VacStats[mjPhase].KSPStage;
-                double    ispCurrent  = Core.StageStats.AtmoStats[mjPhase].Isp;
-                double    minThrottle = Core.StageStats.VacStats[mjPhase].MinThrust / Core.StageStats.VacStats[mjPhase].MaxThrust;
+                FuelStats fuelStats = Core.StageStats.VacStats[mjPhase];
+                int kspStage = Core.StageStats.VacStats[mjPhase].KSPStage;
+                double ispCurrent = Core.StageStats.AtmoStats[mjPhase].Isp;
+                double minThrottle = Core.StageStats.VacStats[mjPhase].MinThrust / Core.StageStats.VacStats[mjPhase].MaxThrust;
 
                 if (kspStage < _ascentSettings.LastStage)
                     break;
@@ -267,8 +267,8 @@ namespace MuMech
 
                         if (Core.Guidance.IsCoasting())
                         {
-                            maxt = Max(maxt - (VesselState.time - Core.Guidance.StartCoast), 0);
-                            mint = Max(mint - (VesselState.time - Core.Guidance.StartCoast), 0);
+                            maxt = Max(maxt - (VesselState.Time - Core.Guidance.StartCoast), 0);
+                            mint = Max(mint - (VesselState.Time - Core.Guidance.StartCoast), 0);
                         }
 
                         bool unguidedCoast = IsUnguided(kspStage);
@@ -291,7 +291,7 @@ namespace MuMech
             if (!_ascent.TryStartJob())
                 throw new Exception("[MechJebModulePSGGlueBall] could not start optimizer job");
 
-            _blockOptimizerUntilTime = VesselState.time + 1;
+            _blockOptimizerUntilTime = VesselState.Time + 1;
         }
 
         private bool IsCurrentCoastAfterStage(int kspStage)

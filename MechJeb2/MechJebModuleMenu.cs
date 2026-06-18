@@ -15,9 +15,9 @@ namespace MuMech
         public MechJebModuleMenu(MechJebCore core)
             : base(core)
         {
-            Priority     = -1000;
-            Enabled      = true;
-            Hidden       = true;
+            Priority = -1000;
+            Enabled = true;
+            Hidden = true;
             ShowInFlight = true;
             ShowInEditor = true;
 
@@ -48,8 +48,8 @@ namespace MuMech
         private struct Button
         {
             public IButton button;
-            public string  texturePath;
-            public string  texturePathActive;
+            public string texturePath;
+            public string texturePathActive;
         }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -125,12 +125,10 @@ namespace MuMech
 
         private bool movingButton;
 
-        [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc)]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc), Persistent(pass = (int)Pass.GLOBAL)]
         public readonly bool hideButton; //Hide Menu Button
 
-        [ToggleInfoItem("#MechJeb_UseAppLauncher", InfoItem.Category.Misc)]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [ToggleInfoItem("#MechJeb_UseAppLauncher", InfoItem.Category.Misc), Persistent(pass = (int)Pass.GLOBAL)]
         public readonly bool useAppLauncher = true; //Use AppLauncher
 
         [GeneralInfoItem("#MechJeb_MenuPosition", InfoItem.Category.Misc)] //Menu Position
@@ -181,8 +179,8 @@ namespace MuMech
         public bool HideMenuButton => (ToolbarManager.ToolbarAvailable || useAppLauncher) && hideButton;
 
         private static Dictionary<DisplayModule, Button> toolbarButtons;
-        private static Dictionary<Action, Button>        featureButtons;
-        private const  string                            Qmark = "MechJeb2/Icons/QMark";
+        private static Dictionary<Action, Button> featureButtons;
+        private const string Qmark = "MechJeb2/Icons/QMark";
 
         private IButton menuButton;
 
@@ -200,10 +198,10 @@ namespace MuMech
 
             if (toggleInactive == null)
             {
-                toggleInactive                  = new GUIStyle(GUI.skin.toggle);
+                toggleInactive = new GUIStyle(GUI.skin.toggle);
                 toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
 
-                toggleActive                  = new GUIStyle(toggleInactive);
+                toggleActive = new GUIStyle(toggleInactive);
                 toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
             }
 
@@ -289,7 +287,7 @@ namespace MuMech
                     string TexturePath = "MechJeb2/Icons/" + name;
                     string TexturePathActive = TexturePath + "_active";
 
-                    button        = new Button();
+                    button = new Button();
                     button.button = ToolbarManager.Instance.add("MechJeb2", name);
 
                     if (GameDatabase.Instance.GetTexture(TexturePath, false) == null)
@@ -318,7 +316,7 @@ namespace MuMech
                     button.button.OnClick += b =>
                     {
                         DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetDisplayModules(DisplayOrder.instance)
-                            .FirstOrDefault(m => m == module);
+                           .FirstOrDefault(m => m == module);
                         if (mod != null)
                         {
                             mod.Enabled = !mod.Enabled;
@@ -330,7 +328,7 @@ namespace MuMech
                     button = toolbarButtons[module];
                 }
 
-                button.button.Visible     = module.ShowInCurrentScene;
+                button.button.Visible = module.ShowInCurrentScene;
                 button.button.TexturePath = module.IsActive() ? button.texturePathActive : button.texturePath;
             }
 
@@ -427,7 +425,7 @@ namespace MuMech
                 button.texturePathActive = texturePathActive;
             }
 
-            button.button.ToolTip =  tooltip;
+            button.button.ToolTip = tooltip;
             button.button.OnClick += onClick;
             featureButtons.Add(() =>
             {
@@ -436,7 +434,7 @@ namespace MuMech
                     : button.texturePath;
             }, button);
 
-            button.button.Visible     = module.ShowInCurrentScene;
+            button.button.Visible = module.ShowInCurrentScene;
             button.button.TexturePath = button.texturePath;
         }
 
@@ -447,10 +445,10 @@ namespace MuMech
 
             if (menuButton == null)
             {
-                menuButton             =  ToolbarManager.Instance.add("MechJeb2", "MechJeb2MenuButton");
-                menuButton.ToolTip     =  "MechJeb2";
-                menuButton.TexturePath =  "MechJeb2/Icons/MJ2";
-                menuButton.OnClick     += b => ShowHideMasterWindow();
+                menuButton = ToolbarManager.Instance.add("MechJeb2", "MechJeb2MenuButton");
+                menuButton.ToolTip = "MechJeb2";
+                menuButton.TexturePath = "MechJeb2/Icons/MJ2";
+                menuButton.OnClick += b => ShowHideMasterWindow();
             }
 
             menuButton.Visible = true;
@@ -526,7 +524,7 @@ namespace MuMech
                     if (windowProgr >= 1)
                     {
                         windowProgr = 1;
-                        windowStat  = WindowStat.NORMAL;
+                        windowStat = WindowStat.NORMAL;
                     }
 
                     break;
@@ -535,7 +533,7 @@ namespace MuMech
                     if (windowProgr <= 0)
                     {
                         windowProgr = 0;
-                        windowStat  = WindowStat.HIDDEN;
+                        windowStat = WindowStat.HIDDEN;
                     }
 
                     break;
@@ -589,13 +587,13 @@ namespace MuMech
         {
             if (windowStat == WindowStat.HIDDEN)
             {
-                windowStat  = WindowStat.OPENING;
+                windowStat = WindowStat.OPENING;
                 windowProgr = 0;
-                firstDraw   = true;
+                firstDraw = true;
             }
             else if (windowStat == WindowStat.NORMAL)
             {
-                windowStat  = WindowStat.CLOSING;
+                windowStat = WindowStat.CLOSING;
                 windowProgr = 1;
             }
         }

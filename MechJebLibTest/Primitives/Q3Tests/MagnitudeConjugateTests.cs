@@ -142,7 +142,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
         private void MagnitudeAvoidingOverflow()
         {
             const double LARGE = 1e200;
-            var          q     = new Q3(LARGE, LARGE, LARGE, LARGE);
+            var q = new Q3(LARGE, LARGE, LARGE, LARGE);
 
             q.magnitude.ShouldEqual(2 * LARGE);
             q.magnitude.ShouldBeFinite();
@@ -152,7 +152,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
         private void MagnitudeAvoidingUnderflow()
         {
             const double SMALL = 1e-200;
-            var          q     = new Q3(SMALL, SMALL, SMALL, SMALL);
+            var q = new Q3(SMALL, SMALL, SMALL, SMALL);
 
             q.magnitude.ShouldEqual(2 * SMALL);
             q.magnitude.ShouldBeGreaterThan(0);
@@ -164,8 +164,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void ConjugateNegatesVectorPart()
         {
-            var q    = new Q3(1, 2, 3, 4);
-            Q3  conj = q.conjugate;
+            var q = new Q3(1, 2, 3, 4);
+            Q3 conj = q.conjugate;
 
             conj.x.ShouldEqual(-1);
             conj.y.ShouldEqual(-2);
@@ -200,8 +200,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void ConjugateTimesOriginalGivesScalar()
         {
-            var q      = Q3.AngleAxis(PI / 4, new V3(1, 2, 3).normalized);
-            Q3  result = q * q.conjugate;
+            var q = Q3.AngleAxis(PI / 4, new V3(1, 2, 3).normalized);
+            Q3 result = q * q.conjugate;
 
             result.x.ShouldBeZero(1e-14);
             result.y.ShouldBeZero(1e-14);
@@ -212,9 +212,9 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void ConjugateOfNormalizedIsInverse()
         {
-            var q    = Q3.AngleAxis(0.789, new V3(3, -2, 1).normalized);
-            Q3  conj = q.conjugate;
-            var inv  = Q3.Inverse(q);
+            var q = Q3.AngleAxis(0.789, new V3(3, -2, 1).normalized);
+            Q3 conj = q.conjugate;
+            var inv = Q3.Inverse(q);
 
             conj.ShouldEqual(inv, 1e-14);
         }
@@ -230,8 +230,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void ConjugateWithZeroScalarPart()
         {
-            var q    = new Q3(1, 2, 3, 0);
-            Q3  conj = q.conjugate;
+            var q = new Q3(1, 2, 3, 0);
+            Q3 conj = q.conjugate;
 
             conj.x.ShouldEqual(-1);
             conj.y.ShouldEqual(-2);
@@ -245,7 +245,7 @@ namespace MechJebLibTest.Primitives.Q3Tests
             var q = Q3.AngleAxis(PI / 3, V3.up);
             var v = new V3(1, 2, 3);
 
-            V3 rotated   = q * v;
+            V3 rotated = q * v;
             V3 unrotated = q.conjugate * rotated;
 
             unrotated.ShouldEqual(v, 1e-14);
@@ -254,8 +254,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
         [Fact]
         private void ConjugateWithSpecialValues()
         {
-            var q    = new Q3(double.PositiveInfinity, double.NegativeInfinity, 0, 1);
-            Q3  conj = q.conjugate;
+            var q = new Q3(double.PositiveInfinity, double.NegativeInfinity, 0, 1);
+            Q3 conj = q.conjugate;
 
             conj.x.ShouldBeNegativeInfinity();
             conj.y.ShouldBePositiveInfinity();
