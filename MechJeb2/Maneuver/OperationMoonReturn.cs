@@ -10,25 +10,22 @@ namespace MuMech
     public class OperationMoonReturn : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_return_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDoubleMult Periapsis = new EditableDoubleMult(100000, 1000);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble Inclination = new EditableDouble(-90);
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool InclinationFlag;
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_return_label1"), Periapsis, "km");   //Approximate final periapsis:
-            GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°");         //Inclination
-            GUILayout.Label(Localizer.Format("#MechJeb_return_label2"));                           //Schedule the burn at the next return window.
+            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_return_label1"), Periapsis, "km"); //Approximate final periapsis:
+            GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°"); //Inclination
+            GUILayout.Label(Localizer.Format("#MechJeb_return_label2")); //Schedule the burn at the next return window.
         }
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)

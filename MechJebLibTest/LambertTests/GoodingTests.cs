@@ -9,6 +9,7 @@ using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
+using MechJebLib.Utils;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -29,16 +30,17 @@ namespace MechJebLibTest.LambertTests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void RandomMultipleRevolution(int seed)
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             double tol = 1e-6;
 
             var random = new Random(seed);
 
-            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt, period;
             double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
 
@@ -79,7 +81,7 @@ namespace MechJebLibTest.LambertTests
                     viNRev.ShouldEqual(viGooding, tol);
                     vfNRev.ShouldEqual(vfGooding, tol);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     (V3 viNRev, V3 vfNRev) = Gooding.Solve(1.0, r0, rfShepperd, dt + n * period, TransferGeometry.Prograde, n, V3.Cross(r0, v0));
 
@@ -89,16 +91,17 @@ namespace MechJebLibTest.LambertTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         private void RandomPositions(int seed)
         {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
             double tol = 1e-6;
 
             var random = new Random(seed);
 
-            var    r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-            var    rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt = random.NextDouble() * 6 + 0.05;
 
             // avoid inherent singularity at nearly collinear ri, rf

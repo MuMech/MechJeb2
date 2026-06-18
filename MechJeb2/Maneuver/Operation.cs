@@ -12,12 +12,12 @@ namespace MuMech
     {
         // ReSharper disable once InconsistentNaming
         public Vector3d dV;
-        public double   UT;
+        public double UT;
 
         public ManeuverParameters(Vector3d dV, double ut)
         {
             this.dV = dV;
-            UT      = ut;
+            UT = ut;
         }
     }
 
@@ -28,8 +28,8 @@ namespace MuMech
 
     public abstract class Operation
     {
-        protected string ErrorMessage = "";
-        public    string GetErrorMessage() => ErrorMessage;
+        protected string? ErrorMessage = "";
+        public string? GetErrorMessage() => ErrorMessage;
 
         // Methods that need to be implemented for new operations:
 

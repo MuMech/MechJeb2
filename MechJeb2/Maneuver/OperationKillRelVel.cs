@@ -9,7 +9,7 @@ namespace MuMech
     public class OperationKillRelVel : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_match_v_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.CLOSEST_APPROACH, TimeReference.X_FROM_NOW };
 

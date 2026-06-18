@@ -44,64 +44,17 @@ namespace MuMech
             VERTICAL_PLUS
         }
 
-        public static Mode[] Target2Mode =
-        {
-            Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL,
-            Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO, Mode.SURFACE,
-            Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE
-        };
+        public static Mode[] Target2Mode = { Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.SURFACE, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.ORBITAL, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.TARGET, Mode.ADVANCED, Mode.AUTO, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE, Mode.SURFACE };
 
-        public static bool[] TargetIsMode =
-        {
-            true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false,
-            false, false, false, false
-        };
+        public static bool[] TargetIsMode = { true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false };
 
-        public static readonly string[] ModeTexts =
-        {
-            Localizer.Format("#MechJeb_SmartASS_button1"), Localizer.Format("#MechJeb_SmartASS_button2"),
-            Localizer.Format("#MechJeb_SmartASS_button3"), Localizer.Format("#MechJeb_SmartASS_button4"),
-            Localizer.Format("#MechJeb_SmartASS_button5")
-        }; //"OBT""SURF""TGT""ADV""AUTO"
+        public static readonly string[] ModeTexts = { Localizer.Format("#MechJeb_SmartASS_button1"), Localizer.Format("#MechJeb_SmartASS_button2"), Localizer.Format("#MechJeb_SmartASS_button3"), Localizer.Format("#MechJeb_SmartASS_button4"), Localizer.Format("#MechJeb_SmartASS_button5") }; //"OBT""SURF""TGT""ADV""AUTO"
 
-        public static string[] ScriptModeTexts =
-        {
-            Localizer.Format("#MechJeb_SmartASS_button6"), Localizer.Format("#MechJeb_SmartASS_button7"),
-            Localizer.Format("#MechJeb_SmartASS_button8"), Localizer.Format("#MechJeb_SmartASS_button9"),
-            Localizer.Format("#MechJeb_SmartASS_button10")
-        }; //"Orbit""Surface""Target""Advanced""Auto"
+        public static string[] ScriptModeTexts = { Localizer.Format("#MechJeb_SmartASS_button6"), Localizer.Format("#MechJeb_SmartASS_button7"), Localizer.Format("#MechJeb_SmartASS_button8"), Localizer.Format("#MechJeb_SmartASS_button9"), Localizer.Format("#MechJeb_SmartASS_button10") }; //"Orbit""Surface""Target""Advanced""Auto"
 
-        public static readonly string[] TargetTexts =
-        {
-            Localizer.Format("#MechJeb_SmartASS_button11"), Localizer.Format("#MechJeb_SmartASS_button12"),
-            Localizer.Format("#MechJeb_SmartASS_button13"), Localizer.Format("#MechJeb_SmartASS_button14"),
-            Localizer.Format("#MechJeb_SmartASS_button15"), Localizer.Format("#MechJeb_SmartASS_button16"),
-            Localizer.Format("#MechJeb_SmartASS_button17"), Localizer.Format("#MechJeb_SmartASS_button18"),
-            Localizer.Format("#MechJeb_SmartASS_button19"), Localizer.Format("#MechJeb_SmartASS_button20"),
-            Localizer.Format("#MechJeb_SmartASS_button21"), Localizer.Format("#MechJeb_SmartASS_button22"),
-            Localizer.Format("#MechJeb_SmartASS_button23"), Localizer.Format("#MechJeb_SmartASS_button24"),
-            Localizer.Format("#MechJeb_SmartASS_button25"), Localizer.Format("#MechJeb_SmartASS_button26"),
-            Localizer.Format("#MechJeb_SmartASS_button27"), Localizer.Format("#MechJeb_SmartASS_button28"),
-            Localizer.Format("#MechJeb_SmartASS_button29"), Localizer.Format("#MechJeb_SmartASS_button30"),
-            Localizer.Format("#MechJeb_SmartASS_button31"), Localizer.Format("#MechJeb_SmartASS_button32"),
-            Localizer.Format("#MechJeb_SmartASS_button33")
-        }; //"OFF""KILL\nROT""NODE""SURF""PRO\nGRAD" "RETR\nGRAD""NML\n+""NML\n-""RAD\n+""RAD\n-""RVEL\n+""RVEL\n-""TGT\n+""TGT\n-""PAR\n+""PAR\n-""ADV""AUTO""SVEL\n+""SVEL\n-""HVEL\n+""HVEL\n-""UP"
+        public static readonly string[] TargetTexts = { Localizer.Format("#MechJeb_SmartASS_button11"), Localizer.Format("#MechJeb_SmartASS_button12"), Localizer.Format("#MechJeb_SmartASS_button13"), Localizer.Format("#MechJeb_SmartASS_button14"), Localizer.Format("#MechJeb_SmartASS_button15"), Localizer.Format("#MechJeb_SmartASS_button16"), Localizer.Format("#MechJeb_SmartASS_button17"), Localizer.Format("#MechJeb_SmartASS_button18"), Localizer.Format("#MechJeb_SmartASS_button19"), Localizer.Format("#MechJeb_SmartASS_button20"), Localizer.Format("#MechJeb_SmartASS_button21"), Localizer.Format("#MechJeb_SmartASS_button22"), Localizer.Format("#MechJeb_SmartASS_button23"), Localizer.Format("#MechJeb_SmartASS_button24"), Localizer.Format("#MechJeb_SmartASS_button25"), Localizer.Format("#MechJeb_SmartASS_button26"), Localizer.Format("#MechJeb_SmartASS_button27"), Localizer.Format("#MechJeb_SmartASS_button28"), Localizer.Format("#MechJeb_SmartASS_button29"), Localizer.Format("#MechJeb_SmartASS_button30"), Localizer.Format("#MechJeb_SmartASS_button31"), Localizer.Format("#MechJeb_SmartASS_button32"), Localizer.Format("#MechJeb_SmartASS_button33") }; //"OFF""KILL\nROT""NODE""SURF""PRO\nGRAD" "RETR\nGRAD""NML\n+""NML\n-""RAD\n+""RAD\n-""RVEL\n+""RVEL\n-""TGT\n+""TGT\n-""PAR\n+""PAR\n-""ADV""AUTO""SVEL\n+""SVEL\n-""HVEL\n+""HVEL\n-""UP"
 
-        public static string[] ScriptTargetTexts =
-        {
-            Localizer.Format("#MechJeb_SmartASS_button34"), Localizer.Format("#MechJeb_SmartASS_button35"),
-            Localizer.Format("#MechJeb_SmartASS_button36"), Localizer.Format("#MechJeb_SmartASS_button37"),
-            Localizer.Format("#MechJeb_SmartASS_button38"), Localizer.Format("#MechJeb_SmartASS_button39"),
-            Localizer.Format("#MechJeb_SmartASS_button40"), Localizer.Format("#MechJeb_SmartASS_button41"),
-            Localizer.Format("#MechJeb_SmartASS_button42"), Localizer.Format("#MechJeb_SmartASS_button43"),
-            Localizer.Format("#MechJeb_SmartASS_button44"), Localizer.Format("#MechJeb_SmartASS_button45"),
-            Localizer.Format("#MechJeb_SmartASS_button46"), Localizer.Format("#MechJeb_SmartASS_button47"),
-            Localizer.Format("#MechJeb_SmartASS_button48"), Localizer.Format("#MechJeb_SmartASS_button49"),
-            Localizer.Format("#MechJeb_SmartASS_button50"), Localizer.Format("#MechJeb_SmartASS_button51"),
-            Localizer.Format("#MechJeb_SmartASS_button52"), Localizer.Format("#MechJeb_SmartASS_button53"),
-            Localizer.Format("#MechJeb_SmartASS_button54"), Localizer.Format("#MechJeb_SmartASS_button55"),
-            Localizer.Format("#MechJeb_SmartASS_button56")
-        }; //"Off""Kill Rotation""Node""Surface""Prograde""Retrograde""Normal+""Normal-""Radial+""Radial-""Relative Velocity+""Relative Velocity-""Target+""Target-""Parallel+""Parallel-""Advanced""Auto""Surface Velocity+""Surface Velocity-""Horizontal Velocity+""Horizontal Velocity-""Up"
+        public static string[] ScriptTargetTexts = { Localizer.Format("#MechJeb_SmartASS_button34"), Localizer.Format("#MechJeb_SmartASS_button35"), Localizer.Format("#MechJeb_SmartASS_button36"), Localizer.Format("#MechJeb_SmartASS_button37"), Localizer.Format("#MechJeb_SmartASS_button38"), Localizer.Format("#MechJeb_SmartASS_button39"), Localizer.Format("#MechJeb_SmartASS_button40"), Localizer.Format("#MechJeb_SmartASS_button41"), Localizer.Format("#MechJeb_SmartASS_button42"), Localizer.Format("#MechJeb_SmartASS_button43"), Localizer.Format("#MechJeb_SmartASS_button44"), Localizer.Format("#MechJeb_SmartASS_button45"), Localizer.Format("#MechJeb_SmartASS_button46"), Localizer.Format("#MechJeb_SmartASS_button47"), Localizer.Format("#MechJeb_SmartASS_button48"), Localizer.Format("#MechJeb_SmartASS_button49"), Localizer.Format("#MechJeb_SmartASS_button50"), Localizer.Format("#MechJeb_SmartASS_button51"), Localizer.Format("#MechJeb_SmartASS_button52"), Localizer.Format("#MechJeb_SmartASS_button53"), Localizer.Format("#MechJeb_SmartASS_button54"), Localizer.Format("#MechJeb_SmartASS_button55"), Localizer.Format("#MechJeb_SmartASS_button56") }; //"Off""Kill Rotation""Node""Surface""Prograde""Retrograde""Normal+""Normal-""Radial+""Radial-""Relative Velocity+""Relative Velocity-""Target+""Target-""Parallel+""Parallel-""Advanced""Auto""Surface Velocity+""Surface Velocity-""Horizontal Velocity+""Horizontal Velocity-""Up"
 
         public static readonly string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
         public static readonly string[] directionTexts = Enum.GetNames(typeof(Vector6.Direction));
@@ -152,8 +105,9 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoDisableSmartASS = true;
+
         [Persistent(pass = (int)Pass.LOCAL)]
-        public bool smoothControl = false;
+        public bool smoothControl;
 
         [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble degreesPerSecond = new EditableDouble(10);
@@ -168,6 +122,7 @@ namespace MuMech
         // Current attitude/direction (for smooth interpolation)
         private Vector3d curDirection = Vector3d.zero;
         private Quaternion curAttitude = Quaternion.identity;
+
         [GeneralInfoItem("#MechJeb_DisableSmartACSAutomatically", InfoItem.Category.Misc)] //Disable SmartACS automatically
         public void AutoDisableSmartASS() =>
             autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS,
@@ -226,20 +181,20 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            bool hasSmoothControl = false;  // Local variable for current frame
+            bool hasSmoothControl = false; // Local variable for current frame
             if (btNormal == null)
             {
-                btNormal                    = new GUIStyle(GUI.skin.button);
-                btNormal.normal.textColor   = btNormal.focused.textColor   = Color.white;
-                btNormal.hover.textColor    = btNormal.active.textColor    = Color.yellow;
+                btNormal = new GUIStyle(GUI.skin.button);
+                btNormal.normal.textColor = btNormal.focused.textColor = Color.white;
+                btNormal.hover.textColor = btNormal.active.textColor = Color.yellow;
                 btNormal.onNormal.textColor = btNormal.onFocused.textColor = btNormal.onHover.textColor = btNormal.onActive.textColor = Color.green;
-                btNormal.padding            = new RectOffset(8, 8, 8, 8);
+                btNormal.padding = new RectOffset(8, 8, 8, 8);
 
-                btActive           = new GUIStyle(btNormal);
-                btActive.active    = btActive.onActive;
-                btActive.normal    = btActive.onNormal;
+                btActive = new GUIStyle(btNormal);
+                btActive.active = btActive.onActive;
+                btActive.normal = btActive.onNormal;
                 btActive.onFocused = btActive.focused;
-                btActive.hover     = btActive.onHover;
+                btActive.hover = btActive.onHover;
 
                 btAuto = new GUIStyle(btNormal);
                 btAuto.normal.textColor = Color.red;
@@ -490,7 +445,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
-                                srfVelRol = -VesselState.vesselRoll.Value;
+                                srfVelRol = -VesselState.Roll;
                                 changed = true;
                             }
 
@@ -530,7 +485,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
-                                srfVelPit = VesselState.AoA.Value;
+                                srfVelPit = VesselState.AoA;
                                 changed = true;
                             }
 
@@ -550,6 +505,7 @@ namespace MuMech
                                 srfVelYaw -= LARGE_INCREMENT;
                                 changed = true;
                             }
+
                             if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
                             {
                                 srfVelYaw -= val;
@@ -571,7 +527,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
-                                srfVelYaw = -VesselState.AoS.Value;
+                                srfVelYaw = -VesselState.AoS;
                                 changed = true;
                             }
 
@@ -641,7 +597,7 @@ namespace MuMech
                     case Mode.AUTO:
                         break;
                 }
-                
+
                 // Disable smooth control for modes that don't have it
                 if (!hasSmoothControl)
                 {
@@ -675,8 +631,8 @@ namespace MuMech
                     return;
                 case Target.KILLROT:
                     Core.Attitude.attitudeKILLROT = true;
-                    attitude                      = Quaternion.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
-                    reference                     = AttitudeReference.INERTIAL;
+                    attitude = Quaternion.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
+                    reference = AttitudeReference.INERTIAL;
                     break;
                 case Target.NODE:
                     direction = Vector3d.forward;
@@ -684,8 +640,8 @@ namespace MuMech
                     break;
                 case Target.SURFACE:
                     attitude = Quaternion.AngleAxis((float)srfHdg, Vector3.up)
-                               * Quaternion.AngleAxis(-(float)srfPit, Vector3.right)
-                               * Quaternion.AngleAxis(-(float)srfRol, Vector3.forward);
+                        * Quaternion.AngleAxis(-(float)srfPit, Vector3.right)
+                        * Quaternion.AngleAxis(-(float)srfRol, Vector3.forward);
                     reference = AttitudeReference.SURFACE_NORTH;
                     break;
                 case Target.PROGRADE:
@@ -742,14 +698,14 @@ namespace MuMech
                     break;
                 case Target.SURFACE_PROGRADE:
                     attitude = Quaternion.AngleAxis(-(float)srfVelRol, Vector3.forward) *
-                               Quaternion.AngleAxis(-(float)srfVelPit, Vector3.right) *
-                               Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
+                        Quaternion.AngleAxis(-(float)srfVelPit, Vector3.right) *
+                        Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
                     reference = AttitudeReference.SURFACE_VELOCITY;
                     break;
                 case Target.SURFACE_RETROGRADE:
                     attitude = Quaternion.AngleAxis((float)srfVelRol + 180, Vector3.forward) *
-                               Quaternion.AngleAxis(-(float)srfVelPit + 180, Vector3.right) *
-                               Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
+                        Quaternion.AngleAxis(-(float)srfVelPit + 180, Vector3.right) *
+                        Quaternion.AngleAxis((float)srfVelYaw, Vector3.up);
                     reference = AttitudeReference.SURFACE_VELOCITY;
                     break;
                 case Target.HORIZONTAL_PLUS:
@@ -770,7 +726,7 @@ namespace MuMech
 
             if (forceRol && direction != Vector3d.zero)
             {
-                attitude  = Quaternion.LookRotation(direction, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.forward);
+                attitude = Quaternion.LookRotation(direction, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.forward);
                 direction = Vector3d.zero;
             }
 
@@ -784,8 +740,8 @@ namespace MuMech
             {
                 // Get the reference rotation for the current mode
                 QuaternionD refRotation = Core.Attitude.attitudeGetReferenceRotation(reference);
-                QuaternionD vesselRotation = QuaternionD.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
-                
+                var vesselRotation = QuaternionD.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
+
                 // Get the vessel's current attitude in the reference frame
                 QuaternionD vesselAttitudeInRef = QuaternionD.Inverse(refRotation) * vesselRotation;
 
@@ -799,7 +755,7 @@ namespace MuMech
                 {
                     // For attitude-based targets, use the actual vessel attitude in this reference frame
                     curDirection = Vector3d.zero;
-                    curAttitude = (Quaternion)vesselAttitudeInRef;
+                    curAttitude = vesselAttitudeInRef;
                 }
 
                 // Call attitudeTo with current values, smooth transition will take over in OnFixedUpdate
@@ -824,12 +780,13 @@ namespace MuMech
         {
             base.OnFixedUpdate();
 
-            if (!smoothControl || target == Target.OFF || !Core.Attitude.Users.Contains(this)) {
+            if (!smoothControl || target == Target.OFF || !Core.Attitude.Users.Contains(this))
+            {
                 // Just make sure that if we randomly turn on smooth control, it won't cause weird behavior
                 // by jumping to some random attitude because the current values are out of date
                 curDirection = targetDirection;
                 curAttitude = targetAttitude;
-            } 
+            }
             // Handle smooth transitions if enabled and SmartASS is still controlling
             else
             {
@@ -848,6 +805,7 @@ namespace MuMech
                     {
                         curDirection = targetDirection;
                     }
+
                     Core.Attitude.attitudeTo(curDirection, targetReference, this);
                 }
                 else
@@ -863,6 +821,7 @@ namespace MuMech
                     {
                         curAttitude = targetAttitude;
                     }
+
                     Core.Attitude.attitudeTo(curAttitude, targetReference, this);
                 }
             }

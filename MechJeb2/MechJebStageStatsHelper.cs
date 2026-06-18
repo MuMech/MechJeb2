@@ -73,7 +73,7 @@ namespace MuMech
         private enum StageData
         {
             KSPStage, InitialMass, FinalMass, StagedMass, BurnedMass, Thrust, VacInitialTWR, VacMaxTWR, AtmoInitialTWR, AtmoMaxTWR,
-            Isp, AtmoDeltaV, VacDeltaV, Time, AtmoCumulativeDeltaV, VacCumulativeDeltaV, ControllableMass, RcsUllageTime,
+            Isp, AtmoDeltaV, VacDeltaV, Time, AtmoCumulativeDeltaV, VacCumulativeDeltaV, ControllableMass, RcsUllageTime
         }
 
         private static readonly List<StageData> AllStages = new List<StageData>
@@ -224,9 +224,10 @@ namespace MuMech
                 if (stageVisibility[StageData.AtmoMaxTWR])
                     stageDisplayInfo[StageData.AtmoMaxTWR].Add($"{_atmoEndTWR(index, geeASL):F2}   ");
                 if (stageVisibility[StageData.Isp]) stageDisplayInfo[StageData.Isp].Add($"{_isp(index):F2}   ");
-                if (stageVisibility[StageData.RcsUllageTime]) stageDisplayInfo[StageData.RcsUllageTime].Add(timeSeconds
-                    ? $"{stats.AtmoStats[index].RcsUllageTime:F2}s   "
-                    : $"{GuiUtils.TimeToDHMS(stats.AtmoStats[index].RcsUllageTime, 1)}   ");
+                if (stageVisibility[StageData.RcsUllageTime])
+                    stageDisplayInfo[StageData.RcsUllageTime].Add(timeSeconds
+                        ? $"{stats.AtmoStats[index].RcsUllageTime:F2}s   "
+                        : $"{GuiUtils.TimeToDHMS(stats.AtmoStats[index].RcsUllageTime, 1)}   ");
                 if (stageVisibility[StageData.AtmoDeltaV]) stageDisplayInfo[StageData.AtmoDeltaV].Add($"{_atmoDv(index):F0} m/s   ");
                 if (stageVisibility[StageData.VacDeltaV]) stageDisplayInfo[StageData.VacDeltaV].Add($"{_vacDv(index):F0} m/s   ");
                 if (stageVisibility[StageData.AtmoCumulativeDeltaV])

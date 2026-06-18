@@ -32,14 +32,13 @@ namespace MechJebLibTest.TwoBodyTests
                 yield return new object[] { i };
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomForwardAndBack(int seed)
         {
             var rng = new Random(seed);
 
-            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
-            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
             double dt = 40 * rng.NextDouble() - 20;
 
             (V3 rf, V3 vf) = Farnocchia.Solve(1.0, dt, r0, v0);
@@ -66,7 +65,7 @@ namespace MechJebLibTest.TwoBodyTests
                 var v = new V3(yin[3], yin[4], yin[5]);
 
                 double rm2 = r.sqrMagnitude;
-                double rm  = Sqrt(rm2);
+                double rm = Sqrt(rm2);
                 double rm3 = rm2 * rm;
 
                 V3 dr = v;
@@ -77,15 +76,14 @@ namespace MechJebLibTest.TwoBodyTests
             }
         }
 
-        [Theory]
-        [MemberData(nameof(Seeds))]
+        [Theory, MemberData(nameof(Seeds))]
         public void RandomComparedToDP5(int seed)
         {
             var solver = new DP5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
-            var rng    = new Random(seed);
+            var rng = new Random(seed);
 
-            var    r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
-            var    v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
+            var v0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
             double dt = 10 * rng.NextDouble() - 5;
 
             (double _, double ecc, double _, double _, double _, double _, double l) =

@@ -591,15 +591,15 @@ namespace MechJebLib.Primitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static M3 Inverse(in M3 m)
         {
-            double a      = m.m11 * m.m22 - m.m21 * m.m12;
-            double b      = m.m21 * m.m02 - m.m01 * m.m22;
-            double c      = m.m01 * m.m12 - m.m11 * m.m02;
-            double d      = m.m20 * m.m12 - m.m10 * m.m22;
-            double e      = m.m00 * m.m22 - m.m20 * m.m02;
-            double f      = m.m10 * m.m02 - m.m00 * m.m12;
-            double g      = m.m10 * m.m21 - m.m20 * m.m11;
-            double h      = m.m20 * m.m01 - m.m00 * m.m21;
-            double i      = m.m11 * m.m00 - m.m10 * m.m01;
+            double a = m.m11 * m.m22 - m.m21 * m.m12;
+            double b = m.m21 * m.m02 - m.m01 * m.m22;
+            double c = m.m01 * m.m12 - m.m11 * m.m02;
+            double d = m.m20 * m.m12 - m.m10 * m.m22;
+            double e = m.m00 * m.m22 - m.m20 * m.m02;
+            double f = m.m10 * m.m02 - m.m00 * m.m12;
+            double g = m.m10 * m.m21 - m.m20 * m.m11;
+            double h = m.m20 * m.m01 - m.m00 * m.m21;
+            double i = m.m11 * m.m00 - m.m10 * m.m01;
             double invDet = 1.0 / (m.m00 * a + m.m10 * b + m.m20 * c);
             return new M3(
                 a * invDet, b * invDet, c * invDet,
@@ -715,9 +715,9 @@ namespace MechJebLib.Primitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static M3 Rotate(in Q3 q)
         {
-            double x  = q.x * 2.0;
-            double y  = q.y * 2.0;
-            double z  = q.z * 2.0;
+            double x = q.x * 2.0;
+            double y = q.y * 2.0;
+            double z = q.z * 2.0;
             double xx = q.x * x;
             double yy = q.y * y;
             double zz = q.z * z;
@@ -753,7 +753,7 @@ namespace MechJebLib.Primitives
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static M3 AngleAxis(double angle, in V3 axis)
         {
-            V3     a = axis.normalized;
+            V3 a = axis.normalized;
             double c = Cos(angle);
             double s = Sin(angle);
             double t = 1.0 - c;

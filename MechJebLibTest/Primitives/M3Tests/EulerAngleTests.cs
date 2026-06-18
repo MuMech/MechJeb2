@@ -29,7 +29,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void EulerAnglesRollOnly()
         {
             double roll = PI / 4;
-            var    m    = M3.EulerAngles(roll, 0, 0);
+            var m = M3.EulerAngles(roll, 0, 0);
 
             var expected = M3.AngleAxis(roll, V3.xaxis);
             m.ShouldEqual(expected, 1e-14);
@@ -39,7 +39,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void EulerAnglesPitchOnly()
         {
             double pitch = PI / 4;
-            var    m     = M3.EulerAngles(0, pitch, 0);
+            var m = M3.EulerAngles(0, pitch, 0);
 
             var expected = M3.AngleAxis(pitch, V3.yaxis);
             m.ShouldEqual(expected, 1e-14);
@@ -49,7 +49,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void EulerAnglesYawOnly()
         {
             double yaw = PI / 4;
-            var    m   = M3.EulerAngles(0, 0, yaw);
+            var m = M3.EulerAngles(0, 0, yaw);
 
             var expected = M3.AngleAxis(yaw, V3.zaxis);
             m.ShouldEqual(expected, 1e-14);
@@ -58,9 +58,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EulerAnglesCombined()
         {
-            double roll  = PI / 6;
+            double roll = PI / 6;
             double pitch = PI / 4;
-            double yaw   = PI / 3;
+            double yaw = PI / 3;
 
             var m = M3.EulerAngles(roll, pitch, yaw);
 
@@ -71,9 +71,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EulerAnglesFromVectorMatchesScalars()
         {
-            double roll  = PI / 6;
+            double roll = PI / 6;
             double pitch = PI / 4;
-            double yaw   = PI / 3;
+            double yaw = PI / 3;
 
             var m1 = M3.EulerAngles(roll, pitch, yaw);
             var m2 = M3.EulerAngles(new V3(roll, pitch, yaw));
@@ -84,9 +84,9 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EulerAnglesNegativeAngles()
         {
-            double roll  = -PI / 6;
+            double roll = -PI / 6;
             double pitch = -PI / 4;
-            double yaw   = -PI / 3;
+            double yaw = -PI / 3;
 
             var m = M3.EulerAngles(roll, pitch, yaw);
 
@@ -131,7 +131,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void ToEulerAnglesRollOnly()
         {
             double roll = PI / 4;
-            var    m    = M3.EulerAngles(roll, 0, 0);
+            var m = M3.EulerAngles(roll, 0, 0);
 
             V3 euler = m.ToEulerAngles();
             euler.x.ShouldEqual(roll, 1e-14);
@@ -143,7 +143,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void ToEulerAnglesPitchOnly()
         {
             double pitch = PI / 4;
-            var    m     = M3.EulerAngles(0, pitch, 0);
+            var m = M3.EulerAngles(0, pitch, 0);
 
             V3 euler = m.ToEulerAngles();
             euler.x.ShouldBeZero(1e-14);
@@ -155,7 +155,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void ToEulerAnglesYawOnly()
         {
             double yaw = PI / 4;
-            var    m   = M3.EulerAngles(0, 0, yaw);
+            var m = M3.EulerAngles(0, 0, yaw);
 
             V3 euler = m.ToEulerAngles();
             euler.x.ShouldBeZero(1e-14);
@@ -166,12 +166,12 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void ToEulerAnglesCombined()
         {
-            double roll  = PI / 6;
+            double roll = PI / 6;
             double pitch = PI / 4;
-            double yaw   = PI / 3;
+            double yaw = PI / 3;
 
-            var m     = M3.EulerAngles(roll, pitch, yaw);
-            V3  euler = m.ToEulerAngles();
+            var m = M3.EulerAngles(roll, pitch, yaw);
+            V3 euler = m.ToEulerAngles();
 
             euler.x.ShouldEqual(roll, 1e-14);
             euler.y.ShouldEqual(pitch, 1e-14);
@@ -181,12 +181,12 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void ToEulerAnglesNegativeAngles()
         {
-            double roll  = -PI / 6;
+            double roll = -PI / 6;
             double pitch = -PI / 4;
-            double yaw   = -PI / 3;
+            double yaw = -PI / 3;
 
-            var m     = M3.EulerAngles(roll, pitch, yaw);
-            V3  euler = m.ToEulerAngles();
+            var m = M3.EulerAngles(roll, pitch, yaw);
+            V3 euler = m.ToEulerAngles();
 
             euler.x.ShouldEqual(roll, 1e-14);
             euler.y.ShouldEqual(pitch, 1e-14);
@@ -196,13 +196,13 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EulerAnglesRoundTrip()
         {
-            double roll  = 0.5;
+            double roll = 0.5;
             double pitch = 0.3;
-            double yaw   = 0.7;
+            double yaw = 0.7;
 
-            var m     = M3.EulerAngles(roll, pitch, yaw);
-            V3  euler = m.ToEulerAngles();
-            var m2    = M3.EulerAngles(euler);
+            var m = M3.EulerAngles(roll, pitch, yaw);
+            V3 euler = m.ToEulerAngles();
+            var m2 = M3.EulerAngles(euler);
 
             m2.ShouldEqual(m, 1e-14);
         }
@@ -216,9 +216,9 @@ namespace MechJebLibTest.Primitives.M3Tests
             foreach (double pitch in new[] { -PI / 3, 0, PI / 3 })
             foreach (double yaw in angles)
             {
-                var m     = M3.EulerAngles(roll, pitch, yaw);
-                V3  euler = m.ToEulerAngles();
-                var m2    = M3.EulerAngles(euler);
+                var m = M3.EulerAngles(roll, pitch, yaw);
+                V3 euler = m.ToEulerAngles();
+                var m2 = M3.EulerAngles(euler);
 
                 m2.ShouldEqual(m, 1e-13);
             }
@@ -254,10 +254,10 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void ToEulerAnglesNearGimbalLock()
         {
             double nearNinety = PI / 2 - 1e-10;
-            var    m          = M3.EulerAngles(PI / 6, nearNinety, PI / 3);
+            var m = M3.EulerAngles(PI / 6, nearNinety, PI / 3);
 
-            V3  euler = m.ToEulerAngles();
-            var m2    = M3.EulerAngles(euler);
+            V3 euler = m.ToEulerAngles();
+            var m2 = M3.EulerAngles(euler);
 
             m2.ShouldEqual(m, 1e-8);
         }
@@ -265,17 +265,17 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void EulerAnglesConsistentWithQuaternion()
         {
-            double roll  = PI / 6;
+            double roll = PI / 6;
             double pitch = PI / 4;
-            double yaw   = PI / 3;
+            double yaw = PI / 3;
 
-            var qRoll  = Q3.AngleAxis(roll, V3.forward);
+            var qRoll = Q3.AngleAxis(roll, V3.forward);
             var qPitch = Q3.AngleAxis(pitch, V3.right);
-            var qYaw   = Q3.AngleAxis(yaw, V3.down);
-            Q3  q      = qYaw * qPitch * qRoll;
+            var qYaw = Q3.AngleAxis(yaw, V3.down);
+            Q3 q = qYaw * qPitch * qRoll;
 
             var mFromEuler = M3.EulerAngles(roll, pitch, yaw);
-            var mFromQuat  = M3.Rotate(q);
+            var mFromQuat = M3.Rotate(q);
 
             mFromEuler.ShouldEqual(mFromQuat, 1e-14);
         }
@@ -284,7 +284,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void EulerAnglesSmallAngles()
         {
             double small = 1e-10;
-            var    m     = M3.EulerAngles(small, small, small);
+            var m = M3.EulerAngles(small, small, small);
 
             V3 euler = m.ToEulerAngles();
 
@@ -299,8 +299,8 @@ namespace MechJebLibTest.Primitives.M3Tests
             var q = Q3.AngleAxis(0.5, new V3(1, 2, 3).normalized);
             var m = M3.Rotate(q);
 
-            V3  euler = m.ToEulerAngles();
-            var m2    = M3.EulerAngles(euler);
+            V3 euler = m.ToEulerAngles();
+            var m2 = M3.EulerAngles(euler);
 
             m2.ShouldEqual(m, 1e-14);
         }

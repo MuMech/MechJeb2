@@ -10,22 +10,18 @@ namespace MuMech
     public class OperationGeneric : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_Hohm_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool Capture = true;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool PlanCapture = true;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool MatchOrbit = false;
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
+        public bool MatchOrbit;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble LagTime = 0;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -34,16 +30,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableTime MaxDepartureUT = 0;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool Coplanar;
 
-        private static readonly TimeReference[] _timeReferences =
-        {
-            TimeReference.COMPUTED, TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE,
-            TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING,
-            TimeReference.REL_DESCENDING, TimeReference.CLOSEST_APPROACH
-        };
+        private static readonly TimeReference[] _timeReferences = { TimeReference.COMPUTED, TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING, TimeReference.CLOSEST_APPROACH };
 
         private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
@@ -119,7 +109,7 @@ namespace MuMech
                         Localizer.Format("#MechJeb_Hohm_Exception5")); //neither ascending nor descending node with target exists.
 
                 universalTime = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-                fixedTime     = true;
+                fixedTime = true;
             }
 
             (Vector3d dV1, double ut1, Vector3d dV2, double ut2) =

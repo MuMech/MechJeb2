@@ -7,6 +7,7 @@ using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
@@ -44,7 +45,7 @@ namespace MechJebLib.Maths
         /// <param name="rtol">Error tolerance</param>
         /// <returns>The initial (v1) and final (v2) velocity vectors</returns>
         public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof,
-            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3 h = default,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null,
             int numiter = 35, double rtol = 1e-8)
         {
             // Check preconditions
@@ -60,8 +61,8 @@ namespace MechJebLib.Maths
             nrev = Abs(nrev);
 
             // Chord
-            V3     c      = r2 - r1;
-            double cNorm  = c.magnitude;
+            V3 c = r2 - r1;
+            double cNorm = c.magnitude;
             double r1Norm = r1.magnitude;
             double r2Norm = r2.magnitude;
 
@@ -71,14 +72,18 @@ namespace MechJebLib.Maths
             // Versors
             V3 iR1 = r1 / r1Norm;
             V3 iR2 = r2 / r2Norm;
-            V3 iH  = V3.Cross(iR1, iR2).normalized;
+            V3 iH = V3.Cross(iR1, iR2).safeNormalized;
 
             // Geometry of the problem
             double ll = Sqrt(1 - Min(1.0, cNorm / s));
 
             bool flip = direction == TransferGeometry.LongWay || direction == TransferGeometry.Retrograde;
             if (direction == TransferGeometry.Prograde || direction == TransferGeometry.Retrograde)
-                flip ^= V3.Dot(iH, h) < 0;
+            {
+                if (h == null)
+                    throw new Exception("Prograde or Retrograde directions require a normal vector");
+                flip ^= V3.Dot(iH, h.Value) < 0;
+            }
 
             // Compute the fundamental tangential directions
             V3 iT1, iT2;
@@ -102,7 +107,7 @@ namespace MechJebLib.Maths
 
             // Reconstruct
             double gamma = Sqrt(mu * s / 2);
-            double rho   = (r1Norm - r2Norm) / cNorm;
+            double rho = (r1Norm - r2Norm) / cNorm;
             double sigma = Sqrt(1 - rho * rho);
 
             // Compute the radial and tangential components at r1 and r2
@@ -111,6 +116,31 @@ namespace MechJebLib.Maths
             // Solve for the initial and final velocity
             V3 v1 = vr1 * (r1 / r1Norm) + vt1 * iT1;
             V3 v2 = vr2 * (r2 / r2Norm) + vt2 * iT2;
+
+            return (v1, v2);
+        }
+
+        public static (DualV3 v1, DualV3 v2) Solve(double mu, DualV3 r1, DualV3 r2, Dual tof,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null,
+            int numiter = 35, double rtol = 1e-8)
+        {
+            (V3 v1M, V3 v2M) = Solve(mu, r1.M, r2.M, tof.M, direction, nrev, h, numiter, rtol);
+            (V3 _, V3 _, M3 stmRfR0, M3 stmRfV0, M3 stmVfR0, M3 stmVfV0) = Shepperd.Solve2(mu, tof.M, r1.M, v1M);
+
+            M3 stmRfV0Inv = stmRfV0.inverse;
+            M3 stmRfV0InvRfR0 = stmRfV0Inv * stmRfR0;
+
+            M3 v1R1 = -stmRfV0InvRfR0;
+            M3 v1R2 = stmRfV0Inv;
+            M3 v2R1 = stmVfR0 - stmVfV0 * stmRfV0InvRfR0;
+            M3 v2R2 = stmVfV0 * stmRfV0Inv;
+
+            V3 v1Tof = -stmRfV0Inv * v2M;
+            V3 a2 = -mu / (r2.M.magnitude * r2.M.sqrMagnitude) * r2.M;
+            V3 v2Tof = a2 - stmVfV0 * (stmRfV0Inv * v2M);
+
+            var v1 = new DualV3(v1M, v1R1 * r1.D + v1R2 * r2.D + v1Tof * tof.D);
+            var v2 = new DualV3(v2M, v2R1 * r1.D + v2R2 * r2.D + v2Tof * tof.D);
 
             return (v1, v2);
         }
@@ -181,8 +211,8 @@ namespace MechJebLib.Maths
             if (m == 0 && Sqrt(0.6) < x && x < Sqrt(1.4))
             {
                 double eta = y - ll * x;
-                double s1  = (1 - ll - x * eta) * 0.5;
-                double q   = 4.0 / 3.0 * Hyp2F1B(s1);
+                double s1 = (1 - ll - x * eta) * 0.5;
+                double q = 4.0 / 3.0 * Hyp2F1B(s1);
                 t = (eta * eta * eta * q + 4 * ll * eta) * 0.5;
             }
             else
@@ -210,7 +240,7 @@ namespace MechJebLib.Maths
 
                 // Single revolution
                 double t0 = SafeAcos(ll) + ll * Sqrt(1 - ll2); // Equation 19
-                double t1 = 2 * (1 - ll3) / 3.0;               // Equation 21
+                double t1 = 2 * (1 - ll3) / 3.0; // Equation 21
 
                 if (t >= t0)
                     return -(t - t0) / (t - t0 + 4);
@@ -224,12 +254,12 @@ namespace MechJebLib.Maths
             // we change the meaning of lowpath compared to poliastro here out of smoothness concerns
             if (lowpath)
             {
-                double r   = Pow(8 * t / (m * PI), 2.0 / 3.0);
+                double r = Pow(8 * t / (m * PI), 2.0 / 3.0);
                 double x0R = (r - 1) / (r + 1);
                 return x0R;
             }
 
-            double l   = Pow((m * PI + PI) / (8 * t), 2.0 / 3.0);
+            double l = Pow((m * PI + PI) / (8 * t), 2.0 / 3.0);
             double x0L = (l - 1) / (l + 1);
             return x0L;
         }
@@ -242,10 +272,10 @@ namespace MechJebLib.Maths
         {
             for (int ii = 0; ii < maxiter; ii++)
             {
-                double y     = Sqrt(1 - ll * ll * (1 - p0 * p0));
-                double fval  = TofEquationY(p0, y, t0, ll, m);
-                double t     = fval + t0;
-                double fder  = (3 * t * p0 - 2 + 2 * ll * ll * ll * p0 / y) / (1 - p0 * p0);
+                double y = Sqrt(1 - ll * ll * (1 - p0 * p0));
+                double fval = TofEquationY(p0, y, t0, ll, m);
+                double t = fval + t0;
+                double fder = (3 * t * p0 - 2 + 2 * ll * ll * ll * p0 / y) / (1 - p0 * p0);
                 double fder2 = (3 * t + 5 * p0 * fder + 2 * (1 - ll * ll) * ll * ll * ll / (y * y * y)) / (1 - p0 * p0);
                 double fder3 = (7 * p0 * fder2 + 8 * fder - 6 * (1 - ll * ll) * Powi(ll, 5) * p0 / Powi(y, 5)) / (1 - p0 * p0);
 
@@ -271,9 +301,9 @@ namespace MechJebLib.Maths
             if (x >= 1.0)
                 return double.PositiveInfinity;
 
-            double res  = 1.0;
+            double res = 1.0;
             double term = 1.0;
-            int    ii   = 0;
+            int ii = 0;
 
             while (true)
             {

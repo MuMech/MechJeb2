@@ -269,8 +269,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             double maxThrust = MaxFuelFlow * FlowMultiplier * ISP * G * MultIsp * MultFlow;
             double minThrust = MinFuelFlow * FlowMultiplier * ISP * G * MultIsp * MultFlow;
 
-            double eMaxThrust     = minThrust + (maxThrust - minThrust) * thrustLimiter;
-            double eMinThrust     = ThrottleLocked ? eMaxThrust : minThrust;
+            double eMaxThrust = minThrust + (maxThrust - minThrust) * thrustLimiter;
+            double eMinThrust = ThrottleLocked ? eMaxThrust : minThrust;
             double eCurrentThrust = MassFlowRate * ISP * G * MultIsp * MultFlow;
 
             for (int i = 0; i < ThrustDirectionVectors.Count; i++)
@@ -345,8 +345,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
             for (int j = 0; j < Propellants.Count; j++)
             {
-                SimPropellant p       = Propellants[j];
-                double        density = p.density;
+                SimPropellant p = Propellants[j];
+                double density = p.density;
 
                 // skip zero density (eC, air intakes, etc.) assuming those are available and infinite
                 if (density <= 0)
@@ -369,8 +369,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
             for (int j = 0; j < Propellants.Count; j++)
             {
-                SimPropellant p       = Propellants[j];
-                double        density = p.density;
+                SimPropellant p = Propellants[j];
+                double density = p.density;
 
                 // this is the individual propellant volume rate.  we are including the ignoreForIsp fuels in this loop and this will
                 // correctly calculate the volume rates of all the propellants, in L/sec.  if you sum these it'll be larger than the

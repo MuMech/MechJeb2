@@ -107,7 +107,7 @@ namespace MechJebLib.FuelFlowSimulation
         private void ComputeRcsMaxValues(SimVessel vessel) => SimulateRCS(vessel, true);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ComputeRcsUllageTime(SimVessel vessel)
+        private void ComputeRcsUllageTime(SimVessel vessel)
         {
             _currentSegment.RcsUllageTime = 0.0;
 
@@ -116,7 +116,7 @@ namespace MechJebLib.FuelFlowSimulation
             // FIXME: read this from RFSettings via reflection
             double translateAxialCoefficientY = 1.5;
             // magic calculation that gives time to ullage up to 0.996 guaranteed ignition
-            double a             = vessel.RcsThrust / vessel.Mass;
+            double a = vessel.RcsThrust / vessel.Mass;
             double rcsUllageTime = 0.35 / (translateAxialCoefficientY * a);
 
             _currentSegment.RcsUllageTime = rcsUllageTime;
@@ -441,7 +441,7 @@ namespace MechJebLib.FuelFlowSimulation
         private void FinishRcsSegment(bool max, double deltaTime, double startMass, double endMass, double rcsThrust)
         {
             double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Log(startMass / endMass);
-            double rcsISP    = rcsDeltaV / (G0 * Log(startMass / endMass));
+            double rcsISP = rcsDeltaV / (G0 * Log(startMass / endMass));
 
             if (_currentSegment.RcsISP == 0)
                 _currentSegment.RcsISP = rcsISP;
@@ -470,11 +470,11 @@ namespace MechJebLib.FuelFlowSimulation
                 return;
 
             double startMass = _currentSegment.StartMass;
-            double thrust    = _currentSegment.Thrust;
-            double endMass   = vessel.Mass;
+            double thrust = _currentSegment.Thrust;
+            double endMass = vessel.Mass;
             double deltaTime = _time - _currentSegment.StartTime;
-            double deltaV    = startMass > endMass ? thrust * deltaTime / (startMass - endMass) * Log(startMass / endMass) : 0;
-            double isp       = startMass > endMass ? deltaV / (G0 * Log(startMass / endMass)) : 0;
+            double deltaV = startMass > endMass ? thrust * deltaTime / (startMass - endMass) * Log(startMass / endMass) : 0;
+            double isp = startMass > endMass ? deltaV / (G0 * Log(startMass / endMass)) : 0;
 
             _currentSegment.ControllableMass = ComputeControllableMass(vessel);
             _currentSegment.DeltaTime = deltaTime;

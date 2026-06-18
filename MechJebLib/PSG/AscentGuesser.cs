@@ -33,14 +33,14 @@ namespace MechJebLib.PSG
             {
                 Check.True(Phase.Normalized);
 
-                var y  = InterpolantLayout.CreateFrom(yin);
+                var y = InterpolantLayout.CreateFrom(yin);
                 var dy = new InterpolantLayout();
 
                 double thrust = Phase.VacThrust;
-                double at     = thrust / y.M;
+                double at = thrust / y.M;
 
                 double r2 = V3.Dot(y.R, y.R);
-                double r  = Sqrt(r2);
+                double r = Sqrt(r2);
                 double r3 = r2 * r;
 
                 dy.R = y.V;
@@ -57,9 +57,9 @@ namespace MechJebLib.PSG
         {
             var y = InterpolantLayout.CreateFrom(yin);
 
-            double r  = y.R.magnitude;
+            double r = y.R.magnitude;
             double v2 = y.V.sqrMagnitude;
-            double e  = 0.5 * v2 - 1.0 / r;
+            double e = 0.5 * v2 - 1.0 / r;
 
             return e - _targetOrbitalEnergy;
         }
@@ -98,7 +98,7 @@ namespace MechJebLib.PSG
 
         private void Shooting(Solution solution, PhaseCollection phases, V3 u0, double targetOrbitalEnergy)
         {
-            using var initial  = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            using var initial = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             using var terminal = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
             var y0 = new InterpolantLayout();

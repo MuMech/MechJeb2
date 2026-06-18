@@ -43,8 +43,8 @@ namespace MechJebLib.Primitives
             get
             {
                 double m2 = M.x * M.x + M.y * M.y + M.z * M.z;
-                double m  = Math.Sqrt(m2);
-                double d  = (M.x * D.x + M.y * D.y + M.z * D.z) / m;
+                double m = Math.Sqrt(m2);
+                double d = (M.x * D.x + M.y * D.y + M.z * D.z) / m;
                 return new Dual(m, d);
             }
         }

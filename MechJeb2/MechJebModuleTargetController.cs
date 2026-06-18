@@ -49,8 +49,8 @@ namespace MuMech
 
         public void SetPositionTarget(CelestialBody body, double latitude, double longitude)
         {
-            targetBody      = body;
-            targetLatitude  = latitude;
+            targetBody = body;
+            targetLatitude = latitude;
             targetLongitude = longitude;
 
             Set(new PositionTarget(string.Format(GetPositionTargetString(), latitude, longitude)));
@@ -88,7 +88,7 @@ namespace MuMech
         public void StopPickPositionTargetOnMap()
         {
             pickingPositionTarget = false;
-            Cursor.visible        = true;
+            Cursor.visible = true;
         }
 
         public void Unset() => Set(null);
@@ -163,8 +163,8 @@ namespace MuMech
                 Target = Vessel.targetObject;
                 if (Target is Vessel && ((Vessel)Target).LandedOrSplashed && ((Vessel)Target).mainBody == Vessel.mainBody)
                 {
-                    targetBody      = Vessel.mainBody;
-                    targetLatitude  = Vessel.mainBody.GetLatitude(Target.GetTransform().position);
+                    targetBody = Vessel.mainBody;
+                    targetLatitude = Vessel.mainBody.GetLatitude(Target.GetTransform().position);
                     targetLongitude = Vessel.mainBody.GetLongitude(Target.GetTransform().position);
                 }
 

@@ -28,8 +28,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void SphericalToCartesianBasicAngles()
         {
-            var v      = new V3(2, PI / 4, 0);
-            V3  result = v.sph2cart;
+            var v = new V3(2, PI / 4, 0);
+            V3 result = v.sph2cart;
             result.x.ShouldEqual(Sqrt(2), 1e-15);
             result.y.ShouldEqual(0, 1e-15);
             result.z.ShouldEqual(Sqrt(2), 1e-15);
@@ -102,8 +102,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CartesianToSphericalArbitraryVectors()
         {
-            var v      = new V3(3, 4, 0);
-            V3  result = v.cart2sph;
+            var v = new V3(3, 4, 0);
+            V3 result = v.cart2sph;
             result.x.ShouldEqual(5);
             result.y.ShouldEqual(PI / 2);
             result.z.ShouldEqual(Atan2(4, 3));
@@ -127,8 +127,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CartesianToSphericalNegativeCoordinates()
         {
-            var v      = new V3(-1, 0, 0);
-            V3  result = v.cart2sph;
+            var v = new V3(-1, 0, 0);
+            V3 result = v.cart2sph;
             result.x.ShouldEqual(1);
             result.y.ShouldEqual(PI / 2);
             result.z.ShouldEqual(PI);
@@ -149,8 +149,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CartesianToSphericalPhiRange()
         {
-            var v      = new V3(1, 0.001, 0);
-            V3  result = v.cart2sph;
+            var v = new V3(1, 0.001, 0);
+            V3 result = v.cart2sph;
             result.z.ShouldBePositive();
             result.z.ShouldBeLessThan(TAU);
 
@@ -169,9 +169,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         private void CartesianToSphericalSmallAnglePrecision()
         {
             const double TINY = 1e-10;
-            var          v    = new V3(TINY, 0, 1);
+            var v = new V3(TINY, 0, 1);
 
-            V3     result        = v.cart2sph;
+            V3 result = v.cart2sph;
             double expectedTheta = Atan2(TINY, 1);
 
             result.x.ShouldEqual(Sqrt(1 + TINY * TINY));
@@ -184,7 +184,9 @@ namespace MechJebLibTest.Primitives.V3Tests
 
             expectedTheta = PI / 2 - SMALL;
 
-            result.y.ShouldEqual(expectedTheta, 1e-20);
+            // 1e-14 still distinguishes PI/2 - 1e-12 from a naive PI/2 (which differ by 1e-12), while
+            // tolerating cross-platform 1-ULP (~2e-16) variance in the result near PI/2.
+            result.y.ShouldEqual(expectedTheta, 1e-14);
         }
 
         [Fact]
@@ -192,8 +194,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         {
             const double TINY = 1e-14;
 
-            var v      = new V3(1, TINY, 0);
-            V3  result = v.cart2sph;
+            var v = new V3(1, TINY, 0);
+            V3 result = v.cart2sph;
 
             result.z.ShouldEqual(TINY, 1e-28);
 
@@ -206,9 +208,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void SphericalCartesianRoundTrip()
         {
-            var original   = new V3(3, 4, 5);
-            V3  spherical  = original.cart2sph;
-            V3  backToCart = spherical.sph2cart;
+            var original = new V3(3, 4, 5);
+            V3 spherical = original.cart2sph;
+            V3 backToCart = spherical.sph2cart;
             backToCart.ShouldEqual(original, 1e-14);
 
             original = new V3(-2, 3, -1);
@@ -225,9 +227,9 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CartesianSphericalRoundTrip()
         {
-            var original  = new V3(5, PI / 3, PI / 4);
-            V3  cartesian = original.sph2cart;
-            V3  backToSph = cartesian.cart2sph;
+            var original = new V3(5, PI / 3, PI / 4);
+            V3 cartesian = original.sph2cart;
+            V3 backToSph = cartesian.cart2sph;
             backToSph.ShouldEqual(original, 1e-14);
 
             original = new V3(2, PI / 6, 3 * PI / 2);
@@ -286,36 +288,36 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void SphericalToCartesianLargeRadius()
         {
-            const double LARGE  = 1e150;
-            var          v      = new V3(LARGE, PI / 4, PI / 3);
-            V3           result = v.sph2cart;
+            const double LARGE = 1e150;
+            var v = new V3(LARGE, PI / 4, PI / 3);
+            V3 result = v.sph2cart;
             result.magnitude.ShouldEqual(LARGE, 1e135);
         }
 
         [Fact]
         private void SphericalToCartesianSmallRadius()
         {
-            const double SMALL  = 1e-150;
-            var          v      = new V3(SMALL, PI / 4, PI / 3);
-            V3           result = v.sph2cart;
+            const double SMALL = 1e-150;
+            var v = new V3(SMALL, PI / 4, PI / 3);
+            V3 result = v.sph2cart;
             result.magnitude.ShouldEqual(SMALL, 1e-165);
         }
 
         [Fact]
         private void CartesianToSphericalLargeVectors()
         {
-            const double LARGE  = 1e150;
-            var          v      = new V3(LARGE, LARGE, LARGE);
-            V3           result = v.cart2sph;
+            const double LARGE = 1e150;
+            var v = new V3(LARGE, LARGE, LARGE);
+            V3 result = v.cart2sph;
             result.x.ShouldEqual(Sqrt(3) * LARGE, 1e135);
         }
 
         [Fact]
         private void CartesianToSphericalSmallVectors()
         {
-            const double SMALL  = 1e-150;
-            var          v      = new V3(SMALL, SMALL, SMALL);
-            V3           result = v.cart2sph;
+            const double SMALL = 1e-150;
+            var v = new V3(SMALL, SMALL, SMALL);
+            V3 result = v.cart2sph;
             result.x.ShouldEqual(Sqrt(3) * SMALL, 1e-165);
         }
 
@@ -335,8 +337,8 @@ namespace MechJebLibTest.Primitives.V3Tests
         [Fact]
         private void CartesianToSphericalOnAxis()
         {
-            var v      = new V3(5, 0, 0);
-            V3  result = v.cart2sph;
+            var v = new V3(5, 0, 0);
+            V3 result = v.cart2sph;
             result.x.ShouldEqual(5);
             result.y.ShouldEqual(PI / 2, 1e-15);
             result.z.ShouldEqual(0);
@@ -360,8 +362,8 @@ namespace MechJebLibTest.Primitives.V3Tests
             V3.positiveinfinity.xzy.ShouldEqual(V3.positiveinfinity);
             V3.negativeinfinity.xzy.ShouldEqual(V3.negativeinfinity);
 
-            var v      = new V3(double.NaN, 1, 2);
-            V3  result = v.xzy;
+            var v = new V3(double.NaN, 1, 2);
+            V3 result = v.xzy;
             result.x.ShouldBeNaN();
             result.y.ShouldEqual(2);
             result.z.ShouldEqual(1);

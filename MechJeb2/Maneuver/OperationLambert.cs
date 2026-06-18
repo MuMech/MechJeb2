@@ -9,10 +9,9 @@ namespace MuMech
     public class OperationLambert : Operation
     {
         private static readonly string _name = Localizer.Format("#MechJeb_intercept_title");
-        public override         string GetName() => _name;
+        public override string GetName() => _name;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableTime InterceptInterval = 3600;
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.X_FROM_NOW };

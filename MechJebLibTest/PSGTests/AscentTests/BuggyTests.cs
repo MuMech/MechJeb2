@@ -31,13 +31,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var    r0    = new V3(-4821814.88567718, 2840684.21567451, 3044792.18285841);
-            var    v0    = new V3(-207.145959092742, -351.61231101642, -6.44113221332937E-06);
-            var    u0    = new V3(-0.756795136086477, 0.44594494863847, 0.477906107902527);
-            double t0    = 222334531.385379;
-            double mu    = 398600435436096;
+            var r0 = new V3(-4821814.88567718, 2840684.21567451, 3044792.18285841);
+            var v0 = new V3(-207.145959092742, -351.61231101642, -6.44113221332937E-06);
+            var u0 = new V3(-0.756795136086477, 0.44594494863847, 0.477906107902527);
+            double t0 = 222334531.385379;
+            double mu = 398600435436096;
             double rbody = 6371010;
-            double attR  = rbody + 250000;
+            double attR = rbody + 250000;
 
             double thrust1 = Astro.ThrustFromMassesIspBurntime(23796.5132378765, 3243.62653856172, 241.889217870454, 127.294984318196);
             double thrust2 = Astro.ThrustFromMassesIspBurntime(438.273627540912, 200.596948133534, 220.000025355962, 5.82703026766676);
@@ -75,11 +75,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
         public void SubOrbitalThor()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(1470817.12150277, -5396417.72296515, 3050610.07863681);
-            var    v0    = new V3(393.513790634158, 107.250777770179, 0.00161788515083675);
-            var    u0    = new V3(0.23076841882078, -0.846631607518583, 0.47954249382019);
-            double t0    = 666733.571923551;
-            double mu    = 398600435436096;
+            var r0 = new V3(1470817.12150277, -5396417.72296515, 3050610.07863681);
+            var v0 = new V3(393.513790634158, 107.250777770179, 0.00161788515083675);
+            var u0 = new V3(0.23076841882078, -0.846631607518583, 0.47954249382019);
+            double t0 = 666733.571923551;
+            double mu = 398600435436096;
             double rbody = 6371000;
 
             double incT = 0.499303792410538;
@@ -98,7 +98,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
@@ -130,11 +130,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
-            var    r0    = new V3(5591854.96465599, 126079.439022067, 3050616.55737457);
-            var    v0    = new V3(-9.1936944030452, 407.764494724287, 0.000353003400966649);
-            var    u0    = new V3(0.877712545724556, 0.0197197822130759, 0.478781640529633);
-            double t0    = 81786.024077168;
-            double mu    = 398600435436096;
+            var r0 = new V3(5591854.96465599, 126079.439022067, 3050616.55737457);
+            var v0 = new V3(-9.1936944030452, 407.764494724287, 0.000353003400966649);
+            var u0 = new V3(0.877712545724556, 0.0197197822130759, 0.478781640529633);
+            double t0 = 81786.024077168;
+            double mu = 398600435436096;
             double rbody = 6371000;
 
             double decmass = 2403; // can be decreased to add more payload
@@ -165,11 +165,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
         private void BiggerEarlyRocketMaybe()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-            var    r0    = new V3(-4230937.57027061, -3658393.88789034, 3050613.04457008);
-            var    v0    = new V3(266.772640873606, -308.526291373473, 0.00117499917444357);
-            var    u0    = new V3(-0.664193346276844, -0.574214958863673, 0.478669494390488);
-            double t0    = 134391.70903729;
-            double mu    = 398600435436096;
+            var r0 = new V3(-4230937.57027061, -3658393.88789034, 3050613.04457008);
+            var v0 = new V3(266.772640873606, -308.526291373473, 0.00117499917444357);
+            var u0 = new V3(-0.664193346276844, -0.574214958863673, 0.478669494390488);
+            double t0 = 134391.70903729;
+            double mu = 398600435436096;
             double rbody = 6371000;
 
             double thrust1 = Astro.ThrustFromMassesIspBurntime(51814.6957082437, 12381.5182945184, 277.252333393375, 139.843831752395);
@@ -253,7 +253,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent.Run();
 
-            Optimizer      psg      = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
@@ -270,7 +270,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             ascent2.Run();
 
-            Optimizer      psg2      = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
 
             psg2.PrimalFeasibility.ShouldBeZero(1e-5);

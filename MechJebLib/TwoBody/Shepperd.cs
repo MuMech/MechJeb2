@@ -20,15 +20,15 @@ namespace MechJebLib.TwoBody
         public static (V3 rf, V3 vf) Solve(double mu, double tau, V3 ri, V3 vi)
         {
             double tolerance = 1.0e-12;
-            double u         = 0;
-            int    imax      = 50;
-            double umax      = double.MaxValue;
-            double umin      = double.MinValue;
-            double orbits    = 0;
-            double tdesired  = tau;
+            double u = 0;
+            int imax = 50;
+            double umax = double.MaxValue;
+            double umin = double.MinValue;
+            double orbits = 0;
+            double tdesired = tau;
             double threshold = tolerance * Math.Abs(tdesired);
-            double r0        = ri.magnitude;
-            double n0        = V3.Dot(ri, vi);
+            double r0 = ri.magnitude;
+            double n0 = V3.Dot(ri, vi);
 
             double beta = 2.0 * (mu / r0) - vi.sqrMagnitude;
 
@@ -45,24 +45,24 @@ namespace MechJebLib.TwoBody
                 orbits = Math.Floor(orbits / 2);
             }
 
-            double uold  = double.MinValue;
+            double uold = double.MinValue;
             double dtold = double.MinValue;
-            double u1    = 0.0;
-            double u2    = 0.0;
-            double r1    = 0.0;
+            double u1 = 0.0;
+            double u2 = 0.0;
+            double r1 = 0.0;
 
             for (int i = 1; i < imax; i++)
             {
                 double q = beta * u * u;
                 q /= 1.0 + q;
 
-                double n   = 0;
-                double r   = 1;
-                double l   = 1;
-                double s   = 1;
-                double d   = 3;
+                double n = 0;
+                double r = 1;
+                double l = 1;
+                double s = 1;
+                double d = 3;
                 double gcf = 1;
-                double k   = -5;
+                double k = -5;
 
                 double gold = 0;
 
@@ -92,7 +92,7 @@ namespace MechJebLib.TwoBody
                 }
 
                 r1 = r0 * u0 + n0 * u1 + mu * u2;
-                double dt    = r0 * u1 + n0 * u2 + mu * u3;
+                double dt = r0 * u1 + n0 * u2 + mu * u3;
                 double slope = 4 * r1 / (1 + beta * u * u);
 
                 double terror = tdesired - dt;
@@ -128,9 +128,9 @@ namespace MechJebLib.TwoBody
                 }
             }
 
-            double f  = 1.0 - mu / r0 * u2;
+            double f = 1.0 - mu / r0 * u2;
             double gg = 1.0 - mu / r1 * u2;
-            double g  = r0 * u1 + n0 * u2;
+            double g = r0 * u1 + n0 * u2;
             double ff = -mu * u1 / (r0 * r1);
 
             V3 rf = f * ri + g * vi;
@@ -139,28 +139,38 @@ namespace MechJebLib.TwoBody
             return (rf, vf);
         }
 
+        // Aux function for derivatives if all you care about is w.r.t the time of flight
+        public static (DualV3 rf, DualV3 vf) Solve(double mu, Dual tau, V3 ri, V3 vi)
+        {
+            (V3 rfM, V3 vfM) = Solve(mu, tau.M, ri, vi);
+            double rfM3 = rfM.sqrMagnitude * rfM.magnitude;
+            var rf = new DualV3(rfM, vfM * tau.D);
+            var vf = new DualV3(vfM, -mu * rfM / rfM3 * tau.D);
+            return (rf, vf);
+        }
+
         // The STM is a 6x6 matrix which we return decomposed into 4 3x3 matrices
         //
-        //  [ 𝛿r ] = [ stm00 stm01 ] [ r ]
-        //  [ 𝛿v ] = [ stm10 stm11 ] [ v ]
+        //  [ 𝛿r ] = [ stmRfR0 stmRfV0 ] [ r ]
+        //  [ 𝛿v ] = [ stmVfR0 stmVfV0 ] [ v ]
         //
         // More robust version of Shepperd's method that solves for U3 directly to just propagate state, with a
         // fallback to bisection.  Then it solves for U5 with one additional continued fraction to generate U5
         // and the STM matrix.
         //
-        public static ( V3 rf, V3 vf, M3 stm00, M3 stm01, M3 stm10, M3 stm11) Solve2(double mu, double tau, V3 ri, V3 vi)
+        public static (V3 rf, V3 vf, M3 stmRfR0, M3 stmRfV0, M3 stmVfR0, M3 stmVfV0) Solve2(double mu, double tau, V3 ri, V3 vi)
 
         {
             double tolerance = 1.0e-12;
-            double u         = 0;
-            int    imax      = 50;
+            double u = 0;
+            int imax = 50;
             double umax;
             double umin;
-            double orbits    = 0;
-            double tdesired  = tau;
+            double orbits = 0;
+            double tdesired = tau;
             double threshold = tolerance * Math.Abs(tdesired);
-            double r0        = ri.magnitude;
-            double n0        = V3.Dot(ri, vi);
+            double r0 = ri.magnitude;
+            double n0 = V3.Dot(ri, vi);
 
             double beta = 2.0 * (mu / r0) - vi.sqrMagnitude;
 
@@ -187,18 +197,18 @@ namespace MechJebLib.TwoBody
             if (beta > 0.0)
             {
                 double beta3 = beta * beta * beta;
-                double p     = 2.0 * Math.PI * mu * 1 / Math.Sqrt(beta3);
-                double norb  = Math.Truncate(1.0 / p * (tau + 0.5 * p - 2 * n0 / beta));
+                double p = 2.0 * Math.PI * mu * 1 / Math.Sqrt(beta3);
+                double norb = Math.Truncate(1.0 / p * (tau + 0.5 * p - 2 * n0 / beta));
                 delu = 2.0 * norb * Math.PI * 1 / Math.Sqrt(beta3 * beta * beta);
             }
 
-            double uold  = double.MinValue;
+            double uold = double.MinValue;
             double dtold = double.MinValue;
             double u0;
             double u1 = 0.0;
             double u2 = 0.0;
             double r1 = 0.0;
-            double q  = 0.0;
+            double q = 0.0;
 
             double n, r, l, s, d, gcf, k, gold, h0, h1, u3;
 
@@ -243,7 +253,7 @@ namespace MechJebLib.TwoBody
                 }
 
                 r1 = r0 * u0 + n0 * u1 + mu * u2;
-                double dt    = r0 * u1 + n0 * u2 + mu * u3;
+                double dt = r0 * u1 + n0 * u2 + mu * u3;
                 double slope = 4.0 * r1 * (1.0 - q);
 
                 double terror = tdesired - dt;
@@ -279,11 +289,11 @@ namespace MechJebLib.TwoBody
                 }
             }
 
-            double fm  = -mu * u2 / r0;
+            double fm = -mu * u2 / r0;
             double ggm = -mu * u2 / r1;
 
-            double f  = 1.0 + fm;
-            double g  = r0 * u1 + n0 * u2;
+            double f = 1.0 + fm;
+            double g = r0 * u1 + n0 * u2;
             double ff = -mu * u1 / (r0 * r1);
             double gg = 1.0 + ggm;
 
@@ -320,7 +330,7 @@ namespace MechJebLib.TwoBody
             u1 = 2 * h0 * h1;
             u2 = 2 * h1 * h1;
 
-            double w  = g * u2 + 3 * mu * uu;
+            double w = g * u2 + 3 * mu * uu;
             double a0 = mu / (r0 * r0 * r0);
             double a1 = mu / (r1 * r1 * r1);
 
@@ -344,12 +354,12 @@ namespace MechJebLib.TwoBody
             V3 t11 = rf * m[0, 1] + vf * m[1, 1];
             V3 t12 = rf * m[0, 2] + vf * m[1, 2];
 
-            M3 stm00 = V3.Outer(t00, ri) + V3.Outer(t01, vi) + M3.Diagonal(f);
-            M3 stm01 = V3.Outer(t01, ri) + V3.Outer(t02, vi) + M3.Diagonal(g);
-            M3 stm10 = -(V3.Outer(t10, ri) + V3.Outer(t11, vi)) + M3.Diagonal(ff);
-            M3 stm11 = -(V3.Outer(t11, ri) + V3.Outer(t12, vi)) + M3.Diagonal(gg);
+            M3 stmRfR0 = V3.Outer(t00, ri) + V3.Outer(t01, vi) + M3.Diagonal(f);
+            M3 stmRfV0 = V3.Outer(t01, ri) + V3.Outer(t02, vi) + M3.Diagonal(g);
+            M3 stmVfR0 = -(V3.Outer(t10, ri) + V3.Outer(t11, vi)) + M3.Diagonal(ff);
+            M3 stmVfV0 = -(V3.Outer(t11, ri) + V3.Outer(t12, vi)) + M3.Diagonal(gg);
 
-            return (rf, vf, stm00, stm01, stm10, stm11);
+            return (rf, vf, stmRfR0, stmRfV0, stmVfR0, stmVfV0);
         }
     }
 }

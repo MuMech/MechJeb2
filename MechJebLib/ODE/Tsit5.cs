@@ -179,7 +179,7 @@ namespace MechJebLib.ODE
 
         public static void Interpolate(double x, double t, double h, Vec y, Vec k1, Vec k2, Vec k3, Vec k4, Vec k5, Vec k6, Vec k7, Vec yout)
         {
-            double s  = (x - t) / h;
+            double s = (x - t) / h;
             double s2 = s * s;
             double s3 = s * s2;
 

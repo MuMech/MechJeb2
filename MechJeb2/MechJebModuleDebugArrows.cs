@@ -73,7 +73,7 @@ namespace MuMech
 
         public static DebugArrow debugArrow2;
 
-        public static Vector3d debugVector  = Vector3d.one;
+        public static Vector3d debugVector = Vector3d.one;
         public static Vector3d debugVector2 = Vector3d.one;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -145,13 +145,13 @@ namespace MuMech
 
                 requestedAttitudeArrow = new DebugArrow(Color.gray);
 
-                debugArrow  = new DebugArrow(XKCDColors.Fuchsia);
+                debugArrow = new DebugArrow(XKCDColors.Fuchsia);
                 debugArrow2 = new DebugArrow(XKCDColors.LightBlue);
             }
 
 
             Vector3d frameVel =
-                (VesselState.orbitalVelocity - Krakensbane.GetFrameVelocity() - Vessel.orbit.GetRotFrameVel(Vessel.orbit.referenceBody).xzy) *
+                (VesselState.OrbitalVelocity - Krakensbane.GetFrameVelocity() - Vessel.orbit.GetRotFrameVel(Vessel.orbit.referenceBody).xzy) *
                 Time.fixedDeltaTime;
             Vector3d instantCoM = VesselState.CoM + frameVel;
 
@@ -166,14 +166,14 @@ namespace MuMech
                 comSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            colSphere.State(colSphereActive && VesselState.CoLScalar > 0 && Core.ShowGui);
+            colSphere.State(colSphereActive && VesselState.CoLMagnitude > 0 && Core.ShowGui);
             if (colSphereActive)
             {
                 colSphere.Set(VesselState.CoL + frameVel);
                 colSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            cotSphere.State(cotSphereActive && VesselState.CoTScalar > 0 && Core.ShowGui);
+            cotSphere.State(cotSphereActive && VesselState.CoTMagnitude > 0 && Core.ShowGui);
             if (cotSphereActive)
             {
                 cotSphere.Set(VesselState.CoT + frameVel);
@@ -196,11 +196,11 @@ namespace MuMech
                 obtVelocityArrow.SeeThrough(seeThrough);
             }
 
-            dotArrow.State(dotArrowActive && VesselState.thrustCurrent > 0 && Core.ShowGui);
+            dotArrow.State(dotArrowActive && VesselState.ThrustCurrent > 0 && Core.ShowGui);
             if (dotArrowActive)
             {
                 dotArrow.Set(VesselState.CoT + frameVel, VesselState.DoT);
-                dotArrow.SetLength((float)Math.Log10(VesselState.thrustCurrent + 1));
+                dotArrow.SetLength((float)Math.Log10(VesselState.ThrustCurrent + 1));
                 dotArrow.SeeThrough(seeThrough);
             }
 
@@ -259,41 +259,41 @@ namespace MuMech
     {
         private readonly GameObject gameObject;
         private readonly GameObject haft;
-        private          GameObject cone;
+        private GameObject cone;
 
-        private const    float        coneLength = 0.5f;
-        private          float        length;
-        private          bool         seeThrough;
+        private const float coneLength = 0.5f;
+        private float length;
+        private bool seeThrough;
         private readonly MeshRenderer _haftMeshRenderer;
         private readonly MeshRenderer _coneMeshRenderer;
 
         public DebugArrow(Color color, bool seeThrough = false)
         {
-            gameObject       = new GameObject("DebugArrow");
+            gameObject = new GameObject("DebugArrow");
             gameObject.layer = 15; // Change layer. Not reentry effect that way (TODO :  try 22)
 
-            haft                         = CreateCone(1f, 0.05f, 0.05f, 0f, 20);
-            haft.transform.parent        = gameObject.transform;
+            haft = CreateCone(1f, 0.05f, 0.05f, 0f, 20);
+            haft.transform.parent = gameObject.transform;
             haft.transform.localRotation = Quaternion.Euler(90, 0, 0);
-            haft.layer                   = 15;
+            haft.layer = 15;
 
-            cone                         = CreateCone(coneLength, 0.15f, 0f, 0f, 20);
-            cone.transform.parent        = gameObject.transform;
+            cone = CreateCone(coneLength, 0.15f, 0f, 0f, 20);
+            cone.transform.parent = gameObject.transform;
             cone.transform.localRotation = Quaternion.Euler(90, 0, 0);
-            cone.layer                   = 15;
+            cone.layer = 15;
 
             SetLength(4);
 
             _haftMeshRenderer = haft.AddComponent<MeshRenderer>();
             _coneMeshRenderer = cone.AddComponent<MeshRenderer>();
 
-            _haftMeshRenderer.material.color    = color;
+            _haftMeshRenderer.material.color = color;
             _haftMeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            _haftMeshRenderer.receiveShadows    = false;
+            _haftMeshRenderer.receiveShadows = false;
 
-            _coneMeshRenderer.material.color    = color;
+            _coneMeshRenderer.material.color = color;
             _coneMeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            _coneMeshRenderer.receiveShadows    = false;
+            _coneMeshRenderer.receiveShadows = false;
 
             SeeThrough(seeThrough);
         }
@@ -308,7 +308,7 @@ namespace MuMech
         {
             if (seeThrough != state)
             {
-                seeThrough                        = state;
+                seeThrough = state;
                 _coneMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
                 _haftMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
             }
@@ -321,17 +321,17 @@ namespace MuMech
             float conePos = length - coneLength;
             if (conePos > 0)
             {
-                this.length                  = length;
-                haft.transform.localScale    = new Vector3(1f, conePos, 1f);
+                this.length = length;
+                haft.transform.localScale = new Vector3(1f, conePos, 1f);
                 cone.transform.localPosition = new Vector3(0f, 0f, conePos);
-                cone.transform.localScale    = new Vector3(1f, 1f, 1f);
+                cone.transform.localScale = new Vector3(1f, 1f, 1f);
             }
             else
             {
-                this.length                  = length;
-                haft.transform.localScale    = new Vector3(1f, 0, 1f);
+                this.length = length;
+                haft.transform.localScale = new Vector3(1f, 0, 1f);
                 cone.transform.localPosition = new Vector3(0f, 0f, 0);
-                cone.transform.localScale    = new Vector3(length / coneLength, length / coneLength, length / coneLength);
+                cone.transform.localScale = new Vector3(length / coneLength, length / coneLength, length / coneLength);
             }
         }
 
@@ -399,13 +399,13 @@ namespace MuMech
             while (vert <= vertices.Length - 4)
             {
                 float rad = (float)v / nbSides * _2pi;
-                vertices[vert]     =  new Vector3(Mathf.Cos(rad) * topRadius, offset + height, Mathf.Sin(rad) * topRadius);
-                vertices[vert + 1] =  new Vector3(Mathf.Cos(rad) * bottomRadius, offset, Mathf.Sin(rad) * bottomRadius);
-                vert               += 2;
+                vertices[vert] = new Vector3(Mathf.Cos(rad) * topRadius, offset + height, Mathf.Sin(rad) * topRadius);
+                vertices[vert + 1] = new Vector3(Mathf.Cos(rad) * bottomRadius, offset, Mathf.Sin(rad) * bottomRadius);
+                vert += 2;
                 v++;
             }
 
-            vertices[vert]     = vertices[nbSides * 2 + 2];
+            vertices[vert] = vertices[nbSides * 2 + 2];
             vertices[vert + 1] = vertices[nbSides * 2 + 3];
 
             #endregion
@@ -436,14 +436,14 @@ namespace MuMech
                 float cos = Mathf.Cos(rad);
                 float sin = Mathf.Sin(rad);
 
-                normales[vert]     = new Vector3(cos, 0f, sin);
+                normales[vert] = new Vector3(cos, 0f, sin);
                 normales[vert + 1] = normales[vert];
 
                 vert += 2;
                 v++;
             }
 
-            normales[vert]     = normales[nbSides * 2 + 2];
+            normales[vert] = normales[nbSides * 2 + 2];
             normales[vert + 1] = normales[nbSides * 2 + 3];
 
             #endregion
@@ -476,13 +476,13 @@ namespace MuMech
             while (u <= uvs.Length - 4)
             {
                 float t = (float)u_sides / nbSides;
-                uvs[u]     =  new Vector3(t, 1f);
-                uvs[u + 1] =  new Vector3(t, 0f);
-                u          += 2;
+                uvs[u] = new Vector3(t, 1f);
+                uvs[u + 1] = new Vector3(t, 0f);
+                u += 2;
                 u_sides++;
             }
 
-            uvs[u]     = new Vector2(1f, 1f);
+            uvs[u] = new Vector2(1f, 1f);
             uvs[u + 1] = new Vector2(1f, 0f);
 
             #endregion
@@ -497,14 +497,14 @@ namespace MuMech
             int i = 0;
             while (tri < nbSides - 1)
             {
-                triangles[i]     = 0;
+                triangles[i] = 0;
                 triangles[i + 1] = tri + 1;
                 triangles[i + 2] = tri + 2;
                 tri++;
                 i += 3;
             }
 
-            triangles[i]     = 0;
+            triangles[i] = 0;
             triangles[i + 1] = tri + 1;
             triangles[i + 2] = 1;
             tri++;
@@ -514,14 +514,14 @@ namespace MuMech
             //tri++;
             while (tri < nbSides * 2)
             {
-                triangles[i]     = tri + 2;
+                triangles[i] = tri + 2;
                 triangles[i + 1] = tri + 1;
                 triangles[i + 2] = nbVerticesCap;
                 tri++;
                 i += 3;
             }
 
-            triangles[i]     = nbVerticesCap + 1;
+            triangles[i] = nbVerticesCap + 1;
             triangles[i + 1] = tri + 1;
             triangles[i + 2] = nbVerticesCap;
             tri++;
@@ -531,13 +531,13 @@ namespace MuMech
             // Sides
             while (tri <= nbTriangles)
             {
-                triangles[i]     = tri + 2;
+                triangles[i] = tri + 2;
                 triangles[i + 1] = tri + 1;
                 triangles[i + 2] = tri + 0;
                 tri++;
                 i += 3;
 
-                triangles[i]     = tri + 1;
+                triangles[i] = tri + 1;
                 triangles[i + 1] = tri + 2;
                 triangles[i + 2] = tri + 0;
                 tri++;
@@ -546,9 +546,9 @@ namespace MuMech
 
             #endregion
 
-            mesh.vertices  = vertices;
-            mesh.normals   = normales;
-            mesh.uv        = uvs;
+            mesh.vertices = vertices;
+            mesh.normals = normales;
+            mesh.uv = uvs;
             mesh.triangles = triangles;
 
             mesh.RecalculateBounds();
@@ -564,18 +564,18 @@ namespace MuMech
         private readonly MeshRenderer _meshRenderer;
 
         private float radius;
-        private bool  seeThrough;
+        private bool seeThrough;
 
         public DebugIcoSphere(Color color, bool seeThrough = false)
         {
-            gameObject       = CreateIcoSphere(1);
+            gameObject = CreateIcoSphere(1);
             gameObject.layer = 15; // Change layer. Not reentry effect that way (TODO :  try 22)
 
             _meshRenderer = gameObject.AddComponent<MeshRenderer>();
 
-            _meshRenderer.material.color    = color;
+            _meshRenderer.material.color = color;
             _meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            _meshRenderer.receiveShadows    = false;
+            _meshRenderer.receiveShadows = false;
 
             SetRadius(0.09f);
             SeeThrough(seeThrough);
@@ -595,7 +595,7 @@ namespace MuMech
         {
             if (this.radius == radius || radius <= 0)
                 return;
-            this.radius                     = radius;
+            this.radius = radius;
             gameObject.transform.localScale = new Vector3(radius, radius, radius);
         }
 
@@ -603,7 +603,7 @@ namespace MuMech
         {
             if (seeThrough != state)
             {
-                seeThrough                    = state;
+                seeThrough = state;
                 _meshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
             }
         }
@@ -705,7 +705,7 @@ namespace MuMech
 
             // The UV and normals are wrong, but it works for my needs.
             mesh.triangles = triList.ToArray();
-            mesh.uv        = new Vector2[vertList.Count];
+            mesh.uv = new Vector2[vertList.Count];
 
             var normales = new Vector3[vertList.Count];
             for (int i = 0; i < normales.Length; i++)

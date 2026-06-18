@@ -15,7 +15,7 @@ namespace MuMech
         private MechJebModuleAscentBaseAutopilot _autopilot      => Core.Ascent;
 
         private readonly string _climbString = $"{CachedLocalizer.Instance.MechJebAscentLabel22}: ";
-        private readonly string _turnString  = $"{CachedLocalizer.Instance.MechJebAscentLabel23}: ";
+        private readonly string _turnString = $"{CachedLocalizer.Instance.MechJebAscentLabel23}: ";
 
         private void ShowAscentSettingsGUIElements()
         {
@@ -31,9 +31,8 @@ namespace MuMech
 
             if (_ascentSettings.AscentType == AscentType.PSG)
             {
-                Core.Thrust.LimitThrottle           = false;
-                Core.Thrust.LimitToTerminalVelocity = false;
-                Core.Thrust.ElectricThrottle        = false;
+                Core.Thrust.LimitThrottle = false;
+                Core.Thrust.ElectricThrottle = false;
             }
 
             _ascentSettings.ForceRoll = GUILayout.Toggle(_ascentSettings.ForceRoll, CachedLocalizer.Instance.MechJebAscentCheckbox2); //Force Roll
@@ -42,15 +41,15 @@ namespace MuMech
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(15);
                 GuiUtils.SimpleTextBox(_climbString, _ascentSettings.VerticalRoll, "º", 30); //climb
-                GuiUtils.SimpleTextBox(_turnString, _ascentSettings.TurnRoll, "º", 30);      //turn
+                GuiUtils.SimpleTextBox(_turnString, _ascentSettings.TurnRoll, "º", 30); //turn
                 GuiUtils.SimpleTextBox("Alt: ", _ascentSettings.RollAltitude, "m", 30);
                 GUILayout.EndHorizontal();
             }
 
             if (_ascentSettings.AscentType != AscentType.PSG)
             {
-                GUIStyle s              = _ascentSettings.LimitingAoA ? GuiUtils.GreenToggle : null;
-                string   sCurrentMaxAoA = $"º ({_autopilot.CurrentMaxAoA:F1}°)";
+                GUIStyle s = _ascentSettings.LimitingAoA ? GuiUtils.GreenToggle : null;
+                string sCurrentMaxAoA = $"º ({_autopilot.CurrentMaxAoA:F1}°)";
                 GuiUtils.ToggledTextBox(ref _ascentSettings.LimitAoA, CachedLocalizer.Instance.MechJebAscentCheckbox3, _ascentSettings.MaxAoA,
                     sCurrentMaxAoA, s,
                     30); //Limit AoA to
@@ -59,7 +58,7 @@ namespace MuMech
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Space(25);
-                    GUIStyle sl = _ascentSettings.LimitingAoA && VesselState.dynamicPressure < _ascentSettings.AOALimitFadeoutPressure
+                    GUIStyle sl = _ascentSettings.LimitingAoA && VesselState.DynamicPressure < _ascentSettings.AOALimitFadeoutPressure
                         ? GuiUtils.GreenLabel
                         : GuiUtils.Skin.label;
                     GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel24, _ascentSettings.AOALimitFadeoutPressure, "Pa", 50,
@@ -107,7 +106,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (_ascentSettings.AscentType == AscentType.PSG)
-                Core.Settings.rssMode = GUILayout.Toggle(Core.Settings.rssMode, "Module disabling does not kill throttle");
+                Core.Settings.RssMode = GUILayout.Toggle(Core.Settings.RssMode, "Module disabling does not kill throttle");
 
             GUILayout.EndVertical();
             Profiler.EndSample();

@@ -47,7 +47,7 @@ namespace MechJebLib.PSG
         private Optimizer ConvergedOptimization(Solution oldSolution)
         {
             Optimizer.ObjectiveType cost = _fixedBurnTime ? Optimizer.ObjectiveType.MAX_ENERGY : Optimizer.ObjectiveType.MIN_THRUST_ACCEL;
-            var                     psg  = new Optimizer(_problem, _phases, _problem.Terminal, cost);
+            var psg = new Optimizer(_problem, _phases, _problem.Terminal, cost);
             psg.TranscribePreviousSolution(oldSolution);
             Solution? solution = psg.Run();
 
@@ -65,7 +65,7 @@ namespace MechJebLib.PSG
             foreach (Phase p in bootPhases)
                 p.Unguided = false;
 
-            var      psg      = new Optimizer(_problem, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MAX_ENERGY);
+            var psg = new Optimizer(_problem, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MAX_ENERGY);
             Solution solution = _guesser.InitialGuess(bootPhases, _problem.Terminal.IncT(), _problem.Terminal.TargetOrbitalEnergy());
             psg.TranscribePreviousBootSolution(solution);
             Solution? solution2 = psg.Run();
@@ -87,7 +87,7 @@ namespace MechJebLib.PSG
 
         private Optimizer InitialBootstrappingOptimized()
         {
-            Optimizer psg      = InitialBootstrappingOptimizedWithoutQAlpha();
+            Optimizer psg = InitialBootstrappingOptimizedWithoutQAlpha();
             Solution? solution = psg.Solution;
 
             if (_problem.Rho0InvQAlphaMax <= 0 || solution == null)
@@ -125,7 +125,7 @@ namespace MechJebLib.PSG
             Problem problemNoQa = _problem.WithoutDynamicPressure();
 
             DebugPrint("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
-            var       psg      = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
+            var psg = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
             Solution? solution = _guesser.InitialGuess(bootPhases, _problem.Terminal.IncT(), _problem.Terminal.TargetOrbitalEnergy());
             psg.TranscribePreviousBootSolution(solution);
             solution = psg.Run();

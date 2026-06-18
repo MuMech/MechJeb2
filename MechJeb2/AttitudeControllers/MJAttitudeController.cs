@@ -14,39 +14,39 @@ namespace MuMech.AttitudeControllers
 
         private Vector3d _lastAct = Vector3d.zero;
         private Vector3d _pidAction; //info
-        private Vector3d _error;     //info
+        private Vector3d _error; //info
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool TfAutoTune = true;
 
         private Vector3d _tfV = new Vector3d(0.3, 0.3, 0.3);
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public Vector3 TfVec = new Vector3(0.3f, 0.3f, 0.3f); // use the serialize since Vector3d does not
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public double TfMin = 0.1;
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public double TfMax = 0.5;
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool LowPassFilter = true;
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public double KpFactor = 3;
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public double KiFactor = 6;
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public double KdFactor = 0.5;
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public double Deadband = 0.0001;
 
         //Lower value of "kWlimit" reduces maximum angular velocity
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble KWlimit = 0.15;
 
         private readonly Vector3d _defaultTfV = new Vector3d(0.3, 0.3, 0.3);
@@ -73,11 +73,11 @@ namespace MuMech.AttitudeControllers
             _lastAct = Vector3d.zero;
 
 
-            _uiTfX      = new EditableDouble(_tfV.x);
-            _uiTfY      = new EditableDouble(_tfV.y);
-            _uiTfZ      = new EditableDouble(_tfV.z);
-            _uiTfMin    = new EditableDouble(TfMin);
-            _uiTfMax    = new EditableDouble(TfMax);
+            _uiTfX = new EditableDouble(_tfV.x);
+            _uiTfY = new EditableDouble(_tfV.y);
+            _uiTfZ = new EditableDouble(_tfV.z);
+            _uiTfMin = new EditableDouble(TfMin);
+            _uiTfMax = new EditableDouble(TfMax);
             _uiKpFactor = new EditableDouble(KpFactor);
             _uiKiFactor = new EditableDouble(KiFactor);
             _uiKdFactor = new EditableDouble(KdFactor);
@@ -121,7 +121,7 @@ namespace MuMech.AttitudeControllers
 
             _tfV = 0.05 * ratio;
 
-            Vector3d delayFactor = Vector3d.one + 2 * Ac.VesselState.torqueReactionSpeed;
+            Vector3d delayFactor = Vector3d.one + 2 * Ac.VesselState.TorqueReactionSpeed;
 
 
             _tfV.Scale(delayFactor);
@@ -136,14 +136,14 @@ namespace MuMech.AttitudeControllers
 
         public override void ResetConfig()
         {
-            _tfV     = _defaultTfV;
-            TfMin    = 0.1;
-            TfMax    = 0.5;
+            _tfV = _defaultTfV;
+            TfMin = 0.1;
+            TfMax = 0.5;
             KpFactor = 3;
             KiFactor = 6;
             KdFactor = 0.5;
             Deadband = 0.0001;
-            KWlimit  = 0.15;
+            KWlimit = 0.15;
         }
 
         public override void Reset() => _pid.Reset();
@@ -157,13 +157,13 @@ namespace MuMech.AttitudeControllers
             Vector3d tgtLocalUp = (QuaternionD)vesselTransform.transform.rotation.Inverse() * Ac.RequestedAttitude * Vector3d.forward;
             Vector3d curLocalUp = Vector3d.up;
 
-            double turnAngle    = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
-            var    rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
+            double turnAngle = Math.Abs(Vector3d.Angle(curLocalUp, tgtLocalUp));
+            var rotDirection = new Vector2d(tgtLocalUp.x, tgtLocalUp.z);
             rotDirection = rotDirection.normalized * turnAngle;
 
             // And the lowest roll
             // Thanks to Crzyrndm
-            var         normVec         = Vector3.Cross(Ac.RequestedAttitude * Vector3.forward, vesselTransform.up);
+            var normVec = Vector3.Cross(Ac.RequestedAttitude * Vector3.forward, vesselTransform.up);
             QuaternionD targetDeRotated = QuaternionD.AngleAxis((float)turnAngle, normVec) * Ac.RequestedAttitude;
             float rollError = Vector3.Angle(vesselTransform.right, targetDeRotated * Vector3.right) *
                 Math.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
@@ -248,7 +248,7 @@ namespace MuMech.AttitudeControllers
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label1")); //"Larger ship do better with a larger Tf"
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label2"), GuiUtils.LayoutExpandWidth);  //"Tf (s)"
+                GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label2"), GuiUtils.LayoutExpandWidth); //"Tf (s)"
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label3"), GuiUtils.LayoutNoExpandWidth); //"P"
                 _uiTfX.Text = GUILayout.TextField(_uiTfX.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(40));
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label4"), GuiUtils.LayoutNoExpandWidth); //"Y"
@@ -270,7 +270,7 @@ namespace MuMech.AttitudeControllers
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label7"), GuiUtils.LayoutExpandWidth); //"Tf range"
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label8"), _uiTfMin, "", 50);     //"min"
+                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label8"), _uiTfMin, "", 50); //"min"
                 _uiTfMin = Math.Max(_uiTfMin, 0.01);
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label9"), _uiTfMax, "", 50); //"max"
                 _uiTfMax = Math.Max(_uiTfMax, 0.01);
@@ -289,7 +289,7 @@ namespace MuMech.AttitudeControllers
             }
 
             GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_PIDF")); //"PID factors"
-            GuiUtils.SimpleTextBox("Kd = ", _uiKdFactor, " / Tf", 50);             //
+            GuiUtils.SimpleTextBox("Kd = ", _uiKdFactor, " / Tf", 50); //
             _uiKdFactor = Math.Max(_uiKdFactor, 0.01);
             GuiUtils.SimpleTextBox("Kp = pid.Kd / (", _uiKpFactor, " * Math.Sqrt(2) * Tf)", 50);
             _uiKpFactor = Math.Max(_uiKpFactor, 0.01);

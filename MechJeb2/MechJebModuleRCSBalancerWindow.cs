@@ -85,10 +85,10 @@ namespace MuMech
                     // This doesn't work properly, and it might not even be needed.
                     //balancer.smartRotation = GUILayout.Toggle(balancer.smartRotation, "Smart rotation");
 
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RCSBalancer_label3"), balancer.overdriveScale);             //"Overdrive scale"
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RCSBalancer_label4"), balancer.tuningParamFactorTorque);    //"torque factor"
+                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RCSBalancer_label3"), balancer.overdriveScale); //"Overdrive scale"
+                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RCSBalancer_label4"), balancer.tuningParamFactorTorque); //"torque factor"
                     GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RCSBalancer_label5"), balancer.tuningParamFactorTranslate); //"Translate factor"
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RCSBalancer_label6"), balancer.tuningParamFactorWaste);     //"Waste factor"
+                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_RCSBalancer_label6"), balancer.tuningParamFactorWaste); //"Waste factor"
                 }
 
                 // Apply tuning parameters.

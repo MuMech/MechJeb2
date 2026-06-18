@@ -45,20 +45,20 @@ namespace MuMech
         {
             if (btNormal == null)
             {
-                btNormal                  = new GUIStyle(GUI.skin.button);
+                btNormal = new GUIStyle(GUI.skin.button);
                 btNormal.normal.textColor = btNormal.focused.textColor = Color.white;
-                btNormal.hover.textColor  = btNormal.active.textColor  = Color.yellow;
+                btNormal.hover.textColor = btNormal.active.textColor = Color.yellow;
                 btNormal.onNormal.textColor =
                     btNormal.onFocused.textColor = btNormal.onHover.textColor = btNormal.onActive.textColor = Color.green;
                 btNormal.padding = new RectOffset(8, 8, 8, 8);
 
-                btActive           = new GUIStyle(btNormal);
-                btActive.active    = btActive.onActive;
-                btActive.normal    = btActive.onNormal;
+                btActive = new GUIStyle(btNormal);
+                btActive.active = btActive.onActive;
+                btActive.normal = btActive.onNormal;
                 btActive.onFocused = btActive.focused;
-                btActive.hover     = btActive.onHover;
+                btActive.hover = btActive.onHover;
 
-                btAuto                  = new GUIStyle(btNormal);
+                btAuto = new GUIStyle(btNormal);
                 btAuto.normal.textColor = Color.red;
                 btAuto.onActive =
                     btAuto.onFocused = btAuto.onHover = btAuto.onNormal = btAuto.active = btAuto.focused = btAuto.hover = btAuto.normal;

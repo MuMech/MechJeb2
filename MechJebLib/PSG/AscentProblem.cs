@@ -183,7 +183,7 @@ namespace MechJebLib.PSG
                 return ci;
             }
 
-            PhaseProxy thisPhase     = _vars[p];
+            PhaseProxy thisPhase = _vars[p];
             PhaseProxy nextBurnPhase = _vars[nextBurnPhaseIndex];
 
             bool combiningThisBurn = nextNextBurnPhaseIndex > 0 && _optimizer.Phases[nextBurnPhaseIndex].MassContinuity;
@@ -241,10 +241,10 @@ namespace MechJebLib.PSG
         private int DynamicPressureConstraints(double[] f, alglib.sparsematrix j, int ci)
         {
             double rho0InvQAlphaMax = _optimizer.Problem.Rho0InvQAlphaMax;
-            double rho0InvQMax      = _optimizer.Problem.Rho0InvQMax;
-            double rBody            = _optimizer.Problem.RBody;
-            double h0               = _optimizer.Problem.H0;
-            V3     w                = _optimizer.Problem.W;
+            double rho0InvQMax = _optimizer.Problem.Rho0InvQMax;
+            double rBody = _optimizer.Problem.RBody;
+            double h0 = _optimizer.Problem.H0;
+            V3 w = _optimizer.Problem.W;
 
             if (h0 <= 0)
                 return ci;
@@ -291,10 +291,10 @@ namespace MechJebLib.PSG
                 DualV3 v = x[1];
                 DualV3 u = x[2];
 
-                Dual   rm    = r.magnitude;
-                DualV3 vr    = v - DualV3.Cross(w, r);
-                Dual   q     = 0.5 * rho0InvQAlphaMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
-                Dual   alpha = DualV3.AngleUnit(vr.normalized, u);
+                Dual rm = r.magnitude;
+                DualV3 vr = v - DualV3.Cross(w, r);
+                Dual q = 0.5 * rho0InvQAlphaMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
+                Dual alpha = DualV3.AngleUnit(vr.normalized, u);
 
                 return q * alpha / 100.0;
             }
@@ -304,9 +304,9 @@ namespace MechJebLib.PSG
                 DualV3 r = x[0];
                 DualV3 v = x[1];
 
-                Dual   rm = r.magnitude;
+                Dual rm = r.magnitude;
                 DualV3 vr = v - DualV3.Cross(w, r);
-                Dual   q  = 0.5 * rho0InvQMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
+                Dual q = 0.5 * rho0InvQMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
 
                 return q / 100.0;
             }
@@ -316,17 +316,17 @@ namespace MechJebLib.PSG
         {
             PhaseProxy thisPhase = _vars[p];
 
-            double mdot       = _optimizer.Phases[p].Mdot;
-            double vacThrust  = _optimizer.Phases[p].VacThrust;
-            double vexVacuum  = _optimizer.Phases[p].VexVacuum;
+            double mdot = _optimizer.Phases[p].Mdot;
+            double vacThrust = _optimizer.Phases[p].VacThrust;
+            double vexVacuum = _optimizer.Phases[p].VexVacuum;
             double vexCurrent = _optimizer.Phases[p].VexCurrent;
-            double h          = thisPhase.Bt() / (_optimizer.N - 1);
+            double h = thisPhase.Bt() / (_optimizer.N - 1);
 
             double rho0CdAref = _optimizer.Problem.Rho0CdAref;
-            double rBody      = _optimizer.Problem.RBody;
-            double h0         = _optimizer.Problem.H0;
-            double r0         = _optimizer.Problem.R0.magnitude;
-            V3     w          = _optimizer.Problem.W;
+            double rBody = _optimizer.Problem.RBody;
+            double h0 = _optimizer.Problem.H0;
+            double r0 = _optimizer.Problem.R0.magnitude;
+            V3 w = _optimizer.Problem.W;
 
             // dynamical constraints per phase
             for (int n = 0; n < _optimizer.N - 1; n += 1)
@@ -349,8 +349,8 @@ namespace MechJebLib.PSG
 
                 int idx = 2 * n;
 
-                double m0,    m1,    m2;
-                int    m0Idx, m1Idx, m2Idx;
+                double m0, m1, m2;
+                int m0Idx, m1Idx, m2Idx;
 
                 if (_optimizer.Phases[p].Coast)
                 {
@@ -367,7 +367,7 @@ namespace MechJebLib.PSG
                     m2Idx = thisPhase.M.Idx(idx + 2);
                 }
 
-                V3              u0,    u1,    u2;
+                V3 u0, u1, u2;
                 (int, int, int) u0Idx, u1Idx, u2Idx;
 
                 if (_optimizer.Phases[p].Unguided || _optimizer.Phases[p].GuidedCoast)
@@ -420,7 +420,6 @@ namespace MechJebLib.PSG
                 };
 
 
-
                 if (h0 > 0 && rho0CdAref > 0)
                     ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
                 else
@@ -464,12 +463,12 @@ namespace MechJebLib.PSG
 
             DualV3 VDot(ref HermiteSimpsonDualPoint d)
             {
-                Dual   r               = d.R.magnitude;
-                Dual   r3              = d.R.sqrMagnitude * r;
-                DualV3 vr              = d.V - DualV3.Cross(w, d.R);
-                var    normAtmosphere  = Dual.Exp(-(r - rBody) / h0);
-                var    normAtmosphere2 = Dual.Exp(-(r - r0) / h0);
-                DualV3 drag            = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
+                Dual r = d.R.magnitude;
+                Dual r3 = d.R.sqrMagnitude * r;
+                DualV3 vr = d.V - DualV3.Cross(w, d.R);
+                var normAtmosphere = Dual.Exp(-(r - rBody) / h0);
+                var normAtmosphere2 = Dual.Exp(-(r - r0) / h0);
+                DualV3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
                 //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
                 Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
                 return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
@@ -512,8 +511,8 @@ namespace MechJebLib.PSG
 
                     break;
                 case Optimizer.ObjectiveType.MAX_ENERGY:
-                    V3              rf = lastPhase.R[-1];
-                    V3              vf = lastPhase.V[-1];
+                    V3 rf = lastPhase.R[-1];
+                    V3 vf = lastPhase.V[-1];
                     (int, int, int) ri = lastPhase.R.Idx(-1);
                     (int, int, int) vi = lastPhase.V.Idx(-1);
 
@@ -530,8 +529,8 @@ namespace MechJebLib.PSG
                         PhaseProxy thisPhase = _vars[p];
 
                         double thrust = _optimizer.Phases[p].VacThrust;
-                        double den    = (_optimizer.N - 1) * 6;
-                        double h6     = thisPhase.Bt() / den;
+                        double den = (_optimizer.N - 1) * 6;
+                        double h6 = thisPhase.Bt() / den;
 
                         double sum = 0;
                         for (int k = 0; k < _optimizer.K; k += 1)

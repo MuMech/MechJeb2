@@ -34,7 +34,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void FrobeniusNormArbitraryMatrix()
         {
-            var    m        = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             double expected = Sqrt(1 + 4 + 9 + 16 + 25 + 36 + 49 + 64 + 81);
             m.frobeniusNorm.ShouldEqual(expected);
         }
@@ -42,7 +42,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void FrobeniusNormNegativeValues()
         {
-            var    m        = new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9);
+            var m = new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9);
             double expected = Sqrt(1 + 4 + 9 + 16 + 25 + 36 + 49 + 64 + 81);
             m.frobeniusNorm.ShouldEqual(expected);
         }
@@ -65,7 +65,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void FrobeniusNormScalarMultiplication()
         {
-            var    m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             double k = 3.5;
             (m * k).frobeniusNorm.ShouldEqual(k * m.frobeniusNorm, 1e-14);
         }
@@ -215,7 +215,7 @@ namespace MechJebLibTest.Primitives.M3Tests
         [Fact]
         private void InfinityNormScalarMultiplication()
         {
-            var    m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
             double k = 2.5;
             (m * k).infinityNorm.ShouldEqual(k * m.infinityNorm);
         }

@@ -21,19 +21,16 @@ namespace MuMech
 
         private readonly TimeReference[] _allowedTimeRef;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public int _currentTimeRef;
 
         public TimeReference TimeReference => _allowedTimeRef[_currentTimeRef];
 
         // Input parameters
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableTime LeadTime = 0;
 
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult CircularizeAltitude = new EditableDoubleMult(150000, 1000);
 
         //"Warning: orbit is hyperbolic, so apoapsis doesn't exist."
@@ -60,8 +57,8 @@ namespace MuMech
         public TimeSelector(TimeReference[] allowedTimeRef)
         {
             _allowedTimeRef = allowedTimeRef;
-            _universalTime  = 0;
-            _timeRefNames   = new string[allowedTimeRef.Length];
+            _universalTime = 0;
+            _timeRefNames = new string[allowedTimeRef.Length];
             for (int i = 0; i < allowedTimeRef.Length; ++i)
             {
                 _timeRefNames[i] = allowedTimeRef[i] switch

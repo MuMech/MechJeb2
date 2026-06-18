@@ -1,5 +1,4 @@
-﻿using System;
-using MechJebLib.Functions;
+﻿using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using Xunit;
 using static System.Math;

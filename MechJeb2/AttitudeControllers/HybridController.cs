@@ -3,40 +3,41 @@ using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech.AttitudeControllers
 {
     internal class HybridController : BaseAttitudeController
     {
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble MaxStoppingTime = new EditableDouble(2);
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDoubleMult RollControlRange = new EditableDoubleMult(5 * Mathf.Deg2Rad, Mathf.Deg2Rad);
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool UseControlRange = true;
 
         private readonly TorquePI _pitchPI = new TorquePI();
-        private readonly TorquePI _yawPI   = new TorquePI();
-        private readonly TorquePI _rollPI  = new TorquePI();
+        private readonly TorquePI _yawPI = new TorquePI();
+        private readonly TorquePI _rollPI = new TorquePI();
 
         private readonly KosPIDLoop _pitchRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
-        private readonly KosPIDLoop _yawRatePI   = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
-        private readonly KosPIDLoop _rollRatePI  = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
+        private readonly KosPIDLoop _yawRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
+        private readonly KosPIDLoop _rollRatePI = new KosPIDLoop(1, 0.1, 0, extraUnwind: true);
 
-        [UsedImplicitly] [Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool UseInertia = true;
 
-        private Vector3d _actuation    = Vector3d.zero;
+        private Vector3d _actuation = Vector3d.zero;
         private Vector3d _targetTorque = Vector3d.zero;
-        private Vector3d _omega        = Vector3d.zero;
+        private Vector3d _omega = Vector3d.zero;
 
         /* error */
         private double _phiTotal;
 
         /* error in pitch, roll, yaw */
-        private Vector3d _phiVector   = Vector3d.zero;
+        private Vector3d _phiVector = Vector3d.zero;
         private Vector3d _targetOmega = Vector3d.zero;
 
         /* max angular rotation */
@@ -56,7 +57,7 @@ namespace MuMech.AttitudeControllers
             UpdateControl();
 
             deltaEuler = _phiVector * Mathf.Rad2Deg;
-            act        = _actuation;
+            act = _actuation;
         }
 
         private void UpdatePhi()
@@ -69,13 +70,13 @@ namespace MuMech.AttitudeControllers
             QuaternionD deltaRotation = QuaternionD.Inverse((QuaternionD)vesselTransform.transform.rotation * MathExtensions.Euler(-90, 0, 0)) * Ac.RequestedAttitude;
 
             // get us some euler angles for the target transform
-            Vector3d ea    = MathExtensions.EulerAngles(deltaRotation);
-            double   pitch = ea[0] * UtilMath.Deg2Rad;
-            double   yaw   = ea[1] * UtilMath.Deg2Rad;
-            double   roll  = ea[2] * UtilMath.Deg2Rad;
+            Vector3d ea = MathExtensions.EulerAngles(deltaRotation);
+            double pitch = ea[0] * UtilMath.Deg2Rad;
+            double yaw = ea[1] * UtilMath.Deg2Rad;
+            double roll = ea[2] * UtilMath.Deg2Rad;
 
             // law of cosines for the "distance" of the miss in radians
-            _phiTotal = Math.Acos(MuUtils.Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
+            _phiTotal = Math.Acos(Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
 
             // this is the initial direction of the great circle route of the requested transform
             // (pitch is latitude, yaw is -longitude, and we are "navigating" from 0,0)
@@ -84,9 +85,9 @@ namespace MuMech.AttitudeControllers
 
             // we assemble phi in the pitch, roll, yaw basis that vessel.MOI uses (right handed basis)
             var phi = new Vector3d(
-                MuUtils.ClampRadiansPi(temp[0]), // pitch distance around the geodesic
-                MuUtils.ClampRadiansPi(roll),
-                MuUtils.ClampRadiansPi(temp[1]) // yaw distance around the geodesic
+                ClampPi(temp[0]), // pitch distance around the geodesic
+                ClampPi(roll),
+                ClampPi(temp[1]) // yaw distance around the geodesic
             );
 
             phi.Scale(Ac.AxisControl);

@@ -94,7 +94,7 @@ namespace MechJebLib.ODE
 
             while (lo <= hi)
             {
-                int i     = lo + ((hi - lo) >> 1);
+                int i = lo + ((hi - lo) >> 1);
                 int order = Direction * x.CompareTo(_nodes[i].T);
 
                 if (order == 0)

@@ -20,7 +20,7 @@ namespace MuMech
         {
             Vector3d up = body.GetSurfaceNVector(latitude, longitude);
             double height = body.pqsController.GetSurfaceHeight(QuaternionD.AngleAxis(longitude, Vector3d.down) *
-                                                                QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
+                QuaternionD.AngleAxis(latitude, Vector3d.forward) * Vector3d.right);
             if (height < body.Radius) { height = body.Radius; }
 
             Vector3d center = body.position + height * up;
@@ -46,19 +46,19 @@ namespace MuMech
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation - 10, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation + 10, up) * north)
-                , c, map);
+              , c, map);
 
             GLTriangle(
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation + 110, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation + 130, up) * north)
-                , c, map);
+              , c, map);
 
             GLTriangle(
                 center,
                 center + radius * (QuaternionD.AngleAxis(rotation - 110, up) * north),
                 center + radius * (QuaternionD.AngleAxis(rotation - 130, up) * north)
-                , c, map);
+              , c, map);
         }
 
         private static void GLTriangle(Vector3d worldVertices1, Vector3d worldVertices2, Vector3d worldVertices3, Color c, bool map)
