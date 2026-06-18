@@ -337,7 +337,7 @@ namespace MuMech
 
             Core.Guidance.UllageLeadTime.Val = 20;
 
-            Core.Settings.rssMode = true;
+            Core.Settings.RssMode = true;
 
             // set the thrust controller to sane RO/RSS defaults
             Core.Thrust.LimitToPreventUnstableIgnition = false;

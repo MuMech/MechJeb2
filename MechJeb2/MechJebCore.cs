@@ -98,7 +98,7 @@ namespace MuMech
         [KSPField(isPersistant = false)]
         public bool eduMode;
 
-        public bool RssMode => Settings.rssMode;
+        public bool RssMode => Settings.RssMode;
 
         public bool ShowGui { get; private set; } = true;
 
@@ -1133,7 +1133,7 @@ namespace MuMech
 
                 GuiUtils.ComboBox.DrawGUI();
 
-                GuiUtils.LoadSkin((GuiUtils.SkinType)Settings.skinId);
+                GuiUtils.LoadSkin((GuiUtils.SkinType)Settings.SkinId);
 
                 GUI.skin = GuiUtils.Skin;
 

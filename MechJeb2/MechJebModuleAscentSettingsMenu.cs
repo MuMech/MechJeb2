@@ -106,7 +106,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (_ascentSettings.AscentType == AscentType.PSG)
-                Core.Settings.rssMode = GUILayout.Toggle(Core.Settings.rssMode, "Module disabling does not kill throttle");
+                Core.Settings.RssMode = GUILayout.Toggle(Core.Settings.RssMode, "Module disabling does not kill throttle");
 
             GUILayout.EndVertical();
             Profiler.EndSample();
