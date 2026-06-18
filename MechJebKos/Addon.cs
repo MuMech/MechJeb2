@@ -42,6 +42,7 @@ namespace MuMech.MechJebKos
             var hoverslamSimulation = new HoverslamSimulationBinding(() => _core);
             var vesselState = new VesselStateBinding(() => _core);
             var infoItems = new InfoItemsBinding(() => _core);
+            var stageStats = new StageStatsBinding(() => _core);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -63,6 +64,8 @@ namespace MuMech.MechJebKos
                 "MechJeb's per-tick VesselState (physics/aero/orbit readouts)."));
             AddSuffix("INFOITEMS", new NoArgsSuffix<InfoItemsBinding>(() => infoItems,
                 "MechJeb's info-item readouts (the values shown in custom info windows)."));
+            AddSuffix("STAGESTATS", new NoArgsSuffix<StageStatsBinding>(() => stageStats,
+                "MechJeb's per-stage fuel-flow simulation (delta-V, thrust, mass, etc.)."));
         }
     }
 }
