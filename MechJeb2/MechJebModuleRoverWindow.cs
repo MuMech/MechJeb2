@@ -51,7 +51,7 @@ namespace MuMech
             ed.registry.Find(i => i.id == "Value:RoverController.speedErr").DrawItem();
             ed.registry.Find(i => i.id == "Toggle:RoverController.StabilityControl").DrawItem();
 
-            if (!Core.Settings.hideBrakeOnEject)
+            if (!Core.Settings.HideBrakeOnEject)
             {
                 ed.registry.Find(i => i.id == "Toggle:RoverController.BrakeOnEject").DrawItem();
             }
