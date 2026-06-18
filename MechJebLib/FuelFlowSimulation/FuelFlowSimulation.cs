@@ -36,7 +36,7 @@ namespace MechJebLib.FuelFlowSimulation
             if (!(o is SimVessel vessel))
                 throw new ArgumentException("o is not a SimVessel", nameof(o));
 
-            _halfStageIsDetected   = false;
+            _halfStageIsDetected = false;
             _allocatedFirstSegment = false;
             _time = 0;
             Segments.Clear();
@@ -157,7 +157,7 @@ namespace MechJebLib.FuelFlowSimulation
 
                 double dt = MinimumTimeStep();
                 if (_currentSegment.KSPStage == vessel.HalfStageIndex)
-                {   
+                {
                     double massFlow = ResourceMaxMassFlow(vessel);
                     dt = Min(dt, (vessel.Mass - vessel.HalfStageEndMass) / massFlow);
                 }
