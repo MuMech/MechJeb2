@@ -41,6 +41,7 @@ namespace MuMech.MechJebKos
             var hoverslamAutopilot = new HoverslamAutopilotBinding(() => _core);
             var hoverslamSimulation = new HoverslamSimulationBinding(() => _core);
             var vesselState = new VesselStateBinding(() => _core);
+            var infoItems = new InfoItemsBinding(() => _core);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -60,6 +61,8 @@ namespace MuMech.MechJebKos
                 "The hoverslam landing predictor/simulation."));
             AddSuffix("VESSELSTATE", new NoArgsSuffix<VesselStateBinding>(() => vesselState,
                 "MechJeb's per-tick VesselState (physics/aero/orbit readouts)."));
+            AddSuffix("INFOITEMS", new NoArgsSuffix<InfoItemsBinding>(() => infoItems,
+                "MechJeb's info-item readouts (the values shown in custom info windows)."));
         }
     }
 }
