@@ -21,15 +21,10 @@ namespace MuMech.MechJebKos
             RegisterInitializer(InitializeSuffixes);
         }
 
-        // the Module deliberately re-evaluates on every call since the core can update dynamically
-        protected T Module
-        {
-            get
-            {
-                MechJebCore core = _core() ?? throw new KOSException("MechJeb is not available on this vessel.");
-                return core.GetComputerModule<T>();
-            }
-        }
+        // the Core (and Module) deliberately re-evaluate on every call since the core can update dynamically
+        protected MechJebCore Core => _core() ?? throw new KOSException("MechJeb is not available on this vessel.");
+
+        protected T Module => Core.GetComputerModule<T>();
 
         protected abstract void InitializeSuffixes();
 
