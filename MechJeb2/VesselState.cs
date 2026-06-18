@@ -176,11 +176,6 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_IntakeAirNeeded", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kg/s")] //Intake air needed
         public double IntakeAirNeeded;
 
-        public double LastSuicideBurnDt;
-
-        // this is written to by OrbitalManeuverCalculator.SuicideBurnCountdown() because it needs to keep track of state between calls
-        public double LastSuicideBurnRadius;
-
         [ValueInfoItem("#MechJeb_Latitude", InfoItem.Category.Surface, format = ValueInfoItem.ANGLE_NS)] //Latitude
         public double Latitude;
 

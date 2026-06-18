@@ -40,6 +40,7 @@ namespace MuMech.MechJebKos
             var solarPanelController = new SolarPanelControllerBinding(() => _core);
             var hoverslamAutopilot = new HoverslamAutopilotBinding(() => _core);
             var hoverslamSimulation = new HoverslamSimulationBinding(() => _core);
+            var vesselState = new VesselStateBinding(() => _core);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -57,6 +58,8 @@ namespace MuMech.MechJebKos
                 "The hoverslam (suicide burn) landing autopilot."));
             AddSuffix("HOVERSLAMSIMULATION", new NoArgsSuffix<HoverslamSimulationBinding>(() => hoverslamSimulation,
                 "The hoverslam landing predictor/simulation."));
+            AddSuffix("VESSELSTATE", new NoArgsSuffix<VesselStateBinding>(() => vesselState,
+                "MechJeb's per-tick VesselState (physics/aero/orbit readouts)."));
         }
     }
 }
