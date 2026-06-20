@@ -44,6 +44,7 @@ namespace MuMech.MechJebKos
             var infoItems = new InfoItemsBinding(() => _core);
             var stageStats = new StageStatsBinding(() => _core);
             var settings = new SettingsBinding(() => _core);
+            var ascent = new AscentBinding(() => _core);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -69,6 +70,8 @@ namespace MuMech.MechJebKos
                 "MechJeb's per-stage fuel-flow simulation (delta-V, thrust, mass, etc.)."));
             AddSuffix("SETTINGS", new NoArgsSuffix<SettingsBinding>(() => settings,
                 "MechJeb's global settings (skin, UI scale, RSS mode, etc.)."));
+            AddSuffix("ASCENT", new NoArgsSuffix<AscentBinding>(() => ascent,
+                "The ascent autopilots (classic and PSG)."));
         }
     }
 }
