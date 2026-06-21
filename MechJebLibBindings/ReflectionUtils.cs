@@ -46,12 +46,6 @@ namespace MechJebLibBindings
             return false;
         }
 
-        public static FieldInfo? GetFieldByReflection(string assemblyString, string className, string fieldName,
-            BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static) =>
-            Assembly(assemblyString).Class(className).Field(fieldName, flags).FieldInfo();
-
-        public static MethodInfo? GetMethodByReflection(string assemblyString, string className, string methodName, BindingFlags flags, Type[] args) => Assembly(assemblyString).Class(className).Method(methodName, flags, args).MethodInfo();
-
         public static AssemblyContext Assembly(string assemblyString)
         {
             string assemblyName = "";
