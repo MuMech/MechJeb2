@@ -362,7 +362,7 @@ namespace MuMech
             Core.Staging.HotStaging = true;
             Core.Staging.HotStagingLeadTime.Val = 2.0;
             Core.Staging.DropSolids = true;
-            Core.Staging.DropSolidsLeadTime.Val = 1.0;
+            Core.Staging.DropSolidsTwrPct.Val = 0.50;
 
             // turn on PSG by default
             AscentType = AscentType.PSG;
