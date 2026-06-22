@@ -84,12 +84,11 @@ namespace MuMech
 
         private void Init()
         {
-            State = States.WARPALIGN;
             _direction = Vector3d.zero;
             _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
-            Core.Thrust.ThrustOff();
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
+            TransitionTo(States.WARPALIGN);
         }
 
         public void Abort()
@@ -194,30 +193,53 @@ namespace MuMech
             // note that in principia after our node disappears this value will change to -1
             _ignitionUT = CalculateIgnitionUT();
 
-            if (VesselState.Time >= _ignitionUT - LeadTime && State != States.BURN)
-                State = States.LEAD;
+            UpdateState();
+            TickState();
+        }
 
-            if (VesselState.Time >= _ignitionUT && Aligned())
-                State = States.BURN;
+        private void UpdateState()
+        {
+            States desired = DetermineState(State);
+            if (desired != State) TransitionTo(desired);
+        }
 
-            switch (State)
+        private States DetermineState(States desired)
+        {
+            if (desired == States.WARPALIGN && VesselState.Time >= _ignitionUT - LeadTime)
+                desired = States.LEAD;
+
+            if ((desired == States.WARPALIGN || desired == States.LEAD) && VesselState.Time >= _ignitionUT && Aligned())
+                desired = States.BURN;
+
+            return desired;
+        }
+
+        private void TransitionTo(States next)
+        {
+            State = next;
+            switch (next)
             {
-                case States.WARPALIGN:
-                    StateWarpAlign();
-                    return;
-                case States.LEAD:
-                    StateLeadTime();
-                    return;
-                case States.BURN:
-                    StateBurn();
-                    return;
+                case States.WARPALIGN: OnEnterWarpAlign(); break;
+                case States.LEAD:      OnEnterLead();      break;
+                case States.BURN:      OnEnterBurn();      break;
+                case States.IDLE:      OnEnterIdle();      break;
             }
         }
 
-        private void StateWarpAlign()
+        private void TickState()
         {
-            Core.Thrust.ThrustOff();
+            switch (State)
+            {
+                case States.WARPALIGN: TickWarpAlign(); break;
+                case States.LEAD:      TickLead();      break;
+                case States.BURN:      TickBurn();      break;
+            }
+        }
 
+        private void OnEnterWarpAlign() => Core.Thrust.ThrustOff();
+
+        private void TickWarpAlign()
+        {
             if (!Autowarp)
             {
                 SetAttitude();
@@ -248,10 +270,10 @@ namespace MuMech
             SetAttitude();
         }
 
-        private void StateLeadTime()
-        {
-            Core.Thrust.ThrustOff();
+        private void OnEnterLead() => Core.Thrust.ThrustOff();
 
+        private void TickLead()
+        {
             if (!MuUtils.PhysicsRunning())
             {
                 Core.Warp.MinimumWarp();
@@ -267,7 +289,11 @@ namespace MuMech
                 DecrementDvLeft();
         }
 
-        private void StateBurn()
+        private void OnEnterBurn() { }
+
+        private void OnEnterIdle() { }
+
+        private void TickBurn()
         {
             if (!MuUtils.PhysicsRunning())
             {
