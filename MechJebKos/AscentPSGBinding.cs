@@ -87,6 +87,29 @@ namespace MuMech.MechJebKos
                 "Engage and start a timed launch to the given LAN (degrees). Returns the scheduled launch UT."));
             AddSuffix("LAUNCHTOTARGETLAN", new NoArgsSuffix<ScalarValue>(LaunchToTargetLan,
                 "Engage and start a timed launch matching the current target's LAN (requires a target in the same SoI). Returns the scheduled launch UT."));
+
+            // --- guidance solution (read-only) ---
+            // PSG can take ~20s to converge an initial solution from a cold start. Staging before there
+            // is a solution drops the rocket on the pad, so a launch script should wait on HASSOLUTION
+            // (e.g. "WAIT UNTIL ADDONS:MECHJEB:ASCENT:PSG:HASSOLUTION") before releasing the clamps.
+            AddSuffix("HASSOLUTION", new Suffix<BooleanValue>(() => Core.Guidance.Solution != null,
+                "True once the optimizer has produced a guidance solution. Wait on this before staging to launch."));
+            AddSuffix("GUIDANCESTATUS", new Suffix<StringValue>(() => Core.Guidance.Status.ToString(),
+                "PSG guidance controller status (ENABLED, INITIALIZED, BURNING, COASTING, TERMINAL, ...)."));
+            AddSuffix("VGO", new Suffix<ScalarValue>(() => Core.Guidance.Vgo,
+                "Velocity-to-go of the current guidance solution in m/s."));
+            AddSuffix("TGO", new Suffix<ScalarValue>(() => Core.Guidance.Tgo,
+                "Time-to-go (until the end of the burn) of the current guidance solution in seconds."));
+            AddSuffix("HEADING", new Suffix<ScalarValue>(() => Core.Guidance.Heading,
+                "Guidance-commanded heading in degrees."));
+            AddSuffix("PITCH", new Suffix<ScalarValue>(() => Core.Guidance.Pitch,
+                "Guidance-commanded pitch in degrees."));
+            AddSuffix("INFEASIBILITY", new Suffix<ScalarValue>(() => Core.Glueball.LastInfeasibility,
+                "Infeasibility (constraint residual norm) of the last optimizer run; near zero is converged."));
+            AddSuffix("STALENESS", new Suffix<ScalarValue>(() => Core.Glueball.Staleness,
+                "Age in seconds of the most recent optimizer solution."));
+            AddSuffix("SUCCESSFULCONVERGES", new Suffix<ScalarValue>(() => Core.Glueball.SuccessfulConverges,
+                "Count of successful optimizer convergences since the autopilot was engaged."));
         }
 
         private ScalarValue LaunchToLan(ScalarValue degrees)
