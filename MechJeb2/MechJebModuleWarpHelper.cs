@@ -20,7 +20,7 @@ namespace MuMech
         public readonly EditableTime leadTime = 0;
 
         public bool warping;
-        private readonly EditableTime timeOffset = 0;
+        public readonly EditableTime timeOffset = 0;
 
         private double targetUT;
 
@@ -59,92 +59,12 @@ namespace MuMech
             if (warping)
             {
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button1"))) //"Abort"
-                {
-                    warping = false;
-                    Core.Warp.MinimumWarp(true);
-                }
+                    AbortWarp();
             }
             else
             {
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button2"))) //"Warp"
-                {
-                    warping = true;
-
-                    switch (warpTarget)
-                    {
-                        case WarpTarget.Periapsis:
-                            targetUT = Orbit.NextPeriapsisTime(VesselState.Time);
-                            break;
-
-                        case WarpTarget.Apoapsis:
-                            if (Orbit.eccentricity < 1) targetUT = Orbit.NextApoapsisTime(VesselState.Time);
-                            break;
-
-                        case WarpTarget.SoI:
-                            if (Orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL) targetUT = Orbit.EndUT;
-                            break;
-
-                        case WarpTarget.Node:
-                            if (Vessel.patchedConicsUnlocked() && Vessel.patchedConicSolver.maneuverNodes.Any())
-                                targetUT = Vessel.patchedConicSolver.maneuverNodes[0].UT;
-                            break;
-
-                        case WarpTarget.Time:
-                            targetUT = VesselState.Time + timeOffset;
-                            break;
-
-                        case WarpTarget.PhaseAngleT:
-                            if (Core.Target.NormalTargetExists)
-                            {
-                                Orbit reference;
-                                if (Core.Target.TargetOrbit.referenceBody == Orbit.referenceBody)
-                                    reference = Orbit; // we orbit arround the same body
-                                else
-                                    reference = Orbit.referenceBody.orbit;
-                                // From Kerbal Alarm Clock
-                                double angleChangePerSec = 360 / Core.Target.TargetOrbit.period - 360 / reference.period;
-                                double currentAngle = reference.PhaseAngle(Core.Target.TargetOrbit, VesselState.Time);
-                                double angleDigff = currentAngle - phaseAngle;
-                                if (angleDigff > 0 && angleChangePerSec > 0)
-                                    angleDigff -= 360;
-                                if (angleDigff < 0 && angleChangePerSec < 0)
-                                    angleDigff += 360;
-                                double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
-                                targetUT = VesselState.Time + TimeToTarget;
-                            }
-
-                            break;
-
-                        case WarpTarget.AtmosphericEntry:
-                            try
-                            {
-                                targetUT = Vessel.orbit.NextTimeOfRadius(VesselState.Time,
-                                    VesselState.MainBody.Radius + VesselState.MainBody.RealMaxAtmosphereAltitude());
-                            }
-                            catch
-                            {
-                                warping = false;
-                            }
-
-                            break;
-
-                        case WarpTarget.HoverslamBurn:
-                            try
-                            {
-                                targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
-                            }
-                            catch
-                            {
-                                warping = false;
-                            }
-
-                            break;
-
-                        default:
-                            targetUT = VesselState.Time;
-                            break;
-                    }
-                }
+                    StartWarp();
             }
 
             GUILayout.EndHorizontal();
@@ -160,6 +80,96 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+        }
+
+        // Resolve the target time for the current warpTarget setting and begin warping. OnFixedUpdate
+        // then drives Core.Warp toward (targetUT - leadTime). Callable directly (e.g. from kOS) as the
+        // high-level entry point; the GUI Warp button just calls this.
+        public void StartWarp()
+        {
+            warping = true;
+
+            switch (warpTarget)
+            {
+                case WarpTarget.Periapsis:
+                    targetUT = Orbit.NextPeriapsisTime(VesselState.Time);
+                    break;
+
+                case WarpTarget.Apoapsis:
+                    if (Orbit.eccentricity < 1) targetUT = Orbit.NextApoapsisTime(VesselState.Time);
+                    break;
+
+                case WarpTarget.SoI:
+                    if (Orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL) targetUT = Orbit.EndUT;
+                    break;
+
+                case WarpTarget.Node:
+                    if (Vessel.patchedConicsUnlocked() && Vessel.patchedConicSolver.maneuverNodes.Any())
+                        targetUT = Vessel.patchedConicSolver.maneuverNodes[0].UT;
+                    break;
+
+                case WarpTarget.Time:
+                    targetUT = VesselState.Time + timeOffset;
+                    break;
+
+                case WarpTarget.PhaseAngleT:
+                    if (Core.Target.NormalTargetExists)
+                    {
+                        Orbit reference;
+                        if (Core.Target.TargetOrbit.referenceBody == Orbit.referenceBody)
+                            reference = Orbit; // we orbit arround the same body
+                        else
+                            reference = Orbit.referenceBody.orbit;
+                        // From Kerbal Alarm Clock
+                        double angleChangePerSec = 360 / Core.Target.TargetOrbit.period - 360 / reference.period;
+                        double currentAngle = reference.PhaseAngle(Core.Target.TargetOrbit, VesselState.Time);
+                        double angleDigff = currentAngle - phaseAngle;
+                        if (angleDigff > 0 && angleChangePerSec > 0)
+                            angleDigff -= 360;
+                        if (angleDigff < 0 && angleChangePerSec < 0)
+                            angleDigff += 360;
+                        double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
+                        targetUT = VesselState.Time + TimeToTarget;
+                    }
+
+                    break;
+
+                case WarpTarget.AtmosphericEntry:
+                    try
+                    {
+                        targetUT = Vessel.orbit.NextTimeOfRadius(VesselState.Time,
+                            VesselState.MainBody.Radius + VesselState.MainBody.RealMaxAtmosphereAltitude());
+                    }
+                    catch
+                    {
+                        warping = false;
+                    }
+
+                    break;
+
+                case WarpTarget.HoverslamBurn:
+                    try
+                    {
+                        targetUT = Core.GetComputerModule<MechJebModuleHoverslamSimulation>().IgnitionUT;
+                    }
+                    catch
+                    {
+                        warping = false;
+                    }
+
+                    break;
+
+                default:
+                    targetUT = VesselState.Time;
+                    break;
+            }
+        }
+
+        // Stop warping and drop back to minimum (1x) warp.
+        public void AbortWarp()
+        {
+            warping = false;
+            Core.Warp.MinimumWarp(true);
         }
 
         public override void OnFixedUpdate()

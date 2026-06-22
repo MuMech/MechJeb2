@@ -45,6 +45,8 @@ namespace MuMech.MechJebKos
             var stageStats = new StageStatsBinding(() => _core);
             var settings = new SettingsBinding(() => _core);
             var ascent = new AscentBinding(() => _core);
+            var warpController = new WarpControllerBinding(() => _core);
+            var warpHelper = new WarpHelperBinding(() => _core);
 
             AddSuffix("RUNNING", new NoArgsSuffix<BooleanValue>(() => _core?.running ?? false,
                 "True if MechJeb is present and running on this vessel."));
@@ -72,6 +74,10 @@ namespace MuMech.MechJebKos
                 "MechJeb's global settings (skin, UI scale, RSS mode, etc.)."));
             AddSuffix("ASCENT", new NoArgsSuffix<AscentBinding>(() => ascent,
                 "The ascent autopilots (classic and PSG)."));
+            AddSuffix("WARPCONTROLLER", new NoArgsSuffix<WarpControllerBinding>(() => warpController,
+                "The low-level time-warp controller (warp to UT / hold a rate)."));
+            AddSuffix("WARPHELPER", new NoArgsSuffix<WarpHelperBinding>(() => warpHelper,
+                "The high-level warp helper (warp to periapsis, node, SoI, ...)."));
         }
     }
 }
