@@ -22,7 +22,7 @@ namespace MuMech.MechJebKos
             AddSuffix("ENABLED", new SetSuffix<BooleanValue>(() => Module.Enabled, value => SetEnabled(value),
                 "Whether node execution is engaged: set true to execute, false to abort."));
             AddSuffix("STATE", new Suffix<StringValue>(() => Module.State.ToString(),
-                "Executor state: WARPALIGN, LEAD, BURN, or IDLE."));
+                "Executor state: INITIAL_WARP, ALIGNING, WARPING, LEAD, BURN, or IDLE."));
             AddSuffix("MODE", new SetSuffix<StringValue>(() => Module.Mode.ToString(), value => Module.Mode = ParseMode(value),
                 "Execution mode: ONE_NODE or ALL_NODES."));
             AddSuffix("AUTOWARP",
@@ -30,6 +30,15 @@ namespace MuMech.MechJebKos
                     "Automatically time-warp to the node."));
             AddSuffix("LEADTIME", new SetSuffix<ScalarValue>(() => Module.LeadTime.Val, value => Module.LeadTime.Val = value,
                 "Seconds before the burn to begin orienting the vessel."));
+            AddSuffix("INITIALWARPLEAD",
+                new SetSuffix<ScalarValue>(() => Module.InitialWarpLeadTime.Val, value => Module.InitialWarpLeadTime.Val = value,
+                    "Seconds before the burn to land the initial coarse warp (and the threshold above which the coarse warp is used)."));
+            AddSuffix("ALIGNTOLERANCE",
+                new SetSuffix<ScalarValue>(() => Module.AlignedToleranceDegrees.Val, value => Module.AlignedToleranceDegrees.Val = value,
+                    "Degrees within which the vessel is considered aligned for starting the burn."));
+            AddSuffix("WARPALIGNTOLERANCE",
+                new SetSuffix<ScalarValue>(() => Module.WarpAlignedToleranceDegrees.Val, value => Module.WarpAlignedToleranceDegrees.Val = value,
+                    "Degrees within which the vessel is considered aligned enough to warp toward the burn."));
             AddSuffix("RCSONLY", new SetSuffix<BooleanValue>(() => Module.RCSOnly, value => Module.RCSOnly = value,
                 "Execute the burn using RCS only."));
             AddSuffix("KILLROLLROTATION", new SetSuffix<BooleanValue>(() => Module.KillRollRotation, value => Module.KillRollRotation = value,
