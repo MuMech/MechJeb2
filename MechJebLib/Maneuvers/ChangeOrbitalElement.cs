@@ -139,6 +139,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcsetcond(state, 0, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
 #if DEBUG
+            const double DIFFSTEP = 1e-7;
             alglib.minnlcoptguardsmoothness(state);
             alglib.minnlcoptguardgradient(state, DIFFSTEP);
 #endif
