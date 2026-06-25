@@ -48,7 +48,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .Initial(r0, v0, u0, t0, mu, rbody)
                .SetTarget(attR, attR, attR, 0.498274048151861, 0, 0, 0, true, false, false)
                .AddStage(23796.5132378765, 3243.62653856172, thrust1, 241.889217870454, 4, 4)
-               .AddCoast(438.273627540912, 0, 450, 3, 3)
+               .AddCoast(438.273627540912, 438.273627540912, 0, 450, 3, 3)
                .AddStage(438.273627540912, 200.596948133534, thrust2, 220.000025355962, 2, 2, true, false)
                .AddStage(124.617032384849, 59.7961198192007, thrust3, 220.000054043093, 1, 1, true, false)
                .AddStage(41.1652332654921, 19.558262410276, thrust4, 220.00004748658, 0, 0, true, false)
@@ -247,7 +247,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295, 7, 7)
                .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000108671115, 4, 4)
-               .AddCoast(529.255624515231, 200, 2000, 1, 0)
+               .AddCoast(529.255624515231, 529.255624515231, 200, 2000, 1, 0)
                .AddStage(529.255624515231, 306.288652498034, thrust3, 279.000106442456, 0, 0, false, false)
                .Build();
 
@@ -263,7 +263,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .SetTarget(PER, 6371000, PER, 0.499303792410538, 0, 0, 0, false, false, false)
                .AddStage(176568.069166482, 33739.9978121645, thrust1, 294.100108674295, 7, 7)
                .AddStage(22640.1444759873, 7657.9646078915, thrust2, 427.000108671115, 4, 4)
-               .AddCoast(529.255624515231, 200, 2000, 1, 0)
+               .AddCoast(529.255624515231, 529.255624515231, 200, 2000, 1, 0)
                .AddStage(529.255624515231, 306.288652498034, thrust3, 279.000106442456, 0, 0, true, false)
                .OldSolution(solution)
                .Build();

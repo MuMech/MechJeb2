@@ -79,10 +79,10 @@ namespace MechJebLib.PSG
                 return this;
             }
 
-            public AscentBuilder AddCoast(double m0, double mint, double maxt, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
+            public AscentBuilder AddCoast(double m0, double mf, double mint, double maxt, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
             {
                 var sb = new StringBuilder();
-                sb.Append($"[MechJebLib.AscentBuilder] AddCoast({m0}, {mint}, {maxt}, {kspStage}, {mjPhase}");
+                sb.Append($"[MechJebLib.AscentBuilder] AddCoast({m0}, {mf}, {mint}, {maxt}, {kspStage}, {mjPhase}");
                 if (unguided)
                     sb.Append(", unguided: true");
                 if (massContinuity)
@@ -90,7 +90,7 @@ namespace MechJebLib.PSG
                 sb.Append(")");
                 DebugPrint(sb.ToString());
 
-                _phases.Add(Phase.NewCoast(m0, mint, maxt, kspStage, mjPhase, unguided, massContinuity));
+                _phases.Add(Phase.NewCoast(m0, mf, mint, maxt, kspStage, mjPhase, unguided, massContinuity));
 
                 return this;
             }

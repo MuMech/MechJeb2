@@ -342,7 +342,6 @@ namespace MechJebLib.PSG
                     boxConstrained[idx] = true;
             }
 
-            // FIXME: set box path boundaries on control
             for (int p = 0; p < Phases.Count; p++)
             {
                 PhaseProxy thisPhase = _vars[p];
@@ -369,14 +368,28 @@ namespace MechJebLib.PSG
 
                     if (k == 0 && !doingContinuity)
                     {
+                        // pin the initial mass if we aren't carrying over from a prior burn-coast-burn
                         bndu[idx] = bndl[idx] = Phases[p].M0;
-
                         boxConstrained[idx] = true;
+                    }
+                    else if (k == thisPhase.M.Length-1 && !Phases[p].AllowShutdown)
+                    {
+                        // pin the terminal mass if we aren't allowed to shut it down early
+                        bndu[idx] = bndl[idx] = Phases[p].Mf;
+                        boxConstrained[idx] = true;
+                    }
+                    else if (Phases[p].Coast && doingContinuity)
+                    {
+                        // for doingContinuity coasts, we need to allow the mass to be flexible.
+                        bndu[idx] = Phases[p].M0;
+                        bndl[idx] = Phases[p+1].LastAllowShutdownStage ? Sqrt(EPS) : Phases[p+1].Mf;
                     }
                     else
                     {
+                        // constrain everything else within the mass bounds, but allow the
+                        // LastAllowShutdownStage to burn down to effectively zero.
                         bndu[idx] = Phases[p].M0;
-                        bndl[idx] = 0;
+                        bndl[idx] = Phases[p].LastAllowShutdownStage ? Sqrt(EPS) : Phases[p].Mf;
                     }
                 }
             }

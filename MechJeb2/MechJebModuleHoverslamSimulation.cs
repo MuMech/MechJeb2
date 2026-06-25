@@ -282,7 +282,7 @@ namespace MuMech
                         stagingDelay += nextDelay * (deltaStage - 1);
                     }
 
-                    _manager.AddCoast(fuelStats.StartMass * 1000, stagingDelay, fuelStats.KSPStage, mjPhase);
+                    _manager.AddCoast(fuelStats.StartMass * 1000, fuelStats.StartMass * 1000,  stagingDelay, fuelStats.KSPStage, mjPhase);
                 }
 
                 _manager.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,
