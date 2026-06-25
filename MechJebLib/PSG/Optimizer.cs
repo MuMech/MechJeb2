@@ -31,6 +31,7 @@ namespace MechJebLib.PSG
         public int Iterations;
         public int TerminationType;
         public double PrimalFeasibility;
+        public double InitialPrimalFeasibility;
         public double Cost;
         public Solution? Solution;
 
@@ -113,7 +114,7 @@ namespace MechJebLib.PSG
                 double tf = t0 + bt;
                 double h = bt / (K - 1);
 
-                double m0 = phase.M0;
+                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0) : phase.M0;
                 double mdot = -phase.Mdot;
 
                 for (int k = 0; k < K; k++)
@@ -372,7 +373,7 @@ namespace MechJebLib.PSG
                         bndu[idx] = bndl[idx] = Phases[p].M0;
                         boxConstrained[idx] = true;
                     }
-                    else if (k == thisPhase.M.Length-1 && !Phases[p].AllowShutdown)
+                    else if (k == thisPhase.M.Length - 1 && !Phases[p].AllowShutdown)
                     {
                         // pin the terminal mass if we aren't allowed to shut it down early
                         bndu[idx] = bndl[idx] = Phases[p].Mf;
@@ -433,6 +434,7 @@ namespace MechJebLib.PSG
 
             DebugPrint($"Initial Cost: {Cost}");
             DebugPrint($"Initial PrimalFeasibility: {PrimalFeasibility}");
+            InitialPrimalFeasibility = PrimalFeasibility;
 
             alglib.minnlccreate(_vars.TotalVariables, _xGuess, out _state);
             alglib.minnlcsetbc(_state, bndl, bndu);
