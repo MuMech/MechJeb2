@@ -51,8 +51,8 @@ namespace MechJebLib.PSG
                 sb.Append($"[MechJebLib.AscentBuilder] AddStage({m0}, {mf}, {thrust}, {isp}, {kspStage}, {mjPhase}");
                 if (unguided)
                     sb.Append(", unguided: true");
-                if (allowShutdown)
-                    sb.Append(", allowShutdown: true");
+                if (!allowShutdown)
+                    sb.Append(", allowShutdown: false");
                 if (massContinuity)
                     sb.Append(", massContinuity: true");
                 if (ispCurrent >= 0)
@@ -70,7 +70,7 @@ namespace MechJebLib.PSG
 
             public AscentBuilder AerodynamicConstants(double cd, double aRef, double rho0, double qAlphaMax, double qMax, double h0, V3 w)
             {
-                DebugPrint($"AerodynamicConstants({cd},  {aRef}, {rho0}, {qAlphaMax}, {qMax}, {h0}, new V3({w}))");
+                DebugPrint($"[MechJebLib.AscentBuilder] AerodynamicConstants({cd}, {aRef}, {rho0}, {qAlphaMax}, {qMax}, {h0}, new V3({w}))");
                 _h0 = h0;
                 _rho0CdAref = cd * aRef * rho0;
                 _rho0QAlphaMaxInv = qAlphaMax > 0 ? rho0 / qAlphaMax : 0;
@@ -179,7 +179,7 @@ namespace MechJebLib.PSG
                 double fpa, bool attachAltFlag, bool lanflag, bool argpflag)
             {
                 DebugPrint(
-                    $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {fpa}, {argp}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")}, {(argpflag ? "true" : "false")})");
+                    $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {argp}, {fpa}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")}, {(argpflag ? "true" : "false")})");
                 _peR = peR;
                 _apR = apR;
                 _attR = attR;
