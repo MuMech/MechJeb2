@@ -48,8 +48,11 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool DropSolids;
 
+        // fraction of the whole rocket's current TWR that a booster stack must drop to before the solids are
+        // jettisoned early.  Stored as a fraction (0.50 == 50%); the UI text box edits it as a percentage.
+        // (Space shuttle actual value was something close to 37%)
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble DropSolidsLeadTime = 1.0;
+        public readonly EditableDoubleMult DropSolidsTwrPct = new EditableDoubleMult(0.50, 0.01);
 
         public bool AutostagingOnce;
 
@@ -219,7 +222,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             DropSolids = GUILayout.Toggle(DropSolids, CachedLocalizer.Instance.MechJebAscentDropSolids); //"Drop solids early"
             GUILayout.FlexibleSpace();
-            GuiUtils.SimpleTextBox(_sLeadTime, DropSolidsLeadTime, "s", 35); //"lead time"
+            GuiUtils.SimpleTextBox("", DropSolidsTwrPct, "% rocket accel", 35);
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -246,7 +249,11 @@ namespace MuMech
 
         //internal state:
         private double _lastStageTime;
+        private bool? _shouldDropSolids;
         private bool _countingDown;
+
+        // lazily computed (and cached) once per fixed update, only when first needed
+        private bool _droppingSolids => _shouldDropSolids ??= ShouldDropSolids();
         private double _stageCountdownStart;
         private Vessel _currentActiveVessel;
         private bool _initializedOnce;
@@ -290,6 +297,7 @@ namespace MuMech
 
             UpdateActiveModuleEngines(_allModuleEngines);
             UpdateBurnedResources();
+            _shouldDropSolids = null; // invalidate the cache; _droppingSolids recomputes lazily if needed this update
 
             if (Vessel.currentStage == _stats.HalfStageIndex && Vessel.totalMass <= _stats.HalfStageEndMass)
             {
@@ -533,10 +541,60 @@ namespace MuMech
             _activeModuleEngines.Slinq().SelectMany(eng => eng.propellants.Slinq()).Select(prop => prop.id).AddTo(_burnedResources);
         }
 
-        // detect if this part is an SRB, will be dropped in the next stage, and we are below the enabled dropSolidsLeadTime
-        private bool IsBurnedOutSrbDecoupledInNextStage(Part p) =>
-            DropSolids && p.IsThrottleLockedEngine() && LastNonZeroDVStageBurnTime() < DropSolidsLeadTime &&
-            p.IsDecoupledInStage(Vessel.currentStage - 1);
+        // detect if this part is an SRB, will be dropped in the next stage, and the boosters being dropped are no
+        // longer pulling their weight (their TWR has fallen to or below the whole rocket's TWR)
+        private bool IsBurnedOutSrbDecoupledInNextStage(Part p) => DropSolids && p.IsThrottleLockedEngine() && p.IsDecoupledInStage(Vessel.currentStage - 1) && _droppingSolids;
+
+        // Drop boosters once the highest-TWR stack that will be decoupled in the next stage has dropped to or below
+        // DropSolidsTwrPct of the whole rocket's current TWR (gravity cancels, so we compare thrust/mass
+        // accelerations directly).  Comparing each booster stack against the whole-rocket TWR is equivalent to
+        // comparing it against the remaining core TWR, since the whole-rocket TWR is the mass-weighted average of
+        // the stacks and the core.
+        private bool ShouldDropSolids()
+        {
+            if (!DropSolids)
+                return false;
+
+            double referenceAccel = VesselState.CurrentThrustAcceleration * DropSolidsTwrPct;
+            double maxStackAccel = 0;
+
+            foreach (PartModule pm in _allDecouplers)
+            {
+                if (pm.part.inverseStage != Vessel.currentStage - 1)
+                    continue;
+                if (!pm.IsUnfiredDecoupler(out Part decoupledPart))
+                    continue;
+
+                double thrust = 0;
+                double mass = 0;
+                SumStackThrustAndMass(decoupledPart, ref thrust, ref mass);
+
+                if (mass <= 0)
+                    continue;
+
+                double accel = thrust / mass;
+                if (accel > maxStackAccel)
+                    maxStackAccel = accel;
+            }
+
+            return maxStackAccel <= referenceAccel;
+        }
+
+        // recursively sum the current thrust and mass of a decoupled subtree (one detached stack)
+        private static void SumStackThrustAndMass(Part p, ref double thrust, ref double mass)
+        {
+            if (p is null)
+                return;
+
+            mass += p.mass + p.GetResourceMass();
+
+            for (int i = 0; i < p.Modules.Count; i++)
+                if (p.Modules[i] is ModuleEngines engine)
+                    thrust += engine.finalThrust;
+
+            for (int i = 0; i < p.children.Count; i++)
+                SumStackThrustAndMass(p.children[i], ref thrust, ref mass);
+        }
 
         //detect if a part is above an active or idle engine in the part tree
         private bool HasActiveOrIdleEngineOrTankDescendant(Part p, List<int> tankResources, List<ModuleEngines> activeModuleEngines)

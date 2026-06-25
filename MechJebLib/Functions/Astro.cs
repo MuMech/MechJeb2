@@ -876,5 +876,15 @@ namespace MechJebLib.Functions
             Check.PositiveFinite(mf);
             return isp * G0 * Log(m0 / mf);
         }
+
+        public static double MassFromMassThrustIspBurntime(double m0, double thrust, double isp, double bt)
+        {
+            Check.PositiveFinite(m0);
+            Check.PositiveFinite(thrust);
+            Check.PositiveFinite(isp);
+            Check.Finite(bt);
+            double mdot = thrust / (isp * G0);
+            return m0 - mdot * bt;
+        }
     }
 }

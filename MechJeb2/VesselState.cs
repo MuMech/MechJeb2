@@ -126,12 +126,15 @@ namespace MuMech
         public double CelestialLongitude;
 
         public Vector3d CoL;
-        public double CoLMagnitude;
+        // Sum of the per-part scalar lift weights used to form the CoL centroid (not a vector magnitude).
+        public double CoLWeightSum;
 
         public Vector3d CoM;
 
         public Vector3d CoT;
-        public double CoTMagnitude;
+        // Sum of the per-thrust-transform scalar thrust weights used to form the CoT centroid
+        // (equals total scalar thrust, i.e. before directional cancellation -- not the net thrust magnitude).
+        public double CoTWeightSum;
 
         public double DeltaT; //TimeWarp.fixedDeltaTime
         public Vector3d DoT;
@@ -831,11 +834,11 @@ namespace MuMech
             }
 
             CoL = Vector3d.zero;
-            CoLMagnitude = 0;
+            CoLWeightSum = 0;
 
             CoT = Vector3d.zero;
             DoT = Vector3d.zero;
-            CoTMagnitude = 0;
+            CoTWeightSum = 0;
             ThrustForward = Vector3d.zero;
 
             foreach (Part p in _vessel.parts)
@@ -997,7 +1000,7 @@ namespace MuMech
 
                 foreach (KeyValuePair<ModuleEngines, ModuleGimbal?> engine in _engines)
                 {
-                    einfo.AddNewEngine(engine.Key, engine.Value, EngineWrappers, ref CoT, ref DoT, ref CoTMagnitude);
+                    einfo.AddNewEngine(engine.Key, engine.Value, EngineWrappers, ref CoT, ref DoT, ref CoTWeightSum);
                     einfo.CheckUllageStatus(engine.Key);
                 }
 
@@ -1009,12 +1012,12 @@ namespace MuMech
                 var partDrag = Vector3d.Project(partAeroForce, -SurfaceVelocity);
                 Vector3d partLift = partAeroForce - partDrag;
 
-                double partLiftScalar = partLift.magnitude;
+                double partCoLWeight = partLift.magnitude;
 
-                if (p.rb != null && partLiftScalar > 0.01)
+                if (p.rb != null && partCoLWeight > 0.01)
                 {
-                    CoLMagnitude += partLiftScalar;
-                    CoL += ((Vector3d)p.rb.worldCenterOfMass + (Vector3d)(p.partTransform.rotation * p.CoLOffset)) * partLiftScalar;
+                    CoLWeightSum += partCoLWeight;
+                    CoL += ((Vector3d)p.rb.worldCenterOfMass + (Vector3d)(p.partTransform.rotation * p.CoLOffset)) * partCoLWeight;
                 }
             }
 
@@ -1056,9 +1059,9 @@ namespace MuMech
             ThrustVectorMinThrottle = einfo.ThrustMin;
             ThrustVectorLastFrame = einfo.ThrustCurrent;
 
-            if (CoTMagnitude > 0)
+            if (CoTWeightSum > 0)
             {
-                CoT /= CoTMagnitude;
+                CoT /= CoTWeightSum;
                 ThrustForward = (CoM - CoT).normalized;
                 // In certain circumstances, like hotstaging, the CoM of the Vessel can be behind the CoT before
                 // decoupling and while dragging the previous stage.  In that case thrustForward can wind up pointing
@@ -1069,8 +1072,8 @@ namespace MuMech
 
             DoT = DoT.normalized;
 
-            if (CoLMagnitude > 0)
-                CoL /= CoLMagnitude;
+            if (CoLWeightSum > 0)
+                CoL /= CoLWeightSum;
 
             Vector3d liftDir = -Vector3d.Cross(_vessel.transform.right, -SurfaceVelocity.normalized);
 
@@ -1324,7 +1327,7 @@ namespace MuMech
             }
 
             public void AddNewEngine(ModuleEngines e, ModuleGimbal? gimbal, List<EngineWrapper> enginesWrappers, ref Vector3d cot, ref Vector3d dot,
-                ref double coTScalar)
+                ref double coTWeightSum)
             {
                 // FIXME: shouldn't we gather statistics on unignited engines???
                 if (!e.EngineIgnited || !e.isEnabled)
@@ -1399,17 +1402,22 @@ namespace MuMech
                     // from the engine.  The resulting thrust force is in the opposite direction.
                     Vector3d thrustDirectionVector = -transform.forward;
 
-                    double cosineLosses = Vector3d.Dot(thrustDirectionVector, e.part.vessel.GetTransform().up);
                     float thrustTransformMultiplier = e.thrustTransformMultipliers[i];
                     double tCurrentThrust = eCurrentThrust * thrustTransformMultiplier;
+                    double tMaxThrust = eMaxThrust * thrustTransformMultiplier;
 
-                    ThrustCurrent += tCurrentThrust * cosineLosses * thrustDirectionVector;
-                    ThrustMax += eMaxThrust * cosineLosses * thrustDirectionVector * thrustTransformMultiplier;
-                    ThrustMin += eMinThrust * cosineLosses * thrustDirectionVector * thrustTransformMultiplier;
+                    ThrustCurrent += tCurrentThrust  * thrustDirectionVector;
+                    ThrustMax += tMaxThrust * thrustDirectionVector;
+                    ThrustMin += eMinThrust * thrustDirectionVector * thrustTransformMultiplier;
 
-                    cot += tCurrentThrust * (Vector3d)transform.position;
+                    // CoT (and hence ThrustForward, the neutral trim axis) is weighted by max thrust, not
+                    // current thrust, so the axis is a fixed property of the airframe, otherwise e.g. diff throttle
+                    // would wind up pushing its own setpoint around.  Do not design rockets which have a neutral
+                    // trim axis that is significantly different at minthrottle than maxthrottle.
+                    cot += tMaxThrust * (Vector3d)transform.position;
+                    // DoT is the actual current direction of thrust.
                     dot -= tCurrentThrust * thrustDirectionVector;
-                    coTScalar += tCurrentThrust;
+                    coTWeightSum += tMaxThrust;
 
                     Quaternion inverseVesselRot = e.part.vessel.ReferenceTransform.rotation.Inverse();
                     Vector3d thrustDir = inverseVesselRot * thrustDirectionVector;

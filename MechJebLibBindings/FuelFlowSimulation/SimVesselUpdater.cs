@@ -4,14 +4,13 @@
  */
 
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
-using UnityEngine;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
+using static MechJebLibBindings.ReflectionUtils;
 
 namespace MechJebLibBindings.FuelFlowSimulation
 {
@@ -26,27 +25,17 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private Dictionary<SimPartModule, PartModule> _inversePartModuleMapping => _manager._inversePartModuleMapping;
             private SimVessel                             _vessel                   => _manager._vessel;
 
-            private static readonly FieldInfo? _pfDecoupled;
-            private static readonly FieldInfo? _rfPredictedMaximumResiduals;
+            private static readonly FieldContext _pfDecoupled = Assembly("ProceduralFairings").Class("Keramzit.ProceduralFairingDecoupler").Field("decoupled");
+            private static readonly FieldContext _rfPredictedMaximumResiduals = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("predictedMaximumResiduals");
+
+            private static readonly bool _isProcFairingsLoadedCorrectly;
+            private static readonly bool _isRealFuelsLoadedCorrectly;
+
 
             static SimVesselUpdater()
             {
-                if (ReflectionUtils.IsAssemblyLoaded("ProceduralFairings"))
-                {
-                    _pfDecoupled = ReflectionUtils.GetFieldByReflection("ProceduralFairings", "Keramzit.ProceduralFairingDecoupler",
-                        "decoupled");
-                    if (_pfDecoupled == null)
-                        Debug.Log("MechJeb BUG: ProceduralFairings loaded, but ProceduralFairings.ProceduralFairingDecoupler has no decoupled field");
-                }
-
-                if (ReflectionUtils.IsAssemblyLoaded("RealFuels"))
-                {
-                    _rfPredictedMaximumResiduals =
-                        ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "predictedMaximumResiduals");
-                    if (_rfPredictedMaximumResiduals == null)
-                        Debug.Log(
-                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no predictedMaximumResiduals field, disabling residuals");
-                }
+                _isProcFairingsLoadedCorrectly = IsLoadedProceduralFairing && _pfDecoupled.IsValid;
+                _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfPredictedMaximumResiduals.IsValid;
             }
 
             internal SimVesselUpdater(SimVesselManager manager)
@@ -173,8 +162,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.NoPropellants = kspEngine is { flameout: true, statusL2: "No propellants" };
                 engine.ModuleResiduals = 0;
 
-                if (engine.IsModuleEnginesRf && _rfPredictedMaximumResiduals!.GetValue(kspEngine) is double doubleVal)
-                    engine.ModuleResiduals = doubleVal;
+                if (engine.IsModuleEnginesRf && _isRealFuelsLoadedCorrectly)
+                    engine.ModuleResiduals = _rfPredictedMaximumResiduals.GetValue<double>(kspEngine);
 
                 part.EngineResiduals = Max(part.EngineResiduals, engine.ModuleResiduals);
             }
@@ -242,10 +231,12 @@ namespace MechJebLibBindings.FuelFlowSimulation
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void UpdateProceduralFairingDecoupler(SimProceduralFairingDecoupler decoupler, PartModule kspPartModule)
             {
-                if (_pfDecoupled == null) return;
+                if (!_isProcFairingsLoadedCorrectly)
+                    return;
 
-                if (_pfDecoupled.GetValue(kspPartModule) is bool boolVal)
-                    decoupler.IsDecoupled = boolVal;
+                bool boolVal = _pfDecoupled.GetValue<bool>(kspPartModule);
+
+                decoupler.IsDecoupled = boolVal;
             }
         }
     }

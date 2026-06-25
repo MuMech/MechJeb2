@@ -166,14 +166,14 @@ namespace MuMech
                 comSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            colSphere.State(colSphereActive && VesselState.CoLMagnitude > 0 && Core.ShowGui);
+            colSphere.State(colSphereActive && VesselState.CoLWeightSum > 0 && Core.ShowGui);
             if (colSphereActive)
             {
                 colSphere.Set(VesselState.CoL + frameVel);
                 colSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            cotSphere.State(cotSphereActive && VesselState.CoTMagnitude > 0 && Core.ShowGui);
+            cotSphere.State(cotSphereActive && VesselState.CoTWeightSum > 0 && Core.ShowGui);
             if (cotSphereActive)
             {
                 cotSphere.Set(VesselState.CoT + frameVel);

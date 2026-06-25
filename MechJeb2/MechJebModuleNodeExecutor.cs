@@ -20,6 +20,18 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble LeadTime = new EditableDouble(3);
 
+        // how many seconds before a burn to land the initial coarse warp (and the threshold above which we coarse warp)
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public readonly EditableDouble InitialWarpLeadTime = new EditableDouble(600);
+
+        // tolerance (degrees) within which the vessel is considered aligned for starting the burn
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public readonly EditableDouble AlignedToleranceDegrees = new EditableDouble(1);
+
+        // tolerance (degrees) within which the vessel is considered aligned enough to warp toward the burn
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public readonly EditableDouble WarpAlignedToleranceDegrees = new EditableDouble(10);
+
         // do burn on RCS engines only
         public bool RCSOnly = false;
 
@@ -84,12 +96,11 @@ namespace MuMech
 
         private void Init()
         {
-            State = States.WARPALIGN;
             _direction = Vector3d.zero;
             _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
-            Core.Thrust.ThrustOff();
-            Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
+            Core.Attitude.Users.Add(this);
+            TransitionTo(States.INITIAL_WARP);
         }
 
         public void Abort()
@@ -121,7 +132,7 @@ namespace MuMech
 
         public enum Modes { ONE_NODE, ALL_NODES }
 
-        public enum States { WARPALIGN, LEAD, BURN, IDLE }
+        public enum States { INITIAL_WARP, ALIGNING, WARPING, LEAD, BURN, IDLE }
 
         public Modes Mode = Modes.ONE_NODE;
         public States State = States.IDLE;
@@ -130,6 +141,7 @@ namespace MuMech
         private Vector3d _direction; // de-rotated world vector
         private Vector3d _worldDirection => Planetarium.fetch.rotation * _direction;
         private double _ignitionUT;
+        private double _timeToBurn;
         private bool _hasNodes => Vessel.patchedConicSolver.maneuverNodes.Count > 0;
         private double _ullageUntil;
 
@@ -193,53 +205,85 @@ namespace MuMech
 
             // note that in principia after our node disappears this value will change to -1
             _ignitionUT = CalculateIgnitionUT();
+            _timeToBurn = _ignitionUT - VesselState.Time;
 
-            if (VesselState.Time >= _ignitionUT - LeadTime && State != States.BURN)
-                State = States.LEAD;
+            UpdateState();
+            TickState();
+        }
 
-            if (VesselState.Time >= _ignitionUT && Aligned())
-                State = States.BURN;
+        private void UpdateState()
+        {
+            States desired = DetermineState(State);
+            if (desired != State) TransitionTo(desired);
+        }
 
+        private States DetermineState(States desired)
+        {
+            // if we're in IDLE, always stay in IDLE
+            if (desired == States.IDLE)
+                return States.IDLE;
+
+            // if we're in BURN, always stay in BURN, if we're not in BURN always ignite when ready
+            if (desired == States.BURN || (VesselState.Time >= _ignitionUT && Aligned()))
+                return States.BURN;
+
+            // if we're not in BURN/LEAD, and within the leadtime, always be in LEAD
+            if (VesselState.Time >= _ignitionUT - LeadTime)
+                return States.LEAD;
+
+            // if we're not warping at all, just constantly align to the burn
+            if (!Autowarp)
+                return States.ALIGNING;
+
+            // if we keep within the warp alignment tolerance just warp all the way to IDLE
+            if (MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(WarpAlignedToleranceDegrees))
+                return States.WARPING;
+
+            // we may chatter a bit between WARPING and INITIAL_WARP if the Vessel is tumbling
+            if (_timeToBurn > InitialWarpLeadTime)
+                return States.INITIAL_WARP;
+
+            // sette back down to ALIGNING if we deviate beyond the warp alignment tolerance
+            return States.ALIGNING;
+        }
+
+        private void TransitionTo(States next)
+        {
+            State = next;
+            switch (next)
+            {
+                case States.INITIAL_WARP: OnEnterInitialWarp(); break;
+                case States.ALIGNING:     OnEnterAligning(); break;
+                case States.WARPING:      OnEnterWarping(); break;
+                case States.LEAD:         OnEnterLead(); break;
+                case States.BURN:         OnEnterBurn(); break;
+                case States.IDLE:         OnEnterIdle(); break;
+            }
+        }
+
+        private void TickState()
+        {
+            // default to no attitude control unless we explicitly set it
+            Core.Attitude.SetAxisControl(false, false, false);
             switch (State)
             {
-                case States.WARPALIGN:
-                    StateWarpAlign();
-                    return;
-                case States.LEAD:
-                    StateLeadTime();
-                    return;
-                case States.BURN:
-                    StateBurn();
-                    return;
+                case States.INITIAL_WARP: TickInitialWarp(); break;
+                case States.ALIGNING:     TickAligning(); break;
+                case States.WARPING:      TickWarping(); break;
+                case States.LEAD:         TickLead(); break;
+                case States.BURN:         TickBurn(); break;
             }
         }
 
-        private void StateWarpAlign()
+        private void OnEnterInitialWarp() => Core.Thrust.ThrustOff();
+
+        private void TickInitialWarp() => Core.Warp.WarpToUT(_ignitionUT - InitialWarpLeadTime);
+
+        private void OnEnterAligning() => Core.Thrust.ThrustOff();
+
+        private void TickAligning()
         {
-            Core.Thrust.ThrustOff();
-
-            if (!Autowarp)
-            {
-                SetAttitude();
-                return;
-            }
-
-            if (MuUtils.PhysicsRunning() ? AlignedAndSettled() : AngleFromDirection() < Deg2Rad(10))
-            {
-                Core.Warp.WarpToUT(_ignitionUT - LeadTime);
-                return;
-            }
-
-            double timeToBurn = _ignitionUT - VesselState.Time;
-
-            if (timeToBurn > 600)
-            {
-                Core.Attitude.SetAxisControl(false, false, false);
-                Core.Warp.WarpToUT(_ignitionUT - 600);
-                return;
-            }
-
-            if (!MuUtils.PhysicsRunning())
+            if (Autowarp && !MuUtils.PhysicsRunning())
             {
                 Core.Warp.MinimumWarp();
                 return;
@@ -248,26 +292,17 @@ namespace MuMech
             SetAttitude();
         }
 
-        private void StateLeadTime()
+        private void OnEnterWarping() => Core.Thrust.ThrustOff();
+
+        private void TickWarping()
         {
-            Core.Thrust.ThrustOff();
-
-            if (!MuUtils.PhysicsRunning())
-            {
-                Core.Warp.MinimumWarp();
-                return;
-            }
-
             SetAttitude();
-
-            // update _dvLeft here because we're out of warp and might be doing RCS
-            if (!_isLoadedPrincipia)
-                _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
-            else
-                DecrementDvLeft();
+            Core.Warp.WarpToUT(_ignitionUT - LeadTime);
         }
 
-        private void StateBurn()
+        private void OnEnterLead() => Core.Thrust.ThrustOff();
+
+        private void TickLead()
         {
             if (!MuUtils.PhysicsRunning())
             {
@@ -277,10 +312,24 @@ namespace MuMech
 
             SetAttitude();
 
-            if (!_isLoadedPrincipia)
-                _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
-            else
-                DecrementDvLeft();
+            UpdateDvLeft(); // we might be doing some RCS/ullage here so account for it.
+        }
+
+        private void OnEnterBurn() { }
+
+        private void OnEnterIdle() { }
+
+        private void TickBurn()
+        {
+            if (!MuUtils.PhysicsRunning())
+            {
+                Core.Warp.MinimumWarp();
+                return;
+            }
+
+            SetAttitude();
+
+            UpdateDvLeft();
 
             if (ShouldTerminate())
                 return;
@@ -324,7 +373,7 @@ namespace MuMech
 
         private bool ShouldTerminate() => _isLoadedPrincipia ? ShouldTerminatePrincipia() : ShouldTerminateStock();
 
-        private bool Aligned() => AngleFromDirection() < Deg2Rad(1);
+        private bool Aligned() => AngleFromDirection() < Deg2Rad(AlignedToleranceDegrees);
 
         private bool AlignedAndSettled() =>
             Aligned()
@@ -398,6 +447,14 @@ namespace MuMech
 
             // in stock node.UT is the center of the burn and the halfBurnTime calculation has the spool time
             return Vessel.patchedConicSolver.maneuverNodes[0].UT - halfBurnTime;
+        }
+
+        private void UpdateDvLeft()
+        {
+            if (!_isLoadedPrincipia)
+                _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
+            else
+                DecrementDvLeft();
         }
 
         private void DecrementDvLeft()

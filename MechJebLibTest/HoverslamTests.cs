@@ -166,7 +166,7 @@ namespace MechJebLibTest
             manager.Initial(r0, v0, t0, mu, w)
                .TargetConditions(height, descentSpeed)
                .AddStage(1631.71526258703, 1478.0574232488, 64000.0164757482, 290.000076251489, 2, 2)
-               .AddCoast(1041.14351191796, 0.5625, 0, 0)
+               .AddCoast(1041.14351191796, 1041.14351191796, 0.5625, 0, 0)
                .AddStage(1041.14351191796, 733.827833241511, 64000.0092904123, 290.000043692936, 0, 0)
                .Reconfigure(hoverslam);
 

@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using KSP.UI;
 using KSP.UI.Screens;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using UnityEngine;
+using static MechJebLibBindings.ReflectionUtils;
 
 namespace MechJebLibBindings.FuelFlowSimulation
 {
@@ -23,11 +22,15 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private Dictionary<SimPart, Part>             _inversePartMapping       => _manager._inversePartMapping;
             private Dictionary<SimPartModule, PartModule> _inversePartModuleMapping => _manager._inversePartModuleMapping;
 
-            private static readonly FieldInfo? _rfSpoolUpTime;
-            private static readonly FieldInfo? _rfAutoCutoff;
-            private static readonly FieldInfo? _rfUllage;
-            private static readonly FieldInfo? _rp0ControllableMass;
-            private static readonly FieldInfo? _rp0MassLimit;
+            private static readonly ClassContext _rfModuleEnginesRf = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF");
+            private static readonly FieldContext _rfSpoolUpTime = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("effectiveSpoolUpTime");
+            private static readonly FieldContext _rfAutoCutoff = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("autoCutoff");
+            private static readonly FieldContext _rfUllage = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("ullage");
+            private static readonly FieldContext _rp0ControllableMass = Assembly("RP0").Class("RP0.ProceduralAvionics.ModuleProceduralAvionics").Field("controllableMass");
+            private static readonly FieldContext _rp0MassLimit = Assembly("RP0").Class("RP0.ModuleAvionics").Field("massLimit");
+
+            private static readonly bool _isRealFuelsLoadedCorrectly;
+            private static readonly bool _isRP0LoadedCorrectly;
 
             private delegate double CrewMass(ProtoCrewMember crew);
 
@@ -38,43 +41,14 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private IShipconstruct _kspVessel => _manager._kspVessel;
 
             private readonly SimVesselManager _manager;
-            private static readonly Type? _rfType;
 
             static SimVesselBuilder()
             {
                 _crewMassDelegate = Versioning.version_major == 1 && Versioning.version_minor < 11 ? (CrewMass)CrewMassOld : CrewMassNew;
 
-                if (ReflectionUtils.IsLoadedRealFuels)
-                {
-                    _rfSpoolUpTime = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "effectiveSpoolUpTime");
-                    if (_rfSpoolUpTime == null)
-                        Debug.Log(
-                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no effectiveSpoolUpTime field, disabling spoolup.");
-
-                    _rfType = Type.GetType("RealFuels.ModuleEnginesRF, RealFuels");
-
-                    _rfAutoCutoff = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "autoCutoff");
-                    if (_rfAutoCutoff == null)
-                        Debug.Log(
-                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no autoCutoff field, disabling symmetric flameout.");
-
-                    _rfUllage = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ullage");
-                    if (_rfUllage == null)
-                        Debug.Log(
-                            "MechJeb BUG: RealFuels loaded, but RealFuels.ModuleEnginesRF has no ullage field, disabling RCS Ullage Time calculation.");
-                }
-
-                if (ReflectionUtils.IsLoadedRP0)
-                {
-                    _rp0ControllableMass = ReflectionUtils.GetFieldByReflection("RP0", "RP0.ProceduralAvionics.ModuleProceduralAvionics", "controllableMass");
-                    if (_rp0ControllableMass == null)
-                        Debug.Log(
-                            "MechJeb BUG: RP0 loaded, but RP0.ProceduralAvionics.ModuleProceduralAvionics has no controllableMass field, disabling proc avionics support.");
-                    _rp0MassLimit = ReflectionUtils.GetFieldByReflection("RP0", "RP0.ModuleAvionics", "massLimit");
-                    if (_rp0MassLimit == null)
-                        Debug.Log(
-                            "MechJeb BUG: RP0 loaded, but RP0.ModuleAvionics has no massLimit field, disabling proc avionics support.");
-                }
+                _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfModuleEnginesRf.IsValid && _rfSpoolUpTime.IsValid &&
+                    _rfAutoCutoff.IsValid && _rfUllage.IsValid;
+                _isRP0LoadedCorrectly = IsLoadedRP0 && _rp0ControllableMass.IsValid && _rp0MassLimit.IsValid;
             }
 
             private static double CrewMassOld(ProtoCrewMember crew) => PhysicsGlobals.KerbalCrewMass;
@@ -289,18 +263,16 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.ModuleSpoolupTime = 0;
                 engine.IsModuleEnginesRf = false;
 
-                if (ReflectionUtils.IsLoadedRealFuels)
+                if (_isRealFuelsLoadedCorrectly)
                 {
-                    engine.IsModuleEnginesRf = _rfType != null && _rfType.IsInstanceOfType(kspEngine);
+                    engine.IsModuleEnginesRf = _rfModuleEnginesRf.IsInstance(kspEngine);
 
-                    if (engine.IsModuleEnginesRf && _rfSpoolUpTime?.GetValue(kspEngine) is float floatVal)
-                        engine.ModuleSpoolupTime = floatVal;
-
-                    if (engine.IsModuleEnginesRf && _rfAutoCutoff?.GetValue(kspEngine) is bool boolVal)
-                        engine.AutoCutoff = boolVal;
-
-                    if (engine.IsModuleEnginesRf && _rfUllage?.GetValue(kspEngine) is bool boolVal2)
-                        engine.Ullage = boolVal2;
+                    if (engine.IsModuleEnginesRf)
+                    {
+                        engine.ModuleSpoolupTime = _rfSpoolUpTime.GetValue<float>(kspEngine);
+                        engine.AutoCutoff = _rfAutoCutoff.GetValue<bool>(kspEngine);
+                        engine.Ullage = _rfUllage.GetValue<bool>(kspEngine);
+                    }
                 }
 
                 return engine;
@@ -334,8 +306,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
             {
                 var avionics = SimModuleAvionics.Borrow(part);
 
-                if (_rp0ControllableMass?.GetValue(kspModule) is float floatVal)
-                    avionics.ControllableMass = floatVal;
+                if (_isRP0LoadedCorrectly)
+                    avionics.ControllableMass = _rp0ControllableMass.GetValue<float>(kspModule);
 
                 return avionics;
             }
@@ -344,8 +316,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
             {
                 var avionics = SimModuleAvionics.Borrow(part);
 
-                if (_rp0MassLimit?.GetValue(kspModule) is float floatVal)
-                    avionics.ControllableMass = floatVal;
+                if (_isRP0LoadedCorrectly)
+                    avionics.ControllableMass = _rp0MassLimit.GetValue<float>(kspModule);
 
                 return avionics;
             }

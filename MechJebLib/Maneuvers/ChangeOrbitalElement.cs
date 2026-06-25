@@ -112,8 +112,6 @@ namespace MechJebLib.Maneuvers
             if (!v.IsFinite())
                 throw new ArgumentException("bad v in ChangeOrbitalElement");
 
-            const double DIFFSTEP = 1e-7;
-            //const double EPSX     = 1e-10;
             const int MAXITS = 1000;
 
             const int NVARIABLES = 2;
@@ -141,6 +139,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcsetcond(state, 0, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
 #if DEBUG
+            const double DIFFSTEP = 1e-7;
             alglib.minnlcoptguardsmoothness(state);
             alglib.minnlcoptguardgradient(state, DIFFSTEP);
 #endif
