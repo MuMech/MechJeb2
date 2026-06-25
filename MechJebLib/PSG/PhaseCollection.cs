@@ -35,7 +35,8 @@ namespace MechJebLib.PSG
                 return;
 
             Phase phase = this[lastShutdownStage];
-            phase.MaxT = 0.999 * phase.Tau;
+            phase.MaxT = phase.Tau / phase.MinThrottle;
+            phase.LastAllowShutdownStage = true;
             this[lastShutdownStage] = phase;
         }
     }

@@ -273,7 +273,9 @@ namespace MuMech
 
                         bool unguidedCoast = IsUnguided(kspStage);
 
-                        ascentBuilder.AddCoast(fuelStats.StartMass * 1000, mint, maxt, _ascentSettings.CoastStage, mjPhase, unguidedCoast);
+                        double mf = CoastingDuring() ? fuelStats.EndMass * 1000 : fuelStats.StartMass * 1000;
+
+                        ascentBuilder.AddCoast(fuelStats.StartMass * 1000, mf, mint, maxt, _ascentSettings.CoastStage, mjPhase, unguidedCoast);
                     }
                 }
 

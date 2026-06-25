@@ -109,7 +109,7 @@ namespace MechJebLib.HoverslamSimulation
             double t0 = 0;
             double tf = t;
 
-            using var coastPhase = Phase.NewCoast(1.0, t0, tf, 0, 0);
+            using var coastPhase = Phase.NewCoast(1.0, 1.0, t0, tf, 0, 0);
             PropagatePhase(ref x, t0, ref tf, coastPhase);
 
             V3 vRel = x.V - V3.Cross(_w, x.R);

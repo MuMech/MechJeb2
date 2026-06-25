@@ -102,12 +102,12 @@ namespace MechJebLib.HoverslamSimulation
                 return this;
             }
 
-            public HoverslamSimulationManager AddCoast(double m0, double ct, int kspStage, int mjPhase)
+            public HoverslamSimulationManager AddCoast(double m0, double mf, double ct, int kspStage, int mjPhase)
             {
                 if (_debug)
                     DebugPrint($"[MechJebLib.HoverslamSimulationBuilder] AddCoast({m0}, {ct}, {kspStage}, {mjPhase})");
 
-                _phases.Add(Phase.NewCoast(m0, ct, ct, kspStage, mjPhase));
+                _phases.Add(Phase.NewCoast(m0, m0, ct, ct, kspStage, mjPhase));
 
                 return this;
             }
