@@ -489,7 +489,7 @@ namespace MechJebLib.PSG
                     f[ci++] = val;
 
                     break;
-                case Optimizer.ObjectiveType.MAX_MASS:
+                case Optimizer.ObjectiveType.MAX_MASS: // this doesn't work for upper stages with fixed burntimes
                     f[ci++] = -lastPhase.M[-1];
                     alglib.sparseappendemptyrow(j);
                     alglib.sparseappendelement(j, lastPhase.M.Idx(-1), -1.0);
@@ -505,49 +505,75 @@ namespace MechJebLib.PSG
 
                     break;
                 case Optimizer.ObjectiveType.MIN_THRUST_ACCEL:
-                    alglib.sparseappendemptyrow(j);
-                    for (int p = 0; p < _optimizer.Phases.Count; p++)
                     {
-                        if (_optimizer.Phases[p].Coast || !_optimizer.Phases[p].AllowShutdown)
-                            continue;
+                        using var jac = Vec.Rent(_vars.TotalVariables, true);
 
-                        PhaseProxy thisPhase = _vars[p];
-
-                        double thrust = _optimizer.Phases[p].VacThrust;
-                        double den = (_optimizer.N - 1) * 6;
-                        double h6 = thisPhase.Bt() / den;
-
-                        double sum = 0;
-                        for (int k = 0; k < _optimizer.K; k += 1)
+                        for (int p = 0; p < _optimizer.Phases.Count; p++)
                         {
-                            double mk = thisPhase.M[k];
-
-                            if (k == 0 || k == _optimizer.K - 1)
-                            {
-                                val += thrust * h6 / mk;
-                                alglib.sparseappendelement(j, thisPhase.M.Idx(k), -thrust * h6 / (mk * mk));
-                                sum += thrust / mk / den;
+                            if (_optimizer.Phases[p].Coast || !_optimizer.Phases[p].AllowShutdown)
                                 continue;
-                            }
 
-                            if (k % 2 == 0)
+                            PhaseProxy thisPhase = _vars[p];
+
+                            double thrust = _optimizer.Phases[p].VacThrust;
+                            double den = (_optimizer.N - 1) * 6;
+                            double h6 = thisPhase.Bt() / den;
+
+                            double sum = 0;
+                            for (int k = 0; k < _optimizer.K; k += 1)
                             {
-                                val += thrust * h6 * 2.0 / mk;
-                                alglib.sparseappendelement(j, thisPhase.M.Idx(k), -2.0 * thrust * h6 / (mk * mk));
-                                sum += 2.0 * thrust / mk / den;
-                            }
-                            else
-                            {
-                                val += thrust * h6 * 4.0 / mk;
-                                alglib.sparseappendelement(j, thisPhase.M.Idx(k), -4.0 * thrust * h6 / (mk * mk));
-                                sum += 4.0 * thrust / mk / den;
+                                double mk = thisPhase.M[k];
+                                double u = thisPhase.U[k].magnitude;
+                                double ux = thisPhase.Ux[k];
+                                double uy = thisPhase.Uy[k];
+                                double uz = thisPhase.Uz[k];
+
+                                if (k == 0 || k == _optimizer.K - 1)
+                                {
+                                    val += u * thrust * h6 / mk;
+                                    jac[thisPhase.M.Idx(k)] = -u * thrust * h6 / (mk * mk);
+                                    jac[thisPhase.Ux.Idx(k)] = ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.Uy.Idx(k)] = uy * thrust * h6 / (u * mk);
+                                    ;
+                                    jac[thisPhase.Uz.Idx(k)] = uz * thrust * h6 / (u * mk);
+                                    ;
+                                    jac[thisPhase.BtIdx()] += u * thrust / mk / den;
+                                    continue;
+                                }
+
+                                if (k % 2 == 0)
+                                {
+                                    val += u * thrust * h6 * 2.0 / mk;
+                                    jac[thisPhase.M.Idx(k)] = -2.0 * u * thrust * h6 / (mk * mk);
+                                    jac[thisPhase.Ux.Idx(k)] = 2.0 * ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.Uy.Idx(k)] = 2.0 * uy * thrust * h6 / (u * mk);
+                                    ;
+                                    jac[thisPhase.Uz.Idx(k)] = 2.0 * uz * thrust * h6 / (u * mk);
+                                    ;
+                                    jac[thisPhase.BtIdx()] += 2.0 * u * thrust / mk / den;
+                                }
+                                else
+                                {
+                                    val += u * thrust * h6 * 4.0 / mk;
+                                    jac[thisPhase.M.Idx(k)] = -4.0 * u * thrust * h6 / (mk * mk);
+                                    jac[thisPhase.Ux.Idx(k)] = 4.0 * ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.Uy.Idx(k)] = 4.0 * uy * thrust * h6 / (u * mk);
+                                    ;
+                                    jac[thisPhase.Uz.Idx(k)] = 4.0 * uz * thrust * h6 / (u * mk);
+                                    ;
+                                    jac[thisPhase.BtIdx()] += 4.0 * u * thrust / mk / den;
+                                }
                             }
                         }
 
-                        alglib.sparseappendelement(j, thisPhase.BtIdx(), sum);
-                    }
+                        f[ci++] = val;
 
-                    f[ci++] = val;
+                        alglib.sparseappendemptyrow(j);
+
+                        for (int k = 0; k < _vars.TotalVariables; k++)
+                            if (jac[k] != 0)
+                                alglib.sparseappendelement(j, k, jac[k]);
+                    }
 
                     break;
                 default:
