@@ -275,5 +275,57 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg2.PrimalFeasibility.ShouldBeZero(1e-5);
         }
+
+        // A Falcon 9 (with SRBs) style 3-stage rocket where every stage has a deep, fractional
+        // minThrottle (0.72 / 0.36 / 0.39) and a nonzero qAlphaMax, exercising the throttle path.
+        [Fact]
+        public void Falcon9WithSRBSTest()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var r0 = new V3(-4450586.1613649148, -3387777.1061104261, 3050615.9472641465);
+            var v0 = new V3(247.04060855067507, -324.54186700561797, -5.8305065009617646E-07);
+            var u0 = new V3(-0.69859864900017787, -0.5316864130313963, 0.47882089018821716);
+            double m0 = 1033328.31931524;
+            double t0 = 650465.898893842;
+            double mu = 398600435436096;
+            double incT = 0.499303792410538;
+
+            Ascent ascent = Ascent.Builder()
+               .Initial(r0, v0, u0, t0, mu, 6371000)
+               .SetTarget(6551000, 6551000, 6551000, incT, 0, 0, 0, false, false, false)
+               .AerodynamicConstants(0.5, 30, 1.2494765593625, 2000, 0, 7566.61914736748,
+                    new V3(0, 0, 7.2921151467069236E-05))
+               .AddStage(1033328.31931524, 404698.49103155, 18844594.8472217, 282.998725869868, 5, 5,
+                    ispCurrent: 257.600546549178, minThrottle: 0.72102981734908, allowShutdown: false)
+               .AddStage(324854.597006168, 163764.142614619, 8227080.17044208, 311.000003911686, 4, 4,
+                    ispCurrent: 288.783758490671, minThrottle: 0.361002936935094, allowShutdown: false)
+               .AddStage(138224.102979586, 31554.6610762891, 934120.169945651, 348.000064517226, 1, 1,
+                    ispCurrent: 228.526012939348, minThrottle: 0.385389461457581)
+               .Build();
+
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+
+            psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                Astro.KeplerianFromStateVectors(mu, rf, vf);
+
+            solution.R(t0).ShouldEqual(r0, 1e-9);
+            solution.V(t0).ShouldEqual(v0, 1e-9);
+            solution.M(t0).ShouldEqual(m0, 1e-9);
+            solution.Vgo(t0).ShouldEqual(8620.1405495395156, 1e-3);
+            solution.U(t0).ShouldEqual(new V3(-0.57978971705636706, -0.66407516766532904, 0.47206785349321667).normalized, 1e-2);
+
+            smaf.ShouldEqual(6551000.0104806134, 1e-2);
+            eccf.ShouldEqual(0, 1e-1);
+            incf.ShouldEqual(incT, 1e-6);
+            ClampPi(lanf + argpf + tanof).ShouldEqual(-2.1587413706373946, 1e-2);
+        }
     }
 }
