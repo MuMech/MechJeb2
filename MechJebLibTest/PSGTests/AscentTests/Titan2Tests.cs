@@ -445,6 +445,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.M(0).ShouldEqual(157355.487476332, 1e-9);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
             solution.Vgo(0).ShouldEqual(8518.1366714811684, 1e-3);
 
             solution.U(0).normalized.ShouldEqual(new V3(0.69734975209707417, 0.6074944955387559, 0.38033374967291772), 1e-2);
@@ -460,8 +461,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
 
             Ascent ascent2 = Ascent.Builder()
-               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4, minThrottle:0)
-               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, minThrottle:0)
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4, minThrottle: 0)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, minThrottle: 0)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .OldSolution(solution)
@@ -471,6 +472,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+
+            psg2.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
         }
 
         [Fact]
@@ -559,6 +563,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.M(0).ShouldEqual(157355.487476332, 1e-9);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
             solution.Vgo(0).ShouldEqual(8474.9669267192712, 1e-3);
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
@@ -590,6 +595,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+
+            psg2.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
         }
 
         [Fact]
@@ -684,6 +692,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.M(0).ShouldEqual(157355.487476332, 1e-9);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
 
             solution.Tgo(solution.T0, 0).ShouldEqual(148.10238013870301, 1e-2);
             solution.Tgo(solution.T0, 1).ShouldEqual(153.53757758636579, 1e-2);
@@ -718,6 +727,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+
+            psg2.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
 
             solution2.Vgo(0).ShouldEqual(8101.193073142621, 1e-3);
         }
