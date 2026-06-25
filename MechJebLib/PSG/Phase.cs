@@ -31,7 +31,6 @@ namespace MechJebLib.PSG
         public bool Normalized;
         public bool Tagged;
         public bool AllowShutdown;
-        public bool LastAllowShutdownStage;
 
         public int KSPStage;
         public int MJPhase;
@@ -71,7 +70,6 @@ namespace MechJebLib.PSG
             phase.Normalized = false;
             phase.Tagged = false;
             phase.AllowShutdown = false;
-            phase.LastAllowShutdownStage = false;
 
             phase.KSPStage = 0;
             phase.MJPhase = 0;

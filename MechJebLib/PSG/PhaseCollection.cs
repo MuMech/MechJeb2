@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using System.Collections.Generic;
+using static MechJebLib.Utils.Statics;
+using static System.Math;
 
 namespace MechJebLib.PSG
 {
@@ -35,9 +38,27 @@ namespace MechJebLib.PSG
                 return;
 
             Phase phase = this[lastShutdownStage];
-            phase.MaxT = phase.Tau / phase.MinThrottle;
-            phase.LastAllowShutdownStage = true;
+            double maxt = phase.Tau / phase.MinThrottle;
+            phase.MaxT = maxt;
+            phase.Mf = Sqrt(EPS);
             this[lastShutdownStage] = phase;
+
+            if (lastShutdownStage > 0 && phase.MassContinuity)
+            {
+                // this is the coast before the massContinuity burn
+                phase = this[lastShutdownStage - 1];
+                phase.Mf = Sqrt(EPS);
+                this[lastShutdownStage-1] = phase;
+
+                if (lastShutdownStage > 1)
+                {
+                    // this is the burn before the massContinuity coast
+                    phase = this[lastShutdownStage - 2];
+                    phase.MaxT = maxt;
+                    phase.Mf = Sqrt(EPS);
+                    this[lastShutdownStage-2] = phase;
+                }
+            }
         }
     }
 }

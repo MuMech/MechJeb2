@@ -686,9 +686,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
             solution.Tgo(solution.T0, 0).ShouldEqual(148.10238013870301, 1e-2);
-            //solution.Tgo(solution.T0, 1).ShouldEqual(153.53757758636579, 1e-2);
-            //solution.Tgo(solution.T0, 2).ShouldEqual(449.99973855863101, 1e-2);
-            //solution.Tgo(solution.T0, 3).ShouldEqual(9.1537185650994335, 1e-2);
+            solution.Tgo(solution.T0, 1).ShouldEqual(153.53757758636579, 1e-2);
+            solution.Tgo(solution.T0, 2).ShouldEqual(449.99973855863101, 1e-2);
+            solution.Tgo(solution.T0, 3).ShouldEqual(9.1537185650994335, 1e-2);
 
             solution.Vgo(0).ShouldEqual(8101.193073142621, 1e-3);
 
