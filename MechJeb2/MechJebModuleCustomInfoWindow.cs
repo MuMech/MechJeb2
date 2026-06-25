@@ -282,7 +282,7 @@ namespace MuMech
             // an earlier non-saving pass would otherwise suppress the regen in the pass that saves.
             // Decide staleness from the key's presence on disk so we keep regenerating until the
             // bumped version is actually persisted.
-            if (!global.HasValue("customWindowsVersion") || CustomWindowsVersion < CUSTOM_WINDOWS_VERSION)
+            if (!global.HasValue("CustomWindowsVersion") || CustomWindowsVersion < CUSTOM_WINDOWS_VERSION)
             {
                 CustomWindowsVersion = CUSTOM_WINDOWS_VERSION;
                 RegenerateDefaultWindows = true;

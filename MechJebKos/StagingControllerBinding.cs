@@ -43,8 +43,8 @@ namespace MuMech.MechJebKos
                 "Seconds before burnout to begin hotstaging."));
             AddSuffix("DROPSOLIDS", new SetSuffix<BooleanValue>(() => Module.DropSolids, value => Module.DropSolids = value,
                 "Drop spent solid boosters early."));
-            AddSuffix("DROPSOLIDSLEADTIME", new SetSuffix<ScalarValue>(() => Module.DropSolidsLeadTime.Val, value => Module.DropSolidsLeadTime.Val = value,
-                "Seconds before burnout to drop solids."));
+            AddSuffix("DROPSOLIDSLEADTIME", new SetSuffix<ScalarValue>(() => Module.DropSolidsTwrPct.Val, value => Module.DropSolidsTwrPct.Val = value,
+                "Drop solids at % of rocket thrust acceleration."));
             AddSuffix("AUTOSTAGINGONCE", new Suffix<BooleanValue>(() => Module.AutostagingOnce,
                 "True while a one-shot autostage is pending."));
             AddSuffix("AUTOSTAGEONCE", new NoArgsVoidSuffix(() => Module.AutostageOnce(this),

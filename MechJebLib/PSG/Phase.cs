@@ -30,11 +30,11 @@ namespace MechJebLib.PSG
         public bool Unguided;
         public bool Normalized;
         public bool Tagged;
+        public bool AllowShutdown;
 
         public int KSPStage;
         public int MJPhase;
 
-        public bool   AllowShutdown => MinT < MaxT;
         public double VacThrust     => Mdot * VexVacuum;
         public double Tau           => Coast ? double.PositiveInfinity : VexVacuum / VacThrust * M0;
         public bool   Coast         => Mdot == 0;
@@ -48,8 +48,31 @@ namespace MechJebLib.PSG
 
         private static Phase New() => new Phase();
 
+        // Runs on every pool Release. The object pool does not reset state on
+        // Borrow, and field initializers only run on a genuinely-new allocation,
+        // so every mutable field must be reset here or it leaks across reuse.
         private static void Clear(Phase phase)
         {
+            phase.M0 = 0;
+            phase.Mf = 0;
+            phase.Bt = 0;
+            phase.MaxT = 0;
+            phase.MinT = 0;
+            phase.VexVacuum = 0;
+            phase.VexCurrent = 0;
+            phase.Mdot = 0;
+            phase.MinThrottle = 0;
+
+            phase.PreciseShutdown = false;
+            phase.TerminalStage = false;
+            phase.MassContinuity = false;
+            phase.Unguided = false;
+            phase.Normalized = false;
+            phase.Tagged = false;
+            phase.AllowShutdown = false;
+
+            phase.KSPStage = 0;
+            phase.MJPhase = 0;
         }
 
         public static Phase Rent() => _pool.Borrow();
@@ -110,6 +133,7 @@ namespace MechJebLib.PSG
             Phase phase = Rent();
             phase.Set(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent);
 
+            phase.AllowShutdown = allowShutdown;
             phase.MinT = allowShutdown ? 0 : bt;
             phase.MaxT = bt / minThrottle;
             phase.Unguided = unguided;
@@ -119,11 +143,12 @@ namespace MechJebLib.PSG
             return phase;
         }
 
-        public static Phase NewCoast(double m0, double minT, double maxT, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
+        public static Phase NewCoast(double m0, double mf, double minT, double maxT, int kspStage, int mjPhase, bool unguided = false, bool massContinuity = false)
         {
             Phase phase = Rent();
-            phase.Set(m0, 0, 0, m0, minT, kspStage, mjPhase);
+            phase.Set(m0, 0, 0, mf, minT, kspStage, mjPhase);
 
+            phase.AllowShutdown = true;
             phase.MinT = minT;
             phase.MaxT = maxT;
             phase.Unguided = unguided;

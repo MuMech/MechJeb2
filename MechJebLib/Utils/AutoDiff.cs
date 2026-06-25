@@ -413,6 +413,128 @@ namespace MechJebLib.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ApplyMDotDynamics(double[] f, alglib.sparsematrix j, int ci, double mdot, HermiteSimpsonSegment segment, HermiteSimpsonIndexes indexes, int n)
+        {
+            const int NUM_VARS = 31;
+            var jac = Vec.Rent(NUM_VARS, true);
+            var ans = new Dual();
+
+            var d0 = new HermiteSimpsonDualPoint { R = segment.R0, V = segment.V0, U = segment.U0, M = segment.M0 };
+            var d1 = new HermiteSimpsonDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, M = segment.M1 };
+            var d2 = new HermiteSimpsonDualPoint { R = segment.R2, V = segment.V2, U = segment.U2, M = segment.M2 };
+            var dbt = new Dual(segment.Bt);
+
+            bool singleControlVariable = indexes.Index(21) == indexes.Index(22);
+
+            for (int k = 18; k < NUM_VARS; k++)
+            {
+                if (k < 30)
+                    SetDual(k, ref d0, ref d1, ref d2, 1);
+                else
+                    dbt = new Dual(segment.Bt, 1);
+
+                Dual h = dbt / (n - 1);
+                Dual h6 = h / 6.0;
+
+                ans = d2.M - d0.M + mdot * h6 * (d0.U.magnitude + 4 * d1.U.magnitude + d2.U.magnitude);
+
+                if (singleControlVariable && k >= 21 && k <= 23)
+                {
+                    jac[21] += ans.D;
+                }
+                else if (singleControlVariable && k >= 24 && k <= 26)
+                {
+                    jac[24] += ans.D;
+                }
+                else if (singleControlVariable && k >= 27 && k <= 29)
+                {
+                    jac[27] += ans.D;
+                }
+                else
+                {
+                    jac[k] = ans.D;
+                }
+
+                if (k < 30)
+                    SetDual(k, ref d0, ref d1, ref d2, 0);
+                else
+                    dbt = new Dual(segment.Bt);
+            }
+
+            f[ci++] = ans.M;
+
+            int lastindex = -1;
+
+            alglib.sparseappendemptyrow(j);
+            for (int k = 18; k < NUM_VARS; k++)
+                if (jac[k] != 0)
+                {
+                    int index = indexes.Index(k);
+                    if (lastindex == index)
+                        continue;
+                    alglib.sparseappendelement(j, index, jac[k]);
+                    lastindex = index;
+                }
+
+            jac.Dispose();
+            jac = Vec.Rent(NUM_VARS, true);
+
+            for (int k = 18; k < NUM_VARS; k++)
+            {
+                if (k < 30)
+                    SetDual(k, ref d0, ref d1, ref d2, 1);
+                else
+                    dbt = new Dual(segment.Bt, 1);
+
+                Dual h = dbt / (n - 1);
+                Dual h8 = h * 0.125;
+
+                ans = d1.M - 0.5 * (d0.M + d2.M) + mdot* h8 * (d0.U.magnitude - d2.U.magnitude);
+
+                if (singleControlVariable && k >= 21 && k <= 23)
+                {
+                    jac[21] += ans.D;
+                }
+                else if (singleControlVariable && k >= 24 && k <= 26)
+                {
+                    jac[24] += ans.D;
+                }
+                else if (singleControlVariable && k >= 27 && k <= 29)
+                {
+                    jac[27] += ans.D;
+                }
+                else
+                {
+                    jac[k] = ans.D;
+                }
+
+                if (k < 30)
+                    SetDual(k, ref d0, ref d1, ref d2, 0);
+                else
+                    dbt = new Dual(segment.Bt);
+            }
+
+            f[ci++] = ans.M;
+
+            lastindex = -1;
+
+            alglib.sparseappendemptyrow(j);
+            for (int k = 18; k < NUM_VARS; k++)
+                if (jac[k] != 0)
+                {
+                    int index = indexes.Index(k);
+                    if (lastindex == index)
+                        continue;
+                    alglib.sparseappendelement(j, index, jac[k]);
+                    lastindex = index;
+                }
+
+            jac.Dispose();
+
+            return ci;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ApplyHermiteSimpsonDynamics(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot, HermiteSimpsonSegment segment, HermiteSimpsonIndexes indexes, int n)
         {
             const int NUM_VARS = 31;
@@ -670,7 +792,7 @@ namespace MechJebLib.Utils
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
+                    alglib.sparseappendelement(j, index, jacX[k]);
                     lastindex = index;
                 }
 
@@ -685,7 +807,7 @@ namespace MechJebLib.Utils
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
+                    alglib.sparseappendelement(j, index, jacY[k]);
                     lastindex = index;
                 }
 
@@ -700,7 +822,7 @@ namespace MechJebLib.Utils
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
+                    alglib.sparseappendelement(j, index, jacZ[k]);
                     lastindex = index;
                 }
 
@@ -782,7 +904,7 @@ namespace MechJebLib.Utils
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
+                    alglib.sparseappendelement(j, index, jacY[k]);
                     lastindex = index;
                 }
 
@@ -797,9 +919,13 @@ namespace MechJebLib.Utils
                     int index = indexes.Index(k);
                     if (lastindex == index)
                         continue;
-                    alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
+                    alglib.sparseappendelement(j, index, jacZ[k]);
                     lastindex = index;
                 }
+
+            jacX.Dispose();
+            jacY.Dispose();
+            jacZ.Dispose();
 
             return ci;
         }

@@ -115,7 +115,7 @@ namespace MuMech
         public Vector3d IgnitionAttitude;
         // ReSharper restore MemberCanBePrivate.Global
 
-        public double _lastCycleUT;
+        private double _lastCycleUT;
 
         private readonly HoverslamSimulation.HoverslamSimulationManager _manager = new HoverslamSimulation.HoverslamSimulationManager();
         private readonly HoverslamSimulation _hoverslam = new HoverslamSimulation();
@@ -239,6 +239,11 @@ namespace MuMech
             V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
 
             bool noBurnableStages = true;
+            // TODO: if VesselState.LowestUllage drops below 1.0, but we're already doing the burn, we should not re-add ullage computations (but this is a pathological edge-case).
+            // TODO: this is relying on the ullage status of the currently active engines, should put ullage status into the fuelsim and check the status of the first dv>0 stage.
+            // TODO: should always do the RCS ullage burn since it is part of the plan (don't want to get ahead or behind).
+            // TODO: in theory we should also sim the RCS continuously burning as the engine is spooling up.
+            bool needsRCSUllage = ReflectionUtils.IsLoadedRealFuels && VesselState.LowestUllage < 1.0;
             int lastKSPStage = -1;
 
             for (int mjPhase = _vacStats.Count - 1; mjPhase >= 0; mjPhase--)
@@ -247,6 +252,17 @@ namespace MuMech
 
                 if (fuelStats.DeltaV <= 0)
                     continue;
+
+                if (needsRCSUllage && IsFinite(fuelStats.RcsUllageTime) && fuelStats.RcsUllageTime > 0)
+                {
+                    double m0 = fuelStats.StartMass * 1000;
+                    double thrust = fuelStats.RcsThrust;
+                    double isp = fuelStats.RcsISP;
+                    double bt = fuelStats.RcsUllageTime;
+                    double mf = Astro.MassFromMassThrustIspBurntime(m0, thrust, isp, bt);
+                    _manager.AddStage(m0, mf, thrust, isp, fuelStats.KSPStage, mjPhase);
+                    needsRCSUllage = false;
+                }
 
                 int deltaStage = lastKSPStage - fuelStats.KSPStage;
 
@@ -266,7 +282,7 @@ namespace MuMech
                         stagingDelay += nextDelay * (deltaStage - 1);
                     }
 
-                    _manager.AddCoast(fuelStats.StartMass * 1000, stagingDelay, fuelStats.KSPStage, mjPhase);
+                    _manager.AddCoast(fuelStats.StartMass * 1000, fuelStats.StartMass * 1000,  stagingDelay, fuelStats.KSPStage, mjPhase);
                 }
 
                 _manager.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,

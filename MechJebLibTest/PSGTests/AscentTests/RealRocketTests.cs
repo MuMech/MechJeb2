@@ -149,7 +149,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AerodynamicConstants(CD, aref, RHO0, Q_ALPHA_MAX, Q_MAX, H0, w)
                .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 2, 2, allowShutdown: false)
                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1)
-               .AddCoast(SECOND_STAGE_M0, 0, 1300, 1, 1, massContinuity: true)
+               .AddCoast(SECOND_STAGE_M0, SECOND_STAGE_MF, 0, 1300, 1, 1, massContinuity: true)
                .AddStage(SECOND_STAGE_M0, SECOND_STAGE_MF, SECOND_THRUST, SECOND_ISP, 1, 1, massContinuity: true)
                .Initial(r0, v0, r0.normalized, T0, MU, R_BODY)
                .SetTarget(PER_T, APR_T, PER_T, INC_T, LAN_T, ARGP_T, 0, false, true, true)

@@ -320,7 +320,6 @@ namespace MechJebLib.PSG
             double vacThrust = _optimizer.Phases[p].VacThrust;
             double vexVacuum = _optimizer.Phases[p].VexVacuum;
             double vexCurrent = _optimizer.Phases[p].VexCurrent;
-            double h = thisPhase.Bt() / (_optimizer.N - 1);
 
             double rho0CdAref = _optimizer.Problem.Rho0CdAref;
             double rBody = _optimizer.Problem.RBody;
@@ -435,21 +434,7 @@ namespace MechJebLib.PSG
                         ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot midpoint";
                     }
 
-                    bool doingMassContinuity = p > 0 && _optimizer.Phases[p].MassContinuity;
-
-                    double mi = doingMassContinuity ? thisPhase.M[0] : _optimizer.Phases[p].M0;
-                    f[ci++] = m1 - mi + (n + 0.5) * h * mdot;
-                    f[ci++] = m2 - mi + (n + 1.0) * h * mdot;
-                    alglib.sparseappendemptyrow(j);
-                    if (doingMassContinuity)
-                        alglib.sparseappendelement(j, thisPhase.M.Idx(0), -1.0);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 1), 1.0);
-                    alglib.sparseappendelement(j, thisPhase.BtIdx(), (n + 0.5) / (_optimizer.N - 1.0) * mdot);
-                    alglib.sparseappendemptyrow(j);
-                    if (doingMassContinuity)
-                        alglib.sparseappendelement(j, thisPhase.M.Idx(0), -1.0);
-                    alglib.sparseappendelement(j, thisPhase.M.Idx(idx + 2), 1.0);
-                    alglib.sparseappendelement(j, thisPhase.BtIdx(), (n + 1.0) / (_optimizer.N - 1.0) * mdot);
+                    ci = ApplyMDotDynamics(f, j, ci, mdot, point, indexes, _optimizer.N);
                 }
             }
 

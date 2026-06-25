@@ -3,25 +3,23 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using System.Collections.Generic;
 using System.Reflection;
+using static MechJebLibBindings.ReflectionUtils;
 
 namespace MechJebLibBindings
 {
     public static class PartExtensions
     {
-        private static readonly FieldInfo? _rfIgnited;
-        private static readonly FieldInfo? _rfIgnitions;
+        private static readonly ClassContext _rfModuleEnginesRf = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF");
+        private static readonly FieldContext _rfIgnited = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("ignited", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldContext _rfIgnitions = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("ignitions");
+
+        private static readonly bool _isRealFuelsLoadedCorrectly;
 
         static PartExtensions()
         {
-            if (!ReflectionUtils.IsAssemblyLoaded("RealFuels"))
-                return;
-
-            _rfIgnited = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignited",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            _rfIgnitions = ReflectionUtils.GetFieldByReflection("RealFuels", "RealFuels.ModuleEnginesRF", "ignitions");
+            _isRealFuelsLoadedCorrectly = IsLoadedRealFuels && _rfModuleEnginesRf.IsValid && _rfIgnited.IsValid && _rfIgnitions.IsValid;
         }
 
         /// <summary>
@@ -36,7 +34,7 @@ namespace MechJebLibBindings
         {
             if (CheatOptions.InfinitePropellant)
                 return false;
-            if (_rfIgnited is null || _rfIgnitions is null) // stock doesn't have this concept
+            if (!_isRealFuelsLoadedCorrectly) // stock doesn't have this concept
                 return false;
 
             List<ModuleEngines> enginelist = p.FindModulesImplementing<ModuleEngines>();
@@ -64,21 +62,17 @@ namespace MechJebLibBindings
         {
             if (CheatOptions.InfinitePropellant)
                 return false;
-            if (_rfIgnited is null || _rfIgnitions is null) // stock doesn't have this concept
+            if (!_isRealFuelsLoadedCorrectly) // stock doesn't have this concept
                 return false;
             if (e.finalThrust > 0)
                 return false;
+            if (!_rfModuleEnginesRf.IsInstance(e))
+                return false;
 
-            try
-            {
-                if (_rfIgnited.GetValue(e) is bool ignited && ignited)
-                    return false;
-                if (_rfIgnitions.GetValue(e) is int ignitions)
-                    return ignitions == 0;
-            }
-            catch (ArgumentException) { }
+            if (_rfIgnited.GetValue<bool>(e))
+                return false;
 
-            return false;
+            return _rfIgnitions.GetValue<int>(e) == 0;
         }
     }
 }

@@ -184,10 +184,6 @@ namespace MuMech.MechJebKos
                 "Physics timestep in seconds."));
             AddSuffix("MAXENGINERESPONSETIME", new Suffix<ScalarValue>(() => _vesselState.MaxEngineResponseTime,
                 "Maximum engine spool-up response time in seconds."));
-            AddSuffix("COTMAGNITUDE", new Suffix<ScalarValue>(() => _vesselState.CoTMagnitude,
-                "Magnitude of the center-of-thrust vector."));
-            AddSuffix("COLMAGNITUDE", new Suffix<ScalarValue>(() => _vesselState.CoLMagnitude,
-                "Magnitude of the center-of-lift vector."));
 
             // --- Booleans ---
             AddSuffix("PARACHUTEDEPLOYED", new Suffix<BooleanValue>(() => _vesselState.ParachuteDeployed,

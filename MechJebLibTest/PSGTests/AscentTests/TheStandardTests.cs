@@ -50,7 +50,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
                .AddStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1)
-               .AddCoast(678.290157913434, 0, 450, 1, 1)
+               .AddCoast(678.290157913434, 678.290157913434, 0, 450, 1, 1)
                .AddStage(678.290157913434, 177.582604389742, thrust3, 230.039271734103, 0, 0, allowShutdown: false)
                .Build();
 
@@ -115,7 +115,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, false, false, false)
                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
                .AddStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1)
-               .AddCoast(678.290157913434, 0, 450, 1, 1)
+               .AddCoast(678.290157913434, 678.290157913434, 0, 450, 1, 1)
                .AddStage(678.290157913434, 177.582604389742, thrust3, 230.039271734103, 0, 0, allowShutdown: false)
                .Build();
 
@@ -187,7 +187,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .SetTarget(PeR, ApR, PeR, incT, 0, 0, 0, true, false, false)
                .AddStage(49119.7842689869, 7114.2513992454, thrust1, 288.000034332275, 3, 3)
                .AddStage(2848.62586760223, 1363.71123994759, thrust2, 270.15767003304, 1, 1)
-               .AddCoast(678.290157913434, 0, 450, 1, 1)
+               .AddCoast(678.290157913434, 678.290157913434, 0, 450, 1, 1)
                .AddStage(678.290157913434, 177.582604389742, thrust3, 230.039271734103, 0, 0, true, false)
                .Build();
 
