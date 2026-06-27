@@ -185,54 +185,51 @@ namespace MechJebLib.PSG
 
             PhaseProxy thisPhase = _vars[p];
             PhaseProxy nextBurnPhase = _vars[nextBurnPhaseIndex];
+            PhaseProxy nextNextBurnPhase = _vars[nextNextBurnPhaseIndex];
 
             bool combiningThisBurn = nextNextBurnPhaseIndex > 0 && _optimizer.Phases[nextBurnPhaseIndex].MassContinuity;
             bool combiningNextBurn = nextNextBurnPhaseIndex > 0 && !combiningThisBurn && _optimizer.Phases[nextNextBurnPhaseIndex].MassContinuity;
 
-            double thisBt;
-            double nextBt;
+            double thisMassRemaining;
+            double nextMassConsumed;
 
             if (combiningThisBurn)
             {
-                thisBt = thisPhase.Bt() + nextBurnPhase.Bt();
-                nextBt = _vars[nextNextBurnPhaseIndex].Bt();
+                thisMassRemaining = nextBurnPhase.M[-1] / _optimizer.Phases[nextBurnPhaseIndex].Mf - 1.0;
+                nextMassConsumed = 1.0 - nextNextBurnPhase.M[-1] / _optimizer.Phases[nextNextBurnPhaseIndex].M0;
             }
             else if (combiningNextBurn)
             {
-                thisBt = thisPhase.Bt();
-                nextBt = nextBurnPhase.Bt() + _vars[nextNextBurnPhaseIndex].Bt();
+                thisMassRemaining = thisPhase.M[-1]/_optimizer.Phases[p].Mf - 1.0;
+                nextMassConsumed = 1.0 - nextNextBurnPhase.M[-1]/_optimizer.Phases[nextNextBurnPhaseIndex].M0;
             }
             else
             {
-                thisBt = thisPhase.Bt();
-                nextBt = nextBurnPhase.Bt();
+                thisMassRemaining = thisPhase.M[-1]/_optimizer.Phases[p].Mf - 1.0;
+                nextMassConsumed = 1.0 - _vars[nextBurnPhaseIndex].M[-1]/_optimizer.Phases[nextBurnPhaseIndex].M0;
             }
 
-            // next burn time
-            double a = nextBt;
-            // this burn time remaining
-            double b = _optimizer.Phases[p].Bt - thisBt;
+            double a = nextMassConsumed;
+            double b = thisMassRemaining;
             double u = a * a + b * b + 2e-6;
 
-            // smoothed Fischer-Burmeister constraint on burn times
+            // smoothed Fischer-Burmeister constraint on burned/unburned mass
             f[ci++] = Sqrt(u) - (a + b);
             alglib.sparseappendemptyrow(j);
             if (combiningThisBurn)
             {
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), 1 - b / Sqrt(u));
-                alglib.sparseappendelement(j, nextBurnPhase.BtIdx(), 1 - b / Sqrt(u));
-                alglib.sparseappendelement(j, _vars[nextNextBurnPhaseIndex].BtIdx(), a / Sqrt(u) - 1);
+                alglib.sparseappendelement(j, nextBurnPhase.M.Idx(-1), (b/Sqrt(u) - 1)/_optimizer.Phases[nextBurnPhaseIndex].Mf);
+                alglib.sparseappendelement(j, nextNextBurnPhase.M.Idx(-1), (1-a / Sqrt(u))/ _optimizer.Phases[nextNextBurnPhaseIndex].M0);
             }
             else if (combiningNextBurn)
             {
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), 1 - b / Sqrt(u));
-                alglib.sparseappendelement(j, nextBurnPhase.BtIdx(), a / Sqrt(u) - 1);
-                alglib.sparseappendelement(j, _vars[nextNextBurnPhaseIndex].BtIdx(), a / Sqrt(u) - 1);
+                alglib.sparseappendelement(j, thisPhase.M.Idx(-1), (b/Sqrt(u) - 1)/_optimizer.Phases[p].Mf);
+                alglib.sparseappendelement(j, nextNextBurnPhase.M.Idx(-1), (1-a / Sqrt(u))/_optimizer.Phases[nextNextBurnPhaseIndex].M0);
             }
             else
             {
-                alglib.sparseappendelement(j, thisPhase.BtIdx(), 1 - b / Sqrt(u));
-                alglib.sparseappendelement(j, nextBurnPhase.BtIdx(), a / Sqrt(u) - 1);
+                alglib.sparseappendelement(j, thisPhase.M.Idx(-1), (b/Sqrt(u) - 1)/_optimizer.Phases[p].Mf);
+                alglib.sparseappendelement(j, nextBurnPhase.M.Idx(-1), (1-a / Sqrt(u))/_optimizer.Phases[nextBurnPhaseIndex].M0);
             }
 
             return ci;
