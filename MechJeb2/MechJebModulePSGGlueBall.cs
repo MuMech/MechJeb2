@@ -204,10 +204,13 @@ namespace MuMech
             if (_blockOptimizerUntilTime > VesselState.Time)
                 return;
 
+            double argp = _ascentSettings.DesiredArgP;
+            bool argpFlag = _ascentSettings.DesiredArgPFlag;
+
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
                   , MainBody.gravParameter, MainBody.Radius)
-               .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), 0, fpa, attachAltFlag, lanflag, false);
+               .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), Deg2Rad(argp), fpa, attachAltFlag, lanflag, argpFlag);
 
             if (MainBody.atmosphere)
             {
