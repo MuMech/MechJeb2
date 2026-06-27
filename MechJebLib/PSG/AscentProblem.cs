@@ -183,54 +183,32 @@ namespace MechJebLib.PSG
                 return ci;
             }
 
-            PhaseProxy thisPhase = _vars[p];
-            PhaseProxy nextBurnPhase = _vars[nextBurnPhaseIndex];
-            PhaseProxy nextNextBurnPhase = _vars[nextNextBurnPhaseIndex];
-
             bool combiningThisBurn = nextNextBurnPhaseIndex > 0 && _optimizer.Phases[nextBurnPhaseIndex].MassContinuity;
             bool combiningNextBurn = nextNextBurnPhaseIndex > 0 && !combiningThisBurn && _optimizer.Phases[nextNextBurnPhaseIndex].MassContinuity;
 
-            double thisMassRemaining;
-            double nextMassConsumed;
+            // The complementarity is between the burn ending at preIdx and the burn starting
+            // at postIdx. When burns are combined across a mass-continuity coast, we step to
+            // the far side of the combined burn for the relevant endpoint.
+            int preIdx = combiningThisBurn ? nextBurnPhaseIndex : p;
+            int postIdx = combiningThisBurn || combiningNextBurn ? nextNextBurnPhaseIndex : nextBurnPhaseIndex;
 
-            if (combiningThisBurn)
-            {
-                thisMassRemaining = nextBurnPhase.M[-1] / _optimizer.Phases[nextBurnPhaseIndex].Mf - 1.0;
-                nextMassConsumed = 1.0 - nextNextBurnPhase.M[-1] / _optimizer.Phases[nextNextBurnPhaseIndex].M0;
-            }
-            else if (combiningNextBurn)
-            {
-                thisMassRemaining = thisPhase.M[-1]/_optimizer.Phases[p].Mf - 1.0;
-                nextMassConsumed = 1.0 - nextNextBurnPhase.M[-1]/_optimizer.Phases[nextNextBurnPhaseIndex].M0;
-            }
-            else
-            {
-                thisMassRemaining = thisPhase.M[-1]/_optimizer.Phases[p].Mf - 1.0;
-                nextMassConsumed = 1.0 - _vars[nextBurnPhaseIndex].M[-1]/_optimizer.Phases[nextBurnPhaseIndex].M0;
-            }
+            PhaseProxy prePhase = _vars[preIdx];
+            PhaseProxy postPhase = _vars[postIdx];
 
-            double a = nextMassConsumed;
-            double b = thisMassRemaining;
+            double preMf = _optimizer.Phases[preIdx].Mf;
+            double postM0 = _optimizer.Phases[postIdx].M0;
+
+            // fractional propellant remaining at the end of the burn, ending here
+            double b = prePhase.M[-1] / preMf - 1.0;
+            // fractional propellant consumed by the burn starting next
+            double a = 1.0 - postPhase.M[-1] / postM0;
             double u = a * a + b * b + 2e-6;
 
             // smoothed Fischer-Burmeister constraint on burned/unburned mass
             f[ci++] = Sqrt(u) - (a + b);
             alglib.sparseappendemptyrow(j);
-            if (combiningThisBurn)
-            {
-                alglib.sparseappendelement(j, nextBurnPhase.M.Idx(-1), (b/Sqrt(u) - 1)/_optimizer.Phases[nextBurnPhaseIndex].Mf);
-                alglib.sparseappendelement(j, nextNextBurnPhase.M.Idx(-1), (1-a / Sqrt(u))/ _optimizer.Phases[nextNextBurnPhaseIndex].M0);
-            }
-            else if (combiningNextBurn)
-            {
-                alglib.sparseappendelement(j, thisPhase.M.Idx(-1), (b/Sqrt(u) - 1)/_optimizer.Phases[p].Mf);
-                alglib.sparseappendelement(j, nextNextBurnPhase.M.Idx(-1), (1-a / Sqrt(u))/_optimizer.Phases[nextNextBurnPhaseIndex].M0);
-            }
-            else
-            {
-                alglib.sparseappendelement(j, thisPhase.M.Idx(-1), (b/Sqrt(u) - 1)/_optimizer.Phases[p].Mf);
-                alglib.sparseappendelement(j, nextBurnPhase.M.Idx(-1), (1-a / Sqrt(u))/_optimizer.Phases[nextBurnPhaseIndex].M0);
-            }
+            alglib.sparseappendelement(j, prePhase.M.Idx(-1), (b / Sqrt(u) - 1) / preMf);
+            alglib.sparseappendelement(j, postPhase.M.Idx(-1), (1 - a / Sqrt(u)) / postM0);
 
             return ci;
         }
