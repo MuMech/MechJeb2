@@ -21,6 +21,8 @@ namespace MechJebLib.PSG
         private readonly Scale _scale;
         private readonly List<double> _tmin = new List<double>();
         private readonly List<double> _tmax = new List<double>();
+        private readonly List<double> _dvstart = new List<double>();
+        private readonly List<double> _dvend = new List<double>();
         private readonly List<IInterpolant> _interpolants = new List<IInterpolant>();
         public readonly List<Phase> Phases = new List<Phase>();
         private readonly double _mu;
@@ -52,6 +54,10 @@ namespace MechJebLib.PSG
             _tmax.Add(interpolant.MaxT);
             Phases.Add(phase.DeepCopy());
             _interpolants.Add(interpolant);
+            double dvstart = _dvend.Count > 0 ? _dvend[_dvend.Count - 1] : 0;
+            double dvend = dvstart + phase.DeltaVFromMass(MBar(interpolant.MinT), MBar(interpolant.MaxT));
+            _dvstart.Add(dvstart);
+            _dvend.Add(dvend);
         }
 
         // convert kerbal time to normalized time
@@ -172,9 +178,9 @@ namespace MechJebLib.PSG
 
         public double DVBar(double tBar)
         {
-            using Vec xRaw = Interpolate(tBar);
-            var x = InterpolantLayout.CreateFrom(xRaw);
-            return x.Dv;
+            int idx = IndexForTbar(tBar);
+            double dv = Phases[idx].DeltaVFromMass(MBar(_tmin[idx]), MBar(tBar));
+            return _dvstart[idx] + dv;
         }
 
         public double DV(double t)
@@ -186,13 +192,10 @@ namespace MechJebLib.PSG
         public double DV(double t, int n)
         {
             double tbar = (t - T0) / _timeScale;
-            double min = tbar > _tmin[n] ? tbar : _tmin[n];
-            double max = _tmax[n];
-            using Vec ddmin = Interpolate(n, min);
-            var xmin = InterpolantLayout.CreateFrom(ddmin);
-            using Vec ddmax = Interpolate(n, max);
-            var xmax = InterpolantLayout.CreateFrom(ddmax);
-            return Max(xmax.Dv - xmin.Dv, 0) * _velocityScale;
+            if (tbar < _tmin[n])
+                tbar = _tmin[n];
+            double dv = Phases[n].DeltaVFromMass(MBar(tbar), MBar(_tmax[n]));
+            return Max(dv, 0) * _velocityScale;
         }
 
         public (double burn1, double coast, double burn2) TgoBarSplit(double tBar)

@@ -10,13 +10,12 @@ namespace MechJebLib.PSG
 {
     public struct InterpolantLayout
     {
-        public const int INTERPOLANT_LAYOUT_LEN = 11;
+        public const int INTERPOLANT_LAYOUT_LEN = 10;
 
         public V3 R;
         public V3 V;
         public double M;
         public V3 U;
-        public double Dv;
 
         public void CopyTo(IList<double> other)
         {
@@ -24,7 +23,6 @@ namespace MechJebLib.PSG
             V.CopyTo(other, 3);
             other[6] = M;
             U.CopyTo(other, 7);
-            other[10] = Dv;
         }
 
         public void CopyFrom(IList<double> other)
@@ -33,7 +31,6 @@ namespace MechJebLib.PSG
             V.CopyFrom(other, 3);
             M = other[6];
             U.CopyFrom(other, 7);
-            Dv = other[10];
         }
 
         public static InterpolantLayout CreateFrom(IList<double> other)

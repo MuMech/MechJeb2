@@ -494,7 +494,6 @@ namespace MechJebLib.PSG
                             double den = (_optimizer.N - 1) * 6;
                             double h6 = thisPhase.Bt() / den;
 
-                            double sum = 0;
                             for (int k = 0; k < _optimizer.K; k += 1)
                             {
                                 double mk = thisPhase.M[k];
@@ -509,9 +508,7 @@ namespace MechJebLib.PSG
                                     jac[thisPhase.M.Idx(k)] = -u * thrust * h6 / (mk * mk);
                                     jac[thisPhase.Ux.Idx(k)] = ux * thrust * h6 / (u * mk);
                                     jac[thisPhase.Uy.Idx(k)] = uy * thrust * h6 / (u * mk);
-                                    ;
                                     jac[thisPhase.Uz.Idx(k)] = uz * thrust * h6 / (u * mk);
-                                    ;
                                     jac[thisPhase.BtIdx()] += u * thrust / mk / den;
                                     continue;
                                 }
@@ -522,9 +519,7 @@ namespace MechJebLib.PSG
                                     jac[thisPhase.M.Idx(k)] = -2.0 * u * thrust * h6 / (mk * mk);
                                     jac[thisPhase.Ux.Idx(k)] = 2.0 * ux * thrust * h6 / (u * mk);
                                     jac[thisPhase.Uy.Idx(k)] = 2.0 * uy * thrust * h6 / (u * mk);
-                                    ;
                                     jac[thisPhase.Uz.Idx(k)] = 2.0 * uz * thrust * h6 / (u * mk);
-                                    ;
                                     jac[thisPhase.BtIdx()] += 2.0 * u * thrust / mk / den;
                                 }
                                 else
@@ -533,9 +528,7 @@ namespace MechJebLib.PSG
                                     jac[thisPhase.M.Idx(k)] = -4.0 * u * thrust * h6 / (mk * mk);
                                     jac[thisPhase.Ux.Idx(k)] = 4.0 * ux * thrust * h6 / (u * mk);
                                     jac[thisPhase.Uy.Idx(k)] = 4.0 * uy * thrust * h6 / (u * mk);
-                                    ;
                                     jac[thisPhase.Uz.Idx(k)] = 4.0 * uz * thrust * h6 / (u * mk);
-                                    ;
                                     jac[thisPhase.BtIdx()] += 4.0 * u * thrust / mk / den;
                                 }
                             }
