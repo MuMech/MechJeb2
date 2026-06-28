@@ -47,7 +47,6 @@ namespace MechJebLib.PSG
                 dy.V = -y.R / r3 + at * y.U;
                 dy.M = -Phase.Mdot;
                 dy.U = V3.zero;
-                dy.Dv = at;
 
                 dy.CopyTo(dyout);
             }
@@ -109,7 +108,6 @@ namespace MechJebLib.PSG
             y0.V = _problem.V0;
             y0.M = _problem.M0;
             y0.U = u0.normalized;
-            y0.Dv = 0;
 
             for (int p = 0; p < phases.Count; p++)
             {
