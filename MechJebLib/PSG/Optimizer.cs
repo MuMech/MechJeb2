@@ -376,13 +376,13 @@ namespace MechJebLib.PSG
                     else if (k == thisPhase.M.Length - 1 && !Phases[p].AllowShutdown)
                     {
                         // pin the terminal mass if we aren't allowed to shut it down early
-                        bndu[idx] = bndl[idx] = Phases[p].Mf;
+                        bndu[idx] = bndl[idx] = Phases[p].MinM;
                         boxConstrained[idx] = true;
                     }
                     else
                     {
                         bndu[idx] = Phases[p].M0;
-                        bndl[idx] = Phases[p].Mf;
+                        bndl[idx] = Phases[p].MinM;
                     }
                 }
             }
