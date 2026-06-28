@@ -35,10 +35,11 @@ namespace MechJebLib.PSG
             {
                 Phase phase = _phases[p];
                 PhaseProxy thisPhase = _vars[p];
+                double mf = thisPhase.M[-1];
                 double bt = thisPhase.Bt();
 
                 // is there unburned propellant going to be left in this stage?
-                bool freeBurntimeLeft = phase.Bt - bt > 1e-3;
+                bool freeBurntimeLeft = mf - phase.Mf > 1e-3;
                 // is this is a prunable stage (negligible propellant use after we can prune)
                 bool prunableStage = pruningStages && bt < 1e-3;
 
