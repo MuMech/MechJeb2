@@ -195,7 +195,6 @@ namespace MechJebLib.PSG
             double tbar = (t - T0) / _timeScale;
             tbar = Clamp(tbar, _tmin[n], _tmax[n]);
             double dv = Phases[n].DeltaVFromMass(MBar(n, tbar), MBar(n, _tmax[n]));
-            Print($"{t - T0} {_tmin[n] * _timeScale} {tbar * _timeScale} {_tmax[n] * _timeScale} {dv * _velocityScale}");
             return dv * _velocityScale;
         }
 
