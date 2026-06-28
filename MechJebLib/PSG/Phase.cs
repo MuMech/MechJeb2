@@ -168,9 +168,8 @@ namespace MechJebLib.PSG
             return sb.ToString();
         }
 
-        public double DeltaVForTime(double m, double t) => Coast ? 0 : -VexVacuum * Log(1 - t * VacThrust / (VexVacuum * m));
         public double BurnTimeFromMass(double m)        => Coast ? double.PositiveInfinity : (m - Mf) / Mdot;
-        public double TauFromMass(double m)             => Coast ? double.PositiveInfinity : m / Mdot;
+        public double DeltaVFromMass(double m0, double mf)          => Coast ? 0 : VexVacuum * Log(m0 / mf);
 
         public void Dispose() => _pool.Release(this);
     }

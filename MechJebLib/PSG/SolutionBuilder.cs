@@ -68,7 +68,6 @@ namespace MechJebLib.PSG
         {
             var solution = new Solution(_problem);
 
-            double dv = 0;
             double ti = 0;
 
             for (int p = 0; p < _phases.Count; p++)
@@ -79,7 +78,6 @@ namespace MechJebLib.PSG
 
                 double bt = thisPhase.Bt();
                 double h = bt / (_n - 1);
-                double m0 = thisPhase.M[0];
 
                 using var outTangent = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
                 using var inTangent = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
@@ -87,13 +85,12 @@ namespace MechJebLib.PSG
                 for (int n = 0; n < _n - 1; n++)
                 {
                     double dt1 = n * h;
-                    using Vec array1 = InterpolantValues(thisPhase, 2 * n, phase, dv, m0, dt1);
+                    using Vec array1 = InterpolantValues(thisPhase, 2 * n, phase);
 
-                    double dt2 = (n + 0.5) * h;
-                    using Vec array2 = InterpolantValues(thisPhase, 2 * n + 1, phase, dv, m0, dt2);
+                    using Vec array2 = InterpolantValues(thisPhase, 2 * n + 1, phase);
 
                     double dt3 = (n + 1.0) * h;
-                    using Vec array3 = InterpolantValues(thisPhase, 2 * n + 2, phase, dv, m0, dt3);
+                    using Vec array3 = InterpolantValues(thisPhase, 2 * n + 2, phase);
 
                     outTangent.CopyFrom(array1).Scal(-3.0 / h);
                     outTangent.LinComb2(outTangent, 4.0 / h, array2, -1.0 / h, array3);
@@ -116,13 +113,13 @@ namespace MechJebLib.PSG
                 solution.AddSegment(interpolant, _phases[p]);
                 ti = tf;
 
-                dv = solution.DVBar(solution.Tmax);
+                solution.DVBar(solution.Tmax);
             }
 
             return solution;
         }
 
-        private Vec InterpolantValues(PhaseProxy thisPhase, int k, Phase phase, double dv, double m0, double dt)
+        private Vec InterpolantValues(PhaseProxy thisPhase, int k, Phase phase)
         {
             var layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k] };
 
@@ -137,8 +134,6 @@ namespace MechJebLib.PSG
             {
                 layout.U = phase.Unguided ? thisPhase.U[0] : thisPhase.U[k];
             }
-
-            layout.Dv = dv + phase.DeltaVForTime(m0, dt);
 
             var array = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             layout.CopyTo(array);
