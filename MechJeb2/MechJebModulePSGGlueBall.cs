@@ -210,7 +210,7 @@ namespace MuMech
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
                   , MainBody.gravParameter, MainBody.Radius)
-               .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), Deg2Rad(argp), fpa, attachAltFlag, lanflag, argpFlag);
+               .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), argp, fpa, attachAltFlag, lanflag, argpFlag);
 
             if (MainBody.atmosphere)
             {
