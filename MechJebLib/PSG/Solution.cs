@@ -239,6 +239,19 @@ namespace MechJebLib.PSG
             return TgoBar(tbar, n) * _timeScale;
         }
 
+        public double TgoForKSPStage(double t, int kspStage)
+        {
+            double tbar = (t - T0) / _timeScale;
+            double sum = 0;
+            for (int i = IndexForTbar(tbar); i < Phases.Count && Phases[i].KSPStage == kspStage; i++)
+            {
+                if (Phases[i].Coast)
+                    continue;
+                sum += TgoBar(tbar, i) * _timeScale;
+            }
+            return sum;
+        }
+
         public double TgoBar(double tbar, int n)
         {
             if (tbar > _tmin[n])
@@ -255,6 +268,7 @@ namespace MechJebLib.PSG
         }
 
         // Specialized API to determine if we still have the coast in our future or not
+        // (or if we're in a coast right now)
         public bool WillCoast(double t)
         {
             double tbar = (t - T0) / _timeScale;
