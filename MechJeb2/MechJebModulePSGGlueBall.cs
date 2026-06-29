@@ -111,10 +111,10 @@ namespace MuMech
             if (!(_ascent is { IsFaulted: true }))
                 return;
 
-            LastFailureMessage = _ascent.ExceptionMessage;
+            LastFailureMessage = _ascent.Exception?.Message;
 
-            if (LastFailureMessage != null)
-                Debug.Log(LastFailureMessage);
+            if (_ascent.Exception != null)
+                Debug.Log(_ascent.Exception);
         }
 
         private void MarkReady()
