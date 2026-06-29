@@ -42,6 +42,7 @@ namespace MuMech
         public double Tgo;
         public double Vgo;
         public double StartCoast;
+        public bool hasCoasted;
 
         public Solution? Solution;
 
@@ -64,6 +65,7 @@ namespace MuMech
             Core.Spinup.Users.Add(this);
             Solution = null;
             _allowExecution = false;
+            hasCoasted = false;
         }
 
         protected override void OnModuleDisabled()
@@ -127,7 +129,7 @@ namespace MuMech
             bool hasRCS = Vessel.hasEnabledRCSModules() &&
                 VesselState.RCSThrustAvailable.Up > 0.1 * VesselState.RCSThrustAvailable.MaxMagnitude();
 
-            return hasRCS && Status != PSGStatus.TERMINAL_RCS && Vessel.currentStage == Solution.TerminalKSPStage();
+            return hasRCS && Status != PSGStatus.TERMINAL_RCS && Core.StageStats.VacStats.Count - 1 <= Solution.TerminalMJPhase();
         }
 
         private void HandleTerminal()
@@ -453,6 +455,8 @@ namespace MuMech
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
             Status = PSGStatus.COASTING;
+
+            hasCoasted = true;
         }
 
         public void SetSolution(Solution solution)

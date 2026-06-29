@@ -64,6 +64,8 @@ namespace MuMech
         }
 
         public static implicit operator double(EditableDoubleMult x) => x.Val;
+
+        public override string ToString() => Val.ToString();
     }
 
     public class EditableDouble : EditableDoubleMult
@@ -120,6 +122,8 @@ namespace MuMech
         }
 
         public static implicit operator EditableTime(double x) => new EditableTime(x);
+
+        public override string ToString() => GuiUtils.TimeToDHMS(Val);
     }
 
     public class EditableAngle
