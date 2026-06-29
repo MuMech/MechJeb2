@@ -277,6 +277,8 @@ namespace MechJebLib.PSG
 
         public int TerminalKSPStage() => Phases[Phases.FindIndex(p => p.TerminalStage)].KSPStage;
 
+        public int TerminalMJPhase() => Phases[Phases.FindIndex(p => p.TerminalStage)].MJPhase;
+
         public int OptimizeKSPStage() => Phases[Phases.FindIndex(p => p.PreciseShutdown)].KSPStage;
 
         public bool Unguided(double t)
