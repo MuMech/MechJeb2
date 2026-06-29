@@ -181,7 +181,6 @@ namespace MuMech
                 return;
             }
 
-            Debug.Log("prelaunch killing throttle");
             Core.Thrust.ThrustOff();
 
             Core.Attitude.SetAxisControl(false, false, false);
@@ -215,7 +214,6 @@ namespace MuMech
         {
             if (TimedLaunch)
             {
-                Debug.Log("Awaiting Liftoff");
                 Status = Localizer.Format("#MechJeb_Ascent_status6"); //"Awaiting liftoff"
 
                 Core.Attitude.SetAxisControl(false, false, false);
