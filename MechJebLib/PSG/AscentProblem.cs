@@ -195,7 +195,7 @@ namespace MechJebLib.PSG
             PhaseProxy prePhase = _vars[preIdx];
             PhaseProxy postPhase = _vars[postIdx];
 
-            double preMf = _optimizer.Phases[preIdx].Mf;
+            double preMf = _optimizer.Phases[preIdx].MinM;
             double postM0 = _optimizer.Phases[postIdx].M0;
 
             // fractional propellant remaining at the end of the burn, ending here

@@ -30,7 +30,7 @@ namespace MuMech
         public int MaxLmIterations;
         public int LastLmIterations;
 
-        public Exception? Exception;
+        public string? LastFailureMessage;
         public double Staleness;
         public double LastInfeasibility;
         private double _lastTime;
@@ -47,6 +47,7 @@ namespace MuMech
             SuccessfulConverges = LastLmStatus = MaxLmIterations = 0;
             LastLmStatus = LastLmIterations = 0;
             Staleness = LastInfeasibility = _lastTime = 0;
+            LastFailureMessage = null;
             _ascent = null;
         }
 
@@ -92,6 +93,7 @@ namespace MuMech
                     SuccessfulConverges += 1;
                     _lastTime = VesselState.Time;
                     Staleness = 0;
+                    LastFailureMessage = null;
                 }
                 else
                 {
@@ -109,8 +111,10 @@ namespace MuMech
             if (!(_ascent is { IsFaulted: true }))
                 return;
 
-            if (_ascent.ExceptionMessage != null)
-                Debug.Log(_ascent.ExceptionMessage);
+            LastFailureMessage = _ascent.ExceptionMessage;
+
+            if (LastFailureMessage != null)
+                Debug.Log(LastFailureMessage);
         }
 
         private void MarkReady()
@@ -210,7 +214,7 @@ namespace MuMech
             Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
                .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
                   , MainBody.gravParameter, MainBody.Radius)
-               .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), Deg2Rad(argp), fpa, attachAltFlag, lanflag, argpFlag);
+               .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), argp, fpa, attachAltFlag, lanflag, argpFlag);
 
             if (MainBody.atmosphere)
             {

@@ -54,8 +54,9 @@ namespace MechJebLib.PSG
             _tmax.Add(interpolant.MaxT);
             Phases.Add(phase.DeepCopy());
             _interpolants.Add(interpolant);
+            int idx = _interpolants.Count - 1;
             double dvstart = _dvend.Count > 0 ? _dvend[_dvend.Count - 1] : 0;
-            double dvend = dvstart + phase.DeltaVFromMass(MBar(interpolant.MinT), MBar(interpolant.MaxT));
+            double dvend = dvstart + phase.DeltaVFromMass(MBar(idx, interpolant.MinT), MBar(idx, interpolant.MaxT));
             _dvstart.Add(dvstart);
             _dvend.Add(dvend);
         }
@@ -179,7 +180,7 @@ namespace MechJebLib.PSG
         public double DVBar(double tBar)
         {
             int idx = IndexForTbar(tBar);
-            double dv = Phases[idx].DeltaVFromMass(MBar(_tmin[idx]), MBar(tBar));
+            double dv = Phases[idx].DeltaVFromMass(MBar(idx, _tmin[idx]), MBar(idx, tBar));
             return _dvstart[idx] + dv;
         }
 
@@ -192,10 +193,9 @@ namespace MechJebLib.PSG
         public double DV(double t, int n)
         {
             double tbar = (t - T0) / _timeScale;
-            if (tbar < _tmin[n])
-                tbar = _tmin[n];
-            double dv = Phases[n].DeltaVFromMass(MBar(tbar), MBar(_tmax[n]));
-            return Max(dv, 0) * _velocityScale;
+            tbar = Clamp(tbar, _tmin[n], _tmax[n]);
+            double dv = Phases[n].DeltaVFromMass(MBar(n, tbar), MBar(n, _tmax[n]));
+            return dv * _velocityScale;
         }
 
         public (double burn1, double coast, double burn2) TgoBarSplit(double tBar)

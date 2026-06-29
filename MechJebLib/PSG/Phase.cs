@@ -14,31 +14,68 @@ namespace MechJebLib.PSG
 {
     public class Phase : IDisposable
     {
+        // starting mass of the phase/stage
         public double M0;
+
+        // ending mass of the phase/stage
         public double Mf;
+
+        // minimum mass constraint used by the optimizer, other callers should use Mf vs. MinM
+        public double MinM;
+
+        // burntime of the stage
         public double Bt;
-        public double MaxT;
+
+        // minimum coast/burn time of the phase
         public double MinT;
+
+        // maximum coast/burn time of the phase
+        public double MaxT;
+
+        // exhaust velocity in vacuum (0 for coast)
         public double VexVacuum;
+
+        // exhaust velocity at current conditions (0 for coast)
         public double VexCurrent;
+
+        // mdot of phase (0 for coast)
         public double Mdot;
+
+        // minimum supported throttle
         public double MinThrottle;
 
-        public bool PreciseShutdown = false;
-        public bool TerminalStage = false;
+        // assigned in the solution for a stage which needs a precise shutdown.
+        // (AllowShutdown stages which the optimizer burns to completion do not get this tag)
+        public bool PreciseShutdown;
+
+        // assigned in the solution for the 'top' of the rocket.
+        public bool TerminalStage;
+
+        // mass continuity assigned to the last two stages in a burn-coast-burn sequence in the same phase (coast during)
         public bool MassContinuity;
+
+        // true if the stage is inertially fixed
         public bool Unguided;
+
+        // true if this phase has been converted to normalized units
         public bool Normalized;
+
+        // used for "boot" process in Ascent
         public bool Tagged;
+
+        // if this stage is allowed to let the optimizer tune the burntime
         public bool AllowShutdown;
 
+        // the KSP stage of the rocket (KSP stage sequencing number)
         public int KSPStage;
+
+        // the MJ phase of the rocket (index into stage stats)
         public int MJPhase;
 
-        public double VacThrust     => Mdot * VexVacuum;
-        public double Tau           => Coast ? double.PositiveInfinity : VexVacuum / VacThrust * M0;
-        public bool   Coast         => Mdot == 0;
-        public bool   GuidedCoast   => Coast && !Unguided;
+        public double VacThrust   => Mdot * VexVacuum;
+        public double Tau         => Coast ? double.PositiveInfinity : VexVacuum / VacThrust * M0;
+        public bool   Coast       => Mdot == 0;
+        public bool   GuidedCoast => Coast && !Unguided;
 
         private static readonly ObjectPool<Phase> _pool = new ObjectPool<Phase>(New, Clear);
 
@@ -48,13 +85,11 @@ namespace MechJebLib.PSG
 
         private static Phase New() => new Phase();
 
-        // Runs on every pool Release. The object pool does not reset state on
-        // Borrow, and field initializers only run on a genuinely-new allocation,
-        // so every mutable field must be reset here or it leaks across reuse.
         private static void Clear(Phase phase)
         {
             phase.M0 = 0;
             phase.Mf = 0;
+            phase.MinM = 0;
             phase.Bt = 0;
             phase.MaxT = 0;
             phase.MinT = 0;
@@ -90,6 +125,7 @@ namespace MechJebLib.PSG
             MJPhase = mjPhase;
             M0 = m0;
             Mf = mf;
+            MinM = mf;
             Bt = bt;
             VexVacuum = ispVacuum * G0;
             VexCurrent = ispCurrent >= 0 ? ispCurrent * G0 : VexVacuum;
@@ -110,6 +146,7 @@ namespace MechJebLib.PSG
             phase.MaxT = MaxT / scale.TimeScale;
             phase.M0 = M0 / scale.MassScale;
             phase.Mf = Mf / scale.MassScale;
+            phase.MinM = MinM / scale.MassScale;
             phase.Normalized = true;
 
             return phase;
@@ -168,8 +205,8 @@ namespace MechJebLib.PSG
             return sb.ToString();
         }
 
-        public double BurnTimeFromMass(double m)        => Coast ? double.PositiveInfinity : (m - Mf) / Mdot;
-        public double DeltaVFromMass(double m0, double mf)          => Coast ? 0 : VexVacuum * Log(m0 / mf);
+        public double BurnTimeFromMass(double m)           => Coast ? double.PositiveInfinity : (m - Mf) / Mdot;
+        public double DeltaVFromMass(double m0, double mf) => Coast ? 0 : VexVacuum * Log(m0 / mf);
 
         public void Dispose() => _pool.Release(this);
     }

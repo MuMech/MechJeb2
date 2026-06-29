@@ -199,7 +199,7 @@ namespace MuMech
                 GUILayout.Label(n, GuiUtils.LayoutWidth(90));
                 GUILayout.Label(znorm);
                 GUILayout.EndHorizontal();
-                if (Core.Glueball.Exception != null)
+                if (Core.Glueball.LastFailureMessage != null)
                 {
                     GUILayout.Label(label30, GuiUtils.RedLabel); //LAST FAILURE:
                 }
@@ -328,8 +328,8 @@ namespace MuMech
             n = $"n: {Core.Glueball.LastLmIterations}({Core.Glueball.MaxLmIterations})";
             label29 = $"{CachedLocalizer.Instance.MechJebAscentLabel29} {GuiUtils.TimeToDHMS(Core.Glueball.Staleness)}";
             znorm = $"infeasibility: {Core.Glueball.LastInfeasibility:G5}";
-            if (Core.Glueball.Exception != null)
-                label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.Glueball.Exception.Message}";
+            if (Core.Glueball.LastFailureMessage != null)
+                label30 = $"{CachedLocalizer.Instance.MechJebAscentLabel30}{Core.Glueball.LastFailureMessage}";
 
             if (_launchingToPlane) launchTimer = CachedLocalizer.Instance.MechJebAscentMsg2; //Launching to target plane
             else if (_launchingToMatchLan) launchTimer = CachedLocalizer.Instance.MechJebAscentLaunchingToTargetLAN; //Launching to target LAN

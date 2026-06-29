@@ -447,6 +447,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
             solution.Vgo(0).ShouldEqual(8518.1366714811684, 1e-3);
+            solution.DV(0, 0).ShouldEqual(4034.1207426276151, 1e-3);
+            solution.DV(0, 1).ShouldEqual(4483.5493109058016, 1e-3);
 
             solution.U(0).normalized.ShouldEqual(new V3(0.69734975209707417, 0.6074944955387559, 0.38033374967291772), 1e-2);
 
