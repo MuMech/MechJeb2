@@ -35,8 +35,8 @@ namespace MechJebLib.Utils
         private CancellationTokenSource? _cts;
         private int _state = (int)JobState.Ready;
 
-        public JobState State            => (JobState)Volatile.Read(ref _state);
-        public string?  ExceptionMessage { get; private set; }
+        public JobState State     => (JobState)Volatile.Read(ref _state);
+        public Exception? Exception { get; private set; }
 
         protected CancellationToken CancelToken { get; private set; }
 
@@ -57,7 +57,7 @@ namespace MechJebLib.Utils
             if (Interlocked.CompareExchange(ref _state, (int)JobState.Running, (int)JobState.Ready) != (int)JobState.Ready)
                 return false;
 
-            ExceptionMessage = null;
+            Exception = null;
             _cts = new CancellationTokenSource();
             CancelToken = _cts.Token;
             _task = Task.Factory.StartNew(
@@ -83,7 +83,7 @@ namespace MechJebLib.Utils
             }
             catch (Exception ex)
             {
-                ExceptionMessage = $"Exception in {GetType().Name}: {ex.Message}";
+                Exception = ex;
                 Interlocked.Exchange(ref _state, (int)JobState.Faulted);
             }
         }
