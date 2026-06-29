@@ -83,7 +83,7 @@ namespace MechJebLib.Utils
             }
             catch (Exception ex)
             {
-                ExceptionMessage = $"Exception in {GetType().Name}: {ex}";
+                ExceptionMessage = $"Exception in {GetType().Name}: {ex.Message}";
                 Interlocked.Exchange(ref _state, (int)JobState.Faulted);
             }
         }
