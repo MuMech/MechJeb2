@@ -141,10 +141,10 @@ namespace MuMech
             stageHeaderData.Add(StageData.AtmoMaxTWR, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn8 + SPACING);
             stageHeaderData.Add(StageData.Isp, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn9 + SPACING);
             stageHeaderData.Add(StageData.RcsUllageTime, "RCS Ullage" + SPACING);
-            stageHeaderData.Add(StageData.AtmoDeltaV, (showRcs ? "RCS ∆Vmin" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn10) + SPACING);
-            stageHeaderData.Add(StageData.VacDeltaV, (showRcs ? "RCS ∆Vmax" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn11) + SPACING);
-            stageHeaderData.Add(StageData.AtmoCumulativeDeltaV, "Σ Atmo ∆V" + SPACING);
-            stageHeaderData.Add(StageData.VacCumulativeDeltaV, "Σ Vac ∆V" + SPACING);
+            stageHeaderData.Add(StageData.AtmoDeltaV, (showRcs ? "RCS ΔVmin" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn10) + SPACING);
+            stageHeaderData.Add(StageData.VacDeltaV, (showRcs ? "RCS ΔVmax" : CachedLocalizer.Instance.MechJebInfoItemsStatsColumn11) + SPACING);
+            stageHeaderData.Add(StageData.AtmoCumulativeDeltaV, "Σ Atmo ΔV" + SPACING);
+            stageHeaderData.Add(StageData.VacCumulativeDeltaV, "Σ Vac ΔV" + SPACING);
             stageHeaderData.Add(StageData.Time, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn12 + SPACING);
         }
 

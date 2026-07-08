@@ -311,7 +311,7 @@ namespace MuMech
 
             GUI.color = XKCDColors.Beige;
             graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].display, "∆V", GuiUtils.LayoutNoExpandWidth);
+                graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].display, "ΔV", GuiUtils.LayoutNoExpandWidth);
 
             GUI.color = XKCDColors.Green;
             graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].display = GUILayout.Toggle(
@@ -466,7 +466,7 @@ namespace MuMech
             {
                 GUI.color = XKCDColors.Beige;
                 //if (GUILayout.Toggle(scaleIdx == (int)recordType.DeltaVExpended, "DeltaVExpended " + MuUtils.ToSI(graphStates[(int)recordType.DeltaVExpended].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.DeltaVExpended].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED, "∆V", GuiUtils.LayoutExpandWidth))
+                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED, "ΔV", GuiUtils.LayoutExpandWidth))
                     scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED;
             }
 
