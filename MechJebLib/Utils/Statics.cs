@@ -566,6 +566,16 @@ namespace MechJebLib.Utils
         public static string ToSI(this float f, int sigFigs = 4, int maxPrecision = int.MaxValue) =>
             ((double)f).ToSI(sigFigs, maxPrecision);
 
+        /// <summary>
+        ///     Prefixes every line of a (possibly multi-line) string with <paramref name="n" /> spaces.  Used to compose the
+        ///     nested ToString() debug dumps of SimVessel/SimPart/SimPartModule so children indent underneath their parent.
+        /// </summary>
+        public static string Indent(this string s, int n)
+        {
+            string pad = new string(' ', n);
+            return pad + s.Replace("\n", "\n" + pad);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Print(string message) => Logger.Print(message);
 

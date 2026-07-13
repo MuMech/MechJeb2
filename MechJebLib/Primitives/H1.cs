@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Text;
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.Primitives
 {
@@ -46,5 +48,23 @@ namespace MechJebLib.Primitives
             Functions.Interpolants.CubicHermiteInterpolant(x1, y1, yp1, x2, y2, yp2, x);
 
         private static void Clear(H1 h) => h.Clear();
+
+        // Debug dump of the raw keyframes, in a form that mirrors HBase.Add(time, value, inTangent, outTangent) so the
+        // curve can be transcribed into a test fixture.  HBase/H3/Hn are effectively deprecated so this lives only on H1.
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append(Invariant($"H1(unityCompat={UnityCompat})["));
+            for (int i = 0; i < _list.Count; i++)
+            {
+                HFrame<double> f = _list.Values[i];
+                if (i > 0)
+                    sb.Append(", ");
+                sb.Append(Invariant($"(t={f.Time}, v={f.Value}, in={f.InTangent}, out={f.OutTangent})"));
+            }
+
+            sb.Append("]");
+            return sb.ToString();
+        }
     }
 }

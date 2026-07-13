@@ -4,6 +4,7 @@
  */
 
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
@@ -27,5 +28,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         private static void Clear(SimProceduralFairingDecoupler m)
         {
         }
+
+        public override string ToString() =>
+            Invariant($"SimProceduralFairingDecoupler: {CommonFields()} IsDecoupled={IsDecoupled}");
     }
 }

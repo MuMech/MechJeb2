@@ -4,6 +4,7 @@
  */
 
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
@@ -26,5 +27,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         private static SimModuleDockingNode New() => new SimModuleDockingNode();
 
         private static void Clear(SimModuleDockingNode m) => m.AttachedPart = null;
+
+        public override string ToString() =>
+            Invariant($"SimModuleDockingNode: {CommonFields()} Staged={Staged} AttachedPart={AttachedPart?.Name ?? "null"}");
     }
 }
