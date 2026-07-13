@@ -192,8 +192,12 @@ namespace MuMech
             if (Solution.TgoForKSPStage(VesselState.Time, Vessel.currentStage) > 10)
                 return;
 
-            // but if we're doing a coast, or going to do a coast we don't enter terminal guidance yet
-            if (Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.Time))
+            // if we are in a coast then don't enter terminal guidance
+            if (IsCoasting())
+                return;
+
+            // if we are coast-during then prevent coasting if we will be coasting this stage (first burn of burn-coast-burn)
+            if (_ascentSettings.CoastLocation == 0 && Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.Time))
                 return;
 
             if (Status != PSGStatus.TERMINAL_RCS)
@@ -469,17 +473,6 @@ namespace MuMech
             Solution = solution;
             if (Status == PSGStatus.ENABLED)
                 Status = PSGStatus.INITIALIZED;
-        }
-
-        // This API is necessary so that we know that there's no future coast on the trajectory so
-        // we entirely suppress adding the coast in the glueball.  If there is no solution, then we're
-        // bootstrapping so we want to add a coast if we need one, so we return false here.
-        public bool HasGoodSolutionWithNoFutureCoast()
-        {
-            if (Solution == null)
-                return false;
-
-            return !Solution.WillCoast(VesselState.Time);
         }
     }
 }
