@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Text;
 using MechJebLib.Utils;
 using static System.Math;
+using static System.FormattableString;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation
 {
@@ -222,24 +224,40 @@ namespace MechJebLib.FuelFlowSimulation
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"{Name}: ");
-            sb.Append("  Neighbors:");
-            for (int i = 0; i < Links.Count; i++)
-                sb.Append($" {Links[i].Name}");
+            sb.AppendLine(Invariant($"SimPart '{Name}':"));
+            sb.AppendLine(Invariant($"  InverseStage={InverseStage} DecoupledInStage={DecoupledInStage} StagingOn={StagingOn}"));
+            sb.AppendLine(Invariant(
+                $"  IsRoot={IsRoot} IsEngine={IsEngine} IsLaunchClamp={IsLaunchClamp} IsThrottleLocked={IsThrottleLocked} ActivatesEvenIfDisconnected={ActivatesEvenIfDisconnected} IsEnabled={IsEnabled}"));
+            sb.AppendLine(Invariant($"  ResourcePriority={ResourcePriority} ResourceRequestRemainingThreshold={ResourceRequestRemainingThreshold}"));
+            sb.AppendLine(Invariant(
+                $"  Mass={Mass} DryMass={DryMass} CrewMass={CrewMass} ModulesStagedMass={ModulesStagedMass} ModulesUnstagedMass={ModulesUnstagedMass} DisabledResourcesMass={DisabledResourcesMass} EngineResiduals={EngineResiduals}"));
+
+            sb.Append("  Links:");
+            foreach (SimPart p in Links)
+                sb.Append(Invariant($" {p.Name}"));
             sb.AppendLine();
-            //sb.Append("  CrossFeedPartSet:");
-            //for (int i = 0; i < CrossFeedPartSet.Count; i++)
-            //    sb.Append($" {CrossFeedPartSet[i].Name}");
-            //sb.AppendLine();
+
+            sb.Append("  SymmetryCounterParts:");
+            foreach (SimPart p in SymmetryCounterParts)
+                sb.Append(Invariant($" {p.Name}"));
+            sb.AppendLine();
+
+            sb.Append("  CrossFeedPartSet:");
+            foreach (SimPart p in CrossFeedPartSet)
+                sb.Append(Invariant($" {p.Name}"));
+            sb.AppendLine();
+
             sb.Append("  Resources:");
-            foreach (SimResource resource in Resources.Values)
-                sb.Append($" {resource.Id}={resource.Amount}*{resource.Density}");
-            sb.AppendLine();
-            sb.Append($"  DecoupledInStage: {DecoupledInStage} InverseStage: {InverseStage}");
+            foreach (SimResource r in Resources.Values)
+                sb.Append(Invariant(
+                    $" [id={r.Id} amount={r.Amount} maxAmount={r.MaxAmount} density={r.Density} free={r.Free} residual={r.Residual}]"));
             sb.AppendLine();
 
+            sb.AppendLine(Invariant($"  Modules ({Modules.Count}):"));
+            foreach (SimPartModule m in Modules)
+                sb.AppendLine(m.ToString().Indent(4));
 
-            return sb.ToString();
+            return sb.ToString().TrimEnd();
         }
     }
 }

@@ -4,6 +4,7 @@
  */
 
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
@@ -28,5 +29,9 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         private static SimModuleDecouple New() => new SimModuleDecouple();
 
         private static void Clear(SimModuleDecouple m) => m.AttachedPart = null;
+
+        public override string ToString() =>
+            Invariant(
+                $"SimModuleDecouple: {CommonFields()} IsDecoupled={IsDecoupled} IsOmniDecoupler={IsOmniDecoupler} Staged={Staged} AttachedPart={AttachedPart?.Name ?? "null"}");
     }
 }

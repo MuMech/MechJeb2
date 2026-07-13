@@ -4,6 +4,7 @@
  */
 
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
@@ -28,5 +29,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         private static void Clear(SimModuleAvionics m)
         {
         }
+
+        public override string ToString() =>
+            Invariant($"SimModuleAvionics: {CommonFields()} ControllableMass={ControllableMass}");
     }
 }

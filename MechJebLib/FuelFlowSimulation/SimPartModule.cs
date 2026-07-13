@@ -4,6 +4,7 @@
  */
 
 using System;
+using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation
 {
@@ -15,5 +16,9 @@ namespace MechJebLib.FuelFlowSimulation
         public bool StagingEnabled;
 
         public abstract void Dispose();
+
+        // The fields common to every SimPartModule, for the concrete ToString() debug dumps to include.
+        protected string CommonFields() =>
+            Invariant($"IsEnabled={IsEnabled} ModuleIsEnabled={ModuleIsEnabled} StagingEnabled={StagingEnabled}");
     }
 }
