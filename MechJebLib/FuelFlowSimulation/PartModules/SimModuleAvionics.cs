@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Collections.Generic;
 using MechJebLib.Utils;
 using static System.FormattableString;
 
@@ -30,7 +31,11 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         {
         }
 
-        public override string ToString() =>
-            Invariant($"SimModuleAvionics: {CommonFields()} ControllableMass={ControllableMass}");
+        public override string ToString()
+        {
+            List<string> fields = CommonFieldList();
+            AddField(fields, "ControllableMass", ControllableMass, 0);
+            return ModuleLine("SimModuleAvionics", fields);
+        }
     }
 }

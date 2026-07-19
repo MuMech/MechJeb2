@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Collections.Generic;
 using MechJebLib.Utils;
 using static System.FormattableString;
 
@@ -12,7 +13,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
     {
         private static readonly ObjectPool<SimProceduralFairingDecoupler> _pool = new ObjectPool<SimProceduralFairingDecoupler>(New, Clear);
 
-        public bool IsDecoupled;
+        public bool IsDecoupled = false;
 
         public override void Dispose() => _pool.Release(this);
 
@@ -29,7 +30,11 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         {
         }
 
-        public override string ToString() =>
-            Invariant($"SimProceduralFairingDecoupler: {CommonFields()} IsDecoupled={IsDecoupled}");
+        public override string ToString()
+        {
+            List<string> fields = CommonFieldList();
+            AddField(fields, "IsDecoupled", IsDecoupled, false);
+            return ModuleLine("SimProceduralFairingDecoupler", fields);
+        }
     }
 }

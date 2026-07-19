@@ -154,6 +154,7 @@ namespace MuMech
                 _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
                 _vesselManagerAtmo.SetInitial(VesselState.Time, VesselState.OrbitalPosition.WorldToV3Rotated(),
                     VesselState.OrbitalVelocity.WorldToV3Rotated(), VesselState.Forward.WorldToV3Rotated());
+                //_vesselManagerAtmo.PrintVessel();
                 if (!_vesselManagerAtmo.TryStartFuelFlowSimulationJob())
                     throw new Exception("[MechJebModuleStageStats] could not start atmo stats job");
             }

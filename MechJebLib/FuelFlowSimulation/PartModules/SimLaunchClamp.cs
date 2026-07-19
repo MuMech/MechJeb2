@@ -27,6 +27,6 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         {
         }
 
-        public override string ToString() => Invariant($"SimLaunchClamp: {CommonFields()}");
+        public override string ToString() => ModuleLine("SimLaunchClamp", CommonFieldList());
     }
 }
