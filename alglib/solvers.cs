@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.07.0 (source code generated 2025-12-29)
+ALGLIB 4.08.0 (source code generated 2026-06-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -24,97 +24,6 @@ http://www.fsf.org/licensing/licenses
 #pragma warning disable 8981
 using System;
 
-public partial class alglib
-{
-
-
-    /*************************************************************************
-
-    *************************************************************************/
-    public class polynomialsolverreport : alglibobject
-    {
-        //
-        // Public declarations
-        //
-        public double maxerr { get { return _innerobj.maxerr; } set { _innerobj.maxerr = value; } }
-    
-        public polynomialsolverreport()
-        {
-            _innerobj = new polynomialsolver.polynomialsolverreport();
-        }
-        
-        public override alglib.alglibobject make_copy()
-        {
-            return new polynomialsolverreport((polynomialsolver.polynomialsolverreport)_innerobj.make_copy());
-        }
-    
-        //
-        // Although some of declarations below are public, you should not use them
-        // They are intended for internal use only
-        //
-        private polynomialsolver.polynomialsolverreport _innerobj;
-        public polynomialsolver.polynomialsolverreport innerobj { get { return _innerobj; } }
-        public polynomialsolverreport(polynomialsolver.polynomialsolverreport obj)
-        {
-            _innerobj = obj;
-        }
-    }
-    
-    /*************************************************************************
-    Polynomial root finding.
-
-    This function returns all roots of the polynomial
-        P(x) = a0 + a1*x + a2*x^2 + ... + an*x^n
-    Both real and complex roots are returned (see below).
-
-    INPUT PARAMETERS:
-        A       -   array[N+1], polynomial coefficients:
-                    * A[0] is constant term
-                    * A[N] is a coefficient of X^N
-        N       -   polynomial degree
-
-    OUTPUT PARAMETERS:
-        X       -   array of complex roots:
-                    * for isolated real root, X[I] is strictly real: IMAGE(X[I])=0
-                    * complex roots are always returned in pairs - roots occupy
-                      positions I and I+1, with:
-                      * X[I+1]=Conj(X[I])
-                      * IMAGE(X[I]) > 0
-                      * IMAGE(X[I+1]) = -IMAGE(X[I]) < 0
-                    * multiple real roots may have non-zero imaginary part due
-                      to roundoff errors. There is no reliable way to distinguish
-                      real root of multiplicity 2 from two  complex  roots  in
-                      the presence of roundoff errors.
-        Rep     -   report, additional information, following fields are set:
-                    * Rep.MaxErr - max( |P(xi)| )  for  i=0..N-1.  This  field
-                      allows to quickly estimate "quality" of the roots  being
-                      returned.
-
-    NOTE:   this function uses companion matrix method to find roots. In  case
-            internal EVD  solver  fails  do  find  eigenvalues,  exception  is
-            generated.
-
-    NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
-            for them.
-
-      -- ALGLIB --
-         Copyright 24.02.2014 by Bochkanov Sergey
-    *************************************************************************/
-    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep)
-    {
-        x = new complex[0];
-        rep = new polynomialsolverreport();
-        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj, null);
-    }
-    
-    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep, alglib.xparams _params)
-    {
-        x = new complex[0];
-        rep = new polynomialsolverreport();
-        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj, _params);
-    }
-
-}
 public partial class alglib
 {
 
@@ -3630,6 +3539,503 @@ public partial class alglib
 
 
     /*************************************************************************
+    This object stores state of the LinLSQR method.
+
+    You should use ALGLIB functions to work with this object.
+    *************************************************************************/
+    public class linlsqrstate : alglibobject
+    {
+        //
+        // Public declarations
+        //
+    
+        public linlsqrstate()
+        {
+            _innerobj = new linlsqr.linlsqrstate();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new linlsqrstate((linlsqr.linlsqrstate)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private linlsqr.linlsqrstate _innerobj;
+        public linlsqr.linlsqrstate innerobj { get { return _innerobj; } }
+        public linlsqrstate(linlsqr.linlsqrstate obj)
+        {
+            _innerobj = obj;
+        }
+    }
+
+
+    /*************************************************************************
+
+    *************************************************************************/
+    public class linlsqrreport : alglibobject
+    {
+        //
+        // Public declarations
+        //
+        public int iterationscount { get { return _innerobj.iterationscount; } set { _innerobj.iterationscount = value; } }
+        public int nmv { get { return _innerobj.nmv; } set { _innerobj.nmv = value; } }
+        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
+    
+        public linlsqrreport()
+        {
+            _innerobj = new linlsqr.linlsqrreport();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new linlsqrreport((linlsqr.linlsqrreport)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private linlsqr.linlsqrreport _innerobj;
+        public linlsqr.linlsqrreport innerobj { get { return _innerobj; } }
+        public linlsqrreport(linlsqr.linlsqrreport obj)
+        {
+            _innerobj = obj;
+        }
+    }
+    
+    /*************************************************************************
+    This function initializes linear LSQR Solver. This solver is used to solve
+    non-symmetric (and, possibly, non-square) problems. Least squares solution
+    is returned for non-compatible systems.
+
+    USAGE:
+    1. User initializes algorithm state with LinLSQRCreate() call
+    2. User tunes solver parameters with  LinLSQRSetCond() and other functions
+    3. User  calls  LinLSQRSolveSparse()  function which takes algorithm state
+       and SparseMatrix object.
+    4. User calls LinLSQRResults() to get solution
+    5. Optionally, user may call LinLSQRSolveSparse() again to  solve  another
+       problem  with different matrix and/or right part without reinitializing
+       LinLSQRState structure.
+
+    INPUT PARAMETERS:
+        M       -   number of rows in A
+        N       -   number of variables, N>0
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+    NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
+          allocated place as much as possible.
+
+      -- ALGLIB --
+         Copyright 30.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrcreate(int m, int n, out linlsqrstate state)
+    {
+        state = new linlsqrstate();
+        linlsqr.linlsqrcreate(m, n, state.innerobj, null);
+    }
+    
+    public static void linlsqrcreate(int m, int n, out linlsqrstate state, alglib.xparams _params)
+    {
+        state = new linlsqrstate();
+        linlsqr.linlsqrcreate(m, n, state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function initializes linear LSQR Solver.  It  provides  exactly  same
+    functionality as linlsqrcreate(), but reuses  previously  allocated  space
+    as much as possible.
+
+    INPUT PARAMETERS:
+        M       -   number of rows in A
+        N       -   number of variables, N>0
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 14.11.2018 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrcreatebuf(int m, int n, linlsqrstate state)
+    {
+    
+        linlsqr.linlsqrcreatebuf(m, n, state.innerobj, null);
+    }
+    
+    public static void linlsqrcreatebuf(int m, int n, linlsqrstate state, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrcreatebuf(m, n, state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This  function  changes  preconditioning  settings of LinLSQQSolveSparse()
+    function. By default, SolveSparse() uses diagonal preconditioner,  but  if
+    you want to use solver without preconditioning, you can call this function
+    which forces solver to use unit matrix for preconditioning.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 19.11.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrsetprecunit(linlsqrstate state)
+    {
+    
+        linlsqr.linlsqrsetprecunit(state.innerobj, null);
+    }
+    
+    public static void linlsqrsetprecunit(linlsqrstate state, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetprecunit(state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
+    function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
+    preconditioner. This preconditioning mode is active by default.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 19.11.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrsetprecdiag(linlsqrstate state)
+    {
+    
+        linlsqr.linlsqrsetprecdiag(state.innerobj, null);
+    }
+    
+    public static void linlsqrsetprecdiag(linlsqrstate state, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetprecdiag(state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function sets optional Tikhonov regularization coefficient.
+    It is zero by default.
+
+    INPUT PARAMETERS:
+        LambdaI -   regularization factor, LambdaI>=0
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 30.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrsetlambdai(linlsqrstate state, double lambdai)
+    {
+    
+        linlsqr.linlsqrsetlambdai(state.innerobj, lambdai, null);
+    }
+    
+    public static void linlsqrsetlambdai(linlsqrstate state, double lambdai, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetlambdai(state.innerobj, lambdai, _params);
+    }
+    
+    /*************************************************************************
+    Procedure for solution of A*x=b with sparse A.
+
+    INPUT PARAMETERS:
+        State   -   algorithm state
+        A       -   sparse M*N matrix in the CRS format (you MUST contvert  it
+                    to CRS format  by  calling  SparseConvertToCRS()  function
+                    BEFORE you pass it to this function).
+        B       -   right part, array[M]
+
+    RESULT:
+        This function returns no result.
+        You can get solution by calling LinCGResults()
+
+    NOTE: this function uses lightweight preconditioning -  multiplication  by
+          inverse of diag(A). If you want, you can turn preconditioning off by
+          calling LinLSQRSetPrecUnit(). However, preconditioning cost is   low
+          and preconditioner is very important for solution  of  badly  scaled
+          problems.
+
+      -- ALGLIB --
+         Copyright 30.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b)
+    {
+    
+        linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b, null);
+    }
+    
+    public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b, _params);
+    }
+    
+    /*************************************************************************
+    This function sets stopping criteria.
+
+    INPUT PARAMETERS:
+        EpsA    -   algorithm will be stopped if ||A^T*Rk||/(||A||*||Rk||)<=EpsA.
+        EpsB    -   algorithm will be stopped if ||Rk||<=EpsB*||B||
+        MaxIts  -   algorithm will be stopped if number of iterations
+                    more than MaxIts.
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+    NOTE: if EpsA,EpsB,EpsC and MaxIts are zero then these variables will
+    be setted as default values.
+
+      -- ALGLIB --
+         Copyright 30.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits)
+    {
+    
+        linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits, null);
+    }
+    
+    public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits, _params);
+    }
+    
+    /*************************************************************************
+    LSQR solver: results.
+
+    This function must be called after LinLSQRSolve
+
+    INPUT PARAMETERS:
+        State   -   algorithm state
+
+    OUTPUT PARAMETERS:
+        X       -   array[N], solution
+        Rep     -   optimization report:
+                    * Rep.TerminationType completetion code:
+                        *  1    ||Rk||<=EpsB*||B||
+                        *  4    ||A^T*Rk||/(||A||*||Rk||)<=EpsA
+                        *  5    MaxIts steps was taken
+                        *  7    rounding errors prevent further progress,
+                                X contains best point found so far.
+                                (sometimes returned on singular systems)
+                        *  8    user requested termination via calling
+                                linlsqrrequesttermination()
+                    * Rep.IterationsCount contains iterations count
+                    * NMV countains number of matrix-vector calculations
+
+      -- ALGLIB --
+         Copyright 30.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrresults(linlsqrstate state, out double[] x, out linlsqrreport rep)
+    {
+        x = new double[0];
+        rep = new linlsqrreport();
+        linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj, null);
+    }
+    
+    public static void linlsqrresults(linlsqrstate state, out double[] x, out linlsqrreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new linlsqrreport();
+        linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function turns on/off reporting.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+        NeedXRep-   whether iteration reports are needed or not
+
+    If NeedXRep is True, algorithm will call rep() callback function if  it is
+    provided to MinCGOptimize().
+
+      -- ALGLIB --
+         Copyright 30.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrsetxrep(linlsqrstate state, bool needxrep)
+    {
+    
+        linlsqr.linlsqrsetxrep(state.innerobj, needxrep, null);
+    }
+    
+    public static void linlsqrsetxrep(linlsqrstate state, bool needxrep, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrsetxrep(state.innerobj, needxrep, _params);
+    }
+    
+    /*************************************************************************
+    This function is used to peek into LSQR solver and get  current  iteration
+    counter. You can safely "peek" into the solver from another thread.
+
+    INPUT PARAMETERS:
+        S           -   solver object
+
+    RESULT:
+        iteration counter, in [0,INF)
+
+      -- ALGLIB --
+         Copyright 21.05.2018 by Bochkanov Sergey
+    *************************************************************************/
+    public static int linlsqrpeekiterationscount(linlsqrstate s)
+    {
+    
+        return linlsqr.linlsqrpeekiterationscount(s.innerobj, null);
+    }
+    
+    public static int linlsqrpeekiterationscount(linlsqrstate s, alglib.xparams _params)
+    {
+    
+        return linlsqr.linlsqrpeekiterationscount(s.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This subroutine submits request for termination of the running solver.  It
+    can be called from some other thread which wants LSQR solver to  terminate
+    (obviously, the  thread  running  LSQR  solver can not request termination
+    because it is already busy working on LSQR).
+
+    As result, solver  stops  at  point  which  was  "current  accepted"  when
+    termination  request  was  submitted  and returns error code 8 (successful
+    termination).  Such   termination   is  a smooth  process  which  properly
+    deallocates all temporaries.
+
+    INPUT PARAMETERS:
+        State   -   solver structure
+
+    NOTE: calling this function on solver which is NOT running  will  have  no
+          effect.
+
+    NOTE: multiple calls to this function are possible. First call is counted,
+          subsequent calls are silently ignored.
+
+    NOTE: solver clears termination flag on its start, it means that  if  some
+          other thread will request termination too soon, its request will went
+          unnoticed.
+
+      -- ALGLIB --
+         Copyright 08.10.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void linlsqrrequesttermination(linlsqrstate state)
+    {
+    
+        linlsqr.linlsqrrequesttermination(state.innerobj, null);
+    }
+    
+    public static void linlsqrrequesttermination(linlsqrstate state, alglib.xparams _params)
+    {
+    
+        linlsqr.linlsqrrequesttermination(state.innerobj, _params);
+    }
+
+}
+public partial class alglib
+{
+
+
+    /*************************************************************************
+
+    *************************************************************************/
+    public class polynomialsolverreport : alglibobject
+    {
+        //
+        // Public declarations
+        //
+        public double maxerr { get { return _innerobj.maxerr; } set { _innerobj.maxerr = value; } }
+    
+        public polynomialsolverreport()
+        {
+            _innerobj = new polynomialsolver.polynomialsolverreport();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new polynomialsolverreport((polynomialsolver.polynomialsolverreport)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private polynomialsolver.polynomialsolverreport _innerobj;
+        public polynomialsolver.polynomialsolverreport innerobj { get { return _innerobj; } }
+        public polynomialsolverreport(polynomialsolver.polynomialsolverreport obj)
+        {
+            _innerobj = obj;
+        }
+    }
+    
+    /*************************************************************************
+    Polynomial root finding.
+
+    This function returns all roots of the polynomial
+        P(x) = a0 + a1*x + a2*x^2 + ... + an*x^n
+    Both real and complex roots are returned (see below).
+
+    INPUT PARAMETERS:
+        A       -   array[N+1], polynomial coefficients:
+                    * A[0] is constant term
+                    * A[N] is a coefficient of X^N
+        N       -   polynomial degree
+
+    OUTPUT PARAMETERS:
+        X       -   array of complex roots:
+                    * for isolated real root, X[I] is strictly real: IMAGE(X[I])=0
+                    * complex roots are always returned in pairs - roots occupy
+                      positions I and I+1, with:
+                      * X[I+1]=Conj(X[I])
+                      * IMAGE(X[I]) > 0
+                      * IMAGE(X[I+1]) = -IMAGE(X[I]) < 0
+                    * multiple real roots may have non-zero imaginary part due
+                      to roundoff errors. There is no reliable way to distinguish
+                      real root of multiplicity 2 from two  complex  roots  in
+                      the presence of roundoff errors.
+        Rep     -   report, additional information, following fields are set:
+                    * Rep.MaxErr - max( |P(xi)| )  for  i=0..N-1.  This  field
+                      allows to quickly estimate "quality" of the roots  being
+                      returned.
+
+    NOTE:   this function uses companion matrix method to find roots. In  case
+            internal EVD  solver  fails  do  find  eigenvalues,  exception  is
+            generated.
+
+    NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
+            for them.
+
+      -- ALGLIB --
+         Copyright 24.02.2014 by Bochkanov Sergey
+    *************************************************************************/
+    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep)
+    {
+        x = new complex[0];
+        rep = new polynomialsolverreport();
+        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj, null);
+    }
+    
+    public static void polynomialsolve(double[] a, int n, out complex[] x, out polynomialsolverreport rep, alglib.xparams _params)
+    {
+        x = new complex[0];
+        rep = new polynomialsolverreport();
+        polynomialsolver.polynomialsolve(a, n, ref x, rep.innerobj, _params);
+    }
+
+}
+public partial class alglib
+{
+
+
+    /*************************************************************************
     This structure is a sparse solver report (both direct and iterative solvers
     use this structure).
 
@@ -4486,781 +4892,6 @@ public partial class alglib
 public partial class alglib
 {
 
-
-    /*************************************************************************
-    This object stores state of the linear CG method.
-
-    You should use ALGLIB functions to work with this object.
-    Never try to access its fields directly!
-    *************************************************************************/
-    public class lincgstate : alglibobject
-    {
-        //
-        // Public declarations
-        //
-    
-        public lincgstate()
-        {
-            _innerobj = new lincg.lincgstate();
-        }
-        
-        public override alglib.alglibobject make_copy()
-        {
-            return new lincgstate((lincg.lincgstate)_innerobj.make_copy());
-        }
-    
-        //
-        // Although some of declarations below are public, you should not use them
-        // They are intended for internal use only
-        //
-        private lincg.lincgstate _innerobj;
-        public lincg.lincgstate innerobj { get { return _innerobj; } }
-        public lincgstate(lincg.lincgstate obj)
-        {
-            _innerobj = obj;
-        }
-    }
-
-
-    /*************************************************************************
-
-    *************************************************************************/
-    public class lincgreport : alglibobject
-    {
-        //
-        // Public declarations
-        //
-        public int iterationscount { get { return _innerobj.iterationscount; } set { _innerobj.iterationscount = value; } }
-        public int nmv { get { return _innerobj.nmv; } set { _innerobj.nmv = value; } }
-        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
-        public double r2 { get { return _innerobj.r2; } set { _innerobj.r2 = value; } }
-    
-        public lincgreport()
-        {
-            _innerobj = new lincg.lincgreport();
-        }
-        
-        public override alglib.alglibobject make_copy()
-        {
-            return new lincgreport((lincg.lincgreport)_innerobj.make_copy());
-        }
-    
-        //
-        // Although some of declarations below are public, you should not use them
-        // They are intended for internal use only
-        //
-        private lincg.lincgreport _innerobj;
-        public lincg.lincgreport innerobj { get { return _innerobj; } }
-        public lincgreport(lincg.lincgreport obj)
-        {
-            _innerobj = obj;
-        }
-    }
-    
-    /*************************************************************************
-    This function initializes linear CG Solver. This solver is used  to  solve
-    symmetric positive definite problems. If you want  to  solve  nonsymmetric
-    (or non-positive definite) problem you may use LinLSQR solver provided  by
-    ALGLIB.
-
-    USAGE:
-    1. User initializes algorithm state with LinCGCreate() call
-    2. User tunes solver parameters with  LinCGSetCond() and other functions
-    3. Optionally, user sets starting point with LinCGSetStartingPoint()
-    4. User  calls LinCGSolveSparse() function which takes algorithm state and
-       SparseMatrix object.
-    5. User calls LinCGResults() to get solution
-    6. Optionally, user may call LinCGSolveSparse()  again  to  solve  another
-       problem  with different matrix and/or right part without reinitializing
-       LinCGState structure.
-
-    INPUT PARAMETERS:
-        N       -   problem dimension, N>0
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgcreate(int n, out lincgstate state)
-    {
-        state = new lincgstate();
-        lincg.lincgcreate(n, state.innerobj, null);
-    }
-    
-    public static void lincgcreate(int n, out lincgstate state, alglib.xparams _params)
-    {
-        state = new lincgstate();
-        lincg.lincgcreate(n, state.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This function sets starting point.
-    By default, zero starting point is used.
-
-    INPUT PARAMETERS:
-        X       -   starting point, array[N]
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetstartingpoint(lincgstate state, double[] x)
-    {
-    
-        lincg.lincgsetstartingpoint(state.innerobj, x, null);
-    }
-    
-    public static void lincgsetstartingpoint(lincgstate state, double[] x, alglib.xparams _params)
-    {
-    
-        lincg.lincgsetstartingpoint(state.innerobj, x, _params);
-    }
-    
-    /*************************************************************************
-    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
-    function. By default, SolveSparse() uses diagonal preconditioner,  but  if
-    you want to use solver without preconditioning, you can call this function
-    which forces solver to use unit matrix for preconditioning.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 19.11.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetprecunit(lincgstate state)
-    {
-    
-        lincg.lincgsetprecunit(state.innerobj, null);
-    }
-    
-    public static void lincgsetprecunit(lincgstate state, alglib.xparams _params)
-    {
-    
-        lincg.lincgsetprecunit(state.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
-    function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
-    preconditioner. This preconditioning mode is active by default.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 19.11.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetprecdiag(lincgstate state)
-    {
-    
-        lincg.lincgsetprecdiag(state.innerobj, null);
-    }
-    
-    public static void lincgsetprecdiag(lincgstate state, alglib.xparams _params)
-    {
-    
-        lincg.lincgsetprecdiag(state.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This function sets stopping criteria.
-
-    INPUT PARAMETERS:
-        EpsF    -   algorithm will be stopped if norm of residual is less than
-                    EpsF*||b||.
-        MaxIts  -   algorithm will be stopped if number of iterations is  more
-                    than MaxIts.
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-    NOTES:
-    If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small
-    value.
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetcond(lincgstate state, double epsf, int maxits)
-    {
-    
-        lincg.lincgsetcond(state.innerobj, epsf, maxits, null);
-    }
-    
-    public static void lincgsetcond(lincgstate state, double epsf, int maxits, alglib.xparams _params)
-    {
-    
-        lincg.lincgsetcond(state.innerobj, epsf, maxits, _params);
-    }
-    
-    /*************************************************************************
-    Procedure for solution of A*x=b with sparse A.
-
-    INPUT PARAMETERS:
-        State   -   algorithm state
-        A       -   sparse matrix in the CRS format (you MUST contvert  it  to
-                    CRS format by calling SparseConvertToCRS() function).
-        IsUpper -   whether upper or lower triangle of A is used:
-                    * IsUpper=True  => only upper triangle is used and lower
-                                       triangle is not referenced at all
-                    * IsUpper=False => only lower triangle is used and upper
-                                       triangle is not referenced at all
-        B       -   right part, array[N]
-
-    RESULT:
-        This function returns no result.
-        You can get solution by calling LinCGResults()
-
-    NOTE: this function uses lightweight preconditioning -  multiplication  by
-          inverse of diag(A). If you want, you can turn preconditioning off by
-          calling LinCGSetPrecUnit(). However, preconditioning cost is low and
-          preconditioner  is  very  important  for  solution  of  badly scaled
-          problems.
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b)
-    {
-    
-        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b, null);
-    }
-    
-    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b, alglib.xparams _params)
-    {
-    
-        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b, _params);
-    }
-    
-    /*************************************************************************
-    CG-solver: results.
-
-    This function must be called after LinCGSolve
-
-    INPUT PARAMETERS:
-        State   -   algorithm state
-
-    OUTPUT PARAMETERS:
-        X       -   array[N], solution
-        Rep     -   optimization report:
-                    * Rep.TerminationType completetion code:
-                        * -5    input matrix is either not positive definite,
-                                too large or too small
-                        * -4    overflow/underflow during solution
-                                (ill conditioned problem)
-                        *  1    ||residual||<=EpsF*||b||
-                        *  5    MaxIts steps was taken
-                        *  7    rounding errors prevent further progress,
-                                best point found is returned
-                    * Rep.IterationsCount contains iterations count
-                    * NMV countains number of matrix-vector calculations
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep)
-    {
-        x = new double[0];
-        rep = new lincgreport();
-        lincg.lincgresults(state.innerobj, ref x, rep.innerobj, null);
-    }
-    
-    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep, alglib.xparams _params)
-    {
-        x = new double[0];
-        rep = new lincgreport();
-        lincg.lincgresults(state.innerobj, ref x, rep.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This function sets restart frequency. By default, algorithm  is  restarted
-    after N subsequent iterations.
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetrestartfreq(lincgstate state, int srf)
-    {
-    
-        lincg.lincgsetrestartfreq(state.innerobj, srf, null);
-    }
-    
-    public static void lincgsetrestartfreq(lincgstate state, int srf, alglib.xparams _params)
-    {
-    
-        lincg.lincgsetrestartfreq(state.innerobj, srf, _params);
-    }
-    
-    /*************************************************************************
-    This function sets frequency of residual recalculations.
-
-    Algorithm updates residual r_k using iterative formula,  but  recalculates
-    it from scratch after each 10 iterations. It is done to avoid accumulation
-    of numerical errors and to stop algorithm when r_k starts to grow.
-
-    Such low update frequence (1/10) gives very  little  overhead,  but  makes
-    algorithm a bit more robust against numerical errors. However, you may
-    change it
-
-    INPUT PARAMETERS:
-        Freq    -   desired update frequency, Freq>=0.
-                    Zero value means that no updates will be done.
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetrupdatefreq(lincgstate state, int freq)
-    {
-    
-        lincg.lincgsetrupdatefreq(state.innerobj, freq, null);
-    }
-    
-    public static void lincgsetrupdatefreq(lincgstate state, int freq, alglib.xparams _params)
-    {
-    
-        lincg.lincgsetrupdatefreq(state.innerobj, freq, _params);
-    }
-    
-    /*************************************************************************
-    This function turns on/off reporting.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-        NeedXRep-   whether iteration reports are needed or not
-
-    If NeedXRep is True, algorithm will call rep() callback function if  it is
-    provided to MinCGOptimize().
-
-      -- ALGLIB --
-         Copyright 14.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void lincgsetxrep(lincgstate state, bool needxrep)
-    {
-    
-        lincg.lincgsetxrep(state.innerobj, needxrep, null);
-    }
-    
-    public static void lincgsetxrep(lincgstate state, bool needxrep, alglib.xparams _params)
-    {
-    
-        lincg.lincgsetxrep(state.innerobj, needxrep, _params);
-    }
-
-}
-public partial class alglib
-{
-
-
-    /*************************************************************************
-    This object stores state of the LinLSQR method.
-
-    You should use ALGLIB functions to work with this object.
-    *************************************************************************/
-    public class linlsqrstate : alglibobject
-    {
-        //
-        // Public declarations
-        //
-    
-        public linlsqrstate()
-        {
-            _innerobj = new linlsqr.linlsqrstate();
-        }
-        
-        public override alglib.alglibobject make_copy()
-        {
-            return new linlsqrstate((linlsqr.linlsqrstate)_innerobj.make_copy());
-        }
-    
-        //
-        // Although some of declarations below are public, you should not use them
-        // They are intended for internal use only
-        //
-        private linlsqr.linlsqrstate _innerobj;
-        public linlsqr.linlsqrstate innerobj { get { return _innerobj; } }
-        public linlsqrstate(linlsqr.linlsqrstate obj)
-        {
-            _innerobj = obj;
-        }
-    }
-
-
-    /*************************************************************************
-
-    *************************************************************************/
-    public class linlsqrreport : alglibobject
-    {
-        //
-        // Public declarations
-        //
-        public int iterationscount { get { return _innerobj.iterationscount; } set { _innerobj.iterationscount = value; } }
-        public int nmv { get { return _innerobj.nmv; } set { _innerobj.nmv = value; } }
-        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
-    
-        public linlsqrreport()
-        {
-            _innerobj = new linlsqr.linlsqrreport();
-        }
-        
-        public override alglib.alglibobject make_copy()
-        {
-            return new linlsqrreport((linlsqr.linlsqrreport)_innerobj.make_copy());
-        }
-    
-        //
-        // Although some of declarations below are public, you should not use them
-        // They are intended for internal use only
-        //
-        private linlsqr.linlsqrreport _innerobj;
-        public linlsqr.linlsqrreport innerobj { get { return _innerobj; } }
-        public linlsqrreport(linlsqr.linlsqrreport obj)
-        {
-            _innerobj = obj;
-        }
-    }
-    
-    /*************************************************************************
-    This function initializes linear LSQR Solver. This solver is used to solve
-    non-symmetric (and, possibly, non-square) problems. Least squares solution
-    is returned for non-compatible systems.
-
-    USAGE:
-    1. User initializes algorithm state with LinLSQRCreate() call
-    2. User tunes solver parameters with  LinLSQRSetCond() and other functions
-    3. User  calls  LinLSQRSolveSparse()  function which takes algorithm state
-       and SparseMatrix object.
-    4. User calls LinLSQRResults() to get solution
-    5. Optionally, user may call LinLSQRSolveSparse() again to  solve  another
-       problem  with different matrix and/or right part without reinitializing
-       LinLSQRState structure.
-
-    INPUT PARAMETERS:
-        M       -   number of rows in A
-        N       -   number of variables, N>0
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-    NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
-          allocated place as much as possible.
-
-      -- ALGLIB --
-         Copyright 30.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrcreate(int m, int n, out linlsqrstate state)
-    {
-        state = new linlsqrstate();
-        linlsqr.linlsqrcreate(m, n, state.innerobj, null);
-    }
-    
-    public static void linlsqrcreate(int m, int n, out linlsqrstate state, alglib.xparams _params)
-    {
-        state = new linlsqrstate();
-        linlsqr.linlsqrcreate(m, n, state.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This function initializes linear LSQR Solver.  It  provides  exactly  same
-    functionality as linlsqrcreate(), but reuses  previously  allocated  space
-    as much as possible.
-
-    INPUT PARAMETERS:
-        M       -   number of rows in A
-        N       -   number of variables, N>0
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 14.11.2018 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrcreatebuf(int m, int n, linlsqrstate state)
-    {
-    
-        linlsqr.linlsqrcreatebuf(m, n, state.innerobj, null);
-    }
-    
-    public static void linlsqrcreatebuf(int m, int n, linlsqrstate state, alglib.xparams _params)
-    {
-    
-        linlsqr.linlsqrcreatebuf(m, n, state.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This  function  changes  preconditioning  settings of LinLSQQSolveSparse()
-    function. By default, SolveSparse() uses diagonal preconditioner,  but  if
-    you want to use solver without preconditioning, you can call this function
-    which forces solver to use unit matrix for preconditioning.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 19.11.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrsetprecunit(linlsqrstate state)
-    {
-    
-        linlsqr.linlsqrsetprecunit(state.innerobj, null);
-    }
-    
-    public static void linlsqrsetprecunit(linlsqrstate state, alglib.xparams _params)
-    {
-    
-        linlsqr.linlsqrsetprecunit(state.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
-    function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
-    preconditioner. This preconditioning mode is active by default.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 19.11.2012 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrsetprecdiag(linlsqrstate state)
-    {
-    
-        linlsqr.linlsqrsetprecdiag(state.innerobj, null);
-    }
-    
-    public static void linlsqrsetprecdiag(linlsqrstate state, alglib.xparams _params)
-    {
-    
-        linlsqr.linlsqrsetprecdiag(state.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This function sets optional Tikhonov regularization coefficient.
-    It is zero by default.
-
-    INPUT PARAMETERS:
-        LambdaI -   regularization factor, LambdaI>=0
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-      -- ALGLIB --
-         Copyright 30.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrsetlambdai(linlsqrstate state, double lambdai)
-    {
-    
-        linlsqr.linlsqrsetlambdai(state.innerobj, lambdai, null);
-    }
-    
-    public static void linlsqrsetlambdai(linlsqrstate state, double lambdai, alglib.xparams _params)
-    {
-    
-        linlsqr.linlsqrsetlambdai(state.innerobj, lambdai, _params);
-    }
-    
-    /*************************************************************************
-    Procedure for solution of A*x=b with sparse A.
-
-    INPUT PARAMETERS:
-        State   -   algorithm state
-        A       -   sparse M*N matrix in the CRS format (you MUST contvert  it
-                    to CRS format  by  calling  SparseConvertToCRS()  function
-                    BEFORE you pass it to this function).
-        B       -   right part, array[M]
-
-    RESULT:
-        This function returns no result.
-        You can get solution by calling LinCGResults()
-
-    NOTE: this function uses lightweight preconditioning -  multiplication  by
-          inverse of diag(A). If you want, you can turn preconditioning off by
-          calling LinLSQRSetPrecUnit(). However, preconditioning cost is   low
-          and preconditioner is very important for solution  of  badly  scaled
-          problems.
-
-      -- ALGLIB --
-         Copyright 30.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b)
-    {
-    
-        linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b, null);
-    }
-    
-    public static void linlsqrsolvesparse(linlsqrstate state, sparsematrix a, double[] b, alglib.xparams _params)
-    {
-    
-        linlsqr.linlsqrsolvesparse(state.innerobj, a.innerobj, b, _params);
-    }
-    
-    /*************************************************************************
-    This function sets stopping criteria.
-
-    INPUT PARAMETERS:
-        EpsA    -   algorithm will be stopped if ||A^T*Rk||/(||A||*||Rk||)<=EpsA.
-        EpsB    -   algorithm will be stopped if ||Rk||<=EpsB*||B||
-        MaxIts  -   algorithm will be stopped if number of iterations
-                    more than MaxIts.
-
-    OUTPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-
-    NOTE: if EpsA,EpsB,EpsC and MaxIts are zero then these variables will
-    be setted as default values.
-
-      -- ALGLIB --
-         Copyright 30.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits)
-    {
-    
-        linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits, null);
-    }
-    
-    public static void linlsqrsetcond(linlsqrstate state, double epsa, double epsb, int maxits, alglib.xparams _params)
-    {
-    
-        linlsqr.linlsqrsetcond(state.innerobj, epsa, epsb, maxits, _params);
-    }
-    
-    /*************************************************************************
-    LSQR solver: results.
-
-    This function must be called after LinLSQRSolve
-
-    INPUT PARAMETERS:
-        State   -   algorithm state
-
-    OUTPUT PARAMETERS:
-        X       -   array[N], solution
-        Rep     -   optimization report:
-                    * Rep.TerminationType completetion code:
-                        *  1    ||Rk||<=EpsB*||B||
-                        *  4    ||A^T*Rk||/(||A||*||Rk||)<=EpsA
-                        *  5    MaxIts steps was taken
-                        *  7    rounding errors prevent further progress,
-                                X contains best point found so far.
-                                (sometimes returned on singular systems)
-                        *  8    user requested termination via calling
-                                linlsqrrequesttermination()
-                    * Rep.IterationsCount contains iterations count
-                    * NMV countains number of matrix-vector calculations
-
-      -- ALGLIB --
-         Copyright 30.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrresults(linlsqrstate state, out double[] x, out linlsqrreport rep)
-    {
-        x = new double[0];
-        rep = new linlsqrreport();
-        linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj, null);
-    }
-    
-    public static void linlsqrresults(linlsqrstate state, out double[] x, out linlsqrreport rep, alglib.xparams _params)
-    {
-        x = new double[0];
-        rep = new linlsqrreport();
-        linlsqr.linlsqrresults(state.innerobj, ref x, rep.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This function turns on/off reporting.
-
-    INPUT PARAMETERS:
-        State   -   structure which stores algorithm state
-        NeedXRep-   whether iteration reports are needed or not
-
-    If NeedXRep is True, algorithm will call rep() callback function if  it is
-    provided to MinCGOptimize().
-
-      -- ALGLIB --
-         Copyright 30.11.2011 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrsetxrep(linlsqrstate state, bool needxrep)
-    {
-    
-        linlsqr.linlsqrsetxrep(state.innerobj, needxrep, null);
-    }
-    
-    public static void linlsqrsetxrep(linlsqrstate state, bool needxrep, alglib.xparams _params)
-    {
-    
-        linlsqr.linlsqrsetxrep(state.innerobj, needxrep, _params);
-    }
-    
-    /*************************************************************************
-    This function is used to peek into LSQR solver and get  current  iteration
-    counter. You can safely "peek" into the solver from another thread.
-
-    INPUT PARAMETERS:
-        S           -   solver object
-
-    RESULT:
-        iteration counter, in [0,INF)
-
-      -- ALGLIB --
-         Copyright 21.05.2018 by Bochkanov Sergey
-    *************************************************************************/
-    public static int linlsqrpeekiterationscount(linlsqrstate s)
-    {
-    
-        return linlsqr.linlsqrpeekiterationscount(s.innerobj, null);
-    }
-    
-    public static int linlsqrpeekiterationscount(linlsqrstate s, alglib.xparams _params)
-    {
-    
-        return linlsqr.linlsqrpeekiterationscount(s.innerobj, _params);
-    }
-    
-    /*************************************************************************
-    This subroutine submits request for termination of the running solver.  It
-    can be called from some other thread which wants LSQR solver to  terminate
-    (obviously, the  thread  running  LSQR  solver can not request termination
-    because it is already busy working on LSQR).
-
-    As result, solver  stops  at  point  which  was  "current  accepted"  when
-    termination  request  was  submitted  and returns error code 8 (successful
-    termination).  Such   termination   is  a smooth  process  which  properly
-    deallocates all temporaries.
-
-    INPUT PARAMETERS:
-        State   -   solver structure
-
-    NOTE: calling this function on solver which is NOT running  will  have  no
-          effect.
-
-    NOTE: multiple calls to this function are possible. First call is counted,
-          subsequent calls are silently ignored.
-
-    NOTE: solver clears termination flag on its start, it means that  if  some
-          other thread will request termination too soon, its request will went
-          unnoticed.
-
-      -- ALGLIB --
-         Copyright 08.10.2014 by Bochkanov Sergey
-    *************************************************************************/
-    public static void linlsqrrequesttermination(linlsqrstate state)
-    {
-    
-        linlsqr.linlsqrrequesttermination(state.innerobj, null);
-    }
-    
-    public static void linlsqrrequesttermination(linlsqrstate state, alglib.xparams _params)
-    {
-    
-        linlsqr.linlsqrrequesttermination(state.innerobj, _params);
-    }
-
-}
-public partial class alglib
-{
-
     
     /*************************************************************************
     Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
@@ -5636,6 +5267,375 @@ public partial class alglib
         x = new double[0];
         rep = new sparsesolverreport();
         directsparsesolvers.sparselusolve(a.innerobj, p, q, b, ref x, rep.innerobj, _params);
+    }
+
+}
+public partial class alglib
+{
+
+
+    /*************************************************************************
+    This object stores state of the linear CG method.
+
+    You should use ALGLIB functions to work with this object.
+    Never try to access its fields directly!
+    *************************************************************************/
+    public class lincgstate : alglibobject
+    {
+        //
+        // Public declarations
+        //
+    
+        public lincgstate()
+        {
+            _innerobj = new lincg.lincgstate();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new lincgstate((lincg.lincgstate)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private lincg.lincgstate _innerobj;
+        public lincg.lincgstate innerobj { get { return _innerobj; } }
+        public lincgstate(lincg.lincgstate obj)
+        {
+            _innerobj = obj;
+        }
+    }
+
+
+    /*************************************************************************
+
+    *************************************************************************/
+    public class lincgreport : alglibobject
+    {
+        //
+        // Public declarations
+        //
+        public int iterationscount { get { return _innerobj.iterationscount; } set { _innerobj.iterationscount = value; } }
+        public int nmv { get { return _innerobj.nmv; } set { _innerobj.nmv = value; } }
+        public int terminationtype { get { return _innerobj.terminationtype; } set { _innerobj.terminationtype = value; } }
+        public double r2 { get { return _innerobj.r2; } set { _innerobj.r2 = value; } }
+    
+        public lincgreport()
+        {
+            _innerobj = new lincg.lincgreport();
+        }
+        
+        public override alglib.alglibobject make_copy()
+        {
+            return new lincgreport((lincg.lincgreport)_innerobj.make_copy());
+        }
+    
+        //
+        // Although some of declarations below are public, you should not use them
+        // They are intended for internal use only
+        //
+        private lincg.lincgreport _innerobj;
+        public lincg.lincgreport innerobj { get { return _innerobj; } }
+        public lincgreport(lincg.lincgreport obj)
+        {
+            _innerobj = obj;
+        }
+    }
+    
+    /*************************************************************************
+    This function initializes linear CG Solver. This solver is used  to  solve
+    symmetric positive definite problems. If you want  to  solve  nonsymmetric
+    (or non-positive definite) problem you may use LinLSQR solver provided  by
+    ALGLIB.
+
+    USAGE:
+    1. User initializes algorithm state with LinCGCreate() call
+    2. User tunes solver parameters with  LinCGSetCond() and other functions
+    3. Optionally, user sets starting point with LinCGSetStartingPoint()
+    4. User  calls LinCGSolveSparse() function which takes algorithm state and
+       SparseMatrix object.
+    5. User calls LinCGResults() to get solution
+    6. Optionally, user may call LinCGSolveSparse()  again  to  solve  another
+       problem  with different matrix and/or right part without reinitializing
+       LinCGState structure.
+
+    INPUT PARAMETERS:
+        N       -   problem dimension, N>0
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgcreate(int n, out lincgstate state)
+    {
+        state = new lincgstate();
+        lincg.lincgcreate(n, state.innerobj, null);
+    }
+    
+    public static void lincgcreate(int n, out lincgstate state, alglib.xparams _params)
+    {
+        state = new lincgstate();
+        lincg.lincgcreate(n, state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function sets starting point.
+    By default, zero starting point is used.
+
+    INPUT PARAMETERS:
+        X       -   starting point, array[N]
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetstartingpoint(lincgstate state, double[] x)
+    {
+    
+        lincg.lincgsetstartingpoint(state.innerobj, x, null);
+    }
+    
+    public static void lincgsetstartingpoint(lincgstate state, double[] x, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetstartingpoint(state.innerobj, x, _params);
+    }
+    
+    /*************************************************************************
+    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
+    function. By default, SolveSparse() uses diagonal preconditioner,  but  if
+    you want to use solver without preconditioning, you can call this function
+    which forces solver to use unit matrix for preconditioning.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 19.11.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetprecunit(lincgstate state)
+    {
+    
+        lincg.lincgsetprecunit(state.innerobj, null);
+    }
+    
+    public static void lincgsetprecunit(lincgstate state, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetprecunit(state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
+    function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
+    preconditioner. This preconditioning mode is active by default.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+      -- ALGLIB --
+         Copyright 19.11.2012 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetprecdiag(lincgstate state)
+    {
+    
+        lincg.lincgsetprecdiag(state.innerobj, null);
+    }
+    
+    public static void lincgsetprecdiag(lincgstate state, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetprecdiag(state.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function sets stopping criteria.
+
+    INPUT PARAMETERS:
+        EpsF    -   algorithm will be stopped if norm of residual is less than
+                    EpsF*||b||.
+        MaxIts  -   algorithm will be stopped if number of iterations is  more
+                    than MaxIts.
+
+    OUTPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+
+    NOTES:
+    If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small
+    value.
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetcond(lincgstate state, double epsf, int maxits)
+    {
+    
+        lincg.lincgsetcond(state.innerobj, epsf, maxits, null);
+    }
+    
+    public static void lincgsetcond(lincgstate state, double epsf, int maxits, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetcond(state.innerobj, epsf, maxits, _params);
+    }
+    
+    /*************************************************************************
+    Procedure for solution of A*x=b with sparse A.
+
+    INPUT PARAMETERS:
+        State   -   algorithm state
+        A       -   sparse matrix in the CRS format (you MUST contvert  it  to
+                    CRS format by calling SparseConvertToCRS() function).
+        IsUpper -   whether upper or lower triangle of A is used:
+                    * IsUpper=True  => only upper triangle is used and lower
+                                       triangle is not referenced at all
+                    * IsUpper=False => only lower triangle is used and upper
+                                       triangle is not referenced at all
+        B       -   right part, array[N]
+
+    RESULT:
+        This function returns no result.
+        You can get solution by calling LinCGResults()
+
+    NOTE: this function uses lightweight preconditioning -  multiplication  by
+          inverse of diag(A). If you want, you can turn preconditioning off by
+          calling LinCGSetPrecUnit(). However, preconditioning cost is low and
+          preconditioner  is  very  important  for  solution  of  badly scaled
+          problems.
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b)
+    {
+    
+        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b, null);
+    }
+    
+    public static void lincgsolvesparse(lincgstate state, sparsematrix a, bool isupper, double[] b, alglib.xparams _params)
+    {
+    
+        lincg.lincgsolvesparse(state.innerobj, a.innerobj, isupper, b, _params);
+    }
+    
+    /*************************************************************************
+    CG-solver: results.
+
+    This function must be called after LinCGSolve
+
+    INPUT PARAMETERS:
+        State   -   algorithm state
+
+    OUTPUT PARAMETERS:
+        X       -   array[N], solution
+        Rep     -   optimization report:
+                    * Rep.TerminationType completetion code:
+                        * -5    input matrix is either not positive definite,
+                                too large or too small
+                        * -4    overflow/underflow during solution
+                                (ill conditioned problem)
+                        *  1    ||residual||<=EpsF*||b||
+                        *  5    MaxIts steps was taken
+                        *  7    rounding errors prevent further progress,
+                                best point found is returned
+                    * Rep.IterationsCount contains iterations count
+                    * NMV countains number of matrix-vector calculations
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep)
+    {
+        x = new double[0];
+        rep = new lincgreport();
+        lincg.lincgresults(state.innerobj, ref x, rep.innerobj, null);
+    }
+    
+    public static void lincgresults(lincgstate state, out double[] x, out lincgreport rep, alglib.xparams _params)
+    {
+        x = new double[0];
+        rep = new lincgreport();
+        lincg.lincgresults(state.innerobj, ref x, rep.innerobj, _params);
+    }
+    
+    /*************************************************************************
+    This function sets restart frequency. By default, algorithm  is  restarted
+    after N subsequent iterations.
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetrestartfreq(lincgstate state, int srf)
+    {
+    
+        lincg.lincgsetrestartfreq(state.innerobj, srf, null);
+    }
+    
+    public static void lincgsetrestartfreq(lincgstate state, int srf, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetrestartfreq(state.innerobj, srf, _params);
+    }
+    
+    /*************************************************************************
+    This function sets frequency of residual recalculations.
+
+    Algorithm updates residual r_k using iterative formula,  but  recalculates
+    it from scratch after each 10 iterations. It is done to avoid accumulation
+    of numerical errors and to stop algorithm when r_k starts to grow.
+
+    Such low update frequence (1/10) gives very  little  overhead,  but  makes
+    algorithm a bit more robust against numerical errors. However, you may
+    change it
+
+    INPUT PARAMETERS:
+        Freq    -   desired update frequency, Freq>=0.
+                    Zero value means that no updates will be done.
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetrupdatefreq(lincgstate state, int freq)
+    {
+    
+        lincg.lincgsetrupdatefreq(state.innerobj, freq, null);
+    }
+    
+    public static void lincgsetrupdatefreq(lincgstate state, int freq, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetrupdatefreq(state.innerobj, freq, _params);
+    }
+    
+    /*************************************************************************
+    This function turns on/off reporting.
+
+    INPUT PARAMETERS:
+        State   -   structure which stores algorithm state
+        NeedXRep-   whether iteration reports are needed or not
+
+    If NeedXRep is True, algorithm will call rep() callback function if  it is
+    provided to MinCGOptimize().
+
+      -- ALGLIB --
+         Copyright 14.11.2011 by Bochkanov Sergey
+    *************************************************************************/
+    public static void lincgsetxrep(lincgstate state, bool needxrep)
+    {
+    
+        lincg.lincgsetxrep(state.innerobj, needxrep, null);
+    }
+    
+    public static void lincgsetxrep(lincgstate state, bool needxrep, alglib.xparams _params)
+    {
+    
+        lincg.lincgsetxrep(state.innerobj, needxrep, _params);
     }
 
 }
@@ -6069,175 +6069,7 @@ public partial class alglib
 }
 public partial class alglib
 {
-    public class polynomialsolver
-    {
-        public class polynomialsolverreport : apobject
-        {
-            public double maxerr;
-            public polynomialsolverreport()
-            {
-                init();
-            }
-            public override void init()
-            {
-            }
-            public override alglib.apobject make_copy()
-            {
-                polynomialsolverreport _result = new polynomialsolverreport();
-                _result.maxerr = maxerr;
-                return _result;
-            }
-        };
-
-
-
-
-        /*************************************************************************
-        Polynomial root finding.
-
-        This function returns all roots of the polynomial
-            P(x) = a0 + a1*x + a2*x^2 + ... + an*x^n
-        Both real and complex roots are returned (see below).
-
-        INPUT PARAMETERS:
-            A       -   array[N+1], polynomial coefficients:
-                        * A[0] is constant term
-                        * A[N] is a coefficient of X^N
-            N       -   polynomial degree
-
-        OUTPUT PARAMETERS:
-            X       -   array of complex roots:
-                        * for isolated real root, X[I] is strictly real: IMAGE(X[I])=0
-                        * complex roots are always returned in pairs - roots occupy
-                          positions I and I+1, with:
-                          * X[I+1]=Conj(X[I])
-                          * IMAGE(X[I]) > 0
-                          * IMAGE(X[I+1]) = -IMAGE(X[I]) < 0
-                        * multiple real roots may have non-zero imaginary part due
-                          to roundoff errors. There is no reliable way to distinguish
-                          real root of multiplicity 2 from two  complex  roots  in
-                          the presence of roundoff errors.
-            Rep     -   report, additional information, following fields are set:
-                        * Rep.MaxErr - max( |P(xi)| )  for  i=0..N-1.  This  field
-                          allows to quickly estimate "quality" of the roots  being
-                          returned.
-
-        NOTE:   this function uses companion matrix method to find roots. In  case
-                internal EVD  solver  fails  do  find  eigenvalues,  exception  is
-                generated.
-
-        NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
-                for them.
-
-          -- ALGLIB --
-             Copyright 24.02.2014 by Bochkanov Sergey
-        *************************************************************************/
-        public static void polynomialsolve(double[] a,
-            int n,
-            ref complex[] x,
-            polynomialsolverreport rep,
-            alglib.xparams _params)
-        {
-            double[,] c = new double[0,0];
-            double[,] vl = new double[0,0];
-            double[,] vr = new double[0,0];
-            double[] wr = new double[0];
-            double[] wi = new double[0];
-            int i = 0;
-            int j = 0;
-            bool status = new bool();
-            int nz = 0;
-            int ne = 0;
-            complex v = 0;
-            complex vv = 0;
-
-            a = (double[])a.Clone();
-            x = new complex[0];
-
-            alglib.ap.assert(n>0, "PolynomialSolve: N<=0");
-            alglib.ap.assert(alglib.ap.len(a)>=n+1, "PolynomialSolve: Length(A)<N+1");
-            alglib.ap.assert(apserv.isfinitevector(a, n+1, _params), "PolynomialSolve: A contains infitite numbers");
-            alglib.ap.assert((double)(a[n])!=(double)(0), "PolynomialSolve: A[N]=0");
-            
-            //
-            // Prepare
-            //
-            x = new complex[n];
-            
-            //
-            // Normalize A:
-            // * analytically determine NZ zero roots
-            // * quick exit for NZ=N
-            // * make residual NE-th degree polynomial monic
-            //   (here NE=N-NZ)
-            //
-            nz = 0;
-            while( nz<n && (double)(a[nz])==(double)(0) )
-            {
-                nz = nz+1;
-            }
-            ne = n-nz;
-            for(i=nz; i<=n; i++)
-            {
-                a[i-nz] = a[i]/a[n];
-            }
-            
-            //
-            // For NZ<N, build companion matrix and find NE non-zero roots
-            //
-            if( ne>0 )
-            {
-                c = new double[ne, ne];
-                for(i=0; i<=ne-1; i++)
-                {
-                    for(j=0; j<=ne-1; j++)
-                    {
-                        c[i,j] = 0;
-                    }
-                }
-                c[0,ne-1] = -a[0];
-                for(i=1; i<=ne-1; i++)
-                {
-                    c[i,i-1] = 1;
-                    c[i,ne-1] = -a[i];
-                }
-                status = evd.rmatrixevd(c, ne, 0, ref wr, ref wi, ref vl, ref vr, _params);
-                alglib.ap.assert(status, "PolynomialSolve: inernal error - EVD solver failed");
-                for(i=0; i<=ne-1; i++)
-                {
-                    x[i].x = wr[i];
-                    x[i].y = wi[i];
-                }
-            }
-            
-            //
-            // Remaining NZ zero roots
-            //
-            for(i=ne; i<=n-1; i++)
-            {
-                x[i] = 0;
-            }
-            
-            //
-            // Rep
-            //
-            rep.maxerr = 0;
-            for(i=0; i<=ne-1; i++)
-            {
-                v = 0;
-                vv = 1;
-                for(j=0; j<=ne; j++)
-                {
-                    v = v+a[j]*vv;
-                    vv = vv*x[i];
-                }
-                rep.maxerr = Math.Max(rep.maxerr, math.abscomplex(v));
-            }
-        }
-
-
-    }
-    public class directdensesolvers
+    public partial class directdensesolvers
     {
         public class densesolverreport : apobject
         {
@@ -10827,7 +10659,1406 @@ public partial class alglib
 
 
     }
-    public class iterativesparse
+    public partial class linlsqr
+    {
+        /*************************************************************************
+        This object stores state of the LinLSQR method.
+
+        You should use ALGLIB functions to work with this object.
+        *************************************************************************/
+        public class linlsqrstate : apobject
+        {
+            public normestimator.normestimatorstate nes;
+            public double[] rx;
+            public double[] b;
+            public int n;
+            public int m;
+            public int prectype;
+            public double[] ui;
+            public double[] uip1;
+            public double[] vi;
+            public double[] vip1;
+            public double[] omegai;
+            public double[] omegaip1;
+            public double alphai;
+            public double alphaip1;
+            public double betai;
+            public double betaip1;
+            public double phibari;
+            public double phibarip1;
+            public double phii;
+            public double rhobari;
+            public double rhobarip1;
+            public double rhoi;
+            public double ci;
+            public double si;
+            public double theta;
+            public double lambdai;
+            public double[] d;
+            public double anorm;
+            public double bnorm2;
+            public double dnorm;
+            public double r2;
+            public double[] x;
+            public double[] mv;
+            public double[] mtv;
+            public double epsa;
+            public double epsb;
+            public double epsc;
+            public int maxits;
+            public bool xrep;
+            public bool xupdated;
+            public bool needmv;
+            public bool needmtv;
+            public bool needmv2;
+            public bool needvmv;
+            public bool needprec;
+            public int repiterationscount;
+            public int repnmv;
+            public int repterminationtype;
+            public bool running;
+            public bool userterminationneeded;
+            public double[] tmpd;
+            public double[] tmpx;
+            public ap.rcommstate rstate;
+            public linlsqrstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+                nes = new normestimator.normestimatorstate();
+                rx = new double[0];
+                b = new double[0];
+                ui = new double[0];
+                uip1 = new double[0];
+                vi = new double[0];
+                vip1 = new double[0];
+                omegai = new double[0];
+                omegaip1 = new double[0];
+                d = new double[0];
+                x = new double[0];
+                mv = new double[0];
+                mtv = new double[0];
+                tmpd = new double[0];
+                tmpx = new double[0];
+                rstate = new ap.rcommstate();
+            }
+            public override alglib.apobject make_copy()
+            {
+                linlsqrstate _result = new linlsqrstate();
+                _result.nes = nes!=null ? (normestimator.normestimatorstate)nes.make_copy() : null;
+                _result.rx = (double[])rx.Clone();
+                _result.b = (double[])b.Clone();
+                _result.n = n;
+                _result.m = m;
+                _result.prectype = prectype;
+                _result.ui = (double[])ui.Clone();
+                _result.uip1 = (double[])uip1.Clone();
+                _result.vi = (double[])vi.Clone();
+                _result.vip1 = (double[])vip1.Clone();
+                _result.omegai = (double[])omegai.Clone();
+                _result.omegaip1 = (double[])omegaip1.Clone();
+                _result.alphai = alphai;
+                _result.alphaip1 = alphaip1;
+                _result.betai = betai;
+                _result.betaip1 = betaip1;
+                _result.phibari = phibari;
+                _result.phibarip1 = phibarip1;
+                _result.phii = phii;
+                _result.rhobari = rhobari;
+                _result.rhobarip1 = rhobarip1;
+                _result.rhoi = rhoi;
+                _result.ci = ci;
+                _result.si = si;
+                _result.theta = theta;
+                _result.lambdai = lambdai;
+                _result.d = (double[])d.Clone();
+                _result.anorm = anorm;
+                _result.bnorm2 = bnorm2;
+                _result.dnorm = dnorm;
+                _result.r2 = r2;
+                _result.x = (double[])x.Clone();
+                _result.mv = (double[])mv.Clone();
+                _result.mtv = (double[])mtv.Clone();
+                _result.epsa = epsa;
+                _result.epsb = epsb;
+                _result.epsc = epsc;
+                _result.maxits = maxits;
+                _result.xrep = xrep;
+                _result.xupdated = xupdated;
+                _result.needmv = needmv;
+                _result.needmtv = needmtv;
+                _result.needmv2 = needmv2;
+                _result.needvmv = needvmv;
+                _result.needprec = needprec;
+                _result.repiterationscount = repiterationscount;
+                _result.repnmv = repnmv;
+                _result.repterminationtype = repterminationtype;
+                _result.running = running;
+                _result.userterminationneeded = userterminationneeded;
+                _result.tmpd = (double[])tmpd.Clone();
+                _result.tmpx = (double[])tmpx.Clone();
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
+                return _result;
+            }
+        };
+
+
+        public class linlsqrreport : apobject
+        {
+            public int iterationscount;
+            public int nmv;
+            public int terminationtype;
+            public linlsqrreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                linlsqrreport _result = new linlsqrreport();
+                _result.iterationscount = iterationscount;
+                _result.nmv = nmv;
+                _result.terminationtype = terminationtype;
+                return _result;
+            }
+        };
+
+
+
+
+        public const double atol = 1.0E-6;
+        public const double btol = 1.0E-6;
+
+
+        /*************************************************************************
+        This function initializes linear LSQR Solver. This solver is used to solve
+        non-symmetric (and, possibly, non-square) problems. Least squares solution
+        is returned for non-compatible systems.
+
+        USAGE:
+        1. User initializes algorithm state with LinLSQRCreate() call
+        2. User tunes solver parameters with  LinLSQRSetCond() and other functions
+        3. User  calls  LinLSQRSolveSparse()  function which takes algorithm state 
+           and SparseMatrix object.
+        4. User calls LinLSQRResults() to get solution
+        5. Optionally, user may call LinLSQRSolveSparse() again to  solve  another  
+           problem  with different matrix and/or right part without reinitializing 
+           LinLSQRState structure.
+          
+        INPUT PARAMETERS:
+            M       -   number of rows in A
+            N       -   number of variables, N>0
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+            
+        NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
+              allocated place as much as possible.
+
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrcreate(int m,
+            int n,
+            linlsqrstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(m>0, "LinLSQRCreate: M<=0");
+            alglib.ap.assert(n>0, "LinLSQRCreate: N<=0");
+            linlsqrcreatebuf(m, n, state, _params);
+        }
+
+
+        /*************************************************************************
+        This function initializes linear LSQR Solver.  It  provides  exactly  same
+        functionality as linlsqrcreate(), but reuses  previously  allocated  space
+        as much as possible.
+          
+        INPUT PARAMETERS:
+            M       -   number of rows in A
+            N       -   number of variables, N>0
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 14.11.2018 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrcreatebuf(int m,
+            int n,
+            linlsqrstate state,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.assert(m>0, "LinLSQRCreateBuf: M<=0");
+            alglib.ap.assert(n>0, "LinLSQRCreateBuf: N<=0");
+            state.m = m;
+            state.n = n;
+            state.prectype = 0;
+            state.epsa = atol;
+            state.epsb = btol;
+            state.epsc = 1/Math.Sqrt(math.machineepsilon);
+            state.maxits = 0;
+            state.lambdai = 0;
+            state.xrep = false;
+            state.running = false;
+            state.repiterationscount = 0;
+            
+            //
+            // * allocate arrays
+            // * set RX to NAN (just for the case user calls Results() without 
+            //   calling SolveSparse()
+            // * set B to zero
+            //
+            normestimator.normestimatorcreate(m, n, 2, 2, state.nes, _params);
+            state.rx = new double[state.n];
+            state.ui = new double[state.m+state.n];
+            state.uip1 = new double[state.m+state.n];
+            state.vip1 = new double[state.n];
+            state.vi = new double[state.n];
+            state.omegai = new double[state.n];
+            state.omegaip1 = new double[state.n];
+            state.d = new double[state.n];
+            state.x = new double[state.m+state.n];
+            state.mv = new double[state.m+state.n];
+            state.mtv = new double[state.n];
+            state.b = new double[state.m];
+            for(i=0; i<=n-1; i++)
+            {
+                state.rx[i] = Double.NaN;
+            }
+            for(i=0; i<=m-1; i++)
+            {
+                state.b[i] = 0;
+            }
+            state.rstate.ia = new int[1+1];
+            state.rstate.ra = new double[0+1];
+            state.rstate.stage = -1;
+            state.rstate.clear_handler();
+        }
+
+
+        /*************************************************************************
+        This function sets right part. By default, right part is zero.
+
+        INPUT PARAMETERS:
+            B       -   right part, array[N].
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrsetb(linlsqrstate state,
+            double[] b,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.assert(!state.running, "LinLSQRSetB: you can not change B when LinLSQRIteration is running");
+            alglib.ap.assert(state.m<=alglib.ap.len(b), "LinLSQRSetB: Length(B)<M");
+            alglib.ap.assert(apserv.isfinitevector(b, state.m, _params), "LinLSQRSetB: B contains infinite or NaN values");
+            state.bnorm2 = 0;
+            for(i=0; i<=state.m-1; i++)
+            {
+                state.b[i] = b[i];
+                state.bnorm2 = state.bnorm2+b[i]*b[i];
+            }
+        }
+
+
+        /*************************************************************************
+        This  function  changes  preconditioning  settings of LinLSQQSolveSparse()
+        function. By default, SolveSparse() uses diagonal preconditioner,  but  if
+        you want to use solver without preconditioning, you can call this function
+        which forces solver to use unit matrix for preconditioning.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 19.11.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrsetprecunit(linlsqrstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinLSQRSetPrecUnit: you can not change preconditioner, because function LinLSQRIteration is running!");
+            state.prectype = -1;
+        }
+
+
+        /*************************************************************************
+        This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
+        function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
+        preconditioner. This preconditioning mode is active by default.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 19.11.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrsetprecdiag(linlsqrstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinLSQRSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!");
+            state.prectype = 0;
+        }
+
+
+        /*************************************************************************
+        This function sets optional Tikhonov regularization coefficient.
+        It is zero by default.
+
+        INPUT PARAMETERS:
+            LambdaI -   regularization factor, LambdaI>=0
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+            
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrsetlambdai(linlsqrstate state,
+            double lambdai,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinLSQRSetLambdaI: you can not set LambdaI, because function LinLSQRIteration is running");
+            alglib.ap.assert(math.isfinite(lambdai) && (double)(lambdai)>=(double)(0), "LinLSQRSetLambdaI: LambdaI is infinite or NaN");
+            state.lambdai = lambdai;
+        }
+
+
+        /*************************************************************************
+
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool linlsqriteration(linlsqrstate state,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+            int summn = 0;
+            double bnorm = 0;
+            int i = 0;
+            int i_ = 0;
+
+            
+            //
+            // Reverse communication preparations
+            //
+            // This code initializes locals by:
+            // * random values determined during code
+            //   generation - on first subroutine call
+            // * values from previous call - on subsequent calls
+            //
+            if( state.rstate.stage>=0 )
+            {
+                summn = state.rstate.ia[0];
+                i = state.rstate.ia[1];
+                bnorm = state.rstate.ra[0];
+            }
+            else
+            {
+                summn = 359;
+                i = -58;
+                bnorm = -919.0;
+            }
+            if( state.rstate.stage==0 )
+            {
+                goto lbl_0;
+            }
+            if( state.rstate.stage==1 )
+            {
+                goto lbl_1;
+            }
+            if( state.rstate.stage==2 )
+            {
+                goto lbl_2;
+            }
+            if( state.rstate.stage==3 )
+            {
+                goto lbl_3;
+            }
+            if( state.rstate.stage==4 )
+            {
+                goto lbl_4;
+            }
+            if( state.rstate.stage==5 )
+            {
+                goto lbl_5;
+            }
+            if( state.rstate.stage==6 )
+            {
+                goto lbl_6;
+            }
+            
+            //
+            // Routine body
+            //
+            alglib.ap.assert(alglib.ap.len(state.b)>0, "LinLSQRIteration: using non-allocated array B");
+            summn = state.m+state.n;
+            bnorm = Math.Sqrt(state.bnorm2);
+            state.userterminationneeded = false;
+            state.running = true;
+            state.repnmv = 0;
+            state.repiterationscount = 0;
+            state.r2 = state.bnorm2;
+            clearrfields(state, _params);
+            
+            //
+            //estimate for ANorm
+            //
+            normestimator.normestimatorrestart(state.nes, _params);
+        lbl_7:
+            if( !normestimator.normestimatoriteration(state.nes, _params) )
+            {
+                goto lbl_8;
+            }
+            if( !state.nes.needmv )
+            {
+                goto lbl_9;
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.nes.x[i_];
+            }
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needmv = true;
+            state.rstate.stage = 0;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_0:
+            state.needmv = false;
+            for(i_=0; i_<=state.m-1;i_++)
+            {
+                state.nes.mv[i_] = state.mv[i_];
+            }
+            goto lbl_7;
+        lbl_9:
+            if( !state.nes.needmtv )
+            {
+                goto lbl_11;
+            }
+            for(i_=0; i_<=state.m-1;i_++)
+            {
+                state.x[i_] = state.nes.x[i_];
+            }
+            
+            //
+            //matrix-vector multiplication
+            //
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needmtv = true;
+            state.rstate.stage = 1;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_1:
+            state.needmtv = false;
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.nes.mtv[i_] = state.mtv[i_];
+            }
+            goto lbl_7;
+        lbl_11:
+            goto lbl_7;
+        lbl_8:
+            normestimator.normestimatorresults(state.nes, ref state.anorm, _params);
+            
+            //
+            //initialize .RX by zeros
+            //
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.rx[i] = 0;
+            }
+            
+            //
+            //output first report
+            //
+            if( !state.xrep )
+            {
+                goto lbl_13;
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.rx[i_];
+            }
+            clearrfields(state, _params);
+            state.xupdated = true;
+            state.rstate.stage = 2;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_2:
+            state.xupdated = false;
+        lbl_13:
+            
+            //
+            // LSQR, Step 0.
+            //
+            // Algorithm outline corresponds to one which was described at p.50 of
+            // "LSQR - an algorithm for sparse linear equations and sparse least 
+            // squares" by C.Paige and M.Saunders with one small addition - we
+            // explicitly extend system matrix by additional N lines in order 
+            // to handle non-zero lambda, i.e. original A is replaced by
+            //         [ A        ]
+            // A_mod = [          ]
+            //         [ lambda*I ].
+            //
+            // Step 0:
+            //     x[0]          = 0
+            //     beta[1]*u[1]  = b
+            //     alpha[1]*v[1] = A_mod'*u[1]
+            //     w[1]          = v[1]
+            //     phiBar[1]     = beta[1]
+            //     rhoBar[1]     = alpha[1]
+            //     d[0]          = 0
+            //
+            // NOTE:
+            // There are three criteria for stopping:
+            // (S0) maximum number of iterations
+            // (S1) ||Rk||<=EpsB*||B||;
+            // (S2) ||A^T*Rk||/(||A||*||Rk||)<=EpsA.
+            // It is very important that S2 always checked AFTER S1. It is necessary
+            // to avoid division by zero when Rk=0.
+            //
+            state.betai = bnorm;
+            if( (double)(state.betai)==(double)(0) )
+            {
+                
+                //
+                // Zero right part
+                //
+                state.running = false;
+                state.repterminationtype = 1;
+                result = false;
+                return result;
+            }
+            for(i=0; i<=summn-1; i++)
+            {
+                if( i<state.m )
+                {
+                    state.ui[i] = state.b[i]/state.betai;
+                }
+                else
+                {
+                    state.ui[i] = 0;
+                }
+                state.x[i] = state.ui[i];
+            }
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needmtv = true;
+            state.rstate.stage = 3;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_3:
+            state.needmtv = false;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.mtv[i] = state.mtv[i]+state.lambdai*state.ui[state.m+i];
+            }
+            state.alphai = 0;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.alphai = state.alphai+state.mtv[i]*state.mtv[i];
+            }
+            state.alphai = Math.Sqrt(state.alphai);
+            if( (double)(state.alphai)==(double)(0) )
+            {
+                
+                //
+                // Orthogonality stopping criterion is met
+                //
+                state.running = false;
+                state.repterminationtype = 4;
+                result = false;
+                return result;
+            }
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.vi[i] = state.mtv[i]/state.alphai;
+                state.omegai[i] = state.vi[i];
+            }
+            state.phibari = state.betai;
+            state.rhobari = state.alphai;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.d[i] = 0;
+            }
+            state.dnorm = 0;
+            
+            //
+            // Steps I=1, 2, ...
+            //
+        lbl_15:
+            if( false )
+            {
+                goto lbl_16;
+            }
+            
+            //
+            // At I-th step State.RepIterationsCount=I.
+            //
+            state.repiterationscount = state.repiterationscount+1;
+            
+            //
+            // Bidiagonalization part:
+            //     beta[i+1]*u[i+1]  = A_mod*v[i]-alpha[i]*u[i]
+            //     alpha[i+1]*v[i+1] = A_mod'*u[i+1] - beta[i+1]*v[i]
+            //     
+            // NOTE:  beta[i+1]=0 or alpha[i+1]=0 will lead to successful termination
+            //        in the end of the current iteration. In this case u/v are zero.
+            // NOTE2: algorithm won't fail on zero alpha or beta (there will be no
+            //        division by zero because it will be stopped BEFORE division
+            //        occurs). However, near-zero alpha and beta won't stop algorithm
+            //        and, although no division by zero will happen, orthogonality 
+            //        in U and V will be lost.
+            //
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.vi[i_];
+            }
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needmv = true;
+            state.rstate.stage = 4;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_4:
+            state.needmv = false;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.mv[state.m+i] = state.lambdai*state.vi[i];
+            }
+            state.betaip1 = 0;
+            for(i=0; i<=summn-1; i++)
+            {
+                state.uip1[i] = state.mv[i]-state.alphai*state.ui[i];
+                state.betaip1 = state.betaip1+state.uip1[i]*state.uip1[i];
+            }
+            if( (double)(state.betaip1)!=(double)(0) )
+            {
+                state.betaip1 = Math.Sqrt(state.betaip1);
+                for(i=0; i<=summn-1; i++)
+                {
+                    state.uip1[i] = state.uip1[i]/state.betaip1;
+                }
+            }
+            for(i_=0; i_<=state.m-1;i_++)
+            {
+                state.x[i_] = state.uip1[i_];
+            }
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needmtv = true;
+            state.rstate.stage = 5;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_5:
+            state.needmtv = false;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.mtv[i] = state.mtv[i]+state.lambdai*state.uip1[state.m+i];
+            }
+            state.alphaip1 = 0;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.vip1[i] = state.mtv[i]-state.betaip1*state.vi[i];
+                state.alphaip1 = state.alphaip1+state.vip1[i]*state.vip1[i];
+            }
+            if( (double)(state.alphaip1)!=(double)(0) )
+            {
+                state.alphaip1 = Math.Sqrt(state.alphaip1);
+                for(i=0; i<=state.n-1; i++)
+                {
+                    state.vip1[i] = state.vip1[i]/state.alphaip1;
+                }
+            }
+            
+            //
+            // Build next orthogonal transformation
+            //
+            state.rhoi = apserv.safepythag2(state.rhobari, state.betaip1, _params);
+            state.ci = state.rhobari/state.rhoi;
+            state.si = state.betaip1/state.rhoi;
+            state.theta = state.si*state.alphaip1;
+            state.rhobarip1 = -(state.ci*state.alphaip1);
+            state.phii = state.ci*state.phibari;
+            state.phibarip1 = state.si*state.phibari;
+            
+            //
+            // Update .RNorm
+            //
+            // This tricky  formula  is  necessary  because  simply  writing
+            // State.R2:=State.PhiBarIP1*State.PhiBarIP1 does NOT guarantees
+            // monotonic decrease of R2. Roundoff error combined with 80-bit
+            // precision used internally by Intel chips allows R2 to increase
+            // slightly in some rare, but possible cases. This property is
+            // undesirable, so we prefer to guard against R increase.
+            //
+            state.r2 = Math.Min(state.r2, state.phibarip1*state.phibarip1);
+            
+            //
+            // Update d and DNorm, check condition-related stopping criteria
+            //
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.d[i] = 1/state.rhoi*(state.vi[i]-state.theta*state.d[i]);
+                state.dnorm = state.dnorm+state.d[i]*state.d[i];
+            }
+            if( (double)(Math.Sqrt(state.dnorm)*state.anorm)>=(double)(state.epsc) )
+            {
+                state.running = false;
+                state.repterminationtype = 7;
+                result = false;
+                return result;
+            }
+            
+            //
+            // Update x, output report
+            //
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.rx[i] = state.rx[i]+state.phii/state.rhoi*state.omegai[i];
+            }
+            if( !state.xrep )
+            {
+                goto lbl_17;
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.rx[i_];
+            }
+            clearrfields(state, _params);
+            state.xupdated = true;
+            state.rstate.stage = 6;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_6:
+            state.xupdated = false;
+        lbl_17:
+            
+            //
+            // Check stopping criteria
+            // 1. achieved required number of iterations;
+            // 2. ||Rk||<=EpsB*||B||;
+            // 3. ||A^T*Rk||/(||A||*||Rk||)<=EpsA;
+            //
+            if( state.maxits>0 && state.repiterationscount>=state.maxits )
+            {
+                
+                //
+                // Achieved required number of iterations
+                //
+                state.running = false;
+                state.repterminationtype = 5;
+                result = false;
+                return result;
+            }
+            if( (double)(state.phibarip1)<=(double)(state.epsb*bnorm) )
+            {
+                
+                //
+                // ||Rk||<=EpsB*||B||, here ||Rk||=PhiBar
+                //
+                state.running = false;
+                state.repterminationtype = 1;
+                result = false;
+                return result;
+            }
+            if( (double)(state.alphaip1*Math.Abs(state.ci)/state.anorm)<=(double)(state.epsa) )
+            {
+                
+                //
+                // ||A^T*Rk||/(||A||*||Rk||)<=EpsA, here ||A^T*Rk||=PhiBar*Alpha[i+1]*|.C|
+                //
+                state.running = false;
+                state.repterminationtype = 4;
+                result = false;
+                return result;
+            }
+            if( state.userterminationneeded )
+            {
+                
+                //
+                // User requested termination
+                //
+                state.running = false;
+                state.repterminationtype = 8;
+                result = false;
+                return result;
+            }
+            
+            //
+            // Update omega
+            //
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.omegaip1[i] = state.vip1[i]-state.theta/state.rhoi*state.omegai[i];
+            }
+            
+            //
+            // Prepare for the next iteration - rename variables:
+            // u[i]   := u[i+1]
+            // v[i]   := v[i+1]
+            // rho[i] := rho[i+1]
+            // ...
+            //
+            for(i_=0; i_<=summn-1;i_++)
+            {
+                state.ui[i_] = state.uip1[i_];
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.vi[i_] = state.vip1[i_];
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.omegai[i_] = state.omegaip1[i_];
+            }
+            state.alphai = state.alphaip1;
+            state.betai = state.betaip1;
+            state.phibari = state.phibarip1;
+            state.rhobari = state.rhobarip1;
+            goto lbl_15;
+        lbl_16:
+            result = false;
+            return result;
+            
+            //
+            // Saving state
+            //
+        lbl_rcomm:
+            result = true;
+            state.rstate.ia[0] = summn;
+            state.rstate.ia[1] = i;
+            state.rstate.ra[0] = bnorm;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Procedure for solution of A*x=b with sparse A.
+
+        INPUT PARAMETERS:
+            State   -   algorithm state
+            A       -   sparse M*N matrix in the CRS format (you MUST contvert  it 
+                        to CRS format  by  calling  SparseConvertToCRS()  function
+                        BEFORE you pass it to this function).
+            B       -   right part, array[M]
+
+        RESULT:
+            This function returns no result.
+            You can get solution by calling LinCGResults()
+            
+        NOTE: this function uses lightweight preconditioning -  multiplication  by
+              inverse of diag(A). If you want, you can turn preconditioning off by
+              calling LinLSQRSetPrecUnit(). However, preconditioning cost is   low
+              and preconditioner is very important for solution  of  badly  scaled
+              problems.
+
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrsolvesparse(linlsqrstate state,
+            sparse.sparsematrix a,
+            double[] b,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int i = 0;
+            int j = 0;
+            int t0 = 0;
+            int t1 = 0;
+            double v = 0;
+
+            n = state.n;
+            alglib.ap.assert(!state.running, "LinLSQRSolveSparse: you can not call this function when LinLSQRIteration is running");
+            alglib.ap.assert(alglib.ap.len(b)>=state.m, "LinLSQRSolveSparse: Length(B)<M");
+            alglib.ap.assert(apserv.isfinitevector(b, state.m, _params), "LinLSQRSolveSparse: B contains infinite or NaN values");
+            
+            //
+            // Allocate temporaries
+            //
+            apserv.rvectorsetlengthatleast(ref state.tmpd, n, _params);
+            apserv.rvectorsetlengthatleast(ref state.tmpx, n, _params);
+            
+            //
+            // Compute diagonal scaling matrix D
+            //
+            if( state.prectype==0 )
+            {
+                
+                //
+                // Default preconditioner - inverse of column norms
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    state.tmpd[i] = 0;
+                }
+                t0 = 0;
+                t1 = 0;
+                while( sparse.sparseenumerate(a, ref t0, ref t1, ref i, ref j, ref v, _params) )
+                {
+                    state.tmpd[j] = state.tmpd[j]+math.sqr(v);
+                }
+                for(i=0; i<=n-1; i++)
+                {
+                    if( (double)(state.tmpd[i])>(double)(0) )
+                    {
+                        state.tmpd[i] = 1/Math.Sqrt(state.tmpd[i]);
+                    }
+                    else
+                    {
+                        state.tmpd[i] = 1;
+                    }
+                }
+            }
+            else
+            {
+                
+                //
+                // No diagonal scaling
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    state.tmpd[i] = 1;
+                }
+            }
+            
+            //
+            // Solve.
+            //
+            // Instead of solving A*x=b we solve preconditioned system (A*D)*(inv(D)*x)=b.
+            // Transformed A is not calculated explicitly, we just modify multiplication
+            // by A or A'. After solution we modify State.RX so it will store untransformed
+            // variables
+            //
+            linlsqrsetb(state, b, _params);
+            linlsqrrestart(state, _params);
+            while( linlsqriteration(state, _params) )
+            {
+                if( state.needmv )
+                {
+                    for(i=0; i<=n-1; i++)
+                    {
+                        state.tmpx[i] = state.tmpd[i]*state.x[i];
+                    }
+                    sparse.sparsemv(a, state.tmpx, ref state.mv, _params);
+                }
+                if( state.needmtv )
+                {
+                    sparse.sparsemtv(a, state.x, ref state.mtv, _params);
+                    for(i=0; i<=n-1; i++)
+                    {
+                        state.mtv[i] = state.tmpd[i]*state.mtv[i];
+                    }
+                }
+            }
+            for(i=0; i<=n-1; i++)
+            {
+                state.rx[i] = state.tmpd[i]*state.rx[i];
+            }
+        }
+
+
+        /*************************************************************************
+        This function sets stopping criteria.
+
+        INPUT PARAMETERS:
+            EpsA    -   algorithm will be stopped if ||A^T*Rk||/(||A||*||Rk||)<=EpsA.
+            EpsB    -   algorithm will be stopped if ||Rk||<=EpsB*||B||
+            MaxIts  -   algorithm will be stopped if number of iterations
+                        more than MaxIts.
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+        NOTE: if EpsA,EpsB,EpsC and MaxIts are zero then these variables will
+        be setted as default values.
+            
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrsetcond(linlsqrstate state,
+            double epsa,
+            double epsb,
+            int maxits,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinLSQRSetCond: you can not call this function when LinLSQRIteration is running");
+            alglib.ap.assert(math.isfinite(epsa) && (double)(epsa)>=(double)(0), "LinLSQRSetCond: EpsA is negative, INF or NAN");
+            alglib.ap.assert(math.isfinite(epsb) && (double)(epsb)>=(double)(0), "LinLSQRSetCond: EpsB is negative, INF or NAN");
+            alglib.ap.assert(maxits>=0, "LinLSQRSetCond: MaxIts is negative");
+            if( ((double)(epsa)==(double)(0) && (double)(epsb)==(double)(0)) && maxits==0 )
+            {
+                state.epsa = atol;
+                state.epsb = btol;
+                state.maxits = state.n;
+            }
+            else
+            {
+                state.epsa = epsa;
+                state.epsb = epsb;
+                state.maxits = maxits;
+            }
+        }
+
+
+        /*************************************************************************
+        LSQR solver: results.
+
+        This function must be called after LinLSQRSolve
+
+        INPUT PARAMETERS:
+            State   -   algorithm state
+
+        OUTPUT PARAMETERS:
+            X       -   array[N], solution
+            Rep     -   optimization report:
+                        * Rep.TerminationType completetion code:
+                            *  1    ||Rk||<=EpsB*||B||
+                            *  4    ||A^T*Rk||/(||A||*||Rk||)<=EpsA
+                            *  5    MaxIts steps was taken
+                            *  7    rounding errors prevent further progress,
+                                    X contains best point found so far.
+                                    (sometimes returned on singular systems)
+                            *  8    user requested termination via calling
+                                    linlsqrrequesttermination()
+                        * Rep.IterationsCount contains iterations count
+                        * NMV countains number of matrix-vector calculations
+                        
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrresults(linlsqrstate state,
+            ref double[] x,
+            linlsqrreport rep,
+            alglib.xparams _params)
+        {
+            int i_ = 0;
+
+            x = new double[0];
+
+            alglib.ap.assert(!state.running, "LinLSQRResult: you can not call this function when LinLSQRIteration is running");
+            if( alglib.ap.len(x)<state.n )
+            {
+                x = new double[state.n];
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                x[i_] = state.rx[i_];
+            }
+            rep.iterationscount = state.repiterationscount;
+            rep.nmv = state.repnmv;
+            rep.terminationtype = state.repterminationtype;
+        }
+
+
+        /*************************************************************************
+        This function turns on/off reporting.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+            NeedXRep-   whether iteration reports are needed or not
+
+        If NeedXRep is True, algorithm will call rep() callback function if  it is
+        provided to MinCGOptimize().
+
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrsetxrep(linlsqrstate state,
+            bool needxrep,
+            alglib.xparams _params)
+        {
+            state.xrep = needxrep;
+        }
+
+
+        /*************************************************************************
+        This function restarts LinLSQRIteration
+
+          -- ALGLIB --
+             Copyright 30.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrrestart(linlsqrstate state,
+            alglib.xparams _params)
+        {
+            state.rstate.ia = new int[1+1];
+            state.rstate.ra = new double[0+1];
+            state.rstate.stage = -1;
+            state.rstate.clear_handler();
+            clearrfields(state, _params);
+            state.repiterationscount = 0;
+        }
+
+
+        /*************************************************************************
+        This function is used to peek into LSQR solver and get  current  iteration
+        counter. You can safely "peek" into the solver from another thread.
+
+        INPUT PARAMETERS:
+            S           -   solver object
+
+        RESULT:
+            iteration counter, in [0,INF)
+
+          -- ALGLIB --
+             Copyright 21.05.2018 by Bochkanov Sergey
+        *************************************************************************/
+        public static int linlsqrpeekiterationscount(linlsqrstate s,
+            alglib.xparams _params)
+        {
+            int result = 0;
+
+            result = s.repiterationscount;
+            return result;
+        }
+
+
+        /*************************************************************************
+        This subroutine submits request for termination of the running solver.  It
+        can be called from some other thread which wants LSQR solver to  terminate
+        (obviously, the  thread  running  LSQR  solver can not request termination
+        because it is already busy working on LSQR).
+
+        As result, solver  stops  at  point  which  was  "current  accepted"  when
+        termination  request  was  submitted  and returns error code 8 (successful
+        termination).  Such   termination   is  a smooth  process  which  properly
+        deallocates all temporaries.
+
+        INPUT PARAMETERS:
+            State   -   solver structure
+
+        NOTE: calling this function on solver which is NOT running  will  have  no
+              effect.
+              
+        NOTE: multiple calls to this function are possible. First call is counted,
+              subsequent calls are silently ignored.
+
+        NOTE: solver clears termination flag on its start, it means that  if  some
+              other thread will request termination too soon, its request will went
+              unnoticed.
+
+          -- ALGLIB --
+             Copyright 08.10.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void linlsqrrequesttermination(linlsqrstate state,
+            alglib.xparams _params)
+        {
+            state.userterminationneeded = true;
+        }
+
+
+        /*************************************************************************
+        Clears request fileds (to be sure that we don't forgot to clear something)
+        *************************************************************************/
+        private static void clearrfields(linlsqrstate state,
+            alglib.xparams _params)
+        {
+            state.xupdated = false;
+            state.needmv = false;
+            state.needmtv = false;
+            state.needmv2 = false;
+            state.needvmv = false;
+            state.needprec = false;
+        }
+
+
+    }
+    public partial class polynomialsolver
+    {
+        public class polynomialsolverreport : apobject
+        {
+            public double maxerr;
+            public polynomialsolverreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                polynomialsolverreport _result = new polynomialsolverreport();
+                _result.maxerr = maxerr;
+                return _result;
+            }
+        };
+
+
+
+
+        /*************************************************************************
+        Polynomial root finding.
+
+        This function returns all roots of the polynomial
+            P(x) = a0 + a1*x + a2*x^2 + ... + an*x^n
+        Both real and complex roots are returned (see below).
+
+        INPUT PARAMETERS:
+            A       -   array[N+1], polynomial coefficients:
+                        * A[0] is constant term
+                        * A[N] is a coefficient of X^N
+            N       -   polynomial degree
+
+        OUTPUT PARAMETERS:
+            X       -   array of complex roots:
+                        * for isolated real root, X[I] is strictly real: IMAGE(X[I])=0
+                        * complex roots are always returned in pairs - roots occupy
+                          positions I and I+1, with:
+                          * X[I+1]=Conj(X[I])
+                          * IMAGE(X[I]) > 0
+                          * IMAGE(X[I+1]) = -IMAGE(X[I]) < 0
+                        * multiple real roots may have non-zero imaginary part due
+                          to roundoff errors. There is no reliable way to distinguish
+                          real root of multiplicity 2 from two  complex  roots  in
+                          the presence of roundoff errors.
+            Rep     -   report, additional information, following fields are set:
+                        * Rep.MaxErr - max( |P(xi)| )  for  i=0..N-1.  This  field
+                          allows to quickly estimate "quality" of the roots  being
+                          returned.
+
+        NOTE:   this function uses companion matrix method to find roots. In  case
+                internal EVD  solver  fails  do  find  eigenvalues,  exception  is
+                generated.
+
+        NOTE:   roots are not "polished" and  no  matrix  balancing  is  performed
+                for them.
+
+          -- ALGLIB --
+             Copyright 24.02.2014 by Bochkanov Sergey
+        *************************************************************************/
+        public static void polynomialsolve(double[] a,
+            int n,
+            ref complex[] x,
+            polynomialsolverreport rep,
+            alglib.xparams _params)
+        {
+            double[,] c = new double[0,0];
+            double[,] vl = new double[0,0];
+            double[,] vr = new double[0,0];
+            double[] wr = new double[0];
+            double[] wi = new double[0];
+            int i = 0;
+            int j = 0;
+            bool status = new bool();
+            int nz = 0;
+            int ne = 0;
+            complex v = 0;
+            complex vv = 0;
+
+            a = (double[])a.Clone();
+            x = new complex[0];
+
+            alglib.ap.assert(n>0, "PolynomialSolve: N<=0");
+            alglib.ap.assert(alglib.ap.len(a)>=n+1, "PolynomialSolve: Length(A)<N+1");
+            alglib.ap.assert(apserv.isfinitevector(a, n+1, _params), "PolynomialSolve: A contains infitite numbers");
+            alglib.ap.assert((double)(a[n])!=(double)(0), "PolynomialSolve: A[N]=0");
+            
+            //
+            // Prepare
+            //
+            x = new complex[n];
+            
+            //
+            // Normalize A:
+            // * analytically determine NZ zero roots
+            // * quick exit for NZ=N
+            // * make residual NE-th degree polynomial monic
+            //   (here NE=N-NZ)
+            //
+            nz = 0;
+            while( nz<n && (double)(a[nz])==(double)(0) )
+            {
+                nz = nz+1;
+            }
+            ne = n-nz;
+            for(i=nz; i<=n; i++)
+            {
+                a[i-nz] = a[i]/a[n];
+            }
+            
+            //
+            // For NZ<N, build companion matrix and find NE non-zero roots
+            //
+            if( ne>0 )
+            {
+                c = new double[ne, ne];
+                for(i=0; i<=ne-1; i++)
+                {
+                    for(j=0; j<=ne-1; j++)
+                    {
+                        c[i,j] = 0;
+                    }
+                }
+                c[0,ne-1] = -a[0];
+                for(i=1; i<=ne-1; i++)
+                {
+                    c[i,i-1] = 1;
+                    c[i,ne-1] = -a[i];
+                }
+                status = evd.rmatrixevd(c, ne, 0, ref wr, ref wi, ref vl, ref vr, _params);
+                alglib.ap.assert(status, "PolynomialSolve: inernal error - EVD solver failed");
+                for(i=0; i<=ne-1; i++)
+                {
+                    x[i].x = wr[i];
+                    x[i].y = wi[i];
+                }
+            }
+            
+            //
+            // Remaining NZ zero roots
+            //
+            for(i=ne; i<=n-1; i++)
+            {
+                x[i] = 0;
+            }
+            
+            //
+            // Rep
+            //
+            rep.maxerr = 0;
+            for(i=0; i<=ne-1; i++)
+            {
+                v = 0;
+                vv = 1;
+                for(j=0; j<=ne; j++)
+                {
+                    v = v+a[j]*vv;
+                    vv = vv*x[i];
+                }
+                rep.maxerr = Math.Max(rep.maxerr, math.abscomplex(v));
+            }
+        }
+
+
+    }
+    public partial class iterativesparse
     {
         /*************************************************************************
         This structure is a sparse solver report (both direct and iterative solvers
@@ -10896,7 +12127,7 @@ public partial class alglib
             public double[] wrkb;
             public sparse.sparsematrix convbuf;
             public fbls.fblsgmresstate gmressolver;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
             public sparsesolverstate()
             {
                 init();
@@ -10911,7 +12142,7 @@ public partial class alglib
                 wrkb = new double[0];
                 convbuf = new sparse.sparsematrix();
                 gmressolver = new fbls.fblsgmresstate();
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
             }
             public override alglib.apobject make_copy()
             {
@@ -10938,7 +12169,7 @@ public partial class alglib
                 _result.wrkb = (double[])wrkb.Clone();
                 _result.convbuf = convbuf!=null ? (sparse.sparsematrix)convbuf.make_copy() : null;
                 _result.gmressolver = gmressolver!=null ? (fbls.fblsgmresstate)gmressolver.make_copy() : null;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -11600,6 +12831,7 @@ public partial class alglib
             state.rstate.ia = new int[0+1];
             state.rstate.ra = new double[2+1];
             state.rstate.stage = -1;
+            state.rstate.clear_handler();
             clearrequestfields(state, _params);
             clearreportfields(state, _params);
             state.running = true;
@@ -11911,8 +13143,6 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
@@ -11988,7 +13218,10 @@ public partial class alglib
             state.requesttype = 0;
             ablasf.rcopyv(state.n, state.x0, state.x, _params);
             state.rstate.stage = 0;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
             state.requesttype = -999;
             state.repnmv = state.repnmv+1;
@@ -12012,7 +13245,10 @@ public partial class alglib
             state.reply1 = res*res;
             ablasf.rcopyv(state.n, state.xf, state.x, _params);
             state.rstate.stage = 1;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_1:
             state.requesttype = -999;
         lbl_9:
@@ -12044,7 +13280,10 @@ public partial class alglib
             state.requesttype = 0;
             ablasf.rcopyv(state.n, state.gmressolver.x, state.x, _params);
             state.rstate.stage = 2;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_2:
             state.requesttype = -999;
             ablasf.rcopyv(state.n, state.ax, state.gmressolver.ax, _params);
@@ -12070,7 +13309,10 @@ public partial class alglib
             state.requesttype = 0;
             ablasf.rcopyv(state.n, state.xf, state.x, _params);
             state.rstate.stage = 3;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_3:
             state.requesttype = -999;
             state.repnmv = state.repnmv+1;
@@ -12091,7 +13333,10 @@ public partial class alglib
             state.reply1 = res*res;
             ablasf.rcopyv(state.n, state.xf, state.x, _params);
             state.rstate.stage = 4;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_4:
             state.requesttype = -999;
         lbl_15:
@@ -12170,2352 +13415,7 @@ public partial class alglib
 
 
     }
-    public class lincg
-    {
-        /*************************************************************************
-        This object stores state of the linear CG method.
-
-        You should use ALGLIB functions to work with this object.
-        Never try to access its fields directly!
-        *************************************************************************/
-        public class lincgstate : apobject
-        {
-            public double[] rx;
-            public double[] b;
-            public int n;
-            public int prectype;
-            public double[] cx;
-            public double[] cr;
-            public double[] cz;
-            public double[] p;
-            public double[] r;
-            public double[] z;
-            public double alpha;
-            public double beta;
-            public double r2;
-            public double meritfunction;
-            public double[] x;
-            public double[] mv;
-            public double[] pv;
-            public double vmv;
-            public double[] startx;
-            public double epsf;
-            public int maxits;
-            public int itsbeforerestart;
-            public int itsbeforerupdate;
-            public bool xrep;
-            public bool xupdated;
-            public bool needmv;
-            public bool needmtv;
-            public bool needmv2;
-            public bool needvmv;
-            public bool needprec;
-            public int repiterationscount;
-            public int repnmv;
-            public int repterminationtype;
-            public bool running;
-            public double[] tmpd;
-            public rcommstate rstate;
-            public lincgstate()
-            {
-                init();
-            }
-            public override void init()
-            {
-                rx = new double[0];
-                b = new double[0];
-                cx = new double[0];
-                cr = new double[0];
-                cz = new double[0];
-                p = new double[0];
-                r = new double[0];
-                z = new double[0];
-                x = new double[0];
-                mv = new double[0];
-                pv = new double[0];
-                startx = new double[0];
-                tmpd = new double[0];
-                rstate = new rcommstate();
-            }
-            public override alglib.apobject make_copy()
-            {
-                lincgstate _result = new lincgstate();
-                _result.rx = (double[])rx.Clone();
-                _result.b = (double[])b.Clone();
-                _result.n = n;
-                _result.prectype = prectype;
-                _result.cx = (double[])cx.Clone();
-                _result.cr = (double[])cr.Clone();
-                _result.cz = (double[])cz.Clone();
-                _result.p = (double[])p.Clone();
-                _result.r = (double[])r.Clone();
-                _result.z = (double[])z.Clone();
-                _result.alpha = alpha;
-                _result.beta = beta;
-                _result.r2 = r2;
-                _result.meritfunction = meritfunction;
-                _result.x = (double[])x.Clone();
-                _result.mv = (double[])mv.Clone();
-                _result.pv = (double[])pv.Clone();
-                _result.vmv = vmv;
-                _result.startx = (double[])startx.Clone();
-                _result.epsf = epsf;
-                _result.maxits = maxits;
-                _result.itsbeforerestart = itsbeforerestart;
-                _result.itsbeforerupdate = itsbeforerupdate;
-                _result.xrep = xrep;
-                _result.xupdated = xupdated;
-                _result.needmv = needmv;
-                _result.needmtv = needmtv;
-                _result.needmv2 = needmv2;
-                _result.needvmv = needvmv;
-                _result.needprec = needprec;
-                _result.repiterationscount = repiterationscount;
-                _result.repnmv = repnmv;
-                _result.repterminationtype = repterminationtype;
-                _result.running = running;
-                _result.tmpd = (double[])tmpd.Clone();
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
-                return _result;
-            }
-        };
-
-
-        public class lincgreport : apobject
-        {
-            public int iterationscount;
-            public int nmv;
-            public int terminationtype;
-            public double r2;
-            public lincgreport()
-            {
-                init();
-            }
-            public override void init()
-            {
-            }
-            public override alglib.apobject make_copy()
-            {
-                lincgreport _result = new lincgreport();
-                _result.iterationscount = iterationscount;
-                _result.nmv = nmv;
-                _result.terminationtype = terminationtype;
-                _result.r2 = r2;
-                return _result;
-            }
-        };
-
-
-
-
-        public const double defaultprecision = 1.0E-6;
-
-
-        /*************************************************************************
-        This function initializes linear CG Solver. This solver is used  to  solve
-        symmetric positive definite problems. If you want  to  solve  nonsymmetric
-        (or non-positive definite) problem you may use LinLSQR solver provided  by
-        ALGLIB.
-
-        USAGE:
-        1. User initializes algorithm state with LinCGCreate() call
-        2. User tunes solver parameters with  LinCGSetCond() and other functions
-        3. Optionally, user sets starting point with LinCGSetStartingPoint()
-        4. User  calls LinCGSolveSparse() function which takes algorithm state and
-           SparseMatrix object.
-        5. User calls LinCGResults() to get solution
-        6. Optionally, user may call LinCGSolveSparse()  again  to  solve  another
-           problem  with different matrix and/or right part without reinitializing
-           LinCGState structure.
-          
-        INPUT PARAMETERS:
-            N       -   problem dimension, N>0
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgcreate(int n,
-            lincgstate state,
-            alglib.xparams _params)
-        {
-            int i = 0;
-
-            alglib.ap.assert(n>0, "LinCGCreate: N<=0");
-            state.n = n;
-            state.prectype = 0;
-            state.itsbeforerestart = n;
-            state.itsbeforerupdate = 10;
-            state.epsf = defaultprecision;
-            state.maxits = 0;
-            state.xrep = false;
-            state.running = false;
-            
-            //
-            // * allocate arrays
-            // * set RX to NAN (just for the case user calls Results() without 
-            //   calling SolveSparse()
-            // * set starting point to zero
-            // * we do NOT initialize B here because we assume that user should
-            //   initializate it using LinCGSetB() function. In case he forgets
-            //   to do so, exception will be thrown in the LinCGIteration().
-            //
-            state.rx = new double[state.n];
-            state.startx = new double[state.n];
-            state.b = new double[state.n];
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.rx[i] = Double.NaN;
-                state.startx[i] = 0.0;
-                state.b[i] = 0;
-            }
-            state.cx = new double[state.n];
-            state.p = new double[state.n];
-            state.r = new double[state.n];
-            state.cr = new double[state.n];
-            state.z = new double[state.n];
-            state.cz = new double[state.n];
-            state.x = new double[state.n];
-            state.mv = new double[state.n];
-            state.pv = new double[state.n];
-            updateitersdata(state, _params);
-            state.rstate.ia = new int[0+1];
-            state.rstate.ra = new double[2+1];
-            state.rstate.stage = -1;
-        }
-
-
-        /*************************************************************************
-        This function sets starting point.
-        By default, zero starting point is used.
-
-        INPUT PARAMETERS:
-            X       -   starting point, array[N]
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsetstartingpoint(lincgstate state,
-            double[] x,
-            alglib.xparams _params)
-        {
-            int i_ = 0;
-
-            alglib.ap.assert(!state.running, "LinCGSetStartingPoint: you can not change starting point because LinCGIteration() function is running");
-            alglib.ap.assert(state.n<=alglib.ap.len(x), "LinCGSetStartingPoint: Length(X)<N");
-            alglib.ap.assert(apserv.isfinitevector(x, state.n, _params), "LinCGSetStartingPoint: X contains infinite or NaN values!");
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.startx[i_] = x[i_];
-            }
-        }
-
-
-        /*************************************************************************
-        This function sets right part. By default, right part is zero.
-
-        INPUT PARAMETERS:
-            B       -   right part, array[N].
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsetb(lincgstate state,
-            double[] b,
-            alglib.xparams _params)
-        {
-            int i_ = 0;
-
-            alglib.ap.assert(!state.running, "LinCGSetB: you can not set B, because function LinCGIteration is running!");
-            alglib.ap.assert(alglib.ap.len(b)>=state.n, "LinCGSetB: Length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, state.n, _params), "LinCGSetB: B contains infinite or NaN values!");
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.b[i_] = b[i_];
-            }
-        }
-
-
-        /*************************************************************************
-        This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
-        function. By default, SolveSparse() uses diagonal preconditioner,  but  if
-        you want to use solver without preconditioning, you can call this function
-        which forces solver to use unit matrix for preconditioning.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 19.11.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsetprecunit(lincgstate state,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinCGSetPrecUnit: you can not change preconditioner, because function LinCGIteration is running!");
-            state.prectype = -1;
-        }
-
-
-        /*************************************************************************
-        This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
-        function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
-        preconditioner. This preconditioning mode is active by default.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 19.11.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsetprecdiag(lincgstate state,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinCGSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!");
-            state.prectype = 0;
-        }
-
-
-        /*************************************************************************
-        This function sets stopping criteria.
-
-        INPUT PARAMETERS:
-            EpsF    -   algorithm will be stopped if norm of residual is less than 
-                        EpsF*||b||.
-            MaxIts  -   algorithm will be stopped if number of iterations is  more 
-                        than MaxIts.
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-        NOTES:
-        If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small 
-        value.
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsetcond(lincgstate state,
-            double epsf,
-            int maxits,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinCGSetCond: you can not change stopping criteria when LinCGIteration() is running");
-            alglib.ap.assert(math.isfinite(epsf) && (double)(epsf)>=(double)(0), "LinCGSetCond: EpsF is negative or contains infinite or NaN values");
-            alglib.ap.assert(maxits>=0, "LinCGSetCond: MaxIts is negative");
-            if( (double)(epsf)==(double)(0) && maxits==0 )
-            {
-                state.epsf = defaultprecision;
-                state.maxits = maxits;
-            }
-            else
-            {
-                state.epsf = epsf;
-                state.maxits = maxits;
-            }
-        }
-
-
-        /*************************************************************************
-        Reverse communication version of linear CG.
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool lincgiteration(lincgstate state,
-            alglib.xparams _params)
-        {
-            bool result = new bool();
-            int i = 0;
-            double uvar = 0;
-            double bnorm = 0;
-            double v = 0;
-            int i_ = 0;
-
-            
-            //
-            // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
-            //
-            // This code initializes locals by:
-            // * random values determined during code
-            //   generation - on first subroutine call
-            // * values from previous call - on subsequent calls
-            //
-            if( state.rstate.stage>=0 )
-            {
-                i = state.rstate.ia[0];
-                uvar = state.rstate.ra[0];
-                bnorm = state.rstate.ra[1];
-                v = state.rstate.ra[2];
-            }
-            else
-            {
-                i = 359;
-                uvar = -58.0;
-                bnorm = -919.0;
-                v = -909.0;
-            }
-            if( state.rstate.stage==0 )
-            {
-                goto lbl_0;
-            }
-            if( state.rstate.stage==1 )
-            {
-                goto lbl_1;
-            }
-            if( state.rstate.stage==2 )
-            {
-                goto lbl_2;
-            }
-            if( state.rstate.stage==3 )
-            {
-                goto lbl_3;
-            }
-            if( state.rstate.stage==4 )
-            {
-                goto lbl_4;
-            }
-            if( state.rstate.stage==5 )
-            {
-                goto lbl_5;
-            }
-            if( state.rstate.stage==6 )
-            {
-                goto lbl_6;
-            }
-            if( state.rstate.stage==7 )
-            {
-                goto lbl_7;
-            }
-            
-            //
-            // Routine body
-            //
-            alglib.ap.assert(alglib.ap.len(state.b)>0, "LinCGIteration: B is not initialized (you must initialize B by LinCGSetB() call");
-            state.running = true;
-            state.repnmv = 0;
-            clearrfields(state, _params);
-            updateitersdata(state, _params);
-            
-            //
-            // Start 0-th iteration
-            //
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.rx[i_] = state.startx[i_];
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.rx[i_];
-            }
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needvmv = true;
-            state.rstate.stage = 0;
-            goto lbl_rcomm;
-        lbl_0:
-            state.needvmv = false;
-            bnorm = 0;
-            state.r2 = 0;
-            state.meritfunction = 0;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.r[i] = state.b[i]-state.mv[i];
-                state.r2 = state.r2+state.r[i]*state.r[i];
-                state.meritfunction = state.meritfunction+state.mv[i]*state.rx[i]-2*state.b[i]*state.rx[i];
-                bnorm = bnorm+state.b[i]*state.b[i];
-            }
-            bnorm = Math.Sqrt(bnorm);
-            
-            //
-            // Output first report
-            //
-            if( !state.xrep )
-            {
-                goto lbl_8;
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.rx[i_];
-            }
-            clearrfields(state, _params);
-            state.xupdated = true;
-            state.rstate.stage = 1;
-            goto lbl_rcomm;
-        lbl_1:
-            state.xupdated = false;
-        lbl_8:
-            
-            //
-            // Is x0 a solution?
-            //
-            if( !math.isfinite(state.r2) || (double)(Math.Sqrt(state.r2))<=(double)(state.epsf*bnorm) )
-            {
-                state.running = false;
-                if( math.isfinite(state.r2) )
-                {
-                    state.repterminationtype = 1;
-                }
-                else
-                {
-                    state.repterminationtype = -4;
-                }
-                result = false;
-                return result;
-            }
-            
-            //
-            // Calculate Z and P
-            //
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.r[i_];
-            }
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needprec = true;
-            state.rstate.stage = 2;
-            goto lbl_rcomm;
-        lbl_2:
-            state.needprec = false;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.z[i] = state.pv[i];
-                state.p[i] = state.z[i];
-            }
-            
-            //
-            // Other iterations(1..N)
-            //
-            state.repiterationscount = 0;
-        lbl_10:
-            if( false )
-            {
-                goto lbl_11;
-            }
-            state.repiterationscount = state.repiterationscount+1;
-            
-            //
-            // Calculate Alpha
-            //
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.p[i_];
-            }
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needvmv = true;
-            state.rstate.stage = 3;
-            goto lbl_rcomm;
-        lbl_3:
-            state.needvmv = false;
-            if( !math.isfinite(state.vmv) || (double)(state.vmv)<=(double)(0) )
-            {
-                
-                //
-                // a) Overflow when calculating VMV
-                // b) non-positive VMV (non-SPD matrix)
-                //
-                state.running = false;
-                if( math.isfinite(state.vmv) )
-                {
-                    state.repterminationtype = -5;
-                }
-                else
-                {
-                    state.repterminationtype = -4;
-                }
-                result = false;
-                return result;
-            }
-            state.alpha = 0;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.alpha = state.alpha+state.r[i]*state.z[i];
-            }
-            state.alpha = state.alpha/state.vmv;
-            if( !math.isfinite(state.alpha) )
-            {
-                
-                //
-                // Overflow when calculating Alpha
-                //
-                state.running = false;
-                state.repterminationtype = -4;
-                result = false;
-                return result;
-            }
-            
-            //
-            // Next step toward solution
-            //
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.cx[i] = state.rx[i]+state.alpha*state.p[i];
-            }
-            
-            //
-            // Calculate R:
-            // * use recurrent relation to update R
-            // * at every ItsBeforeRUpdate-th iteration recalculate it from scratch, using matrix-vector product
-            //   in case R grows instead of decreasing, algorithm is terminated with positive completion code
-            //
-            if( !(state.itsbeforerupdate==0 || state.repiterationscount%state.itsbeforerupdate!=0) )
-            {
-                goto lbl_12;
-            }
-            
-            //
-            // Calculate R using recurrent formula
-            //
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.cr[i] = state.r[i]-state.alpha*state.mv[i];
-                state.x[i] = state.cr[i];
-            }
-            goto lbl_13;
-        lbl_12:
-            
-            //
-            // Calculate R using matrix-vector multiplication
-            //
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.cx[i_];
-            }
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needmv = true;
-            state.rstate.stage = 4;
-            goto lbl_rcomm;
-        lbl_4:
-            state.needmv = false;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.cr[i] = state.b[i]-state.mv[i];
-                state.x[i] = state.cr[i];
-            }
-            
-            //
-            // Calculating merit function
-            // Check emergency stopping criterion
-            //
-            v = 0;
-            for(i=0; i<=state.n-1; i++)
-            {
-                v = v+state.mv[i]*state.cx[i]-2*state.b[i]*state.cx[i];
-            }
-            if( (double)(v)<(double)(state.meritfunction) )
-            {
-                goto lbl_14;
-            }
-            for(i=0; i<=state.n-1; i++)
-            {
-                if( !math.isfinite(state.rx[i]) )
-                {
-                    state.running = false;
-                    state.repterminationtype = -4;
-                    result = false;
-                    return result;
-                }
-            }
-            
-            //
-            //output last report
-            //
-            if( !state.xrep )
-            {
-                goto lbl_16;
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.rx[i_];
-            }
-            clearrfields(state, _params);
-            state.xupdated = true;
-            state.rstate.stage = 5;
-            goto lbl_rcomm;
-        lbl_5:
-            state.xupdated = false;
-        lbl_16:
-            state.running = false;
-            state.repterminationtype = 7;
-            result = false;
-            return result;
-        lbl_14:
-            state.meritfunction = v;
-        lbl_13:
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.rx[i_] = state.cx[i_];
-            }
-            
-            //
-            // calculating RNorm
-            //
-            // NOTE: monotonic decrease of R2 is not guaranteed by algorithm.
-            //
-            state.r2 = 0;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.r2 = state.r2+state.cr[i]*state.cr[i];
-            }
-            
-            //
-            //output report
-            //
-            if( !state.xrep )
-            {
-                goto lbl_18;
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.rx[i_];
-            }
-            clearrfields(state, _params);
-            state.xupdated = true;
-            state.rstate.stage = 6;
-            goto lbl_rcomm;
-        lbl_6:
-            state.xupdated = false;
-        lbl_18:
-            
-            //
-            //stopping criterion
-            //achieved the required precision
-            //
-            if( !math.isfinite(state.r2) || (double)(Math.Sqrt(state.r2))<=(double)(state.epsf*bnorm) )
-            {
-                state.running = false;
-                if( math.isfinite(state.r2) )
-                {
-                    state.repterminationtype = 1;
-                }
-                else
-                {
-                    state.repterminationtype = -4;
-                }
-                result = false;
-                return result;
-            }
-            if( state.repiterationscount>=state.maxits && state.maxits>0 )
-            {
-                for(i=0; i<=state.n-1; i++)
-                {
-                    if( !math.isfinite(state.rx[i]) )
-                    {
-                        state.running = false;
-                        state.repterminationtype = -4;
-                        result = false;
-                        return result;
-                    }
-                }
-                
-                //
-                //if X is finite number
-                //
-                state.running = false;
-                state.repterminationtype = 5;
-                result = false;
-                return result;
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.cr[i_];
-            }
-            
-            //
-            //prepere of parameters for next iteration
-            //
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needprec = true;
-            state.rstate.stage = 7;
-            goto lbl_rcomm;
-        lbl_7:
-            state.needprec = false;
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.cz[i_] = state.pv[i_];
-            }
-            if( state.repiterationscount%state.itsbeforerestart!=0 )
-            {
-                state.beta = 0;
-                uvar = 0;
-                for(i=0; i<=state.n-1; i++)
-                {
-                    state.beta = state.beta+state.cz[i]*state.cr[i];
-                    uvar = uvar+state.z[i]*state.r[i];
-                }
-                
-                //
-                //check that UVar is't INF or is't zero
-                //
-                if( !math.isfinite(uvar) || (double)(uvar)==(double)(0) )
-                {
-                    state.running = false;
-                    state.repterminationtype = -4;
-                    result = false;
-                    return result;
-                }
-                
-                //
-                //calculate .BETA
-                //
-                state.beta = state.beta/uvar;
-                
-                //
-                //check that .BETA neither INF nor NaN
-                //
-                if( !math.isfinite(state.beta) )
-                {
-                    state.running = false;
-                    state.repterminationtype = -1;
-                    result = false;
-                    return result;
-                }
-                for(i=0; i<=state.n-1; i++)
-                {
-                    state.p[i] = state.cz[i]+state.beta*state.p[i];
-                }
-            }
-            else
-            {
-                for(i_=0; i_<=state.n-1;i_++)
-                {
-                    state.p[i_] = state.cz[i_];
-                }
-            }
-            
-            //
-            //prepere data for next iteration
-            //
-            for(i=0; i<=state.n-1; i++)
-            {
-                
-                //
-                //write (k+1)th iteration to (k )th iteration
-                //
-                state.r[i] = state.cr[i];
-                state.z[i] = state.cz[i];
-            }
-            goto lbl_10;
-        lbl_11:
-            result = false;
-            return result;
-            
-            //
-            // Saving state
-            //
-        lbl_rcomm:
-            result = true;
-            state.rstate.ia[0] = i;
-            state.rstate.ra[0] = uvar;
-            state.rstate.ra[1] = bnorm;
-            state.rstate.ra[2] = v;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Procedure for solution of A*x=b with sparse A.
-
-        INPUT PARAMETERS:
-            State   -   algorithm state
-            A       -   sparse matrix in the CRS format (you MUST contvert  it  to 
-                        CRS format by calling SparseConvertToCRS() function).
-            IsUpper -   whether upper or lower triangle of A is used:
-                        * IsUpper=True  => only upper triangle is used and lower
-                                           triangle is not referenced at all 
-                        * IsUpper=False => only lower triangle is used and upper
-                                           triangle is not referenced at all
-            B       -   right part, array[N]
-
-        RESULT:
-            This function returns no result.
-            You can get solution by calling LinCGResults()
-            
-        NOTE: this function uses lightweight preconditioning -  multiplication  by
-              inverse of diag(A). If you want, you can turn preconditioning off by
-              calling LinCGSetPrecUnit(). However, preconditioning cost is low and
-              preconditioner  is  very  important  for  solution  of  badly scaled
-              problems.
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsolvesparse(lincgstate state,
-            sparse.sparsematrix a,
-            bool isupper,
-            double[] b,
-            alglib.xparams _params)
-        {
-            int n = 0;
-            int i = 0;
-            double v = 0;
-            double vmv = 0;
-            int i_ = 0;
-
-            n = state.n;
-            alglib.ap.assert(alglib.ap.len(b)>=state.n, "LinCGSetB: Length(B)<N");
-            alglib.ap.assert(apserv.isfinitevector(b, state.n, _params), "LinCGSetB: B contains infinite or NaN values!");
-            
-            //
-            // Allocate temporaries
-            //
-            apserv.rvectorsetlengthatleast(ref state.tmpd, n, _params);
-            
-            //
-            // Compute diagonal scaling matrix D
-            //
-            if( state.prectype==0 )
-            {
-                
-                //
-                // Default preconditioner - inverse of matrix diagonal
-                //
-                for(i=0; i<=n-1; i++)
-                {
-                    v = sparse.sparsegetdiagonal(a, i, _params);
-                    if( (double)(v)>(double)(0) )
-                    {
-                        state.tmpd[i] = 1/Math.Sqrt(v);
-                    }
-                    else
-                    {
-                        state.tmpd[i] = 1;
-                    }
-                }
-            }
-            else
-            {
-                
-                //
-                // No diagonal scaling
-                //
-                for(i=0; i<=n-1; i++)
-                {
-                    state.tmpd[i] = 1;
-                }
-            }
-            
-            //
-            // Solve
-            //
-            lincgrestart(state, _params);
-            lincgsetb(state, b, _params);
-            while( lincgiteration(state, _params) )
-            {
-                
-                //
-                // Process different requests from optimizer
-                //
-                if( state.needmv )
-                {
-                    sparse.sparsesmv(a, isupper, state.x, ref state.mv, _params);
-                }
-                if( state.needvmv )
-                {
-                    sparse.sparsesmv(a, isupper, state.x, ref state.mv, _params);
-                    vmv = 0.0;
-                    for(i_=0; i_<=state.n-1;i_++)
-                    {
-                        vmv += state.x[i_]*state.mv[i_];
-                    }
-                    state.vmv = vmv;
-                }
-                if( state.needprec )
-                {
-                    for(i=0; i<=n-1; i++)
-                    {
-                        state.pv[i] = state.x[i]*math.sqr(state.tmpd[i]);
-                    }
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        CG-solver: results.
-
-        This function must be called after LinCGSolve
-
-        INPUT PARAMETERS:
-            State   -   algorithm state
-
-        OUTPUT PARAMETERS:
-            X       -   array[N], solution
-            Rep     -   optimization report:
-                        * Rep.TerminationType completetion code:
-                            * -5    input matrix is either not positive definite,
-                                    too large or too small                            
-                            * -4    overflow/underflow during solution
-                                    (ill conditioned problem)
-                            *  1    ||residual||<=EpsF*||b||
-                            *  5    MaxIts steps was taken
-                            *  7    rounding errors prevent further progress,
-                                    best point found is returned
-                        * Rep.IterationsCount contains iterations count
-                        * NMV countains number of matrix-vector calculations
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgresults(lincgstate state,
-            ref double[] x,
-            lincgreport rep,
-            alglib.xparams _params)
-        {
-            int i_ = 0;
-
-            x = new double[0];
-
-            alglib.ap.assert(!state.running, "LinCGResult: you can not get result, because function LinCGIteration has been launched!");
-            if( alglib.ap.len(x)<state.n )
-            {
-                x = new double[state.n];
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                x[i_] = state.rx[i_];
-            }
-            rep.iterationscount = state.repiterationscount;
-            rep.nmv = state.repnmv;
-            rep.terminationtype = state.repterminationtype;
-            rep.r2 = state.r2;
-        }
-
-
-        /*************************************************************************
-        This function sets restart frequency. By default, algorithm  is  restarted
-        after N subsequent iterations.
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsetrestartfreq(lincgstate state,
-            int srf,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinCGSetRestartFreq: you can not change restart frequency when LinCGIteration() is running");
-            alglib.ap.assert(srf>0, "LinCGSetRestartFreq: non-positive SRF");
-            state.itsbeforerestart = srf;
-        }
-
-
-        /*************************************************************************
-        This function sets frequency of residual recalculations.
-
-        Algorithm updates residual r_k using iterative formula,  but  recalculates
-        it from scratch after each 10 iterations. It is done to avoid accumulation
-        of numerical errors and to stop algorithm when r_k starts to grow.
-
-        Such low update frequence (1/10) gives very  little  overhead,  but  makes
-        algorithm a bit more robust against numerical errors. However, you may
-        change it 
-
-        INPUT PARAMETERS:
-            Freq    -   desired update frequency, Freq>=0.
-                        Zero value means that no updates will be done.
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsetrupdatefreq(lincgstate state,
-            int freq,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinCGSetRUpdateFreq: you can not change update frequency when LinCGIteration() is running");
-            alglib.ap.assert(freq>=0, "LinCGSetRUpdateFreq: non-positive Freq");
-            state.itsbeforerupdate = freq;
-        }
-
-
-        /*************************************************************************
-        This function turns on/off reporting.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-            NeedXRep-   whether iteration reports are needed or not
-
-        If NeedXRep is True, algorithm will call rep() callback function if  it is
-        provided to MinCGOptimize().
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgsetxrep(lincgstate state,
-            bool needxrep,
-            alglib.xparams _params)
-        {
-            state.xrep = needxrep;
-        }
-
-
-        /*************************************************************************
-        Procedure for restart function LinCGIteration
-
-          -- ALGLIB --
-             Copyright 14.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void lincgrestart(lincgstate state,
-            alglib.xparams _params)
-        {
-            state.rstate.ia = new int[0+1];
-            state.rstate.ra = new double[2+1];
-            state.rstate.stage = -1;
-            clearrfields(state, _params);
-        }
-
-
-        /*************************************************************************
-        Clears request fileds (to be sure that we don't forgot to clear something)
-        *************************************************************************/
-        private static void clearrfields(lincgstate state,
-            alglib.xparams _params)
-        {
-            state.xupdated = false;
-            state.needmv = false;
-            state.needmtv = false;
-            state.needmv2 = false;
-            state.needvmv = false;
-            state.needprec = false;
-        }
-
-
-        /*************************************************************************
-        Clears request fileds (to be sure that we don't forgot to clear something)
-        *************************************************************************/
-        private static void updateitersdata(lincgstate state,
-            alglib.xparams _params)
-        {
-            state.repiterationscount = 0;
-            state.repnmv = 0;
-            state.repterminationtype = 0;
-        }
-
-
-    }
-    public class linlsqr
-    {
-        /*************************************************************************
-        This object stores state of the LinLSQR method.
-
-        You should use ALGLIB functions to work with this object.
-        *************************************************************************/
-        public class linlsqrstate : apobject
-        {
-            public normestimator.normestimatorstate nes;
-            public double[] rx;
-            public double[] b;
-            public int n;
-            public int m;
-            public int prectype;
-            public double[] ui;
-            public double[] uip1;
-            public double[] vi;
-            public double[] vip1;
-            public double[] omegai;
-            public double[] omegaip1;
-            public double alphai;
-            public double alphaip1;
-            public double betai;
-            public double betaip1;
-            public double phibari;
-            public double phibarip1;
-            public double phii;
-            public double rhobari;
-            public double rhobarip1;
-            public double rhoi;
-            public double ci;
-            public double si;
-            public double theta;
-            public double lambdai;
-            public double[] d;
-            public double anorm;
-            public double bnorm2;
-            public double dnorm;
-            public double r2;
-            public double[] x;
-            public double[] mv;
-            public double[] mtv;
-            public double epsa;
-            public double epsb;
-            public double epsc;
-            public int maxits;
-            public bool xrep;
-            public bool xupdated;
-            public bool needmv;
-            public bool needmtv;
-            public bool needmv2;
-            public bool needvmv;
-            public bool needprec;
-            public int repiterationscount;
-            public int repnmv;
-            public int repterminationtype;
-            public bool running;
-            public bool userterminationneeded;
-            public double[] tmpd;
-            public double[] tmpx;
-            public rcommstate rstate;
-            public linlsqrstate()
-            {
-                init();
-            }
-            public override void init()
-            {
-                nes = new normestimator.normestimatorstate();
-                rx = new double[0];
-                b = new double[0];
-                ui = new double[0];
-                uip1 = new double[0];
-                vi = new double[0];
-                vip1 = new double[0];
-                omegai = new double[0];
-                omegaip1 = new double[0];
-                d = new double[0];
-                x = new double[0];
-                mv = new double[0];
-                mtv = new double[0];
-                tmpd = new double[0];
-                tmpx = new double[0];
-                rstate = new rcommstate();
-            }
-            public override alglib.apobject make_copy()
-            {
-                linlsqrstate _result = new linlsqrstate();
-                _result.nes = nes!=null ? (normestimator.normestimatorstate)nes.make_copy() : null;
-                _result.rx = (double[])rx.Clone();
-                _result.b = (double[])b.Clone();
-                _result.n = n;
-                _result.m = m;
-                _result.prectype = prectype;
-                _result.ui = (double[])ui.Clone();
-                _result.uip1 = (double[])uip1.Clone();
-                _result.vi = (double[])vi.Clone();
-                _result.vip1 = (double[])vip1.Clone();
-                _result.omegai = (double[])omegai.Clone();
-                _result.omegaip1 = (double[])omegaip1.Clone();
-                _result.alphai = alphai;
-                _result.alphaip1 = alphaip1;
-                _result.betai = betai;
-                _result.betaip1 = betaip1;
-                _result.phibari = phibari;
-                _result.phibarip1 = phibarip1;
-                _result.phii = phii;
-                _result.rhobari = rhobari;
-                _result.rhobarip1 = rhobarip1;
-                _result.rhoi = rhoi;
-                _result.ci = ci;
-                _result.si = si;
-                _result.theta = theta;
-                _result.lambdai = lambdai;
-                _result.d = (double[])d.Clone();
-                _result.anorm = anorm;
-                _result.bnorm2 = bnorm2;
-                _result.dnorm = dnorm;
-                _result.r2 = r2;
-                _result.x = (double[])x.Clone();
-                _result.mv = (double[])mv.Clone();
-                _result.mtv = (double[])mtv.Clone();
-                _result.epsa = epsa;
-                _result.epsb = epsb;
-                _result.epsc = epsc;
-                _result.maxits = maxits;
-                _result.xrep = xrep;
-                _result.xupdated = xupdated;
-                _result.needmv = needmv;
-                _result.needmtv = needmtv;
-                _result.needmv2 = needmv2;
-                _result.needvmv = needvmv;
-                _result.needprec = needprec;
-                _result.repiterationscount = repiterationscount;
-                _result.repnmv = repnmv;
-                _result.repterminationtype = repterminationtype;
-                _result.running = running;
-                _result.userterminationneeded = userterminationneeded;
-                _result.tmpd = (double[])tmpd.Clone();
-                _result.tmpx = (double[])tmpx.Clone();
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
-                return _result;
-            }
-        };
-
-
-        public class linlsqrreport : apobject
-        {
-            public int iterationscount;
-            public int nmv;
-            public int terminationtype;
-            public linlsqrreport()
-            {
-                init();
-            }
-            public override void init()
-            {
-            }
-            public override alglib.apobject make_copy()
-            {
-                linlsqrreport _result = new linlsqrreport();
-                _result.iterationscount = iterationscount;
-                _result.nmv = nmv;
-                _result.terminationtype = terminationtype;
-                return _result;
-            }
-        };
-
-
-
-
-        public const double atol = 1.0E-6;
-        public const double btol = 1.0E-6;
-
-
-        /*************************************************************************
-        This function initializes linear LSQR Solver. This solver is used to solve
-        non-symmetric (and, possibly, non-square) problems. Least squares solution
-        is returned for non-compatible systems.
-
-        USAGE:
-        1. User initializes algorithm state with LinLSQRCreate() call
-        2. User tunes solver parameters with  LinLSQRSetCond() and other functions
-        3. User  calls  LinLSQRSolveSparse()  function which takes algorithm state 
-           and SparseMatrix object.
-        4. User calls LinLSQRResults() to get solution
-        5. Optionally, user may call LinLSQRSolveSparse() again to  solve  another  
-           problem  with different matrix and/or right part without reinitializing 
-           LinLSQRState structure.
-          
-        INPUT PARAMETERS:
-            M       -   number of rows in A
-            N       -   number of variables, N>0
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-            
-        NOTE: see also linlsqrcreatebuf()  for  version  which  reuses  previously
-              allocated place as much as possible.
-
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrcreate(int m,
-            int n,
-            linlsqrstate state,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(m>0, "LinLSQRCreate: M<=0");
-            alglib.ap.assert(n>0, "LinLSQRCreate: N<=0");
-            linlsqrcreatebuf(m, n, state, _params);
-        }
-
-
-        /*************************************************************************
-        This function initializes linear LSQR Solver.  It  provides  exactly  same
-        functionality as linlsqrcreate(), but reuses  previously  allocated  space
-        as much as possible.
-          
-        INPUT PARAMETERS:
-            M       -   number of rows in A
-            N       -   number of variables, N>0
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 14.11.2018 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrcreatebuf(int m,
-            int n,
-            linlsqrstate state,
-            alglib.xparams _params)
-        {
-            int i = 0;
-
-            alglib.ap.assert(m>0, "LinLSQRCreateBuf: M<=0");
-            alglib.ap.assert(n>0, "LinLSQRCreateBuf: N<=0");
-            state.m = m;
-            state.n = n;
-            state.prectype = 0;
-            state.epsa = atol;
-            state.epsb = btol;
-            state.epsc = 1/Math.Sqrt(math.machineepsilon);
-            state.maxits = 0;
-            state.lambdai = 0;
-            state.xrep = false;
-            state.running = false;
-            state.repiterationscount = 0;
-            
-            //
-            // * allocate arrays
-            // * set RX to NAN (just for the case user calls Results() without 
-            //   calling SolveSparse()
-            // * set B to zero
-            //
-            normestimator.normestimatorcreate(m, n, 2, 2, state.nes, _params);
-            state.rx = new double[state.n];
-            state.ui = new double[state.m+state.n];
-            state.uip1 = new double[state.m+state.n];
-            state.vip1 = new double[state.n];
-            state.vi = new double[state.n];
-            state.omegai = new double[state.n];
-            state.omegaip1 = new double[state.n];
-            state.d = new double[state.n];
-            state.x = new double[state.m+state.n];
-            state.mv = new double[state.m+state.n];
-            state.mtv = new double[state.n];
-            state.b = new double[state.m];
-            for(i=0; i<=n-1; i++)
-            {
-                state.rx[i] = Double.NaN;
-            }
-            for(i=0; i<=m-1; i++)
-            {
-                state.b[i] = 0;
-            }
-            state.rstate.ia = new int[1+1];
-            state.rstate.ra = new double[0+1];
-            state.rstate.stage = -1;
-        }
-
-
-        /*************************************************************************
-        This function sets right part. By default, right part is zero.
-
-        INPUT PARAMETERS:
-            B       -   right part, array[N].
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrsetb(linlsqrstate state,
-            double[] b,
-            alglib.xparams _params)
-        {
-            int i = 0;
-
-            alglib.ap.assert(!state.running, "LinLSQRSetB: you can not change B when LinLSQRIteration is running");
-            alglib.ap.assert(state.m<=alglib.ap.len(b), "LinLSQRSetB: Length(B)<M");
-            alglib.ap.assert(apserv.isfinitevector(b, state.m, _params), "LinLSQRSetB: B contains infinite or NaN values");
-            state.bnorm2 = 0;
-            for(i=0; i<=state.m-1; i++)
-            {
-                state.b[i] = b[i];
-                state.bnorm2 = state.bnorm2+b[i]*b[i];
-            }
-        }
-
-
-        /*************************************************************************
-        This  function  changes  preconditioning  settings of LinLSQQSolveSparse()
-        function. By default, SolveSparse() uses diagonal preconditioner,  but  if
-        you want to use solver without preconditioning, you can call this function
-        which forces solver to use unit matrix for preconditioning.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 19.11.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrsetprecunit(linlsqrstate state,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinLSQRSetPrecUnit: you can not change preconditioner, because function LinLSQRIteration is running!");
-            state.prectype = -1;
-        }
-
-
-        /*************************************************************************
-        This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
-        function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
-        preconditioner. This preconditioning mode is active by default.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-          -- ALGLIB --
-             Copyright 19.11.2012 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrsetprecdiag(linlsqrstate state,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinLSQRSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!");
-            state.prectype = 0;
-        }
-
-
-        /*************************************************************************
-        This function sets optional Tikhonov regularization coefficient.
-        It is zero by default.
-
-        INPUT PARAMETERS:
-            LambdaI -   regularization factor, LambdaI>=0
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-            
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrsetlambdai(linlsqrstate state,
-            double lambdai,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinLSQRSetLambdaI: you can not set LambdaI, because function LinLSQRIteration is running");
-            alglib.ap.assert(math.isfinite(lambdai) && (double)(lambdai)>=(double)(0), "LinLSQRSetLambdaI: LambdaI is infinite or NaN");
-            state.lambdai = lambdai;
-        }
-
-
-        /*************************************************************************
-
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool linlsqriteration(linlsqrstate state,
-            alglib.xparams _params)
-        {
-            bool result = new bool();
-            int summn = 0;
-            double bnorm = 0;
-            int i = 0;
-            int i_ = 0;
-
-            
-            //
-            // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
-            //
-            // This code initializes locals by:
-            // * random values determined during code
-            //   generation - on first subroutine call
-            // * values from previous call - on subsequent calls
-            //
-            if( state.rstate.stage>=0 )
-            {
-                summn = state.rstate.ia[0];
-                i = state.rstate.ia[1];
-                bnorm = state.rstate.ra[0];
-            }
-            else
-            {
-                summn = 359;
-                i = -58;
-                bnorm = -919.0;
-            }
-            if( state.rstate.stage==0 )
-            {
-                goto lbl_0;
-            }
-            if( state.rstate.stage==1 )
-            {
-                goto lbl_1;
-            }
-            if( state.rstate.stage==2 )
-            {
-                goto lbl_2;
-            }
-            if( state.rstate.stage==3 )
-            {
-                goto lbl_3;
-            }
-            if( state.rstate.stage==4 )
-            {
-                goto lbl_4;
-            }
-            if( state.rstate.stage==5 )
-            {
-                goto lbl_5;
-            }
-            if( state.rstate.stage==6 )
-            {
-                goto lbl_6;
-            }
-            
-            //
-            // Routine body
-            //
-            alglib.ap.assert(alglib.ap.len(state.b)>0, "LinLSQRIteration: using non-allocated array B");
-            summn = state.m+state.n;
-            bnorm = Math.Sqrt(state.bnorm2);
-            state.userterminationneeded = false;
-            state.running = true;
-            state.repnmv = 0;
-            state.repiterationscount = 0;
-            state.r2 = state.bnorm2;
-            clearrfields(state, _params);
-            
-            //
-            //estimate for ANorm
-            //
-            normestimator.normestimatorrestart(state.nes, _params);
-        lbl_7:
-            if( !normestimator.normestimatoriteration(state.nes, _params) )
-            {
-                goto lbl_8;
-            }
-            if( !state.nes.needmv )
-            {
-                goto lbl_9;
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.nes.x[i_];
-            }
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needmv = true;
-            state.rstate.stage = 0;
-            goto lbl_rcomm;
-        lbl_0:
-            state.needmv = false;
-            for(i_=0; i_<=state.m-1;i_++)
-            {
-                state.nes.mv[i_] = state.mv[i_];
-            }
-            goto lbl_7;
-        lbl_9:
-            if( !state.nes.needmtv )
-            {
-                goto lbl_11;
-            }
-            for(i_=0; i_<=state.m-1;i_++)
-            {
-                state.x[i_] = state.nes.x[i_];
-            }
-            
-            //
-            //matrix-vector multiplication
-            //
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needmtv = true;
-            state.rstate.stage = 1;
-            goto lbl_rcomm;
-        lbl_1:
-            state.needmtv = false;
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.nes.mtv[i_] = state.mtv[i_];
-            }
-            goto lbl_7;
-        lbl_11:
-            goto lbl_7;
-        lbl_8:
-            normestimator.normestimatorresults(state.nes, ref state.anorm, _params);
-            
-            //
-            //initialize .RX by zeros
-            //
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.rx[i] = 0;
-            }
-            
-            //
-            //output first report
-            //
-            if( !state.xrep )
-            {
-                goto lbl_13;
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.rx[i_];
-            }
-            clearrfields(state, _params);
-            state.xupdated = true;
-            state.rstate.stage = 2;
-            goto lbl_rcomm;
-        lbl_2:
-            state.xupdated = false;
-        lbl_13:
-            
-            //
-            // LSQR, Step 0.
-            //
-            // Algorithm outline corresponds to one which was described at p.50 of
-            // "LSQR - an algorithm for sparse linear equations and sparse least 
-            // squares" by C.Paige and M.Saunders with one small addition - we
-            // explicitly extend system matrix by additional N lines in order 
-            // to handle non-zero lambda, i.e. original A is replaced by
-            //         [ A        ]
-            // A_mod = [          ]
-            //         [ lambda*I ].
-            //
-            // Step 0:
-            //     x[0]          = 0
-            //     beta[1]*u[1]  = b
-            //     alpha[1]*v[1] = A_mod'*u[1]
-            //     w[1]          = v[1]
-            //     phiBar[1]     = beta[1]
-            //     rhoBar[1]     = alpha[1]
-            //     d[0]          = 0
-            //
-            // NOTE:
-            // There are three criteria for stopping:
-            // (S0) maximum number of iterations
-            // (S1) ||Rk||<=EpsB*||B||;
-            // (S2) ||A^T*Rk||/(||A||*||Rk||)<=EpsA.
-            // It is very important that S2 always checked AFTER S1. It is necessary
-            // to avoid division by zero when Rk=0.
-            //
-            state.betai = bnorm;
-            if( (double)(state.betai)==(double)(0) )
-            {
-                
-                //
-                // Zero right part
-                //
-                state.running = false;
-                state.repterminationtype = 1;
-                result = false;
-                return result;
-            }
-            for(i=0; i<=summn-1; i++)
-            {
-                if( i<state.m )
-                {
-                    state.ui[i] = state.b[i]/state.betai;
-                }
-                else
-                {
-                    state.ui[i] = 0;
-                }
-                state.x[i] = state.ui[i];
-            }
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needmtv = true;
-            state.rstate.stage = 3;
-            goto lbl_rcomm;
-        lbl_3:
-            state.needmtv = false;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.mtv[i] = state.mtv[i]+state.lambdai*state.ui[state.m+i];
-            }
-            state.alphai = 0;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.alphai = state.alphai+state.mtv[i]*state.mtv[i];
-            }
-            state.alphai = Math.Sqrt(state.alphai);
-            if( (double)(state.alphai)==(double)(0) )
-            {
-                
-                //
-                // Orthogonality stopping criterion is met
-                //
-                state.running = false;
-                state.repterminationtype = 4;
-                result = false;
-                return result;
-            }
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.vi[i] = state.mtv[i]/state.alphai;
-                state.omegai[i] = state.vi[i];
-            }
-            state.phibari = state.betai;
-            state.rhobari = state.alphai;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.d[i] = 0;
-            }
-            state.dnorm = 0;
-            
-            //
-            // Steps I=1, 2, ...
-            //
-        lbl_15:
-            if( false )
-            {
-                goto lbl_16;
-            }
-            
-            //
-            // At I-th step State.RepIterationsCount=I.
-            //
-            state.repiterationscount = state.repiterationscount+1;
-            
-            //
-            // Bidiagonalization part:
-            //     beta[i+1]*u[i+1]  = A_mod*v[i]-alpha[i]*u[i]
-            //     alpha[i+1]*v[i+1] = A_mod'*u[i+1] - beta[i+1]*v[i]
-            //     
-            // NOTE:  beta[i+1]=0 or alpha[i+1]=0 will lead to successful termination
-            //        in the end of the current iteration. In this case u/v are zero.
-            // NOTE2: algorithm won't fail on zero alpha or beta (there will be no
-            //        division by zero because it will be stopped BEFORE division
-            //        occurs). However, near-zero alpha and beta won't stop algorithm
-            //        and, although no division by zero will happen, orthogonality 
-            //        in U and V will be lost.
-            //
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.vi[i_];
-            }
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needmv = true;
-            state.rstate.stage = 4;
-            goto lbl_rcomm;
-        lbl_4:
-            state.needmv = false;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.mv[state.m+i] = state.lambdai*state.vi[i];
-            }
-            state.betaip1 = 0;
-            for(i=0; i<=summn-1; i++)
-            {
-                state.uip1[i] = state.mv[i]-state.alphai*state.ui[i];
-                state.betaip1 = state.betaip1+state.uip1[i]*state.uip1[i];
-            }
-            if( (double)(state.betaip1)!=(double)(0) )
-            {
-                state.betaip1 = Math.Sqrt(state.betaip1);
-                for(i=0; i<=summn-1; i++)
-                {
-                    state.uip1[i] = state.uip1[i]/state.betaip1;
-                }
-            }
-            for(i_=0; i_<=state.m-1;i_++)
-            {
-                state.x[i_] = state.uip1[i_];
-            }
-            state.repnmv = state.repnmv+1;
-            clearrfields(state, _params);
-            state.needmtv = true;
-            state.rstate.stage = 5;
-            goto lbl_rcomm;
-        lbl_5:
-            state.needmtv = false;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.mtv[i] = state.mtv[i]+state.lambdai*state.uip1[state.m+i];
-            }
-            state.alphaip1 = 0;
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.vip1[i] = state.mtv[i]-state.betaip1*state.vi[i];
-                state.alphaip1 = state.alphaip1+state.vip1[i]*state.vip1[i];
-            }
-            if( (double)(state.alphaip1)!=(double)(0) )
-            {
-                state.alphaip1 = Math.Sqrt(state.alphaip1);
-                for(i=0; i<=state.n-1; i++)
-                {
-                    state.vip1[i] = state.vip1[i]/state.alphaip1;
-                }
-            }
-            
-            //
-            // Build next orthogonal transformation
-            //
-            state.rhoi = apserv.safepythag2(state.rhobari, state.betaip1, _params);
-            state.ci = state.rhobari/state.rhoi;
-            state.si = state.betaip1/state.rhoi;
-            state.theta = state.si*state.alphaip1;
-            state.rhobarip1 = -(state.ci*state.alphaip1);
-            state.phii = state.ci*state.phibari;
-            state.phibarip1 = state.si*state.phibari;
-            
-            //
-            // Update .RNorm
-            //
-            // This tricky  formula  is  necessary  because  simply  writing
-            // State.R2:=State.PhiBarIP1*State.PhiBarIP1 does NOT guarantees
-            // monotonic decrease of R2. Roundoff error combined with 80-bit
-            // precision used internally by Intel chips allows R2 to increase
-            // slightly in some rare, but possible cases. This property is
-            // undesirable, so we prefer to guard against R increase.
-            //
-            state.r2 = Math.Min(state.r2, state.phibarip1*state.phibarip1);
-            
-            //
-            // Update d and DNorm, check condition-related stopping criteria
-            //
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.d[i] = 1/state.rhoi*(state.vi[i]-state.theta*state.d[i]);
-                state.dnorm = state.dnorm+state.d[i]*state.d[i];
-            }
-            if( (double)(Math.Sqrt(state.dnorm)*state.anorm)>=(double)(state.epsc) )
-            {
-                state.running = false;
-                state.repterminationtype = 7;
-                result = false;
-                return result;
-            }
-            
-            //
-            // Update x, output report
-            //
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.rx[i] = state.rx[i]+state.phii/state.rhoi*state.omegai[i];
-            }
-            if( !state.xrep )
-            {
-                goto lbl_17;
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.x[i_] = state.rx[i_];
-            }
-            clearrfields(state, _params);
-            state.xupdated = true;
-            state.rstate.stage = 6;
-            goto lbl_rcomm;
-        lbl_6:
-            state.xupdated = false;
-        lbl_17:
-            
-            //
-            // Check stopping criteria
-            // 1. achieved required number of iterations;
-            // 2. ||Rk||<=EpsB*||B||;
-            // 3. ||A^T*Rk||/(||A||*||Rk||)<=EpsA;
-            //
-            if( state.maxits>0 && state.repiterationscount>=state.maxits )
-            {
-                
-                //
-                // Achieved required number of iterations
-                //
-                state.running = false;
-                state.repterminationtype = 5;
-                result = false;
-                return result;
-            }
-            if( (double)(state.phibarip1)<=(double)(state.epsb*bnorm) )
-            {
-                
-                //
-                // ||Rk||<=EpsB*||B||, here ||Rk||=PhiBar
-                //
-                state.running = false;
-                state.repterminationtype = 1;
-                result = false;
-                return result;
-            }
-            if( (double)(state.alphaip1*Math.Abs(state.ci)/state.anorm)<=(double)(state.epsa) )
-            {
-                
-                //
-                // ||A^T*Rk||/(||A||*||Rk||)<=EpsA, here ||A^T*Rk||=PhiBar*Alpha[i+1]*|.C|
-                //
-                state.running = false;
-                state.repterminationtype = 4;
-                result = false;
-                return result;
-            }
-            if( state.userterminationneeded )
-            {
-                
-                //
-                // User requested termination
-                //
-                state.running = false;
-                state.repterminationtype = 8;
-                result = false;
-                return result;
-            }
-            
-            //
-            // Update omega
-            //
-            for(i=0; i<=state.n-1; i++)
-            {
-                state.omegaip1[i] = state.vip1[i]-state.theta/state.rhoi*state.omegai[i];
-            }
-            
-            //
-            // Prepare for the next iteration - rename variables:
-            // u[i]   := u[i+1]
-            // v[i]   := v[i+1]
-            // rho[i] := rho[i+1]
-            // ...
-            //
-            for(i_=0; i_<=summn-1;i_++)
-            {
-                state.ui[i_] = state.uip1[i_];
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.vi[i_] = state.vip1[i_];
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                state.omegai[i_] = state.omegaip1[i_];
-            }
-            state.alphai = state.alphaip1;
-            state.betai = state.betaip1;
-            state.phibari = state.phibarip1;
-            state.rhobari = state.rhobarip1;
-            goto lbl_15;
-        lbl_16:
-            result = false;
-            return result;
-            
-            //
-            // Saving state
-            //
-        lbl_rcomm:
-            result = true;
-            state.rstate.ia[0] = summn;
-            state.rstate.ia[1] = i;
-            state.rstate.ra[0] = bnorm;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Procedure for solution of A*x=b with sparse A.
-
-        INPUT PARAMETERS:
-            State   -   algorithm state
-            A       -   sparse M*N matrix in the CRS format (you MUST contvert  it 
-                        to CRS format  by  calling  SparseConvertToCRS()  function
-                        BEFORE you pass it to this function).
-            B       -   right part, array[M]
-
-        RESULT:
-            This function returns no result.
-            You can get solution by calling LinCGResults()
-            
-        NOTE: this function uses lightweight preconditioning -  multiplication  by
-              inverse of diag(A). If you want, you can turn preconditioning off by
-              calling LinLSQRSetPrecUnit(). However, preconditioning cost is   low
-              and preconditioner is very important for solution  of  badly  scaled
-              problems.
-
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrsolvesparse(linlsqrstate state,
-            sparse.sparsematrix a,
-            double[] b,
-            alglib.xparams _params)
-        {
-            int n = 0;
-            int i = 0;
-            int j = 0;
-            int t0 = 0;
-            int t1 = 0;
-            double v = 0;
-
-            n = state.n;
-            alglib.ap.assert(!state.running, "LinLSQRSolveSparse: you can not call this function when LinLSQRIteration is running");
-            alglib.ap.assert(alglib.ap.len(b)>=state.m, "LinLSQRSolveSparse: Length(B)<M");
-            alglib.ap.assert(apserv.isfinitevector(b, state.m, _params), "LinLSQRSolveSparse: B contains infinite or NaN values");
-            
-            //
-            // Allocate temporaries
-            //
-            apserv.rvectorsetlengthatleast(ref state.tmpd, n, _params);
-            apserv.rvectorsetlengthatleast(ref state.tmpx, n, _params);
-            
-            //
-            // Compute diagonal scaling matrix D
-            //
-            if( state.prectype==0 )
-            {
-                
-                //
-                // Default preconditioner - inverse of column norms
-                //
-                for(i=0; i<=n-1; i++)
-                {
-                    state.tmpd[i] = 0;
-                }
-                t0 = 0;
-                t1 = 0;
-                while( sparse.sparseenumerate(a, ref t0, ref t1, ref i, ref j, ref v, _params) )
-                {
-                    state.tmpd[j] = state.tmpd[j]+math.sqr(v);
-                }
-                for(i=0; i<=n-1; i++)
-                {
-                    if( (double)(state.tmpd[i])>(double)(0) )
-                    {
-                        state.tmpd[i] = 1/Math.Sqrt(state.tmpd[i]);
-                    }
-                    else
-                    {
-                        state.tmpd[i] = 1;
-                    }
-                }
-            }
-            else
-            {
-                
-                //
-                // No diagonal scaling
-                //
-                for(i=0; i<=n-1; i++)
-                {
-                    state.tmpd[i] = 1;
-                }
-            }
-            
-            //
-            // Solve.
-            //
-            // Instead of solving A*x=b we solve preconditioned system (A*D)*(inv(D)*x)=b.
-            // Transformed A is not calculated explicitly, we just modify multiplication
-            // by A or A'. After solution we modify State.RX so it will store untransformed
-            // variables
-            //
-            linlsqrsetb(state, b, _params);
-            linlsqrrestart(state, _params);
-            while( linlsqriteration(state, _params) )
-            {
-                if( state.needmv )
-                {
-                    for(i=0; i<=n-1; i++)
-                    {
-                        state.tmpx[i] = state.tmpd[i]*state.x[i];
-                    }
-                    sparse.sparsemv(a, state.tmpx, ref state.mv, _params);
-                }
-                if( state.needmtv )
-                {
-                    sparse.sparsemtv(a, state.x, ref state.mtv, _params);
-                    for(i=0; i<=n-1; i++)
-                    {
-                        state.mtv[i] = state.tmpd[i]*state.mtv[i];
-                    }
-                }
-            }
-            for(i=0; i<=n-1; i++)
-            {
-                state.rx[i] = state.tmpd[i]*state.rx[i];
-            }
-        }
-
-
-        /*************************************************************************
-        This function sets stopping criteria.
-
-        INPUT PARAMETERS:
-            EpsA    -   algorithm will be stopped if ||A^T*Rk||/(||A||*||Rk||)<=EpsA.
-            EpsB    -   algorithm will be stopped if ||Rk||<=EpsB*||B||
-            MaxIts  -   algorithm will be stopped if number of iterations
-                        more than MaxIts.
-
-        OUTPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-
-        NOTE: if EpsA,EpsB,EpsC and MaxIts are zero then these variables will
-        be setted as default values.
-            
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrsetcond(linlsqrstate state,
-            double epsa,
-            double epsb,
-            int maxits,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(!state.running, "LinLSQRSetCond: you can not call this function when LinLSQRIteration is running");
-            alglib.ap.assert(math.isfinite(epsa) && (double)(epsa)>=(double)(0), "LinLSQRSetCond: EpsA is negative, INF or NAN");
-            alglib.ap.assert(math.isfinite(epsb) && (double)(epsb)>=(double)(0), "LinLSQRSetCond: EpsB is negative, INF or NAN");
-            alglib.ap.assert(maxits>=0, "LinLSQRSetCond: MaxIts is negative");
-            if( ((double)(epsa)==(double)(0) && (double)(epsb)==(double)(0)) && maxits==0 )
-            {
-                state.epsa = atol;
-                state.epsb = btol;
-                state.maxits = state.n;
-            }
-            else
-            {
-                state.epsa = epsa;
-                state.epsb = epsb;
-                state.maxits = maxits;
-            }
-        }
-
-
-        /*************************************************************************
-        LSQR solver: results.
-
-        This function must be called after LinLSQRSolve
-
-        INPUT PARAMETERS:
-            State   -   algorithm state
-
-        OUTPUT PARAMETERS:
-            X       -   array[N], solution
-            Rep     -   optimization report:
-                        * Rep.TerminationType completetion code:
-                            *  1    ||Rk||<=EpsB*||B||
-                            *  4    ||A^T*Rk||/(||A||*||Rk||)<=EpsA
-                            *  5    MaxIts steps was taken
-                            *  7    rounding errors prevent further progress,
-                                    X contains best point found so far.
-                                    (sometimes returned on singular systems)
-                            *  8    user requested termination via calling
-                                    linlsqrrequesttermination()
-                        * Rep.IterationsCount contains iterations count
-                        * NMV countains number of matrix-vector calculations
-                        
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrresults(linlsqrstate state,
-            ref double[] x,
-            linlsqrreport rep,
-            alglib.xparams _params)
-        {
-            int i_ = 0;
-
-            x = new double[0];
-
-            alglib.ap.assert(!state.running, "LinLSQRResult: you can not call this function when LinLSQRIteration is running");
-            if( alglib.ap.len(x)<state.n )
-            {
-                x = new double[state.n];
-            }
-            for(i_=0; i_<=state.n-1;i_++)
-            {
-                x[i_] = state.rx[i_];
-            }
-            rep.iterationscount = state.repiterationscount;
-            rep.nmv = state.repnmv;
-            rep.terminationtype = state.repterminationtype;
-        }
-
-
-        /*************************************************************************
-        This function turns on/off reporting.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores algorithm state
-            NeedXRep-   whether iteration reports are needed or not
-
-        If NeedXRep is True, algorithm will call rep() callback function if  it is
-        provided to MinCGOptimize().
-
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrsetxrep(linlsqrstate state,
-            bool needxrep,
-            alglib.xparams _params)
-        {
-            state.xrep = needxrep;
-        }
-
-
-        /*************************************************************************
-        This function restarts LinLSQRIteration
-
-          -- ALGLIB --
-             Copyright 30.11.2011 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrrestart(linlsqrstate state,
-            alglib.xparams _params)
-        {
-            state.rstate.ia = new int[1+1];
-            state.rstate.ra = new double[0+1];
-            state.rstate.stage = -1;
-            clearrfields(state, _params);
-            state.repiterationscount = 0;
-        }
-
-
-        /*************************************************************************
-        This function is used to peek into LSQR solver and get  current  iteration
-        counter. You can safely "peek" into the solver from another thread.
-
-        INPUT PARAMETERS:
-            S           -   solver object
-
-        RESULT:
-            iteration counter, in [0,INF)
-
-          -- ALGLIB --
-             Copyright 21.05.2018 by Bochkanov Sergey
-        *************************************************************************/
-        public static int linlsqrpeekiterationscount(linlsqrstate s,
-            alglib.xparams _params)
-        {
-            int result = 0;
-
-            result = s.repiterationscount;
-            return result;
-        }
-
-
-        /*************************************************************************
-        This subroutine submits request for termination of the running solver.  It
-        can be called from some other thread which wants LSQR solver to  terminate
-        (obviously, the  thread  running  LSQR  solver can not request termination
-        because it is already busy working on LSQR).
-
-        As result, solver  stops  at  point  which  was  "current  accepted"  when
-        termination  request  was  submitted  and returns error code 8 (successful
-        termination).  Such   termination   is  a smooth  process  which  properly
-        deallocates all temporaries.
-
-        INPUT PARAMETERS:
-            State   -   solver structure
-
-        NOTE: calling this function on solver which is NOT running  will  have  no
-              effect.
-              
-        NOTE: multiple calls to this function are possible. First call is counted,
-              subsequent calls are silently ignored.
-
-        NOTE: solver clears termination flag on its start, it means that  if  some
-              other thread will request termination too soon, its request will went
-              unnoticed.
-
-          -- ALGLIB --
-             Copyright 08.10.2014 by Bochkanov Sergey
-        *************************************************************************/
-        public static void linlsqrrequesttermination(linlsqrstate state,
-            alglib.xparams _params)
-        {
-            state.userterminationneeded = true;
-        }
-
-
-        /*************************************************************************
-        Clears request fileds (to be sure that we don't forgot to clear something)
-        *************************************************************************/
-        private static void clearrfields(linlsqrstate state,
-            alglib.xparams _params)
-        {
-            state.xupdated = false;
-            state.needmv = false;
-            state.needmtv = false;
-            state.needmv2 = false;
-            state.needvmv = false;
-            state.needprec = false;
-        }
-
-
-    }
-    public class directsparsesolvers
+    public partial class directsparsesolvers
     {
         /*************************************************************************
         Sparse linear solver for A*x=b with N*N  sparse  real  symmetric  positive
@@ -15429,7 +14329,1166 @@ public partial class alglib
 
 
     }
-    public class nleq
+    public partial class lincg
+    {
+        /*************************************************************************
+        This object stores state of the linear CG method.
+
+        You should use ALGLIB functions to work with this object.
+        Never try to access its fields directly!
+        *************************************************************************/
+        public class lincgstate : apobject
+        {
+            public double[] rx;
+            public double[] b;
+            public int n;
+            public int prectype;
+            public double[] cx;
+            public double[] cr;
+            public double[] cz;
+            public double[] p;
+            public double[] r;
+            public double[] z;
+            public double alpha;
+            public double beta;
+            public double r2;
+            public double meritfunction;
+            public double[] x;
+            public double[] mv;
+            public double[] pv;
+            public double vmv;
+            public double[] startx;
+            public double epsf;
+            public int maxits;
+            public int itsbeforerestart;
+            public int itsbeforerupdate;
+            public bool xrep;
+            public bool xupdated;
+            public bool needmv;
+            public bool needmtv;
+            public bool needmv2;
+            public bool needvmv;
+            public bool needprec;
+            public int repiterationscount;
+            public int repnmv;
+            public int repterminationtype;
+            public bool running;
+            public double[] tmpd;
+            public ap.rcommstate rstate;
+            public lincgstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+                rx = new double[0];
+                b = new double[0];
+                cx = new double[0];
+                cr = new double[0];
+                cz = new double[0];
+                p = new double[0];
+                r = new double[0];
+                z = new double[0];
+                x = new double[0];
+                mv = new double[0];
+                pv = new double[0];
+                startx = new double[0];
+                tmpd = new double[0];
+                rstate = new ap.rcommstate();
+            }
+            public override alglib.apobject make_copy()
+            {
+                lincgstate _result = new lincgstate();
+                _result.rx = (double[])rx.Clone();
+                _result.b = (double[])b.Clone();
+                _result.n = n;
+                _result.prectype = prectype;
+                _result.cx = (double[])cx.Clone();
+                _result.cr = (double[])cr.Clone();
+                _result.cz = (double[])cz.Clone();
+                _result.p = (double[])p.Clone();
+                _result.r = (double[])r.Clone();
+                _result.z = (double[])z.Clone();
+                _result.alpha = alpha;
+                _result.beta = beta;
+                _result.r2 = r2;
+                _result.meritfunction = meritfunction;
+                _result.x = (double[])x.Clone();
+                _result.mv = (double[])mv.Clone();
+                _result.pv = (double[])pv.Clone();
+                _result.vmv = vmv;
+                _result.startx = (double[])startx.Clone();
+                _result.epsf = epsf;
+                _result.maxits = maxits;
+                _result.itsbeforerestart = itsbeforerestart;
+                _result.itsbeforerupdate = itsbeforerupdate;
+                _result.xrep = xrep;
+                _result.xupdated = xupdated;
+                _result.needmv = needmv;
+                _result.needmtv = needmtv;
+                _result.needmv2 = needmv2;
+                _result.needvmv = needvmv;
+                _result.needprec = needprec;
+                _result.repiterationscount = repiterationscount;
+                _result.repnmv = repnmv;
+                _result.repterminationtype = repterminationtype;
+                _result.running = running;
+                _result.tmpd = (double[])tmpd.Clone();
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
+                return _result;
+            }
+        };
+
+
+        public class lincgreport : apobject
+        {
+            public int iterationscount;
+            public int nmv;
+            public int terminationtype;
+            public double r2;
+            public lincgreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+            }
+            public override alglib.apobject make_copy()
+            {
+                lincgreport _result = new lincgreport();
+                _result.iterationscount = iterationscount;
+                _result.nmv = nmv;
+                _result.terminationtype = terminationtype;
+                _result.r2 = r2;
+                return _result;
+            }
+        };
+
+
+
+
+        public const double defaultprecision = 1.0E-6;
+
+
+        /*************************************************************************
+        This function initializes linear CG Solver. This solver is used  to  solve
+        symmetric positive definite problems. If you want  to  solve  nonsymmetric
+        (or non-positive definite) problem you may use LinLSQR solver provided  by
+        ALGLIB.
+
+        USAGE:
+        1. User initializes algorithm state with LinCGCreate() call
+        2. User tunes solver parameters with  LinCGSetCond() and other functions
+        3. Optionally, user sets starting point with LinCGSetStartingPoint()
+        4. User  calls LinCGSolveSparse() function which takes algorithm state and
+           SparseMatrix object.
+        5. User calls LinCGResults() to get solution
+        6. Optionally, user may call LinCGSolveSparse()  again  to  solve  another
+           problem  with different matrix and/or right part without reinitializing
+           LinCGState structure.
+          
+        INPUT PARAMETERS:
+            N       -   problem dimension, N>0
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgcreate(int n,
+            lincgstate state,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.assert(n>0, "LinCGCreate: N<=0");
+            state.n = n;
+            state.prectype = 0;
+            state.itsbeforerestart = n;
+            state.itsbeforerupdate = 10;
+            state.epsf = defaultprecision;
+            state.maxits = 0;
+            state.xrep = false;
+            state.running = false;
+            
+            //
+            // * allocate arrays
+            // * set RX to NAN (just for the case user calls Results() without 
+            //   calling SolveSparse()
+            // * set starting point to zero
+            // * we do NOT initialize B here because we assume that user should
+            //   initializate it using LinCGSetB() function. In case he forgets
+            //   to do so, exception will be thrown in the LinCGIteration().
+            //
+            state.rx = new double[state.n];
+            state.startx = new double[state.n];
+            state.b = new double[state.n];
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.rx[i] = Double.NaN;
+                state.startx[i] = 0.0;
+                state.b[i] = 0;
+            }
+            state.cx = new double[state.n];
+            state.p = new double[state.n];
+            state.r = new double[state.n];
+            state.cr = new double[state.n];
+            state.z = new double[state.n];
+            state.cz = new double[state.n];
+            state.x = new double[state.n];
+            state.mv = new double[state.n];
+            state.pv = new double[state.n];
+            updateitersdata(state, _params);
+            state.rstate.ia = new int[0+1];
+            state.rstate.ra = new double[2+1];
+            state.rstate.stage = -1;
+            state.rstate.clear_handler();
+        }
+
+
+        /*************************************************************************
+        This function sets starting point.
+        By default, zero starting point is used.
+
+        INPUT PARAMETERS:
+            X       -   starting point, array[N]
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsetstartingpoint(lincgstate state,
+            double[] x,
+            alglib.xparams _params)
+        {
+            int i_ = 0;
+
+            alglib.ap.assert(!state.running, "LinCGSetStartingPoint: you can not change starting point because LinCGIteration() function is running");
+            alglib.ap.assert(state.n<=alglib.ap.len(x), "LinCGSetStartingPoint: Length(X)<N");
+            alglib.ap.assert(apserv.isfinitevector(x, state.n, _params), "LinCGSetStartingPoint: X contains infinite or NaN values!");
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.startx[i_] = x[i_];
+            }
+        }
+
+
+        /*************************************************************************
+        This function sets right part. By default, right part is zero.
+
+        INPUT PARAMETERS:
+            B       -   right part, array[N].
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsetb(lincgstate state,
+            double[] b,
+            alglib.xparams _params)
+        {
+            int i_ = 0;
+
+            alglib.ap.assert(!state.running, "LinCGSetB: you can not set B, because function LinCGIteration is running!");
+            alglib.ap.assert(alglib.ap.len(b)>=state.n, "LinCGSetB: Length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, state.n, _params), "LinCGSetB: B contains infinite or NaN values!");
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.b[i_] = b[i_];
+            }
+        }
+
+
+        /*************************************************************************
+        This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
+        function. By default, SolveSparse() uses diagonal preconditioner,  but  if
+        you want to use solver without preconditioning, you can call this function
+        which forces solver to use unit matrix for preconditioning.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 19.11.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsetprecunit(lincgstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinCGSetPrecUnit: you can not change preconditioner, because function LinCGIteration is running!");
+            state.prectype = -1;
+        }
+
+
+        /*************************************************************************
+        This  function  changes  preconditioning  settings  of  LinCGSolveSparse()
+        function.  LinCGSolveSparse() will use diagonal of the  system  matrix  as
+        preconditioner. This preconditioning mode is active by default.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+          -- ALGLIB --
+             Copyright 19.11.2012 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsetprecdiag(lincgstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinCGSetPrecDiag: you can not change preconditioner, because function LinCGIteration is running!");
+            state.prectype = 0;
+        }
+
+
+        /*************************************************************************
+        This function sets stopping criteria.
+
+        INPUT PARAMETERS:
+            EpsF    -   algorithm will be stopped if norm of residual is less than 
+                        EpsF*||b||.
+            MaxIts  -   algorithm will be stopped if number of iterations is  more 
+                        than MaxIts.
+
+        OUTPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+
+        NOTES:
+        If  both  EpsF  and  MaxIts  are  zero then small EpsF will be set to small 
+        value.
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsetcond(lincgstate state,
+            double epsf,
+            int maxits,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinCGSetCond: you can not change stopping criteria when LinCGIteration() is running");
+            alglib.ap.assert(math.isfinite(epsf) && (double)(epsf)>=(double)(0), "LinCGSetCond: EpsF is negative or contains infinite or NaN values");
+            alglib.ap.assert(maxits>=0, "LinCGSetCond: MaxIts is negative");
+            if( (double)(epsf)==(double)(0) && maxits==0 )
+            {
+                state.epsf = defaultprecision;
+                state.maxits = maxits;
+            }
+            else
+            {
+                state.epsf = epsf;
+                state.maxits = maxits;
+            }
+        }
+
+
+        /*************************************************************************
+        Reverse communication version of linear CG.
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool lincgiteration(lincgstate state,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+            int i = 0;
+            double uvar = 0;
+            double bnorm = 0;
+            double v = 0;
+            int i_ = 0;
+
+            
+            //
+            // Reverse communication preparations
+            //
+            // This code initializes locals by:
+            // * random values determined during code
+            //   generation - on first subroutine call
+            // * values from previous call - on subsequent calls
+            //
+            if( state.rstate.stage>=0 )
+            {
+                i = state.rstate.ia[0];
+                uvar = state.rstate.ra[0];
+                bnorm = state.rstate.ra[1];
+                v = state.rstate.ra[2];
+            }
+            else
+            {
+                i = 359;
+                uvar = -58.0;
+                bnorm = -919.0;
+                v = -909.0;
+            }
+            if( state.rstate.stage==0 )
+            {
+                goto lbl_0;
+            }
+            if( state.rstate.stage==1 )
+            {
+                goto lbl_1;
+            }
+            if( state.rstate.stage==2 )
+            {
+                goto lbl_2;
+            }
+            if( state.rstate.stage==3 )
+            {
+                goto lbl_3;
+            }
+            if( state.rstate.stage==4 )
+            {
+                goto lbl_4;
+            }
+            if( state.rstate.stage==5 )
+            {
+                goto lbl_5;
+            }
+            if( state.rstate.stage==6 )
+            {
+                goto lbl_6;
+            }
+            if( state.rstate.stage==7 )
+            {
+                goto lbl_7;
+            }
+            
+            //
+            // Routine body
+            //
+            alglib.ap.assert(alglib.ap.len(state.b)>0, "LinCGIteration: B is not initialized (you must initialize B by LinCGSetB() call");
+            state.running = true;
+            state.repnmv = 0;
+            clearrfields(state, _params);
+            updateitersdata(state, _params);
+            
+            //
+            // Start 0-th iteration
+            //
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.rx[i_] = state.startx[i_];
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.rx[i_];
+            }
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needvmv = true;
+            state.rstate.stage = 0;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_0:
+            state.needvmv = false;
+            bnorm = 0;
+            state.r2 = 0;
+            state.meritfunction = 0;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.r[i] = state.b[i]-state.mv[i];
+                state.r2 = state.r2+state.r[i]*state.r[i];
+                state.meritfunction = state.meritfunction+state.mv[i]*state.rx[i]-2*state.b[i]*state.rx[i];
+                bnorm = bnorm+state.b[i]*state.b[i];
+            }
+            bnorm = Math.Sqrt(bnorm);
+            
+            //
+            // Output first report
+            //
+            if( !state.xrep )
+            {
+                goto lbl_8;
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.rx[i_];
+            }
+            clearrfields(state, _params);
+            state.xupdated = true;
+            state.rstate.stage = 1;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_1:
+            state.xupdated = false;
+        lbl_8:
+            
+            //
+            // Is x0 a solution?
+            //
+            if( !math.isfinite(state.r2) || (double)(Math.Sqrt(state.r2))<=(double)(state.epsf*bnorm) )
+            {
+                state.running = false;
+                if( math.isfinite(state.r2) )
+                {
+                    state.repterminationtype = 1;
+                }
+                else
+                {
+                    state.repterminationtype = -4;
+                }
+                result = false;
+                return result;
+            }
+            
+            //
+            // Calculate Z and P
+            //
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.r[i_];
+            }
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needprec = true;
+            state.rstate.stage = 2;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_2:
+            state.needprec = false;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.z[i] = state.pv[i];
+                state.p[i] = state.z[i];
+            }
+            
+            //
+            // Other iterations(1..N)
+            //
+            state.repiterationscount = 0;
+        lbl_10:
+            if( false )
+            {
+                goto lbl_11;
+            }
+            state.repiterationscount = state.repiterationscount+1;
+            
+            //
+            // Calculate Alpha
+            //
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.p[i_];
+            }
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needvmv = true;
+            state.rstate.stage = 3;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_3:
+            state.needvmv = false;
+            if( !math.isfinite(state.vmv) || (double)(state.vmv)<=(double)(0) )
+            {
+                
+                //
+                // a) Overflow when calculating VMV
+                // b) non-positive VMV (non-SPD matrix)
+                //
+                state.running = false;
+                if( math.isfinite(state.vmv) )
+                {
+                    state.repterminationtype = -5;
+                }
+                else
+                {
+                    state.repterminationtype = -4;
+                }
+                result = false;
+                return result;
+            }
+            state.alpha = 0;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.alpha = state.alpha+state.r[i]*state.z[i];
+            }
+            state.alpha = state.alpha/state.vmv;
+            if( !math.isfinite(state.alpha) )
+            {
+                
+                //
+                // Overflow when calculating Alpha
+                //
+                state.running = false;
+                state.repterminationtype = -4;
+                result = false;
+                return result;
+            }
+            
+            //
+            // Next step toward solution
+            //
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.cx[i] = state.rx[i]+state.alpha*state.p[i];
+            }
+            
+            //
+            // Calculate R:
+            // * use recurrent relation to update R
+            // * at every ItsBeforeRUpdate-th iteration recalculate it from scratch, using matrix-vector product
+            //   in case R grows instead of decreasing, algorithm is terminated with positive completion code
+            //
+            if( !(state.itsbeforerupdate==0 || state.repiterationscount%state.itsbeforerupdate!=0) )
+            {
+                goto lbl_12;
+            }
+            
+            //
+            // Calculate R using recurrent formula
+            //
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.cr[i] = state.r[i]-state.alpha*state.mv[i];
+                state.x[i] = state.cr[i];
+            }
+            goto lbl_13;
+        lbl_12:
+            
+            //
+            // Calculate R using matrix-vector multiplication
+            //
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.cx[i_];
+            }
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needmv = true;
+            state.rstate.stage = 4;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_4:
+            state.needmv = false;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.cr[i] = state.b[i]-state.mv[i];
+                state.x[i] = state.cr[i];
+            }
+            
+            //
+            // Calculating merit function
+            // Check emergency stopping criterion
+            //
+            v = 0;
+            for(i=0; i<=state.n-1; i++)
+            {
+                v = v+state.mv[i]*state.cx[i]-2*state.b[i]*state.cx[i];
+            }
+            if( (double)(v)<(double)(state.meritfunction) )
+            {
+                goto lbl_14;
+            }
+            for(i=0; i<=state.n-1; i++)
+            {
+                if( !math.isfinite(state.rx[i]) )
+                {
+                    state.running = false;
+                    state.repterminationtype = -4;
+                    result = false;
+                    return result;
+                }
+            }
+            
+            //
+            //output last report
+            //
+            if( !state.xrep )
+            {
+                goto lbl_16;
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.rx[i_];
+            }
+            clearrfields(state, _params);
+            state.xupdated = true;
+            state.rstate.stage = 5;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_5:
+            state.xupdated = false;
+        lbl_16:
+            state.running = false;
+            state.repterminationtype = 7;
+            result = false;
+            return result;
+        lbl_14:
+            state.meritfunction = v;
+        lbl_13:
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.rx[i_] = state.cx[i_];
+            }
+            
+            //
+            // calculating RNorm
+            //
+            // NOTE: monotonic decrease of R2 is not guaranteed by algorithm.
+            //
+            state.r2 = 0;
+            for(i=0; i<=state.n-1; i++)
+            {
+                state.r2 = state.r2+state.cr[i]*state.cr[i];
+            }
+            
+            //
+            //output report
+            //
+            if( !state.xrep )
+            {
+                goto lbl_18;
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.rx[i_];
+            }
+            clearrfields(state, _params);
+            state.xupdated = true;
+            state.rstate.stage = 6;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_6:
+            state.xupdated = false;
+        lbl_18:
+            
+            //
+            //stopping criterion
+            //achieved the required precision
+            //
+            if( !math.isfinite(state.r2) || (double)(Math.Sqrt(state.r2))<=(double)(state.epsf*bnorm) )
+            {
+                state.running = false;
+                if( math.isfinite(state.r2) )
+                {
+                    state.repterminationtype = 1;
+                }
+                else
+                {
+                    state.repterminationtype = -4;
+                }
+                result = false;
+                return result;
+            }
+            if( state.repiterationscount>=state.maxits && state.maxits>0 )
+            {
+                for(i=0; i<=state.n-1; i++)
+                {
+                    if( !math.isfinite(state.rx[i]) )
+                    {
+                        state.running = false;
+                        state.repterminationtype = -4;
+                        result = false;
+                        return result;
+                    }
+                }
+                
+                //
+                //if X is finite number
+                //
+                state.running = false;
+                state.repterminationtype = 5;
+                result = false;
+                return result;
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.x[i_] = state.cr[i_];
+            }
+            
+            //
+            //prepere of parameters for next iteration
+            //
+            state.repnmv = state.repnmv+1;
+            clearrfields(state, _params);
+            state.needprec = true;
+            state.rstate.stage = 7;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_7:
+            state.needprec = false;
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                state.cz[i_] = state.pv[i_];
+            }
+            if( state.repiterationscount%state.itsbeforerestart!=0 )
+            {
+                state.beta = 0;
+                uvar = 0;
+                for(i=0; i<=state.n-1; i++)
+                {
+                    state.beta = state.beta+state.cz[i]*state.cr[i];
+                    uvar = uvar+state.z[i]*state.r[i];
+                }
+                
+                //
+                //check that UVar is't INF or is't zero
+                //
+                if( !math.isfinite(uvar) || (double)(uvar)==(double)(0) )
+                {
+                    state.running = false;
+                    state.repterminationtype = -4;
+                    result = false;
+                    return result;
+                }
+                
+                //
+                //calculate .BETA
+                //
+                state.beta = state.beta/uvar;
+                
+                //
+                //check that .BETA neither INF nor NaN
+                //
+                if( !math.isfinite(state.beta) )
+                {
+                    state.running = false;
+                    state.repterminationtype = -1;
+                    result = false;
+                    return result;
+                }
+                for(i=0; i<=state.n-1; i++)
+                {
+                    state.p[i] = state.cz[i]+state.beta*state.p[i];
+                }
+            }
+            else
+            {
+                for(i_=0; i_<=state.n-1;i_++)
+                {
+                    state.p[i_] = state.cz[i_];
+                }
+            }
+            
+            //
+            //prepere data for next iteration
+            //
+            for(i=0; i<=state.n-1; i++)
+            {
+                
+                //
+                //write (k+1)th iteration to (k )th iteration
+                //
+                state.r[i] = state.cr[i];
+                state.z[i] = state.cz[i];
+            }
+            goto lbl_10;
+        lbl_11:
+            result = false;
+            return result;
+            
+            //
+            // Saving state
+            //
+        lbl_rcomm:
+            result = true;
+            state.rstate.ia[0] = i;
+            state.rstate.ra[0] = uvar;
+            state.rstate.ra[1] = bnorm;
+            state.rstate.ra[2] = v;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Procedure for solution of A*x=b with sparse A.
+
+        INPUT PARAMETERS:
+            State   -   algorithm state
+            A       -   sparse matrix in the CRS format (you MUST contvert  it  to 
+                        CRS format by calling SparseConvertToCRS() function).
+            IsUpper -   whether upper or lower triangle of A is used:
+                        * IsUpper=True  => only upper triangle is used and lower
+                                           triangle is not referenced at all 
+                        * IsUpper=False => only lower triangle is used and upper
+                                           triangle is not referenced at all
+            B       -   right part, array[N]
+
+        RESULT:
+            This function returns no result.
+            You can get solution by calling LinCGResults()
+            
+        NOTE: this function uses lightweight preconditioning -  multiplication  by
+              inverse of diag(A). If you want, you can turn preconditioning off by
+              calling LinCGSetPrecUnit(). However, preconditioning cost is low and
+              preconditioner  is  very  important  for  solution  of  badly scaled
+              problems.
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsolvesparse(lincgstate state,
+            sparse.sparsematrix a,
+            bool isupper,
+            double[] b,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int i = 0;
+            double v = 0;
+            double vmv = 0;
+            int i_ = 0;
+
+            n = state.n;
+            alglib.ap.assert(alglib.ap.len(b)>=state.n, "LinCGSetB: Length(B)<N");
+            alglib.ap.assert(apserv.isfinitevector(b, state.n, _params), "LinCGSetB: B contains infinite or NaN values!");
+            
+            //
+            // Allocate temporaries
+            //
+            apserv.rvectorsetlengthatleast(ref state.tmpd, n, _params);
+            
+            //
+            // Compute diagonal scaling matrix D
+            //
+            if( state.prectype==0 )
+            {
+                
+                //
+                // Default preconditioner - inverse of matrix diagonal
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    v = sparse.sparsegetdiagonal(a, i, _params);
+                    if( (double)(v)>(double)(0) )
+                    {
+                        state.tmpd[i] = 1/Math.Sqrt(v);
+                    }
+                    else
+                    {
+                        state.tmpd[i] = 1;
+                    }
+                }
+            }
+            else
+            {
+                
+                //
+                // No diagonal scaling
+                //
+                for(i=0; i<=n-1; i++)
+                {
+                    state.tmpd[i] = 1;
+                }
+            }
+            
+            //
+            // Solve
+            //
+            lincgrestart(state, _params);
+            lincgsetb(state, b, _params);
+            while( lincgiteration(state, _params) )
+            {
+                
+                //
+                // Process different requests from optimizer
+                //
+                if( state.needmv )
+                {
+                    sparse.sparsesmv(a, isupper, state.x, ref state.mv, _params);
+                }
+                if( state.needvmv )
+                {
+                    sparse.sparsesmv(a, isupper, state.x, ref state.mv, _params);
+                    vmv = 0.0;
+                    for(i_=0; i_<=state.n-1;i_++)
+                    {
+                        vmv += state.x[i_]*state.mv[i_];
+                    }
+                    state.vmv = vmv;
+                }
+                if( state.needprec )
+                {
+                    for(i=0; i<=n-1; i++)
+                    {
+                        state.pv[i] = state.x[i]*math.sqr(state.tmpd[i]);
+                    }
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        CG-solver: results.
+
+        This function must be called after LinCGSolve
+
+        INPUT PARAMETERS:
+            State   -   algorithm state
+
+        OUTPUT PARAMETERS:
+            X       -   array[N], solution
+            Rep     -   optimization report:
+                        * Rep.TerminationType completetion code:
+                            * -5    input matrix is either not positive definite,
+                                    too large or too small                            
+                            * -4    overflow/underflow during solution
+                                    (ill conditioned problem)
+                            *  1    ||residual||<=EpsF*||b||
+                            *  5    MaxIts steps was taken
+                            *  7    rounding errors prevent further progress,
+                                    best point found is returned
+                        * Rep.IterationsCount contains iterations count
+                        * NMV countains number of matrix-vector calculations
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgresults(lincgstate state,
+            ref double[] x,
+            lincgreport rep,
+            alglib.xparams _params)
+        {
+            int i_ = 0;
+
+            x = new double[0];
+
+            alglib.ap.assert(!state.running, "LinCGResult: you can not get result, because function LinCGIteration has been launched!");
+            if( alglib.ap.len(x)<state.n )
+            {
+                x = new double[state.n];
+            }
+            for(i_=0; i_<=state.n-1;i_++)
+            {
+                x[i_] = state.rx[i_];
+            }
+            rep.iterationscount = state.repiterationscount;
+            rep.nmv = state.repnmv;
+            rep.terminationtype = state.repterminationtype;
+            rep.r2 = state.r2;
+        }
+
+
+        /*************************************************************************
+        This function sets restart frequency. By default, algorithm  is  restarted
+        after N subsequent iterations.
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsetrestartfreq(lincgstate state,
+            int srf,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinCGSetRestartFreq: you can not change restart frequency when LinCGIteration() is running");
+            alglib.ap.assert(srf>0, "LinCGSetRestartFreq: non-positive SRF");
+            state.itsbeforerestart = srf;
+        }
+
+
+        /*************************************************************************
+        This function sets frequency of residual recalculations.
+
+        Algorithm updates residual r_k using iterative formula,  but  recalculates
+        it from scratch after each 10 iterations. It is done to avoid accumulation
+        of numerical errors and to stop algorithm when r_k starts to grow.
+
+        Such low update frequence (1/10) gives very  little  overhead,  but  makes
+        algorithm a bit more robust against numerical errors. However, you may
+        change it 
+
+        INPUT PARAMETERS:
+            Freq    -   desired update frequency, Freq>=0.
+                        Zero value means that no updates will be done.
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsetrupdatefreq(lincgstate state,
+            int freq,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(!state.running, "LinCGSetRUpdateFreq: you can not change update frequency when LinCGIteration() is running");
+            alglib.ap.assert(freq>=0, "LinCGSetRUpdateFreq: non-positive Freq");
+            state.itsbeforerupdate = freq;
+        }
+
+
+        /*************************************************************************
+        This function turns on/off reporting.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores algorithm state
+            NeedXRep-   whether iteration reports are needed or not
+
+        If NeedXRep is True, algorithm will call rep() callback function if  it is
+        provided to MinCGOptimize().
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgsetxrep(lincgstate state,
+            bool needxrep,
+            alglib.xparams _params)
+        {
+            state.xrep = needxrep;
+        }
+
+
+        /*************************************************************************
+        Procedure for restart function LinCGIteration
+
+          -- ALGLIB --
+             Copyright 14.11.2011 by Bochkanov Sergey
+        *************************************************************************/
+        public static void lincgrestart(lincgstate state,
+            alglib.xparams _params)
+        {
+            state.rstate.ia = new int[0+1];
+            state.rstate.ra = new double[2+1];
+            state.rstate.stage = -1;
+            state.rstate.clear_handler();
+            clearrfields(state, _params);
+        }
+
+
+        /*************************************************************************
+        Clears request fileds (to be sure that we don't forgot to clear something)
+        *************************************************************************/
+        private static void clearrfields(lincgstate state,
+            alglib.xparams _params)
+        {
+            state.xupdated = false;
+            state.needmv = false;
+            state.needmtv = false;
+            state.needmv2 = false;
+            state.needvmv = false;
+            state.needprec = false;
+        }
+
+
+        /*************************************************************************
+        Clears request fileds (to be sure that we don't forgot to clear something)
+        *************************************************************************/
+        private static void updateitersdata(lincgstate state,
+            alglib.xparams _params)
+        {
+            state.repiterationscount = 0;
+            state.repnmv = 0;
+            state.repterminationtype = 0;
+        }
+
+
+    }
+    public partial class nleq
     {
         public class nleqstate : apobject
         {
@@ -15446,7 +15505,7 @@ public partial class alglib
             public bool needf;
             public bool needfij;
             public bool xupdated;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
             public int repiterationscount;
             public int repnfunc;
             public int repnjac;
@@ -15466,7 +15525,7 @@ public partial class alglib
                 x = new double[0];
                 fi = new double[0];
                 j = new double[0,0];
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
                 xbase = new double[0];
                 candstep = new double[0];
                 rightpart = new double[0];
@@ -15488,7 +15547,7 @@ public partial class alglib
                 _result.needf = needf;
                 _result.needfij = needfij;
                 _result.xupdated = xupdated;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
                 _result.repiterationscount = repiterationscount;
                 _result.repnfunc = repnfunc;
                 _result.repnjac = repnjac;
@@ -15738,8 +15797,6 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
@@ -15813,7 +15870,10 @@ public partial class alglib
             clearrequestfields(state, _params);
             state.needf = true;
             state.rstate.stage = 0;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
             state.needf = false;
             state.repnfunc = state.repnfunc+1;
@@ -15834,7 +15894,10 @@ public partial class alglib
             clearrequestfields(state, _params);
             state.xupdated = true;
             state.rstate.stage = 1;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_1:
             state.xupdated = false;
         lbl_5:
@@ -15871,7 +15934,10 @@ public partial class alglib
                 state.x[i_] = state.xbase[i_];
             }
             state.rstate.stage = 2;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_2:
             state.needfij = false;
             state.repnfunc = state.repnfunc+1;
@@ -15965,7 +16031,10 @@ public partial class alglib
             clearrequestfields(state, _params);
             state.needf = true;
             state.rstate.stage = 3;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_3:
             state.needf = false;
             state.repnfunc = state.repnfunc+1;
@@ -16022,7 +16091,10 @@ public partial class alglib
                 state.x[i_] = state.xbase[i_];
             }
             state.rstate.stage = 4;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_4:
             state.xupdated = false;
         lbl_11:
@@ -16177,6 +16249,7 @@ public partial class alglib
             state.rstate.ba = new bool[0+1];
             state.rstate.ra = new double[5+1];
             state.rstate.stage = -1;
+            state.rstate.clear_handler();
             clearrequestfields(state, _params);
         }
 
@@ -16191,6 +16264,7 @@ public partial class alglib
             state.rstate.ba = new bool[0+1];
             state.rstate.ra = new double[5+1];
             state.rstate.stage = -1;
+            state.rstate.clear_handler();
         }
 
 

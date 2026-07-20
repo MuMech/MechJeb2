@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.07.0 (source code generated 2025-12-29)
+ALGLIB 4.08.0 (source code generated 2026-06-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -1252,117 +1252,6 @@ public partial class alglib
 
     
     /*************************************************************************
-    Pearson's correlation coefficient significance test
-
-    This test checks hypotheses about whether X  and  Y  are  samples  of  two
-    continuous  distributions  having  zero  correlation  or   whether   their
-    correlation is non-zero.
-
-    The following tests are performed:
-        * two-tailed test (null hypothesis - X and Y have zero correlation)
-        * left-tailed test (null hypothesis - the correlation  coefficient  is
-          greater than or equal to 0)
-        * right-tailed test (null hypothesis - the correlation coefficient  is
-          less than or equal to 0).
-
-    Requirements:
-        * the number of elements in each sample is not less than 5
-        * normality of distributions of X and Y.
-
-    Input parameters:
-        R   -   Pearson's correlation coefficient for X and Y
-        N   -   number of elements in samples, N>=5.
-
-    Output parameters:
-        BothTails   -   p-value for two-tailed test.
-                        If BothTails is less than the given significance level
-                        the null hypothesis is rejected.
-        LeftTail    -   p-value for left-tailed test.
-                        If LeftTail is less than the given significance level,
-                        the null hypothesis is rejected.
-        RightTail   -   p-value for right-tailed test.
-                        If RightTail is less than the given significance level
-                        the null hypothesis is rejected.
-
-      -- ALGLIB --
-         Copyright 09.04.2007 by Bochkanov Sergey
-    *************************************************************************/
-    public static void pearsoncorrelationsignificance(double r, int n, out double bothtails, out double lefttail, out double righttail)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        correlationtests.pearsoncorrelationsignificance(r, n, ref bothtails, ref lefttail, ref righttail, null);
-    }
-    
-    public static void pearsoncorrelationsignificance(double r, int n, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        correlationtests.pearsoncorrelationsignificance(r, n, ref bothtails, ref lefttail, ref righttail, _params);
-    }
-    
-    /*************************************************************************
-    Spearman's rank correlation coefficient significance test
-
-    This test checks hypotheses about whether X  and  Y  are  samples  of  two
-    continuous  distributions  having  zero  correlation  or   whether   their
-    correlation is non-zero.
-
-    The following tests are performed:
-        * two-tailed test (null hypothesis - X and Y have zero correlation)
-        * left-tailed test (null hypothesis - the correlation  coefficient  is
-          greater than or equal to 0)
-        * right-tailed test (null hypothesis - the correlation coefficient  is
-          less than or equal to 0).
-
-    Requirements:
-        * the number of elements in each sample is not less than 5.
-
-    The test is non-parametric and doesn't require distributions X and Y to be
-    normal.
-
-    Input parameters:
-        R   -   Spearman's rank correlation coefficient for X and Y
-        N   -   number of elements in samples, N>=5.
-
-    Output parameters:
-        BothTails   -   p-value for two-tailed test.
-                        If BothTails is less than the given significance level
-                        the null hypothesis is rejected.
-        LeftTail    -   p-value for left-tailed test.
-                        If LeftTail is less than the given significance level,
-                        the null hypothesis is rejected.
-        RightTail   -   p-value for right-tailed test.
-                        If RightTail is less than the given significance level
-                        the null hypothesis is rejected.
-
-      -- ALGLIB --
-         Copyright 09.04.2007 by Bochkanov Sergey
-    *************************************************************************/
-    public static void spearmanrankcorrelationsignificance(double r, int n, out double bothtails, out double lefttail, out double righttail)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        correlationtests.spearmanrankcorrelationsignificance(r, n, ref bothtails, ref lefttail, ref righttail, null);
-    }
-    
-    public static void spearmanrankcorrelationsignificance(double r, int n, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        correlationtests.spearmanrankcorrelationsignificance(r, n, ref bothtails, ref lefttail, ref righttail, _params);
-    }
-
-}
-public partial class alglib
-{
-
-    
-    /*************************************************************************
     Jarque-Bera test
 
     This test checks hypotheses about the fact that a  given  sample  X  is  a
@@ -1410,137 +1299,36 @@ public partial class alglib
 
     
     /*************************************************************************
-    Two-sample F-test
+    Mann-Whitney U-test
 
-    This test checks three hypotheses about dispersions of the given  samples.
+    This test checks hypotheses about whether X  and  Y  are  samples  of  two
+    continuous distributions of the same shape  and  same  median  or  whether
+    their medians are different.
+
     The following tests are performed:
-        * two-tailed test (null hypothesis - the dispersions are equal)
-        * left-tailed test (null hypothesis  -  the  dispersion  of  the first
-          sample is greater than or equal to  the  dispersion  of  the  second
-          sample).
-        * right-tailed test (null hypothesis - the  dispersion  of  the  first
-          sample is less than or equal to the dispersion of the second sample)
+        * two-tailed test (null hypothesis - the medians are equal)
+        * left-tailed test (null hypothesis - the median of the  first  sample
+          is greater than or equal to the median of the second sample)
+        * right-tailed test (null hypothesis - the median of the first  sample
+          is less than or equal to the median of the second sample).
 
-    The test is based on the following assumptions:
-        * the given samples have normal distributions
-        * the samples are independent.
+    Requirements:
+        * the samples are independent
+        * X and Y are continuous distributions (or discrete distributions well-
+          approximating continuous distributions)
+        * distributions of X and Y have the  same  shape.  The  only  possible
+          difference is their position (i.e. the value of the median)
+        * the number of elements in each sample is not less than 5
+        * the scale of measurement should be ordinal, interval or ratio  (i.e.
+          the test could not be applied to nominal variables).
+
+    The test is non-parametric and doesn't require distributions to be normal.
 
     Input parameters:
         X   -   sample 1. Array whose index goes from 0 to N-1.
-        N   -   sample size.
+        N   -   size of the sample. N>=5
         Y   -   sample 2. Array whose index goes from 0 to M-1.
-        M   -   sample size.
-
-    Output parameters:
-        BothTails   -   p-value for two-tailed test.
-                        If BothTails is less than the given significance level
-                        the null hypothesis is rejected.
-        LeftTail    -   p-value for left-tailed test.
-                        If LeftTail is less than the given significance level,
-                        the null hypothesis is rejected.
-        RightTail   -   p-value for right-tailed test.
-                        If RightTail is less than the given significance level
-                        the null hypothesis is rejected.
-
-      -- ALGLIB --
-         Copyright 19.09.2006 by Bochkanov Sergey
-    *************************************************************************/
-    public static void ftest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        variancetests.ftest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, null);
-    }
-    
-    public static void ftest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        variancetests.ftest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, _params);
-    }
-    
-    /*************************************************************************
-    One-sample chi-square test
-
-    This test checks three hypotheses about the dispersion of the given sample
-    The following tests are performed:
-        * two-tailed test (null hypothesis - the dispersion equals  the  given
-          number)
-        * left-tailed test (null hypothesis - the dispersion is  greater  than
-          or equal to the given number)
-        * right-tailed test (null hypothesis  -  dispersion is  less  than  or
-          equal to the given number).
-
-    Test is based on the following assumptions:
-        * the given sample has a normal distribution.
-
-    Input parameters:
-        X           -   sample 1. Array whose index goes from 0 to N-1.
-        N           -   size of the sample.
-        Variance    -   dispersion value to compare with.
-
-    Output parameters:
-        BothTails   -   p-value for two-tailed test.
-                        If BothTails is less than the given significance level
-                        the null hypothesis is rejected.
-        LeftTail    -   p-value for left-tailed test.
-                        If LeftTail is less than the given significance level,
-                        the null hypothesis is rejected.
-        RightTail   -   p-value for right-tailed test.
-                        If RightTail is less than the given significance level
-                        the null hypothesis is rejected.
-
-      -- ALGLIB --
-         Copyright 19.09.2006 by Bochkanov Sergey
-    *************************************************************************/
-    public static void onesamplevariancetest(double[] x, int n, double variance, out double bothtails, out double lefttail, out double righttail)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        variancetests.onesamplevariancetest(x, n, variance, ref bothtails, ref lefttail, ref righttail, null);
-    }
-    
-    public static void onesamplevariancetest(double[] x, int n, double variance, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
-    {
-        bothtails = 0;
-        lefttail = 0;
-        righttail = 0;
-        variancetests.onesamplevariancetest(x, n, variance, ref bothtails, ref lefttail, ref righttail, _params);
-    }
-
-}
-public partial class alglib
-{
-
-    
-    /*************************************************************************
-    Wilcoxon signed-rank test
-
-    This test checks three hypotheses about the median  of  the  given sample.
-    The following tests are performed:
-        * two-tailed test (null hypothesis - the median is equal to the  given
-          value)
-        * left-tailed test (null hypothesis - the median is  greater  than  or
-          equal to the given value)
-        * right-tailed test (null hypothesis  -  the  median  is  less than or
-          equal to the given value)
-
-    Requirements:
-        * the scale of measurement should be ordinal, interval or  ratio (i.e.
-          the test could not be applied to nominal variables).
-        * the distribution should be continuous and symmetric relative to  its
-          median.
-        * number of distinct values in the X array should be greater than 4
-
-    The test is non-parametric and doesn't require distribution X to be normal
-
-    Input parameters:
-        X       -   sample. Array whose index goes from 0 to N-1.
-        N       -   size of the sample.
-        Median  -   assumed median value.
+        M   -   size of the sample. M>=5
 
     Output parameters:
         BothTails   -   p-value for two-tailed test.
@@ -1554,31 +1342,44 @@ public partial class alglib
                         the null hypothesis is rejected.
 
     To calculate p-values, special approximation is used. This method lets  us
-    calculate p-values with two decimal places in interval [0.0001, 1].
-
-    "Two decimal places" does not sound very impressive, but in  practice  the
-    relative error of less than 1% is enough to make a decision.
-
+    calculate p-values with satisfactory  accuracy  in  interval  [0.0001, 1].
     There is no approximation outside the [0.0001, 1] interval. Therefore,  if
     the significance level outlies this interval, the test returns 0.0001.
 
+    Relative precision of approximation of p-value:
+
+    N          M          Max.err.   Rms.err.
+    5..10      N..10      1.4e-02    6.0e-04
+    5..10      N..100     2.2e-02    5.3e-06
+    10..15     N..15      1.0e-02    3.2e-04
+    10..15     N..100     1.0e-02    2.2e-05
+    15..100    N..100     6.1e-03    2.7e-06
+
+    For N,M>100 accuracy checks weren't put into  practice,  but  taking  into
+    account characteristics of asymptotic approximation used, precision should
+    not be sharply different from the values for interval [5, 100].
+
+    NOTE: P-value approximation was  optimized  for  0.0001<=p<=0.2500.  Thus,
+          P's outside of this interval are enforced to these bounds. Say,  you
+          may quite often get P equal to exactly 0.25 or 0.0001.
+
       -- ALGLIB --
-         Copyright 08.09.2006 by Bochkanov Sergey
+         Copyright 09.04.2007 by Bochkanov Sergey
     *************************************************************************/
-    public static void wilcoxonsignedranktest(double[] x, int n, double e, out double bothtails, out double lefttail, out double righttail)
+    public static void mannwhitneyutest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail)
     {
         bothtails = 0;
         lefttail = 0;
         righttail = 0;
-        wsr.wilcoxonsignedranktest(x, n, e, ref bothtails, ref lefttail, ref righttail, null);
+        mannwhitneyu.mannwhitneyutest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, null);
     }
     
-    public static void wilcoxonsignedranktest(double[] x, int n, double e, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
+    public static void mannwhitneyutest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
     {
         bothtails = 0;
         lefttail = 0;
         righttail = 0;
-        wsr.wilcoxonsignedranktest(x, n, e, ref bothtails, ref lefttail, ref righttail, _params);
+        mannwhitneyu.mannwhitneyutest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, _params);
     }
 
 }
@@ -1758,6 +1559,117 @@ public partial class alglib
         lefttail = 0;
         righttail = 0;
         studentttests.unequalvariancettest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, _params);
+    }
+
+}
+public partial class alglib
+{
+
+    
+    /*************************************************************************
+    Pearson's correlation coefficient significance test
+
+    This test checks hypotheses about whether X  and  Y  are  samples  of  two
+    continuous  distributions  having  zero  correlation  or   whether   their
+    correlation is non-zero.
+
+    The following tests are performed:
+        * two-tailed test (null hypothesis - X and Y have zero correlation)
+        * left-tailed test (null hypothesis - the correlation  coefficient  is
+          greater than or equal to 0)
+        * right-tailed test (null hypothesis - the correlation coefficient  is
+          less than or equal to 0).
+
+    Requirements:
+        * the number of elements in each sample is not less than 5
+        * normality of distributions of X and Y.
+
+    Input parameters:
+        R   -   Pearson's correlation coefficient for X and Y
+        N   -   number of elements in samples, N>=5.
+
+    Output parameters:
+        BothTails   -   p-value for two-tailed test.
+                        If BothTails is less than the given significance level
+                        the null hypothesis is rejected.
+        LeftTail    -   p-value for left-tailed test.
+                        If LeftTail is less than the given significance level,
+                        the null hypothesis is rejected.
+        RightTail   -   p-value for right-tailed test.
+                        If RightTail is less than the given significance level
+                        the null hypothesis is rejected.
+
+      -- ALGLIB --
+         Copyright 09.04.2007 by Bochkanov Sergey
+    *************************************************************************/
+    public static void pearsoncorrelationsignificance(double r, int n, out double bothtails, out double lefttail, out double righttail)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        correlationtests.pearsoncorrelationsignificance(r, n, ref bothtails, ref lefttail, ref righttail, null);
+    }
+    
+    public static void pearsoncorrelationsignificance(double r, int n, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        correlationtests.pearsoncorrelationsignificance(r, n, ref bothtails, ref lefttail, ref righttail, _params);
+    }
+    
+    /*************************************************************************
+    Spearman's rank correlation coefficient significance test
+
+    This test checks hypotheses about whether X  and  Y  are  samples  of  two
+    continuous  distributions  having  zero  correlation  or   whether   their
+    correlation is non-zero.
+
+    The following tests are performed:
+        * two-tailed test (null hypothesis - X and Y have zero correlation)
+        * left-tailed test (null hypothesis - the correlation  coefficient  is
+          greater than or equal to 0)
+        * right-tailed test (null hypothesis - the correlation coefficient  is
+          less than or equal to 0).
+
+    Requirements:
+        * the number of elements in each sample is not less than 5.
+
+    The test is non-parametric and doesn't require distributions X and Y to be
+    normal.
+
+    Input parameters:
+        R   -   Spearman's rank correlation coefficient for X and Y
+        N   -   number of elements in samples, N>=5.
+
+    Output parameters:
+        BothTails   -   p-value for two-tailed test.
+                        If BothTails is less than the given significance level
+                        the null hypothesis is rejected.
+        LeftTail    -   p-value for left-tailed test.
+                        If LeftTail is less than the given significance level,
+                        the null hypothesis is rejected.
+        RightTail   -   p-value for right-tailed test.
+                        If RightTail is less than the given significance level
+                        the null hypothesis is rejected.
+
+      -- ALGLIB --
+         Copyright 09.04.2007 by Bochkanov Sergey
+    *************************************************************************/
+    public static void spearmanrankcorrelationsignificance(double r, int n, out double bothtails, out double lefttail, out double righttail)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        correlationtests.spearmanrankcorrelationsignificance(r, n, ref bothtails, ref lefttail, ref righttail, null);
+    }
+    
+    public static void spearmanrankcorrelationsignificance(double r, int n, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        correlationtests.spearmanrankcorrelationsignificance(r, n, ref bothtails, ref lefttail, ref righttail, _params);
     }
 
 }
@@ -2114,7 +2026,12 @@ public partial class alglib
                     If the  first  element  of  T  is  different  from  1,  or
                     temperatures are not strictly increasing,  an exception is
                     raised
-        NTemp   -   >=1, temperature ladder height
+        NTemp   -   >=1, temperature ladder height.
+
+    When running the algorithm with parallel  tempering  turned  on,  we  have
+    NTemp ladder levels, each having PopSize walkers. Thus, the  total  number
+    of walkers in the population is NTemp*PopSize, although only PopSize  ones
+    corresponding to the coldest chain are returned.
 
       -- ALGLIB --
          Copyright 15.05.2025 by Bochkanov Sergey
@@ -2156,6 +2073,11 @@ public partial class alglib
                       [1,TMax] and no adaptation
                     * NTemp>2 means that we have  a  ladder  with  T[0]=1  and
                       T[NTemp-1]=TMax, and adaptive temperatures between them.
+
+    When running the algorithm with parallel  tempering  turned  on,  we  have
+    NTemp ladder levels, each having PopSize walkers. Thus, the  total  number
+    of walkers in the population is NTemp*PopSize, although only PopSize  ones
+    corresponding to the coldest chain are returned.
 
       -- ALGLIB --
          Copyright 15.05.2025 by Bochkanov Sergey
@@ -2203,6 +2125,10 @@ public partial class alglib
           influenced by the initial state) and by specifying a thinning factor
           greater than 1 (helps to combat autocorrelations).
 
+    NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+          walkers, but only lowest PopSize ones corresponding to the  original
+          non-smoothed distribution are returned.
+
     INPUT PARAMETERS:
         State   -   structure that stores MCMC sampler state
         PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
@@ -2238,6 +2164,10 @@ public partial class alglib
           using a  burn-in  phase  (discards  initial  samples  that  are  too
           influenced by the initial state) and by specifying a thinning factor
           greater than 1 (helps to combat autocorrelations).
+
+    NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+          walkers, but only lowest PopSize ones corresponding to the  original
+          non-smoothed distribution are returned.
 
     NOTE: for consistency with the rest of the library this move type requires
           PopSize>=N+1. However, it also has a special requirement  PopSize>=4
@@ -2295,6 +2225,10 @@ public partial class alglib
           using a  burn-in  phase  (discards  initial  samples  that  are  too
           influenced by the initial state) and by specifying a thinning factor
           greater than 1 (helps to combat autocorrelations).
+
+    NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+          walkers, but only lowest PopSize ones corresponding to the  original
+          non-smoothed distribution are returned.
 
     NOTE: for consistency with the rest of the library this move type requires
           PopSize>=N+1. However, it also has a special requirement  PopSize>=4
@@ -2384,6 +2318,10 @@ public partial class alglib
           influenced by the initial state) and by specifying a thinning factor
           greater than 1 (helps to combat autocorrelations).
 
+    NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+          walkers, but only lowest PopSize ones corresponding to the  original
+          non-smoothed distribution are returned.
+
     NOTE: for consistency with the rest of the library this move type requires
           PopSize>=N+1. However, it also has a special requirement  PopSize>=6
           that follows from the fact that  each update  needs  at  least three
@@ -2460,6 +2398,10 @@ public partial class alglib
           using a  burn-in  phase  (discards  initial  samples  that  are  too
           influenced by the initial state) and by specifying a thinning factor
           greater than 1 (helps to combat autocorrelations).
+
+    NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+          walkers, but only lowest PopSize ones corresponding to the  original
+          non-smoothed distribution are returned.
 
     NOTE: this  move  is  special  because it can work with any ensemble size,
           including PopSize=1 (most other moves  need  at  least  4,  5  or  6
@@ -2619,54 +2561,16 @@ public partial class alglib
     {
         if( func==null )
             throw new alglibexception("ALGLIB: error in 'mcmcrun()' (func is null)");
+        alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(state.innerobj.rcommv2, obj, "mcmc");
         alglib.ap.rcommv2_callbacks callbacks = new alglib.ap.rcommv2_callbacks();
+        callbacks.rep = rep;
         callbacks.func = func;
     
         alglib.mcmc.mcmcsetprotocolv2(state.innerobj, _params);
+        state.innerobj.rcommv2.assign_handler(ap.rcommv2_request_csharphandler, request, callbacks, null, null);
         while( alglib.mcmciteration(state, _params) )
         {
-            alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
-                state.innerobj.requesttype,
-                state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
-                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, state.innerobj.replysj, obj, "mcmc");
-            alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
-                state.innerobj.tmpx1,
-                state.innerobj.tmpc1,
-                state.innerobj.tmpf1,
-                state.innerobj.tmpg1,
-                state.innerobj.tmpj1,
-                state.innerobj.tmps1);
-            if( state.innerobj.requesttype==3 )
-            { 
-                int njobs = request.size*request.vars+request.size;
-                for(int job_idx=0; job_idx<njobs; job_idx++)
-                    alglib.ap.process_v2request_3phase0(request, job_idx, callbacks, buffers);
-                alglib.ap.process_v2request_3phase1(request);
-                request.request = 0;
-                continue;
-            }
-            if( state.innerobj.requesttype==5 )
-            { 
-                int njobs = request.size*request.vars+request.size;
-                for(int job_idx=0; job_idx<njobs; job_idx++)
-                    alglib.ap.process_v2request_5phase0(request, job_idx, callbacks, buffers);
-                alglib.ap.process_v2request_5phase1(request);
-                request.request = 0;
-                continue;
-            }if( state.innerobj.requesttype==4 )
-            { 
-                for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
-                    alglib.ap.process_v2request_4(request, qidx, callbacks, buffers);
-                state.innerobj.requesttype = 0;
-                continue;
-            }
-            if( state.innerobj.requesttype==-1 )
-            {
-                if( rep!=null )
-                    rep(state.innerobj.reportx, state.innerobj.reportf, obj);
-                continue;
-            }
-            throw new alglibexception("ALGLIB: error in 'mcmcrun' (some derivatives were not provided?)");
+            throw new alglibexception("ALGLIB: critical error in 'mcmcrun' (RCommV2 request escaped handler)");
         }
     }
 
@@ -2731,6 +2635,10 @@ public partial class alglib
 
     NOTE: burn-in iterations are not reported. Similarly, for a primary  phase
           only each ThinFactor-th iteration is reported.
+
+    NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+          walkers, but only lowest PopSize ones corresponding to the  original
+          non-smoothed distribution are reported.
 
       -- ALGLIB --
          Copyright 18.01.2025 by Bochkanov Sergey
@@ -2869,6 +2777,11 @@ public partial class alglib
 
     INPUT PARAMETERS:
         State   -   structure which stores sampler state
+        EpochsCnt-  >=0, whether to use original epochs count or set new:
+                    * >0 means that restarted sampling will continue for
+                         EpochsCnt iterations (or EpochsCnt*ThinBy, of thinning
+                         was configured)
+                    * =0 means that the previous settings will be used
 
     RESULT:
         * False, if no  previous  population  was  stored  in the sampler (the
@@ -2881,19 +2794,45 @@ public partial class alglib
           so the new session  will  produce  the  same  sequence  of  sampling
           decisions.
 
+          It also tells the sampler  to  ignore  burn-in  phase  (if  any  was
+          configured), because the population is  assumed  to  be  already  in
+          equilibrium.
+
       -- ALGLIB --
          Copyright 15.05.2025 by Bochkanov Sergey
     *************************************************************************/
-    public static bool mcmcrestart(mcmcstate state)
+    public static bool mcmcrestart(mcmcstate state, int epochscnt)
     {
     
-        return mcmc.mcmcrestart(state.innerobj, null);
+        return mcmc.mcmcrestart(state.innerobj, epochscnt, null);
     }
     
-    public static bool mcmcrestart(mcmcstate state, alglib.xparams _params)
+    public static bool mcmcrestart(mcmcstate state, int epochscnt, alglib.xparams _params)
     {
     
-        return mcmc.mcmcrestart(state.innerobj, _params);
+        return mcmc.mcmcrestart(state.innerobj, epochscnt, _params);
+    }
+            
+    public static bool mcmcrestart(mcmcstate state)
+    {
+        int epochscnt;
+    
+    
+        epochscnt = 0;
+        bool result = mcmc.mcmcrestart(state.innerobj, epochscnt, null);
+    
+        return result;
+    }
+            
+    public static bool mcmcrestart(mcmcstate state, alglib.xparams _params)
+    {
+        int epochscnt;
+    
+    
+        epochscnt = 0;
+        bool result = mcmc.mcmcrestart(state.innerobj, epochscnt, _params);
+    
+        return result;
     }
 
 }
@@ -2902,36 +2841,30 @@ public partial class alglib
 
     
     /*************************************************************************
-    Mann-Whitney U-test
+    Wilcoxon signed-rank test
 
-    This test checks hypotheses about whether X  and  Y  are  samples  of  two
-    continuous distributions of the same shape  and  same  median  or  whether
-    their medians are different.
-
+    This test checks three hypotheses about the median  of  the  given sample.
     The following tests are performed:
-        * two-tailed test (null hypothesis - the medians are equal)
-        * left-tailed test (null hypothesis - the median of the  first  sample
-          is greater than or equal to the median of the second sample)
-        * right-tailed test (null hypothesis - the median of the first  sample
-          is less than or equal to the median of the second sample).
+        * two-tailed test (null hypothesis - the median is equal to the  given
+          value)
+        * left-tailed test (null hypothesis - the median is  greater  than  or
+          equal to the given value)
+        * right-tailed test (null hypothesis  -  the  median  is  less than or
+          equal to the given value)
 
     Requirements:
-        * the samples are independent
-        * X and Y are continuous distributions (or discrete distributions well-
-          approximating continuous distributions)
-        * distributions of X and Y have the  same  shape.  The  only  possible
-          difference is their position (i.e. the value of the median)
-        * the number of elements in each sample is not less than 5
-        * the scale of measurement should be ordinal, interval or ratio  (i.e.
+        * the scale of measurement should be ordinal, interval or  ratio (i.e.
           the test could not be applied to nominal variables).
+        * the distribution should be continuous and symmetric relative to  its
+          median.
+        * number of distinct values in the X array should be greater than 4
 
-    The test is non-parametric and doesn't require distributions to be normal.
+    The test is non-parametric and doesn't require distribution X to be normal
 
     Input parameters:
-        X   -   sample 1. Array whose index goes from 0 to N-1.
-        N   -   size of the sample. N>=5
-        Y   -   sample 2. Array whose index goes from 0 to M-1.
-        M   -   size of the sample. M>=5
+        X       -   sample. Array whose index goes from 0 to N-1.
+        N       -   size of the sample.
+        Median  -   assumed median value.
 
     Output parameters:
         BothTails   -   p-value for two-tailed test.
@@ -2945,50 +2878,144 @@ public partial class alglib
                         the null hypothesis is rejected.
 
     To calculate p-values, special approximation is used. This method lets  us
-    calculate p-values with satisfactory  accuracy  in  interval  [0.0001, 1].
+    calculate p-values with two decimal places in interval [0.0001, 1].
+
+    "Two decimal places" does not sound very impressive, but in  practice  the
+    relative error of less than 1% is enough to make a decision.
+
     There is no approximation outside the [0.0001, 1] interval. Therefore,  if
     the significance level outlies this interval, the test returns 0.0001.
 
-    Relative precision of approximation of p-value:
-
-    N          M          Max.err.   Rms.err.
-    5..10      N..10      1.4e-02    6.0e-04
-    5..10      N..100     2.2e-02    5.3e-06
-    10..15     N..15      1.0e-02    3.2e-04
-    10..15     N..100     1.0e-02    2.2e-05
-    15..100    N..100     6.1e-03    2.7e-06
-
-    For N,M>100 accuracy checks weren't put into  practice,  but  taking  into
-    account characteristics of asymptotic approximation used, precision should
-    not be sharply different from the values for interval [5, 100].
-
-    NOTE: P-value approximation was  optimized  for  0.0001<=p<=0.2500.  Thus,
-          P's outside of this interval are enforced to these bounds. Say,  you
-          may quite often get P equal to exactly 0.25 or 0.0001.
-
       -- ALGLIB --
-         Copyright 09.04.2007 by Bochkanov Sergey
+         Copyright 08.09.2006 by Bochkanov Sergey
     *************************************************************************/
-    public static void mannwhitneyutest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail)
+    public static void wilcoxonsignedranktest(double[] x, int n, double e, out double bothtails, out double lefttail, out double righttail)
     {
         bothtails = 0;
         lefttail = 0;
         righttail = 0;
-        mannwhitneyu.mannwhitneyutest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, null);
+        wsr.wilcoxonsignedranktest(x, n, e, ref bothtails, ref lefttail, ref righttail, null);
     }
     
-    public static void mannwhitneyutest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
+    public static void wilcoxonsignedranktest(double[] x, int n, double e, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
     {
         bothtails = 0;
         lefttail = 0;
         righttail = 0;
-        mannwhitneyu.mannwhitneyutest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, _params);
+        wsr.wilcoxonsignedranktest(x, n, e, ref bothtails, ref lefttail, ref righttail, _params);
     }
 
 }
 public partial class alglib
 {
-    public class basestat
+
+    
+    /*************************************************************************
+    Two-sample F-test
+
+    This test checks three hypotheses about dispersions of the given  samples.
+    The following tests are performed:
+        * two-tailed test (null hypothesis - the dispersions are equal)
+        * left-tailed test (null hypothesis  -  the  dispersion  of  the first
+          sample is greater than or equal to  the  dispersion  of  the  second
+          sample).
+        * right-tailed test (null hypothesis - the  dispersion  of  the  first
+          sample is less than or equal to the dispersion of the second sample)
+
+    The test is based on the following assumptions:
+        * the given samples have normal distributions
+        * the samples are independent.
+
+    Input parameters:
+        X   -   sample 1. Array whose index goes from 0 to N-1.
+        N   -   sample size.
+        Y   -   sample 2. Array whose index goes from 0 to M-1.
+        M   -   sample size.
+
+    Output parameters:
+        BothTails   -   p-value for two-tailed test.
+                        If BothTails is less than the given significance level
+                        the null hypothesis is rejected.
+        LeftTail    -   p-value for left-tailed test.
+                        If LeftTail is less than the given significance level,
+                        the null hypothesis is rejected.
+        RightTail   -   p-value for right-tailed test.
+                        If RightTail is less than the given significance level
+                        the null hypothesis is rejected.
+
+      -- ALGLIB --
+         Copyright 19.09.2006 by Bochkanov Sergey
+    *************************************************************************/
+    public static void ftest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        variancetests.ftest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, null);
+    }
+    
+    public static void ftest(double[] x, int n, double[] y, int m, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        variancetests.ftest(x, n, y, m, ref bothtails, ref lefttail, ref righttail, _params);
+    }
+    
+    /*************************************************************************
+    One-sample chi-square test
+
+    This test checks three hypotheses about the dispersion of the given sample
+    The following tests are performed:
+        * two-tailed test (null hypothesis - the dispersion equals  the  given
+          number)
+        * left-tailed test (null hypothesis - the dispersion is  greater  than
+          or equal to the given number)
+        * right-tailed test (null hypothesis  -  dispersion is  less  than  or
+          equal to the given number).
+
+    Test is based on the following assumptions:
+        * the given sample has a normal distribution.
+
+    Input parameters:
+        X           -   sample 1. Array whose index goes from 0 to N-1.
+        N           -   size of the sample.
+        Variance    -   dispersion value to compare with.
+
+    Output parameters:
+        BothTails   -   p-value for two-tailed test.
+                        If BothTails is less than the given significance level
+                        the null hypothesis is rejected.
+        LeftTail    -   p-value for left-tailed test.
+                        If LeftTail is less than the given significance level,
+                        the null hypothesis is rejected.
+        RightTail   -   p-value for right-tailed test.
+                        If RightTail is less than the given significance level
+                        the null hypothesis is rejected.
+
+      -- ALGLIB --
+         Copyright 19.09.2006 by Bochkanov Sergey
+    *************************************************************************/
+    public static void onesamplevariancetest(double[] x, int n, double variance, out double bothtails, out double lefttail, out double righttail)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        variancetests.onesamplevariancetest(x, n, variance, ref bothtails, ref lefttail, ref righttail, null);
+    }
+    
+    public static void onesamplevariancetest(double[] x, int n, double variance, out double bothtails, out double lefttail, out double righttail, alglib.xparams _params)
+    {
+        bothtails = 0;
+        lefttail = 0;
+        righttail = 0;
+        variancetests.onesamplevariancetest(x, n, variance, ref bothtails, ref lefttail, ref righttail, _params);
+    }
+
+}
+public partial class alglib
+{
+    public partial class basestat
     {
         /*************************************************************************
         Calculation of the distribution moments: mean, variance, skewness, kurtosis.
@@ -5148,710 +5175,7 @@ public partial class alglib
 
 
     }
-    public class correlationtests
-    {
-        /*************************************************************************
-        Pearson's correlation coefficient significance test
-
-        This test checks hypotheses about whether X  and  Y  are  samples  of  two
-        continuous  distributions  having  zero  correlation  or   whether   their
-        correlation is non-zero.
-
-        The following tests are performed:
-            * two-tailed test (null hypothesis - X and Y have zero correlation)
-            * left-tailed test (null hypothesis - the correlation  coefficient  is
-              greater than or equal to 0)
-            * right-tailed test (null hypothesis - the correlation coefficient  is
-              less than or equal to 0).
-
-        Requirements:
-            * the number of elements in each sample is not less than 5
-            * normality of distributions of X and Y.
-
-        Input parameters:
-            R   -   Pearson's correlation coefficient for X and Y
-            N   -   number of elements in samples, N>=5.
-
-        Output parameters:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-          -- ALGLIB --
-             Copyright 09.04.2007 by Bochkanov Sergey
-        *************************************************************************/
-        public static void pearsoncorrelationsignificance(double r,
-            int n,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            double t = 0;
-            double p = 0;
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            
-            //
-            // Some special cases
-            //
-            if( (double)(r)>=(double)(1) )
-            {
-                bothtails = 0.0;
-                lefttail = 1.0;
-                righttail = 0.0;
-                return;
-            }
-            if( (double)(r)<=(double)(-1) )
-            {
-                bothtails = 0.0;
-                lefttail = 0.0;
-                righttail = 1.0;
-                return;
-            }
-            if( n<5 )
-            {
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            
-            //
-            // General case
-            //
-            t = r*Math.Sqrt((n-2)/(1-math.sqr(r)));
-            p = studenttdistr.studenttdistribution(n-2, t, _params);
-            bothtails = 2*Math.Min(p, 1-p);
-            lefttail = p;
-            righttail = 1-p;
-        }
-
-
-        /*************************************************************************
-        Spearman's rank correlation coefficient significance test
-
-        This test checks hypotheses about whether X  and  Y  are  samples  of  two
-        continuous  distributions  having  zero  correlation  or   whether   their
-        correlation is non-zero.
-
-        The following tests are performed:
-            * two-tailed test (null hypothesis - X and Y have zero correlation)
-            * left-tailed test (null hypothesis - the correlation  coefficient  is
-              greater than or equal to 0)
-            * right-tailed test (null hypothesis - the correlation coefficient  is
-              less than or equal to 0).
-
-        Requirements:
-            * the number of elements in each sample is not less than 5.
-
-        The test is non-parametric and doesn't require distributions X and Y to be
-        normal.
-
-        Input parameters:
-            R   -   Spearman's rank correlation coefficient for X and Y
-            N   -   number of elements in samples, N>=5.
-
-        Output parameters:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-          -- ALGLIB --
-             Copyright 09.04.2007 by Bochkanov Sergey
-        *************************************************************************/
-        public static void spearmanrankcorrelationsignificance(double r,
-            int n,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            double t = 0;
-            double p = 0;
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            
-            //
-            // Special case
-            //
-            if( n<5 )
-            {
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            
-            //
-            // General case
-            //
-            if( (double)(r)>=(double)(1) )
-            {
-                t = 1.0E10;
-            }
-            else
-            {
-                if( (double)(r)<=(double)(-1) )
-                {
-                    t = -1.0E10;
-                }
-                else
-                {
-                    t = r*Math.Sqrt((n-2)/(1-math.sqr(r)));
-                }
-            }
-            if( (double)(t)<(double)(0) )
-            {
-                p = spearmantail(t, n, _params);
-                bothtails = 2*p;
-                lefttail = p;
-                righttail = 1-p;
-            }
-            else
-            {
-                p = spearmantail(-t, n, _params);
-                bothtails = 2*p;
-                lefttail = 1-p;
-                righttail = p;
-            }
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5)
-        *************************************************************************/
-        private static double spearmantail5(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-
-            if( (double)(s)<(double)(0.000e+00) )
-            {
-                result = studenttdistr.studenttdistribution(3, -s, _params);
-                return result;
-            }
-            if( (double)(s)>=(double)(3.580e+00) )
-            {
-                result = 8.304e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.322e+00) )
-            {
-                result = 4.163e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.704e+00) )
-            {
-                result = 6.641e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.303e+00) )
-            {
-                result = 1.164e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.003e+00) )
-            {
-                result = 1.748e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(7.584e-01) )
-            {
-                result = 2.249e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(5.468e-01) )
-            {
-                result = 2.581e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.555e-01) )
-            {
-                result = 3.413e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.759e-01) )
-            {
-                result = 3.911e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.741e-03) )
-            {
-                result = 4.747e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(0.000e+00) )
-            {
-                result = 5.248e-01;
-                return result;
-            }
-            result = 0;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6)
-        *************************************************************************/
-        private static double spearmantail6(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-
-            if( (double)(s)<(double)(1.001e+00) )
-            {
-                result = studenttdistr.studenttdistribution(4, -s, _params);
-                return result;
-            }
-            if( (double)(s)>=(double)(5.663e+00) )
-            {
-                result = 1.366e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.834e+00) )
-            {
-                result = 8.350e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.968e+00) )
-            {
-                result = 1.668e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.430e+00) )
-            {
-                result = 2.921e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.045e+00) )
-            {
-                result = 5.144e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.747e+00) )
-            {
-                result = 6.797e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.502e+00) )
-            {
-                result = 8.752e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.295e+00) )
-            {
-                result = 1.210e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.113e+00) )
-            {
-                result = 1.487e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.001e+00) )
-            {
-                result = 1.780e-01;
-                return result;
-            }
-            result = 0;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7)
-        *************************************************************************/
-        private static double spearmantail7(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-
-            if( (double)(s)<(double)(1.001e+00) )
-            {
-                result = studenttdistr.studenttdistribution(5, -s, _params);
-                return result;
-            }
-            if( (double)(s)>=(double)(8.159e+00) )
-            {
-                result = 2.081e-04;
-                return result;
-            }
-            if( (double)(s)>=(double)(5.620e+00) )
-            {
-                result = 1.393e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(4.445e+00) )
-            {
-                result = 3.398e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.728e+00) )
-            {
-                result = 6.187e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.226e+00) )
-            {
-                result = 1.200e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.844e+00) )
-            {
-                result = 1.712e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.539e+00) )
-            {
-                result = 2.408e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.285e+00) )
-            {
-                result = 3.320e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.068e+00) )
-            {
-                result = 4.406e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.879e+00) )
-            {
-                result = 5.478e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.710e+00) )
-            {
-                result = 6.946e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.559e+00) )
-            {
-                result = 8.331e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.420e+00) )
-            {
-                result = 1.001e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.292e+00) )
-            {
-                result = 1.180e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.173e+00) )
-            {
-                result = 1.335e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.062e+00) )
-            {
-                result = 1.513e-01;
-                return result;
-            }
-            if( (double)(s)>=(double)(1.001e+00) )
-            {
-                result = 1.770e-01;
-                return result;
-            }
-            result = 0;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8)
-        *************************************************************************/
-        private static double spearmantail8(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-
-            if( (double)(s)<(double)(2.001e+00) )
-            {
-                result = studenttdistr.studenttdistribution(6, -s, _params);
-                return result;
-            }
-            if( (double)(s)>=(double)(1.103e+01) )
-            {
-                result = 2.194e-05;
-                return result;
-            }
-            if( (double)(s)>=(double)(7.685e+00) )
-            {
-                result = 2.008e-04;
-                return result;
-            }
-            if( (double)(s)>=(double)(6.143e+00) )
-            {
-                result = 5.686e-04;
-                return result;
-            }
-            if( (double)(s)>=(double)(5.213e+00) )
-            {
-                result = 1.138e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(4.567e+00) )
-            {
-                result = 2.310e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(4.081e+00) )
-            {
-                result = 3.634e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.697e+00) )
-            {
-                result = 5.369e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.381e+00) )
-            {
-                result = 7.708e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.114e+00) )
-            {
-                result = 1.087e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.884e+00) )
-            {
-                result = 1.397e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.682e+00) )
-            {
-                result = 1.838e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.502e+00) )
-            {
-                result = 2.288e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.340e+00) )
-            {
-                result = 2.883e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.192e+00) )
-            {
-                result = 3.469e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.057e+00) )
-            {
-                result = 4.144e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.001e+00) )
-            {
-                result = 4.804e-02;
-                return result;
-            }
-            result = 0;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9)
-        *************************************************************************/
-        private static double spearmantail9(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-
-            if( (double)(s)<(double)(2.001e+00) )
-            {
-                result = studenttdistr.studenttdistribution(7, -s, _params);
-                return result;
-            }
-            if( (double)(s)>=(double)(9.989e+00) )
-            {
-                result = 2.306e-05;
-                return result;
-            }
-            if( (double)(s)>=(double)(8.069e+00) )
-            {
-                result = 8.167e-05;
-                return result;
-            }
-            if( (double)(s)>=(double)(6.890e+00) )
-            {
-                result = 1.744e-04;
-                return result;
-            }
-            if( (double)(s)>=(double)(6.077e+00) )
-            {
-                result = 3.625e-04;
-                return result;
-            }
-            if( (double)(s)>=(double)(5.469e+00) )
-            {
-                result = 6.450e-04;
-                return result;
-            }
-            if( (double)(s)>=(double)(4.991e+00) )
-            {
-                result = 1.001e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(4.600e+00) )
-            {
-                result = 1.514e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(4.272e+00) )
-            {
-                result = 2.213e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.991e+00) )
-            {
-                result = 2.990e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.746e+00) )
-            {
-                result = 4.101e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.530e+00) )
-            {
-                result = 5.355e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.336e+00) )
-            {
-                result = 6.887e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.161e+00) )
-            {
-                result = 8.598e-03;
-                return result;
-            }
-            if( (double)(s)>=(double)(3.002e+00) )
-            {
-                result = 1.065e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.855e+00) )
-            {
-                result = 1.268e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.720e+00) )
-            {
-                result = 1.552e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.595e+00) )
-            {
-                result = 1.836e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.477e+00) )
-            {
-                result = 2.158e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.368e+00) )
-            {
-                result = 2.512e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.264e+00) )
-            {
-                result = 2.942e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.166e+00) )
-            {
-                result = 3.325e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.073e+00) )
-            {
-                result = 3.800e-02;
-                return result;
-            }
-            if( (double)(s)>=(double)(2.001e+00) )
-            {
-                result = 4.285e-02;
-                return result;
-            }
-            result = 0;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(T,N), accepts T<0
-        *************************************************************************/
-        private static double spearmantail(double t,
-            int n,
-            alglib.xparams _params)
-        {
-            double result = 0;
-
-            if( n==5 )
-            {
-                result = spearmantail5(-t, _params);
-                return result;
-            }
-            if( n==6 )
-            {
-                result = spearmantail6(-t, _params);
-                return result;
-            }
-            if( n==7 )
-            {
-                result = spearmantail7(-t, _params);
-                return result;
-            }
-            if( n==8 )
-            {
-                result = spearmantail8(-t, _params);
-                return result;
-            }
-            if( n==9 )
-            {
-                result = spearmantail9(-t, _params);
-                return result;
-            }
-            result = studenttdistr.studenttdistribution(n-2, t, _params);
-            return result;
-        }
-
-
-    }
-    public class jarquebera
+    public partial class jarquebera
     {
         /*************************************************************************
         Jarque-Bera test
@@ -8093,29 +7417,39 @@ public partial class alglib
 
 
     }
-    public class variancetests
+    public partial class mannwhitneyu
     {
         /*************************************************************************
-        Two-sample F-test
+        Mann-Whitney U-test
 
-        This test checks three hypotheses about dispersions of the given  samples.
+        This test checks hypotheses about whether X  and  Y  are  samples  of  two
+        continuous distributions of the same shape  and  same  median  or  whether
+        their medians are different.
+
         The following tests are performed:
-            * two-tailed test (null hypothesis - the dispersions are equal)
-            * left-tailed test (null hypothesis  -  the  dispersion  of  the first
-              sample is greater than or equal to  the  dispersion  of  the  second
-              sample).
-            * right-tailed test (null hypothesis - the  dispersion  of  the  first
-              sample is less than or equal to the dispersion of the second sample)
+            * two-tailed test (null hypothesis - the medians are equal)
+            * left-tailed test (null hypothesis - the median of the  first  sample
+              is greater than or equal to the median of the second sample)
+            * right-tailed test (null hypothesis - the median of the first  sample
+              is less than or equal to the median of the second sample).
 
-        The test is based on the following assumptions:
-            * the given samples have normal distributions
-            * the samples are independent.
+        Requirements:
+            * the samples are independent
+            * X and Y are continuous distributions (or discrete distributions well-
+              approximating continuous distributions)
+            * distributions of X and Y have the  same  shape.  The  only  possible
+              difference is their position (i.e. the value of the median)
+            * the number of elements in each sample is not less than 5
+            * the scale of measurement should be ordinal, interval or ratio  (i.e.
+              the test could not be applied to nominal variables).
+
+        The test is non-parametric and doesn't require distributions to be normal.
 
         Input parameters:
             X   -   sample 1. Array whose index goes from 0 to N-1.
-            N   -   sample size.
+            N   -   size of the sample. N>=5
             Y   -   sample 2. Array whose index goes from 0 to M-1.
-            M   -   sample size.
+            M   -   size of the sample. M>=5
 
         Output parameters:
             BothTails   -   p-value for two-tailed test.
@@ -8128,10 +7462,32 @@ public partial class alglib
                             If RightTail is less than the given significance level
                             the null hypothesis is rejected.
 
+        To calculate p-values, special approximation is used. This method lets  us
+        calculate p-values with satisfactory  accuracy  in  interval  [0.0001, 1].
+        There is no approximation outside the [0.0001, 1] interval. Therefore,  if
+        the significance level outlies this interval, the test returns 0.0001.
+
+        Relative precision of approximation of p-value:
+
+        N          M          Max.err.   Rms.err.
+        5..10      N..10      1.4e-02    6.0e-04
+        5..10      N..100     2.2e-02    5.3e-06
+        10..15     N..15      1.0e-02    3.2e-04
+        10..15     N..100     1.0e-02    2.2e-05
+        15..100    N..100     6.1e-03    2.7e-06
+
+        For N,M>100 accuracy checks weren't put into  practice,  but  taking  into
+        account characteristics of asymptotic approximation used, precision should
+        not be sharply different from the values for interval [5, 100].
+
+        NOTE: P-value approximation was  optimized  for  0.0001<=p<=0.2500.  Thus,
+              P's outside of this interval are enforced to these bounds. Say,  you
+              may quite often get P equal to exactly 0.25 or 0.0001.
+
           -- ALGLIB --
-             Copyright 19.09.2006 by Bochkanov Sergey
+             Copyright 09.04.2007 by Bochkanov Sergey
         *************************************************************************/
-        public static void ftest(double[] x,
+        public static void mannwhitneyutest(double[] x,
             int n,
             double[] y,
             int m,
@@ -8141,19 +7497,4478 @@ public partial class alglib
             alglib.xparams _params)
         {
             int i = 0;
-            double xmean = 0;
-            double ymean = 0;
-            double xvar = 0;
-            double yvar = 0;
-            int df1 = 0;
-            int df2 = 0;
-            double stat = 0;
+            int j = 0;
+            int k = 0;
+            int t = 0;
+            double tmp = 0;
+            int tmpi = 0;
+            int ns = 0;
+            double[] r = new double[0];
+            int[] c = new int[0];
+            double u = 0;
+            double p = 0;
+            double mp = 0;
+            double s = 0;
+            double sigma = 0;
+            double mu = 0;
+            int tiecount = 0;
+            int[] tiesize = new int[0];
 
             bothtails = 0;
             lefttail = 0;
             righttail = 0;
 
-            if( n<=2 || m<=2 )
+            
+            //
+            // Prepare
+            //
+            if( n<=4 || m<=4 )
+            {
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            ns = n+m;
+            r = new double[ns-1+1];
+            c = new int[ns-1+1];
+            for(i=0; i<=n-1; i++)
+            {
+                r[i] = x[i];
+                c[i] = 0;
+            }
+            for(i=0; i<=m-1; i++)
+            {
+                r[n+i] = y[i];
+                c[n+i] = 1;
+            }
+            
+            //
+            // sort {R, C}
+            //
+            if( ns!=1 )
+            {
+                i = 2;
+                do
+                {
+                    t = i;
+                    while( t!=1 )
+                    {
+                        k = t/2;
+                        if( (double)(r[k-1])>=(double)(r[t-1]) )
+                        {
+                            t = 1;
+                        }
+                        else
+                        {
+                            tmp = r[k-1];
+                            r[k-1] = r[t-1];
+                            r[t-1] = tmp;
+                            tmpi = c[k-1];
+                            c[k-1] = c[t-1];
+                            c[t-1] = tmpi;
+                            t = k;
+                        }
+                    }
+                    i = i+1;
+                }
+                while( i<=ns );
+                i = ns-1;
+                do
+                {
+                    tmp = r[i];
+                    r[i] = r[0];
+                    r[0] = tmp;
+                    tmpi = c[i];
+                    c[i] = c[0];
+                    c[0] = tmpi;
+                    t = 1;
+                    while( t!=0 )
+                    {
+                        k = 2*t;
+                        if( k>i )
+                        {
+                            t = 0;
+                        }
+                        else
+                        {
+                            if( k<i )
+                            {
+                                if( (double)(r[k])>(double)(r[k-1]) )
+                                {
+                                    k = k+1;
+                                }
+                            }
+                            if( (double)(r[t-1])>=(double)(r[k-1]) )
+                            {
+                                t = 0;
+                            }
+                            else
+                            {
+                                tmp = r[k-1];
+                                r[k-1] = r[t-1];
+                                r[t-1] = tmp;
+                                tmpi = c[k-1];
+                                c[k-1] = c[t-1];
+                                c[t-1] = tmpi;
+                                t = k;
+                            }
+                        }
+                    }
+                    i = i-1;
+                }
+                while( i>=1 );
+            }
+            
+            //
+            // compute tied ranks
+            //
+            i = 0;
+            tiecount = 0;
+            tiesize = new int[ns-1+1];
+            while( i<=ns-1 )
+            {
+                j = i+1;
+                while( j<=ns-1 )
+                {
+                    if( (double)(r[j])!=(double)(r[i]) )
+                    {
+                        break;
+                    }
+                    j = j+1;
+                }
+                for(k=i; k<=j-1; k++)
+                {
+                    r[k] = 1+(double)(i+j-1)/(double)2;
+                }
+                tiesize[tiecount] = j-i;
+                tiecount = tiecount+1;
+                i = j;
+            }
+            
+            //
+            // Compute U
+            //
+            u = 0;
+            for(i=0; i<=ns-1; i++)
+            {
+                if( c[i]==0 )
+                {
+                    u = u+r[i];
+                }
+            }
+            u = apserv.rmul2(n, m, _params)+apserv.rmul2(n, n+1, _params)*0.5-u;
+            
+            //
+            // Result
+            //
+            mu = apserv.rmul2(n, m, _params)/2;
+            tmp = ns*(math.sqr(ns)-1)/12;
+            for(i=0; i<=tiecount-1; i++)
+            {
+                tmp = tmp-tiesize[i]*(math.sqr(tiesize[i])-1)/12;
+            }
+            sigma = Math.Sqrt(apserv.rmul2(n, m, _params)/ns/(ns-1)*tmp);
+            s = (u-mu)/sigma;
+            if( (double)(s)<=(double)(0) )
+            {
+                p = Math.Exp(usigma(-((u-mu)/sigma), n, m, _params));
+                mp = 1-Math.Exp(usigma(-((u-1-mu)/sigma), n, m, _params));
+            }
+            else
+            {
+                mp = Math.Exp(usigma((u-mu)/sigma, n, m, _params));
+                p = 1-Math.Exp(usigma((u+1-mu)/sigma, n, m, _params));
+            }
+            lefttail = apserv.boundval(Math.Max(mp, 1.0E-4), 0.0001, 0.2500, _params);
+            righttail = apserv.boundval(Math.Max(p, 1.0E-4), 0.0001, 0.2500, _params);
+            bothtails = 2*Math.Min(lefttail, righttail);
+        }
+
+
+        /*************************************************************************
+        Sequential Chebyshev interpolation.
+        *************************************************************************/
+        private static void ucheb(double x,
+            double c,
+            ref double tj,
+            ref double tj1,
+            ref double r,
+            alglib.xparams _params)
+        {
+            double t = 0;
+
+            r = r+c*tj;
+            t = 2*x*tj1-tj;
+            tj = tj1;
+            tj1 = t;
+        }
+
+
+        /*************************************************************************
+        Three-point polynomial interpolation.
+        *************************************************************************/
+        private static double uninterpolate(double p1,
+            double p2,
+            double p3,
+            int n,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double t1 = 0;
+            double t2 = 0;
+            double t3 = 0;
+            double t = 0;
+            double p12 = 0;
+            double p23 = 0;
+
+            t1 = 1.0/15.0;
+            t2 = 1.0/30.0;
+            t3 = 1.0/100.0;
+            t = 1.0/n;
+            p12 = ((t-t2)*p1+(t1-t)*p2)/(t1-t2);
+            p23 = ((t-t3)*p2+(t2-t)*p3)/(t2-t3);
+            result = ((t-t3)*p12+(t1-t)*p23)/(t1-t3);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(0, N1, N2)
+        *************************************************************************/
+        private static double usigma000(int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double p1 = 0;
+            double p2 = 0;
+            double p3 = 0;
+
+            p1 = uninterpolate(-6.76984e-01, -6.83700e-01, -6.89873e-01, n2, _params);
+            p2 = uninterpolate(-6.83700e-01, -6.87311e-01, -6.90957e-01, n2, _params);
+            p3 = uninterpolate(-6.89873e-01, -6.90957e-01, -6.92175e-01, n2, _params);
+            result = uninterpolate(p1, p2, p3, n1, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(0.75, N1, N2)
+        *************************************************************************/
+        private static double usigma075(int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double p1 = 0;
+            double p2 = 0;
+            double p3 = 0;
+
+            p1 = uninterpolate(-1.44500e+00, -1.45906e+00, -1.47063e+00, n2, _params);
+            p2 = uninterpolate(-1.45906e+00, -1.46856e+00, -1.47644e+00, n2, _params);
+            p3 = uninterpolate(-1.47063e+00, -1.47644e+00, -1.48100e+00, n2, _params);
+            result = uninterpolate(p1, p2, p3, n1, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(1.5, N1, N2)
+        *************************************************************************/
+        private static double usigma150(int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double p1 = 0;
+            double p2 = 0;
+            double p3 = 0;
+
+            p1 = uninterpolate(-2.65380e+00, -2.67352e+00, -2.69011e+00, n2, _params);
+            p2 = uninterpolate(-2.67352e+00, -2.68591e+00, -2.69659e+00, n2, _params);
+            p3 = uninterpolate(-2.69011e+00, -2.69659e+00, -2.70192e+00, n2, _params);
+            result = uninterpolate(p1, p2, p3, n1, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(2.25, N1, N2)
+        *************************************************************************/
+        private static double usigma225(int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double p1 = 0;
+            double p2 = 0;
+            double p3 = 0;
+
+            p1 = uninterpolate(-4.41465e+00, -4.42260e+00, -4.43702e+00, n2, _params);
+            p2 = uninterpolate(-4.42260e+00, -4.41639e+00, -4.41928e+00, n2, _params);
+            p3 = uninterpolate(-4.43702e+00, -4.41928e+00, -4.41030e+00, n2, _params);
+            result = uninterpolate(p1, p2, p3, n1, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(3.0, N1, N2)
+        *************************************************************************/
+        private static double usigma300(int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double p1 = 0;
+            double p2 = 0;
+            double p3 = 0;
+
+            p1 = uninterpolate(-6.89839e+00, -6.83477e+00, -6.82340e+00, n2, _params);
+            p2 = uninterpolate(-6.83477e+00, -6.74559e+00, -6.71117e+00, n2, _params);
+            p3 = uninterpolate(-6.82340e+00, -6.71117e+00, -6.64929e+00, n2, _params);
+            result = uninterpolate(p1, p2, p3, n1, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(3.33, N1, N2)
+        *************************************************************************/
+        private static double usigma333(int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double p1 = 0;
+            double p2 = 0;
+            double p3 = 0;
+
+            p1 = uninterpolate(-8.31272e+00, -8.17096e+00, -8.13125e+00, n2, _params);
+            p2 = uninterpolate(-8.17096e+00, -8.00156e+00, -7.93245e+00, n2, _params);
+            p3 = uninterpolate(-8.13125e+00, -7.93245e+00, -7.82502e+00, n2, _params);
+            result = uninterpolate(p1, p2, p3, n1, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(3.66, N1, N2)
+        *************************************************************************/
+        private static double usigma367(int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double p1 = 0;
+            double p2 = 0;
+            double p3 = 0;
+
+            p1 = uninterpolate(-9.98837e+00, -9.70844e+00, -9.62087e+00, n2, _params);
+            p2 = uninterpolate(-9.70844e+00, -9.41156e+00, -9.28998e+00, n2, _params);
+            p3 = uninterpolate(-9.62087e+00, -9.28998e+00, -9.11686e+00, n2, _params);
+            result = uninterpolate(p1, p2, p3, n1, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(4.0, N1, N2)
+        *************************************************************************/
+        private static double usigma400(int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double p1 = 0;
+            double p2 = 0;
+            double p3 = 0;
+
+            p1 = uninterpolate(-1.20250e+01, -1.14911e+01, -1.13231e+01, n2, _params);
+            p2 = uninterpolate(-1.14911e+01, -1.09927e+01, -1.07937e+01, n2, _params);
+            p3 = uninterpolate(-1.13231e+01, -1.07937e+01, -1.05285e+01, n2, _params);
+            result = uninterpolate(p1, p2, p3, n1, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 5)
+        *************************************************************************/
+        private static double utbln5n5(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/2.611165e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -2.596264e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.412086e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.858542e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.614282e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.372686e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.524731e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.435331e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.284665e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.184141e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.298360e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 7.447272e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.938769e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.276205e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.138481e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.684625e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.558104e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 6)
+        *************************************************************************/
+        private static double utbln5n6(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/2.738613e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -2.810459e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.684429e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.712858e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.009324e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.644391e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.034173e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.953498e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.279293e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.563485e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.971952e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.506309e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.541406e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.283205e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.016347e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.221626e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.286752e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 7)
+        *************************************************************************/
+        private static double utbln5n7(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/2.841993e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -2.994677e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.923264e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.506190e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.054280e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.794587e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.726290e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.534180e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.517845e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.904428e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.882443e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.482988e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.114875e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.515082e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.996056e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.293581e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.349444e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 8)
+        *************************************************************************/
+        private static double utbln5n8(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/2.927700e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.155727e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.135078e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.247203e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.309697e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.993725e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.567219e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.383704e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.002188e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.487322e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.443899e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.688270e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.600339e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.874948e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.811593e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.072353e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.659457e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 9)
+        *************************************************************************/
+        private static double utbln5n9(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.000000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.298162e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.325016e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.939852e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.563029e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.222652e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.195200e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.445665e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.204792e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.775217e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.527781e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.221948e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.242968e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.607959e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.771285e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.694026e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.481190e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 10)
+        *************************************************************************/
+        private static double utbln5n10(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.061862e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.425360e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.496710e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.587658e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.812005e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.427637e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.515702e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.406867e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.796295e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.237591e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.654249e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.181165e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.011665e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.417927e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.534880e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.791255e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.871512e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 11)
+        *************************************************************************/
+        private static double utbln5n11(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.115427e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.539959e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.652998e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.196503e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.054363e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.618848e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.109411e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.786668e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.215648e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.484220e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.935991e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.396191e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.894177e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.206979e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.519055e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.210326e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.189679e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 12)
+        *************************************************************************/
+        private static double utbln5n12(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.162278e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.644007e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.796173e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.771177e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.290043e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.794686e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.702110e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.185959e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.416259e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.592056e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.201530e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.754365e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.978945e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.012032e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.304579e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.100378e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.728269e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 13)
+        *************************************************************************/
+        private static double utbln5n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.203616e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.739120e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.928117e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.031605e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.519403e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.962648e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.292183e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.809293e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.465156e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.456278e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.446055e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.109490e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.218256e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.941479e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.058603e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.824402e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.830947e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 14)
+        *************************************************************************/
+        private static double utbln5n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.240370e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.826559e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.050370e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.083408e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.743164e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.012030e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.884686e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.059656e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.327521e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.134026e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.584201e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.440618e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.524133e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.990007e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.887334e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.534977e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.705395e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 15)
+        *************************************************************************/
+        private static double utbln5n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.851572e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.082033e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.095983e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.814595e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.073148e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.420213e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.517175e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.344180e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.371393e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.711443e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.228569e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.683483e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.267112e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.156044e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.131316e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.301023e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 16)
+        *************************************************************************/
+        private static double utbln5n16(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.852210e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.077482e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.091186e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.797282e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.084994e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.667054e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.843909e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.456732e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.039830e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.723508e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.940608e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.478285e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.649144e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.237703e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.707410e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.874293e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 17)
+        *************************************************************************/
+        private static double utbln5n17(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.851752e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.071259e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.084700e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.758898e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.073846e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.684838e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.964936e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.782442e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.956362e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.984727e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.196936e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.558262e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.690746e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.364855e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.401006e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.546748e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 18)
+        *************************************************************************/
+        private static double utbln5n18(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.850840e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.064799e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.077651e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.712659e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.049217e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.571333e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.929809e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.752044e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.949464e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.896101e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.614460e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.384357e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.489113e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.445725e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.945636e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.424653e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 19)
+        *************************************************************************/
+        private static double utbln5n19(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.850027e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.059159e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.071106e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.669960e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.022780e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.442555e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.851335e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.433865e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.514465e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.332989e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.606099e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.341945e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.402164e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.039761e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.512831e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.284427e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 20)
+        *************************************************************************/
+        private static double utbln5n20(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.849651e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.054729e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.065747e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.636243e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.003234e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.372789e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.831551e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.763090e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.830626e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.122384e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.108328e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.557983e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.945666e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.965696e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.493236e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.162591e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 21)
+        *************************************************************************/
+        private static double utbln5n21(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.849649e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.051155e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.061430e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.608869e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.902788e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.346562e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.874709e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.682887e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.026206e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.534551e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.990575e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.713334e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.737011e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.304571e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.133110e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.123457e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 22)
+        *************************************************************************/
+        private static double utbln5n22(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.849598e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.047605e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.057264e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.579513e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.749602e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.275137e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.881768e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.177374e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.981056e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.696290e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.886803e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.085378e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.675242e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.426367e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.039613e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.662378e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 23)
+        *************************************************************************/
+        private static double utbln5n23(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.849269e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.043761e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.052735e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.544683e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.517503e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.112082e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.782070e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.549483e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.747329e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.694263e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.147141e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.526209e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.039173e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.235615e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.656546e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.014423e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 24)
+        *************************************************************************/
+        private static double utbln5n24(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.848925e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.040178e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.048355e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.510198e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.261134e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.915864e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.627423e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.307345e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.732992e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.869652e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.494176e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.047533e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.178439e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.424171e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.829195e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.840810e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 25)
+        *************************************************************************/
+        private static double utbln5n25(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.848937e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.037512e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.044866e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.483269e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.063682e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.767778e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.508540e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.332756e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.881511e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.124041e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.368456e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.930499e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.779630e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.029528e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.658678e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.289695e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 26)
+        *************************************************************************/
+        private static double utbln5n26(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.849416e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.035915e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.042493e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.466021e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.956432e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.698914e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.465689e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.035254e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.674614e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.492734e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.014021e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.944953e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.255750e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.075841e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.989330e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.134862e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 27)
+        *************************************************************************/
+        private static double utbln5n27(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.850070e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.034815e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.040650e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.453117e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.886426e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.661702e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.452346e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.002476e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.720126e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.001400e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.729826e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.740640e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.206333e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.366093e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.193471e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.804091e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 28)
+        *************************************************************************/
+        private static double utbln5n28(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.850668e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.033786e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.038853e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.440281e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.806020e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.612883e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.420436e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.787982e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.535230e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.263121e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.849609e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.863967e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.391610e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.720294e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.952273e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.901413e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 29)
+        *************************************************************************/
+        private static double utbln5n29(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.851217e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.032834e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.037113e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.427762e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.719146e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.557172e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.375498e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.452033e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.187516e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.916936e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.065533e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.067301e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.615824e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.432244e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.417795e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.710038e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 30)
+        *************************************************************************/
+        private static double utbln5n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.851845e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.032148e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.035679e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.417758e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.655330e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.522132e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.352106e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.326911e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.064969e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.813321e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.683881e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.813346e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.627085e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.832107e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.519336e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.888530e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5, 100)
+        *************************************************************************/
+        private static double utbln5n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.877940e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.039324e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.022243e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.305825e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.960119e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.112000e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.138868e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.418164e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.174520e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.489617e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.878301e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.302233e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.054113e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.458862e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.186591e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.623412e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 6)
+        *************************************************************************/
+        private static double utbln6n6(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/2.882307e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.054075e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.998804e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.681518e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.067578e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.709435e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.952661e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.641700e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.304572e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.336275e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.770385e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.401891e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.246148e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.442663e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.502866e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.105855e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.739371e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 7)
+        *************************************************************************/
+        private static double utbln6n7(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.000000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.265287e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.274613e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.582352e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.334293e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.915502e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.108091e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.546701e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.298827e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.891501e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.313717e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.989501e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.914594e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.062372e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.158841e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.596443e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.185662e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 8)
+        *************************************************************************/
+        private static double utbln6n8(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.098387e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.450954e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.520462e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.420299e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.604853e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.165840e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.008756e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.723402e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.843521e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.883405e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.720980e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.301709e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.948034e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.776243e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.623736e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.742068e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.796927e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 9)
+        *************************************************************************/
+        private static double utbln6n9(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.181981e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.616113e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.741650e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.204487e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.873068e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.446794e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.632286e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.266481e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.280067e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.780687e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.480242e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.592200e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.581019e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.264231e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.347174e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.167535e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.092185e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 10)
+        *************************************************************************/
+        private static double utbln6n10(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.253957e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.764382e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.942366e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.939896e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.137812e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.720270e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.281070e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.901060e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.824937e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.802812e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.258132e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.233536e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.085530e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.212151e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.001329e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.226048e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.035298e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 11)
+        *************************************************************************/
+        private static double utbln6n11(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.316625e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.898597e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.125710e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.063297e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.396852e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.990126e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.927977e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.726500e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.858745e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.654590e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.217736e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.989770e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.768493e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.924364e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.140215e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.647914e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.924802e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 12)
+        *************************************************************************/
+        private static double utbln6n12(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.371709e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.020941e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.294250e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.128842e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.650389e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.248611e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.578510e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.162852e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.746982e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.454209e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.128042e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.936650e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.530794e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.665192e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.994144e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.662249e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.368541e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 13)
+        *************************************************************************/
+        private static double utbln6n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.420526e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.133167e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.450016e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.191088e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.898220e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.050249e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.226901e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.471113e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.007470e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.049420e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.059074e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.881249e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.452780e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.441805e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.787493e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.483957e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.481590e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 14)
+        *************************************************************************/
+        private static double utbln6n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.450000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.201268e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.542568e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.226965e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.046029e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.136657e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.786757e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.843748e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.588022e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.253029e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.667188e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.788330e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.474545e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.540494e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.951188e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.863323e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.220904e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 15)
+        *************************************************************************/
+        private static double utbln6n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.450000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.195689e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.526567e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.213617e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.975035e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.118480e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.859142e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.083312e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.298720e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.766708e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.026356e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.093113e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.135168e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.136376e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.190870e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.435972e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.413129e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 30)
+        *************************************************************************/
+        private static double utbln6n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.450000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.166269e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.427399e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.118239e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.360847e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.745885e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.025041e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.187179e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.432089e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.408451e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.388774e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.795560e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.304136e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.258516e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.180236e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.388679e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.836027e-06, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6, 100)
+        *************************************************************************/
+        private static double utbln6n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.450000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.181350e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.417919e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.094201e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.195883e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.818937e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.514202e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.125047e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.022148e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.284181e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.157766e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.023752e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.127985e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.221690e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.516179e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.501398e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.380220e-06, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 7)
+        *************************************************************************/
+        private static double utbln7n7(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.130495e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.501264e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.584790e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.577311e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.617002e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.145186e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.023462e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.408251e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.626515e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.072492e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.722926e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.095445e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.842602e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.751427e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.008927e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.892431e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.772386e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 8)
+        *************************************************************************/
+        private static double utbln7n8(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.240370e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.709965e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.862154e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.504541e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.900195e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.439995e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.678028e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.485540e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.437047e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.440092e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.114227e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.516569e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.829457e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.787550e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.761866e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.991911e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.533481e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 9)
+        *************************************************************************/
+        private static double utbln7n9(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.334314e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.896550e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.112671e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.037277e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.181695e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.765190e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.360116e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.695960e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.780578e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.963843e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.616148e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.852104e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.390744e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.014041e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.888101e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.467474e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.004611e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 10)
+        *************************************************************************/
+        private static double utbln7n10(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.415650e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.064844e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.340749e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.118888e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.459730e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.097781e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.057688e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.097406e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.209262e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.065641e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.196677e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.313994e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.827157e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.822284e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.389090e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.340850e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.395172e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 11)
+        *************************************************************************/
+        private static double utbln7n11(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.486817e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.217795e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.549783e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.195905e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.733093e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.428447e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.760093e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.431676e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.717152e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.032199e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.832423e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.905979e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.302799e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.464371e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.456211e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.736244e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.140712e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 12)
+        *************************************************************************/
+        private static double utbln7n12(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.235822e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.564100e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.190813e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.686546e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.395083e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.967359e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.747096e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.304144e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.903198e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.134906e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.175035e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.266224e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.892931e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.604706e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.070459e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.427010e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 13)
+        *************************************************************************/
+        private static double utbln7n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.222204e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.532300e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.164642e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.523768e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.531984e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.467857e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.483804e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.524136e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.077740e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.745218e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.602085e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.828831e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.994070e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.873879e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.341937e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.706444e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 14)
+        *************************************************************************/
+        private static double utbln7n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.211763e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.507542e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.143640e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.395755e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.808020e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.044259e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.182308e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.057325e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.724255e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.303900e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.113148e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.102514e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.559442e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.634986e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.776476e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.054489e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 15)
+        *************************************************************************/
+        private static double utbln7n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.204898e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.489960e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.129172e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.316741e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.506107e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.983676e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.258013e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.262515e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.984156e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.912108e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.974023e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.056195e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.090842e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.232620e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.816339e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.020421e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 30)
+        *************************************************************************/
+        private static double utbln7n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.176536e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.398705e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.045481e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.821982e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.962304e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.698132e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.062667e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.282353e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.014836e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.035683e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.004137e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.801453e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.920705e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.518735e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.821501e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.801008e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7, 100)
+        *************************************************************************/
+        private static double utbln7n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.188337e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.386949e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.022834e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.686517e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.323516e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.399392e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.644333e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.617044e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.031396e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.792066e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.675457e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.673416e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.258552e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.174214e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.073644e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.349958e-06, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 8)
+        *************************************************************************/
+        private static double utbln8n8(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.360672e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -3.940217e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.168913e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.051485e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.195325e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.775196e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.385506e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.244902e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.525632e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.771275e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.332874e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.079599e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.882551e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.407944e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.769844e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.062433e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.872535e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 9)
+        *************************************************************************/
+        private static double utbln8n9(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.464102e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.147004e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.446939e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.146155e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.488561e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.144561e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.116917e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.205667e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.515661e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.618616e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.599011e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.457324e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.482917e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.488267e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.469823e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.957591e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.058326e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 10)
+        *************************************************************************/
+        private static double utbln8n10(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.554093e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.334282e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.700860e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.235253e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.778489e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.527324e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.862885e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.589781e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.507355e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.717526e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.215726e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.848696e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.918854e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.219614e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.753761e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.573688e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.602177e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 11)
+        *************************************************************************/
+        private static double utbln8n11(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.421882e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.812457e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.266153e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.849344e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.971527e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.258944e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.944820e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.894685e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.031836e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.514330e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.351660e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.206748e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.492600e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.005338e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.780099e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.673599e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 12)
+        *************************************************************************/
+        private static double utbln8n12(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.398211e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.762214e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.226296e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.603837e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.643223e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.502438e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.544574e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.647734e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.442259e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.011484e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.384758e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.998259e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.659985e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.331046e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.638478e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.056785e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 13)
+        *************************************************************************/
+        private static double utbln8n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.380670e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.724511e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.195851e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.420511e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.609928e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.893999e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.115919e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.291410e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.339664e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.801548e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.534710e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.793250e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.806718e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.384624e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.120582e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.936453e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 14)
+        *************************************************************************/
+        private static double utbln8n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.368494e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.697171e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.174440e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.300621e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.087393e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.685826e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.085254e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.525658e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.966647e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.453388e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.826066e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.501958e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.336297e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.251972e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.118456e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.415959e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 15)
+        *************************************************************************/
+        private static double utbln8n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.358397e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.674485e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.155941e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.195780e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.544830e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.426183e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.309902e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.650956e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.068874e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.538544e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.192525e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.073905e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.079673e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.423572e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.579647e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.765904e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 30)
+        *************************************************************************/
+        private static double utbln8n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.318823e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.567159e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.064864e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.688413e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.153712e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.309389e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.226861e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.523815e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.780987e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.166866e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.922431e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.466397e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.690036e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.008185e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.271903e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.534751e-06, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8, 100)
+        *************************************************************************/
+        private static double utbln8n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.324531e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.547071e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.038129e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.541549e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.525605e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.044992e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.085713e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.017871e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.459226e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.092064e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.024349e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 7.366347e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.385637e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.321722e-08, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.439286e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.058079e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 9)
+        *************************************************************************/
+        private static double utbln9n9(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.576237e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.372857e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.750859e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.248233e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.792868e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.559372e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.894941e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.643256e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.091370e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.285034e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.112997e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.806229e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.150741e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.509825e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.891051e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.485013e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.343653e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 10)
+        *************************************************************************/
+        private static double utbln9n10(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.516726e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.939333e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.305046e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.935326e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.029141e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.420592e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.053140e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.065930e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.523581e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.544888e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.813741e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.510631e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.536057e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.833815e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.189692e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.615050e-03, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 11)
+        *************************************************************************/
+        private static double utbln9n11(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.481308e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.867483e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.249072e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.591790e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.400128e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.341992e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.463680e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.487211e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.671196e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.343472e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.544146e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.802335e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.117084e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.217443e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.858766e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.193687e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 12)
+        *************************************************************************/
+        private static double utbln9n12(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.456776e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.817037e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.209788e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.362108e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.171356e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.661557e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.026141e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.361908e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.093885e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.298389e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.663603e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.768522e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.579015e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.868677e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.440652e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.523037e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 13)
+        *************************************************************************/
+        private static double utbln9n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.438840e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.779308e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.180614e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.196489e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.346621e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.234857e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.796211e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.575715e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.525647e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.964651e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.275235e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.299124e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.397416e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.295781e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.237619e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 7.269692e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 14)
+        *************************************************************************/
+        private static double utbln9n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.425981e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.751545e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.159543e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.086570e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.917446e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.120112e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.175519e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.515473e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.727772e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.070629e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.677569e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.876953e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.233502e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.508182e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.120389e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.847212e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 15)
+        *************************************************************************/
+        private static double utbln9n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.414952e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.727612e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.140634e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.981231e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.382635e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.853575e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.571051e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.567625e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.214197e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.448700e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.712669e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.015050e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.438610e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.301363e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.309386e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.164772e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 30)
+        *************************************************************************/
+        private static double utbln9n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.370720e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.615712e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.050023e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.504775e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.318265e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.646826e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.741492e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.735360e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.966911e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.100738e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.348991e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.527687e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.917286e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.397466e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.360175e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.892252e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9, 100)
+        *************************************************************************/
+        private static double utbln9n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.372506e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.590966e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.021758e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.359849e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.755519e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.533166e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.936659e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.634913e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.730053e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.791845e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.030682e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.228663e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.631175e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.636749e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.404599e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.789872e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 10, 10)
+        *************************************************************************/
+        private static double utbln10n10(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.468831e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.844398e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.231728e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.486073e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.781321e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.971425e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.215371e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.828451e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.419872e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.430165e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.740363e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.049211e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.269371e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.211393e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.232314e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.016081e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 10, 11)
+        *************************************************************************/
+        private static double utbln10n11(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.437998e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.782296e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.184732e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.219585e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.457012e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.296008e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.481501e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.527940e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.953426e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.563840e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.574403e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.535775e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.338037e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.002654e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.852676e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.318132e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 10, 12)
+        *************************************************************************/
+        private static double utbln10n12(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.416082e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.737458e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.150952e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.036884e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.609030e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.908684e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.439666e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.162647e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.451601e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.148757e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.803981e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.731621e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.346903e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.013151e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.956148e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.438381e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 10, 13)
+        *************************************************************************/
+        private static double utbln10n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.399480e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.702863e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.124829e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.897428e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.979802e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.634368e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.180461e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.484926e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.864376e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.186576e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.886925e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.836828e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.074756e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.209547e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.883266e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.380143e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 10, 14)
+        *************************************************************************/
+        private static double utbln10n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.386924e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.676124e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.104740e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.793826e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.558886e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.492462e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.052903e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.917782e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.878696e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.576046e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.764551e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.288778e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.757658e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.299101e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.265197e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.384503e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 10, 15)
+        *************************************************************************/
+        private static double utbln10n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.376846e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.654247e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.088083e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.705945e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.169677e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.317213e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.264836e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.548024e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.633910e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.505621e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.658588e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.320254e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.175277e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.122317e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.675688e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.661363e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 10, 30)
+        *************************************************************************/
+        private static double utbln10n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.333977e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.548099e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.004444e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.291014e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.523674e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.828211e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.716917e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.894256e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.433371e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.522675e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.764192e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.140235e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.629230e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.541895e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.944946e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.726360e-06, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 10, 100)
+        *************************************************************************/
+        private static double utbln10n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.334008e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.522316e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.769627e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.158110e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.053650e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.242235e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.173571e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.033661e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.824732e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.084420e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.610036e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.728155e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.217130e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.340966e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.001235e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.694052e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 11, 11)
+        *************************************************************************/
+        private static double utbln11n11(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.519760e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.880694e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.200698e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.174092e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.072304e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.054773e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.506613e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.813942e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.223644e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.417416e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.499166e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.194332e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 7.369096e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.968590e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.630532e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.061000e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 11, 12)
+        *************************************************************************/
+        private static double utbln11n12(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.495790e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.832622e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.165420e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.987306e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.265621e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.723537e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.347406e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.353464e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.613369e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.102522e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.237709e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.665652e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.626903e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.167518e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.564455e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.047320e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 11, 13)
+        *************************************************************************/
+        private static double utbln11n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.477880e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.796242e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.138769e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.851739e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.722104e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.548304e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.176683e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.817895e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.842451e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.935870e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.421777e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.238831e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.867026e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.458255e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.306259e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.961487e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 11, 14)
+        *************************************************************************/
+        private static double utbln11n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.463683e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.766969e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.117082e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.739574e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.238865e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.350306e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.425871e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.640172e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.660633e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.879883e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.349658e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.271795e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.304544e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.024201e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.816867e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.596787e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 11, 15)
+        *************************************************************************/
+        private static double utbln11n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.452526e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.743570e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.099705e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.650612e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.858285e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.187036e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.689241e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.294360e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.072623e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.278008e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.322382e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.131558e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.305669e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.825627e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.332689e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.120973e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 11, 30)
+        *************************************************************************/
+        private static double utbln11n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.402621e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.627440e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.011333e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.224126e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.232856e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.859347e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.377381e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.756709e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.033230e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.875472e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.608399e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.102943e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.740693e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.343139e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.196878e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.658062e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 11, 100)
+        *************************************************************************/
+        private static double utbln11n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.398795e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.596486e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.814761e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.085187e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.766529e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.379425e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.986351e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.214705e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.360075e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.260869e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.033307e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.727087e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.393883e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.242989e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.111928e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.898823e-09, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 12, 12)
+        *************************************************************************/
+        private static double utbln12n12(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.472616e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.786627e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.132099e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.817523e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.570179e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.479511e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.799492e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.565350e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.530139e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.380132e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.242761e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.576269e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.018771e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.933911e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.002799e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.022048e-06, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 12, 13)
+        *************************************************************************/
+        private static double utbln12n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.454800e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.750794e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.105988e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.684754e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.011826e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.262579e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.044492e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.478741e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.322165e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.621104e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.068753e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.468396e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.056235e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.327375e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.914877e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.784191e-04, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 12, 14)
+        *************************************************************************/
+        private static double utbln12n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.440910e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.722404e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.085254e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.579439e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.563738e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.066730e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.129346e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.014531e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.129679e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.000909e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.996174e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.377924e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.936304e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.051098e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.025820e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 8.730585e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 12, 15)
+        *************************************************************************/
+        private static double utbln12n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.430123e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.700008e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.068971e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.499725e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.250897e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.473145e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.680008e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.483350e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.766992e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.891081e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.015140e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.977756e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.707414e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.114786e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.238865e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.381445e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 12, 30)
+        *************************************************************************/
+        private static double utbln12n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.380023e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.585782e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.838583e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.103394e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.834015e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.635212e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.948212e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.574169e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.747980e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.833672e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.722433e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.181038e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.206473e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.716003e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.476434e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.217700e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 12, 100)
+        *************************************************************************/
+        private static double utbln12n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.374567e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.553481e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.541334e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.701907e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.414757e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.404103e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.234388e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.453762e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.311060e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.317501e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.713888e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.309583e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.019804e-08, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.224829e-09, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.349019e-08, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.893302e-08, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 13, 13)
+        *************************************************************************/
+        private static double utbln13n13(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.541046e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.859047e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.130164e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.689719e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.950693e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.231455e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.976550e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.538455e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.245603e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.142647e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.831434e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.032483e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.488405e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.156927e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.949279e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.532700e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 13, 14)
+        *************************************************************************/
+        private static double utbln13n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.525655e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.828341e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.108110e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.579552e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.488307e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.032328e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.988741e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.766394e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.388950e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.338179e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.133440e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.023518e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.110570e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.202332e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.056132e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.536323e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 13, 15)
+        *************************************************************************/
+        private static double utbln13n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.513585e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.803952e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.090686e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.495310e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.160314e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.073124e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.480313e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.478239e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.140914e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.311541e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.677105e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.115464e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.578563e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.044604e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.888939e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 2.395644e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 13, 30)
+        *************************************************************************/
+        private static double utbln13n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.455999e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.678434e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.995491e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.078100e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.705220e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.258739e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.671526e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.185458e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.507764e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.411446e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.044355e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.285765e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.345282e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.066940e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.962037e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.723644e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 13, 100)
+        *************************************************************************/
+        private static double utbln13n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.446787e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.640804e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.671552e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.364990e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.274444e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.047440e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.161439e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.171729e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.562171e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.359762e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.275494e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.747635e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.700292e-08, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.565559e-09, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 5.005396e-09, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 3.335794e-09, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 14, 14)
+        *************************************************************************/
+        private static double utbln14n14(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.510624e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.798584e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.087107e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.478532e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.098050e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.855986e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.409083e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.299536e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.176177e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.479417e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.812761e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -5.225872e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 4.516521e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 6.730551e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 9.237563e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.611820e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 14, 15)
+        *************************************************************************/
+        private static double utbln14n15(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.498681e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.774668e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.070267e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.399348e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.807239e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.845763e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.071773e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.261698e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.011695e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.305946e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.879295e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.999439e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.904438e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.944986e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.373908e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.140794e-05, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 14, 30)
+        *************************************************************************/
+        private static double utbln14n30(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.440378e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.649587e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.807829e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.989753e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.463646e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.586580e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -6.745917e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.635398e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.923172e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.446699e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.613892e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.214073e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.651683e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.272777e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.464988e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.109803e-07, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 14, 100)
+        *************************************************************************/
+        private static double utbln14n100(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double x = 0;
+            double tj = 0;
+            double tj1 = 0;
+
+            result = 0;
+            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
+            tj = 1;
+            tj1 = x;
+            ucheb(x, -4.429701e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -4.610577e+00, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -9.482675e-01, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.605550e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.062151e-02, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.525154e-03, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.835983e-04, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -8.411440e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.744901e-05, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.318850e-06, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.692100e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -1.536270e-07, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -3.705888e-08, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -7.999599e-09, ref tj, ref tj1, ref result, _params);
+            ucheb(x, -2.908395e-09, ref tj, ref tj1, ref result, _params);
+            ucheb(x, 1.546923e-09, ref tj, ref tj1, ref result, _params);
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, N1, N2)
+        *************************************************************************/
+        private static double usigma(double s,
+            int n1,
+            int n2,
+            alglib.xparams _params)
+        {
+            double result = 0;
+            double f0 = 0;
+            double f1 = 0;
+            double f2 = 0;
+            double f3 = 0;
+            double f4 = 0;
+            double s0 = 0;
+            double s1 = 0;
+            double s2 = 0;
+            double s3 = 0;
+            double s4 = 0;
+
+            result = 0;
+            
+            //
+            // N1=5, N2 = 5, 6, 7, ...
+            //
+            if( Math.Min(n1, n2)==5 )
+            {
+                if( Math.Max(n1, n2)==5 )
+                {
+                    result = utbln5n5(s, _params);
+                }
+                if( Math.Max(n1, n2)==6 )
+                {
+                    result = utbln5n6(s, _params);
+                }
+                if( Math.Max(n1, n2)==7 )
+                {
+                    result = utbln5n7(s, _params);
+                }
+                if( Math.Max(n1, n2)==8 )
+                {
+                    result = utbln5n8(s, _params);
+                }
+                if( Math.Max(n1, n2)==9 )
+                {
+                    result = utbln5n9(s, _params);
+                }
+                if( Math.Max(n1, n2)==10 )
+                {
+                    result = utbln5n10(s, _params);
+                }
+                if( Math.Max(n1, n2)==11 )
+                {
+                    result = utbln5n11(s, _params);
+                }
+                if( Math.Max(n1, n2)==12 )
+                {
+                    result = utbln5n12(s, _params);
+                }
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln5n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln5n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln5n15(s, _params);
+                }
+                if( Math.Max(n1, n2)==16 )
+                {
+                    result = utbln5n16(s, _params);
+                }
+                if( Math.Max(n1, n2)==17 )
+                {
+                    result = utbln5n17(s, _params);
+                }
+                if( Math.Max(n1, n2)==18 )
+                {
+                    result = utbln5n18(s, _params);
+                }
+                if( Math.Max(n1, n2)==19 )
+                {
+                    result = utbln5n19(s, _params);
+                }
+                if( Math.Max(n1, n2)==20 )
+                {
+                    result = utbln5n20(s, _params);
+                }
+                if( Math.Max(n1, n2)==21 )
+                {
+                    result = utbln5n21(s, _params);
+                }
+                if( Math.Max(n1, n2)==22 )
+                {
+                    result = utbln5n22(s, _params);
+                }
+                if( Math.Max(n1, n2)==23 )
+                {
+                    result = utbln5n23(s, _params);
+                }
+                if( Math.Max(n1, n2)==24 )
+                {
+                    result = utbln5n24(s, _params);
+                }
+                if( Math.Max(n1, n2)==25 )
+                {
+                    result = utbln5n25(s, _params);
+                }
+                if( Math.Max(n1, n2)==26 )
+                {
+                    result = utbln5n26(s, _params);
+                }
+                if( Math.Max(n1, n2)==27 )
+                {
+                    result = utbln5n27(s, _params);
+                }
+                if( Math.Max(n1, n2)==28 )
+                {
+                    result = utbln5n28(s, _params);
+                }
+                if( Math.Max(n1, n2)==29 )
+                {
+                    result = utbln5n29(s, _params);
+                }
+                if( Math.Max(n1, n2)>29 )
+                {
+                    f0 = utbln5n15(s, _params);
+                    f1 = utbln5n30(s, _params);
+                    f2 = utbln5n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=6, N2 = 6, 7, 8, ...
+            //
+            if( Math.Min(n1, n2)==6 )
+            {
+                if( Math.Max(n1, n2)==6 )
+                {
+                    result = utbln6n6(s, _params);
+                }
+                if( Math.Max(n1, n2)==7 )
+                {
+                    result = utbln6n7(s, _params);
+                }
+                if( Math.Max(n1, n2)==8 )
+                {
+                    result = utbln6n8(s, _params);
+                }
+                if( Math.Max(n1, n2)==9 )
+                {
+                    result = utbln6n9(s, _params);
+                }
+                if( Math.Max(n1, n2)==10 )
+                {
+                    result = utbln6n10(s, _params);
+                }
+                if( Math.Max(n1, n2)==11 )
+                {
+                    result = utbln6n11(s, _params);
+                }
+                if( Math.Max(n1, n2)==12 )
+                {
+                    result = utbln6n12(s, _params);
+                }
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln6n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln6n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln6n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln6n15(s, _params);
+                    f1 = utbln6n30(s, _params);
+                    f2 = utbln6n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=7, N2 = 7, 8, ...
+            //
+            if( Math.Min(n1, n2)==7 )
+            {
+                if( Math.Max(n1, n2)==7 )
+                {
+                    result = utbln7n7(s, _params);
+                }
+                if( Math.Max(n1, n2)==8 )
+                {
+                    result = utbln7n8(s, _params);
+                }
+                if( Math.Max(n1, n2)==9 )
+                {
+                    result = utbln7n9(s, _params);
+                }
+                if( Math.Max(n1, n2)==10 )
+                {
+                    result = utbln7n10(s, _params);
+                }
+                if( Math.Max(n1, n2)==11 )
+                {
+                    result = utbln7n11(s, _params);
+                }
+                if( Math.Max(n1, n2)==12 )
+                {
+                    result = utbln7n12(s, _params);
+                }
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln7n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln7n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln7n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln7n15(s, _params);
+                    f1 = utbln7n30(s, _params);
+                    f2 = utbln7n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=8, N2 = 8, 9, 10, ...
+            //
+            if( Math.Min(n1, n2)==8 )
+            {
+                if( Math.Max(n1, n2)==8 )
+                {
+                    result = utbln8n8(s, _params);
+                }
+                if( Math.Max(n1, n2)==9 )
+                {
+                    result = utbln8n9(s, _params);
+                }
+                if( Math.Max(n1, n2)==10 )
+                {
+                    result = utbln8n10(s, _params);
+                }
+                if( Math.Max(n1, n2)==11 )
+                {
+                    result = utbln8n11(s, _params);
+                }
+                if( Math.Max(n1, n2)==12 )
+                {
+                    result = utbln8n12(s, _params);
+                }
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln8n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln8n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln8n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln8n15(s, _params);
+                    f1 = utbln8n30(s, _params);
+                    f2 = utbln8n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=9, N2 = 9, 10, ...
+            //
+            if( Math.Min(n1, n2)==9 )
+            {
+                if( Math.Max(n1, n2)==9 )
+                {
+                    result = utbln9n9(s, _params);
+                }
+                if( Math.Max(n1, n2)==10 )
+                {
+                    result = utbln9n10(s, _params);
+                }
+                if( Math.Max(n1, n2)==11 )
+                {
+                    result = utbln9n11(s, _params);
+                }
+                if( Math.Max(n1, n2)==12 )
+                {
+                    result = utbln9n12(s, _params);
+                }
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln9n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln9n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln9n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln9n15(s, _params);
+                    f1 = utbln9n30(s, _params);
+                    f2 = utbln9n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=10, N2 = 10, 11, ...
+            //
+            if( Math.Min(n1, n2)==10 )
+            {
+                if( Math.Max(n1, n2)==10 )
+                {
+                    result = utbln10n10(s, _params);
+                }
+                if( Math.Max(n1, n2)==11 )
+                {
+                    result = utbln10n11(s, _params);
+                }
+                if( Math.Max(n1, n2)==12 )
+                {
+                    result = utbln10n12(s, _params);
+                }
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln10n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln10n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln10n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln10n15(s, _params);
+                    f1 = utbln10n30(s, _params);
+                    f2 = utbln10n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=11, N2 = 11, 12, ...
+            //
+            if( Math.Min(n1, n2)==11 )
+            {
+                if( Math.Max(n1, n2)==11 )
+                {
+                    result = utbln11n11(s, _params);
+                }
+                if( Math.Max(n1, n2)==12 )
+                {
+                    result = utbln11n12(s, _params);
+                }
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln11n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln11n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln11n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln11n15(s, _params);
+                    f1 = utbln11n30(s, _params);
+                    f2 = utbln11n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=12, N2 = 12, 13, ...
+            //
+            if( Math.Min(n1, n2)==12 )
+            {
+                if( Math.Max(n1, n2)==12 )
+                {
+                    result = utbln12n12(s, _params);
+                }
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln12n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln12n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln12n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln12n15(s, _params);
+                    f1 = utbln12n30(s, _params);
+                    f2 = utbln12n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=13, N2 = 13, 14, ...
+            //
+            if( Math.Min(n1, n2)==13 )
+            {
+                if( Math.Max(n1, n2)==13 )
+                {
+                    result = utbln13n13(s, _params);
+                }
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln13n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln13n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln13n15(s, _params);
+                    f1 = utbln13n30(s, _params);
+                    f2 = utbln13n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1=14, N2 = 14, 15, ...
+            //
+            if( Math.Min(n1, n2)==14 )
+            {
+                if( Math.Max(n1, n2)==14 )
+                {
+                    result = utbln14n14(s, _params);
+                }
+                if( Math.Max(n1, n2)==15 )
+                {
+                    result = utbln14n15(s, _params);
+                }
+                if( Math.Max(n1, n2)>15 )
+                {
+                    f0 = utbln14n15(s, _params);
+                    f1 = utbln14n30(s, _params);
+                    f2 = utbln14n100(s, _params);
+                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
+                }
+                return result;
+            }
+            
+            //
+            // N1 >= 15, N2 >= 15
+            //
+            if( (double)(s)>(double)(4) )
+            {
+                s = 4;
+            }
+            if( (double)(s)<(double)(3) )
+            {
+                s0 = 0.000000e+00;
+                f0 = usigma000(n1, n2, _params);
+                s1 = 7.500000e-01;
+                f1 = usigma075(n1, n2, _params);
+                s2 = 1.500000e+00;
+                f2 = usigma150(n1, n2, _params);
+                s3 = 2.250000e+00;
+                f3 = usigma225(n1, n2, _params);
+                s4 = 3.000000e+00;
+                f4 = usigma300(n1, n2, _params);
+                f1 = ((s-s0)*f1-(s-s1)*f0)/(s1-s0);
+                f2 = ((s-s0)*f2-(s-s2)*f0)/(s2-s0);
+                f3 = ((s-s0)*f3-(s-s3)*f0)/(s3-s0);
+                f4 = ((s-s0)*f4-(s-s4)*f0)/(s4-s0);
+                f2 = ((s-s1)*f2-(s-s2)*f1)/(s2-s1);
+                f3 = ((s-s1)*f3-(s-s3)*f1)/(s3-s1);
+                f4 = ((s-s1)*f4-(s-s4)*f1)/(s4-s1);
+                f3 = ((s-s2)*f3-(s-s3)*f2)/(s3-s2);
+                f4 = ((s-s2)*f4-(s-s4)*f2)/(s4-s2);
+                f4 = ((s-s3)*f4-(s-s4)*f3)/(s4-s3);
+                result = f4;
+            }
+            else
+            {
+                s0 = 3.000000e+00;
+                f0 = usigma300(n1, n2, _params);
+                s1 = 3.333333e+00;
+                f1 = usigma333(n1, n2, _params);
+                s2 = 3.666667e+00;
+                f2 = usigma367(n1, n2, _params);
+                s3 = 4.000000e+00;
+                f3 = usigma400(n1, n2, _params);
+                f1 = ((s-s0)*f1-(s-s1)*f0)/(s1-s0);
+                f2 = ((s-s0)*f2-(s-s2)*f0)/(s2-s0);
+                f3 = ((s-s0)*f3-(s-s3)*f0)/(s3-s0);
+                f2 = ((s-s1)*f2-(s-s2)*f1)/(s2-s1);
+                f3 = ((s-s1)*f3-(s-s3)*f1)/(s3-s1);
+                f3 = ((s-s2)*f3-(s-s3)*f2)/(s3-s2);
+                result = f3;
+            }
+            return result;
+        }
+
+
+    }
+    public partial class studentttests
+    {
+        /*************************************************************************
+        One-sample t-test
+
+        This test checks three hypotheses about the mean of the given sample.  The
+        following tests are performed:
+            * two-tailed test (null hypothesis - the mean is equal  to  the  given
+              value)
+            * left-tailed test (null hypothesis - the  mean  is  greater  than  or
+              equal to the given value)
+            * right-tailed test (null hypothesis - the mean is less than or  equal
+              to the given value).
+
+        The test is based on the assumption that  a  given  sample  has  a  normal
+        distribution and  an  unknown  dispersion.  If  the  distribution  sharply
+        differs from normal, the test will work incorrectly.
+
+        INPUT PARAMETERS:
+            X       -   sample. Array whose index goes from 0 to N-1.
+            N       -   size of sample, N>=0
+            Mean    -   assumed value of the mean.
+
+        OUTPUT PARAMETERS:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+        NOTE: this function correctly handles degenerate cases:
+              * when N=0, all p-values are set to 1.0
+              * when variance of X[] is exactly zero, p-values are set
+                to 1.0 or 0.0, depending on difference between sample mean and
+                value of mean being tested.
+
+
+          -- ALGLIB --
+             Copyright 08.09.2006 by Bochkanov Sergey
+        *************************************************************************/
+        public static void studentttest1(double[] x,
+            int n,
+            double mean,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            double xmean = 0;
+            double x0 = 0;
+            double v = 0;
+            bool samex = new bool();
+            double xvariance = 0;
+            double xstddev = 0;
+            double v1 = 0;
+            double v2 = 0;
+            double stat = 0;
+            double s = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            if( n<=0 )
             {
                 bothtails = 1.0;
                 lefttail = 1.0;
@@ -8165,34 +11980,155 @@ public partial class alglib
             // Mean
             //
             xmean = 0;
+            x0 = x[0];
+            samex = true;
             for(i=0; i<=n-1; i++)
             {
-                xmean = xmean+x[i];
+                v = x[i];
+                xmean = xmean+v;
+                samex = samex && (double)(v)==(double)(x0);
             }
-            xmean = xmean/n;
-            ymean = 0;
-            for(i=0; i<=m-1; i++)
+            if( samex )
             {
-                ymean = ymean+y[i];
+                xmean = x0;
             }
-            ymean = ymean/m;
+            else
+            {
+                xmean = xmean/n;
+            }
             
             //
             // Variance (using corrected two-pass algorithm)
             //
-            xvar = 0;
-            for(i=0; i<=n-1; i++)
+            xvariance = 0;
+            xstddev = 0;
+            if( n!=1 && !samex )
             {
-                xvar = xvar+math.sqr(x[i]-xmean);
+                v1 = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    v1 = v1+math.sqr(x[i]-xmean);
+                }
+                v2 = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    v2 = v2+(x[i]-xmean);
+                }
+                v2 = math.sqr(v2)/n;
+                xvariance = (v1-v2)/(n-1);
+                if( (double)(xvariance)<(double)(0) )
+                {
+                    xvariance = 0;
+                }
+                xstddev = Math.Sqrt(xvariance);
             }
-            xvar = xvar/(n-1);
-            yvar = 0;
-            for(i=0; i<=m-1; i++)
+            if( (double)(xstddev)==(double)(0) )
             {
-                yvar = yvar+math.sqr(y[i]-ymean);
+                if( (double)(xmean)==(double)(mean) )
+                {
+                    bothtails = 1.0;
+                }
+                else
+                {
+                    bothtails = 0.0;
+                }
+                if( (double)(xmean)>=(double)(mean) )
+                {
+                    lefttail = 1.0;
+                }
+                else
+                {
+                    lefttail = 0.0;
+                }
+                if( (double)(xmean)<=(double)(mean) )
+                {
+                    righttail = 1.0;
+                }
+                else
+                {
+                    righttail = 0.0;
+                }
+                return;
             }
-            yvar = yvar/(m-1);
-            if( (double)(xvar)==(double)(0) || (double)(yvar)==(double)(0) )
+            
+            //
+            // Statistic
+            //
+            stat = (xmean-mean)/(xstddev/Math.Sqrt(n));
+            s = studenttdistr.studenttdistribution(n-1, stat, _params);
+            bothtails = 2*Math.Min(s, 1-s);
+            lefttail = s;
+            righttail = 1-s;
+        }
+
+
+        /*************************************************************************
+        Two-sample pooled test
+
+        This test checks three hypotheses about the mean of the given samples. The
+        following tests are performed:
+            * two-tailed test (null hypothesis - the means are equal)
+            * left-tailed test (null hypothesis - the mean of the first sample  is
+              greater than or equal to the mean of the second sample)
+            * right-tailed test (null hypothesis - the mean of the first sample is
+              less than or equal to the mean of the second sample).
+
+        Test is based on the following assumptions:
+            * given samples have normal distributions
+            * dispersions are equal
+            * samples are independent.
+
+        Input parameters:
+            X       -   sample 1. Array whose index goes from 0 to N-1.
+            N       -   size of sample.
+            Y       -   sample 2. Array whose index goes from 0 to M-1.
+            M       -   size of sample.
+
+        Output parameters:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+        NOTE: this function correctly handles degenerate cases:
+              * when N=0 or M=0, all p-values are set to 1.0
+              * when both samples has exactly zero variance, p-values are set
+                to 1.0 or 0.0, depending on difference between means.
+
+          -- ALGLIB --
+             Copyright 18.09.2006 by Bochkanov Sergey
+        *************************************************************************/
+        public static void studentttest2(double[] x,
+            int n,
+            double[] y,
+            int m,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            bool samex = new bool();
+            bool samey = new bool();
+            double x0 = 0;
+            double y0 = 0;
+            double xmean = 0;
+            double ymean = 0;
+            double v = 0;
+            double stat = 0;
+            double s = 0;
+            double p = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            if( n<=0 || m<=0 )
             {
                 bothtails = 1.0;
                 lefttail = 1.0;
@@ -8201,36 +12137,337 @@ public partial class alglib
             }
             
             //
+            // Mean
+            //
+            xmean = 0;
+            x0 = x[0];
+            samex = true;
+            for(i=0; i<=n-1; i++)
+            {
+                v = x[i];
+                xmean = xmean+v;
+                samex = samex && (double)(v)==(double)(x0);
+            }
+            if( samex )
+            {
+                xmean = x0;
+            }
+            else
+            {
+                xmean = xmean/n;
+            }
+            ymean = 0;
+            y0 = y[0];
+            samey = true;
+            for(i=0; i<=m-1; i++)
+            {
+                v = y[i];
+                ymean = ymean+v;
+                samey = samey && (double)(v)==(double)(y0);
+            }
+            if( samey )
+            {
+                ymean = y0;
+            }
+            else
+            {
+                ymean = ymean/m;
+            }
+            
+            //
+            // S
+            //
+            s = 0;
+            if( n+m>2 )
+            {
+                for(i=0; i<=n-1; i++)
+                {
+                    s = s+math.sqr(x[i]-xmean);
+                }
+                for(i=0; i<=m-1; i++)
+                {
+                    s = s+math.sqr(y[i]-ymean);
+                }
+                s = Math.Sqrt(s*((double)1/(double)n+(double)1/(double)m)/(n+m-2));
+            }
+            if( (double)(s)==(double)(0) )
+            {
+                if( (double)(xmean)==(double)(ymean) )
+                {
+                    bothtails = 1.0;
+                }
+                else
+                {
+                    bothtails = 0.0;
+                }
+                if( (double)(xmean)>=(double)(ymean) )
+                {
+                    lefttail = 1.0;
+                }
+                else
+                {
+                    lefttail = 0.0;
+                }
+                if( (double)(xmean)<=(double)(ymean) )
+                {
+                    righttail = 1.0;
+                }
+                else
+                {
+                    righttail = 0.0;
+                }
+                return;
+            }
+            
+            //
             // Statistic
             //
-            df1 = n-1;
-            df2 = m-1;
-            stat = Math.Min(xvar/yvar, yvar/xvar);
-            bothtails = 1-(fdistr.fdistribution(df1, df2, 1/stat, _params)-fdistr.fdistribution(df1, df2, stat, _params));
-            lefttail = fdistr.fdistribution(df1, df2, xvar/yvar, _params);
-            righttail = 1-lefttail;
+            stat = (xmean-ymean)/s;
+            p = studenttdistr.studenttdistribution(n+m-2, stat, _params);
+            bothtails = 2*Math.Min(p, 1-p);
+            lefttail = p;
+            righttail = 1-p;
         }
 
 
         /*************************************************************************
-        One-sample chi-square test
+        Two-sample unpooled test
 
-        This test checks three hypotheses about the dispersion of the given sample
-        The following tests are performed:
-            * two-tailed test (null hypothesis - the dispersion equals  the  given
-              number)
-            * left-tailed test (null hypothesis - the dispersion is  greater  than
-              or equal to the given number)
-            * right-tailed test (null hypothesis  -  dispersion is  less  than  or
-              equal to the given number).
+        This test checks three hypotheses about the mean of the given samples. The
+        following tests are performed:
+            * two-tailed test (null hypothesis - the means are equal)
+            * left-tailed test (null hypothesis - the mean of the first sample  is
+              greater than or equal to the mean of the second sample)
+            * right-tailed test (null hypothesis - the mean of the first sample is
+              less than or equal to the mean of the second sample).
 
         Test is based on the following assumptions:
-            * the given sample has a normal distribution.
+            * given samples have normal distributions
+            * samples are independent.
+        Equality of variances is NOT required.
 
         Input parameters:
-            X           -   sample 1. Array whose index goes from 0 to N-1.
-            N           -   size of the sample.
-            Variance    -   dispersion value to compare with.
+            X - sample 1. Array whose index goes from 0 to N-1.
+            N - size of the sample.
+            Y - sample 2. Array whose index goes from 0 to M-1.
+            M - size of the sample.
+
+        Output parameters:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+        NOTE: this function correctly handles degenerate cases:
+              * when N=0 or M=0, all p-values are set to 1.0
+              * when both samples has zero variance, p-values are set
+                to 1.0 or 0.0, depending on difference between means.
+              * when only one sample has zero variance, test reduces to 1-sample
+                version.
+
+          -- ALGLIB --
+             Copyright 18.09.2006 by Bochkanov Sergey
+        *************************************************************************/
+        public static void unequalvariancettest(double[] x,
+            int n,
+            double[] y,
+            int m,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            bool samex = new bool();
+            bool samey = new bool();
+            double x0 = 0;
+            double y0 = 0;
+            double xmean = 0;
+            double ymean = 0;
+            double xvar = 0;
+            double yvar = 0;
+            double v = 0;
+            double df = 0;
+            double p = 0;
+            double stat = 0;
+            double c = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            if( n<=0 || m<=0 )
+            {
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            
+            //
+            // Mean
+            //
+            xmean = 0;
+            x0 = x[0];
+            samex = true;
+            for(i=0; i<=n-1; i++)
+            {
+                v = x[i];
+                xmean = xmean+v;
+                samex = samex && (double)(v)==(double)(x0);
+            }
+            if( samex )
+            {
+                xmean = x0;
+            }
+            else
+            {
+                xmean = xmean/n;
+            }
+            ymean = 0;
+            y0 = y[0];
+            samey = true;
+            for(i=0; i<=m-1; i++)
+            {
+                v = y[i];
+                ymean = ymean+v;
+                samey = samey && (double)(v)==(double)(y0);
+            }
+            if( samey )
+            {
+                ymean = y0;
+            }
+            else
+            {
+                ymean = ymean/m;
+            }
+            
+            //
+            // Variance (using corrected two-pass algorithm)
+            //
+            xvar = 0;
+            if( n>=2 && !samex )
+            {
+                for(i=0; i<=n-1; i++)
+                {
+                    xvar = xvar+math.sqr(x[i]-xmean);
+                }
+                xvar = xvar/(n-1);
+            }
+            yvar = 0;
+            if( m>=2 && !samey )
+            {
+                for(i=0; i<=m-1; i++)
+                {
+                    yvar = yvar+math.sqr(y[i]-ymean);
+                }
+                yvar = yvar/(m-1);
+            }
+            
+            //
+            // Handle different special cases
+            // (one or both variances are zero).
+            //
+            if( (double)(xvar)==(double)(0) && (double)(yvar)==(double)(0) )
+            {
+                if( (double)(xmean)==(double)(ymean) )
+                {
+                    bothtails = 1.0;
+                }
+                else
+                {
+                    bothtails = 0.0;
+                }
+                if( (double)(xmean)>=(double)(ymean) )
+                {
+                    lefttail = 1.0;
+                }
+                else
+                {
+                    lefttail = 0.0;
+                }
+                if( (double)(xmean)<=(double)(ymean) )
+                {
+                    righttail = 1.0;
+                }
+                else
+                {
+                    righttail = 0.0;
+                }
+                return;
+            }
+            if( (double)(xvar)==(double)(0) )
+            {
+                
+                //
+                // X is constant, unpooled 2-sample test reduces to 1-sample test.
+                //
+                // NOTE: right-tail and left-tail must be passed to 1-sample
+                //       t-test in reverse order because we reverse order of
+                //       of samples.
+                //
+                studentttest1(y, m, xmean, ref bothtails, ref righttail, ref lefttail, _params);
+                return;
+            }
+            if( (double)(yvar)==(double)(0) )
+            {
+                
+                //
+                // Y is constant, unpooled 2-sample test reduces to 1-sample test.
+                //
+                studentttest1(x, n, ymean, ref bothtails, ref lefttail, ref righttail, _params);
+                return;
+            }
+            
+            //
+            // Statistic
+            //
+            stat = (xmean-ymean)/Math.Sqrt(xvar/n+yvar/m);
+            c = xvar/n/(xvar/n+yvar/m);
+            df = apserv.rmul2(n-1, m-1, _params)/((m-1)*math.sqr(c)+(n-1)*math.sqr(1-c));
+            if( (double)(stat)>(double)(0) )
+            {
+                p = 1-0.5*ibetaf.incompletebeta(df/2, 0.5, df/(df+math.sqr(stat)), _params);
+            }
+            else
+            {
+                p = 0.5*ibetaf.incompletebeta(df/2, 0.5, df/(df+math.sqr(stat)), _params);
+            }
+            bothtails = 2*Math.Min(p, 1-p);
+            lefttail = p;
+            righttail = 1-p;
+        }
+
+
+    }
+    public partial class correlationtests
+    {
+        /*************************************************************************
+        Pearson's correlation coefficient significance test
+
+        This test checks hypotheses about whether X  and  Y  are  samples  of  two
+        continuous  distributions  having  zero  correlation  or   whether   their
+        correlation is non-zero.
+
+        The following tests are performed:
+            * two-tailed test (null hypothesis - X and Y have zero correlation)
+            * left-tailed test (null hypothesis - the correlation  coefficient  is
+              greater than or equal to 0)
+            * right-tailed test (null hypothesis - the correlation coefficient  is
+              less than or equal to 0).
+
+        Requirements:
+            * the number of elements in each sample is not less than 5
+            * normality of distributions of X and Y.
+
+        Input parameters:
+            R   -   Pearson's correlation coefficient for X and Y
+            N   -   number of elements in samples, N>=5.
 
         Output parameters:
             BothTails   -   p-value for two-tailed test.
@@ -8244,21 +12481,726 @@ public partial class alglib
                             the null hypothesis is rejected.
 
           -- ALGLIB --
-             Copyright 19.09.2006 by Bochkanov Sergey
+             Copyright 09.04.2007 by Bochkanov Sergey
         *************************************************************************/
-        public static void onesamplevariancetest(double[] x,
+        public static void pearsoncorrelationsignificance(double r,
             int n,
-            double variance,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            double t = 0;
+            double p = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            
+            //
+            // Some special cases
+            //
+            if( (double)(r)>=(double)(1) )
+            {
+                bothtails = 0.0;
+                lefttail = 1.0;
+                righttail = 0.0;
+                return;
+            }
+            if( (double)(r)<=(double)(-1) )
+            {
+                bothtails = 0.0;
+                lefttail = 0.0;
+                righttail = 1.0;
+                return;
+            }
+            if( n<5 )
+            {
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            
+            //
+            // General case
+            //
+            t = r*Math.Sqrt((n-2)/(1-math.sqr(r)));
+            p = studenttdistr.studenttdistribution(n-2, t, _params);
+            bothtails = 2*Math.Min(p, 1-p);
+            lefttail = p;
+            righttail = 1-p;
+        }
+
+
+        /*************************************************************************
+        Spearman's rank correlation coefficient significance test
+
+        This test checks hypotheses about whether X  and  Y  are  samples  of  two
+        continuous  distributions  having  zero  correlation  or   whether   their
+        correlation is non-zero.
+
+        The following tests are performed:
+            * two-tailed test (null hypothesis - X and Y have zero correlation)
+            * left-tailed test (null hypothesis - the correlation  coefficient  is
+              greater than or equal to 0)
+            * right-tailed test (null hypothesis - the correlation coefficient  is
+              less than or equal to 0).
+
+        Requirements:
+            * the number of elements in each sample is not less than 5.
+
+        The test is non-parametric and doesn't require distributions X and Y to be
+        normal.
+
+        Input parameters:
+            R   -   Spearman's rank correlation coefficient for X and Y
+            N   -   number of elements in samples, N>=5.
+
+        Output parameters:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+          -- ALGLIB --
+             Copyright 09.04.2007 by Bochkanov Sergey
+        *************************************************************************/
+        public static void spearmanrankcorrelationsignificance(double r,
+            int n,
+            ref double bothtails,
+            ref double lefttail,
+            ref double righttail,
+            alglib.xparams _params)
+        {
+            double t = 0;
+            double p = 0;
+
+            bothtails = 0;
+            lefttail = 0;
+            righttail = 0;
+
+            
+            //
+            // Special case
+            //
+            if( n<5 )
+            {
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
+                return;
+            }
+            
+            //
+            // General case
+            //
+            if( (double)(r)>=(double)(1) )
+            {
+                t = 1.0E10;
+            }
+            else
+            {
+                if( (double)(r)<=(double)(-1) )
+                {
+                    t = -1.0E10;
+                }
+                else
+                {
+                    t = r*Math.Sqrt((n-2)/(1-math.sqr(r)));
+                }
+            }
+            if( (double)(t)<(double)(0) )
+            {
+                p = spearmantail(t, n, _params);
+                bothtails = 2*p;
+                lefttail = p;
+                righttail = 1-p;
+            }
+            else
+            {
+                p = spearmantail(-t, n, _params);
+                bothtails = 2*p;
+                lefttail = 1-p;
+                righttail = p;
+            }
+        }
+
+
+        /*************************************************************************
+        Tail(S, 5)
+        *************************************************************************/
+        private static double spearmantail5(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            if( (double)(s)<(double)(0.000e+00) )
+            {
+                result = studenttdistr.studenttdistribution(3, -s, _params);
+                return result;
+            }
+            if( (double)(s)>=(double)(3.580e+00) )
+            {
+                result = 8.304e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.322e+00) )
+            {
+                result = 4.163e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.704e+00) )
+            {
+                result = 6.641e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.303e+00) )
+            {
+                result = 1.164e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.003e+00) )
+            {
+                result = 1.748e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(7.584e-01) )
+            {
+                result = 2.249e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(5.468e-01) )
+            {
+                result = 2.581e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.555e-01) )
+            {
+                result = 3.413e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.759e-01) )
+            {
+                result = 3.911e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.741e-03) )
+            {
+                result = 4.747e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(0.000e+00) )
+            {
+                result = 5.248e-01;
+                return result;
+            }
+            result = 0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 6)
+        *************************************************************************/
+        private static double spearmantail6(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            if( (double)(s)<(double)(1.001e+00) )
+            {
+                result = studenttdistr.studenttdistribution(4, -s, _params);
+                return result;
+            }
+            if( (double)(s)>=(double)(5.663e+00) )
+            {
+                result = 1.366e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.834e+00) )
+            {
+                result = 8.350e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.968e+00) )
+            {
+                result = 1.668e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.430e+00) )
+            {
+                result = 2.921e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.045e+00) )
+            {
+                result = 5.144e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.747e+00) )
+            {
+                result = 6.797e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.502e+00) )
+            {
+                result = 8.752e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.295e+00) )
+            {
+                result = 1.210e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.113e+00) )
+            {
+                result = 1.487e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.001e+00) )
+            {
+                result = 1.780e-01;
+                return result;
+            }
+            result = 0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 7)
+        *************************************************************************/
+        private static double spearmantail7(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            if( (double)(s)<(double)(1.001e+00) )
+            {
+                result = studenttdistr.studenttdistribution(5, -s, _params);
+                return result;
+            }
+            if( (double)(s)>=(double)(8.159e+00) )
+            {
+                result = 2.081e-04;
+                return result;
+            }
+            if( (double)(s)>=(double)(5.620e+00) )
+            {
+                result = 1.393e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(4.445e+00) )
+            {
+                result = 3.398e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.728e+00) )
+            {
+                result = 6.187e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.226e+00) )
+            {
+                result = 1.200e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.844e+00) )
+            {
+                result = 1.712e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.539e+00) )
+            {
+                result = 2.408e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.285e+00) )
+            {
+                result = 3.320e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.068e+00) )
+            {
+                result = 4.406e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.879e+00) )
+            {
+                result = 5.478e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.710e+00) )
+            {
+                result = 6.946e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.559e+00) )
+            {
+                result = 8.331e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.420e+00) )
+            {
+                result = 1.001e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.292e+00) )
+            {
+                result = 1.180e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.173e+00) )
+            {
+                result = 1.335e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.062e+00) )
+            {
+                result = 1.513e-01;
+                return result;
+            }
+            if( (double)(s)>=(double)(1.001e+00) )
+            {
+                result = 1.770e-01;
+                return result;
+            }
+            result = 0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 8)
+        *************************************************************************/
+        private static double spearmantail8(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            if( (double)(s)<(double)(2.001e+00) )
+            {
+                result = studenttdistr.studenttdistribution(6, -s, _params);
+                return result;
+            }
+            if( (double)(s)>=(double)(1.103e+01) )
+            {
+                result = 2.194e-05;
+                return result;
+            }
+            if( (double)(s)>=(double)(7.685e+00) )
+            {
+                result = 2.008e-04;
+                return result;
+            }
+            if( (double)(s)>=(double)(6.143e+00) )
+            {
+                result = 5.686e-04;
+                return result;
+            }
+            if( (double)(s)>=(double)(5.213e+00) )
+            {
+                result = 1.138e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(4.567e+00) )
+            {
+                result = 2.310e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(4.081e+00) )
+            {
+                result = 3.634e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.697e+00) )
+            {
+                result = 5.369e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.381e+00) )
+            {
+                result = 7.708e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.114e+00) )
+            {
+                result = 1.087e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.884e+00) )
+            {
+                result = 1.397e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.682e+00) )
+            {
+                result = 1.838e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.502e+00) )
+            {
+                result = 2.288e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.340e+00) )
+            {
+                result = 2.883e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.192e+00) )
+            {
+                result = 3.469e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.057e+00) )
+            {
+                result = 4.144e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.001e+00) )
+            {
+                result = 4.804e-02;
+                return result;
+            }
+            result = 0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(S, 9)
+        *************************************************************************/
+        private static double spearmantail9(double s,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            if( (double)(s)<(double)(2.001e+00) )
+            {
+                result = studenttdistr.studenttdistribution(7, -s, _params);
+                return result;
+            }
+            if( (double)(s)>=(double)(9.989e+00) )
+            {
+                result = 2.306e-05;
+                return result;
+            }
+            if( (double)(s)>=(double)(8.069e+00) )
+            {
+                result = 8.167e-05;
+                return result;
+            }
+            if( (double)(s)>=(double)(6.890e+00) )
+            {
+                result = 1.744e-04;
+                return result;
+            }
+            if( (double)(s)>=(double)(6.077e+00) )
+            {
+                result = 3.625e-04;
+                return result;
+            }
+            if( (double)(s)>=(double)(5.469e+00) )
+            {
+                result = 6.450e-04;
+                return result;
+            }
+            if( (double)(s)>=(double)(4.991e+00) )
+            {
+                result = 1.001e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(4.600e+00) )
+            {
+                result = 1.514e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(4.272e+00) )
+            {
+                result = 2.213e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.991e+00) )
+            {
+                result = 2.990e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.746e+00) )
+            {
+                result = 4.101e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.530e+00) )
+            {
+                result = 5.355e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.336e+00) )
+            {
+                result = 6.887e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.161e+00) )
+            {
+                result = 8.598e-03;
+                return result;
+            }
+            if( (double)(s)>=(double)(3.002e+00) )
+            {
+                result = 1.065e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.855e+00) )
+            {
+                result = 1.268e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.720e+00) )
+            {
+                result = 1.552e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.595e+00) )
+            {
+                result = 1.836e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.477e+00) )
+            {
+                result = 2.158e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.368e+00) )
+            {
+                result = 2.512e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.264e+00) )
+            {
+                result = 2.942e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.166e+00) )
+            {
+                result = 3.325e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.073e+00) )
+            {
+                result = 3.800e-02;
+                return result;
+            }
+            if( (double)(s)>=(double)(2.001e+00) )
+            {
+                result = 4.285e-02;
+                return result;
+            }
+            result = 0;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Tail(T,N), accepts T<0
+        *************************************************************************/
+        private static double spearmantail(double t,
+            int n,
+            alglib.xparams _params)
+        {
+            double result = 0;
+
+            if( n==5 )
+            {
+                result = spearmantail5(-t, _params);
+                return result;
+            }
+            if( n==6 )
+            {
+                result = spearmantail6(-t, _params);
+                return result;
+            }
+            if( n==7 )
+            {
+                result = spearmantail7(-t, _params);
+                return result;
+            }
+            if( n==8 )
+            {
+                result = spearmantail8(-t, _params);
+                return result;
+            }
+            if( n==9 )
+            {
+                result = spearmantail9(-t, _params);
+                return result;
+            }
+            result = studenttdistr.studenttdistribution(n-2, t, _params);
+            return result;
+        }
+
+
+    }
+    public partial class stest
+    {
+        /*************************************************************************
+        Sign test
+
+        This test checks three hypotheses about the median of  the  given  sample.
+        The following tests are performed:
+            * two-tailed test (null hypothesis - the median is equal to the  given
+              value)
+            * left-tailed test (null hypothesis - the median is  greater  than  or
+              equal to the given value)
+            * right-tailed test (null hypothesis - the  median  is  less  than  or
+              equal to the given value)
+
+        Requirements:
+            * the scale of measurement should be ordinal, interval or ratio  (i.e.
+              the test could not be applied to nominal variables).
+
+        The test is non-parametric and doesn't require distribution X to be normal
+
+        Input parameters:
+            X       -   sample. Array whose index goes from 0 to N-1.
+            N       -   size of the sample.
+            Median  -   assumed median value.
+
+        Output parameters:
+            BothTails   -   p-value for two-tailed test.
+                            If BothTails is less than the given significance level
+                            the null hypothesis is rejected.
+            LeftTail    -   p-value for left-tailed test.
+                            If LeftTail is less than the given significance level,
+                            the null hypothesis is rejected.
+            RightTail   -   p-value for right-tailed test.
+                            If RightTail is less than the given significance level
+                            the null hypothesis is rejected.
+
+        While   calculating   p-values   high-precision   binomial    distribution
+        approximation is used, so significance levels have about 15 exact digits.
+
+          -- ALGLIB --
+             Copyright 08.09.2006 by Bochkanov Sergey
+        *************************************************************************/
+        public static void onesamplesigntest(double[] x,
+            int n,
+            double median,
             ref double bothtails,
             ref double lefttail,
             ref double righttail,
             alglib.xparams _params)
         {
             int i = 0;
-            double xmean = 0;
-            double xvar = 0;
-            double s = 0;
-            double stat = 0;
+            int gtcnt = 0;
+            int necnt = 0;
 
             bothtails = 0;
             lefttail = 0;
@@ -8273,45 +13215,2541 @@ public partial class alglib
             }
             
             //
-            // Mean
+            // Calculate:
+            // GTCnt - count of x[i]>Median
+            // NECnt - count of x[i]<>Median
             //
-            xmean = 0;
+            gtcnt = 0;
+            necnt = 0;
             for(i=0; i<=n-1; i++)
             {
-                xmean = xmean+x[i];
+                if( (double)(x[i])>(double)(median) )
+                {
+                    gtcnt = gtcnt+1;
+                }
+                if( (double)(x[i])!=(double)(median) )
+                {
+                    necnt = necnt+1;
+                }
             }
-            xmean = xmean/n;
-            
-            //
-            // Variance
-            //
-            xvar = 0;
-            for(i=0; i<=n-1; i++)
+            if( necnt==0 )
             {
-                xvar = xvar+math.sqr(x[i]-xmean);
-            }
-            xvar = xvar/(n-1);
-            if( (double)(xvar)==(double)(0) )
-            {
+                
+                //
+                // all x[i] are equal to Median.
+                // So we can conclude that Median is a true median :)
+                //
                 bothtails = 1.0;
                 lefttail = 1.0;
                 righttail = 1.0;
                 return;
             }
-            
-            //
-            // Statistic
-            //
-            stat = (n-1)*xvar/variance;
-            s = chisquaredistr.chisquaredistribution(n-1, stat, _params);
-            bothtails = 2*Math.Min(s, 1-s);
-            lefttail = s;
-            righttail = 1-lefttail;
+            bothtails = Math.Min(2*binomialdistr.binomialdistribution(Math.Min(gtcnt, necnt-gtcnt), necnt, 0.5, _params), 1.0);
+            lefttail = binomialdistr.binomialdistribution(gtcnt, necnt, 0.5, _params);
+            righttail = binomialdistr.binomialcdistribution(gtcnt-1, necnt, 0.5, _params);
         }
 
 
     }
-    public class wsr
+    public partial class mcmc
+    {
+        /*************************************************************************
+        This object stores MCMC sampler.
+
+        You should use functions provided by the MCMC subpackage to work with this
+        object.
+        *************************************************************************/
+        public class mcmcstate : apobject
+        {
+            public int n;
+            public int x0width;
+            public int x0height;
+            public double[,] x0m;
+            public int x0type;
+            public double x0stddev;
+            public int algokind;
+            public int ladderkind;
+            public int proposalkind;
+            public int helperscnt;
+            public double desigma;
+            public double degamma0;
+            public double[] initialladder;
+            public double laddernu0;
+            public double laddertau;
+            public bool noladderadaptationafterburnin;
+            public double[,] gausslowerc;
+            public double[,] gaussl;
+            public bool useparallelmoves;
+            public int epochscnt;
+            public int popwidth;
+            public int popheight;
+            public int burninlen;
+            public int thinby;
+            public bool reportalllevels;
+            public int rngseed;
+            public double[] s;
+            public bool initialstart;
+            public bool xrep;
+            public double[,] population2d;
+            public double[] currentladder;
+            public hqrnd.hqrndstate globalrs;
+            public bool reseedglobalrs;
+            public int[] propidx;
+            public double[] propz;
+            public double[] propt;
+            public double[,] propxf;
+            public int[] grpabidx;
+            public int grpasize;
+            public int[] grpdsidx;
+            public bool haslastpopulation;
+            public double[,] lastpopulation2d;
+            public int[] lastgrpabidx;
+            public int lastpopulationwidth;
+            public int lastpopulationheight;
+            public bool userterminationneeded;
+            public int protocolversion;
+            public bool issuesparserequests;
+            public int repnfev;
+            public int repaccept1cnt;
+            public int repaccepthcnt;
+            public int repepochscnt;
+            public int reppopwidth;
+            public int reppopheight;
+            public int repswapacceptcnt;
+            public int repswapattemptcnt;
+            public double[] repavgswaprates;
+            public double[,] repsample;
+            public int repsamplesize;
+            public bool dotrace;
+            public bool dodetailedtrace;
+            public bool dotimers;
+            public apserv.stimer timertotal;
+            public apserv.stimer timercallback;
+            public apserv.stimer timerreport;
+            public double[] tmp0;
+            public double[] tmp1;
+            public double[] tmp2;
+            public int[] tmpi0;
+            public int[] gphelperidx;
+            public double[] gpmeanhelper;
+            public double[] gpproposal;
+            public double[] gpdelta;
+            public double[] gptmp0;
+            public double[] saacceptrates;
+            public double[] savecsi;
+            public double[] saproposedladder;
+            public ap.rcommstate rcommv2;
+            public mcmcstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+                x0m = new double[0,0];
+                initialladder = new double[0];
+                gausslowerc = new double[0,0];
+                gaussl = new double[0,0];
+                s = new double[0];
+                population2d = new double[0,0];
+                currentladder = new double[0];
+                globalrs = new hqrnd.hqrndstate();
+                propidx = new int[0];
+                propz = new double[0];
+                propt = new double[0];
+                propxf = new double[0,0];
+                grpabidx = new int[0];
+                grpdsidx = new int[0];
+                lastpopulation2d = new double[0,0];
+                lastgrpabidx = new int[0];
+                repavgswaprates = new double[0];
+                repsample = new double[0,0];
+                timertotal = new apserv.stimer();
+                timercallback = new apserv.stimer();
+                timerreport = new apserv.stimer();
+                tmp0 = new double[0];
+                tmp1 = new double[0];
+                tmp2 = new double[0];
+                tmpi0 = new int[0];
+                gphelperidx = new int[0];
+                gpmeanhelper = new double[0];
+                gpproposal = new double[0];
+                gpdelta = new double[0];
+                gptmp0 = new double[0];
+                saacceptrates = new double[0];
+                savecsi = new double[0];
+                saproposedladder = new double[0];
+                rcommv2 = new ap.rcommstate();
+            }
+            public override alglib.apobject make_copy()
+            {
+                mcmcstate _result = new mcmcstate();
+                _result.n = n;
+                _result.x0width = x0width;
+                _result.x0height = x0height;
+                _result.x0m = (double[,])x0m.Clone();
+                _result.x0type = x0type;
+                _result.x0stddev = x0stddev;
+                _result.algokind = algokind;
+                _result.ladderkind = ladderkind;
+                _result.proposalkind = proposalkind;
+                _result.helperscnt = helperscnt;
+                _result.desigma = desigma;
+                _result.degamma0 = degamma0;
+                _result.initialladder = (double[])initialladder.Clone();
+                _result.laddernu0 = laddernu0;
+                _result.laddertau = laddertau;
+                _result.noladderadaptationafterburnin = noladderadaptationafterburnin;
+                _result.gausslowerc = (double[,])gausslowerc.Clone();
+                _result.gaussl = (double[,])gaussl.Clone();
+                _result.useparallelmoves = useparallelmoves;
+                _result.epochscnt = epochscnt;
+                _result.popwidth = popwidth;
+                _result.popheight = popheight;
+                _result.burninlen = burninlen;
+                _result.thinby = thinby;
+                _result.reportalllevels = reportalllevels;
+                _result.rngseed = rngseed;
+                _result.s = (double[])s.Clone();
+                _result.initialstart = initialstart;
+                _result.xrep = xrep;
+                _result.population2d = (double[,])population2d.Clone();
+                _result.currentladder = (double[])currentladder.Clone();
+                _result.globalrs = globalrs!=null ? (hqrnd.hqrndstate)globalrs.make_copy() : null;
+                _result.reseedglobalrs = reseedglobalrs;
+                _result.propidx = (int[])propidx.Clone();
+                _result.propz = (double[])propz.Clone();
+                _result.propt = (double[])propt.Clone();
+                _result.propxf = (double[,])propxf.Clone();
+                _result.grpabidx = (int[])grpabidx.Clone();
+                _result.grpasize = grpasize;
+                _result.grpdsidx = (int[])grpdsidx.Clone();
+                _result.haslastpopulation = haslastpopulation;
+                _result.lastpopulation2d = (double[,])lastpopulation2d.Clone();
+                _result.lastgrpabidx = (int[])lastgrpabidx.Clone();
+                _result.lastpopulationwidth = lastpopulationwidth;
+                _result.lastpopulationheight = lastpopulationheight;
+                _result.userterminationneeded = userterminationneeded;
+                _result.protocolversion = protocolversion;
+                _result.issuesparserequests = issuesparserequests;
+                _result.repnfev = repnfev;
+                _result.repaccept1cnt = repaccept1cnt;
+                _result.repaccepthcnt = repaccepthcnt;
+                _result.repepochscnt = repepochscnt;
+                _result.reppopwidth = reppopwidth;
+                _result.reppopheight = reppopheight;
+                _result.repswapacceptcnt = repswapacceptcnt;
+                _result.repswapattemptcnt = repswapattemptcnt;
+                _result.repavgswaprates = (double[])repavgswaprates.Clone();
+                _result.repsample = (double[,])repsample.Clone();
+                _result.repsamplesize = repsamplesize;
+                _result.dotrace = dotrace;
+                _result.dodetailedtrace = dodetailedtrace;
+                _result.dotimers = dotimers;
+                _result.timertotal = timertotal!=null ? (apserv.stimer)timertotal.make_copy() : null;
+                _result.timercallback = timercallback!=null ? (apserv.stimer)timercallback.make_copy() : null;
+                _result.timerreport = timerreport!=null ? (apserv.stimer)timerreport.make_copy() : null;
+                _result.tmp0 = (double[])tmp0.Clone();
+                _result.tmp1 = (double[])tmp1.Clone();
+                _result.tmp2 = (double[])tmp2.Clone();
+                _result.tmpi0 = (int[])tmpi0.Clone();
+                _result.gphelperidx = (int[])gphelperidx.Clone();
+                _result.gpmeanhelper = (double[])gpmeanhelper.Clone();
+                _result.gpproposal = (double[])gpproposal.Clone();
+                _result.gpdelta = (double[])gpdelta.Clone();
+                _result.gptmp0 = (double[])gptmp0.Clone();
+                _result.saacceptrates = (double[])saacceptrates.Clone();
+                _result.savecsi = (double[])savecsi.Clone();
+                _result.saproposedladder = (double[])saproposedladder.Clone();
+                _result.rcommv2 = rcommv2!=null ? (ap.rcommstate)rcommv2.make_copy() : null;
+                return _result;
+            }
+        };
+
+
+        /*************************************************************************
+        These fields store MCMC report:
+        * nfev                      number of function evaluations
+        * acceptrate                acceptance rate of a MCMC algo; when  parallel
+                                    tempering is used, this field stores acceptance
+                                    rate for the lowest level (T=1).
+        * swapacceptrate            acceptance rate for swaps between levels of the
+                                    temperature ladder. When no parallel tempering
+                                    is used, stores zero.
+        * autocorrtimes             array[N], per-variable autocorrelation times
+
+        *************************************************************************/
+        public class mcmcreport : apobject
+        {
+            public int nfev;
+            public double acceptrate;
+            public double swapacceptrate;
+            public double[] autocorrtimes;
+            public mcmcreport()
+            {
+                init();
+            }
+            public override void init()
+            {
+                autocorrtimes = new double[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                mcmcreport _result = new mcmcreport();
+                _result.nfev = nfev;
+                _result.acceptrate = acceptrate;
+                _result.swapacceptrate = swapacceptrate;
+                _result.autocorrtimes = (double[])autocorrtimes.Clone();
+                return _result;
+            }
+        };
+
+
+
+
+        public const double goodmanwearea = 2.0;
+        public const double cautocorr = 5.0;
+
+
+        /*************************************************************************
+        This function initializes MCMC sampler using single initial point to  seed
+        the population.
+
+        The population is generated around the initial point with random  Gaussian
+        noise being added, having per-variable magnitude equal to XStdDev  or  (if
+        MCMCSetScale() was called) equal to XStdDev*S[I].
+
+
+        INPUT PARAMETERS:
+            N       -   problem dimension, N>0:
+                        * if given, only leading N elements of X are used
+                        * if not given, automatically determined from size of X
+            X       -   starting point used to seed a MCMC algo, array[N]:
+                        * it is better to have X not too far away from the maximum
+                          of log-likelihood
+                        * any point will do, if no maximum location is unknown
+            XStdDev -   standard deviation of a population generated around X:
+                        * strictly greater than zero
+                        * nearly zero values are likely  to  cause  population  to
+                          stagnate, whilst too large values are  likely  to  cause
+                          population to spend excessive time converging
+
+        OUTPUT PARAMETERS:
+            State   -   structure stores MCMC sampler state
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmccreate1(int n,
+            double[] x,
+            double xstddev,
+            mcmcstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(n>=1, "MCMCCreate1: N<1");
+            alglib.ap.assert(alglib.ap.len(x)>=n, "MCMCCreate1: Length(X)<N");
+            alglib.ap.assert(apserv.isfinitevector(x, n, _params), "MCMCCreate1: X contains infinite or NaN values");
+            alglib.ap.assert(math.isfinite(xstddev) && (double)(xstddev)>(double)(0), "MCMCCreate1: XStdDev<=0 or is not finite");
+            initinternal(state, n, _params);
+            state.x0width = 1;
+            state.x0height = 1;
+            ablasf.rallocm(1, n, ref state.x0m, _params);
+            ablasf.rcopyvr(n, x, state.x0m, 0, _params);
+            state.x0stddev = xstddev;
+            state.x0type = 0;
+        }
+
+
+        /*************************************************************************
+        This function initializes MCMC sampler using a population of user-specified
+        points.
+
+        A specific sampling algorithm that needs an  initial  population will  use
+        user-provided points. If an algorithm needs more initial points  than  was
+        specified, additional points will be randomly generated  using  population
+        as a distribution reference.
+
+        INPUT PARAMETERS:
+            N       -   problem dimension, N>0:
+                        * if given, only leading N elements of P are used
+                        * if not given, automatically determined from size of P
+            P       -   initial points, array[PopSize,N]
+            PopSize -   population size, PopSize>0:
+                        * if given, only leading PopSize elements of P are used
+                        * if not given, automatically determined from size of P
+
+        OUTPUT PARAMETERS:
+            State   -   structure stores MCMC sampler state
+
+          -- ALGLIB --
+             Copyright 20.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmccreatefrompopulation(int n,
+            double[,] p,
+            int popsize,
+            mcmcstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(n>=1, "MCMCCreateFromPopulation: N<1");
+            alglib.ap.assert(popsize>=1, "MCMCCreateFromPopulation: PopSize<1");
+            alglib.ap.assert(alglib.ap.cols(p)>=n, "MCMCCreateFromPopulation: Cols(P)<N");
+            alglib.ap.assert(alglib.ap.rows(p)>=popsize, "MCMCCreateFromPopulation: Rows(P)<PopSize");
+            alglib.ap.assert(apserv.apservisfinitematrix(p, popsize, n, _params), "MCMCCreateFromPopulation: P contains infinite or NaN values");
+            initinternal(state, n, _params);
+            state.x0width = popsize;
+            state.x0height = 1;
+            ablasf.rcopyallocm(popsize, n, p, ref state.x0m, _params);
+            state.x0type = 1;
+        }
+
+
+        /*************************************************************************
+        This function sets per-variable scaling coefficients for MCMC sampler.
+
+        Present version of the MCMC sampler uses per-variable scales during initial
+        popilation generation: an initial point X0 is perturbed with random noise,
+        whose per-variable magnitude is XStdDev*S[I].
+
+        Future versions of the sampler may use scales for other purposes too,  but
+        are likely to do so in a backward-compatible manner.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            S       -   array[N], non-zero scaling coefficients
+                        S[i] may be negative, sign doesn't matter.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetscale(mcmcstate state,
+            double[] s,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.assert(alglib.ap.len(s)>=state.n, "MCMCSetScale: Length(S)<N");
+            for(i=0; i<=state.n-1; i++)
+            {
+                alglib.ap.assert(math.isfinite(s[i]), "MCMCSetScale: S contains infinite or NAN elements");
+                alglib.ap.assert((double)(s[i])!=(double)(0), "MCMCSetScale: S contains zero elements");
+                state.s[i] = Math.Abs(s[i]);
+            }
+        }
+
+
+        /*************************************************************************
+        This function controls adaptation rate of the temperature ladder  used  by
+        adaptive parallel tempering algorithms.
+
+        The sampler changes the logarithmic difference between temperatures in the
+        ladder ln(T[i+1]-T[i]) as a product of different between swap accept rates
+        A[i]-A[i+1] and current adaptation rate, which is nu0/(1+iteridx/tau).
+
+        Here nu0 is an initial adaptation rate that similar to stochastic gradient
+        descent learning rate. Recommended values 0.01-0.1. And tau is a  learning
+        rate decay time, depending on the problem it can be 100 or 1000.
+
+        The MCMC sampler uses some default values for these parameters,  but  they
+        can change in future versions without notice.
+
+        This function has no effect when adaptive tempering is not active.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            Nu0     -   initial learning rate, >=0.
+                        Zero value effectively turns off adaptation.
+            Tau     -   characteristic decay time, >=0.
+                        Zero value effectively turns off adaptation.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetladderadaptationrate(mcmcstate state,
+            double nu0,
+            double tau,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(math.isfinite(nu0), "MCMCSetLadderAdaptationRate: Nu0 is not finite");
+            alglib.ap.assert(math.isfinite(tau), "MCMCSetLadderAdaptationRate: Tau is not finite");
+            alglib.ap.assert((double)(nu0)>=(double)(0), "MCMCSetLadderAdaptationRate: Nu0<0");
+            alglib.ap.assert((double)(tau)>=(double)(0), "MCMCSetLadderAdaptationRate: Tau<0");
+            state.laddernu0 = nu0;
+            state.laddertau = tau;
+        }
+
+
+        /*************************************************************************
+        This function activates parallel  tempering  with  the  fixed  temperature
+        ladder.
+
+        Parallel tempering is  intended  for sampling of multimodal distributions,
+        with the T=1 corresponding to sampling of the original distribution  (what
+        you get as result), and  higher temperatures  corresponding  to   smoothed
+        versions of the distribution,  helping  the  sampler  to  reach  otherwise
+        unreachable remote peaks.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            T       -   array[NTemp], T[0]=1, T[I+1]>T[I], sampling  temperatures.
+                        If the  first  element  of  T  is  different  from  1,  or
+                        temperatures are not strictly increasing,  an exception is
+                        raised
+            NTemp   -   >=1, temperature ladder height.
+
+        When running the algorithm with parallel  tempering  turned  on,  we  have
+        NTemp ladder levels, each having PopSize walkers. Thus, the  total  number
+        of walkers in the population is NTemp*PopSize, although only PopSize  ones
+        corresponding to the coldest chain are returned.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetfixedtemperatureladder(mcmcstate state,
+            double[] t,
+            int ntemp,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            alglib.ap.assert(ntemp>=1, "MCMCSetFixedTemperatureLadder: NTemp<1");
+            alglib.ap.assert(alglib.ap.len(t)>=ntemp, "MCMCSetFixedTemperatureLadder: Length(T)<NTemp");
+            alglib.ap.assert(apserv.isfinitevector(t, ntemp, _params), "MCMCSetFixedTemperatureLadder: T contains INF/NAN");
+            alglib.ap.assert((double)(t[0])==(double)(1), "MCMCSetFixedTemperatureLadder: T[0]<>1");
+            for(i=0; i<=ntemp-2; i++)
+            {
+                alglib.ap.assert((double)(t[i+1])>(double)(t[i]), "MCMCSetFixedTemperatureLadder: T[I+1]<=T[I]");
+            }
+            state.ladderkind = 0;
+            state.popheight = ntemp;
+            ablasf.rcopyallocv(ntemp, t, ref state.initialladder, _params);
+        }
+
+
+        /*************************************************************************
+        This function activates parallel  tempering  with the adaptive temperature
+        ladder using uniform Swap Acceptance Rate (SAR) proposal.
+
+        Parallel tempering is  intended  for sampling of multimodal distributions,
+        with the T=1 corresponding to sampling of the original distribution  (what
+        you get as result), and  higher temperatures  corresponding  to   smoothed
+        versions of the distribution,  helping  the  sampler  to  reach  otherwise
+        unreachable remote peaks.
+
+        The function accepts the hottest temperature in the ladder TMax,  as  well
+        as ladder height NTemp>=1.
+
+        You can control adaptation rate wuth mcmcsetladderadaptationrate() function.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            TMax    -   initial value of the maximum temperature in the ladder,
+                        TMax>1 (strictly)
+            NTemp   -   >=1, temperature ladder height:
+                        * NTemp=1 means that no temperature ladder is actually used
+                        * NTemp=2 means that we have a ladder with temperatures
+                          [1,TMax] and no adaptation
+                        * NTemp>2 means that we have  a  ladder  with  T[0]=1  and
+                          T[NTemp-1]=TMax, and adaptive temperatures between them.
+
+        When running the algorithm with parallel  tempering  turned  on,  we  have
+        NTemp ladder levels, each having PopSize walkers. Thus, the  total  number
+        of walkers in the population is NTemp*PopSize, although only PopSize  ones
+        corresponding to the coldest chain are returned.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetsartemperatureladder(mcmcstate state,
+            double tmax,
+            int ntemp,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            double growth = 0;
+
+            alglib.ap.assert(ntemp>=1, "MCMCSetSARTemperatureLadder: NTemp<1");
+            alglib.ap.assert(math.isfinite(tmax), "MCMCSetSARTemperatureLadder: TMax is INF/NAN");
+            alglib.ap.assert((double)(tmax)>(double)(1), "MCMCSetSARTemperatureLadder: TMax<=1");
+            state.ladderkind = 1;
+            state.popheight = ntemp;
+            ablasf.rallocv(ntemp, ref state.initialladder, _params);
+            state.initialladder[0] = 1.0;
+            if( ntemp>1 )
+            {
+                growth = Math.Pow(tmax, (double)1/(double)(ntemp-1));
+                for(i=1; i<=ntemp-1; i++)
+                {
+                    state.initialladder[i] = state.initialladder[i-1]*growth;
+                }
+            }
+        }
+
+
+        /*************************************************************************
+        Same as mcmcsetalgostretch().
+        *************************************************************************/
+        public static void mcmcsetalgogoodmanweare(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            alglib.xparams _params)
+        {
+            mcmcsetalgostretch(state, popsize, epochscnt, _params);
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses  stretch  move,   as   defined  in  'Ensemble  samplers  with  affine
+        invariance', Goodman and Weare, 2010.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+              walkers, but only lowest PopSize ones corresponding to the  original
+              non-smoothed distribution are returned.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+            EpochsCnt-  iterations count to be reported, >=1
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgostretch(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoStretch: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoStretch: EpochsCnt<1");
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 0;
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses walk move, as defined in 'Ensemble  samplers with affine invariance',
+        Goodman and Weare, 2010.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+              walkers, but only lowest PopSize ones corresponding to the  original
+              non-smoothed distribution are returned.
+              
+        NOTE: for consistency with the rest of the library this move type requires
+              PopSize>=N+1. However, it also has a special requirement  PopSize>=4
+              that follows from the fact that  each  walker  needs  at  least  two
+              helpers, and that we can use parallel moves.
+              
+              For N=1 or N=2 it is possible to  specify PopSize=N+1 that  is  less
+              than 4. In order to simplify the algorithm, in this case we silently
+              override selection with the stretch move.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            
+            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+            
+            EpochsCnt-  iterations count to be reported, >=1
+            
+            HelpersCnt- helpers count, >=2. Number of  helpers  used  to  generate
+                        proposal. Recommended values: some small number like  3-5.
+                        It is possible  to  specify  HelpersCnt=PopSize,  but  for
+                        large populations it will result  in  proposal  generation
+                        overhead growing as O(N*PopSize^2).
+                        Values larger than PopSize will be silently  truncated  to
+                        PopSize.
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgowalk(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            int helperscnt,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoWalk: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoWalk: EpochsCnt<1");
+            alglib.ap.assert(helperscnt>=2, "MCMCSetAlgoWalk: HelpersCnt<2");
+            if( popsize<4 )
+            {
+                mcmcsetalgostretch(state, popsize, epochscnt, _params);
+                return;
+            }
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 1;
+            state.helperscnt = helperscnt;
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses DE move, as defined in 'RUN DMC:  an  efficient,  parallel  code  for
+        analyzing radial  velocity  observations  using  n-body  integrations  and
+        differential evolution Markov chain Monte Carlo' by Benjamin Nelson,  Eric
+        B. Ford, and Matthew J. Payne.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+              walkers, but only lowest PopSize ones corresponding to the  original
+              non-smoothed distribution are returned.
+              
+        NOTE: for consistency with the rest of the library this move type requires
+              PopSize>=N+1. However, it also has a special requirement  PopSize>=4
+              that follows from the fact that  each  walker  needs  at  least  two
+              other walkers to produce a DE proposal, and that we can use parallel
+              moves (that need larger ensembles).
+              
+              For N=1 or N=2 it is possible to  specify PopSize=N+1 that  is  less
+              than 4. In order to simplify the algorithm, in this case we silently
+              override selection with the stretch move.
+              
+        NOTE: it is recommended to specify PopSize and EpochsCnt and  leave  other
+              parameters to their default values.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            
+            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+            
+            EpochsCnt-  iterations count to be reported, >=1
+            
+            Sigma   -   non-negative, standard deviation of  a  Gaussian  used  to
+                        randomly modify the proposal vector.  Recommended  values:
+                        about 1E-5. Zero value (or omitted) means that  a  default
+                        one is used.
+                        
+            Gamma0  -   the mean stretch factor for the proposal vector, >=0. Zero
+                        value  means  that  a  default  value  is  used  which  is
+                        2.38/sqrt(2N), as recommended by the original paper.
+            
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgode(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            double sigma,
+            double gamma0,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoDE: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoDE: EpochsCnt<1");
+            alglib.ap.assert(math.isfinite(sigma), "MCMCSetAlgoDE: Sigma is not finite value");
+            alglib.ap.assert(math.isfinite(gamma0), "MCMCSetAlgoDE: Gamma0 is not finite value");
+            alglib.ap.assert((double)(sigma)>=(double)(0), "MCMCSetAlgoDE: Sigma<0");
+            alglib.ap.assert((double)(gamma0)>=(double)(0), "MCMCSetAlgoDE: Gamma0<0");
+            if( popsize<4 )
+            {
+                mcmcsetalgostretch(state, popsize, epochscnt, _params);
+                return;
+            }
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 2;
+            state.desigma = apserv.rcase2((double)(sigma)>(double)(0), sigma, 1.0E-5, _params);
+            state.degamma0 = apserv.rcase2((double)(gamma0)>(double)(0), gamma0, 2.38/Math.Sqrt(2*state.n), _params);
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare  (ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses DE move with snooker update, as defined  in  'Differential  Evolution
+        Markov Chain with snooker updater and fewer chains' by Cajo J.F. ter Braak
+        and Jasper A. Vrugt.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+              walkers, but only lowest PopSize ones corresponding to the  original
+              non-smoothed distribution are returned.
+              
+        NOTE: for consistency with the rest of the library this move type requires
+              PopSize>=N+1. However, it also has a special requirement  PopSize>=6
+              that follows from the fact that  each update  needs  at  least three
+              other walkers to produce a DE proposal, and that we can use parallel
+              moves (that need larger ensembles).
+              
+              In order to simplify the algorithm, if N+1<=PopSize<6,  we  silently
+              override selection with the stretch move.
+              
+        NOTE: it is recommended to specify PopSize and EpochsCnt and  leave  other
+              parameters to their default values.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            
+            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
+            
+            EpochsCnt-  iterations count to be reported, >=1
+                        
+            Gamma0  -   the mean stretch factor for the proposal vector, >=0. Zero
+                        value  means  that  a  default  value  is  used  which  is
+                        2.38/sqrt(2), as recommended by the original paper.
+            
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgodesnooker(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            double gamma0,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoDESnooker: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoDESnooker: EpochsCnt<1");
+            alglib.ap.assert(math.isfinite(gamma0), "MCMCSetAlgoDESnooker: Gamma0 is not finite value");
+            alglib.ap.assert((double)(gamma0)>=(double)(0), "MCMCSetAlgoDESnooker: Gamma0<0");
+            if( popsize<6 )
+            {
+                mcmcsetalgostretch(state, popsize, epochscnt, _params);
+                return;
+            }
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 3;
+            state.degamma0 = apserv.rcase2((double)(gamma0)>(double)(0), gamma0, 2.38/Math.Sqrt(2), _params);
+        }
+
+
+        /*************************************************************************
+        This function sets MCMC algorithm to Goodman-Weare  (ensemble  MCMC)  with
+        the specified ensemble size and number of iterations being reported.
+
+        Uses Gaussian random walk, an ensemble of PopSize  completely  independent
+        walkers.
+
+        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
+              to EpochsCnt iterations being  reported.
+              
+              By  default, it performs exactly the same number of iterations as it
+              reports. However, it will perform more iterations than it reports if
+              using a  burn-in  phase  (discards  initial  samples  that  are  too
+              influenced by the initial state) and by specifying a thinning factor
+              greater than 1 (helps to combat autocorrelations).
+              
+        NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+              walkers, but only lowest PopSize ones corresponding to the  original
+              non-smoothed distribution are returned.
+              
+        NOTE: this  move  is  special  because it can work with any ensemble size,
+              including PopSize=1 (most other moves  need  at  least  4,  5  or  6
+              walkers in the ensemble). Other moves will  throw  an  exception  if
+              called with PopSize<N+1.
+
+        INPUT PARAMETERS:
+            State   -   structure that stores MCMC sampler state
+            
+            PopSize -   ensemble size, PopSize>=1.
+            
+            EpochsCnt-  iterations count to be reported, >=1
+                        
+            C       -   array[N,N], a positive definite covariance matrix.  Walker
+                        position  is  perturbed  with  Gaussian  perturbation with
+                        covariance C.
+            
+            IsUpper -   if IsUpper=True, only upper triangle of  C  is  used  (the
+                        lower one is ignored). Otherwise, only lower  triangle  is
+                        used.
+            
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetalgogaussian(mcmcstate state,
+            int popsize,
+            int epochscnt,
+            double[,] c,
+            bool isupper,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(popsize>=1, "MCMCSetAlgoGaussian: PopSize<N+1");
+            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoGaussian: EpochsCnt<1");
+            alglib.ap.assert(alglib.ap.rows(c)>=state.n, "MCMCSetAlgoGaussian: rows(C)<N");
+            alglib.ap.assert(alglib.ap.cols(c)>=state.n, "MCMCSetAlgoGaussian: cols(C)<N");
+            alglib.ap.assert(apserv.isfinitertrmatrix(c, state.n, isupper, _params), "MCMCSetAlgoGaussian: C contains infinite or NaN values!");
+            state.popwidth = popsize;
+            state.epochscnt = epochscnt;
+            state.algokind = 0;
+            state.proposalkind = 4;
+            ablasf.rallocm(state.n, state.n, ref state.gausslowerc, _params);
+            if( isupper )
+            {
+                ablas.rmatrixtranspose(state.n, state.n, c, 0, 0, state.gausslowerc, 0, 0, _params);
+            }
+            else
+            {
+                ablasf.rcopym(state.n, state.n, c, state.gausslowerc, _params);
+            }
+        }
+
+
+        /*************************************************************************
+        This function sets number of additional initial iterations (in addition to
+        EpochsCnt) that will be performed  and  discarded  (not  stored  into  the
+        report sample), so called 'burn-in length'.
+
+        In total, BurnInLen+EpochsCnt iterations will be performed,  with  initial
+        BurnInLen ones being used solely to help MCMC spread walkers according  to
+        the density of the function being sampled.
+
+        INPUT PARAMETERS:
+            State       -   structure that stores MCMC sampler state
+            BurnInLen   -   burn-in length, >=0
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetburninlength(mcmcstate state,
+            int burninlen,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(burninlen>=0, "MCMCSetBurnInLength: BurnInLen<0");
+            state.burninlen = burninlen;
+        }
+
+
+        /*************************************************************************
+        This function sets thinning factor: ThinBy*EpochsCnt  iterations  will  be
+        performed  (after  the  optional  burn-in  phase),  with  every  ThinBy-th
+        iteration being saved and the rest being discarded.
+
+        This option helps to avoid storing highly correlated samples.
+
+        INPUT PARAMETERS:
+            State       -   structure that stores MCMC sampler state
+            ThinBy      -   thinning factor, >=1
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetthinningfactor(mcmcstate state,
+            int thinby,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(thinby>=1, "MCMCSetThinningFactor: ThinBy<1");
+            state.thinby = thinby;
+        }
+
+
+        /*************************************************************************
+        This function sets the seed  which  is used to initialize internal RNG. By
+        default, a deterministic seed is used - same for each run of the  sampler.
+        It means that the same sampling decisions are taken every time.
+
+        If you specify a non-deterministic seed value, then the sampler may return
+        slightly different results after each run.
+
+        INPUT PARAMETERS:
+            S       -   sampler state
+            Seed    -   seed:
+                        * positive values = use deterministic seed for each run of
+                          algorithms which depend on random initialization
+                        * zero or negative values = use non-deterministic seed
+
+          -- ALGLIB --
+             Copyright 08.06.2017 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetseed(mcmcstate s,
+            int seed,
+            alglib.xparams _params)
+        {
+            s.rngseed = Math.Max(seed, 0);
+        }
+
+
+        /*************************************************************************
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool mcmciteration(mcmcstate state,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+            int n = 0;
+            int i = 0;
+            int j = 0;
+            int k = 0;
+            int itidx = 0;
+            int itmax = 0;
+            int groupscnt = 0;
+            int grpdstsize = 0;
+            int dst = 0;
+            int accept1cnt = 0;
+            int accepthcnt = 0;
+            double v = 0;
+
+            
+            //
+            // Reverse communication preparations
+            //
+            // This code initializes locals by:
+            // * random values determined during code
+            //   generation - on first subroutine call
+            // * values from previous call - on subsequent calls
+            //
+            if( state.rcommv2.stage>=0 )
+            {
+                n = state.rcommv2.ia[0];
+                i = state.rcommv2.ia[1];
+                j = state.rcommv2.ia[2];
+                k = state.rcommv2.ia[3];
+                itidx = state.rcommv2.ia[4];
+                itmax = state.rcommv2.ia[5];
+                groupscnt = state.rcommv2.ia[6];
+                grpdstsize = state.rcommv2.ia[7];
+                dst = state.rcommv2.ia[8];
+                accept1cnt = state.rcommv2.ia[9];
+                accepthcnt = state.rcommv2.ia[10];
+                v = state.rcommv2.ra[0];
+            }
+            else
+            {
+                n = 359;
+                i = -58;
+                j = -919;
+                k = -909;
+                itidx = 81;
+                itmax = 255;
+                groupscnt = 74;
+                grpdstsize = -788;
+                dst = 809;
+                accept1cnt = 205;
+                accepthcnt = -838;
+                v = 939.0;
+            }
+            if( state.rcommv2.stage==0 )
+            {
+                goto lbl_0;
+            }
+            if( state.rcommv2.stage==1 )
+            {
+                goto lbl_1;
+            }
+            if( state.rcommv2.stage==2 )
+            {
+                goto lbl_2;
+            }
+            if( state.rcommv2.stage==3 )
+            {
+                goto lbl_3;
+            }
+            
+            //
+            // Routine body
+            //
+            
+            //
+            // Init
+            //
+            state.dotrace = ap.istraceenabled("MCMC", _params);
+            state.dodetailedtrace = state.dotrace && ap.istraceenabled("MCMC.DETAILED", _params);
+            state.dotimers = state.dotrace;
+            if( state.dotrace )
+            {
+                alglib.ap.trace("\n\n");
+                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
+                alglib.ap.trace("//  MCMC SAMPLER STARTED                                                                          //\n");
+                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
+                alglib.ap.trace(System.String.Format("N             = {0,6:d} (variables)\n", state.n));
+                alglib.ap.trace(System.String.Format("PopSize       = {0,6:d} (walkers)\n", state.popwidth));
+                if( state.popheight>1 )
+                {
+                    alglib.ap.trace(System.String.Format("TemperLvls    = {0,6:d} (tempering levels)\n", state.popheight));
+                }
+                if( state.burninlen>0 && state.initialstart )
+                {
+                    alglib.ap.trace(System.String.Format("BurnIn        = {0,6:d} (burn-in phase, not reported)\n", state.burninlen));
+                }
+                alglib.ap.trace(System.String.Format("EpochsCnt     = {0,6:d} (sampling rounds count)\n", state.epochscnt));
+            }
+            apserv.stimerinit(state.timertotal, _params);
+            apserv.stimerinit(state.timercallback, _params);
+            apserv.stimerinit(state.timerreport, _params);
+            apserv.stimerstartcond(state.timertotal, state.dotimers, _params);
+            state.userterminationneeded = false;
+            state.repnfev = 0;
+            state.repaccept1cnt = 0;
+            state.repaccepthcnt = 0;
+            state.repepochscnt = 0;
+            state.repswapacceptcnt = 0;
+            state.repswapattemptcnt = 0;
+            ablasf.rsetallocv(state.popheight-1, 0.0, ref state.repavgswaprates, _params);
+            state.reppopwidth = state.popwidth;
+            state.reppopheight = state.popheight;
+            state.repsamplesize = 0;
+            n = state.n;
+            if( state.reseedglobalrs )
+            {
+                if( state.rngseed==0 )
+                {
+                    hqrnd.hqrndrandomize(state.globalrs, _params);
+                }
+                else
+                {
+                    hqrnd.hqrndseed(state.rngseed, 856446, state.globalrs, _params);
+                }
+            }
+            if( alglib.ap.cols(state.repsample)>n+1 )
+            {
+                state.repsample = new double[0, 0];
+            }
+            if( state.useparallelmoves )
+            {
+                ablasf.iallocv(state.popwidth*state.popheight, ref state.propidx, _params);
+                ablasf.rallocv(state.popwidth*state.popheight, ref state.propz, _params);
+                ablasf.rallocv(state.popwidth*state.popheight, ref state.propt, _params);
+                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.propxf, _params);
+                ablasf.iallocv(state.popwidth, ref state.grpabidx, _params);
+            }
+            else
+            {
+                ablasf.iallocv(state.popheight, ref state.propidx, _params);
+                ablasf.rallocv(state.popheight, ref state.propz, _params);
+                ablasf.rallocv(state.popheight, ref state.propt, _params);
+                ablasf.rallocm(state.popheight, n+1, ref state.propxf, _params);
+            }
+            ablasf.iallocv(state.popwidth, ref state.grpdsidx, _params);
+            
+            //
+            // Initialize proposal generators
+            //
+            alglib.ap.assert((state.algokind==0 && state.proposalkind>=0) && state.proposalkind<=4, "MCMC: integrity check 795613 failed");
+            if( state.proposalkind==4 )
+            {
+                v = 0;
+                while( true )
+                {
+                    ablasf.rcopyallocm(n, n, state.gausslowerc, ref state.gaussl, _params);
+                    for(i=0; i<=n-1; i++)
+                    {
+                        state.gaussl[i,i] = state.gaussl[i,i]+v;
+                        for(j=i+1; j<=n-1; j++)
+                        {
+                            state.gaussl[i,j] = 0.0;
+                        }
+                    }
+                    if( trfac.spdmatrixcholesky(state.gaussl, n, false, _params) )
+                    {
+                        break;
+                    }
+                    v = apserv.coalesce(2*v, math.machineepsilon, _params);
+                }
+            }
+            
+            //
+            // Initial temperature ladder
+            //
+            alglib.ap.assert(state.ladderkind>=0 && state.ladderkind<=1, "MCMC: 915033 failed");
+            ablasf.rcopyallocv(state.popheight, state.initialladder, ref state.currentladder, _params);
+            
+            //
+            // Allocate buffers, as mandated by the V2 protocol
+            //
+            alglib.ap.assert(state.protocolversion==2, "MCMC: integrity check 206333 failed");
+            alglib.ap.assert(state.algokind==0, "MCMC: integrity check 207333 failed");
+            ablasf.rallocv(n, ref state.rcommv2.querydata, _params);
+            ablasf.rallocv(1, ref state.rcommv2.replyfi, _params);
+            ablasf.rallocv(1, ref state.rcommv2.tmpf1, _params);
+            ablasf.rallocv(n, ref state.rcommv2.tmpx1, _params);
+            ablasf.rallocv(n, ref state.rcommv2.tmpg1, _params);
+            state.rcommv2.reportx = new double[1];
+            state.rcommv2.reportx[0] = 0;
+            state.rcommv2.reportf = 0;
+            
+            //
+            // Initial population and subdivision into groups
+            //
+            alglib.ap.assert((state.x0type==0 || state.x0type==1) || state.x0type==2, "MCMC: integrity check 221342 failed");
+            if( state.useparallelmoves )
+            {
+                for(i=0; i<=state.popwidth-1; i++)
+                {
+                    state.grpabidx[i] = i;
+                }
+                if( state.proposalkind!=4 )
+                {
+                    alglib.ap.assert(state.popwidth>=2, "MCMC: integrity check 294008 failed");
+                    state.grpasize = state.popwidth/2;
+                }
+                else
+                {
+                    state.grpasize = state.popwidth;
+                }
+            }
+            if( state.x0type==0 )
+            {
+                alglib.ap.assert(state.x0width>=1, "MCMC: integrity check 426148 failed");
+                alglib.ap.assert(state.x0height>=1, "MCMC: integrity check 884204 failed");
+                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
+                for(i=0; i<=state.popwidth*state.popheight-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        state.population2d[i,j] = state.x0m[0,j]+state.x0stddev*state.s[j]*hqrnd.hqrndnormal(state.globalrs, _params);
+                    }
+                }
+            }
+            if( state.x0type==1 )
+            {
+                alglib.ap.assert(state.x0width>=1, "MCMC: integrity check 487508 failed");
+                
+                //
+                // Prepare for the case when we do not have enough points to seed the algorithm.
+                //
+                // Compute a bounding box for the user-provided set of points, with center at
+                // tmp0[] and per-variable scaled radii in tmp2[]
+                //
+                // Make sure that the box has no zero radius and that his aspect ratio is well-normalized
+                //
+                ablasf.rallocv(n, ref state.tmp0, _params);
+                ablasf.rallocv(n, ref state.tmp1, _params);
+                ablasf.rcopyrv(n, state.x0m, 0, state.tmp0, _params);
+                ablasf.rcopyrv(n, state.x0m, 0, state.tmp1, _params);
+                for(i=1; i<=state.x0width-1; i++)
+                {
+                    ablasf.rmergeminrv(n, state.x0m, i, state.tmp0, _params);
+                    ablasf.rmergemaxrv(n, state.x0m, i, state.tmp1, _params);
+                }
+                ablasf.rcopyallocv(n, state.tmp1, ref state.tmp2, _params);
+                ablasf.raddv(n, -1.0, state.tmp0, state.tmp2, _params);
+                ablasf.rmulv(n, 0.5, state.tmp2, _params);
+                ablasf.rmergedivv(n, state.s, state.tmp2, _params);
+                ablasf.raddv(n, 1.0, state.tmp1, state.tmp0, _params);
+                ablasf.rmulv(n, 0.5, state.tmp0, _params);
+                v = ablasf.rmaxabsv(n, state.tmp2, _params);
+                for(j=0; j<=n-1; j++)
+                {
+                    state.tmp2[j] = apserv.coalesce(Math.Max(state.tmp2[j], 1.0E-6*v), 1, _params);
+                }
+                
+                //
+                // Seed the algorithm using population in X0, when present; fill with random values when not present.
+                // The same population is used for all levels of the temperature ladder.
+                //
+                alglib.ap.assert(state.x0height==1, "MCMC: integrity check 894205 failed");
+                k = Math.Min(state.x0width, state.popwidth);
+                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
+                for(i=0; i<=state.popwidth*state.popheight-1; i++)
+                {
+                    if( i<state.x0width )
+                    {
+                        for(j=0; j<=n-1; j++)
+                        {
+                            state.population2d[i,j] = state.x0m[i,j];
+                        }
+                    }
+                    else
+                    {
+                        for(j=0; j<=n-1; j++)
+                        {
+                            state.population2d[i,j] = hqrnd.hqrndnormal(state.globalrs, _params)*(0.33*state.tmp2[j]*state.s[j])+state.tmp0[j];
+                        }
+                    }
+                }
+            }
+            if( state.x0type==2 )
+            {
+                alglib.ap.assert(state.haslastpopulation, "MCMC: integrity check 434149 failed");
+                
+                //
+                // Reuse last population
+                //
+                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
+                for(i=0; i<=state.popheight-1; i++)
+                {
+                    for(j=0; j<=state.popwidth-1; j++)
+                    {
+                        if( i<state.lastpopulationheight && j<state.lastpopulationwidth )
+                        {
+                            ablasf.rcopyrr(n, state.lastpopulation2d, i*state.lastpopulationwidth+j, state.population2d, i*state.popwidth+j, _params);
+                        }
+                        else
+                        {
+                            for(k=0; k<=n-1; k++)
+                            {
+                                state.population2d[i*state.popwidth+j,k] = state.lastpopulation2d[Math.Min(i, state.lastpopulationheight-1)*state.lastpopulationwidth+hqrnd.hqrnduniformi(state.globalrs, state.lastpopulationwidth, _params),k];
+                            }
+                        }
+                    }
+                }
+                
+                //
+                // If parallel moves are used AND new population size matches its old size, reuse previous subdivision
+                // into groups (it is important for smooth restarts)
+                //
+                if( (state.useparallelmoves && state.lastpopulationwidth==state.popwidth) && state.lastpopulationheight==state.popheight )
+                {
+                    ablasf.icopyv(state.popwidth, state.lastgrpabidx, state.grpabidx, _params);
+                }
+            }
+            i = 0;
+        lbl_4:
+            if( i>state.popwidth*state.popheight-1 )
+            {
+                goto lbl_6;
+            }
+            state.repnfev = state.repnfev+1;
+            state.rcommv2.requesttype = 4;
+            state.rcommv2.queryfuncs = 1;
+            state.rcommv2.queryvars = n;
+            state.rcommv2.querydim = 0;
+            state.rcommv2.querysize = 1;
+            for(j=0; j<=n-1; j++)
+            {
+                state.rcommv2.querydata[j] = state.population2d[i,j];
+            }
+            apserv.stimerstartcond(state.timercallback, state.dotimers, _params);
+            state.rcommv2.stage = 0;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_0:
+            apserv.stimerstopcond(state.timercallback, state.dotimers, _params);
+            state.population2d[i,n] = state.rcommv2.replyfi[0];
+            i = i+1;
+            goto lbl_4;
+        lbl_6:
+            if( !state.xrep )
+            {
+                goto lbl_7;
+            }
+            state.rcommv2.requesttype = -1;
+            apserv.stimerstartcond(state.timerreport, state.dotimers, _params);
+            state.rcommv2.stage = 1;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_1:
+            apserv.stimerstopcond(state.timerreport, state.dotimers, _params);
+        lbl_7:
+            savepopulation(state, _params);
+            
+            //
+            // Subsequent moves
+            //
+            alglib.ap.assert(state.algokind==0, "MCMC: integrity check 238038 failed");
+            alglib.ap.assert(state.popwidth>=2, "MCMC: integrity check 238039 failed");
+            itmax = apserv.icase2(state.initialstart, state.burninlen, 0, _params)+state.epochscnt*state.thinby;
+            ablasf.rallocm(state.epochscnt*state.popwidth*apserv.icase2(state.reportalllevels, state.popheight, 1, _params), n+1, ref state.repsample, _params);
+            itidx = 0;
+        lbl_9:
+            if( itidx>itmax-1 )
+            {
+                goto lbl_11;
+            }
+            
+            //
+            // Perform moves
+            //
+            accept1cnt = 0;
+            accepthcnt = 0;
+            groupscnt = apserv.icase2(state.useparallelmoves, 2, state.popwidth, _params);
+            if( state.useparallelmoves )
+            {
+                ablasf.icopyv(state.popwidth, state.grpabidx, state.grpdsidx, _params);
+                grpdstsize = state.grpasize;
+            }
+            else
+            {
+                for(i=0; i<=state.popwidth-1; i++)
+                {
+                    state.grpdsidx[i] = i;
+                }
+                grpdstsize = 1;
+            }
+            i = 0;
+        lbl_12:
+            if( i>groupscnt-1 )
+            {
+                goto lbl_14;
+            }
+            
+            //
+            // Handle degenerate cases (walk move with group size = pop size)
+            //
+            if( grpdstsize==0 )
+            {
+                alglib.ap.assert(i==groupscnt-1, "MCMC: 018015 failed");
+                goto lbl_14;
+            }
+            
+            //
+            // Generate proposals
+            //
+            generateproposals(state, state.globalrs, state.grpdsidx, grpdstsize, state.propidx, state.propz, state.propt, state.propxf, _params);
+            
+            //
+            // Issue RCOMM-V2 request
+            //
+            j = 0;
+        lbl_15:
+            if( j>grpdstsize-1 )
+            {
+                goto lbl_17;
+            }
+            ablasf.rcopyrv(n, state.propxf, j, state.rcommv2.querydata, _params);
+            state.repnfev = state.repnfev+1;
+            state.rcommv2.requesttype = 4;
+            state.rcommv2.queryfuncs = 1;
+            state.rcommv2.queryvars = n;
+            state.rcommv2.querydim = 0;
+            state.rcommv2.querysize = 1;
+            apserv.stimerstartcond(state.timercallback, state.dotimers, _params);
+            state.rcommv2.stage = 2;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_2:
+            apserv.stimerstopcond(state.timercallback, state.dotimers, _params);
+            state.propxf[j,n] = state.rcommv2.replyfi[0];
+            j = j+1;
+            goto lbl_15;
+        lbl_17:
+            
+            //
+            // Acceptance test
+            //
+            for(j=0; j<=grpdstsize-1; j++)
+            {
+                if( (double)(hqrnd.hqrnduniformr(state.globalrs, _params))<(double)(Math.Min(1.0, Math.Exp(state.propz[j]+(state.propxf[j,n]-state.population2d[state.propidx[j],n])/state.propt[j]))) )
+                {
+                    ablasf.rcopyrr(n+1, state.propxf, j, state.population2d, state.propidx[j], _params);
+                    accept1cnt = accept1cnt+1;
+                    if( state.propidx[j]>state.popwidth )
+                    {
+                        accepthcnt = accepthcnt+1;
+                    }
+                }
+            }
+            
+            //
+            // Update split into A and B groups
+            //
+            if( state.useparallelmoves )
+            {
+                alglib.ap.assert(i<=1, "MCMC: 071013 failed");
+                if( i==0 )
+                {
+                    ablasf.iallocv(state.popwidth, ref state.tmpi0, _params);
+                    ablasf.icopyvx(state.grpasize, state.grpdsidx, 0, state.tmpi0, state.popwidth-state.grpasize, _params);
+                    ablasf.icopyvx(state.popwidth-state.grpasize, state.grpdsidx, state.grpasize, state.tmpi0, 0, _params);
+                    ablasf.icopyv(state.popwidth, state.tmpi0, state.grpdsidx, _params);
+                    grpdstsize = state.popwidth-state.grpasize;
+                }
+            }
+            else
+            {
+                alglib.ap.assert(grpdstsize==1, "MCMC: 092019 failed");
+                if( i<state.popwidth-1 )
+                {
+                    k = state.grpdsidx[0];
+                    state.grpdsidx[0] = state.grpdsidx[i+1];
+                    state.grpdsidx[i+1] = k;
+                }
+            }
+            i = i+1;
+            goto lbl_12;
+        lbl_14:
+            
+            //
+            // Apply swaps between temperature ladder levels and perform adaptation, if needed
+            //
+            applyswapsandadapt(state, itidx, itidx>=apserv.icase2(state.initialstart, state.burninlen, 0, _params), state.globalrs, _params);
+            
+            //
+            // If parallel moves are used, update splits into groups
+            //
+            if( state.useparallelmoves )
+            {
+                for(i=0; i<=state.popwidth-1; i++)
+                {
+                    j = i+hqrnd.hqrnduniformi(state.globalrs, state.popwidth-i, _params);
+                    k = state.grpabidx[i];
+                    state.grpabidx[i] = state.grpabidx[j];
+                    state.grpabidx[j] = k;
+                }
+            }
+            
+            //
+            // Save report, check for termination request. The check is done twice:
+            // prior to reporting progress and after returning from the callback.
+            //
+            // This way we can:
+            // * stop immediately after progress is reported, if request was submitted
+            //   in the callback
+            // * stop before iteration is accepted, if request was submitted prior to
+            //   invoking the callback
+            //
+            if( state.dotrace )
+            {
+                dologging(state, itidx, accept1cnt, accepthcnt, _params);
+            }
+            if( state.userterminationneeded )
+            {
+                goto lbl_11;
+            }
+            k = itidx;
+            if( state.initialstart )
+            {
+                k = k-state.burninlen;
+            }
+            if( !(k>=0 && k%state.thinby==0) )
+            {
+                goto lbl_18;
+            }
+            alglib.ap.assert(alglib.ap.rows(state.repsample)>=state.repsamplesize+state.popwidth*apserv.icase2(state.reportalllevels, state.popheight, 1, _params) && alglib.ap.cols(state.repsample)>=n+1, "MCMC: integrity check 497055 failed");
+            alglib.ap.assert(!state.reportalllevels, "$rep-all-lvl");
+            for(i=0; i<=state.popwidth-1; i++)
+            {
+                ablasf.rcopyrr(n+1, state.population2d, i, state.repsample, state.repsamplesize, _params);
+                state.repsamplesize = state.repsamplesize+1;
+            }
+            state.repaccept1cnt = state.repaccept1cnt+accept1cnt;
+            state.repaccepthcnt = state.repaccepthcnt+accepthcnt;
+            state.repepochscnt = state.repepochscnt+1;
+            if( !state.xrep )
+            {
+                goto lbl_20;
+            }
+            state.rcommv2.requesttype = -1;
+            apserv.stimerstartcond(state.timerreport, state.dotimers, _params);
+            state.rcommv2.stage = 3;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_3:
+            apserv.stimerstopcond(state.timerreport, state.dotimers, _params);
+        lbl_20:
+        lbl_18:
+            if( state.userterminationneeded )
+            {
+                goto lbl_11;
+            }
+            itidx = itidx+1;
+            goto lbl_9;
+        lbl_11:
+            
+            //
+            // Finalize
+            //
+            state.reseedglobalrs = true;
+            savepopulation(state, _params);
+            apserv.stimerstopcond(state.timertotal, state.dotimers, _params);
+            if( state.dotrace )
+            {
+                alglib.ap.trace("\n=== STOPPED ========================================================================================\n");
+                alglib.ap.trace(System.String.Format("total time:     {0,10:F1} ms, including\n", apserv.stimergetms(state.timertotal, _params)));
+                alglib.ap.trace(System.String.Format("* sampler       {0,10:F1} ms\n", apserv.stimergetms(state.timertotal, _params)-apserv.stimergetms(state.timercallback, _params)-apserv.stimergetms(state.timerreport, _params)));
+                alglib.ap.trace(System.String.Format("* callbacks     {0,10:F1} ms (computing log-likelihood)\n", apserv.stimergetms(state.timercallback, _params)));
+                alglib.ap.trace(System.String.Format("* reports       {0,10:F1} ms (reporting progress)\n", apserv.stimergetms(state.timerreport, _params)));
+            }
+            result = false;
+            return result;
+            
+            //
+            // Saving state
+            //
+        lbl_rcomm:
+            result = true;
+            state.rcommv2.ia[0] = n;
+            state.rcommv2.ia[1] = i;
+            state.rcommv2.ia[2] = j;
+            state.rcommv2.ia[3] = k;
+            state.rcommv2.ia[4] = itidx;
+            state.rcommv2.ia[5] = itmax;
+            state.rcommv2.ia[6] = groupscnt;
+            state.rcommv2.ia[7] = grpdstsize;
+            state.rcommv2.ia[8] = dst;
+            state.rcommv2.ia[9] = accept1cnt;
+            state.rcommv2.ia[10] = accepthcnt;
+            state.rcommv2.ra[0] = v;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Extract MCMC sampler results from the sampler. This function has significant
+        overhead coming from two sources:
+        * overhead of copying PopSize*EpochsCnt*N-sized array from internal memory
+        * overhead of computing per-variable integrated autocorrelating time
+                   
+        INPUT PARAMETERS:
+            State           -   MCMC sampler, either after return  from  mcmcrun()
+                                or  still  running (in  the  latter   case,   this
+                                function can be safely called only from the  rep()
+                                callback).
+                                
+        OUTPUT PARAMETERS:
+            Sample          -   array[SampleSize,N+1], current sample:
+                                * first N columns store variable values, the  last
+                                  one stores log-likelihood value as  computed  by
+                                  the callback
+                                * first  PopSize  rows  store  population snapshot
+                                  after the iteration #0, subsequent PopSize  rows
+                                  correspond to iteration #1 and so on.
+                                * each snapshot (a set  of  PopSize  rows)  stores
+                                  positions of PopSize walkers, each walker having
+                                  the same position in each of SampleSize snapshots.
+                                  Thus, walker #I at the iteration  #J  is  stored
+                                  at the row PopSize*J+I.
+                                
+            SampleSize      -   current sample size:
+                                * for a sampler that stopped it is equal to PopSize*EpochsCnt
+                                * for a sampler that is  still  running,  we  have
+                                  0<=SampleSize<PopSize*EpochsCnt. Zero sample  is
+                                  reported upon the first call to rep().
+                                  
+            Rep             -   other information being reported, including:
+                                * acceptance rate
+                                * per-variable integrated autocorrelation time
+
+        IMPORTANT: unlike other [something]results() functions from ALGLIB library
+                   this function can be called on a sampler that is still running.
+                   
+                   Thus,  it  can  be  used  to peek into a sampler from the rep()
+                   callback, e.g. to check convergence. When called prior to  MCMC
+                   completion, it will return in  Sample/SampleSize/Rep  the  most
+                   recent snapshot of MCMC sampling.
+                   
+                   Note that due to significant overhead (iteration with number #K
+                   involves copying O(K) data and doing between O(K) and O(K*logK)
+                   job) calling  this function after each iteration will lead to a
+                   catastrophic slowdown of the sampler:  its  running  time  will
+                   become quadratic with respect  to  iterations  count!
+                   
+                   Consider doing it after  each  100-th  iteration  or  something
+                   like that.
+                   
+        IMPORTANT: THIS FUNCTION IS NOT THREAD-SAFE! Thus, the  only  place  where
+                   it can be called  is  rep()  callback,  and  it  must  complete
+                   prior to returning from the callback into the sampler.
+
+        NOTE: burn-in iterations are not reported. Similarly, for a primary  phase
+              only each ThinFactor-th iteration is reported.
+              
+        NOTE: when  using  parallel  tempering,  the  algorithm runs PopSize*NTemp
+              walkers, but only lowest PopSize ones corresponding to the  original
+              non-smoothed distribution are reported.
+           
+          -- ALGLIB --
+             Copyright 18.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcresults(mcmcstate state,
+            ref double[,] sample,
+            ref int samplesize,
+            mcmcreport rep,
+            alglib.xparams _params)
+        {
+            sample = new double[0,0];
+            samplesize = 0;
+
+            mcmcresultsbuf(state, ref sample, ref samplesize, rep, _params);
+        }
+
+
+        /*************************************************************************
+        Buffered implementation of MCMCResults() which uses  pre-allocated  buffer
+        to store X[]. If buffer size is  too  small,  it  resizes  buffer.  It  is
+        intended to be used in the inner cycles of performance critical algorithms
+        where array reallocation penalty is too large to be ignored.
+
+          -- ALGLIB --
+             Copyright 18.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcresultsbuf(mcmcstate state,
+            ref double[,] sample,
+            ref int samplesize,
+            mcmcreport rep,
+            alglib.xparams _params)
+        {
+            sample = new double[0,0];
+            samplesize = 0;
+
+            
+            //
+            // Parameters that are always valid + default state for RepSampleSize=0
+            //
+            rep.nfev = state.repnfev;
+            rep.acceptrate = state.repaccept1cnt/apserv.coalesce(state.repepochscnt*state.reppopwidth, 1, _params);
+            rep.swapacceptrate = state.repswapacceptcnt/apserv.coalesce(state.repswapattemptcnt, 1, _params);
+            ablasf.rsetallocv(state.n, 0.0, ref rep.autocorrtimes, _params);
+            samplesize = state.repsamplesize;
+            
+            //
+            // RepSampleSize>0
+            //
+            if( state.repsamplesize>0 )
+            {
+                ablasf.rcopyallocm(state.repsamplesize, state.n+1, state.repsample, ref sample, _params);
+                computeautocorrtimes(state, ref rep.autocorrtimes, _params);
+            }
+        }
+
+
+        /*************************************************************************
+        This  subroutine  submits  request  for  termination  of  a  running  MCMC
+        sampler. It should be called from user-supplied callback when user decides
+        that it is time to "smoothly" terminate optimization process. As a result,
+        sampler stops at the point which was "current accepted"  when  termination
+        request was submitted.
+
+        Alternatively,  this  function  can  be  called  from  some  other  thread
+        (different from one where the sampler is running).
+
+        INPUT PARAMETERS:
+            State   -   sampler structure
+
+        NOTE: after  request  for  termination  sampler   may    perform   several
+              additional calls to user-supplied callbacks. It does  NOT  guarantee
+              to stop immediately - it just guarantees that these additional calls
+              will be discarded later.
+
+        NOTE: calling this function on sampler  which is NOT running will have  no
+              effect.
+              
+        NOTE: multiple calls to this function are possible. First call is counted,
+              subsequent calls are silently ignored.
+
+          -- ALGLIB --
+             Copyright 25.02.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcrequesttermination(mcmcstate state,
+            alglib.xparams _params)
+        {
+            state.userterminationneeded = true;
+        }
+
+
+        /*************************************************************************
+        This function turns on/off reporting.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores sampler state
+            NeedXRep-   whether iteration reports are needed or not
+
+        If NeedXRep is True, the algorithm will call rep() callback function if it
+        was provided to mcmcrun().
+
+        NOTE: due to ALGLIB conventions regarding report  callbacks,  the  sampler
+              passes two parameters to the rep() callback - an 1D  floating  point
+              array, and a scalar floating-point value.
+              
+              In nonlinear optimizers these parameters are used  to report current
+              point/objective, but it makes little sense in the context  of  MCMC.
+              Because  of  that,  MCMC  sampler  sets  the first parameter to be a
+              zero-initialized  single-element  array,  and  the  second  (scalar)
+              parameter is set to zero.
+
+          -- ALGLIB --
+             Copyright 25.02.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void mcmcsetxrep(mcmcstate state,
+            bool needxrep,
+            alglib.xparams _params)
+        {
+            state.xrep = needxrep;
+        }
+
+
+        /*************************************************************************
+        This function tells the sampler to restart the next sampling session using
+        the most recent population as an initial state.
+
+        The new sampling session is still considered an independent one.  It  uses
+        sampling distribution of the previous session to provide a smooth restart,
+        but its results do not  include  samples  collected  during  the  previous
+        session.
+
+        It  is  possible  to  specify  different  sampling  algorithm  or   change
+        parameters of the algorithm. If population size has changed, then we  have
+        two options:
+        * the new population size is less than the previous one; the population is
+          truncated (only leading NewPopSize elements are retained)
+        * the  new population size is greater than the previous one; in this case,
+          leading OldPopSize elements are retained from the  previous  population,
+          and the rest (NewPopSize-OldPopSize) is randomly initialized  using  the
+          previous population as a reference distribution.
+
+        INPUT PARAMETERS:
+            State   -   structure which stores sampler state
+            EpochsCnt-  >=0, whether to use original epochs count or set new:
+                        * >0 means that restarted sampling will continue for
+                             EpochsCnt iterations (or EpochsCnt*ThinBy, of thinning
+                             was configured)
+                        * =0 means that the previous settings will be used
+            
+        RESULT:
+            * False, if no  previous  population  was  stored  in the sampler (the
+              restart was requested prior to running anything, so we have  nothing
+              to restart from). In this case,  the  sampler  will  silently  reuse
+              previous initial population generation strategy.
+            * True, if a request was successfully accepted.
+            
+        NOTE: this function also tells the sampler not to  re-seed  internal  RNG,
+              so the new session  will  produce  the  same  sequence  of  sampling
+              decisions.
+              
+              It also tells the sampler  to  ignore  burn-in  phase  (if  any  was
+              configured), because the population is  assumed  to  be  already  in
+              equilibrium.
+
+          -- ALGLIB --
+             Copyright 15.05.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static bool mcmcrestart(mcmcstate state,
+            int epochscnt,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+
+            alglib.ap.assert(epochscnt>=0, "MCMCRestart: EpochsCnt<0");
+            result = state.haslastpopulation;
+            if( !result )
+            {
+                return result;
+            }
+            state.x0type = 2;
+            state.reseedglobalrs = false;
+            state.initialstart = false;
+            if( epochscnt>0 )
+            {
+                state.epochscnt = epochscnt;
+            }
+            state.rcommv2.ia = new int[10+1];
+            state.rcommv2.ra = new double[0+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
+            return result;
+        }
+
+
+        /*************************************************************************
+        Set V2 reverse communication protocol with dense requests
+        *************************************************************************/
+        public static void mcmcsetprotocolv2(mcmcstate state,
+            alglib.xparams _params)
+        {
+            state.protocolversion = 2;
+            state.issuesparserequests = false;
+            state.rcommv2.ia = new int[10+1];
+            state.rcommv2.ra = new double[0+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
+            state.rcommv2.clear_handler();
+        }
+
+
+        /*************************************************************************
+        Set V2 reverse communication protocol with sparse requests
+        *************************************************************************/
+        public static void mcmcsetprotocolv2s(mcmcstate state,
+            alglib.xparams _params)
+        {
+            state.protocolversion = 2;
+            state.issuesparserequests = true;
+            state.rcommv2.ia = new int[10+1];
+            state.rcommv2.ra = new double[0+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
+            state.rcommv2.clear_handler();
+        }
+
+
+        /*************************************************************************
+        Internal initialization to the default state
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void initinternal(mcmcstate state,
+            int n,
+            alglib.xparams _params)
+        {
+            state.n = n;
+            state.x0width = 0;
+            state.x0height = 0;
+            state.x0type = -1;
+            state.algokind = 0;
+            state.proposalkind = 0;
+            state.popwidth = 10*n;
+            state.ladderkind = 0;
+            state.popheight = 1;
+            ablasf.rsetallocv(1, 1.0, ref state.initialladder, _params);
+            state.laddernu0 = 0.05;
+            state.laddertau = 1000.0;
+            state.noladderadaptationafterburnin = false;
+            state.epochscnt = 100;
+            state.burninlen = 0;
+            state.thinby = 1;
+            state.reportalllevels = false;
+            state.initialstart = true;
+            state.protocolversion = 2;
+            state.haslastpopulation = false;
+            state.rngseed = 6435533;
+            state.xrep = false;
+            ablasf.rsetallocv(n, 1.0, ref state.s, _params);
+            hqrnd.hqrndseed(state.rngseed, 856446, state.globalrs, _params);
+            state.reseedglobalrs = true;
+            state.useparallelmoves = true;
+            state.rcommv2.ia = new int[10+1];
+            state.rcommv2.ra = new double[0+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
+        }
+
+
+        /*************************************************************************
+        Logging
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void dologging(mcmcstate state,
+            int iteridx,
+            int accept1cnt,
+            int accepthcnt,
+            alglib.xparams _params)
+        {
+            double[] popmean = new double[0];
+            double[] popstddev = new double[0];
+            int i = 0;
+            int j = 0;
+            int n = 0;
+            int popwidth = 0;
+            double llmean = 0;
+            double llstddev = 0;
+
+            alglib.ap.assert(state.dotrace, "MCMC: DoLogging() is called with tracing disable; this function shall not be called when logging is turned off");
+            n = state.n;
+            popwidth = state.popwidth;
+            if( state.dodetailedtrace )
+            {
+                alglib.ap.trace(System.String.Format("=== ITERATION {0,5:d} ================================================================================\n", iteridx));
+                ablasf.rsetallocv(n, 0.0, ref popmean, _params);
+                ablasf.rsetallocv(n, 0.0, ref popstddev, _params);
+                for(i=0; i<=popwidth-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        popmean[j] = popmean[j]+state.population2d[i,j];
+                    }
+                }
+                for(j=0; j<=n-1; j++)
+                {
+                    popmean[j] = popmean[j]/popwidth;
+                }
+                for(i=0; i<=popwidth-1; i++)
+                {
+                    for(j=0; j<=n-1; j++)
+                    {
+                        popstddev[j] = popstddev[j]+(state.population2d[i,j]-popmean[j])*(state.population2d[i,j]-popmean[j]);
+                    }
+                }
+                for(j=0; j<=n-1; j++)
+                {
+                    popstddev[j] = Math.Sqrt(popstddev[j]/popwidth);
+                }
+                alglib.ap.trace("pop.mean   = ");
+                apserv.tracevectore3(popmean, 0, n, _params);
+                alglib.ap.trace("\n");
+                alglib.ap.trace("pop.stddev = ");
+                apserv.tracevectore3(popstddev, 0, n, _params);
+                alglib.ap.trace("\n");
+                llmean = 0;
+                for(i=0; i<=popwidth-1; i++)
+                {
+                    llmean = llmean+state.population2d[i,n];
+                }
+                llmean = llmean/popwidth;
+                llstddev = 0;
+                for(i=0; i<=popwidth-1; i++)
+                {
+                    llstddev = llstddev+math.sqr(state.population2d[i,n]-llmean);
+                }
+                llstddev = Math.Sqrt(llstddev/popwidth);
+                alglib.ap.trace(System.String.Format("loglik.mean   = {0,0:F3}\n", llmean));
+                alglib.ap.trace(System.String.Format("loglik.stddev = {0,0:F3}\n", llstddev));
+                alglib.ap.trace(System.String.Format("accept.rate   = {0,0:F3}\n", (double)accept1cnt/(double)popwidth));
+                if( state.popheight>1 )
+                {
+                    alglib.ap.trace("> Temperature ladder:\n");
+                    alglib.ap.trace("temperatures  = [");
+                    apserv.tracevectore3(state.currentladder, 0, state.popheight, _params);
+                    alglib.ap.trace("]\n");
+                    alglib.ap.trace("accept rates  = [");
+                    apserv.tracevectore3(state.repavgswaprates, 0, state.popheight-1, _params);
+                    alglib.ap.trace("]\n");
+                }
+            }
+            else
+            {
+            }
+        }
+
+
+        /*************************************************************************
+        Apply temperature ladder swaps and perform adaptation;
+        does nothing for popheight=1.
+
+        INPUT PARAMETERS:
+            RawItIdx        iteration index, starts from the very beginning,
+                            is NOT thinned (counts all iterations)
+            BurnInOver      if True, burn-in phase is completed
+
+          -- ALGLIB --
+             Copyright 20.11.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void applyswapsandadapt(mcmcstate state,
+            int rawitidx,
+            bool burninover,
+            hqrnd.hqrndstate rs,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int popheight = 0;
+            int popwidth = 0;
+            int i = 0;
+            int widx = 0;
+            int hidx = 0;
+            int idx0 = 0;
+            int idx1 = 0;
+            double deltabeta = 0;
+            double logprob = 0;
+            bool adaptationdone = new bool();
+            double decay = 0;
+            double v = 0;
+
+            n = state.n;
+            popheight = state.popheight;
+            popwidth = state.popwidth;
+            if( popheight==1 )
+            {
+                return;
+            }
+            
+            //
+            // Apply swaps
+            //
+            ablasf.rsetallocv(popheight-1, 0.0, ref state.saacceptrates, _params);
+            for(hidx=popheight-1; hidx>=1; hidx--)
+            {
+                deltabeta = 1/state.currentladder[hidx]-1/state.currentladder[hidx-1];
+                for(widx=0; widx<=popwidth-1; widx++)
+                {
+                    idx0 = hidx*popwidth+widx;
+                    idx1 = (hidx-1)*popwidth+widx;
+                    logprob = -(deltabeta*(state.population2d[idx0,n]-state.population2d[idx1,n]));
+                    if( (double)(hqrnd.hqrnduniformr(rs, _params))<(double)(Math.Min(Math.Exp(logprob), 1)) )
+                    {
+                        apserv.swaprows(state.population2d, idx0, idx1, n+1, _params);
+                        state.repswapacceptcnt = state.repswapacceptcnt+1;
+                        state.saacceptrates[hidx-1] = state.saacceptrates[hidx-1]+(double)1/(double)popwidth;
+                    }
+                    state.repswapattemptcnt = state.repswapattemptcnt+1;
+                }
+            }
+            if( popheight>1 )
+            {
+                if( (double)(ablasf.rmaxabsv(popheight-1, state.repavgswaprates, _params))>(double)(0) )
+                {
+                    v = 0.01;
+                    ablasf.rmulv(popheight-1, 1-v, state.repavgswaprates, _params);
+                    ablasf.raddv(popheight-1, v, state.saacceptrates, state.repavgswaprates, _params);
+                }
+                else
+                {
+                    ablasf.rcopyv(popheight-1, state.saacceptrates, state.repavgswaprates, _params);
+                }
+            }
+            
+            //
+            // Perform adaptation
+            //
+            if( !burninover || !state.noladderadaptationafterburnin )
+            {
+                decay = state.laddernu0*state.laddertau/(rawitidx+state.laddertau+math.machineepsilon);
+                adaptationdone = false;
+                if( state.ladderkind==0 )
+                {
+                    adaptationdone = true;
+                }
+                if( state.ladderkind==1 )
+                {
+                    if( popheight>=3 )
+                    {
+                        ablasf.rallocv(popheight-2, ref state.savecsi, _params);
+                        ablasf.rallocv(popheight-1, ref state.saproposedladder, _params);
+                        for(i=0; i<=popheight-3; i++)
+                        {
+                            state.savecsi[i] = Math.Log(state.currentladder[i+1]-state.currentladder[i])+decay*(state.saacceptrates[i]-state.saacceptrates[i+1]);
+                        }
+                        state.saproposedladder[0] = state.currentladder[0];
+                        for(i=1; i<=popheight-2; i++)
+                        {
+                            state.saproposedladder[i] = state.saproposedladder[i-1]+Math.Exp(state.savecsi[i-1]);
+                        }
+                        if( (double)(state.saproposedladder[popheight-2])<(double)(state.currentladder[popheight-1]) )
+                        {
+                            ablasf.rcopyv(popheight-1, state.saproposedladder, state.currentladder, _params);
+                        }
+                    }
+                    adaptationdone = true;
+                }
+                alglib.ap.assert(adaptationdone, "MCMC: 728137");
+            }
+        }
+
+
+        /*************************************************************************
+        Save current population
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void savepopulation(mcmcstate state,
+            alglib.xparams _params)
+        {
+            state.haslastpopulation = true;
+            state.lastpopulationwidth = state.popwidth;
+            state.lastpopulationheight = state.popheight;
+            ablasf.rcopyallocm(state.popwidth*state.popheight, state.n+1, state.population2d, ref state.lastpopulation2d, _params);
+            if( state.useparallelmoves )
+            {
+                ablasf.icopyallocv(state.popwidth, state.grpabidx, ref state.lastgrpabidx, _params);
+            }
+        }
+
+
+        /*************************************************************************
+        Generates proposals for walkers
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void generateproposals(mcmcstate state,
+            hqrnd.hqrndstate rs,
+            int[] grpidx,
+            int dstgrpsize,
+            int[] propidx,
+            double[] propz,
+            double[] propt,
+            double[,] propxf,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int popwidth = 0;
+            int popheight = 0;
+            int helperscnt = 0;
+            int widx = 0;
+            int hidx = 0;
+            int offs = 0;
+            int jj = 0;
+            int k = 0;
+            int src = 0;
+            int srca = 0;
+            int srcb = 0;
+            int srcc = 0;
+            int dst = 0;
+            double v = 0;
+            double vs = 0;
+            double vnrm = 0;
+
+            n = state.n;
+            popwidth = state.popwidth;
+            popheight = state.popheight;
+            alglib.ap.assert(state.algokind==0, "MCMC 188955 failed");
+            alglib.ap.assert((((state.proposalkind==0 || state.proposalkind==1) || state.proposalkind==2) || state.proposalkind==3) || state.proposalkind==4, "MCMC 250131 failed");
+            
+            //
+            // Prepare group structure
+            //
+            alglib.ap.assert(state.proposalkind!=0 || popwidth-dstgrpsize>=1, "MCMC 564025 failed");
+            alglib.ap.assert(state.proposalkind!=1 || (popwidth-dstgrpsize>=2 && state.helperscnt>=2), "MCMC 272113 failed");
+            alglib.ap.assert(state.proposalkind!=2 || popwidth-dstgrpsize>=2, "MCMC 367147 failed");
+            alglib.ap.assert(state.proposalkind!=3 || popwidth-dstgrpsize>=3, "MCMC 432520 failed");
+            
+            //
+            // Generate proposals
+            //
+            alglib.ap.assert((((alglib.ap.len(propidx)>=dstgrpsize*popheight && alglib.ap.len(propz)>=dstgrpsize*popheight) && alglib.ap.len(propt)>=dstgrpsize*popheight) && alglib.ap.rows(propxf)>=dstgrpsize*popheight) && alglib.ap.cols(propxf)>=n+1, "MCMC 188955 failed");
+            if( state.proposalkind==0 )
+            {
+                
+                //
+                // Stretch move
+                //
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        dst = grpidx[widx];
+                        src = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        dst = hidx*popwidth+dst;
+                        src = hidx*popwidth+src;
+                        propidx[offs] = dst;
+                        v = math.sqr((goodmanwearea-1)*hqrnd.hqrnduniformr(rs, _params)+1)/goodmanwearea;
+                        propz[offs] = (n-1)*Math.Log(v);
+                        propt[offs] = state.currentladder[hidx];
+                        for(k=0; k<=n-1; k++)
+                        {
+                            propxf[offs,k] = state.population2d[src,k]+v*(state.population2d[dst,k]-state.population2d[src,k]);
+                        }
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            if( state.proposalkind==1 )
+            {
+                
+                //
+                // Walk move
+                //
+                helperscnt = Math.Min(state.helperscnt, popwidth-dstgrpsize);
+                ablasf.iallocv(popwidth, ref state.gphelperidx, _params);
+                ablasf.rallocv(n, ref state.gpmeanhelper, _params);
+                ablasf.rallocv(n, ref state.gpproposal, _params);
+                ablasf.icopyvx(popwidth-dstgrpsize, grpidx, dstgrpsize, state.gphelperidx, 0, _params);
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        
+                        //
+                        // Determine Dst and Helper indexes
+                        //
+                        dst = grpidx[widx];
+                        for(jj=0; jj<=helperscnt-1; jj++)
+                        {
+                            apserv.swapelementsi(state.gphelperidx, jj, jj+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize-jj, _params), _params);
+                        }
+                        dst = hidx*popwidth+dst;
+                        
+                        //
+                        // Generate proposal
+                        //
+                        propidx[offs] = dst;
+                        ablasf.rsetv(n, 0.0, state.gpmeanhelper, _params);
+                        ablasf.rsetv(n, 0.0, state.gpproposal, _params);
+                        vs = 0;
+                        for(jj=0; jj<=helperscnt-1; jj++)
+                        {
+                            v = hqrnd.hqrndnormal(rs, _params);
+                            ablasf.raddrv(n, v, state.population2d, hidx*popwidth+state.gphelperidx[jj], state.gpproposal, _params);
+                            ablasf.raddrv(n, 1.0/helperscnt, state.population2d, hidx*popwidth+state.gphelperidx[jj], state.gpmeanhelper, _params);
+                            vs = vs+v;
+                        }
+                        ablasf.raddv(n, -vs, state.gpmeanhelper, state.gpproposal, _params);
+                        propz[offs] = 0.0;
+                        propt[offs] = state.currentladder[hidx];
+                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
+                        ablasf.raddvr(n, 1.0, state.gpproposal, propxf, offs, _params);
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            if( state.proposalkind==2 )
+            {
+                
+                //
+                // DE move
+                //
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        
+                        //
+                        // Determine Dst and SrcA/SrcB indexes
+                        //
+                        dst = grpidx[widx];
+                        do
+                        {
+                            srca = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                            srcb = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        }
+                        while( srca==srcb );
+                        dst = hidx*popwidth+dst;
+                        srca = hidx*popwidth+srca;
+                        srcb = hidx*popwidth+srcb;
+                        
+                        //
+                        // Generate proposal
+                        //
+                        propidx[offs] = dst;
+                        propz[offs] = 0.0;
+                        propt[offs] = state.currentladder[hidx];
+                        v = state.degamma0+state.desigma*hqrnd.hqrndnormal(rs, _params);
+                        for(k=0; k<=n-1; k++)
+                        {
+                            propxf[offs,k] = state.population2d[dst,k]+v*(state.population2d[srca,k]-state.population2d[srcb,k]);
+                        }
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            if( state.proposalkind==3 )
+            {
+                
+                //
+                // DE move with snooker update
+                //
+                ablasf.rallocv(n, ref state.gpdelta, _params);
+                ablasf.rallocv(n, ref state.gptmp0, _params);
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        
+                        //
+                        // Determine Dst and SrcA/SrcB/SrcC indexes
+                        //
+                        dst = grpidx[widx];
+                        srca = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        do
+                        {
+                            srcb = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        }
+                        while( srcb==srca );
+                        do
+                        {
+                            srcc = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
+                        }
+                        while( !(srcc!=srcb && srcc!=srca) );
+                        dst = hidx*popwidth+dst;
+                        srca = hidx*popwidth+srca;
+                        srcb = hidx*popwidth+srcb;
+                        srcc = hidx*popwidth+srcc;
+                        
+                        //
+                        // Generate proposal
+                        //
+                        propidx[offs] = dst;
+                        ablasf.rcopyrv(n, state.population2d, dst, state.gpdelta, _params);
+                        ablasf.raddrv(n, -1.0, state.population2d, srca, state.gpdelta, _params);
+                        vnrm = Math.Sqrt(ablasf.rdotv2(n, state.gpdelta, _params));
+                        ablasf.rmulv(n, 1/(vnrm+math.minrealnumber), state.gpdelta, _params);
+                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
+                        ablasf.raddvr(n, state.degamma0*(ablasf.rdotvr(n, state.gpdelta, state.population2d, srcb, _params)-ablasf.rdotvr(n, state.gpdelta, state.population2d, srcc, _params)), state.gpdelta, propxf, offs, _params);
+                        ablasf.rcopyrv(n, propxf, offs, state.gptmp0, _params);
+                        ablasf.raddrv(n, -1.0, state.population2d, srca, state.gptmp0, _params);
+                        v = Math.Sqrt(ablasf.rdotv2(n, state.gptmp0, _params));
+                        propz[offs] = (n-1)*Math.Log((v+math.minrealnumber)/(vnrm+math.minrealnumber));
+                        propt[offs] = state.currentladder[hidx];
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            if( state.proposalkind==4 )
+            {
+                
+                //
+                // Gaussian move
+                //
+                ablasf.rallocv(n, ref state.gpdelta, _params);
+                ablasf.rallocv(n, ref state.gptmp0, _params);
+                offs = 0;
+                for(widx=0; widx<=dstgrpsize-1; widx++)
+                {
+                    for(hidx=0; hidx<=popheight-1; hidx++)
+                    {
+                        
+                        //
+                        // Determine Dst to update
+                        //
+                        dst = hidx*popwidth+grpidx[widx];
+                        
+                        //
+                        // Generate proposal
+                        //
+                        for(k=0; k<=n-1; k++)
+                        {
+                            state.gptmp0[k] = hqrnd.hqrndnormal(rs, _params);
+                        }
+                        ablasf.rgemv(n, n, 1.0, state.gaussl, 0, state.gptmp0, 0.0, state.gpdelta, _params);
+                        propidx[offs] = dst;
+                        propz[offs] = 0.0;
+                        propt[offs] = state.currentladder[hidx];
+                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
+                        ablasf.raddvr(n, 1.0, state.gpdelta, propxf, offs, _params);
+                        offs = offs+1;
+                    }
+                }
+                return;
+            }
+            alglib.ap.assert(false, "MCMC: 319132 failed");
+        }
+
+
+        /*************************************************************************
+        Compute per-variable integrated autocorrelation times
+
+          -- ALGLIB --
+             Copyright 20.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        private static void computeautocorrtimes(mcmcstate state,
+            ref double[] autocorrtimes,
+            alglib.xparams _params)
+        {
+            int n = 0;
+            int m = 0;
+            int epochscnt = 0;
+            int popwidth = 0;
+            int idxv = 0;
+            int idxw = 0;
+            double[] a = new double[0];
+            double[] a2 = new double[0];
+
+            n = state.n;
+            epochscnt = state.repepochscnt;
+            popwidth = state.reppopwidth;
+            alglib.ap.assert(!state.reportalllevels, "MCMC: 778552 failed");
+            alglib.ap.assert(epochscnt*popwidth==state.repsamplesize, "MCMC: integrity check 657126 failed");
+            ablasf.rsetallocv(n, 0.0, ref autocorrtimes, _params);
+            
+            //
+            //
+            //
+            for(idxv=0; idxv<=n-1; idxv++)
+            {
+                
+                //
+                // Compute averaged autocorrelation function
+                //
+                ablasf.rsetallocv(epochscnt, 0.0, ref a, _params);
+                for(idxw=0; idxw<=popwidth-1; idxw++)
+                {
+                    autocorrij(state, idxw, idxv, ref a2, _params);
+                    ablasf.raddv(epochscnt, (double)1/(double)popwidth, a2, a, _params);
+                }
+                ablasf.rmulv(epochscnt, 1/(a[0]+Math.Sqrt(math.minrealnumber)*apserv.possign(a[0], _params)), a, _params);
+                
+                //
+                // Compute integrated autocorrelation time using finite window M, such that time(M)*C<=M for C~5.
+                // Having finite window size helps to reduce influence of random noise.
+                //
+                autocorrtimes[idxv] = a[0];
+                for(m=1; m<=epochscnt-1; m++)
+                {
+                    autocorrtimes[idxv] = autocorrtimes[idxv]+2*a[m];
+                    if( (double)(autocorrtimes[idxv]*cautocorr)<=(double)(m) )
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+
+        private static void autocorrij(mcmcstate state,
+            int idxw,
+            int idxv,
+            ref double[] a,
+            alglib.xparams _params)
+        {
+            int epochscnt = 0;
+            int ex2 = 0;
+            int popwidth = 0;
+            double[] x = new double[0];
+            double meanx = 0;
+            int i = 0;
+            complex[] f = new complex[0];
+
+            epochscnt = state.repepochscnt;
+            popwidth = state.reppopwidth;
+            alglib.ap.assert(!state.reportalllevels, "MCMC: 778552 failed");
+            alglib.ap.assert(epochscnt*popwidth==state.repsamplesize, "MCMC: integrity check 678132 failed");
+            ex2 = 1;
+            while( ex2<epochscnt )
+            {
+                ex2 = ex2*2;
+            }
+            ablasf.rsetallocv(ex2, 0.0, ref x, _params);
+            meanx = 0;
+            for(i=0; i<=epochscnt-1; i++)
+            {
+                x[i] = state.repsample[popwidth*i+idxw,idxv];
+                meanx = meanx+x[i];
+            }
+            meanx = meanx/epochscnt;
+            for(i=0; i<=epochscnt-1; i++)
+            {
+                x[i] = x[i]-meanx;
+            }
+            fft.fftr1dbuf(x, ex2, ref f, _params);
+            for(i=0; i<=ex2-1; i++)
+            {
+                f[i] = f[i]*math.conj(f[i]);
+            }
+            fft.fftr1dinvbuf(f, ex2, ref x, _params);
+            ablasf.rallocv(epochscnt, ref a, _params);
+            ablasf.rcopymulv(epochscnt, (double)1/(double)epochscnt, x, a, _params);
+        }
+
+
+    }
+    public partial class wsr
     {
         /*************************************************************************
         Wilcoxon signed-rank test
@@ -14594,189 +22032,29 @@ public partial class alglib
 
 
     }
-    public class studentttests
+    public partial class variancetests
     {
         /*************************************************************************
-        One-sample t-test
+        Two-sample F-test
 
-        This test checks three hypotheses about the mean of the given sample.  The
-        following tests are performed:
-            * two-tailed test (null hypothesis - the mean is equal  to  the  given
-              value)
-            * left-tailed test (null hypothesis - the  mean  is  greater  than  or
-              equal to the given value)
-            * right-tailed test (null hypothesis - the mean is less than or  equal
-              to the given value).
+        This test checks three hypotheses about dispersions of the given  samples.
+        The following tests are performed:
+            * two-tailed test (null hypothesis - the dispersions are equal)
+            * left-tailed test (null hypothesis  -  the  dispersion  of  the first
+              sample is greater than or equal to  the  dispersion  of  the  second
+              sample).
+            * right-tailed test (null hypothesis - the  dispersion  of  the  first
+              sample is less than or equal to the dispersion of the second sample)
 
-        The test is based on the assumption that  a  given  sample  has  a  normal
-        distribution and  an  unknown  dispersion.  If  the  distribution  sharply
-        differs from normal, the test will work incorrectly.
-
-        INPUT PARAMETERS:
-            X       -   sample. Array whose index goes from 0 to N-1.
-            N       -   size of sample, N>=0
-            Mean    -   assumed value of the mean.
-
-        OUTPUT PARAMETERS:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-        NOTE: this function correctly handles degenerate cases:
-              * when N=0, all p-values are set to 1.0
-              * when variance of X[] is exactly zero, p-values are set
-                to 1.0 or 0.0, depending on difference between sample mean and
-                value of mean being tested.
-
-
-          -- ALGLIB --
-             Copyright 08.09.2006 by Bochkanov Sergey
-        *************************************************************************/
-        public static void studentttest1(double[] x,
-            int n,
-            double mean,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            double xmean = 0;
-            double x0 = 0;
-            double v = 0;
-            bool samex = new bool();
-            double xvariance = 0;
-            double xstddev = 0;
-            double v1 = 0;
-            double v2 = 0;
-            double stat = 0;
-            double s = 0;
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            if( n<=0 )
-            {
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            
-            //
-            // Mean
-            //
-            xmean = 0;
-            x0 = x[0];
-            samex = true;
-            for(i=0; i<=n-1; i++)
-            {
-                v = x[i];
-                xmean = xmean+v;
-                samex = samex && (double)(v)==(double)(x0);
-            }
-            if( samex )
-            {
-                xmean = x0;
-            }
-            else
-            {
-                xmean = xmean/n;
-            }
-            
-            //
-            // Variance (using corrected two-pass algorithm)
-            //
-            xvariance = 0;
-            xstddev = 0;
-            if( n!=1 && !samex )
-            {
-                v1 = 0;
-                for(i=0; i<=n-1; i++)
-                {
-                    v1 = v1+math.sqr(x[i]-xmean);
-                }
-                v2 = 0;
-                for(i=0; i<=n-1; i++)
-                {
-                    v2 = v2+(x[i]-xmean);
-                }
-                v2 = math.sqr(v2)/n;
-                xvariance = (v1-v2)/(n-1);
-                if( (double)(xvariance)<(double)(0) )
-                {
-                    xvariance = 0;
-                }
-                xstddev = Math.Sqrt(xvariance);
-            }
-            if( (double)(xstddev)==(double)(0) )
-            {
-                if( (double)(xmean)==(double)(mean) )
-                {
-                    bothtails = 1.0;
-                }
-                else
-                {
-                    bothtails = 0.0;
-                }
-                if( (double)(xmean)>=(double)(mean) )
-                {
-                    lefttail = 1.0;
-                }
-                else
-                {
-                    lefttail = 0.0;
-                }
-                if( (double)(xmean)<=(double)(mean) )
-                {
-                    righttail = 1.0;
-                }
-                else
-                {
-                    righttail = 0.0;
-                }
-                return;
-            }
-            
-            //
-            // Statistic
-            //
-            stat = (xmean-mean)/(xstddev/Math.Sqrt(n));
-            s = studenttdistr.studenttdistribution(n-1, stat, _params);
-            bothtails = 2*Math.Min(s, 1-s);
-            lefttail = s;
-            righttail = 1-s;
-        }
-
-
-        /*************************************************************************
-        Two-sample pooled test
-
-        This test checks three hypotheses about the mean of the given samples. The
-        following tests are performed:
-            * two-tailed test (null hypothesis - the means are equal)
-            * left-tailed test (null hypothesis - the mean of the first sample  is
-              greater than or equal to the mean of the second sample)
-            * right-tailed test (null hypothesis - the mean of the first sample is
-              less than or equal to the mean of the second sample).
-
-        Test is based on the following assumptions:
-            * given samples have normal distributions
-            * dispersions are equal
-            * samples are independent.
+        The test is based on the following assumptions:
+            * the given samples have normal distributions
+            * the samples are independent.
 
         Input parameters:
-            X       -   sample 1. Array whose index goes from 0 to N-1.
-            N       -   size of sample.
-            Y       -   sample 2. Array whose index goes from 0 to M-1.
-            M       -   size of sample.
+            X   -   sample 1. Array whose index goes from 0 to N-1.
+            N   -   sample size.
+            Y   -   sample 2. Array whose index goes from 0 to M-1.
+            M   -   sample size.
 
         Output parameters:
             BothTails   -   p-value for two-tailed test.
@@ -14789,15 +22067,10 @@ public partial class alglib
                             If RightTail is less than the given significance level
                             the null hypothesis is rejected.
 
-        NOTE: this function correctly handles degenerate cases:
-              * when N=0 or M=0, all p-values are set to 1.0
-              * when both samples has exactly zero variance, p-values are set
-                to 1.0 or 0.0, depending on difference between means.
-
           -- ALGLIB --
-             Copyright 18.09.2006 by Bochkanov Sergey
+             Copyright 19.09.2006 by Bochkanov Sergey
         *************************************************************************/
-        public static void studentttest2(double[] x,
+        public static void ftest(double[] x,
             int n,
             double[] y,
             int m,
@@ -14807,195 +22080,19 @@ public partial class alglib
             alglib.xparams _params)
         {
             int i = 0;
-            bool samex = new bool();
-            bool samey = new bool();
-            double x0 = 0;
-            double y0 = 0;
-            double xmean = 0;
-            double ymean = 0;
-            double v = 0;
-            double stat = 0;
-            double s = 0;
-            double p = 0;
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            if( n<=0 || m<=0 )
-            {
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            
-            //
-            // Mean
-            //
-            xmean = 0;
-            x0 = x[0];
-            samex = true;
-            for(i=0; i<=n-1; i++)
-            {
-                v = x[i];
-                xmean = xmean+v;
-                samex = samex && (double)(v)==(double)(x0);
-            }
-            if( samex )
-            {
-                xmean = x0;
-            }
-            else
-            {
-                xmean = xmean/n;
-            }
-            ymean = 0;
-            y0 = y[0];
-            samey = true;
-            for(i=0; i<=m-1; i++)
-            {
-                v = y[i];
-                ymean = ymean+v;
-                samey = samey && (double)(v)==(double)(y0);
-            }
-            if( samey )
-            {
-                ymean = y0;
-            }
-            else
-            {
-                ymean = ymean/m;
-            }
-            
-            //
-            // S
-            //
-            s = 0;
-            if( n+m>2 )
-            {
-                for(i=0; i<=n-1; i++)
-                {
-                    s = s+math.sqr(x[i]-xmean);
-                }
-                for(i=0; i<=m-1; i++)
-                {
-                    s = s+math.sqr(y[i]-ymean);
-                }
-                s = Math.Sqrt(s*((double)1/(double)n+(double)1/(double)m)/(n+m-2));
-            }
-            if( (double)(s)==(double)(0) )
-            {
-                if( (double)(xmean)==(double)(ymean) )
-                {
-                    bothtails = 1.0;
-                }
-                else
-                {
-                    bothtails = 0.0;
-                }
-                if( (double)(xmean)>=(double)(ymean) )
-                {
-                    lefttail = 1.0;
-                }
-                else
-                {
-                    lefttail = 0.0;
-                }
-                if( (double)(xmean)<=(double)(ymean) )
-                {
-                    righttail = 1.0;
-                }
-                else
-                {
-                    righttail = 0.0;
-                }
-                return;
-            }
-            
-            //
-            // Statistic
-            //
-            stat = (xmean-ymean)/s;
-            p = studenttdistr.studenttdistribution(n+m-2, stat, _params);
-            bothtails = 2*Math.Min(p, 1-p);
-            lefttail = p;
-            righttail = 1-p;
-        }
-
-
-        /*************************************************************************
-        Two-sample unpooled test
-
-        This test checks three hypotheses about the mean of the given samples. The
-        following tests are performed:
-            * two-tailed test (null hypothesis - the means are equal)
-            * left-tailed test (null hypothesis - the mean of the first sample  is
-              greater than or equal to the mean of the second sample)
-            * right-tailed test (null hypothesis - the mean of the first sample is
-              less than or equal to the mean of the second sample).
-
-        Test is based on the following assumptions:
-            * given samples have normal distributions
-            * samples are independent.
-        Equality of variances is NOT required.
-
-        Input parameters:
-            X - sample 1. Array whose index goes from 0 to N-1.
-            N - size of the sample.
-            Y - sample 2. Array whose index goes from 0 to M-1.
-            M - size of the sample.
-
-        Output parameters:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-        NOTE: this function correctly handles degenerate cases:
-              * when N=0 or M=0, all p-values are set to 1.0
-              * when both samples has zero variance, p-values are set
-                to 1.0 or 0.0, depending on difference between means.
-              * when only one sample has zero variance, test reduces to 1-sample
-                version.
-
-          -- ALGLIB --
-             Copyright 18.09.2006 by Bochkanov Sergey
-        *************************************************************************/
-        public static void unequalvariancettest(double[] x,
-            int n,
-            double[] y,
-            int m,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            bool samex = new bool();
-            bool samey = new bool();
-            double x0 = 0;
-            double y0 = 0;
             double xmean = 0;
             double ymean = 0;
             double xvar = 0;
             double yvar = 0;
-            double v = 0;
-            double df = 0;
-            double p = 0;
+            int df1 = 0;
+            int df2 = 0;
             double stat = 0;
-            double c = 0;
 
             bothtails = 0;
             lefttail = 0;
             righttail = 0;
 
-            if( n<=0 || m<=0 )
+            if( n<=2 || m<=2 )
             {
                 bothtails = 1.0;
                 lefttail = 1.0;
@@ -15007,162 +22104,72 @@ public partial class alglib
             // Mean
             //
             xmean = 0;
-            x0 = x[0];
-            samex = true;
             for(i=0; i<=n-1; i++)
             {
-                v = x[i];
-                xmean = xmean+v;
-                samex = samex && (double)(v)==(double)(x0);
+                xmean = xmean+x[i];
             }
-            if( samex )
-            {
-                xmean = x0;
-            }
-            else
-            {
-                xmean = xmean/n;
-            }
+            xmean = xmean/n;
             ymean = 0;
-            y0 = y[0];
-            samey = true;
             for(i=0; i<=m-1; i++)
             {
-                v = y[i];
-                ymean = ymean+v;
-                samey = samey && (double)(v)==(double)(y0);
+                ymean = ymean+y[i];
             }
-            if( samey )
-            {
-                ymean = y0;
-            }
-            else
-            {
-                ymean = ymean/m;
-            }
+            ymean = ymean/m;
             
             //
             // Variance (using corrected two-pass algorithm)
             //
             xvar = 0;
-            if( n>=2 && !samex )
+            for(i=0; i<=n-1; i++)
             {
-                for(i=0; i<=n-1; i++)
-                {
-                    xvar = xvar+math.sqr(x[i]-xmean);
-                }
-                xvar = xvar/(n-1);
+                xvar = xvar+math.sqr(x[i]-xmean);
             }
+            xvar = xvar/(n-1);
             yvar = 0;
-            if( m>=2 && !samey )
+            for(i=0; i<=m-1; i++)
             {
-                for(i=0; i<=m-1; i++)
-                {
-                    yvar = yvar+math.sqr(y[i]-ymean);
-                }
-                yvar = yvar/(m-1);
+                yvar = yvar+math.sqr(y[i]-ymean);
             }
-            
-            //
-            // Handle different special cases
-            // (one or both variances are zero).
-            //
-            if( (double)(xvar)==(double)(0) && (double)(yvar)==(double)(0) )
+            yvar = yvar/(m-1);
+            if( (double)(xvar)==(double)(0) || (double)(yvar)==(double)(0) )
             {
-                if( (double)(xmean)==(double)(ymean) )
-                {
-                    bothtails = 1.0;
-                }
-                else
-                {
-                    bothtails = 0.0;
-                }
-                if( (double)(xmean)>=(double)(ymean) )
-                {
-                    lefttail = 1.0;
-                }
-                else
-                {
-                    lefttail = 0.0;
-                }
-                if( (double)(xmean)<=(double)(ymean) )
-                {
-                    righttail = 1.0;
-                }
-                else
-                {
-                    righttail = 0.0;
-                }
-                return;
-            }
-            if( (double)(xvar)==(double)(0) )
-            {
-                
-                //
-                // X is constant, unpooled 2-sample test reduces to 1-sample test.
-                //
-                // NOTE: right-tail and left-tail must be passed to 1-sample
-                //       t-test in reverse order because we reverse order of
-                //       of samples.
-                //
-                studentttest1(y, m, xmean, ref bothtails, ref righttail, ref lefttail, _params);
-                return;
-            }
-            if( (double)(yvar)==(double)(0) )
-            {
-                
-                //
-                // Y is constant, unpooled 2-sample test reduces to 1-sample test.
-                //
-                studentttest1(x, n, ymean, ref bothtails, ref lefttail, ref righttail, _params);
+                bothtails = 1.0;
+                lefttail = 1.0;
+                righttail = 1.0;
                 return;
             }
             
             //
             // Statistic
             //
-            stat = (xmean-ymean)/Math.Sqrt(xvar/n+yvar/m);
-            c = xvar/n/(xvar/n+yvar/m);
-            df = apserv.rmul2(n-1, m-1, _params)/((m-1)*math.sqr(c)+(n-1)*math.sqr(1-c));
-            if( (double)(stat)>(double)(0) )
-            {
-                p = 1-0.5*ibetaf.incompletebeta(df/2, 0.5, df/(df+math.sqr(stat)), _params);
-            }
-            else
-            {
-                p = 0.5*ibetaf.incompletebeta(df/2, 0.5, df/(df+math.sqr(stat)), _params);
-            }
-            bothtails = 2*Math.Min(p, 1-p);
-            lefttail = p;
-            righttail = 1-p;
+            df1 = n-1;
+            df2 = m-1;
+            stat = Math.Min(xvar/yvar, yvar/xvar);
+            bothtails = 1-(fdistr.fdistribution(df1, df2, 1/stat, _params)-fdistr.fdistribution(df1, df2, stat, _params));
+            lefttail = fdistr.fdistribution(df1, df2, xvar/yvar, _params);
+            righttail = 1-lefttail;
         }
 
 
-    }
-    public class stest
-    {
         /*************************************************************************
-        Sign test
+        One-sample chi-square test
 
-        This test checks three hypotheses about the median of  the  given  sample.
+        This test checks three hypotheses about the dispersion of the given sample
         The following tests are performed:
-            * two-tailed test (null hypothesis - the median is equal to the  given
-              value)
-            * left-tailed test (null hypothesis - the median is  greater  than  or
-              equal to the given value)
-            * right-tailed test (null hypothesis - the  median  is  less  than  or
-              equal to the given value)
+            * two-tailed test (null hypothesis - the dispersion equals  the  given
+              number)
+            * left-tailed test (null hypothesis - the dispersion is  greater  than
+              or equal to the given number)
+            * right-tailed test (null hypothesis  -  dispersion is  less  than  or
+              equal to the given number).
 
-        Requirements:
-            * the scale of measurement should be ordinal, interval or ratio  (i.e.
-              the test could not be applied to nominal variables).
-
-        The test is non-parametric and doesn't require distribution X to be normal
+        Test is based on the following assumptions:
+            * the given sample has a normal distribution.
 
         Input parameters:
-            X       -   sample. Array whose index goes from 0 to N-1.
-            N       -   size of the sample.
-            Median  -   assumed median value.
+            X           -   sample 1. Array whose index goes from 0 to N-1.
+            N           -   size of the sample.
+            Variance    -   dispersion value to compare with.
 
         Output parameters:
             BothTails   -   p-value for two-tailed test.
@@ -15175,23 +22182,22 @@ public partial class alglib
                             If RightTail is less than the given significance level
                             the null hypothesis is rejected.
 
-        While   calculating   p-values   high-precision   binomial    distribution
-        approximation is used, so significance levels have about 15 exact digits.
-
           -- ALGLIB --
-             Copyright 08.09.2006 by Bochkanov Sergey
+             Copyright 19.09.2006 by Bochkanov Sergey
         *************************************************************************/
-        public static void onesamplesigntest(double[] x,
+        public static void onesamplevariancetest(double[] x,
             int n,
-            double median,
+            double variance,
             ref double bothtails,
             ref double lefttail,
             ref double righttail,
             alglib.xparams _params)
         {
             int i = 0;
-            int gtcnt = 0;
-            int necnt = 0;
+            double xmean = 0;
+            double xvar = 0;
+            double s = 0;
+            double stat = 0;
 
             bothtails = 0;
             lefttail = 0;
@@ -15206,7002 +22212,40 @@ public partial class alglib
             }
             
             //
-            // Calculate:
-            // GTCnt - count of x[i]>Median
-            // NECnt - count of x[i]<>Median
+            // Mean
             //
-            gtcnt = 0;
-            necnt = 0;
+            xmean = 0;
             for(i=0; i<=n-1; i++)
             {
-                if( (double)(x[i])>(double)(median) )
-                {
-                    gtcnt = gtcnt+1;
-                }
-                if( (double)(x[i])!=(double)(median) )
-                {
-                    necnt = necnt+1;
-                }
+                xmean = xmean+x[i];
             }
-            if( necnt==0 )
-            {
-                
-                //
-                // all x[i] are equal to Median.
-                // So we can conclude that Median is a true median :)
-                //
-                bothtails = 1.0;
-                lefttail = 1.0;
-                righttail = 1.0;
-                return;
-            }
-            bothtails = Math.Min(2*binomialdistr.binomialdistribution(Math.Min(gtcnt, necnt-gtcnt), necnt, 0.5, _params), 1.0);
-            lefttail = binomialdistr.binomialdistribution(gtcnt, necnt, 0.5, _params);
-            righttail = binomialdistr.binomialcdistribution(gtcnt-1, necnt, 0.5, _params);
-        }
-
-
-    }
-    public class mcmc
-    {
-        /*************************************************************************
-        This object stores MCMC sampler.
-
-        You should use functions provided by the MCMC subpackage to work with this
-        object.
-        *************************************************************************/
-        public class mcmcstate : apobject
-        {
-            public int n;
-            public int x0width;
-            public int x0height;
-            public double[,] x0m;
-            public int x0type;
-            public double x0stddev;
-            public int algokind;
-            public int ladderkind;
-            public int proposalkind;
-            public int helperscnt;
-            public double desigma;
-            public double degamma0;
-            public double[] initialladder;
-            public double laddernu0;
-            public double laddertau;
-            public bool noladderadaptationafterburnin;
-            public double[,] gausslowerc;
-            public double[,] gaussl;
-            public bool useparallelmoves;
-            public int epochscnt;
-            public int popwidth;
-            public int popheight;
-            public int burninlen;
-            public int thinby;
-            public bool reportalllevels;
-            public int rngseed;
-            public double[] s;
-            public bool initialstart;
-            public bool xrep;
-            public double[,] population2d;
-            public double[] currentladder;
-            public hqrnd.hqrndstate globalrs;
-            public bool reseedglobalrs;
-            public int[] propidx;
-            public double[] propz;
-            public double[] propt;
-            public double[,] propxf;
-            public int[] grpabidx;
-            public int grpasize;
-            public int[] grpdsidx;
-            public bool haslastpopulation;
-            public double[,] lastpopulation2d;
-            public int[] lastgrpabidx;
-            public int lastpopulationwidth;
-            public int lastpopulationheight;
-            public bool userterminationneeded;
-            public int protocolversion;
-            public bool issuesparserequests;
-            public int requesttype;
-            public double[] reportx;
-            public double reportf;
-            public int querysize;
-            public int queryfuncs;
-            public int queryvars;
-            public int querydim;
-            public int queryformulasize;
-            public double[] querydata;
-            public double[] replyfi;
-            public double[] replydj;
-            public sparse.sparsematrix replysj;
-            public double[] tmpx1;
-            public double[] tmpc1;
-            public double[] tmpf1;
-            public double[] tmpg1;
-            public double[,] tmpj1;
-            public sparse.sparsematrix tmps1;
-            public int repnfev;
-            public int repaccept1cnt;
-            public int repaccepthcnt;
-            public int repepochscnt;
-            public int reppopwidth;
-            public int reppopheight;
-            public int repswapacceptcnt;
-            public int repswapattemptcnt;
-            public double[] repavgswaprates;
-            public double[,] repsample;
-            public int repsamplesize;
-            public bool dotrace;
-            public bool dodetailedtrace;
-            public bool dotimers;
-            public apserv.stimer timertotal;
-            public apserv.stimer timercallback;
-            public apserv.stimer timerreport;
-            public double[] tmp0;
-            public double[] tmp1;
-            public double[] tmp2;
-            public int[] tmpi0;
-            public int[] gphelperidx;
-            public double[] gpmeanhelper;
-            public double[] gpproposal;
-            public double[] gpdelta;
-            public double[] gptmp0;
-            public double[] saacceptrates;
-            public double[] savecsi;
-            public double[] saproposedladder;
-            public rcommstate rstate;
-            public mcmcstate()
-            {
-                init();
-            }
-            public override void init()
-            {
-                x0m = new double[0,0];
-                initialladder = new double[0];
-                gausslowerc = new double[0,0];
-                gaussl = new double[0,0];
-                s = new double[0];
-                population2d = new double[0,0];
-                currentladder = new double[0];
-                globalrs = new hqrnd.hqrndstate();
-                propidx = new int[0];
-                propz = new double[0];
-                propt = new double[0];
-                propxf = new double[0,0];
-                grpabidx = new int[0];
-                grpdsidx = new int[0];
-                lastpopulation2d = new double[0,0];
-                lastgrpabidx = new int[0];
-                reportx = new double[0];
-                querydata = new double[0];
-                replyfi = new double[0];
-                replydj = new double[0];
-                replysj = new sparse.sparsematrix();
-                tmpx1 = new double[0];
-                tmpc1 = new double[0];
-                tmpf1 = new double[0];
-                tmpg1 = new double[0];
-                tmpj1 = new double[0,0];
-                tmps1 = new sparse.sparsematrix();
-                repavgswaprates = new double[0];
-                repsample = new double[0,0];
-                timertotal = new apserv.stimer();
-                timercallback = new apserv.stimer();
-                timerreport = new apserv.stimer();
-                tmp0 = new double[0];
-                tmp1 = new double[0];
-                tmp2 = new double[0];
-                tmpi0 = new int[0];
-                gphelperidx = new int[0];
-                gpmeanhelper = new double[0];
-                gpproposal = new double[0];
-                gpdelta = new double[0];
-                gptmp0 = new double[0];
-                saacceptrates = new double[0];
-                savecsi = new double[0];
-                saproposedladder = new double[0];
-                rstate = new rcommstate();
-            }
-            public override alglib.apobject make_copy()
-            {
-                mcmcstate _result = new mcmcstate();
-                _result.n = n;
-                _result.x0width = x0width;
-                _result.x0height = x0height;
-                _result.x0m = (double[,])x0m.Clone();
-                _result.x0type = x0type;
-                _result.x0stddev = x0stddev;
-                _result.algokind = algokind;
-                _result.ladderkind = ladderkind;
-                _result.proposalkind = proposalkind;
-                _result.helperscnt = helperscnt;
-                _result.desigma = desigma;
-                _result.degamma0 = degamma0;
-                _result.initialladder = (double[])initialladder.Clone();
-                _result.laddernu0 = laddernu0;
-                _result.laddertau = laddertau;
-                _result.noladderadaptationafterburnin = noladderadaptationafterburnin;
-                _result.gausslowerc = (double[,])gausslowerc.Clone();
-                _result.gaussl = (double[,])gaussl.Clone();
-                _result.useparallelmoves = useparallelmoves;
-                _result.epochscnt = epochscnt;
-                _result.popwidth = popwidth;
-                _result.popheight = popheight;
-                _result.burninlen = burninlen;
-                _result.thinby = thinby;
-                _result.reportalllevels = reportalllevels;
-                _result.rngseed = rngseed;
-                _result.s = (double[])s.Clone();
-                _result.initialstart = initialstart;
-                _result.xrep = xrep;
-                _result.population2d = (double[,])population2d.Clone();
-                _result.currentladder = (double[])currentladder.Clone();
-                _result.globalrs = globalrs!=null ? (hqrnd.hqrndstate)globalrs.make_copy() : null;
-                _result.reseedglobalrs = reseedglobalrs;
-                _result.propidx = (int[])propidx.Clone();
-                _result.propz = (double[])propz.Clone();
-                _result.propt = (double[])propt.Clone();
-                _result.propxf = (double[,])propxf.Clone();
-                _result.grpabidx = (int[])grpabidx.Clone();
-                _result.grpasize = grpasize;
-                _result.grpdsidx = (int[])grpdsidx.Clone();
-                _result.haslastpopulation = haslastpopulation;
-                _result.lastpopulation2d = (double[,])lastpopulation2d.Clone();
-                _result.lastgrpabidx = (int[])lastgrpabidx.Clone();
-                _result.lastpopulationwidth = lastpopulationwidth;
-                _result.lastpopulationheight = lastpopulationheight;
-                _result.userterminationneeded = userterminationneeded;
-                _result.protocolversion = protocolversion;
-                _result.issuesparserequests = issuesparserequests;
-                _result.requesttype = requesttype;
-                _result.reportx = (double[])reportx.Clone();
-                _result.reportf = reportf;
-                _result.querysize = querysize;
-                _result.queryfuncs = queryfuncs;
-                _result.queryvars = queryvars;
-                _result.querydim = querydim;
-                _result.queryformulasize = queryformulasize;
-                _result.querydata = (double[])querydata.Clone();
-                _result.replyfi = (double[])replyfi.Clone();
-                _result.replydj = (double[])replydj.Clone();
-                _result.replysj = replysj!=null ? (sparse.sparsematrix)replysj.make_copy() : null;
-                _result.tmpx1 = (double[])tmpx1.Clone();
-                _result.tmpc1 = (double[])tmpc1.Clone();
-                _result.tmpf1 = (double[])tmpf1.Clone();
-                _result.tmpg1 = (double[])tmpg1.Clone();
-                _result.tmpj1 = (double[,])tmpj1.Clone();
-                _result.tmps1 = tmps1!=null ? (sparse.sparsematrix)tmps1.make_copy() : null;
-                _result.repnfev = repnfev;
-                _result.repaccept1cnt = repaccept1cnt;
-                _result.repaccepthcnt = repaccepthcnt;
-                _result.repepochscnt = repepochscnt;
-                _result.reppopwidth = reppopwidth;
-                _result.reppopheight = reppopheight;
-                _result.repswapacceptcnt = repswapacceptcnt;
-                _result.repswapattemptcnt = repswapattemptcnt;
-                _result.repavgswaprates = (double[])repavgswaprates.Clone();
-                _result.repsample = (double[,])repsample.Clone();
-                _result.repsamplesize = repsamplesize;
-                _result.dotrace = dotrace;
-                _result.dodetailedtrace = dodetailedtrace;
-                _result.dotimers = dotimers;
-                _result.timertotal = timertotal!=null ? (apserv.stimer)timertotal.make_copy() : null;
-                _result.timercallback = timercallback!=null ? (apserv.stimer)timercallback.make_copy() : null;
-                _result.timerreport = timerreport!=null ? (apserv.stimer)timerreport.make_copy() : null;
-                _result.tmp0 = (double[])tmp0.Clone();
-                _result.tmp1 = (double[])tmp1.Clone();
-                _result.tmp2 = (double[])tmp2.Clone();
-                _result.tmpi0 = (int[])tmpi0.Clone();
-                _result.gphelperidx = (int[])gphelperidx.Clone();
-                _result.gpmeanhelper = (double[])gpmeanhelper.Clone();
-                _result.gpproposal = (double[])gpproposal.Clone();
-                _result.gpdelta = (double[])gpdelta.Clone();
-                _result.gptmp0 = (double[])gptmp0.Clone();
-                _result.saacceptrates = (double[])saacceptrates.Clone();
-                _result.savecsi = (double[])savecsi.Clone();
-                _result.saproposedladder = (double[])saproposedladder.Clone();
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
-                return _result;
-            }
-        };
-
-
-        /*************************************************************************
-        These fields store MCMC report:
-        * nfev                      number of function evaluations
-        * acceptrate                acceptance rate of a MCMC algo; when  parallel
-                                    tempering is used, this field stores acceptance
-                                    rate for the lowest level (T=1).
-        * swapacceptrate            acceptance rate for swaps between levels of the
-                                    temperature ladder. When no parallel tempering
-                                    is used, stores zero.
-        * autocorrtimes             array[N], per-variable autocorrelation times
-
-        *************************************************************************/
-        public class mcmcreport : apobject
-        {
-            public int nfev;
-            public double acceptrate;
-            public double swapacceptrate;
-            public double[] autocorrtimes;
-            public mcmcreport()
-            {
-                init();
-            }
-            public override void init()
-            {
-                autocorrtimes = new double[0];
-            }
-            public override alglib.apobject make_copy()
-            {
-                mcmcreport _result = new mcmcreport();
-                _result.nfev = nfev;
-                _result.acceptrate = acceptrate;
-                _result.swapacceptrate = swapacceptrate;
-                _result.autocorrtimes = (double[])autocorrtimes.Clone();
-                return _result;
-            }
-        };
-
-
-
-
-        public const double goodmanwearea = 2.0;
-        public const double cautocorr = 5.0;
-
-
-        /*************************************************************************
-        This function initializes MCMC sampler using single initial point to  seed
-        the population.
-
-        The population is generated around the initial point with random  Gaussian
-        noise being added, having per-variable magnitude equal to XStdDev  or  (if
-        MCMCSetScale() was called) equal to XStdDev*S[I].
-
-
-        INPUT PARAMETERS:
-            N       -   problem dimension, N>0:
-                        * if given, only leading N elements of X are used
-                        * if not given, automatically determined from size of X
-            X       -   starting point used to seed a MCMC algo, array[N]:
-                        * it is better to have X not too far away from the maximum
-                          of log-likelihood
-                        * any point will do, if no maximum location is unknown
-            XStdDev -   standard deviation of a population generated around X:
-                        * strictly greater than zero
-                        * nearly zero values are likely  to  cause  population  to
-                          stagnate, whilst too large values are  likely  to  cause
-                          population to spend excessive time converging
-
-        OUTPUT PARAMETERS:
-            State   -   structure stores MCMC sampler state
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmccreate1(int n,
-            double[] x,
-            double xstddev,
-            mcmcstate state,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(n>=1, "MCMCCreate1: N<1");
-            alglib.ap.assert(alglib.ap.len(x)>=n, "MCMCCreate1: Length(X)<N");
-            alglib.ap.assert(apserv.isfinitevector(x, n, _params), "MCMCCreate1: X contains infinite or NaN values");
-            alglib.ap.assert(math.isfinite(xstddev) && (double)(xstddev)>(double)(0), "MCMCCreate1: XStdDev<=0 or is not finite");
-            initinternal(state, n, _params);
-            state.x0width = 1;
-            state.x0height = 1;
-            ablasf.rallocm(1, n, ref state.x0m, _params);
-            ablasf.rcopyvr(n, x, state.x0m, 0, _params);
-            state.x0stddev = xstddev;
-            state.x0type = 0;
-        }
-
-
-        /*************************************************************************
-        This function initializes MCMC sampler using a population of user-specified
-        points.
-
-        A specific sampling algorithm that needs an  initial  population will  use
-        user-provided points. If an algorithm needs more initial points  than  was
-        specified, additional points will be randomly generated  using  population
-        as a distribution reference.
-
-        INPUT PARAMETERS:
-            N       -   problem dimension, N>0:
-                        * if given, only leading N elements of P are used
-                        * if not given, automatically determined from size of P
-            P       -   initial points, array[PopSize,N]
-            PopSize -   population size, PopSize>0:
-                        * if given, only leading PopSize elements of P are used
-                        * if not given, automatically determined from size of P
-
-        OUTPUT PARAMETERS:
-            State   -   structure stores MCMC sampler state
-
-          -- ALGLIB --
-             Copyright 20.05.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmccreatefrompopulation(int n,
-            double[,] p,
-            int popsize,
-            mcmcstate state,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(n>=1, "MCMCCreateFromPopulation: N<1");
-            alglib.ap.assert(popsize>=1, "MCMCCreateFromPopulation: PopSize<1");
-            alglib.ap.assert(alglib.ap.cols(p)>=n, "MCMCCreateFromPopulation: Cols(P)<N");
-            alglib.ap.assert(alglib.ap.rows(p)>=popsize, "MCMCCreateFromPopulation: Rows(P)<PopSize");
-            alglib.ap.assert(apserv.apservisfinitematrix(p, popsize, n, _params), "MCMCCreateFromPopulation: P contains infinite or NaN values");
-            initinternal(state, n, _params);
-            state.x0width = popsize;
-            state.x0height = 1;
-            ablasf.rcopyallocm(popsize, n, p, ref state.x0m, _params);
-            state.x0type = 1;
-        }
-
-
-        /*************************************************************************
-        This function sets per-variable scaling coefficients for MCMC sampler.
-
-        Present version of the MCMC sampler uses per-variable scales during initial
-        popilation generation: an initial point X0 is perturbed with random noise,
-        whose per-variable magnitude is XStdDev*S[I].
-
-        Future versions of the sampler may use scales for other purposes too,  but
-        are likely to do so in a backward-compatible manner.
-
-        INPUT PARAMETERS:
-            State   -   structure stores algorithm state
-            S       -   array[N], non-zero scaling coefficients
-                        S[i] may be negative, sign doesn't matter.
-
-          -- ALGLIB --
-             Copyright 15.05.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetscale(mcmcstate state,
-            double[] s,
-            alglib.xparams _params)
-        {
-            int i = 0;
-
-            alglib.ap.assert(alglib.ap.len(s)>=state.n, "MCMCSetScale: Length(S)<N");
-            for(i=0; i<=state.n-1; i++)
-            {
-                alglib.ap.assert(math.isfinite(s[i]), "MCMCSetScale: S contains infinite or NAN elements");
-                alglib.ap.assert((double)(s[i])!=(double)(0), "MCMCSetScale: S contains zero elements");
-                state.s[i] = Math.Abs(s[i]);
-            }
-        }
-
-
-        /*************************************************************************
-        This function controls adaptation rate of the temperature ladder  used  by
-        adaptive parallel tempering algorithms.
-
-        The sampler changes the logarithmic difference between temperatures in the
-        ladder ln(T[i+1]-T[i]) as a product of different between swap accept rates
-        A[i]-A[i+1] and current adaptation rate, which is nu0/(1+iteridx/tau).
-
-        Here nu0 is an initial adaptation rate that similar to stochastic gradient
-        descent learning rate. Recommended values 0.01-0.1. And tau is a  learning
-        rate decay time, depending on the problem it can be 100 or 1000.
-
-        The MCMC sampler uses some default values for these parameters,  but  they
-        can change in future versions without notice.
-
-        This function has no effect when adaptive tempering is not active.
-
-        INPUT PARAMETERS:
-            State   -   structure stores algorithm state
-            Nu0     -   initial learning rate, >=0.
-                        Zero value effectively turns off adaptation.
-            Tau     -   characteristic decay time, >=0.
-                        Zero value effectively turns off adaptation.
-
-          -- ALGLIB --
-             Copyright 15.05.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetladderadaptationrate(mcmcstate state,
-            double nu0,
-            double tau,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(math.isfinite(nu0), "MCMCSetLadderAdaptationRate: Nu0 is not finite");
-            alglib.ap.assert(math.isfinite(tau), "MCMCSetLadderAdaptationRate: Tau is not finite");
-            alglib.ap.assert((double)(nu0)>=(double)(0), "MCMCSetLadderAdaptationRate: Nu0<0");
-            alglib.ap.assert((double)(tau)>=(double)(0), "MCMCSetLadderAdaptationRate: Tau<0");
-            state.laddernu0 = nu0;
-            state.laddertau = tau;
-        }
-
-
-        /*************************************************************************
-        This function activates parallel  tempering  with  the  fixed  temperature
-        ladder.
-
-        Parallel tempering is  intended  for sampling of multimodal distributions,
-        with the T=1 corresponding to sampling of the original distribution  (what
-        you get as result), and  higher temperatures  corresponding  to   smoothed
-        versions of the distribution,  helping  the  sampler  to  reach  otherwise
-        unreachable remote peaks.
-
-        INPUT PARAMETERS:
-            State   -   structure stores algorithm state
-            T       -   array[NTemp], T[0]=1, T[I+1]>T[I], sampling  temperatures.
-                        If the  first  element  of  T  is  different  from  1,  or
-                        temperatures are not strictly increasing,  an exception is
-                        raised
-            NTemp   -   >=1, temperature ladder height
-
-          -- ALGLIB --
-             Copyright 15.05.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetfixedtemperatureladder(mcmcstate state,
-            double[] t,
-            int ntemp,
-            alglib.xparams _params)
-        {
-            int i = 0;
-
-            alglib.ap.assert(ntemp>=1, "MCMCSetFixedTemperatureLadder: NTemp<1");
-            alglib.ap.assert(alglib.ap.len(t)>=ntemp, "MCMCSetFixedTemperatureLadder: Length(T)<NTemp");
-            alglib.ap.assert(apserv.isfinitevector(t, ntemp, _params), "MCMCSetFixedTemperatureLadder: T contains INF/NAN");
-            alglib.ap.assert((double)(t[0])==(double)(1), "MCMCSetFixedTemperatureLadder: T[0]<>1");
-            for(i=0; i<=ntemp-2; i++)
-            {
-                alglib.ap.assert((double)(t[i+1])>(double)(t[i]), "MCMCSetFixedTemperatureLadder: T[I+1]<=T[I]");
-            }
-            state.ladderkind = 0;
-            state.popheight = ntemp;
-            ablasf.rcopyallocv(ntemp, t, ref state.initialladder, _params);
-        }
-
-
-        /*************************************************************************
-        This function activates parallel  tempering  with the adaptive temperature
-        ladder using uniform Swap Acceptance Rate (SAR) proposal.
-
-        Parallel tempering is  intended  for sampling of multimodal distributions,
-        with the T=1 corresponding to sampling of the original distribution  (what
-        you get as result), and  higher temperatures  corresponding  to   smoothed
-        versions of the distribution,  helping  the  sampler  to  reach  otherwise
-        unreachable remote peaks.
-
-        The function accepts the hottest temperature in the ladder TMax,  as  well
-        as ladder height NTemp>=1.
-
-        You can control adaptation rate wuth mcmcsetladderadaptationrate() function.
-
-        INPUT PARAMETERS:
-            State   -   structure stores algorithm state
-            TMax    -   initial value of the maximum temperature in the ladder,
-                        TMax>1 (strictly)
-            NTemp   -   >=1, temperature ladder height:
-                        * NTemp=1 means that no temperature ladder is actually used
-                        * NTemp=2 means that we have a ladder with temperatures
-                          [1,TMax] and no adaptation
-                        * NTemp>2 means that we have  a  ladder  with  T[0]=1  and
-                          T[NTemp-1]=TMax, and adaptive temperatures between them.
-
-          -- ALGLIB --
-             Copyright 15.05.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetsartemperatureladder(mcmcstate state,
-            double tmax,
-            int ntemp,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            double growth = 0;
-
-            alglib.ap.assert(ntemp>=1, "MCMCSetSARTemperatureLadder: NTemp<1");
-            alglib.ap.assert(math.isfinite(tmax), "MCMCSetSARTemperatureLadder: TMax is INF/NAN");
-            alglib.ap.assert((double)(tmax)>(double)(1), "MCMCSetSARTemperatureLadder: TMax<=1");
-            state.ladderkind = 1;
-            state.popheight = ntemp;
-            ablasf.rallocv(ntemp, ref state.initialladder, _params);
-            state.initialladder[0] = 1.0;
-            if( ntemp>1 )
-            {
-                growth = Math.Pow(tmax, (double)1/(double)(ntemp-1));
-                for(i=1; i<=ntemp-1; i++)
-                {
-                    state.initialladder[i] = state.initialladder[i-1]*growth;
-                }
-            }
-        }
-
-
-        /*************************************************************************
-        Same as mcmcsetalgostretch().
-        *************************************************************************/
-        public static void mcmcsetalgogoodmanweare(mcmcstate state,
-            int popsize,
-            int epochscnt,
-            alglib.xparams _params)
-        {
-            mcmcsetalgostretch(state, popsize, epochscnt, _params);
-        }
-
-
-        /*************************************************************************
-        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
-        the specified ensemble size and number of iterations being reported.
-
-        Uses  stretch  move,   as   defined  in  'Ensemble  samplers  with  affine
-        invariance', Goodman and Weare, 2010.
-
-        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
-              to EpochsCnt iterations being  reported.
-              
-              By  default, it performs exactly the same number of iterations as it
-              reports. However, it will perform more iterations than it reports if
-              using a  burn-in  phase  (discards  initial  samples  that  are  too
-              influenced by the initial state) and by specifying a thinning factor
-              greater than 1 (helps to combat autocorrelations).
-
-        INPUT PARAMETERS:
-            State   -   structure that stores MCMC sampler state
-            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
-            EpochsCnt-  iterations count to be reported, >=1
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetalgostretch(mcmcstate state,
-            int popsize,
-            int epochscnt,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoStretch: PopSize<N+1");
-            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoStretch: EpochsCnt<1");
-            state.popwidth = popsize;
-            state.epochscnt = epochscnt;
-            state.algokind = 0;
-            state.proposalkind = 0;
-        }
-
-
-        /*************************************************************************
-        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
-        the specified ensemble size and number of iterations being reported.
-
-        Uses walk move, as defined in 'Ensemble  samplers with affine invariance',
-        Goodman and Weare, 2010.
-
-        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
-              to EpochsCnt iterations being  reported.
-              
-              By  default, it performs exactly the same number of iterations as it
-              reports. However, it will perform more iterations than it reports if
-              using a  burn-in  phase  (discards  initial  samples  that  are  too
-              influenced by the initial state) and by specifying a thinning factor
-              greater than 1 (helps to combat autocorrelations).
-              
-        NOTE: for consistency with the rest of the library this move type requires
-              PopSize>=N+1. However, it also has a special requirement  PopSize>=4
-              that follows from the fact that  each  walker  needs  at  least  two
-              helpers, and that we can use parallel moves.
-              
-              For N=1 or N=2 it is possible to  specify PopSize=N+1 that  is  less
-              than 4. In order to simplify the algorithm, in this case we silently
-              override selection with the stretch move.
-
-        INPUT PARAMETERS:
-            State   -   structure that stores MCMC sampler state
-            
-            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
-            
-            EpochsCnt-  iterations count to be reported, >=1
-            
-            HelpersCnt- helpers count, >=2. Number of  helpers  used  to  generate
-                        proposal. Recommended values: some small number like  3-5.
-                        It is possible  to  specify  HelpersCnt=PopSize,  but  for
-                        large populations it will result  in  proposal  generation
-                        overhead growing as O(N*PopSize^2).
-                        Values larger than PopSize will be silently  truncated  to
-                        PopSize.
-
-          -- ALGLIB --
-             Copyright 20.11.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetalgowalk(mcmcstate state,
-            int popsize,
-            int epochscnt,
-            int helperscnt,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoWalk: PopSize<N+1");
-            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoWalk: EpochsCnt<1");
-            alglib.ap.assert(helperscnt>=2, "MCMCSetAlgoWalk: HelpersCnt<2");
-            if( popsize<4 )
-            {
-                mcmcsetalgostretch(state, popsize, epochscnt, _params);
-                return;
-            }
-            state.popwidth = popsize;
-            state.epochscnt = epochscnt;
-            state.algokind = 0;
-            state.proposalkind = 1;
-            state.helperscnt = helperscnt;
-        }
-
-
-        /*************************************************************************
-        This function sets MCMC algorithm to Goodman-Weare ( ensemble  MCMC)  with
-        the specified ensemble size and number of iterations being reported.
-
-        Uses DE move, as defined in 'RUN DMC:  an  efficient,  parallel  code  for
-        analyzing radial  velocity  observations  using  n-body  integrations  and
-        differential evolution Markov chain Monte Carlo' by Benjamin Nelson,  Eric
-        B. Ford, and Matthew J. Payne.
-
-        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
-              to EpochsCnt iterations being  reported.
-              
-              By  default, it performs exactly the same number of iterations as it
-              reports. However, it will perform more iterations than it reports if
-              using a  burn-in  phase  (discards  initial  samples  that  are  too
-              influenced by the initial state) and by specifying a thinning factor
-              greater than 1 (helps to combat autocorrelations).
-              
-        NOTE: for consistency with the rest of the library this move type requires
-              PopSize>=N+1. However, it also has a special requirement  PopSize>=4
-              that follows from the fact that  each  walker  needs  at  least  two
-              other walkers to produce a DE proposal, and that we can use parallel
-              moves (that need larger ensembles).
-              
-              For N=1 or N=2 it is possible to  specify PopSize=N+1 that  is  less
-              than 4. In order to simplify the algorithm, in this case we silently
-              override selection with the stretch move.
-              
-        NOTE: it is recommended to specify PopSize and EpochsCnt and  leave  other
-              parameters to their default values.
-
-        INPUT PARAMETERS:
-            State   -   structure that stores MCMC sampler state
-            
-            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
-            
-            EpochsCnt-  iterations count to be reported, >=1
-            
-            Sigma   -   non-negative, standard deviation of  a  Gaussian  used  to
-                        randomly modify the proposal vector.  Recommended  values:
-                        about 1E-5. Zero value (or omitted) means that  a  default
-                        one is used.
-                        
-            Gamma0  -   the mean stretch factor for the proposal vector, >=0. Zero
-                        value  means  that  a  default  value  is  used  which  is
-                        2.38/sqrt(2N), as recommended by the original paper.
-            
-
-          -- ALGLIB --
-             Copyright 20.11.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetalgode(mcmcstate state,
-            int popsize,
-            int epochscnt,
-            double sigma,
-            double gamma0,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoDE: PopSize<N+1");
-            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoDE: EpochsCnt<1");
-            alglib.ap.assert(math.isfinite(sigma), "MCMCSetAlgoDE: Sigma is not finite value");
-            alglib.ap.assert(math.isfinite(gamma0), "MCMCSetAlgoDE: Gamma0 is not finite value");
-            alglib.ap.assert((double)(sigma)>=(double)(0), "MCMCSetAlgoDE: Sigma<0");
-            alglib.ap.assert((double)(gamma0)>=(double)(0), "MCMCSetAlgoDE: Gamma0<0");
-            if( popsize<4 )
-            {
-                mcmcsetalgostretch(state, popsize, epochscnt, _params);
-                return;
-            }
-            state.popwidth = popsize;
-            state.epochscnt = epochscnt;
-            state.algokind = 0;
-            state.proposalkind = 2;
-            state.desigma = apserv.rcase2((double)(sigma)>(double)(0), sigma, 1.0E-5, _params);
-            state.degamma0 = apserv.rcase2((double)(gamma0)>(double)(0), gamma0, 2.38/Math.Sqrt(2*state.n), _params);
-        }
-
-
-        /*************************************************************************
-        This function sets MCMC algorithm to Goodman-Weare  (ensemble  MCMC)  with
-        the specified ensemble size and number of iterations being reported.
-
-        Uses DE move with snooker update, as defined  in  'Differential  Evolution
-        Markov Chain with snooker updater and fewer chains' by Cajo J.F. ter Braak
-        and Jasper A. Vrugt.
-
-        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
-              to EpochsCnt iterations being  reported.
-              
-              By  default, it performs exactly the same number of iterations as it
-              reports. However, it will perform more iterations than it reports if
-              using a  burn-in  phase  (discards  initial  samples  that  are  too
-              influenced by the initial state) and by specifying a thinning factor
-              greater than 1 (helps to combat autocorrelations).
-              
-        NOTE: for consistency with the rest of the library this move type requires
-              PopSize>=N+1. However, it also has a special requirement  PopSize>=6
-              that follows from the fact that  each update  needs  at  least three
-              other walkers to produce a DE proposal, and that we can use parallel
-              moves (that need larger ensembles).
-              
-              In order to simplify the algorithm, if N+1<=PopSize<6,  we  silently
-              override selection with the stretch move.
-              
-        NOTE: it is recommended to specify PopSize and EpochsCnt and  leave  other
-              parameters to their default values.
-
-        INPUT PARAMETERS:
-            State   -   structure that stores MCMC sampler state
-            
-            PopSize -   ensemble size, PopSize>=N+1, recommended: >=2*N
-            
-            EpochsCnt-  iterations count to be reported, >=1
-                        
-            Gamma0  -   the mean stretch factor for the proposal vector, >=0. Zero
-                        value  means  that  a  default  value  is  used  which  is
-                        2.38/sqrt(2), as recommended by the original paper.
-            
-
-          -- ALGLIB --
-             Copyright 20.11.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetalgodesnooker(mcmcstate state,
-            int popsize,
-            int epochscnt,
-            double gamma0,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(popsize>=state.n+1, "MCMCSetAlgoDESnooker: PopSize<N+1");
-            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoDESnooker: EpochsCnt<1");
-            alglib.ap.assert(math.isfinite(gamma0), "MCMCSetAlgoDESnooker: Gamma0 is not finite value");
-            alglib.ap.assert((double)(gamma0)>=(double)(0), "MCMCSetAlgoDESnooker: Gamma0<0");
-            if( popsize<6 )
-            {
-                mcmcsetalgostretch(state, popsize, epochscnt, _params);
-                return;
-            }
-            state.popwidth = popsize;
-            state.epochscnt = epochscnt;
-            state.algokind = 0;
-            state.proposalkind = 3;
-            state.degamma0 = apserv.rcase2((double)(gamma0)>(double)(0), gamma0, 2.38/Math.Sqrt(2), _params);
-        }
-
-
-        /*************************************************************************
-        This function sets MCMC algorithm to Goodman-Weare  (ensemble  MCMC)  with
-        the specified ensemble size and number of iterations being reported.
-
-        Uses Gaussian random walk, an ensemble of PopSize  completely  independent
-        walkers.
-
-        NOTE: the sampler always reports PopSize*EpochsCnt samples which corresponds
-              to EpochsCnt iterations being  reported.
-              
-              By  default, it performs exactly the same number of iterations as it
-              reports. However, it will perform more iterations than it reports if
-              using a  burn-in  phase  (discards  initial  samples  that  are  too
-              influenced by the initial state) and by specifying a thinning factor
-              greater than 1 (helps to combat autocorrelations).
-              
-        NOTE: this  move  is  special  because it can work with any ensemble size,
-              including PopSize=1 (most other moves  need  at  least  4,  5  or  6
-              walkers in the ensemble). Other moves will  throw  an  exception  if
-              called with PopSize<N+1.
-
-        INPUT PARAMETERS:
-            State   -   structure that stores MCMC sampler state
-            
-            PopSize -   ensemble size, PopSize>=1.
-            
-            EpochsCnt-  iterations count to be reported, >=1
-                        
-            C       -   array[N,N], a positive definite covariance matrix.  Walker
-                        position  is  perturbed  with  Gaussian  perturbation with
-                        covariance C.
-            
-            IsUpper -   if IsUpper=True, only upper triangle of  C  is  used  (the
-                        lower one is ignored). Otherwise, only lower  triangle  is
-                        used.
-            
-
-          -- ALGLIB --
-             Copyright 20.11.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetalgogaussian(mcmcstate state,
-            int popsize,
-            int epochscnt,
-            double[,] c,
-            bool isupper,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(popsize>=1, "MCMCSetAlgoGaussian: PopSize<N+1");
-            alglib.ap.assert(epochscnt>=1, "MCMCSetAlgoGaussian: EpochsCnt<1");
-            alglib.ap.assert(alglib.ap.rows(c)>=state.n, "MCMCSetAlgoGaussian: rows(C)<N");
-            alglib.ap.assert(alglib.ap.cols(c)>=state.n, "MCMCSetAlgoGaussian: cols(C)<N");
-            alglib.ap.assert(apserv.isfinitertrmatrix(c, state.n, isupper, _params), "MCMCSetAlgoGaussian: C contains infinite or NaN values!");
-            state.popwidth = popsize;
-            state.epochscnt = epochscnt;
-            state.algokind = 0;
-            state.proposalkind = 4;
-            ablasf.rallocm(state.n, state.n, ref state.gausslowerc, _params);
-            if( isupper )
-            {
-                ablas.rmatrixtranspose(state.n, state.n, c, 0, 0, state.gausslowerc, 0, 0, _params);
-            }
-            else
-            {
-                ablasf.rcopym(state.n, state.n, c, state.gausslowerc, _params);
-            }
-        }
-
-
-        /*************************************************************************
-        This function sets number of additional initial iterations (in addition to
-        EpochsCnt) that will be performed  and  discarded  (not  stored  into  the
-        report sample), so called 'burn-in length'.
-
-        In total, BurnInLen+EpochsCnt iterations will be performed,  with  initial
-        BurnInLen ones being used solely to help MCMC spread walkers according  to
-        the density of the function being sampled.
-
-        INPUT PARAMETERS:
-            State       -   structure that stores MCMC sampler state
-            BurnInLen   -   burn-in length, >=0
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetburninlength(mcmcstate state,
-            int burninlen,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(burninlen>=0, "MCMCSetBurnInLength: BurnInLen<0");
-            state.burninlen = burninlen;
-        }
-
-
-        /*************************************************************************
-        This function sets thinning factor: ThinBy*EpochsCnt  iterations  will  be
-        performed  (after  the  optional  burn-in  phase),  with  every  ThinBy-th
-        iteration being saved and the rest being discarded.
-
-        This option helps to avoid storing highly correlated samples.
-
-        INPUT PARAMETERS:
-            State       -   structure that stores MCMC sampler state
-            ThinBy      -   thinning factor, >=1
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetthinningfactor(mcmcstate state,
-            int thinby,
-            alglib.xparams _params)
-        {
-            alglib.ap.assert(thinby>=1, "MCMCSetThinningFactor: ThinBy<1");
-            state.thinby = thinby;
-        }
-
-
-        /*************************************************************************
-        This function sets the seed  which  is used to initialize internal RNG. By
-        default, a deterministic seed is used - same for each run of the  sampler.
-        It means that the same sampling decisions are taken every time.
-
-        If you specify a non-deterministic seed value, then the sampler may return
-        slightly different results after each run.
-
-        INPUT PARAMETERS:
-            S       -   sampler state
-            Seed    -   seed:
-                        * positive values = use deterministic seed for each run of
-                          algorithms which depend on random initialization
-                        * zero or negative values = use non-deterministic seed
-
-          -- ALGLIB --
-             Copyright 08.06.2017 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetseed(mcmcstate s,
-            int seed,
-            alglib.xparams _params)
-        {
-            s.rngseed = Math.Max(seed, 0);
-        }
-
-
-        /*************************************************************************
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool mcmciteration(mcmcstate state,
-            alglib.xparams _params)
-        {
-            bool result = new bool();
-            int n = 0;
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int itidx = 0;
-            int itmax = 0;
-            int groupscnt = 0;
-            int grpdstsize = 0;
-            int dst = 0;
-            int accept1cnt = 0;
-            int accepthcnt = 0;
-            double v = 0;
-
+            xmean = xmean/n;
             
             //
-            // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
+            // Variance
             //
-            // This code initializes locals by:
-            // * random values determined during code
-            //   generation - on first subroutine call
-            // * values from previous call - on subsequent calls
-            //
-            if( state.rstate.stage>=0 )
+            xvar = 0;
+            for(i=0; i<=n-1; i++)
             {
-                n = state.rstate.ia[0];
-                i = state.rstate.ia[1];
-                j = state.rstate.ia[2];
-                k = state.rstate.ia[3];
-                itidx = state.rstate.ia[4];
-                itmax = state.rstate.ia[5];
-                groupscnt = state.rstate.ia[6];
-                grpdstsize = state.rstate.ia[7];
-                dst = state.rstate.ia[8];
-                accept1cnt = state.rstate.ia[9];
-                accepthcnt = state.rstate.ia[10];
-                v = state.rstate.ra[0];
+                xvar = xvar+math.sqr(x[i]-xmean);
             }
-            else
-            {
-                n = 359;
-                i = -58;
-                j = -919;
-                k = -909;
-                itidx = 81;
-                itmax = 255;
-                groupscnt = 74;
-                grpdstsize = -788;
-                dst = 809;
-                accept1cnt = 205;
-                accepthcnt = -838;
-                v = 939.0;
-            }
-            if( state.rstate.stage==0 )
-            {
-                goto lbl_0;
-            }
-            if( state.rstate.stage==1 )
-            {
-                goto lbl_1;
-            }
-            if( state.rstate.stage==2 )
-            {
-                goto lbl_2;
-            }
-            if( state.rstate.stage==3 )
-            {
-                goto lbl_3;
-            }
-            
-            //
-            // Routine body
-            //
-            
-            //
-            // Init
-            //
-            state.dotrace = ap.istraceenabled("MCMC", _params);
-            state.dodetailedtrace = state.dotrace && ap.istraceenabled("MCMC.DETAILED", _params);
-            state.dotimers = state.dotrace;
-            if( state.dotrace )
-            {
-                alglib.ap.trace("\n\n");
-                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
-                alglib.ap.trace("//  MCMC SAMPLER STARTED                                                                          //\n");
-                alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
-                alglib.ap.trace(System.String.Format("N             = {0,6:d} (variables)\n", state.n));
-                alglib.ap.trace(System.String.Format("PopSize       = {0,6:d} (walkers)\n", state.popwidth));
-                if( state.popheight>1 )
-                {
-                    alglib.ap.trace(System.String.Format("TemperLvls    = {0,6:d} (tempering levels)\n", state.popheight));
-                }
-                if( state.burninlen>0 )
-                {
-                    alglib.ap.trace(System.String.Format("BurnIn        = {0,6:d} (burn-in phase, not reported)\n", state.burninlen));
-                }
-                alglib.ap.trace(System.String.Format("EpochsCnt     = {0,6:d} (sampling rounds count)\n", state.epochscnt));
-            }
-            apserv.stimerinit(state.timertotal, _params);
-            apserv.stimerinit(state.timercallback, _params);
-            apserv.stimerinit(state.timerreport, _params);
-            apserv.stimerstartcond(state.timertotal, state.dotimers, _params);
-            state.userterminationneeded = false;
-            state.repnfev = 0;
-            state.repaccept1cnt = 0;
-            state.repaccepthcnt = 0;
-            state.repepochscnt = 0;
-            state.repswapacceptcnt = 0;
-            state.repswapattemptcnt = 0;
-            ablasf.rsetallocv(state.popheight-1, 0.0, ref state.repavgswaprates, _params);
-            state.reppopwidth = state.popwidth;
-            state.reppopheight = state.popheight;
-            state.repsamplesize = 0;
-            n = state.n;
-            if( state.reseedglobalrs )
-            {
-                if( state.rngseed==0 )
-                {
-                    hqrnd.hqrndrandomize(state.globalrs, _params);
-                }
-                else
-                {
-                    hqrnd.hqrndseed(state.rngseed, 856446, state.globalrs, _params);
-                }
-            }
-            if( alglib.ap.cols(state.repsample)>n+1 )
-            {
-                state.repsample = new double[0, 0];
-            }
-            if( state.useparallelmoves )
-            {
-                ablasf.iallocv(state.popwidth*state.popheight, ref state.propidx, _params);
-                ablasf.rallocv(state.popwidth*state.popheight, ref state.propz, _params);
-                ablasf.rallocv(state.popwidth*state.popheight, ref state.propt, _params);
-                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.propxf, _params);
-                ablasf.iallocv(state.popwidth, ref state.grpabidx, _params);
-            }
-            else
-            {
-                ablasf.iallocv(state.popheight, ref state.propidx, _params);
-                ablasf.rallocv(state.popheight, ref state.propz, _params);
-                ablasf.rallocv(state.popheight, ref state.propt, _params);
-                ablasf.rallocm(state.popheight, n+1, ref state.propxf, _params);
-            }
-            ablasf.iallocv(state.popwidth, ref state.grpdsidx, _params);
-            
-            //
-            // Initialize proposal generators
-            //
-            alglib.ap.assert((state.algokind==0 && state.proposalkind>=0) && state.proposalkind<=4, "MCMC: integrity check 795613 failed");
-            if( state.proposalkind==4 )
-            {
-                v = 0;
-                while( true )
-                {
-                    ablasf.rcopyallocm(n, n, state.gausslowerc, ref state.gaussl, _params);
-                    for(i=0; i<=n-1; i++)
-                    {
-                        state.gaussl[i,i] = state.gaussl[i,i]+v;
-                        for(j=i+1; j<=n-1; j++)
-                        {
-                            state.gaussl[i,j] = 0.0;
-                        }
-                    }
-                    if( trfac.spdmatrixcholesky(state.gaussl, n, false, _params) )
-                    {
-                        break;
-                    }
-                    v = apserv.coalesce(2*v, math.machineepsilon, _params);
-                }
-            }
-            
-            //
-            // Initial temperature ladder
-            //
-            alglib.ap.assert(state.ladderkind>=0 && state.ladderkind<=1, "MCMC: 915033 failed");
-            ablasf.rcopyallocv(state.popheight, state.initialladder, ref state.currentladder, _params);
-            
-            //
-            // Allocate buffers, as mandated by the V2 protocol
-            //
-            alglib.ap.assert(state.protocolversion==2, "MCMC: integrity check 206333 failed");
-            alglib.ap.assert(state.algokind==0, "MCMC: integrity check 207333 failed");
-            ablasf.rallocv(n, ref state.querydata, _params);
-            ablasf.rallocv(1, ref state.replyfi, _params);
-            ablasf.rallocv(1, ref state.tmpf1, _params);
-            ablasf.rallocv(n, ref state.tmpx1, _params);
-            ablasf.rallocv(n, ref state.tmpg1, _params);
-            state.reportx = new double[1];
-            state.reportx[0] = 0;
-            state.reportf = 0;
-            
-            //
-            // Initial population and subdivision into groups
-            //
-            alglib.ap.assert((state.x0type==0 || state.x0type==1) || state.x0type==2, "MCMC: integrity check 221342 failed");
-            if( state.useparallelmoves )
-            {
-                for(i=0; i<=state.popwidth-1; i++)
-                {
-                    state.grpabidx[i] = i;
-                }
-                if( state.proposalkind!=4 )
-                {
-                    alglib.ap.assert(state.popwidth>=2, "MCMC: integrity check 294008 failed");
-                    state.grpasize = state.popwidth/2;
-                }
-                else
-                {
-                    state.grpasize = state.popwidth;
-                }
-            }
-            if( state.x0type==0 )
-            {
-                alglib.ap.assert(state.x0width>=1, "MCMC: integrity check 426148 failed");
-                alglib.ap.assert(state.x0height>=1, "MCMC: integrity check 884204 failed");
-                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
-                for(i=0; i<=state.popwidth*state.popheight-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        state.population2d[i,j] = state.x0m[0,j]+state.x0stddev*state.s[j]*hqrnd.hqrndnormal(state.globalrs, _params);
-                    }
-                }
-            }
-            if( state.x0type==1 )
-            {
-                alglib.ap.assert(state.x0width>=1, "MCMC: integrity check 487508 failed");
-                
-                //
-                // Prepare for the case when we do not have enough points to seed the algorithm.
-                //
-                // Compute a bounding box for the user-provided set of points, with center at
-                // tmp0[] and per-variable scaled radii in tmp2[]
-                //
-                // Make sure that the box has no zero radius and that his aspect ratio is well-normalized
-                //
-                ablasf.rallocv(n, ref state.tmp0, _params);
-                ablasf.rallocv(n, ref state.tmp1, _params);
-                ablasf.rcopyrv(n, state.x0m, 0, state.tmp0, _params);
-                ablasf.rcopyrv(n, state.x0m, 0, state.tmp1, _params);
-                for(i=1; i<=state.x0width-1; i++)
-                {
-                    ablasf.rmergeminrv(n, state.x0m, i, state.tmp0, _params);
-                    ablasf.rmergemaxrv(n, state.x0m, i, state.tmp1, _params);
-                }
-                ablasf.rcopyallocv(n, state.tmp1, ref state.tmp2, _params);
-                ablasf.raddv(n, -1.0, state.tmp0, state.tmp2, _params);
-                ablasf.rmulv(n, 0.5, state.tmp2, _params);
-                ablasf.rmergedivv(n, state.s, state.tmp2, _params);
-                ablasf.raddv(n, 1.0, state.tmp1, state.tmp0, _params);
-                ablasf.rmulv(n, 0.5, state.tmp0, _params);
-                v = ablasf.rmaxabsv(n, state.tmp2, _params);
-                for(j=0; j<=n-1; j++)
-                {
-                    state.tmp2[j] = apserv.coalesce(Math.Max(state.tmp2[j], 1.0E-6*v), 1, _params);
-                }
-                
-                //
-                // Seed the algorithm using population in X0, when present; fill with random values when not present.
-                // The same population is used for all levels of the temperature ladder.
-                //
-                alglib.ap.assert(state.x0height==1, "MCMC: integrity check 894205 failed");
-                k = Math.Min(state.x0width, state.popwidth);
-                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
-                for(i=0; i<=state.popwidth*state.popheight-1; i++)
-                {
-                    if( i<state.x0width )
-                    {
-                        for(j=0; j<=n-1; j++)
-                        {
-                            state.population2d[i,j] = state.x0m[i,j];
-                        }
-                    }
-                    else
-                    {
-                        for(j=0; j<=n-1; j++)
-                        {
-                            state.population2d[i,j] = hqrnd.hqrndnormal(state.globalrs, _params)*(0.33*state.tmp2[j]*state.s[j])+state.tmp0[j];
-                        }
-                    }
-                }
-            }
-            if( state.x0type==2 )
-            {
-                alglib.ap.assert(state.haslastpopulation, "MCMC: integrity check 434149 failed");
-                
-                //
-                // Reuse last population
-                //
-                ablasf.rallocm(state.popwidth*state.popheight, n+1, ref state.population2d, _params);
-                for(i=0; i<=state.popheight-1; i++)
-                {
-                    for(j=0; j<=state.popwidth-1; j++)
-                    {
-                        if( i<state.lastpopulationheight && j<state.lastpopulationwidth )
-                        {
-                            ablasf.rcopyrr(n, state.lastpopulation2d, i*state.lastpopulationwidth+j, state.population2d, i*state.popwidth+j, _params);
-                        }
-                        else
-                        {
-                            for(k=0; k<=n-1; k++)
-                            {
-                                state.population2d[i*state.popwidth+j,k] = state.lastpopulation2d[Math.Min(i, state.lastpopulationheight-1)*state.lastpopulationwidth+hqrnd.hqrnduniformi(state.globalrs, state.lastpopulationwidth, _params),k];
-                            }
-                        }
-                    }
-                }
-                
-                //
-                // If parallel moves are used AND new population size matches its old size, reuse previous subdivision
-                // into groups (it is important for smooth restarts)
-                //
-                if( (state.useparallelmoves && state.lastpopulationwidth==state.popwidth) && state.lastpopulationheight==state.popheight )
-                {
-                    ablasf.icopyv(state.popwidth, state.lastgrpabidx, state.grpabidx, _params);
-                }
-            }
-            i = 0;
-        lbl_4:
-            if( i>state.popwidth*state.popheight-1 )
-            {
-                goto lbl_6;
-            }
-            state.repnfev = state.repnfev+1;
-            state.requesttype = 4;
-            state.queryfuncs = 1;
-            state.queryvars = n;
-            state.querydim = 0;
-            state.querysize = 1;
-            for(j=0; j<=n-1; j++)
-            {
-                state.querydata[j] = state.population2d[i,j];
-            }
-            apserv.stimerstartcond(state.timercallback, state.dotimers, _params);
-            state.rstate.stage = 0;
-            goto lbl_rcomm;
-        lbl_0:
-            apserv.stimerstopcond(state.timercallback, state.dotimers, _params);
-            state.population2d[i,n] = state.replyfi[0];
-            i = i+1;
-            goto lbl_4;
-        lbl_6:
-            if( !state.xrep )
-            {
-                goto lbl_7;
-            }
-            state.requesttype = -1;
-            apserv.stimerstartcond(state.timerreport, state.dotimers, _params);
-            state.rstate.stage = 1;
-            goto lbl_rcomm;
-        lbl_1:
-            apserv.stimerstopcond(state.timerreport, state.dotimers, _params);
-        lbl_7:
-            savepopulation(state, _params);
-            
-            //
-            // Subsequent moves
-            //
-            alglib.ap.assert(state.algokind==0, "MCMC: integrity check 238038 failed");
-            alglib.ap.assert(state.popwidth>=2, "MCMC: integrity check 238039 failed");
-            itmax = apserv.icase2(state.initialstart, state.burninlen, 0, _params)+state.epochscnt*state.thinby;
-            ablasf.rallocm(state.epochscnt*state.popwidth*apserv.icase2(state.reportalllevels, state.popheight, 1, _params), n+1, ref state.repsample, _params);
-            itidx = 0;
-        lbl_9:
-            if( itidx>itmax-1 )
-            {
-                goto lbl_11;
-            }
-            
-            //
-            // Perform moves
-            //
-            accept1cnt = 0;
-            accepthcnt = 0;
-            groupscnt = apserv.icase2(state.useparallelmoves, 2, state.popwidth, _params);
-            if( state.useparallelmoves )
-            {
-                ablasf.icopyv(state.popwidth, state.grpabidx, state.grpdsidx, _params);
-                grpdstsize = state.grpasize;
-            }
-            else
-            {
-                for(i=0; i<=state.popwidth-1; i++)
-                {
-                    state.grpdsidx[i] = i;
-                }
-                grpdstsize = 1;
-            }
-            i = 0;
-        lbl_12:
-            if( i>groupscnt-1 )
-            {
-                goto lbl_14;
-            }
-            
-            //
-            // Handle degenerate cases (walk move with group size = pop size)
-            //
-            if( grpdstsize==0 )
-            {
-                alglib.ap.assert(i==groupscnt-1, "MCMC: 018015 failed");
-                goto lbl_14;
-            }
-            
-            //
-            // Generate proposals
-            //
-            generateproposals(state, state.globalrs, state.grpdsidx, grpdstsize, state.propidx, state.propz, state.propt, state.propxf, _params);
-            
-            //
-            // Issue RCOMM-V2 request
-            //
-            j = 0;
-        lbl_15:
-            if( j>grpdstsize-1 )
-            {
-                goto lbl_17;
-            }
-            ablasf.rcopyrv(n, state.propxf, j, state.querydata, _params);
-            state.repnfev = state.repnfev+1;
-            state.requesttype = 4;
-            state.queryfuncs = 1;
-            state.queryvars = n;
-            state.querydim = 0;
-            state.querysize = 1;
-            apserv.stimerstartcond(state.timercallback, state.dotimers, _params);
-            state.rstate.stage = 2;
-            goto lbl_rcomm;
-        lbl_2:
-            apserv.stimerstopcond(state.timercallback, state.dotimers, _params);
-            state.propxf[j,n] = state.replyfi[0];
-            j = j+1;
-            goto lbl_15;
-        lbl_17:
-            
-            //
-            // Acceptance test
-            //
-            for(j=0; j<=grpdstsize-1; j++)
-            {
-                if( (double)(hqrnd.hqrnduniformr(state.globalrs, _params))<(double)(Math.Min(1.0, Math.Exp(state.propz[j]+(state.propxf[j,n]-state.population2d[state.propidx[j],n])/state.propt[j]))) )
-                {
-                    ablasf.rcopyrr(n+1, state.propxf, j, state.population2d, state.propidx[j], _params);
-                    accept1cnt = accept1cnt+1;
-                    if( state.propidx[j]>state.popwidth )
-                    {
-                        accepthcnt = accepthcnt+1;
-                    }
-                }
-            }
-            
-            //
-            // Update split into A and B groups
-            //
-            if( state.useparallelmoves )
-            {
-                alglib.ap.assert(i<=1, "MCMC: 071013 failed");
-                if( i==0 )
-                {
-                    ablasf.iallocv(state.popwidth, ref state.tmpi0, _params);
-                    ablasf.icopyvx(state.grpasize, state.grpdsidx, 0, state.tmpi0, state.popwidth-state.grpasize, _params);
-                    ablasf.icopyvx(state.popwidth-state.grpasize, state.grpdsidx, state.grpasize, state.tmpi0, 0, _params);
-                    ablasf.icopyv(state.popwidth, state.tmpi0, state.grpdsidx, _params);
-                    grpdstsize = state.popwidth-state.grpasize;
-                }
-            }
-            else
-            {
-                alglib.ap.assert(grpdstsize==1, "MCMC: 092019 failed");
-                if( i<state.popwidth-1 )
-                {
-                    k = state.grpdsidx[0];
-                    state.grpdsidx[0] = state.grpdsidx[i+1];
-                    state.grpdsidx[i+1] = k;
-                }
-            }
-            i = i+1;
-            goto lbl_12;
-        lbl_14:
-            
-            //
-            // Apply swaps between temperature ladder levels and perform adaptation, if needed
-            //
-            applyswapsandadapt(state, itidx, itidx>=apserv.icase2(state.initialstart, state.burninlen, 0, _params), state.globalrs, _params);
-            
-            //
-            // If parallel moves are used, update splits into groups
-            //
-            if( state.useparallelmoves )
-            {
-                for(i=0; i<=state.popwidth-1; i++)
-                {
-                    j = i+hqrnd.hqrnduniformi(state.globalrs, state.popwidth-i, _params);
-                    k = state.grpabidx[i];
-                    state.grpabidx[i] = state.grpabidx[j];
-                    state.grpabidx[j] = k;
-                }
-            }
-            
-            //
-            // Save report, check for termination request. The check is done twice:
-            // prior to reporting progress and after returning from the callback.
-            //
-            // This way we can:
-            // * stop immediately after progress is reported, if request was submitted
-            //   in the callback
-            // * stop before iteration is accepted, if request was submitted prior to
-            //   invoking the callback
-            //
-            if( state.dotrace )
-            {
-                dologging(state, itidx, accept1cnt, accepthcnt, _params);
-            }
-            if( state.userterminationneeded )
-            {
-                goto lbl_11;
-            }
-            k = itidx;
-            if( state.initialstart )
-            {
-                k = k-state.burninlen;
-            }
-            if( !(k>=0 && k%state.thinby==0) )
-            {
-                goto lbl_18;
-            }
-            alglib.ap.assert(alglib.ap.rows(state.repsample)>=state.repsamplesize+state.popwidth*apserv.icase2(state.reportalllevels, state.popheight, 1, _params) && alglib.ap.cols(state.repsample)>=n+1, "MCMC: integrity check 497055 failed");
-            alglib.ap.assert(!state.reportalllevels, "$rep-all-lvl");
-            for(i=0; i<=state.popwidth-1; i++)
-            {
-                ablasf.rcopyrr(n+1, state.population2d, i, state.repsample, state.repsamplesize, _params);
-                state.repsamplesize = state.repsamplesize+1;
-            }
-            state.repaccept1cnt = state.repaccept1cnt+accept1cnt;
-            state.repaccepthcnt = state.repaccepthcnt+accepthcnt;
-            state.repepochscnt = state.repepochscnt+1;
-            if( !state.xrep )
-            {
-                goto lbl_20;
-            }
-            state.requesttype = -1;
-            apserv.stimerstartcond(state.timerreport, state.dotimers, _params);
-            state.rstate.stage = 3;
-            goto lbl_rcomm;
-        lbl_3:
-            apserv.stimerstopcond(state.timerreport, state.dotimers, _params);
-        lbl_20:
-        lbl_18:
-            if( state.userterminationneeded )
-            {
-                goto lbl_11;
-            }
-            itidx = itidx+1;
-            goto lbl_9;
-        lbl_11:
-            
-            //
-            // Finalize
-            //
-            state.reseedglobalrs = true;
-            savepopulation(state, _params);
-            apserv.stimerstopcond(state.timertotal, state.dotimers, _params);
-            if( state.dotrace )
-            {
-                alglib.ap.trace("\n=== STOPPED ========================================================================================\n");
-                alglib.ap.trace(System.String.Format("total time:     {0,10:F1} ms, including\n", apserv.stimergetms(state.timertotal, _params)));
-                alglib.ap.trace(System.String.Format("* sampler       {0,10:F1} ms\n", apserv.stimergetms(state.timertotal, _params)-apserv.stimergetms(state.timercallback, _params)-apserv.stimergetms(state.timerreport, _params)));
-                alglib.ap.trace(System.String.Format("* callbacks     {0,10:F1} ms (computing log-likelihood)\n", apserv.stimergetms(state.timercallback, _params)));
-                alglib.ap.trace(System.String.Format("* reports       {0,10:F1} ms (reporting progress)\n", apserv.stimergetms(state.timerreport, _params)));
-            }
-            result = false;
-            return result;
-            
-            //
-            // Saving state
-            //
-        lbl_rcomm:
-            result = true;
-            state.rstate.ia[0] = n;
-            state.rstate.ia[1] = i;
-            state.rstate.ia[2] = j;
-            state.rstate.ia[3] = k;
-            state.rstate.ia[4] = itidx;
-            state.rstate.ia[5] = itmax;
-            state.rstate.ia[6] = groupscnt;
-            state.rstate.ia[7] = grpdstsize;
-            state.rstate.ia[8] = dst;
-            state.rstate.ia[9] = accept1cnt;
-            state.rstate.ia[10] = accepthcnt;
-            state.rstate.ra[0] = v;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Extract MCMC sampler results from the sampler. This function has significant
-        overhead coming from two sources:
-        * overhead of copying PopSize*EpochsCnt*N-sized array from internal memory
-        * overhead of computing per-variable integrated autocorrelating time
-                   
-        INPUT PARAMETERS:
-            State           -   MCMC sampler, either after return  from  mcmcrun()
-                                or  still  running (in  the  latter   case,   this
-                                function can be safely called only from the  rep()
-                                callback).
-                                
-        OUTPUT PARAMETERS:
-            Sample          -   array[SampleSize,N+1], current sample:
-                                * first N columns store variable values, the  last
-                                  one stores log-likelihood value as  computed  by
-                                  the callback
-                                * first  PopSize  rows  store  population snapshot
-                                  after the iteration #0, subsequent PopSize  rows
-                                  correspond to iteration #1 and so on.
-                                * each snapshot (a set  of  PopSize  rows)  stores
-                                  positions of PopSize walkers, each walker having
-                                  the same position in each of SampleSize snapshots.
-                                  Thus, walker #I at the iteration  #J  is  stored
-                                  at the row PopSize*J+I.
-                                
-            SampleSize      -   current sample size:
-                                * for a sampler that stopped it is equal to PopSize*EpochsCnt
-                                * for a sampler that is  still  running,  we  have
-                                  0<=SampleSize<PopSize*EpochsCnt. Zero sample  is
-                                  reported upon the first call to rep().
-                                  
-            Rep             -   other information being reported, including:
-                                * acceptance rate
-                                * per-variable integrated autocorrelation time
-
-        IMPORTANT: unlike other [something]results() functions from ALGLIB library
-                   this function can be called on a sampler that is still running.
-                   
-                   Thus,  it  can  be  used  to peek into a sampler from the rep()
-                   callback, e.g. to check convergence. When called prior to  MCMC
-                   completion, it will return in  Sample/SampleSize/Rep  the  most
-                   recent snapshot of MCMC sampling.
-                   
-                   Note that due to significant overhead (iteration with number #K
-                   involves copying O(K) data and doing between O(K) and O(K*logK)
-                   job) calling  this function after each iteration will lead to a
-                   catastrophic slowdown of the sampler:  its  running  time  will
-                   become quadratic with respect  to  iterations  count!
-                   
-                   Consider doing it after  each  100-th  iteration  or  something
-                   like that.
-                   
-        IMPORTANT: THIS FUNCTION IS NOT THREAD-SAFE! Thus, the  only  place  where
-                   it can be called  is  rep()  callback,  and  it  must  complete
-                   prior to returning from the callback into the sampler.
-
-        NOTE: burn-in iterations are not reported. Similarly, for a primary  phase
-              only each ThinFactor-th iteration is reported.
-           
-          -- ALGLIB --
-             Copyright 18.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcresults(mcmcstate state,
-            ref double[,] sample,
-            ref int samplesize,
-            mcmcreport rep,
-            alglib.xparams _params)
-        {
-            sample = new double[0,0];
-            samplesize = 0;
-
-            mcmcresultsbuf(state, ref sample, ref samplesize, rep, _params);
-        }
-
-
-        /*************************************************************************
-        Buffered implementation of MCMCResults() which uses  pre-allocated  buffer
-        to store X[]. If buffer size is  too  small,  it  resizes  buffer.  It  is
-        intended to be used in the inner cycles of performance critical algorithms
-        where array reallocation penalty is too large to be ignored.
-
-          -- ALGLIB --
-             Copyright 18.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcresultsbuf(mcmcstate state,
-            ref double[,] sample,
-            ref int samplesize,
-            mcmcreport rep,
-            alglib.xparams _params)
-        {
-            sample = new double[0,0];
-            samplesize = 0;
-
-            
-            //
-            // Parameters that are always valid + default state for RepSampleSize=0
-            //
-            rep.nfev = state.repnfev;
-            rep.acceptrate = state.repaccept1cnt/apserv.coalesce(state.repepochscnt*state.reppopwidth, 1, _params);
-            rep.swapacceptrate = state.repswapacceptcnt/apserv.coalesce(state.repswapattemptcnt, 1, _params);
-            ablasf.rsetallocv(state.n, 0.0, ref rep.autocorrtimes, _params);
-            samplesize = state.repsamplesize;
-            
-            //
-            // RepSampleSize>0
-            //
-            if( state.repsamplesize>0 )
-            {
-                ablasf.rcopyallocm(state.repsamplesize, state.n+1, state.repsample, ref sample, _params);
-                computeautocorrtimes(state, ref rep.autocorrtimes, _params);
-            }
-        }
-
-
-        /*************************************************************************
-        This  subroutine  submits  request  for  termination  of  a  running  MCMC
-        sampler. It should be called from user-supplied callback when user decides
-        that it is time to "smoothly" terminate optimization process. As a result,
-        sampler stops at the point which was "current accepted"  when  termination
-        request was submitted.
-
-        Alternatively,  this  function  can  be  called  from  some  other  thread
-        (different from one where the sampler is running).
-
-        INPUT PARAMETERS:
-            State   -   sampler structure
-
-        NOTE: after  request  for  termination  sampler   may    perform   several
-              additional calls to user-supplied callbacks. It does  NOT  guarantee
-              to stop immediately - it just guarantees that these additional calls
-              will be discarded later.
-
-        NOTE: calling this function on sampler  which is NOT running will have  no
-              effect.
-              
-        NOTE: multiple calls to this function are possible. First call is counted,
-              subsequent calls are silently ignored.
-
-          -- ALGLIB --
-             Copyright 25.02.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcrequesttermination(mcmcstate state,
-            alglib.xparams _params)
-        {
-            state.userterminationneeded = true;
-        }
-
-
-        /*************************************************************************
-        This function turns on/off reporting.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores sampler state
-            NeedXRep-   whether iteration reports are needed or not
-
-        If NeedXRep is True, the algorithm will call rep() callback function if it
-        was provided to mcmcrun().
-
-        NOTE: due to ALGLIB conventions regarding report  callbacks,  the  sampler
-              passes two parameters to the rep() callback - an 1D  floating  point
-              array, and a scalar floating-point value.
-              
-              In nonlinear optimizers these parameters are used  to report current
-              point/objective, but it makes little sense in the context  of  MCMC.
-              Because  of  that,  MCMC  sampler  sets  the first parameter to be a
-              zero-initialized  single-element  array,  and  the  second  (scalar)
-              parameter is set to zero.
-
-          -- ALGLIB --
-             Copyright 25.02.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mcmcsetxrep(mcmcstate state,
-            bool needxrep,
-            alglib.xparams _params)
-        {
-            state.xrep = needxrep;
-        }
-
-
-        /*************************************************************************
-        This function tells the sampler to restart the next sampling session using
-        the most recent population as an initial state.
-
-        The new sampling session is still considered an independent one.  It  uses
-        sampling distribution of the previous session to provide a smooth restart,
-        but its results do not  include  samples  collected  during  the  previous
-        session.
-
-        It  is  possible  to  specify  different  sampling  algorithm  or   change
-        parameters of the algorithm. If population size has changed, then we  have
-        two options:
-        * the new population size is less than the previous one; the population is
-          truncated (only leading NewPopSize elements are retained)
-        * the  new population size is greater than the previous one; in this case,
-          leading OldPopSize elements are retained from the  previous  population,
-          and the rest (NewPopSize-OldPopSize) is randomly initialized  using  the
-          previous population as a reference distribution.
-
-        INPUT PARAMETERS:
-            State   -   structure which stores sampler state
-            
-        RESULT:
-            * False, if no  previous  population  was  stored  in the sampler (the
-              restart was requested prior to running anything, so we have  nothing
-              to restart from). In this case,  the  sampler  will  silently  reuse
-              previous initial population generation strategy.
-            * True, if a request was successfully accepted.
-            
-        NOTE: this function also tells the sampler not to  re-seed  internal  RNG,
-              so the new session  will  produce  the  same  sequence  of  sampling
-              decisions.
-
-          -- ALGLIB --
-             Copyright 15.05.2025 by Bochkanov Sergey
-        *************************************************************************/
-        public static bool mcmcrestart(mcmcstate state,
-            alglib.xparams _params)
-        {
-            bool result = new bool();
-
-            result = state.haslastpopulation;
-            if( !result )
-            {
-                return result;
-            }
-            state.x0type = 2;
-            state.reseedglobalrs = false;
-            state.rstate.ia = new int[10+1];
-            state.rstate.ra = new double[0+1];
-            state.rstate.stage = -1;
-            return result;
-        }
-
-
-        /*************************************************************************
-        Set V2 reverse communication protocol with dense requests
-        *************************************************************************/
-        public static void mcmcsetprotocolv2(mcmcstate state,
-            alglib.xparams _params)
-        {
-            state.protocolversion = 2;
-            state.issuesparserequests = false;
-            state.rstate.ia = new int[10+1];
-            state.rstate.ra = new double[0+1];
-            state.rstate.stage = -1;
-        }
-
-
-        /*************************************************************************
-        Set V2 reverse communication protocol with sparse requests
-        *************************************************************************/
-        public static void mcmcsetprotocolv2s(mcmcstate state,
-            alglib.xparams _params)
-        {
-            state.protocolversion = 2;
-            state.issuesparserequests = true;
-            state.rstate.ia = new int[10+1];
-            state.rstate.ra = new double[0+1];
-            state.rstate.stage = -1;
-        }
-
-
-        /*************************************************************************
-        Internal initialization to the default state
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        private static void initinternal(mcmcstate state,
-            int n,
-            alglib.xparams _params)
-        {
-            state.n = n;
-            state.x0width = 0;
-            state.x0height = 0;
-            state.x0type = -1;
-            state.algokind = 0;
-            state.proposalkind = 0;
-            state.popwidth = 10*n;
-            state.ladderkind = 0;
-            state.popheight = 1;
-            ablasf.rsetallocv(1, 1.0, ref state.initialladder, _params);
-            state.laddernu0 = 0.05;
-            state.laddertau = 1000.0;
-            state.noladderadaptationafterburnin = false;
-            state.epochscnt = 100;
-            state.burninlen = 0;
-            state.thinby = 1;
-            state.reportalllevels = false;
-            state.initialstart = true;
-            state.protocolversion = 2;
-            state.haslastpopulation = false;
-            state.rngseed = 6435533;
-            state.xrep = false;
-            ablasf.rsetallocv(n, 1.0, ref state.s, _params);
-            hqrnd.hqrndseed(state.rngseed, 856446, state.globalrs, _params);
-            state.reseedglobalrs = true;
-            state.useparallelmoves = true;
-            state.rstate.ia = new int[10+1];
-            state.rstate.ra = new double[0+1];
-            state.rstate.stage = -1;
-        }
-
-
-        /*************************************************************************
-        Logging
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        private static void dologging(mcmcstate state,
-            int iteridx,
-            int accept1cnt,
-            int accepthcnt,
-            alglib.xparams _params)
-        {
-            double[] popmean = new double[0];
-            double[] popstddev = new double[0];
-            int i = 0;
-            int j = 0;
-            int n = 0;
-            int popwidth = 0;
-            double llmean = 0;
-            double llstddev = 0;
-
-            alglib.ap.assert(state.dotrace, "MCMC: DoLogging() is called with tracing disable; this function shall not be called when logging is turned off");
-            n = state.n;
-            popwidth = state.popwidth;
-            if( state.dodetailedtrace )
-            {
-                alglib.ap.trace(System.String.Format("=== ITERATION {0,5:d} ================================================================================\n", iteridx));
-                ablasf.rsetallocv(n, 0.0, ref popmean, _params);
-                ablasf.rsetallocv(n, 0.0, ref popstddev, _params);
-                for(i=0; i<=popwidth-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        popmean[j] = popmean[j]+state.population2d[i,j];
-                    }
-                }
-                for(j=0; j<=n-1; j++)
-                {
-                    popmean[j] = popmean[j]/popwidth;
-                }
-                for(i=0; i<=popwidth-1; i++)
-                {
-                    for(j=0; j<=n-1; j++)
-                    {
-                        popstddev[j] = popstddev[j]+(state.population2d[i,j]-popmean[j])*(state.population2d[i,j]-popmean[j]);
-                    }
-                }
-                for(j=0; j<=n-1; j++)
-                {
-                    popstddev[j] = Math.Sqrt(popstddev[j]/popwidth);
-                }
-                alglib.ap.trace("pop.mean   = ");
-                apserv.tracevectore3(popmean, 0, n, _params);
-                alglib.ap.trace("\n");
-                alglib.ap.trace("pop.stddev = ");
-                apserv.tracevectore3(popstddev, 0, n, _params);
-                alglib.ap.trace("\n");
-                llmean = 0;
-                for(i=0; i<=popwidth-1; i++)
-                {
-                    llmean = llmean+state.population2d[i,n];
-                }
-                llmean = llmean/popwidth;
-                llstddev = 0;
-                for(i=0; i<=popwidth-1; i++)
-                {
-                    llstddev = llstddev+math.sqr(state.population2d[i,n]-llmean);
-                }
-                llstddev = Math.Sqrt(llstddev/popwidth);
-                alglib.ap.trace(System.String.Format("loglik.mean   = {0,0:F3}\n", llmean));
-                alglib.ap.trace(System.String.Format("loglik.stddev = {0,0:F3}\n", llstddev));
-                alglib.ap.trace(System.String.Format("accept.rate   = {0,0:F3}\n", (double)accept1cnt/(double)popwidth));
-                if( state.popheight>1 )
-                {
-                    alglib.ap.trace("> Temperature ladder:\n");
-                    alglib.ap.trace("temperatures  = [");
-                    apserv.tracevectore3(state.currentladder, 0, state.popheight, _params);
-                    alglib.ap.trace("]\n");
-                    alglib.ap.trace("accept rates  = [");
-                    apserv.tracevectore3(state.repavgswaprates, 0, state.popheight-1, _params);
-                    alglib.ap.trace("]\n");
-                }
-            }
-            else
-            {
-            }
-        }
-
-
-        /*************************************************************************
-        Apply temperature ladder swaps and perform adaptation;
-        does nothing for popheight=1.
-
-        INPUT PARAMETERS:
-            RawItIdx        iteration index, starts from the very beginning,
-                            is NOT thinned (counts all iterations)
-            BurnInOver      if True, burn-in phase is completed
-
-          -- ALGLIB --
-             Copyright 20.11.2025 by Bochkanov Sergey
-        *************************************************************************/
-        private static void applyswapsandadapt(mcmcstate state,
-            int rawitidx,
-            bool burninover,
-            hqrnd.hqrndstate rs,
-            alglib.xparams _params)
-        {
-            int n = 0;
-            int popheight = 0;
-            int popwidth = 0;
-            int i = 0;
-            int widx = 0;
-            int hidx = 0;
-            int idx0 = 0;
-            int idx1 = 0;
-            double deltabeta = 0;
-            double logprob = 0;
-            bool adaptationdone = new bool();
-            double decay = 0;
-            double v = 0;
-
-            n = state.n;
-            popheight = state.popheight;
-            popwidth = state.popwidth;
-            if( popheight==1 )
-            {
-                return;
-            }
-            
-            //
-            // Apply swaps
-            //
-            ablasf.rsetallocv(popheight-1, 0.0, ref state.saacceptrates, _params);
-            for(hidx=popheight-1; hidx>=1; hidx--)
-            {
-                deltabeta = 1/state.currentladder[hidx]-1/state.currentladder[hidx-1];
-                for(widx=0; widx<=popwidth-1; widx++)
-                {
-                    idx0 = hidx*popwidth+widx;
-                    idx1 = (hidx-1)*popwidth+widx;
-                    logprob = -(deltabeta*(state.population2d[idx0,n]-state.population2d[idx1,n]));
-                    if( (double)(hqrnd.hqrnduniformr(rs, _params))<(double)(Math.Min(Math.Exp(logprob), 1)) )
-                    {
-                        apserv.swaprows(state.population2d, idx0, idx1, n+1, _params);
-                        state.repswapacceptcnt = state.repswapacceptcnt+1;
-                        state.saacceptrates[hidx-1] = state.saacceptrates[hidx-1]+(double)1/(double)popwidth;
-                    }
-                    state.repswapattemptcnt = state.repswapattemptcnt+1;
-                }
-            }
-            if( popheight>1 )
-            {
-                if( (double)(ablasf.rmaxabsv(popheight-1, state.repavgswaprates, _params))>(double)(0) )
-                {
-                    v = 0.01;
-                    ablasf.rmulv(popheight-1, 1-v, state.repavgswaprates, _params);
-                    ablasf.raddv(popheight-1, v, state.saacceptrates, state.repavgswaprates, _params);
-                }
-                else
-                {
-                    ablasf.rcopyv(popheight-1, state.saacceptrates, state.repavgswaprates, _params);
-                }
-            }
-            
-            //
-            // Perform adaptation
-            //
-            if( !burninover || !state.noladderadaptationafterburnin )
-            {
-                decay = state.laddernu0*state.laddertau/(rawitidx+state.laddertau+math.machineepsilon);
-                adaptationdone = false;
-                if( state.ladderkind==0 )
-                {
-                    adaptationdone = true;
-                }
-                if( state.ladderkind==1 )
-                {
-                    if( popheight>=3 )
-                    {
-                        ablasf.rallocv(popheight-2, ref state.savecsi, _params);
-                        ablasf.rallocv(popheight-1, ref state.saproposedladder, _params);
-                        for(i=0; i<=popheight-3; i++)
-                        {
-                            state.savecsi[i] = Math.Log(state.currentladder[i+1]-state.currentladder[i])+decay*(state.saacceptrates[i]-state.saacceptrates[i+1]);
-                        }
-                        state.saproposedladder[0] = state.currentladder[0];
-                        for(i=1; i<=popheight-2; i++)
-                        {
-                            state.saproposedladder[i] = state.saproposedladder[i-1]+Math.Exp(state.savecsi[i-1]);
-                        }
-                        if( (double)(state.saproposedladder[popheight-2])<(double)(state.currentladder[popheight-1]) )
-                        {
-                            ablasf.rcopyv(popheight-1, state.saproposedladder, state.currentladder, _params);
-                        }
-                    }
-                    adaptationdone = true;
-                }
-                alglib.ap.assert(adaptationdone, "MCMC: 728137");
-            }
-        }
-
-
-        /*************************************************************************
-        Save current population
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        private static void savepopulation(mcmcstate state,
-            alglib.xparams _params)
-        {
-            state.haslastpopulation = true;
-            state.lastpopulationwidth = state.popwidth;
-            state.lastpopulationheight = state.popheight;
-            ablasf.rcopyallocm(state.popwidth*state.popheight, state.n+1, state.population2d, ref state.lastpopulation2d, _params);
-            if( state.useparallelmoves )
-            {
-                ablasf.icopyallocv(state.popwidth, state.grpabidx, ref state.lastgrpabidx, _params);
-            }
-        }
-
-
-        /*************************************************************************
-        Generates proposals for walkers
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        private static void generateproposals(mcmcstate state,
-            hqrnd.hqrndstate rs,
-            int[] grpidx,
-            int dstgrpsize,
-            int[] propidx,
-            double[] propz,
-            double[] propt,
-            double[,] propxf,
-            alglib.xparams _params)
-        {
-            int n = 0;
-            int popwidth = 0;
-            int popheight = 0;
-            int helperscnt = 0;
-            int widx = 0;
-            int hidx = 0;
-            int offs = 0;
-            int j = 0;
-            int jj = 0;
-            int itmp = 0;
-            int k = 0;
-            int src = 0;
-            int srca = 0;
-            int srcb = 0;
-            int srcc = 0;
-            int dst = 0;
-            double v = 0;
-            double vs = 0;
-            double vnrm = 0;
-
-            n = state.n;
-            popwidth = state.popwidth;
-            popheight = state.popheight;
-            alglib.ap.assert(state.algokind==0, "MCMC 188955 failed");
-            alglib.ap.assert((((state.proposalkind==0 || state.proposalkind==1) || state.proposalkind==2) || state.proposalkind==3) || state.proposalkind==4, "MCMC 250131 failed");
-            
-            //
-            // Prepare group structure
-            //
-            alglib.ap.assert(state.proposalkind!=0 || popwidth-dstgrpsize>=1, "MCMC 564025 failed");
-            alglib.ap.assert(state.proposalkind!=1 || (popwidth-dstgrpsize>=2 && state.helperscnt>=2), "MCMC 272113 failed");
-            alglib.ap.assert(state.proposalkind!=2 || popwidth-dstgrpsize>=2, "MCMC 367147 failed");
-            alglib.ap.assert(state.proposalkind!=3 || popwidth-dstgrpsize>=3, "MCMC 432520 failed");
-            
-            //
-            // Generate proposals
-            //
-            alglib.ap.assert((((alglib.ap.len(propidx)>=dstgrpsize*popheight && alglib.ap.len(propz)>=dstgrpsize*popheight) && alglib.ap.len(propt)>=dstgrpsize*popheight) && alglib.ap.rows(propxf)>=dstgrpsize*popheight) && alglib.ap.cols(propxf)>=n+1, "MCMC 188955 failed");
-            if( state.proposalkind==0 )
-            {
-                
-                //
-                // Stretch move
-                //
-                offs = 0;
-                for(widx=0; widx<=dstgrpsize-1; widx++)
-                {
-                    for(hidx=0; hidx<=popheight-1; hidx++)
-                    {
-                        dst = grpidx[widx];
-                        src = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
-                        dst = hidx*popwidth+dst;
-                        src = hidx*popwidth+src;
-                        propidx[offs] = dst;
-                        v = math.sqr((goodmanwearea-1)*hqrnd.hqrnduniformr(rs, _params)+1)/goodmanwearea;
-                        propz[offs] = (n-1)*Math.Log(v);
-                        propt[offs] = state.currentladder[hidx];
-                        for(k=0; k<=n-1; k++)
-                        {
-                            propxf[offs,k] = state.population2d[src,k]+v*(state.population2d[dst,k]-state.population2d[src,k]);
-                        }
-                        offs = offs+1;
-                    }
-                }
-                return;
-            }
-            if( state.proposalkind==1 )
-            {
-                
-                //
-                // Walk move
-                //
-                helperscnt = Math.Min(state.helperscnt, popwidth-dstgrpsize);
-                ablasf.iallocv(popwidth, ref state.gphelperidx, _params);
-                ablasf.rallocv(n, ref state.gpmeanhelper, _params);
-                ablasf.rallocv(n, ref state.gpproposal, _params);
-                ablasf.icopyvx(popwidth-dstgrpsize, grpidx, dstgrpsize, state.gphelperidx, 0, _params);
-                offs = 0;
-                for(widx=0; widx<=dstgrpsize-1; widx++)
-                {
-                    for(hidx=0; hidx<=popheight-1; hidx++)
-                    {
-                        
-                        //
-                        // Determine Dst and Helper indexes
-                        //
-                        dst = grpidx[widx];
-                        for(jj=0; jj<=helperscnt-1; jj++)
-                        {
-                            apserv.swapelementsi(state.gphelperidx, jj, jj+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize-jj, _params), _params);
-                        }
-                        dst = hidx*popwidth+dst;
-                        
-                        //
-                        // Generate proposal
-                        //
-                        propidx[offs] = dst;
-                        ablasf.rsetv(n, 0.0, state.gpmeanhelper, _params);
-                        ablasf.rsetv(n, 0.0, state.gpproposal, _params);
-                        vs = 0;
-                        for(jj=0; jj<=helperscnt-1; jj++)
-                        {
-                            v = hqrnd.hqrndnormal(rs, _params);
-                            ablasf.raddrv(n, v, state.population2d, hidx*popwidth+state.gphelperidx[jj], state.gpproposal, _params);
-                            ablasf.raddrv(n, 1.0/helperscnt, state.population2d, hidx*popwidth+state.gphelperidx[jj], state.gpmeanhelper, _params);
-                            vs = vs+v;
-                        }
-                        ablasf.raddv(n, -vs, state.gpmeanhelper, state.gpproposal, _params);
-                        propz[offs] = 0.0;
-                        propt[offs] = state.currentladder[hidx];
-                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
-                        ablasf.raddvr(n, 1.0, state.gpproposal, propxf, offs, _params);
-                        offs = offs+1;
-                    }
-                }
-                return;
-            }
-            if( state.proposalkind==2 )
-            {
-                
-                //
-                // DE move
-                //
-                offs = 0;
-                for(widx=0; widx<=dstgrpsize-1; widx++)
-                {
-                    for(hidx=0; hidx<=popheight-1; hidx++)
-                    {
-                        
-                        //
-                        // Determine Dst and SrcA/SrcB indexes
-                        //
-                        dst = grpidx[widx];
-                        do
-                        {
-                            srca = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
-                            srcb = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
-                        }
-                        while( srca==srcb );
-                        dst = hidx*popwidth+dst;
-                        srca = hidx*popwidth+srca;
-                        srcb = hidx*popwidth+srcb;
-                        
-                        //
-                        // Generate proposal
-                        //
-                        propidx[offs] = dst;
-                        propz[offs] = 0.0;
-                        propt[offs] = state.currentladder[hidx];
-                        v = state.degamma0+state.desigma*hqrnd.hqrndnormal(rs, _params);
-                        for(k=0; k<=n-1; k++)
-                        {
-                            propxf[offs,k] = state.population2d[dst,k]+v*(state.population2d[srca,k]-state.population2d[srcb,k]);
-                        }
-                        offs = offs+1;
-                    }
-                }
-                return;
-            }
-            if( state.proposalkind==3 )
-            {
-                
-                //
-                // DE move with snooker update
-                //
-                ablasf.rallocv(n, ref state.gpdelta, _params);
-                ablasf.rallocv(n, ref state.gptmp0, _params);
-                offs = 0;
-                for(widx=0; widx<=dstgrpsize-1; widx++)
-                {
-                    for(hidx=0; hidx<=popheight-1; hidx++)
-                    {
-                        
-                        //
-                        // Determine Dst and SrcA/SrcB/SrcC indexes
-                        //
-                        dst = grpidx[widx];
-                        srca = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
-                        do
-                        {
-                            srcb = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
-                        }
-                        while( srcb==srca );
-                        do
-                        {
-                            srcc = grpidx[dstgrpsize+hqrnd.hqrnduniformi(rs, popwidth-dstgrpsize, _params)];
-                        }
-                        while( !(srcc!=srcb && srcc!=srca) );
-                        dst = hidx*popwidth+dst;
-                        srca = hidx*popwidth+srca;
-                        srcb = hidx*popwidth+srcb;
-                        srcc = hidx*popwidth+srcc;
-                        
-                        //
-                        // Generate proposal
-                        //
-                        propidx[offs] = dst;
-                        ablasf.rcopyrv(n, state.population2d, dst, state.gpdelta, _params);
-                        ablasf.raddrv(n, -1.0, state.population2d, srca, state.gpdelta, _params);
-                        vnrm = Math.Sqrt(ablasf.rdotv2(n, state.gpdelta, _params));
-                        ablasf.rmulv(n, 1/(vnrm+math.minrealnumber), state.gpdelta, _params);
-                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
-                        ablasf.raddvr(n, state.degamma0*(ablasf.rdotvr(n, state.gpdelta, state.population2d, srcb, _params)-ablasf.rdotvr(n, state.gpdelta, state.population2d, srcc, _params)), state.gpdelta, propxf, offs, _params);
-                        ablasf.rcopyrv(n, propxf, offs, state.gptmp0, _params);
-                        ablasf.raddrv(n, -1.0, state.population2d, srca, state.gptmp0, _params);
-                        v = Math.Sqrt(ablasf.rdotv2(n, state.gptmp0, _params));
-                        propz[offs] = (n-1)*Math.Log((v+math.minrealnumber)/(vnrm+math.minrealnumber));
-                        propt[offs] = state.currentladder[hidx];
-                        offs = offs+1;
-                    }
-                }
-                return;
-            }
-            if( state.proposalkind==4 )
-            {
-                
-                //
-                // Gaussian move
-                //
-                ablasf.rallocv(n, ref state.gpdelta, _params);
-                ablasf.rallocv(n, ref state.gptmp0, _params);
-                offs = 0;
-                for(widx=0; widx<=dstgrpsize-1; widx++)
-                {
-                    for(hidx=0; hidx<=popheight-1; hidx++)
-                    {
-                        
-                        //
-                        // Determine Dst to update
-                        //
-                        dst = hidx*popwidth+grpidx[widx];
-                        
-                        //
-                        // Generate proposal
-                        //
-                        for(k=0; k<=n-1; k++)
-                        {
-                            state.gptmp0[k] = hqrnd.hqrndnormal(rs, _params);
-                        }
-                        ablasf.rgemv(n, n, 1.0, state.gaussl, 0, state.gptmp0, 0.0, state.gpdelta, _params);
-                        propidx[offs] = dst;
-                        propz[offs] = 0.0;
-                        propt[offs] = state.currentladder[hidx];
-                        ablasf.rcopyrr(n, state.population2d, dst, propxf, offs, _params);
-                        ablasf.raddvr(n, 1.0, state.gpdelta, propxf, offs, _params);
-                        offs = offs+1;
-                    }
-                }
-                return;
-            }
-            alglib.ap.assert(false, "MCMC: 319132 failed");
-        }
-
-
-        /*************************************************************************
-        Compute per-variable integrated autocorrelation times
-
-          -- ALGLIB --
-             Copyright 20.01.2025 by Bochkanov Sergey
-        *************************************************************************/
-        private static void computeautocorrtimes(mcmcstate state,
-            ref double[] autocorrtimes,
-            alglib.xparams _params)
-        {
-            int n = 0;
-            int m = 0;
-            int epochscnt = 0;
-            int popwidth = 0;
-            int idxv = 0;
-            int idxw = 0;
-            double[] a = new double[0];
-            double[] a2 = new double[0];
-
-            n = state.n;
-            epochscnt = state.repepochscnt;
-            popwidth = state.reppopwidth;
-            alglib.ap.assert(!state.reportalllevels, "MCMC: 778552 failed");
-            alglib.ap.assert(epochscnt*popwidth==state.repsamplesize, "MCMC: integrity check 657126 failed");
-            ablasf.rsetallocv(n, 0.0, ref autocorrtimes, _params);
-            
-            //
-            //
-            //
-            for(idxv=0; idxv<=n-1; idxv++)
-            {
-                
-                //
-                // Compute averaged autocorrelation function
-                //
-                ablasf.rsetallocv(epochscnt, 0.0, ref a, _params);
-                for(idxw=0; idxw<=popwidth-1; idxw++)
-                {
-                    autocorrij(state, idxw, idxv, ref a2, _params);
-                    ablasf.raddv(epochscnt, (double)1/(double)popwidth, a2, a, _params);
-                }
-                ablasf.rmulv(epochscnt, 1/(a[0]+Math.Sqrt(math.minrealnumber)*apserv.possign(a[0], _params)), a, _params);
-                
-                //
-                // Compute integrated autocorrelation time using finite window M, such that time(M)*C<=M for C~5.
-                // Having finite window size helps to reduce influence of random noise.
-                //
-                autocorrtimes[idxv] = a[0];
-                for(m=1; m<=epochscnt-1; m++)
-                {
-                    autocorrtimes[idxv] = autocorrtimes[idxv]+2*a[m];
-                    if( (double)(autocorrtimes[idxv]*cautocorr)<=(double)(m) )
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-
-        private static void autocorrij(mcmcstate state,
-            int idxw,
-            int idxv,
-            ref double[] a,
-            alglib.xparams _params)
-        {
-            int epochscnt = 0;
-            int ex2 = 0;
-            int popwidth = 0;
-            double[] x = new double[0];
-            double meanx = 0;
-            int i = 0;
-            complex[] f = new complex[0];
-
-            epochscnt = state.repepochscnt;
-            popwidth = state.reppopwidth;
-            alglib.ap.assert(!state.reportalllevels, "MCMC: 778552 failed");
-            alglib.ap.assert(epochscnt*popwidth==state.repsamplesize, "MCMC: integrity check 678132 failed");
-            ex2 = 1;
-            while( ex2<epochscnt )
-            {
-                ex2 = ex2*2;
-            }
-            ablasf.rsetallocv(ex2, 0.0, ref x, _params);
-            meanx = 0;
-            for(i=0; i<=epochscnt-1; i++)
-            {
-                x[i] = state.repsample[popwidth*i+idxw,idxv];
-                meanx = meanx+x[i];
-            }
-            meanx = meanx/epochscnt;
-            for(i=0; i<=epochscnt-1; i++)
-            {
-                x[i] = x[i]-meanx;
-            }
-            fft.fftr1dbuf(x, ex2, ref f, _params);
-            for(i=0; i<=ex2-1; i++)
-            {
-                f[i] = f[i]*math.conj(f[i]);
-            }
-            fft.fftr1dinvbuf(f, ex2, ref x, _params);
-            ablasf.rallocv(epochscnt, ref a, _params);
-            ablasf.rcopymulv(epochscnt, (double)1/(double)epochscnt, x, a, _params);
-        }
-
-
-    }
-    public class mannwhitneyu
-    {
-        /*************************************************************************
-        Mann-Whitney U-test
-
-        This test checks hypotheses about whether X  and  Y  are  samples  of  two
-        continuous distributions of the same shape  and  same  median  or  whether
-        their medians are different.
-
-        The following tests are performed:
-            * two-tailed test (null hypothesis - the medians are equal)
-            * left-tailed test (null hypothesis - the median of the  first  sample
-              is greater than or equal to the median of the second sample)
-            * right-tailed test (null hypothesis - the median of the first  sample
-              is less than or equal to the median of the second sample).
-
-        Requirements:
-            * the samples are independent
-            * X and Y are continuous distributions (or discrete distributions well-
-              approximating continuous distributions)
-            * distributions of X and Y have the  same  shape.  The  only  possible
-              difference is their position (i.e. the value of the median)
-            * the number of elements in each sample is not less than 5
-            * the scale of measurement should be ordinal, interval or ratio  (i.e.
-              the test could not be applied to nominal variables).
-
-        The test is non-parametric and doesn't require distributions to be normal.
-
-        Input parameters:
-            X   -   sample 1. Array whose index goes from 0 to N-1.
-            N   -   size of the sample. N>=5
-            Y   -   sample 2. Array whose index goes from 0 to M-1.
-            M   -   size of the sample. M>=5
-
-        Output parameters:
-            BothTails   -   p-value for two-tailed test.
-                            If BothTails is less than the given significance level
-                            the null hypothesis is rejected.
-            LeftTail    -   p-value for left-tailed test.
-                            If LeftTail is less than the given significance level,
-                            the null hypothesis is rejected.
-            RightTail   -   p-value for right-tailed test.
-                            If RightTail is less than the given significance level
-                            the null hypothesis is rejected.
-
-        To calculate p-values, special approximation is used. This method lets  us
-        calculate p-values with satisfactory  accuracy  in  interval  [0.0001, 1].
-        There is no approximation outside the [0.0001, 1] interval. Therefore,  if
-        the significance level outlies this interval, the test returns 0.0001.
-
-        Relative precision of approximation of p-value:
-
-        N          M          Max.err.   Rms.err.
-        5..10      N..10      1.4e-02    6.0e-04
-        5..10      N..100     2.2e-02    5.3e-06
-        10..15     N..15      1.0e-02    3.2e-04
-        10..15     N..100     1.0e-02    2.2e-05
-        15..100    N..100     6.1e-03    2.7e-06
-
-        For N,M>100 accuracy checks weren't put into  practice,  but  taking  into
-        account characteristics of asymptotic approximation used, precision should
-        not be sharply different from the values for interval [5, 100].
-
-        NOTE: P-value approximation was  optimized  for  0.0001<=p<=0.2500.  Thus,
-              P's outside of this interval are enforced to these bounds. Say,  you
-              may quite often get P equal to exactly 0.25 or 0.0001.
-
-          -- ALGLIB --
-             Copyright 09.04.2007 by Bochkanov Sergey
-        *************************************************************************/
-        public static void mannwhitneyutest(double[] x,
-            int n,
-            double[] y,
-            int m,
-            ref double bothtails,
-            ref double lefttail,
-            ref double righttail,
-            alglib.xparams _params)
-        {
-            int i = 0;
-            int j = 0;
-            int k = 0;
-            int t = 0;
-            double tmp = 0;
-            int tmpi = 0;
-            int ns = 0;
-            double[] r = new double[0];
-            int[] c = new int[0];
-            double u = 0;
-            double p = 0;
-            double mp = 0;
-            double s = 0;
-            double sigma = 0;
-            double mu = 0;
-            int tiecount = 0;
-            int[] tiesize = new int[0];
-
-            bothtails = 0;
-            lefttail = 0;
-            righttail = 0;
-
-            
-            //
-            // Prepare
-            //
-            if( n<=4 || m<=4 )
+            xvar = xvar/(n-1);
+            if( (double)(xvar)==(double)(0) )
             {
                 bothtails = 1.0;
                 lefttail = 1.0;
                 righttail = 1.0;
                 return;
             }
-            ns = n+m;
-            r = new double[ns-1+1];
-            c = new int[ns-1+1];
-            for(i=0; i<=n-1; i++)
-            {
-                r[i] = x[i];
-                c[i] = 0;
-            }
-            for(i=0; i<=m-1; i++)
-            {
-                r[n+i] = y[i];
-                c[n+i] = 1;
-            }
             
             //
-            // sort {R, C}
+            // Statistic
             //
-            if( ns!=1 )
-            {
-                i = 2;
-                do
-                {
-                    t = i;
-                    while( t!=1 )
-                    {
-                        k = t/2;
-                        if( (double)(r[k-1])>=(double)(r[t-1]) )
-                        {
-                            t = 1;
-                        }
-                        else
-                        {
-                            tmp = r[k-1];
-                            r[k-1] = r[t-1];
-                            r[t-1] = tmp;
-                            tmpi = c[k-1];
-                            c[k-1] = c[t-1];
-                            c[t-1] = tmpi;
-                            t = k;
-                        }
-                    }
-                    i = i+1;
-                }
-                while( i<=ns );
-                i = ns-1;
-                do
-                {
-                    tmp = r[i];
-                    r[i] = r[0];
-                    r[0] = tmp;
-                    tmpi = c[i];
-                    c[i] = c[0];
-                    c[0] = tmpi;
-                    t = 1;
-                    while( t!=0 )
-                    {
-                        k = 2*t;
-                        if( k>i )
-                        {
-                            t = 0;
-                        }
-                        else
-                        {
-                            if( k<i )
-                            {
-                                if( (double)(r[k])>(double)(r[k-1]) )
-                                {
-                                    k = k+1;
-                                }
-                            }
-                            if( (double)(r[t-1])>=(double)(r[k-1]) )
-                            {
-                                t = 0;
-                            }
-                            else
-                            {
-                                tmp = r[k-1];
-                                r[k-1] = r[t-1];
-                                r[t-1] = tmp;
-                                tmpi = c[k-1];
-                                c[k-1] = c[t-1];
-                                c[t-1] = tmpi;
-                                t = k;
-                            }
-                        }
-                    }
-                    i = i-1;
-                }
-                while( i>=1 );
-            }
-            
-            //
-            // compute tied ranks
-            //
-            i = 0;
-            tiecount = 0;
-            tiesize = new int[ns-1+1];
-            while( i<=ns-1 )
-            {
-                j = i+1;
-                while( j<=ns-1 )
-                {
-                    if( (double)(r[j])!=(double)(r[i]) )
-                    {
-                        break;
-                    }
-                    j = j+1;
-                }
-                for(k=i; k<=j-1; k++)
-                {
-                    r[k] = 1+(double)(i+j-1)/(double)2;
-                }
-                tiesize[tiecount] = j-i;
-                tiecount = tiecount+1;
-                i = j;
-            }
-            
-            //
-            // Compute U
-            //
-            u = 0;
-            for(i=0; i<=ns-1; i++)
-            {
-                if( c[i]==0 )
-                {
-                    u = u+r[i];
-                }
-            }
-            u = apserv.rmul2(n, m, _params)+apserv.rmul2(n, n+1, _params)*0.5-u;
-            
-            //
-            // Result
-            //
-            mu = apserv.rmul2(n, m, _params)/2;
-            tmp = ns*(math.sqr(ns)-1)/12;
-            for(i=0; i<=tiecount-1; i++)
-            {
-                tmp = tmp-tiesize[i]*(math.sqr(tiesize[i])-1)/12;
-            }
-            sigma = Math.Sqrt(apserv.rmul2(n, m, _params)/ns/(ns-1)*tmp);
-            s = (u-mu)/sigma;
-            if( (double)(s)<=(double)(0) )
-            {
-                p = Math.Exp(usigma(-((u-mu)/sigma), n, m, _params));
-                mp = 1-Math.Exp(usigma(-((u-1-mu)/sigma), n, m, _params));
-            }
-            else
-            {
-                mp = Math.Exp(usigma((u-mu)/sigma, n, m, _params));
-                p = 1-Math.Exp(usigma((u+1-mu)/sigma, n, m, _params));
-            }
-            lefttail = apserv.boundval(Math.Max(mp, 1.0E-4), 0.0001, 0.2500, _params);
-            righttail = apserv.boundval(Math.Max(p, 1.0E-4), 0.0001, 0.2500, _params);
-            bothtails = 2*Math.Min(lefttail, righttail);
-        }
-
-
-        /*************************************************************************
-        Sequential Chebyshev interpolation.
-        *************************************************************************/
-        private static void ucheb(double x,
-            double c,
-            ref double tj,
-            ref double tj1,
-            ref double r,
-            alglib.xparams _params)
-        {
-            double t = 0;
-
-            r = r+c*tj;
-            t = 2*x*tj1-tj;
-            tj = tj1;
-            tj1 = t;
-        }
-
-
-        /*************************************************************************
-        Three-point polynomial interpolation.
-        *************************************************************************/
-        private static double uninterpolate(double p1,
-            double p2,
-            double p3,
-            int n,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double t1 = 0;
-            double t2 = 0;
-            double t3 = 0;
-            double t = 0;
-            double p12 = 0;
-            double p23 = 0;
-
-            t1 = 1.0/15.0;
-            t2 = 1.0/30.0;
-            t3 = 1.0/100.0;
-            t = 1.0/n;
-            p12 = ((t-t2)*p1+(t1-t)*p2)/(t1-t2);
-            p23 = ((t-t3)*p2+(t2-t)*p3)/(t2-t3);
-            result = ((t-t3)*p12+(t1-t)*p23)/(t1-t3);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(0, N1, N2)
-        *************************************************************************/
-        private static double usigma000(int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double p1 = 0;
-            double p2 = 0;
-            double p3 = 0;
-
-            p1 = uninterpolate(-6.76984e-01, -6.83700e-01, -6.89873e-01, n2, _params);
-            p2 = uninterpolate(-6.83700e-01, -6.87311e-01, -6.90957e-01, n2, _params);
-            p3 = uninterpolate(-6.89873e-01, -6.90957e-01, -6.92175e-01, n2, _params);
-            result = uninterpolate(p1, p2, p3, n1, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(0.75, N1, N2)
-        *************************************************************************/
-        private static double usigma075(int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double p1 = 0;
-            double p2 = 0;
-            double p3 = 0;
-
-            p1 = uninterpolate(-1.44500e+00, -1.45906e+00, -1.47063e+00, n2, _params);
-            p2 = uninterpolate(-1.45906e+00, -1.46856e+00, -1.47644e+00, n2, _params);
-            p3 = uninterpolate(-1.47063e+00, -1.47644e+00, -1.48100e+00, n2, _params);
-            result = uninterpolate(p1, p2, p3, n1, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(1.5, N1, N2)
-        *************************************************************************/
-        private static double usigma150(int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double p1 = 0;
-            double p2 = 0;
-            double p3 = 0;
-
-            p1 = uninterpolate(-2.65380e+00, -2.67352e+00, -2.69011e+00, n2, _params);
-            p2 = uninterpolate(-2.67352e+00, -2.68591e+00, -2.69659e+00, n2, _params);
-            p3 = uninterpolate(-2.69011e+00, -2.69659e+00, -2.70192e+00, n2, _params);
-            result = uninterpolate(p1, p2, p3, n1, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(2.25, N1, N2)
-        *************************************************************************/
-        private static double usigma225(int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double p1 = 0;
-            double p2 = 0;
-            double p3 = 0;
-
-            p1 = uninterpolate(-4.41465e+00, -4.42260e+00, -4.43702e+00, n2, _params);
-            p2 = uninterpolate(-4.42260e+00, -4.41639e+00, -4.41928e+00, n2, _params);
-            p3 = uninterpolate(-4.43702e+00, -4.41928e+00, -4.41030e+00, n2, _params);
-            result = uninterpolate(p1, p2, p3, n1, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(3.0, N1, N2)
-        *************************************************************************/
-        private static double usigma300(int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double p1 = 0;
-            double p2 = 0;
-            double p3 = 0;
-
-            p1 = uninterpolate(-6.89839e+00, -6.83477e+00, -6.82340e+00, n2, _params);
-            p2 = uninterpolate(-6.83477e+00, -6.74559e+00, -6.71117e+00, n2, _params);
-            p3 = uninterpolate(-6.82340e+00, -6.71117e+00, -6.64929e+00, n2, _params);
-            result = uninterpolate(p1, p2, p3, n1, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(3.33, N1, N2)
-        *************************************************************************/
-        private static double usigma333(int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double p1 = 0;
-            double p2 = 0;
-            double p3 = 0;
-
-            p1 = uninterpolate(-8.31272e+00, -8.17096e+00, -8.13125e+00, n2, _params);
-            p2 = uninterpolate(-8.17096e+00, -8.00156e+00, -7.93245e+00, n2, _params);
-            p3 = uninterpolate(-8.13125e+00, -7.93245e+00, -7.82502e+00, n2, _params);
-            result = uninterpolate(p1, p2, p3, n1, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(3.66, N1, N2)
-        *************************************************************************/
-        private static double usigma367(int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double p1 = 0;
-            double p2 = 0;
-            double p3 = 0;
-
-            p1 = uninterpolate(-9.98837e+00, -9.70844e+00, -9.62087e+00, n2, _params);
-            p2 = uninterpolate(-9.70844e+00, -9.41156e+00, -9.28998e+00, n2, _params);
-            p3 = uninterpolate(-9.62087e+00, -9.28998e+00, -9.11686e+00, n2, _params);
-            result = uninterpolate(p1, p2, p3, n1, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(4.0, N1, N2)
-        *************************************************************************/
-        private static double usigma400(int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double p1 = 0;
-            double p2 = 0;
-            double p3 = 0;
-
-            p1 = uninterpolate(-1.20250e+01, -1.14911e+01, -1.13231e+01, n2, _params);
-            p2 = uninterpolate(-1.14911e+01, -1.09927e+01, -1.07937e+01, n2, _params);
-            p3 = uninterpolate(-1.13231e+01, -1.07937e+01, -1.05285e+01, n2, _params);
-            result = uninterpolate(p1, p2, p3, n1, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 5)
-        *************************************************************************/
-        private static double utbln5n5(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/2.611165e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -2.596264e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.412086e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.858542e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.614282e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.372686e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.524731e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.435331e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.284665e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.184141e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.298360e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 7.447272e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.938769e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.276205e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.138481e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.684625e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.558104e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 6)
-        *************************************************************************/
-        private static double utbln5n6(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/2.738613e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -2.810459e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.684429e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.712858e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.009324e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.644391e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.034173e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.953498e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.279293e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.563485e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.971952e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.506309e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.541406e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.283205e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.016347e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.221626e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.286752e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 7)
-        *************************************************************************/
-        private static double utbln5n7(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/2.841993e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -2.994677e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.923264e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.506190e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.054280e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.794587e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.726290e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.534180e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.517845e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.904428e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.882443e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.482988e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.114875e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.515082e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.996056e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.293581e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.349444e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 8)
-        *************************************************************************/
-        private static double utbln5n8(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/2.927700e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.155727e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.135078e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.247203e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.309697e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.993725e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.567219e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.383704e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.002188e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.487322e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.443899e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.688270e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.600339e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.874948e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.811593e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.072353e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.659457e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 9)
-        *************************************************************************/
-        private static double utbln5n9(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.000000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.298162e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.325016e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.939852e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.563029e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.222652e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.195200e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.445665e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.204792e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.775217e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.527781e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.221948e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.242968e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.607959e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.771285e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.694026e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.481190e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 10)
-        *************************************************************************/
-        private static double utbln5n10(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.061862e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.425360e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.496710e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.587658e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.812005e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.427637e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.515702e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.406867e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.796295e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.237591e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.654249e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.181165e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.011665e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.417927e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.534880e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.791255e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.871512e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 11)
-        *************************************************************************/
-        private static double utbln5n11(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.115427e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.539959e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.652998e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.196503e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.054363e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.618848e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.109411e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.786668e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.215648e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.484220e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.935991e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.396191e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.894177e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.206979e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.519055e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.210326e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.189679e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 12)
-        *************************************************************************/
-        private static double utbln5n12(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.162278e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.644007e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.796173e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.771177e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.290043e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.794686e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.702110e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.185959e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.416259e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.592056e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.201530e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.754365e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.978945e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.012032e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.304579e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.100378e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.728269e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 13)
-        *************************************************************************/
-        private static double utbln5n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.203616e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.739120e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.928117e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.031605e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.519403e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.962648e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.292183e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.809293e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.465156e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.456278e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.446055e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.109490e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.218256e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.941479e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.058603e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.824402e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.830947e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 14)
-        *************************************************************************/
-        private static double utbln5n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.240370e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.826559e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.050370e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.083408e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.743164e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.012030e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.884686e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.059656e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.327521e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.134026e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.584201e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.440618e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.524133e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.990007e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.887334e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.534977e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.705395e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 15)
-        *************************************************************************/
-        private static double utbln5n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.851572e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.082033e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.095983e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.814595e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.073148e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.420213e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.517175e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.344180e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.371393e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.711443e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.228569e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.683483e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.267112e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.156044e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.131316e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.301023e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 16)
-        *************************************************************************/
-        private static double utbln5n16(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.852210e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.077482e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.091186e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.797282e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.084994e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.667054e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.843909e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.456732e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.039830e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.723508e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.940608e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.478285e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.649144e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.237703e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.707410e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.874293e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 17)
-        *************************************************************************/
-        private static double utbln5n17(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.851752e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.071259e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.084700e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.758898e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.073846e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.684838e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.964936e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.782442e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.956362e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.984727e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.196936e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.558262e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.690746e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.364855e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.401006e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.546748e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 18)
-        *************************************************************************/
-        private static double utbln5n18(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.850840e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.064799e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.077651e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.712659e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.049217e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.571333e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.929809e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.752044e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.949464e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.896101e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.614460e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.384357e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.489113e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.445725e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.945636e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.424653e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 19)
-        *************************************************************************/
-        private static double utbln5n19(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.850027e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.059159e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.071106e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.669960e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.022780e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.442555e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.851335e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.433865e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.514465e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.332989e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.606099e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.341945e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.402164e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.039761e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.512831e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.284427e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 20)
-        *************************************************************************/
-        private static double utbln5n20(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.849651e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.054729e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.065747e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.636243e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.003234e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.372789e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.831551e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.763090e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.830626e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.122384e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.108328e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.557983e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.945666e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.965696e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.493236e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.162591e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 21)
-        *************************************************************************/
-        private static double utbln5n21(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.849649e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.051155e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.061430e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.608869e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.902788e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.346562e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.874709e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.682887e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.026206e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.534551e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.990575e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.713334e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.737011e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.304571e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.133110e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.123457e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 22)
-        *************************************************************************/
-        private static double utbln5n22(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.849598e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.047605e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.057264e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.579513e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.749602e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.275137e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.881768e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.177374e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.981056e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.696290e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.886803e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.085378e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.675242e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.426367e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.039613e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.662378e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 23)
-        *************************************************************************/
-        private static double utbln5n23(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.849269e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.043761e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.052735e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.544683e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.517503e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.112082e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.782070e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.549483e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.747329e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.694263e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.147141e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.526209e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.039173e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.235615e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.656546e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.014423e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 24)
-        *************************************************************************/
-        private static double utbln5n24(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.848925e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.040178e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.048355e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.510198e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.261134e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.915864e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.627423e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.307345e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.732992e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.869652e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.494176e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.047533e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.178439e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.424171e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.829195e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.840810e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 25)
-        *************************************************************************/
-        private static double utbln5n25(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.848937e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.037512e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.044866e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.483269e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.063682e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.767778e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.508540e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.332756e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.881511e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.124041e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.368456e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.930499e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.779630e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.029528e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.658678e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.289695e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 26)
-        *************************************************************************/
-        private static double utbln5n26(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.849416e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.035915e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.042493e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.466021e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.956432e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.698914e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.465689e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.035254e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.674614e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.492734e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.014021e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.944953e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.255750e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.075841e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.989330e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.134862e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 27)
-        *************************************************************************/
-        private static double utbln5n27(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.850070e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.034815e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.040650e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.453117e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.886426e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.661702e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.452346e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.002476e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.720126e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.001400e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.729826e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.740640e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.206333e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.366093e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.193471e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.804091e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 28)
-        *************************************************************************/
-        private static double utbln5n28(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.850668e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.033786e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.038853e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.440281e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.806020e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.612883e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.420436e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.787982e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.535230e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.263121e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.849609e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.863967e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.391610e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.720294e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.952273e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.901413e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 29)
-        *************************************************************************/
-        private static double utbln5n29(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.851217e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.032834e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.037113e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.427762e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.719146e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.557172e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.375498e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.452033e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.187516e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.916936e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.065533e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.067301e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.615824e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.432244e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.417795e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.710038e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 30)
-        *************************************************************************/
-        private static double utbln5n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.851845e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.032148e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.035679e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.417758e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.655330e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.522132e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.352106e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.326911e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.064969e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.813321e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.683881e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.813346e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.627085e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.832107e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.519336e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.888530e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 5, 100)
-        *************************************************************************/
-        private static double utbln5n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.250000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.877940e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.039324e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.022243e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.305825e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.960119e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.112000e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.138868e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.418164e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.174520e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.489617e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.878301e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.302233e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.054113e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.458862e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.186591e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.623412e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 6)
-        *************************************************************************/
-        private static double utbln6n6(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/2.882307e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.054075e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.998804e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.681518e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.067578e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.709435e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.952661e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.641700e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.304572e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.336275e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.770385e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.401891e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.246148e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.442663e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.502866e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.105855e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.739371e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 7)
-        *************************************************************************/
-        private static double utbln6n7(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.000000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.265287e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.274613e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.582352e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.334293e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.915502e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.108091e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.546701e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.298827e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.891501e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.313717e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.989501e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.914594e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.062372e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.158841e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.596443e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.185662e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 8)
-        *************************************************************************/
-        private static double utbln6n8(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.098387e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.450954e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.520462e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.420299e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.604853e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.165840e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.008756e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.723402e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.843521e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.883405e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.720980e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.301709e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.948034e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.776243e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.623736e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.742068e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.796927e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 9)
-        *************************************************************************/
-        private static double utbln6n9(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.181981e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.616113e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.741650e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.204487e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.873068e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.446794e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.632286e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.266481e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.280067e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.780687e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.480242e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.592200e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.581019e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.264231e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.347174e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.167535e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.092185e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 10)
-        *************************************************************************/
-        private static double utbln6n10(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.253957e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.764382e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.942366e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.939896e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.137812e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.720270e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.281070e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.901060e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.824937e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.802812e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.258132e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.233536e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.085530e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.212151e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.001329e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.226048e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.035298e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 11)
-        *************************************************************************/
-        private static double utbln6n11(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.316625e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.898597e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.125710e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.063297e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.396852e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.990126e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.927977e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.726500e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.858745e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.654590e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.217736e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.989770e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.768493e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.924364e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.140215e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.647914e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.924802e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 12)
-        *************************************************************************/
-        private static double utbln6n12(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.371709e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.020941e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.294250e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.128842e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.650389e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.248611e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.578510e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.162852e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.746982e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.454209e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.128042e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.936650e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.530794e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.665192e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.994144e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.662249e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.368541e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 13)
-        *************************************************************************/
-        private static double utbln6n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.420526e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.133167e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.450016e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.191088e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.898220e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.050249e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.226901e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.471113e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.007470e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.049420e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.059074e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.881249e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.452780e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.441805e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.787493e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.483957e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.481590e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 14)
-        *************************************************************************/
-        private static double utbln6n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.450000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.201268e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.542568e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.226965e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.046029e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.136657e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.786757e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.843748e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.588022e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.253029e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.667188e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.788330e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.474545e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.540494e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.951188e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.863323e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.220904e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 15)
-        *************************************************************************/
-        private static double utbln6n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.450000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.195689e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.526567e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.213617e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.975035e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.118480e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.859142e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.083312e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.298720e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.766708e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.026356e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.093113e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.135168e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.136376e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.190870e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.435972e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.413129e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 30)
-        *************************************************************************/
-        private static double utbln6n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.450000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.166269e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.427399e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.118239e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.360847e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.745885e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.025041e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.187179e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.432089e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.408451e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.388774e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.795560e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.304136e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.258516e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.180236e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.388679e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.836027e-06, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 6, 100)
-        *************************************************************************/
-        private static double utbln6n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.450000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.181350e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.417919e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.094201e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.195883e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.818937e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.514202e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.125047e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.022148e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.284181e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.157766e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.023752e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.127985e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.221690e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.516179e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.501398e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.380220e-06, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 7)
-        *************************************************************************/
-        private static double utbln7n7(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.130495e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.501264e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.584790e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.577311e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.617002e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.145186e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.023462e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.408251e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.626515e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.072492e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.722926e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.095445e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.842602e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.751427e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.008927e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.892431e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.772386e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 8)
-        *************************************************************************/
-        private static double utbln7n8(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.240370e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.709965e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.862154e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.504541e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.900195e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.439995e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.678028e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.485540e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.437047e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.440092e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.114227e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.516569e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.829457e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.787550e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.761866e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.991911e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.533481e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 9)
-        *************************************************************************/
-        private static double utbln7n9(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.334314e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.896550e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.112671e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.037277e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.181695e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.765190e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.360116e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.695960e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.780578e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.963843e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.616148e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.852104e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.390744e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.014041e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.888101e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.467474e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.004611e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 10)
-        *************************************************************************/
-        private static double utbln7n10(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.415650e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.064844e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.340749e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.118888e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.459730e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.097781e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.057688e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.097406e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.209262e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.065641e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.196677e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.313994e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.827157e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.822284e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.389090e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.340850e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.395172e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 11)
-        *************************************************************************/
-        private static double utbln7n11(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.486817e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.217795e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.549783e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.195905e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.733093e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.428447e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.760093e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.431676e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.717152e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.032199e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.832423e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.905979e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.302799e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.464371e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.456211e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.736244e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.140712e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 12)
-        *************************************************************************/
-        private static double utbln7n12(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.235822e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.564100e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.190813e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.686546e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.395083e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.967359e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.747096e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.304144e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.903198e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.134906e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.175035e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.266224e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.892931e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.604706e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.070459e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.427010e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 13)
-        *************************************************************************/
-        private static double utbln7n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.222204e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.532300e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.164642e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.523768e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.531984e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.467857e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.483804e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.524136e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.077740e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.745218e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.602085e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.828831e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.994070e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.873879e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.341937e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.706444e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 14)
-        *************************************************************************/
-        private static double utbln7n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.211763e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.507542e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.143640e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.395755e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.808020e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.044259e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.182308e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.057325e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.724255e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.303900e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.113148e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.102514e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.559442e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.634986e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.776476e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.054489e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 15)
-        *************************************************************************/
-        private static double utbln7n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.204898e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.489960e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.129172e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.316741e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.506107e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.983676e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.258013e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.262515e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.984156e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.912108e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.974023e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.056195e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.090842e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.232620e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.816339e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.020421e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 30)
-        *************************************************************************/
-        private static double utbln7n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.176536e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.398705e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.045481e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.821982e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.962304e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.698132e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.062667e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.282353e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.014836e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.035683e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.004137e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.801453e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.920705e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.518735e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.821501e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.801008e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 7, 100)
-        *************************************************************************/
-        private static double utbln7n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.500000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.188337e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.386949e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.022834e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.686517e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.323516e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.399392e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.644333e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.617044e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.031396e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.792066e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.675457e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.673416e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.258552e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.174214e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.073644e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.349958e-06, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 8)
-        *************************************************************************/
-        private static double utbln8n8(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.360672e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -3.940217e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.168913e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.051485e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.195325e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.775196e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.385506e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.244902e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.525632e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.771275e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.332874e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.079599e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.882551e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.407944e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.769844e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.062433e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.872535e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 9)
-        *************************************************************************/
-        private static double utbln8n9(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.464102e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.147004e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.446939e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.146155e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.488561e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.144561e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.116917e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.205667e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.515661e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.618616e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.599011e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.457324e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.482917e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.488267e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.469823e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.957591e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.058326e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 10)
-        *************************************************************************/
-        private static double utbln8n10(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.554093e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.334282e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.700860e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.235253e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.778489e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.527324e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.862885e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.589781e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.507355e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.717526e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.215726e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.848696e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.918854e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.219614e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.753761e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.573688e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.602177e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 11)
-        *************************************************************************/
-        private static double utbln8n11(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.421882e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.812457e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.266153e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.849344e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.971527e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.258944e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.944820e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.894685e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.031836e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.514330e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.351660e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.206748e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.492600e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.005338e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.780099e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.673599e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 12)
-        *************************************************************************/
-        private static double utbln8n12(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.398211e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.762214e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.226296e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.603837e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.643223e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.502438e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.544574e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.647734e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.442259e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.011484e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.384758e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.998259e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.659985e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.331046e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.638478e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.056785e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 13)
-        *************************************************************************/
-        private static double utbln8n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.380670e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.724511e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.195851e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.420511e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.609928e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.893999e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.115919e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.291410e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.339664e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.801548e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.534710e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.793250e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.806718e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.384624e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.120582e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.936453e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 14)
-        *************************************************************************/
-        private static double utbln8n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.368494e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.697171e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.174440e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.300621e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.087393e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.685826e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.085254e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.525658e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.966647e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.453388e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.826066e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.501958e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.336297e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.251972e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.118456e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.415959e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 15)
-        *************************************************************************/
-        private static double utbln8n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.358397e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.674485e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.155941e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.195780e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.544830e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.426183e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.309902e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.650956e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.068874e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.538544e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.192525e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.073905e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.079673e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.423572e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.579647e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.765904e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 30)
-        *************************************************************************/
-        private static double utbln8n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.318823e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.567159e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.064864e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.688413e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.153712e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.309389e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.226861e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.523815e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.780987e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.166866e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.922431e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.466397e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.690036e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.008185e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.271903e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.534751e-06, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 8, 100)
-        *************************************************************************/
-        private static double utbln8n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.600000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.324531e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.547071e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.038129e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.541549e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.525605e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.044992e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.085713e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.017871e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.459226e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.092064e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.024349e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 7.366347e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.385637e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.321722e-08, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.439286e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.058079e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 9)
-        *************************************************************************/
-        private static double utbln9n9(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.576237e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.372857e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.750859e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.248233e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.792868e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.559372e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.894941e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.643256e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.091370e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.285034e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.112997e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.806229e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.150741e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.509825e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.891051e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.485013e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.343653e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 10)
-        *************************************************************************/
-        private static double utbln9n10(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.516726e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.939333e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.305046e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.935326e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.029141e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.420592e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.053140e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.065930e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.523581e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.544888e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.813741e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.510631e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.536057e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.833815e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.189692e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.615050e-03, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 11)
-        *************************************************************************/
-        private static double utbln9n11(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.481308e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.867483e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.249072e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.591790e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.400128e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.341992e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.463680e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.487211e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.671196e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.343472e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.544146e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.802335e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.117084e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.217443e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.858766e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.193687e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 12)
-        *************************************************************************/
-        private static double utbln9n12(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.456776e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.817037e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.209788e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.362108e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.171356e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.661557e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.026141e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.361908e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.093885e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.298389e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.663603e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.768522e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.579015e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.868677e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.440652e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.523037e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 13)
-        *************************************************************************/
-        private static double utbln9n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.438840e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.779308e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.180614e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.196489e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.346621e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.234857e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.796211e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.575715e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.525647e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.964651e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.275235e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.299124e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.397416e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.295781e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.237619e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 7.269692e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 14)
-        *************************************************************************/
-        private static double utbln9n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.425981e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.751545e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.159543e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.086570e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.917446e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.120112e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.175519e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.515473e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.727772e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.070629e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.677569e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.876953e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.233502e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.508182e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.120389e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.847212e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 15)
-        *************************************************************************/
-        private static double utbln9n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.414952e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.727612e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.140634e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.981231e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.382635e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.853575e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.571051e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.567625e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.214197e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.448700e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.712669e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.015050e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.438610e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.301363e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.309386e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.164772e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 30)
-        *************************************************************************/
-        private static double utbln9n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.370720e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.615712e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.050023e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.504775e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.318265e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.646826e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.741492e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.735360e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.966911e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.100738e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.348991e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.527687e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.917286e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.397466e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.360175e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.892252e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 9, 100)
-        *************************************************************************/
-        private static double utbln9n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.372506e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.590966e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.021758e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.359849e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.755519e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.533166e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.936659e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.634913e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.730053e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.791845e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.030682e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.228663e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.631175e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.636749e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.404599e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.789872e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 10, 10)
-        *************************************************************************/
-        private static double utbln10n10(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.468831e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.844398e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.231728e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.486073e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.781321e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.971425e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.215371e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.828451e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.419872e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.430165e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.740363e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.049211e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.269371e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.211393e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.232314e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.016081e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 10, 11)
-        *************************************************************************/
-        private static double utbln10n11(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.437998e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.782296e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.184732e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.219585e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.457012e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.296008e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.481501e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.527940e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.953426e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.563840e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.574403e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.535775e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.338037e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.002654e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.852676e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.318132e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 10, 12)
-        *************************************************************************/
-        private static double utbln10n12(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.416082e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.737458e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.150952e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.036884e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.609030e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.908684e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.439666e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.162647e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.451601e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.148757e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.803981e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.731621e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.346903e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.013151e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.956148e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.438381e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 10, 13)
-        *************************************************************************/
-        private static double utbln10n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.399480e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.702863e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.124829e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.897428e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.979802e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.634368e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.180461e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.484926e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.864376e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.186576e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.886925e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.836828e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.074756e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.209547e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.883266e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.380143e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 10, 14)
-        *************************************************************************/
-        private static double utbln10n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.386924e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.676124e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.104740e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.793826e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.558886e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.492462e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.052903e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.917782e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.878696e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.576046e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.764551e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.288778e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.757658e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.299101e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.265197e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.384503e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 10, 15)
-        *************************************************************************/
-        private static double utbln10n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.376846e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.654247e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.088083e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.705945e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.169677e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.317213e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.264836e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.548024e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.633910e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.505621e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.658588e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.320254e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.175277e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.122317e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.675688e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.661363e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 10, 30)
-        *************************************************************************/
-        private static double utbln10n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.333977e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.548099e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.004444e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.291014e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.523674e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.828211e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.716917e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.894256e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.433371e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.522675e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.764192e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.140235e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.629230e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.541895e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.944946e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.726360e-06, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 10, 100)
-        *************************************************************************/
-        private static double utbln10n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.650000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.334008e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.522316e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.769627e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.158110e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.053650e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.242235e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.173571e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.033661e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.824732e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.084420e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.610036e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.728155e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.217130e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.340966e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.001235e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.694052e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 11, 11)
-        *************************************************************************/
-        private static double utbln11n11(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.519760e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.880694e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.200698e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.174092e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.072304e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.054773e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.506613e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.813942e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.223644e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.417416e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.499166e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.194332e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 7.369096e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.968590e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.630532e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.061000e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 11, 12)
-        *************************************************************************/
-        private static double utbln11n12(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.495790e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.832622e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.165420e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.987306e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.265621e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.723537e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.347406e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.353464e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.613369e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.102522e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.237709e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.665652e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.626903e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.167518e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.564455e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.047320e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 11, 13)
-        *************************************************************************/
-        private static double utbln11n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.477880e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.796242e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.138769e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.851739e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.722104e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.548304e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.176683e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.817895e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.842451e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.935870e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.421777e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.238831e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.867026e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.458255e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.306259e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.961487e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 11, 14)
-        *************************************************************************/
-        private static double utbln11n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.463683e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.766969e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.117082e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.739574e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.238865e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.350306e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.425871e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.640172e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.660633e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.879883e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.349658e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.271795e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.304544e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.024201e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.816867e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.596787e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 11, 15)
-        *************************************************************************/
-        private static double utbln11n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.452526e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.743570e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.099705e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.650612e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.858285e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.187036e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.689241e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.294360e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.072623e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.278008e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.322382e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.131558e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.305669e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.825627e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.332689e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.120973e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 11, 30)
-        *************************************************************************/
-        private static double utbln11n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.402621e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.627440e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.011333e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.224126e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.232856e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.859347e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.377381e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.756709e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.033230e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.875472e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.608399e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.102943e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.740693e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.343139e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.196878e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.658062e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 11, 100)
-        *************************************************************************/
-        private static double utbln11n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.398795e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.596486e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.814761e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.085187e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.766529e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.379425e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.986351e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.214705e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.360075e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.260869e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.033307e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.727087e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.393883e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.242989e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.111928e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.898823e-09, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 12, 12)
-        *************************************************************************/
-        private static double utbln12n12(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.472616e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.786627e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.132099e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.817523e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.570179e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.479511e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.799492e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.565350e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.530139e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.380132e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.242761e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.576269e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.018771e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.933911e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.002799e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.022048e-06, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 12, 13)
-        *************************************************************************/
-        private static double utbln12n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.454800e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.750794e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.105988e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.684754e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.011826e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.262579e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.044492e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.478741e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.322165e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.621104e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.068753e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.468396e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.056235e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.327375e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.914877e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.784191e-04, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 12, 14)
-        *************************************************************************/
-        private static double utbln12n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.440910e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.722404e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.085254e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.579439e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.563738e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.066730e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.129346e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.014531e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.129679e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.000909e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.996174e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.377924e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.936304e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.051098e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.025820e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 8.730585e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 12, 15)
-        *************************************************************************/
-        private static double utbln12n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.430123e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.700008e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.068971e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.499725e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.250897e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.473145e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.680008e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.483350e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.766992e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.891081e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.015140e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.977756e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.707414e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.114786e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.238865e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.381445e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 12, 30)
-        *************************************************************************/
-        private static double utbln12n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.380023e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.585782e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.838583e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.103394e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.834015e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.635212e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.948212e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.574169e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.747980e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.833672e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.722433e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.181038e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.206473e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.716003e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.476434e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.217700e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 12, 100)
-        *************************************************************************/
-        private static double utbln12n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.700000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.374567e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.553481e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.541334e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.701907e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.414757e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.404103e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.234388e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.453762e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.311060e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.317501e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.713888e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.309583e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.019804e-08, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.224829e-09, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.349019e-08, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.893302e-08, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 13, 13)
-        *************************************************************************/
-        private static double utbln13n13(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.541046e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.859047e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.130164e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.689719e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.950693e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.231455e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.976550e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.538455e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.245603e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.142647e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.831434e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.032483e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.488405e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.156927e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.949279e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.532700e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 13, 14)
-        *************************************************************************/
-        private static double utbln13n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.525655e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.828341e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.108110e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.579552e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.488307e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.032328e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.988741e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.766394e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.388950e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.338179e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.133440e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.023518e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.110570e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.202332e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.056132e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.536323e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 13, 15)
-        *************************************************************************/
-        private static double utbln13n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.513585e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.803952e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.090686e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.495310e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.160314e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.073124e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.480313e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.478239e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.140914e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.311541e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.677105e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.115464e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.578563e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.044604e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.888939e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 2.395644e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 13, 30)
-        *************************************************************************/
-        private static double utbln13n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.455999e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.678434e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.995491e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.078100e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.705220e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.258739e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.671526e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.185458e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.507764e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.411446e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.044355e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.285765e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.345282e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.066940e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.962037e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.723644e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 13, 100)
-        *************************************************************************/
-        private static double utbln13n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.446787e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.640804e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.671552e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.364990e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.274444e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.047440e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.161439e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.171729e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.562171e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.359762e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.275494e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.747635e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.700292e-08, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.565559e-09, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 5.005396e-09, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 3.335794e-09, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 14, 14)
-        *************************************************************************/
-        private static double utbln14n14(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.510624e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.798584e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.087107e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.478532e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.098050e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.855986e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.409083e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.299536e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.176177e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.479417e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.812761e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -5.225872e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 4.516521e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 6.730551e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 9.237563e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.611820e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 14, 15)
-        *************************************************************************/
-        private static double utbln14n15(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.498681e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.774668e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.070267e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.399348e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.807239e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.845763e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.071773e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.261698e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.011695e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.305946e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.879295e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.999439e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.904438e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.944986e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.373908e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.140794e-05, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 14, 30)
-        *************************************************************************/
-        private static double utbln14n30(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.440378e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.649587e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.807829e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.989753e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.463646e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.586580e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -6.745917e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.635398e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.923172e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.446699e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.613892e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.214073e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.651683e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.272777e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.464988e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.109803e-07, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, 14, 100)
-        *************************************************************************/
-        private static double utbln14n100(double s,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double x = 0;
-            double tj = 0;
-            double tj1 = 0;
-
-            result = 0;
-            x = Math.Min(2*(s-0.000000e+00)/3.750000e+00-1, 1.0);
-            tj = 1;
-            tj1 = x;
-            ucheb(x, -4.429701e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -4.610577e+00, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -9.482675e-01, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.605550e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.062151e-02, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.525154e-03, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.835983e-04, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -8.411440e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.744901e-05, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.318850e-06, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.692100e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -1.536270e-07, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -3.705888e-08, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -7.999599e-09, ref tj, ref tj1, ref result, _params);
-            ucheb(x, -2.908395e-09, ref tj, ref tj1, ref result, _params);
-            ucheb(x, 1.546923e-09, ref tj, ref tj1, ref result, _params);
-            return result;
-        }
-
-
-        /*************************************************************************
-        Tail(S, N1, N2)
-        *************************************************************************/
-        private static double usigma(double s,
-            int n1,
-            int n2,
-            alglib.xparams _params)
-        {
-            double result = 0;
-            double f0 = 0;
-            double f1 = 0;
-            double f2 = 0;
-            double f3 = 0;
-            double f4 = 0;
-            double s0 = 0;
-            double s1 = 0;
-            double s2 = 0;
-            double s3 = 0;
-            double s4 = 0;
-
-            result = 0;
-            
-            //
-            // N1=5, N2 = 5, 6, 7, ...
-            //
-            if( Math.Min(n1, n2)==5 )
-            {
-                if( Math.Max(n1, n2)==5 )
-                {
-                    result = utbln5n5(s, _params);
-                }
-                if( Math.Max(n1, n2)==6 )
-                {
-                    result = utbln5n6(s, _params);
-                }
-                if( Math.Max(n1, n2)==7 )
-                {
-                    result = utbln5n7(s, _params);
-                }
-                if( Math.Max(n1, n2)==8 )
-                {
-                    result = utbln5n8(s, _params);
-                }
-                if( Math.Max(n1, n2)==9 )
-                {
-                    result = utbln5n9(s, _params);
-                }
-                if( Math.Max(n1, n2)==10 )
-                {
-                    result = utbln5n10(s, _params);
-                }
-                if( Math.Max(n1, n2)==11 )
-                {
-                    result = utbln5n11(s, _params);
-                }
-                if( Math.Max(n1, n2)==12 )
-                {
-                    result = utbln5n12(s, _params);
-                }
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln5n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln5n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln5n15(s, _params);
-                }
-                if( Math.Max(n1, n2)==16 )
-                {
-                    result = utbln5n16(s, _params);
-                }
-                if( Math.Max(n1, n2)==17 )
-                {
-                    result = utbln5n17(s, _params);
-                }
-                if( Math.Max(n1, n2)==18 )
-                {
-                    result = utbln5n18(s, _params);
-                }
-                if( Math.Max(n1, n2)==19 )
-                {
-                    result = utbln5n19(s, _params);
-                }
-                if( Math.Max(n1, n2)==20 )
-                {
-                    result = utbln5n20(s, _params);
-                }
-                if( Math.Max(n1, n2)==21 )
-                {
-                    result = utbln5n21(s, _params);
-                }
-                if( Math.Max(n1, n2)==22 )
-                {
-                    result = utbln5n22(s, _params);
-                }
-                if( Math.Max(n1, n2)==23 )
-                {
-                    result = utbln5n23(s, _params);
-                }
-                if( Math.Max(n1, n2)==24 )
-                {
-                    result = utbln5n24(s, _params);
-                }
-                if( Math.Max(n1, n2)==25 )
-                {
-                    result = utbln5n25(s, _params);
-                }
-                if( Math.Max(n1, n2)==26 )
-                {
-                    result = utbln5n26(s, _params);
-                }
-                if( Math.Max(n1, n2)==27 )
-                {
-                    result = utbln5n27(s, _params);
-                }
-                if( Math.Max(n1, n2)==28 )
-                {
-                    result = utbln5n28(s, _params);
-                }
-                if( Math.Max(n1, n2)==29 )
-                {
-                    result = utbln5n29(s, _params);
-                }
-                if( Math.Max(n1, n2)>29 )
-                {
-                    f0 = utbln5n15(s, _params);
-                    f1 = utbln5n30(s, _params);
-                    f2 = utbln5n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=6, N2 = 6, 7, 8, ...
-            //
-            if( Math.Min(n1, n2)==6 )
-            {
-                if( Math.Max(n1, n2)==6 )
-                {
-                    result = utbln6n6(s, _params);
-                }
-                if( Math.Max(n1, n2)==7 )
-                {
-                    result = utbln6n7(s, _params);
-                }
-                if( Math.Max(n1, n2)==8 )
-                {
-                    result = utbln6n8(s, _params);
-                }
-                if( Math.Max(n1, n2)==9 )
-                {
-                    result = utbln6n9(s, _params);
-                }
-                if( Math.Max(n1, n2)==10 )
-                {
-                    result = utbln6n10(s, _params);
-                }
-                if( Math.Max(n1, n2)==11 )
-                {
-                    result = utbln6n11(s, _params);
-                }
-                if( Math.Max(n1, n2)==12 )
-                {
-                    result = utbln6n12(s, _params);
-                }
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln6n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln6n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln6n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln6n15(s, _params);
-                    f1 = utbln6n30(s, _params);
-                    f2 = utbln6n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=7, N2 = 7, 8, ...
-            //
-            if( Math.Min(n1, n2)==7 )
-            {
-                if( Math.Max(n1, n2)==7 )
-                {
-                    result = utbln7n7(s, _params);
-                }
-                if( Math.Max(n1, n2)==8 )
-                {
-                    result = utbln7n8(s, _params);
-                }
-                if( Math.Max(n1, n2)==9 )
-                {
-                    result = utbln7n9(s, _params);
-                }
-                if( Math.Max(n1, n2)==10 )
-                {
-                    result = utbln7n10(s, _params);
-                }
-                if( Math.Max(n1, n2)==11 )
-                {
-                    result = utbln7n11(s, _params);
-                }
-                if( Math.Max(n1, n2)==12 )
-                {
-                    result = utbln7n12(s, _params);
-                }
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln7n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln7n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln7n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln7n15(s, _params);
-                    f1 = utbln7n30(s, _params);
-                    f2 = utbln7n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=8, N2 = 8, 9, 10, ...
-            //
-            if( Math.Min(n1, n2)==8 )
-            {
-                if( Math.Max(n1, n2)==8 )
-                {
-                    result = utbln8n8(s, _params);
-                }
-                if( Math.Max(n1, n2)==9 )
-                {
-                    result = utbln8n9(s, _params);
-                }
-                if( Math.Max(n1, n2)==10 )
-                {
-                    result = utbln8n10(s, _params);
-                }
-                if( Math.Max(n1, n2)==11 )
-                {
-                    result = utbln8n11(s, _params);
-                }
-                if( Math.Max(n1, n2)==12 )
-                {
-                    result = utbln8n12(s, _params);
-                }
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln8n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln8n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln8n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln8n15(s, _params);
-                    f1 = utbln8n30(s, _params);
-                    f2 = utbln8n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=9, N2 = 9, 10, ...
-            //
-            if( Math.Min(n1, n2)==9 )
-            {
-                if( Math.Max(n1, n2)==9 )
-                {
-                    result = utbln9n9(s, _params);
-                }
-                if( Math.Max(n1, n2)==10 )
-                {
-                    result = utbln9n10(s, _params);
-                }
-                if( Math.Max(n1, n2)==11 )
-                {
-                    result = utbln9n11(s, _params);
-                }
-                if( Math.Max(n1, n2)==12 )
-                {
-                    result = utbln9n12(s, _params);
-                }
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln9n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln9n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln9n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln9n15(s, _params);
-                    f1 = utbln9n30(s, _params);
-                    f2 = utbln9n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=10, N2 = 10, 11, ...
-            //
-            if( Math.Min(n1, n2)==10 )
-            {
-                if( Math.Max(n1, n2)==10 )
-                {
-                    result = utbln10n10(s, _params);
-                }
-                if( Math.Max(n1, n2)==11 )
-                {
-                    result = utbln10n11(s, _params);
-                }
-                if( Math.Max(n1, n2)==12 )
-                {
-                    result = utbln10n12(s, _params);
-                }
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln10n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln10n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln10n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln10n15(s, _params);
-                    f1 = utbln10n30(s, _params);
-                    f2 = utbln10n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=11, N2 = 11, 12, ...
-            //
-            if( Math.Min(n1, n2)==11 )
-            {
-                if( Math.Max(n1, n2)==11 )
-                {
-                    result = utbln11n11(s, _params);
-                }
-                if( Math.Max(n1, n2)==12 )
-                {
-                    result = utbln11n12(s, _params);
-                }
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln11n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln11n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln11n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln11n15(s, _params);
-                    f1 = utbln11n30(s, _params);
-                    f2 = utbln11n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=12, N2 = 12, 13, ...
-            //
-            if( Math.Min(n1, n2)==12 )
-            {
-                if( Math.Max(n1, n2)==12 )
-                {
-                    result = utbln12n12(s, _params);
-                }
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln12n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln12n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln12n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln12n15(s, _params);
-                    f1 = utbln12n30(s, _params);
-                    f2 = utbln12n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=13, N2 = 13, 14, ...
-            //
-            if( Math.Min(n1, n2)==13 )
-            {
-                if( Math.Max(n1, n2)==13 )
-                {
-                    result = utbln13n13(s, _params);
-                }
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln13n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln13n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln13n15(s, _params);
-                    f1 = utbln13n30(s, _params);
-                    f2 = utbln13n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1=14, N2 = 14, 15, ...
-            //
-            if( Math.Min(n1, n2)==14 )
-            {
-                if( Math.Max(n1, n2)==14 )
-                {
-                    result = utbln14n14(s, _params);
-                }
-                if( Math.Max(n1, n2)==15 )
-                {
-                    result = utbln14n15(s, _params);
-                }
-                if( Math.Max(n1, n2)>15 )
-                {
-                    f0 = utbln14n15(s, _params);
-                    f1 = utbln14n30(s, _params);
-                    f2 = utbln14n100(s, _params);
-                    result = uninterpolate(f0, f1, f2, Math.Max(n1, n2), _params);
-                }
-                return result;
-            }
-            
-            //
-            // N1 >= 15, N2 >= 15
-            //
-            if( (double)(s)>(double)(4) )
-            {
-                s = 4;
-            }
-            if( (double)(s)<(double)(3) )
-            {
-                s0 = 0.000000e+00;
-                f0 = usigma000(n1, n2, _params);
-                s1 = 7.500000e-01;
-                f1 = usigma075(n1, n2, _params);
-                s2 = 1.500000e+00;
-                f2 = usigma150(n1, n2, _params);
-                s3 = 2.250000e+00;
-                f3 = usigma225(n1, n2, _params);
-                s4 = 3.000000e+00;
-                f4 = usigma300(n1, n2, _params);
-                f1 = ((s-s0)*f1-(s-s1)*f0)/(s1-s0);
-                f2 = ((s-s0)*f2-(s-s2)*f0)/(s2-s0);
-                f3 = ((s-s0)*f3-(s-s3)*f0)/(s3-s0);
-                f4 = ((s-s0)*f4-(s-s4)*f0)/(s4-s0);
-                f2 = ((s-s1)*f2-(s-s2)*f1)/(s2-s1);
-                f3 = ((s-s1)*f3-(s-s3)*f1)/(s3-s1);
-                f4 = ((s-s1)*f4-(s-s4)*f1)/(s4-s1);
-                f3 = ((s-s2)*f3-(s-s3)*f2)/(s3-s2);
-                f4 = ((s-s2)*f4-(s-s4)*f2)/(s4-s2);
-                f4 = ((s-s3)*f4-(s-s4)*f3)/(s4-s3);
-                result = f4;
-            }
-            else
-            {
-                s0 = 3.000000e+00;
-                f0 = usigma300(n1, n2, _params);
-                s1 = 3.333333e+00;
-                f1 = usigma333(n1, n2, _params);
-                s2 = 3.666667e+00;
-                f2 = usigma367(n1, n2, _params);
-                s3 = 4.000000e+00;
-                f3 = usigma400(n1, n2, _params);
-                f1 = ((s-s0)*f1-(s-s1)*f0)/(s1-s0);
-                f2 = ((s-s0)*f2-(s-s2)*f0)/(s2-s0);
-                f3 = ((s-s0)*f3-(s-s3)*f0)/(s3-s0);
-                f2 = ((s-s1)*f2-(s-s2)*f1)/(s2-s1);
-                f3 = ((s-s1)*f3-(s-s3)*f1)/(s3-s1);
-                f3 = ((s-s2)*f3-(s-s3)*f2)/(s3-s2);
-                result = f3;
-            }
-            return result;
+            stat = (n-1)*xvar/variance;
+            s = chisquaredistr.chisquaredistribution(n-1, stat, _params);
+            bothtails = 2*Math.Min(s, 1-s);
+            lefttail = s;
+            righttail = 1-lefttail;
         }
 
 
