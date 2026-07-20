@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.07.0 (source code generated 2025-12-29)
+ALGLIB 4.08.0 (source code generated 2026-06-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -276,7 +276,7 @@ public partial class alglib
 }
 public partial class alglib
 {
-    public class odesolver
+    public partial class odesolver
     {
         public class odesolverstate : apobject
         {
@@ -304,7 +304,7 @@ public partial class alglib
             public double[] rkcs;
             public double[,] rkb;
             public double[,] rkk;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
             public odesolverstate()
             {
                 init();
@@ -324,7 +324,7 @@ public partial class alglib
                 rkcs = new double[0];
                 rkb = new double[0,0];
                 rkk = new double[0,0];
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
             }
             public override alglib.apobject make_copy()
             {
@@ -353,7 +353,7 @@ public partial class alglib
                 _result.rkcs = (double[])rkcs.Clone();
                 _result.rkb = (double[,])rkb.Clone();
                 _result.rkk = (double[,])rkk.Clone();
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -483,8 +483,6 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
@@ -708,7 +706,10 @@ public partial class alglib
             }
             state.needdy = true;
             state.rstate.stage = 0;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
             state.needdy = false;
             state.repnfev = state.repnfev+1;
@@ -938,6 +939,7 @@ public partial class alglib
             state.rstate.ba = new bool[0+1];
             state.rstate.ra = new double[5+1];
             state.rstate.stage = -1;
+            state.rstate.clear_handler();
             state.needdy = false;
             
             //

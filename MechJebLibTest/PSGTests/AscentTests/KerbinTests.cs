@@ -38,8 +38,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Vgo(t0).ShouldEqual(2603.1239482534565, 1e-3);
-            // there's about 8 seconds extra burntime here due to throttling down, which these tests may be very sensitive to
-            solution.Tgo(t0).ShouldEqual(554.04809755858685, 1e-3);
+            // there's about 14 seconds extra burntime here due to throttling down, which these tests may be very sensitive to
+            solution.Tgo(t0).ShouldEqual(560.53674689893228, 1e-3);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
         }
@@ -68,7 +68,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Vgo(t0).ShouldEqual(3521.7544134539125, 1e-3);
             // there's about 110 seconds extra burntime here due to throttling down, which these tests may be extremely sensitive to
-            solution.Tgo(t0).ShouldEqual(394.66454166378765, 1e-3);
+            solution.Tgo(t0).ShouldEqual(388.2458105314372, 1e-3);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
         }

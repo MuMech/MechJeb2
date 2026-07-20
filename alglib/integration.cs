@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.07.0 (source code generated 2025-12-29)
+ALGLIB 4.08.0 (source code generated 2026-06-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -897,7 +897,7 @@ public partial class alglib
 }
 public partial class alglib
 {
-    public class gq
+    public partial class gq
     {
         /*************************************************************************
         Computation of nodes and weights for a Gauss quadrature formula
@@ -1639,7 +1639,7 @@ public partial class alglib
 
 
     }
-    public class gkq
+    public partial class gkq
     {
         /*************************************************************************
         Computation of nodes and weights of a Gauss-Kronrod quadrature formula
@@ -2572,7 +2572,7 @@ public partial class alglib
 
 
     }
-    public class autogk
+    public partial class autogk
     {
         /*************************************************************************
         Integration report:
@@ -2629,7 +2629,7 @@ public partial class alglib
             public double[] wk;
             public double[] wr;
             public int n;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
             public autogkinternalstate()
             {
                 init();
@@ -2641,7 +2641,7 @@ public partial class alglib
                 wg = new double[0];
                 wk = new double[0];
                 wr = new double[0];
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
             }
             public override alglib.apobject make_copy()
             {
@@ -2665,7 +2665,7 @@ public partial class alglib
                 _result.wk = (double[])wk.Clone();
                 _result.wr = (double[])wr.Clone();
                 _result.n = n;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -2694,7 +2694,7 @@ public partial class alglib
             public double f;
             public int wrappermode;
             public autogkinternalstate internalstate;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
             public double v;
             public int terminationtype;
             public int nfev;
@@ -2706,7 +2706,7 @@ public partial class alglib
             public override void init()
             {
                 internalstate = new autogkinternalstate();
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
             }
             public override alglib.apobject make_copy()
             {
@@ -2723,7 +2723,7 @@ public partial class alglib
                 _result.f = f;
                 _result.wrappermode = wrappermode;
                 _result.internalstate = internalstate!=null ? (autogkinternalstate)internalstate.make_copy() : null;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
                 _result.v = v;
                 _result.terminationtype = terminationtype;
                 _result.nfev = nfev;
@@ -2814,6 +2814,7 @@ public partial class alglib
             state.needf = false;
             state.rstate.ra = new double[10+1];
             state.rstate.stage = -1;
+            state.rstate.clear_handler();
         }
 
 
@@ -2869,6 +2870,7 @@ public partial class alglib
             state.needf = false;
             state.rstate.ra = new double[10+1];
             state.rstate.stage = -1;
+            state.rstate.clear_handler();
         }
 
 
@@ -2896,8 +2898,6 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
@@ -2991,7 +2991,10 @@ public partial class alglib
             state.bminusx = b-x;
             state.needf = true;
             state.rstate.stage = 0;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
             state.needf = false;
             state.nfev = state.nfev+1;
@@ -3086,7 +3089,10 @@ public partial class alglib
             }
             state.needf = true;
             state.rstate.stage = 1;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_1:
             state.needf = false;
             if( (double)(alpha)!=(double)(0) )
@@ -3134,7 +3140,10 @@ public partial class alglib
             }
             state.needf = true;
             state.rstate.stage = 2;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_2:
             state.needf = false;
             if( (double)(beta)!=(double)(0) )
@@ -3241,6 +3250,7 @@ public partial class alglib
             state.rstate.ia = new int[3+1];
             state.rstate.ra = new double[8+1];
             state.rstate.stage = -1;
+            state.rstate.clear_handler();
         }
 
 
@@ -3268,8 +3278,6 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
@@ -3419,7 +3427,10 @@ public partial class alglib
             //
             state.x = c1*state.qn[i]+c2;
             state.rstate.stage = 0;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
             v = state.f;
             
@@ -3489,7 +3500,10 @@ public partial class alglib
             //
             state.x = c1*state.qn[i]+c2;
             state.rstate.stage = 1;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_1:
             v = state.f;
             
@@ -3595,7 +3609,10 @@ public partial class alglib
             //
             state.x = c1*state.qn[i]+c2;
             state.rstate.stage = 2;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_2:
             v = state.f;
             

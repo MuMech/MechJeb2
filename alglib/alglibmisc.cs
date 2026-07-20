@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.07.0 (source code generated 2025-12-29)
+ALGLIB 4.08.0 (source code generated 2026-06-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -2712,7 +2712,7 @@ public partial class alglib
 }
 public partial class alglib
 {
-    public class xdebug
+    public partial class xdebug
     {
         /*************************************************************************
         This is a debug class intended for testing ALGLIB interface generator.
@@ -3817,7 +3817,7 @@ public partial class alglib
 
 
     }
-    public class hqrnd
+    public partial class hqrnd
     {
         /*************************************************************************
         Portable high quality random number generator state.
@@ -4394,7 +4394,7 @@ public partial class alglib
 
 
     }
-    public class nearestneighbor
+    public partial class nearestneighbor
     {
         /*************************************************************************
         Buffer object which is used to perform nearest neighbor  requests  in  the
