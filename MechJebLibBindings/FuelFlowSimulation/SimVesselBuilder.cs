@@ -147,6 +147,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 var part = SimPart.Borrow(_vessel, kspPart.partName);
 
                 part.InverseStage = kspPart.inverseStage;
+                part.PersistentId = kspPart.persistentId;
                 part.ActivatesEvenIfDisconnected = kspPart.ActivatesEvenIfDisconnected;
                 part.StagingOn = kspPart.stagingOn;
                 part.ResourcePriority = kspPart.GetResourcePriority();

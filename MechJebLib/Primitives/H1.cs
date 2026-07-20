@@ -49,6 +49,8 @@ namespace MechJebLib.Primitives
 
         private static void Clear(H1 h) => h.Clear();
 
+        public bool IsEmpty => _list.Count == 0;
+
         // Debug dump of the raw keyframes, in a form that mirrors HBase.Add(time, value, inTangent, outTangent) so the
         // curve can be transcribed into a test fixture.  HBase/H3/Hn are effectively deprecated so this lives only on H1.
         public override string ToString()

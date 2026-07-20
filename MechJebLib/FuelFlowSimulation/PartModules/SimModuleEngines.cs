@@ -393,7 +393,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine(Invariant($"SimModuleEngines: {CommonFields()}"));
+            sb.AppendLine(ModuleLine("SimModuleEngines", CommonFieldList()));
             sb.AppendLine(Invariant(
                 $"  IsOperational={IsOperational} IsEnabled={IsEnabled} IsUnrestartableDeadEngine={IsUnrestartableDeadEngine} NoPropellants={NoPropellants}"));
             sb.AppendLine(Invariant($"  MaxFuelFlow={MaxFuelFlow} MinFuelFlow={MinFuelFlow} MaxThrust={MaxThrust} MinThrust={MinThrust} G={G}"));
@@ -404,14 +404,21 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 $"  AtmChangeFlow={AtmChangeFlow} UseAtmCurve={UseAtmCurve} UseAtmCurveIsp={UseAtmCurveIsp} UseThrottleIspCurve={UseThrottleIspCurve} UseThrustCurve={UseThrustCurve} UseVelCurve={UseVelCurve} UseVelCurveIsp={UseVelCurveIsp}"));
             sb.AppendLine(Invariant(
                 $"  ModuleResiduals={ModuleResiduals} ModuleSpoolupTime={ModuleSpoolupTime} AutoCutoff={AutoCutoff} IsModuleEnginesRf={IsModuleEnginesRf} Ullage={Ullage}"));
-            sb.AppendLine(Invariant($"  AtmosphereCurve: {AtmosphereCurve}"));
-            sb.AppendLine(Invariant($"  ThrustCurve: {ThrustCurve}"));
-            sb.AppendLine(Invariant($"  ThrottleIspCurve: {ThrottleIspCurve}"));
-            sb.AppendLine(Invariant($"  ThrottleIspCurveAtmStrength: {ThrottleIspCurveAtmStrength}"));
-            sb.AppendLine(Invariant($"  VelCurve: {VelCurve}"));
-            sb.AppendLine(Invariant($"  VelCurveIsp: {VelCurveIsp}"));
-            sb.AppendLine(Invariant($"  ATMCurve: {ATMCurve}"));
-            sb.AppendLine(Invariant($"  ATMCurveIsp: {ATMCurveIsp}"));
+            void AppendCurve(string name, H1 curve)
+            {
+                // empty curves are the default and very common, so omit them to keep the dump readable
+                if (!curve.IsEmpty)
+                    sb.AppendLine(Invariant($"  {name}: {curve}"));
+            }
+
+            AppendCurve("AtmosphereCurve", AtmosphereCurve);
+            AppendCurve("ThrustCurve", ThrustCurve);
+            AppendCurve("ThrottleIspCurve", ThrottleIspCurve);
+            AppendCurve("ThrottleIspCurveAtmStrength", ThrottleIspCurveAtmStrength);
+            AppendCurve("VelCurve", VelCurve);
+            AppendCurve("VelCurveIsp", VelCurveIsp);
+            AppendCurve("ATMCurve", ATMCurve);
+            AppendCurve("ATMCurveIsp", ATMCurveIsp);
 
             sb.Append("  ThrustTransformMultipliers:");
             foreach (double m in ThrustTransformMultipliers)

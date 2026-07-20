@@ -188,7 +188,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine(Invariant($"SimModuleRCS: {CommonFields()}"));
+            sb.AppendLine(ModuleLine("SimModuleRCS", CommonFieldList()));
             sb.AppendLine(Invariant(
                 $"  G={G} Isp={Isp} Thrust={Thrust} RcsEnabled={RcsEnabled} ISPMult={ISPMult} ThrustPercentage={ThrustPercentage} MaxFuelFlow={MaxFuelFlow} MassFlowRate={MassFlowRate}"));
             sb.AppendLine(Invariant($"  AtmosphereCurve: {AtmosphereCurve}"));
