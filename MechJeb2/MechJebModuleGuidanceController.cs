@@ -42,6 +42,7 @@ namespace MuMech
         public double Tgo;
         public double Vgo;
         public double StartCoast;
+        public bool hasCoasted;
 
         public Solution? Solution;
 
@@ -64,6 +65,7 @@ namespace MuMech
             Core.Spinup.Users.Add(this);
             Solution = null;
             _allowExecution = false;
+            hasCoasted = false;
         }
 
         protected override void OnModuleDisabled()
@@ -148,6 +150,21 @@ namespace MuMech
                 return;
             }
 
+            /*
+             * FIXME: consider liquid booster()s + unguided beehive cluster
+             *
+             * 1. we should enter terminal guidance on the top liquid booster and shut it down precisely and suspend the optimizer
+             *    there because we CANNOT use the residuals because we're about to loose our degrees of freedom.  but the optimizer should
+             *    have burned this stage to completion.  we also don't want to use TERMINAL_RCS here.
+             * 2. we should still enter terminal guidance on the top aerobee stage and precisely shut it down to actually hit the target as
+             *    best as possible, and this burntime should have been tuned by the optimizer.  we do want to use TERMINAL_RCS here.
+             *
+             * Right now we only support one OptimizeKSPStage() and really the SolutionBuilder needs to know to slap a PreciseShutdown flag
+             * onto the last liquid booster segment (even though the optimizer didn't optimize it) and likely could use the same flag for
+             * precise shutdown of engines before a coast.  Although maybe there should be two different flags (for precise shutdown with
+             * and without RCS cleanup).
+             */
+
             // this handles termination of thrust for final stages of "fixed" burntime rockets (due to residuals Tgo may go less than zero so we
             // wait for natural termination of thrust).   no support for RCS terminal trim.
             if (Solution.OptimizeKSPStage() < 0 && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.Time) <= 0 &&
@@ -167,26 +184,20 @@ namespace MuMech
                 Status = PSGStatus.BURNING;
             }
 
-            // We should either be in an non-upper stage optimized stage, or we should be within 10 seconds of the whole
-            // burntime in order to enter terminal guidance.
-            if (Vessel.currentStage != Solution.OptimizeKSPStage() && Solution.Tgo(VesselState.Time) > 10)
+            // we need to have an optimizable stage to run terminal guidance
+            if (Vessel.currentStage != Solution.OptimizeKSPStage())
                 return;
 
-            // The includeCoast: false flag here is to skip a coast which is in the past in the Solution when
-            // we are ending the coast and the optimizer hasn't run the solution, but CoastBefore is set so
-            // that both the coast and burn have the same KSPStage.  So we want the index of the current burn
-            // and not the index of the first matching KSPStage in the Solution which is the coast.  Might
-            // also consider modifying APIs like IndexForKSPStage to omit stages which are in the past -- but
-            // I have concerns about that with residuals where you may currently be in a burning stage which
-            // is in the "past" in the Solution but you're burning down residuals and you don't know when
-            // the stage will actually run out (assuming it isn't a burn before a coast or an optimized burntime
-            // so that we burn past the end of the stage and into whatever residuals are available).
-            int solutionIndex = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
-            if (solutionIndex < 0)
+            // we need to be within 10 seconds of the end of the stage to run terminal guidance
+            if (Solution.TgoForKSPStage(VesselState.Time, Vessel.currentStage) > 10)
                 return;
 
-            // Only enter terminal guidance within 10 seconds of the current stage
-            if (Solution.Tgo(VesselState.Time, solutionIndex) > 10)
+            // if we are in a coast then don't enter terminal guidance
+            if (IsCoasting())
+                return;
+
+            // if we are coast-during then prevent coasting if we will be coasting this stage (first burn of burn-coast-burn)
+            if (_ascentSettings.CoastLocation == 0 && Vessel.currentStage == Solution.CoastKSPStage() && Solution.WillCoast(VesselState.Time))
                 return;
 
             if (Status != PSGStatus.TERMINAL_RCS)
@@ -453,6 +464,8 @@ namespace MuMech
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
             Status = PSGStatus.COASTING;
+
+            hasCoasted = true;
         }
 
         public void SetSolution(Solution solution)
@@ -460,17 +473,6 @@ namespace MuMech
             Solution = solution;
             if (Status == PSGStatus.ENABLED)
                 Status = PSGStatus.INITIALIZED;
-        }
-
-        // This API is necessary so that we know that there's no future coast on the trajectory so
-        // we entirely suppress adding the coast in the glueball.  If there is no solution, then we're
-        // bootstrapping so we want to add a coast if we need one, so we return false here.
-        public bool HasGoodSolutionWithNoFutureCoast()
-        {
-            if (Solution == null)
-                return false;
-
-            return !Solution.WillCoast(VesselState.Time);
         }
     }
 }

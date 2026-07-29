@@ -10,6 +10,8 @@ using System.Text;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
+using static System.FormattableString;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation
 {
@@ -304,16 +306,15 @@ namespace MechJebLib.FuelFlowSimulation
         public override string ToString()
         {
             var sb = new StringBuilder();
+            sb.AppendLine("SimVessel:");
+            sb.AppendLine(Invariant($"  CurrentStage={CurrentStage} HasLaunchClamp={HasLaunchClamp} MainThrottle={MainThrottle}"));
+            sb.AppendLine(Invariant($"  ATMPressure={ATMPressure} ATMDensity={ATMDensity} MachNumber={MachNumber}"));
+            sb.AppendLine(Invariant($"  T={T} R={R} V={V} U={U}"));
+            sb.AppendLine(Invariant($"  Parts ({Parts.Count}):"));
+            foreach (SimPart part in Parts)
+                sb.AppendLine(part.ToString().Indent(4));
 
-            for (int i = 0; i <= CurrentStage; i++)
-            {
-                sb.AppendLine($"stage {i}:");
-                foreach (SimPart part in PartsRemainingInStage[i])
-                    sb.Append(part);
-                sb.AppendLine("------------------------");
-            }
-
-            return sb.ToString();
+            return sb.ToString().TrimEnd();
         }
     }
 }

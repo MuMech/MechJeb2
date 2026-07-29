@@ -29,34 +29,34 @@ IF NOT EXIST "%KSPDIR%\*" (
 echo:
 echo Copying to "%KSPDIR%"
 echo:
-IF EXIST %TargetPath% xcopy /Y /I %TargetPath% "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetPath%" xcopy /Y /I "%TargetPath%" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%%TargetName%.pdb xcopy /Y /I "%TargetDir%%TargetName%.pdb" "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%%TargetName%.pdb" xcopy /Y /I "%TargetDir%%TargetName%.pdb" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%JetBrains.Annotations.dll xcopy /Y /I "%TargetDir%JetBrains.Annotations.dll "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%JetBrains.Annotations.dll" xcopy /Y /I "%TargetDir%JetBrains.Annotations.dll" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%JetBrains.Annotations.xml xcopy /Y /I "%TargetDir%JetBrains.Annotations.xml "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%JetBrains.Annotations.xml" xcopy /Y /I "%TargetDir%JetBrains.Annotations.xml" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%MechJebLib.dll xcopy /Y /I "%TargetDir%MechJebLib.dll "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%MechJebLib.dll" xcopy /Y /I "%TargetDir%MechJebLib.dll" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%MechJebLib.pdb xcopy /Y /I "%TargetDir%MechJebLib.pdb "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%MechJebLib.pdb" xcopy /Y /I "%TargetDir%MechJebLib.pdb" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%MechJebLibBindings.dll xcopy /Y /I "%TargetDir%MechJebLibBindings.dll "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%MechJebLibBindings.dll" xcopy /Y /I "%TargetDir%MechJebLibBindings.dll" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%MechJebLibBindings.pdb xcopy /Y /I "%TargetDir%MechJebLibBindings.pdb "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%MechJebLibBindings.pdb" xcopy /Y /I "%TargetDir%MechJebLibBindings.pdb" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%alglib.dll xcopy /Y /I "%TargetDir%alglib.dll "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%alglib.dll" xcopy /Y /I "%TargetDir%alglib.dll" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
-IF EXIST %TargetDir%alglib.pdb xcopy /Y /I "%TargetDir%alglib.pdb "%KSPDIR%\GameData\MechJeb2\Plugins\"
+IF EXIST "%TargetDir%alglib.pdb" xcopy /Y /I "%TargetDir%alglib.pdb" "%KSPDIR%\GameData\MechJeb2\Plugins\"
 echo:
 
 IF EXIST %ProjectDir%..\Bundles xcopy /S /Y /I "%ProjectDir%..\Bundles" "%KSPDIR%\GameData\MechJeb2\Bundles"

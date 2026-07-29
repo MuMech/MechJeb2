@@ -81,7 +81,7 @@ namespace MuMech
             }
 
             GUILayout.BeginVertical(GUI.skin.box);
-            GuiUtils.SimpleTextBox("Min ∆v: ", _ascentSettings.MinDeltaV, "m/s", 30);
+            GuiUtils.SimpleTextBox("Min ΔV: ", _ascentSettings.MinDeltaV, "m/s", 30);
             GuiUtils.SimpleTextBox("Last Stage: ", _ascentSettings.LastStage);
             GuiUtils.ToggledTextBox(ref _ascentSettings.FixedStagesFlag, "Fixed Burn Stages: ", _ascentSettings.FixedStagesInternal);
             GuiUtils.ToggledTextBox(ref _ascentSettings.UnguidedStagesFlag, "Unguided Stages: ", _ascentSettings.UnguidedStagesInternal);

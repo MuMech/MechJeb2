@@ -5,9 +5,11 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
+using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
@@ -386,6 +388,53 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 else
                     ResourceConsumptions.Add(p.id, propVolumeRate);
             }
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(ModuleLine("SimModuleEngines", CommonFieldList()));
+            sb.AppendLine(Invariant(
+                $"  IsOperational={IsOperational} IsEnabled={IsEnabled} IsUnrestartableDeadEngine={IsUnrestartableDeadEngine} NoPropellants={NoPropellants}"));
+            sb.AppendLine(Invariant($"  MaxFuelFlow={MaxFuelFlow} MinFuelFlow={MinFuelFlow} MaxThrust={MaxThrust} MinThrust={MinThrust} G={G}"));
+            sb.AppendLine(Invariant(
+                $"  ThrottleLocked={ThrottleLocked} ThrottleLimiter={ThrottleLimiter} MultIsp={MultIsp} MultFlow={MultFlow} FlowMultiplier={FlowMultiplier}"));
+            sb.AppendLine(Invariant($"  Clamp={Clamp} FlowMultCap={FlowMultCap} FlowMultCapSharpness={FlowMultCapSharpness}"));
+            sb.AppendLine(Invariant(
+                $"  AtmChangeFlow={AtmChangeFlow} UseAtmCurve={UseAtmCurve} UseAtmCurveIsp={UseAtmCurveIsp} UseThrottleIspCurve={UseThrottleIspCurve} UseThrustCurve={UseThrustCurve} UseVelCurve={UseVelCurve} UseVelCurveIsp={UseVelCurveIsp}"));
+            sb.AppendLine(Invariant(
+                $"  ModuleResiduals={ModuleResiduals} ModuleSpoolupTime={ModuleSpoolupTime} AutoCutoff={AutoCutoff} IsModuleEnginesRf={IsModuleEnginesRf} Ullage={Ullage}"));
+            void AppendCurve(string name, H1 curve)
+            {
+                // empty curves are the default and very common, so omit them to keep the dump readable
+                if (!curve.IsEmpty)
+                    sb.AppendLine(Invariant($"  {name}: {curve}"));
+            }
+
+            AppendCurve("AtmosphereCurve", AtmosphereCurve);
+            AppendCurve("ThrustCurve", ThrustCurve);
+            AppendCurve("ThrottleIspCurve", ThrottleIspCurve);
+            AppendCurve("ThrottleIspCurveAtmStrength", ThrottleIspCurveAtmStrength);
+            AppendCurve("VelCurve", VelCurve);
+            AppendCurve("VelCurveIsp", VelCurveIsp);
+            AppendCurve("ATMCurve", ATMCurve);
+            AppendCurve("ATMCurveIsp", ATMCurveIsp);
+
+            sb.Append("  ThrustTransformMultipliers:");
+            foreach (double m in ThrustTransformMultipliers)
+                sb.Append(Invariant($" {m}"));
+            sb.AppendLine();
+
+            sb.Append("  ThrustDirectionVectors:");
+            foreach (V3 v in ThrustDirectionVectors)
+                sb.Append(Invariant($" {v}"));
+            sb.AppendLine();
+
+            sb.Append("  Propellants:");
+            foreach (SimPropellant p in Propellants)
+                sb.Append(Invariant(
+                    $" [id={p.id} ignoreForIsp={p.ignoreForIsp} ratio={p.ratio} flowMode={p.FlowMode} density={p.density}]"));
+            return sb.ToString();
         }
     }
 }

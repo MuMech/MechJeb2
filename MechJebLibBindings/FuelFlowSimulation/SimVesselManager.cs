@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibBindings.FuelFlowSimulation
 {
@@ -56,6 +57,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
             DecouplingAnalyzer.Analyze(_vessel);
             _builder.UpdateEngineSet();
         }
+
+        public void PrintVessel() => Print($"{_vessel}");
 
         public void Update() => _updater.Update();
 

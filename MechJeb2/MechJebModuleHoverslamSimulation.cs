@@ -228,8 +228,8 @@ namespace MuMech
                 DeltaV = CalculateDeltaV(LandingCountdown - (IgnitionUT < VesselState.Time ? 0 : IgnitionCountdown));
             }
 
-            if (_hoverslam.IsFaulted && _hoverslam.ExceptionMessage != null)
-                Print($"[MechJebModuleHoverslamSimulation] {_hoverslam.ExceptionMessage}");
+            if (_hoverslam.IsFaulted && _hoverslam.Exception != null)
+                Print($"[MechJebModuleHoverslamSimulation] {_hoverslam.Exception}");
 
             if (!_hoverslam.TryMarkReady())
                 return;

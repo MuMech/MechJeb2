@@ -10,7 +10,7 @@ namespace MechJebLibBindings
 {
     public static class H1Extensions
     {
-        public static void LoadH1(this H1 h, FloatCurve f)
+        public static void LoadH1(this H1 h, FloatCurve? f)
         {
             h.Clear();
 

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Text;
 using MechJebLib.Utils;
 using static System.Math;
+using static System.FormattableString;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation
 {
@@ -22,29 +24,32 @@ namespace MechJebLib.FuelFlowSimulation
         private readonly Dictionary<int, double> _resourceDrains = new Dictionary<int, double>();
         private readonly Dictionary<int, double> _rcsDrains = new Dictionary<int, double>();
 
-        public int DecoupledInStage;
-        public bool StagingOn;
-        public int InverseStage;
+        public int DecoupledInStage = -1;
+        public bool StagingOn = true;
+        public int InverseStage = -1;
         public SimVessel Vessel;
         public string Name;
+        public uint PersistentId;
 
-        public bool ActivatesEvenIfDisconnected;
-        public bool IsThrottleLocked;
-        public int ResourcePriority;
-        public double ResourceRequestRemainingThreshold;
-        public bool IsEnabled;
+        public string Ident => Invariant($"{Name}-{PersistentId}");
+
+        public bool ActivatesEvenIfDisconnected = true;
+        public bool IsThrottleLocked = false;
+        public int ResourcePriority = 0;
+        public double ResourceRequestRemainingThreshold = 1E-12;
+        public bool IsEnabled = false;
 
         public double Mass;
         public double DryMass;
-        public double CrewMass;
-        public double ModulesStagedMass;
-        public double ModulesUnstagedMass;
-        public double DisabledResourcesMass;
-        public double EngineResiduals;
+        public double CrewMass = 0;
+        public double ModulesStagedMass = 0;
+        public double ModulesUnstagedMass = 0;
+        public double DisabledResourcesMass = 0;
+        public double EngineResiduals = 0;
 
-        public bool IsRoot;
-        public bool IsLaunchClamp;
-        public bool IsEngine;
+        public bool IsRoot = false;
+        public bool IsLaunchClamp = false;
+        public bool IsEngine = false;
         public bool IsSepratron => IsEngine && IsThrottleLocked && ActivatesEvenIfDisconnected && InverseStage == DecoupledInStage;
 
         private SimPart()
@@ -222,24 +227,81 @@ namespace MechJebLib.FuelFlowSimulation
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"{Name}: ");
-            sb.Append("  Neighbors:");
-            for (int i = 0; i < Links.Count; i++)
-                sb.Append($" {Links[i].Name}");
-            sb.AppendLine();
-            //sb.Append("  CrossFeedPartSet:");
-            //for (int i = 0; i < CrossFeedPartSet.Count; i++)
-            //    sb.Append($" {CrossFeedPartSet[i].Name}");
-            //sb.AppendLine();
-            sb.Append("  Resources:");
-            foreach (SimResource resource in Resources.Values)
-                sb.Append($" {resource.Id}={resource.Amount}*{resource.Density}");
-            sb.AppendLine();
-            sb.Append($"  DecoupledInStage: {DecoupledInStage} InverseStage: {InverseStage}");
-            sb.AppendLine();
+            sb.AppendLine(Invariant($"SimPart '{Ident}':"));
 
+            // only emit fields that differ from their declared default, so the dump focuses on what a fixture needs to set
+            var fields = new List<string>();
 
-            return sb.ToString();
+            void B(string name, bool val, bool def)
+            {
+                if (val != def) fields.Add(Invariant($"{name}={val}"));
+            }
+
+            void I(string name, int val, int def)
+            {
+                if (val != def) fields.Add(Invariant($"{name}={val}"));
+            }
+
+            void D(string name, double val, double def)
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (val != def) fields.Add(Invariant($"{name}={val}"));
+            }
+
+            I("InverseStage", InverseStage, -1);
+            I("DecoupledInStage", DecoupledInStage, -1);
+            B("StagingOn", StagingOn, true);
+            B("IsRoot", IsRoot, false);
+            B("IsEngine", IsEngine, false);
+            B("IsLaunchClamp", IsLaunchClamp, false);
+            B("IsThrottleLocked", IsThrottleLocked, false);
+            B("ActivatesEvenIfDisconnected", ActivatesEvenIfDisconnected, true);
+            B("IsEnabled", IsEnabled, false);
+            I("ResourcePriority", ResourcePriority, 0);
+            D("ResourceRequestRemainingThreshold", ResourceRequestRemainingThreshold, 1E-12);
+            D("Mass", Mass, 0);
+            D("DryMass", DryMass, 0);
+            D("CrewMass", CrewMass, 0);
+            D("ModulesStagedMass", ModulesStagedMass, 0);
+            D("ModulesUnstagedMass", ModulesUnstagedMass, 0);
+            D("DisabledResourcesMass", DisabledResourcesMass, 0);
+            D("EngineResiduals", EngineResiduals, 0);
+
+            if (fields.Count > 0)
+                sb.AppendLine("  " + string.Join(" ", fields));
+
+            AppendParts(sb, "Links", Links);
+            AppendParts(sb, "SymmetryCounterParts", SymmetryCounterParts);
+            AppendParts(sb, "CrossFeedPartSet", CrossFeedPartSet);
+
+            if (Resources.Count > 0)
+            {
+                sb.Append("  Resources:");
+                foreach (SimResource r in Resources.Values)
+                    sb.Append(Invariant(
+                        $" [id={r.Id} amount={r.Amount} maxAmount={r.MaxAmount} density={r.Density} free={r.Free} residual={r.Residual}]"));
+                sb.AppendLine();
+            }
+
+            if (Modules.Count > 0)
+            {
+                sb.AppendLine(Invariant($"  Modules ({Modules.Count}):"));
+                foreach (SimPartModule m in Modules)
+                    sb.AppendLine(m.ToString().Indent(4));
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static void AppendParts(StringBuilder sb, string name, List<SimPart> parts)
+        {
+            if (parts.Count == 0)
+                return;
+
+            sb.Append(Invariant($"  {name}:"));
+            foreach (SimPart p in parts)
+                sb.Append(Invariant($" {p.Ident}"));
+            sb.AppendLine();
         }
     }
 }

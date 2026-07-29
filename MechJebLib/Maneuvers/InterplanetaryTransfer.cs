@@ -160,7 +160,9 @@ namespace MechJebLib.Maneuvers
             DualV3 vsoi2helio = v2soi2 + vsoi2 / _targetToHelioScale.VelocityScale;
 
             // solve from the burn to the soi1 interface
-            (DualV3 vi1, DualV3 vf1) = Izzo.Solve(1.0, r0Burn, rsoi1, dt2, _direction1, rtol: 1e-12);
+            // (use prograde/retrograde sense of the initial parking orbit--shortway/longway produces issues--might need to pick some other
+            // axis if we hit issues)
+            (DualV3 vi1, DualV3 vf1) = Izzo.Solve(1.0, r0Burn, rsoi1, dt2, _direction1, rtol: 1e-12, h: V3.Cross(_r0, _v0));
 
             // solve the heliocentric trajectory from soi1 to soi2
             // (this uses prograde/retrograde sense from the rsoi1helio x vsoi1helio plane since shortway/longway has a 180
@@ -332,22 +334,22 @@ namespace MechJebLib.Maneuvers
 
             var best = new Solution(V3.zero, 0.0, 0.0, 0.0, double.PositiveInfinity, double.PositiveInfinity);
 
-            _direction1 = TransferGeometry.ShortWay;
+            _direction1 = TransferGeometry.Prograde;
             _direction2 = TransferGeometry.Prograde;
             Solution sol1 = RunOptimizer(x0short, bndl, bndu, optguard);
             best = UpdateBestSolution(sol1, best);
 
-            _direction1 = TransferGeometry.LongWay;
+            _direction1 = TransferGeometry.Retrograde;
             _direction2 = TransferGeometry.Prograde;
             Solution sol2 = RunOptimizer(x0short, bndl, bndu, optguard);
             best = UpdateBestSolution(sol2, best);
 
-            _direction1 = TransferGeometry.ShortWay;
+            _direction1 = TransferGeometry.Prograde;
             _direction2 = TransferGeometry.Retrograde;
             Solution sol3 = RunOptimizer(x0long, bndl, bndu, optguard);
             best = UpdateBestSolution(sol3, best);
 
-            _direction1 = TransferGeometry.LongWay;
+            _direction1 = TransferGeometry.Retrograde;
             _direction2 = TransferGeometry.Retrograde;
             Solution sol4 = RunOptimizer(x0long, bndl, bndu, optguard);
             best = UpdateBestSolution(sol4, best);

@@ -1,5 +1,5 @@
 /*************************************************************************
-ALGLIB 4.07.0 (source code generated 2025-12-29)
+ALGLIB 4.08.0 (source code generated 2026-06-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -101,6 +101,10 @@ public partial class alglib
       -8    internal integrity control detected  infinite  or  NAN  values  in
             function/gradient, recovery was impossible.  Abnormal  termination
             signaled.
+      -4    the problem is likely to be unbounded;  for  MINLP  problems it is
+            generally impossible to provide an unboundedness  certificate,  so
+            only heuristics are possible, based on growth of |x| and  decrease
+            of f compared to |f(x0)|.
       -3    integer infeasibility is signaled:
             * for convex problems: proved to be infeasible
             * for nonconvex problems: a primal feasible point  is  nonexistent
@@ -851,6 +855,77 @@ public partial class alglib
     }
     
     /*************************************************************************
+    This function tells branch-and-bound solvers to use nonlinear interior
+    point method for continuous subproblems.
+
+    This solver needs several times more function evaluations  than  SQP,  but
+    has an order of magnitude smaller per-iteration linear algebra overhead.
+
+    It is a recommended option for
+    * large-scale problems, especially sparse ones
+    * problems with many constraints (hence  high  linear  algebra  cost)  but
+      relatively cheap objective/constraints evaluations
+
+
+    INPUT PARAMETERS:
+        State   -   structure that stores algorithm state
+        MemLen  -   >=0, memory length for quasi-Newton update (similar to
+                    LBFGS memory parameter):
+                    * 0 means default value which may change in future versions;
+                      presently it is 8.
+                    * 8 is a good default value for moderately nonlinear tasks
+                    * 32 is a good value for problems with more nonlinear
+                      objective/constraints
+                    * values larger than the variables count N  are  possible;
+                      these will be silently truncated to N.
+
+      -- ALGLIB --
+         Copyright 01.02.2026 by Bochkanov Sergey
+    *************************************************************************/
+    public static void minlpsolversetbbsyncsubsolveripm(minlpsolverstate state, int memlen)
+    {
+    
+        minlpsolvers.minlpsolversetbbsyncsubsolveripm(state.innerobj, memlen, null);
+    }
+    
+    public static void minlpsolversetbbsyncsubsolveripm(minlpsolverstate state, int memlen, alglib.xparams _params)
+    {
+    
+        minlpsolvers.minlpsolversetbbsyncsubsolveripm(state.innerobj, memlen, _params);
+    }
+    
+    /*************************************************************************
+    This function tells branch-and-bound solvers to use SQP method for
+    continuous subproblems.
+
+    This solver needs several times less function evaluations  than  IPM,  but
+    has an order of magnitude larger per-iteration  linear  algebra  overhead.
+    Nevertheless, the solver is fully sparse-capable.
+
+    It is a recommended option for:
+    * problems with  relatively  expensive  objective/constraints  evaluations
+      that outweigh additional expense  of  solving  QP  subproblems  at  each
+      step
+
+    INPUT PARAMETERS:
+        State   -   structure that stores algorithm state
+
+      -- ALGLIB --
+         Copyright 01.02.2026 by Bochkanov Sergey
+    *************************************************************************/
+    public static void minlpsolversetbbsyncsubsolversqp(minlpsolverstate state)
+    {
+    
+        minlpsolvers.minlpsolversetbbsyncsubsolversqp(state.innerobj, null);
+    }
+    
+    public static void minlpsolversetbbsyncsubsolversqp(minlpsolverstate state, alglib.xparams _params)
+    {
+    
+        minlpsolvers.minlpsolversetbbsyncsubsolversqp(state.innerobj, _params);
+    }
+    
+    /*************************************************************************
     This function sets tolerance for nonlinear constraints;  points  violating
     constraints by no more than CTol are considered feasible.
 
@@ -1160,6 +1235,40 @@ public partial class alglib
     {
     
         minlpsolvers.minlpsolversetintkth(state.innerobj, k, _params);
+    }
+    
+    /*************************************************************************
+    This function marks K-th variable as a linear one.
+
+    A  linear  variable can appear in objective and all constraint types (box,
+    linear and nonlinear), but the problem must be linear with respect to this
+    variable.
+
+    Knowning that some variables are linear  allows  the  solver  to  do avoid
+    modelling nonlinearities associated with  these  variables  (corresponding
+    rows/cols of a quasi-Newton Hessian will be zero), and, potentially, to do
+    some otherwise unavailable reductions, decreasing linear algebra  overhead
+    and improving convergence.
+
+    By default all variables are nonlinear.
+
+    INPUT PARAMETERS:
+        State   -   structure stores algorithm state
+        K       -   0<=K<N, variable index
+
+      -- ALGLIB --
+         Copyright 01.03.2026 by Bochkanov Sergey
+    *************************************************************************/
+    public static void minlpsolvermarkaslinearvar(minlpsolverstate state, int k)
+    {
+    
+        minlpsolvers.minlpsolvermarkaslinearvar(state.innerobj, k, null);
+    }
+    
+    public static void minlpsolvermarkaslinearvar(minlpsolverstate state, int k, alglib.xparams _params)
+    {
+    
+        minlpsolvers.minlpsolvermarkaslinearvar(state.innerobj, k, _params);
     }
     
     /*************************************************************************
@@ -1681,54 +1790,16 @@ public partial class alglib
     {
         if( fvec==null )
             throw new alglibexception("ALGLIB: error in 'minlpsolveroptimize()' (fvec is null)");
+        alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(state.innerobj.rcommv2, obj, "minlpsolver");
         alglib.ap.rcommv2_callbacks callbacks = new alglib.ap.rcommv2_callbacks();
+        callbacks.rep = rep;
         callbacks.fvec = fvec;
     
         alglib.minlpsolvers.minlpsolversetprotocolv2(state.innerobj, _params);
+        state.innerobj.rcommv2.assign_handler(ap.rcommv2_request_csharphandler, request, callbacks, null, null);
         while( alglib.minlpsolveriteration(state, _params) )
         {
-            alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
-                state.innerobj.requesttype,
-                state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
-                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, state.innerobj.replysj, obj, "minlpsolver");
-            alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
-                state.innerobj.tmpx1,
-                state.innerobj.tmpc1,
-                state.innerobj.tmpf1,
-                state.innerobj.tmpg1,
-                state.innerobj.tmpj1,
-                state.innerobj.tmps1);
-            if( state.innerobj.requesttype==3 )
-            { 
-                int njobs = request.size*request.vars+request.size;
-                for(int job_idx=0; job_idx<njobs; job_idx++)
-                    alglib.ap.process_v2request_3phase0(request, job_idx, callbacks, buffers);
-                alglib.ap.process_v2request_3phase1(request);
-                request.request = 0;
-                continue;
-            }
-            if( state.innerobj.requesttype==5 )
-            { 
-                int njobs = request.size*request.vars+request.size;
-                for(int job_idx=0; job_idx<njobs; job_idx++)
-                    alglib.ap.process_v2request_5phase0(request, job_idx, callbacks, buffers);
-                alglib.ap.process_v2request_5phase1(request);
-                request.request = 0;
-                continue;
-            }if( state.innerobj.requesttype==4 )
-            { 
-                for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
-                    alglib.ap.process_v2request_4(request, qidx, callbacks, buffers);
-                state.innerobj.requesttype = 0;
-                continue;
-            }
-            if( state.innerobj.requesttype==-1 )
-            {
-                if( rep!=null )
-                    rep(state.innerobj.reportx, state.innerobj.reportf, obj);
-                continue;
-            }
-            throw new alglibexception("ALGLIB: error in 'minlpsolveroptimize' (some derivatives were not provided?)");
+            throw new alglibexception("ALGLIB: critical error in 'minlpsolveroptimize' (RCommV2 request escaped handler)");
         }
     }
 
@@ -1741,37 +1812,16 @@ public partial class alglib
     {
         if( jac==null )
             throw new alglibexception("ALGLIB: error in 'minlpsolveroptimize()' (jac is null)");
+        alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(state.innerobj.rcommv2, obj, "minlpsolver");
         alglib.ap.rcommv2_callbacks callbacks = new alglib.ap.rcommv2_callbacks();
+        callbacks.rep = rep;
         callbacks.jac = jac;
     
         alglib.minlpsolvers.minlpsolversetprotocolv2(state.innerobj, _params);
+        state.innerobj.rcommv2.assign_handler(ap.rcommv2_request_csharphandler, request, callbacks, null, null);
         while( alglib.minlpsolveriteration(state, _params) )
         {
-            alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
-                state.innerobj.requesttype,
-                state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
-                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, state.innerobj.replysj, obj, "minlpsolver");
-            alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
-                state.innerobj.tmpx1,
-                state.innerobj.tmpc1,
-                state.innerobj.tmpf1,
-                state.innerobj.tmpg1,
-                state.innerobj.tmpj1,
-                state.innerobj.tmps1);
-            if( state.innerobj.requesttype==2 )
-            { 
-                for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
-                    alglib.ap.process_v2request_2(request, qidx, callbacks, buffers);
-                state.innerobj.requesttype = 0;
-                continue;
-            }
-            if( state.innerobj.requesttype==-1 )
-            {
-                if( rep!=null )
-                    rep(state.innerobj.reportx, state.innerobj.reportf, obj);
-                continue;
-            }
-            throw new alglibexception("ALGLIB: error in 'minlpsolveroptimize' (some derivatives were not provided?)");
+            throw new alglibexception("ALGLIB: critical error in 'minlpsolveroptimize' (RCommV2 request escaped handler)");
         }
     }
 
@@ -1784,39 +1834,16 @@ public partial class alglib
     {
         if( sjac==null )
             throw new alglibexception("ALGLIB: error in 'minlpsolveroptimize()' (sjac is null)");
+        alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(state.innerobj.rcommv2, obj, "minlpsolver");
         alglib.ap.rcommv2_callbacks callbacks = new alglib.ap.rcommv2_callbacks();
+        callbacks.rep = rep;
         callbacks.sjac = sjac;
     
         alglib.minlpsolvers.minlpsolversetprotocolv2s(state.innerobj, _params);
+        state.innerobj.rcommv2.assign_handler(ap.rcommv2_request_csharphandler, request, callbacks, null, null);
         while( alglib.minlpsolveriteration(state, _params) )
         {
-            alglib.ap.rcommv2_request request = new alglib.ap.rcommv2_request(
-                state.innerobj.requesttype,
-                state.innerobj.querysize, state.innerobj.queryfuncs, state.innerobj.queryvars, state.innerobj.querydim, state.innerobj.queryformulasize,
-                state.innerobj.querydata, state.innerobj.replyfi, state.innerobj.replydj, state.innerobj.replysj, obj, "minlpsolver");
-            alglib.ap.rcommv2_buffers buffers = new alglib.ap.rcommv2_buffers(
-                state.innerobj.tmpx1,
-                state.innerobj.tmpc1,
-                state.innerobj.tmpf1,
-                state.innerobj.tmpg1,
-                state.innerobj.tmpj1,
-                state.innerobj.tmps1);
-            if( state.innerobj.requesttype==1 )
-            { 
-                
-                alglib.sparsecreatecrsemptybuf(request.vars, request.reply_sj, alglib.xdefault);
-                for(int qidx=0; qidx<state.innerobj.querysize; qidx++)
-                    alglib.ap.process_v2request_1(request, qidx, callbacks, buffers, request.reply_sj);
-                state.innerobj.requesttype = 0;
-                continue;
-            }
-            if( state.innerobj.requesttype==-1 )
-            {
-                if( rep!=null )
-                    rep(state.innerobj.reportx, state.innerobj.reportf, obj);
-                continue;
-            }
-            throw new alglibexception("ALGLIB: error in 'minlpsolveroptimize' (some derivatives were not provided?)");
+            throw new alglibexception("ALGLIB: critical error in 'minlpsolveroptimize' (RCommV2 request escaped handler)");
         }
     }
 
@@ -1911,7 +1938,7 @@ public partial class alglib
 }
 public partial class alglib
 {
-    public class bbgd
+    public partial class bbgd
     {
         /*************************************************************************
         Subproblem formulation for the solver
@@ -1925,6 +1952,7 @@ public partial class alglib
             public double[] bndu;
             public int branchbucket;
             public double parentfdual;
+            public bool[] parentlinearity;
             public int branchvar;
             public double branchval;
             public int ncuttingplanes;
@@ -1935,12 +1963,18 @@ public partial class alglib
             public bool hasdualsolution;
             public double[] bestxdual;
             public double bestfdual;
+            public double bestfdualearlyerror;
             public double besthdual;
+            public int besttt;
+            public int bestits;
             public double[] worstxdual;
             public double worstfdual;
             public double worsthdual;
             public bool bestdualisintfeas;
             public double dualbound;
+            public bool earlystopped;
+            public bool donotfathom;
+            public bool[] subproblemlinearity;
             public bbgdsubproblem()
             {
                 init();
@@ -1950,9 +1984,11 @@ public partial class alglib
                 x0 = new double[0];
                 bndl = new double[0];
                 bndu = new double[0];
+                parentlinearity = new bool[0];
                 xprim = new double[0];
                 bestxdual = new double[0];
                 worstxdual = new double[0];
+                subproblemlinearity = new bool[0];
             }
             public override alglib.apobject make_copy()
             {
@@ -1964,6 +2000,7 @@ public partial class alglib
                 _result.bndu = (double[])bndu.Clone();
                 _result.branchbucket = branchbucket;
                 _result.parentfdual = parentfdual;
+                _result.parentlinearity = (bool[])parentlinearity.Clone();
                 _result.branchvar = branchvar;
                 _result.branchval = branchval;
                 _result.ncuttingplanes = ncuttingplanes;
@@ -1974,12 +2011,18 @@ public partial class alglib
                 _result.hasdualsolution = hasdualsolution;
                 _result.bestxdual = (double[])bestxdual.Clone();
                 _result.bestfdual = bestfdual;
+                _result.bestfdualearlyerror = bestfdualearlyerror;
                 _result.besthdual = besthdual;
+                _result.besttt = besttt;
+                _result.bestits = bestits;
                 _result.worstxdual = (double[])worstxdual.Clone();
                 _result.worstfdual = worstfdual;
                 _result.worsthdual = worsthdual;
                 _result.bestdualisintfeas = bestdualisintfeas;
                 _result.dualbound = dualbound;
+                _result.earlystopped = earlystopped;
+                _result.donotfathom = donotfathom;
+                _result.subproblemlinearity = (bool[])subproblemlinearity.Clone();
                 return _result;
             }
         };
@@ -1995,7 +2038,7 @@ public partial class alglib
             public minnlc.minnlcstate nlpsubsolver;
             public ipm2solver.ipm2state qpsubsolver;
             public minnlc.minnlcreport nlprep;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
             public double[] xsol;
             public double[] tmp0;
             public double[] tmp1;
@@ -2033,7 +2076,7 @@ public partial class alglib
                 nlpsubsolver = new minnlc.minnlcstate();
                 qpsubsolver = new ipm2solver.ipm2state();
                 nlprep = new minnlc.minnlcreport();
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
                 xsol = new double[0];
                 tmp0 = new double[0];
                 tmp1 = new double[0];
@@ -2068,7 +2111,7 @@ public partial class alglib
                 _result.nlpsubsolver = nlpsubsolver!=null ? (minnlc.minnlcstate)nlpsubsolver.make_copy() : null;
                 _result.qpsubsolver = qpsubsolver!=null ? (ipm2solver.ipm2state)qpsubsolver.make_copy() : null;
                 _result.nlprep = nlprep!=null ? (minnlc.minnlcreport)nlprep.make_copy() : null;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
                 _result.xsol = (double[])xsol.Clone();
                 _result.tmp0 = (double[])tmp0.Clone();
                 _result.tmp1 = (double[])tmp1.Clone();
@@ -2109,9 +2152,12 @@ public partial class alglib
           or already instantiated as a part of subsolver), but no subsolver is waiting
           for RComm reply
         * stWaitingForRComm if there is at least one subsolver waiting for RComm
-        * stSolved if all subproblems were solved
+        * stSolved if all subproblems were solved, either to feasibility or infeasibility
+          (but not unboundedness)
         * stTimeout if timeout was signalled, or if similar stopping condition was
           fired (soft or hard max nodes)
+        * stUnbounded if at least one of subproblems signalled unboundedness
+          (takes precedence over stTimeout)
           
         Additional status flags used for integrity checks:
         * AddStatusSolutionsAggregated - set to true after loading data from
@@ -2135,7 +2181,10 @@ public partial class alglib
             public bbgdsubproblem rootproblem;
             public bbgdsubproblem childsubproblem0;
             public bbgdsubproblem childsubproblem1;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
+            public hqrnd.hqrndstate entryrng;
+            public int entrynfev;
+            public int entrynsubproblems;
             public bool fathomroot;
             public bool fathomchild0;
             public bool fathomchild1;
@@ -2160,7 +2209,8 @@ public partial class alglib
                 rootproblem = new bbgdsubproblem();
                 childsubproblem0 = new bbgdsubproblem();
                 childsubproblem1 = new bbgdsubproblem();
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
+                entryrng = new hqrnd.hqrndstate();
                 subsolvers = new ap.objarray();
                 spqueue = new ap.objarray();
                 solutions = new ap.objarray();
@@ -2188,7 +2238,10 @@ public partial class alglib
                 _result.rootproblem = rootproblem!=null ? (bbgdsubproblem)rootproblem.make_copy() : null;
                 _result.childsubproblem0 = childsubproblem0!=null ? (bbgdsubproblem)childsubproblem0.make_copy() : null;
                 _result.childsubproblem1 = childsubproblem1!=null ? (bbgdsubproblem)childsubproblem1.make_copy() : null;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
+                _result.entryrng = entryrng!=null ? (hqrnd.hqrndstate)entryrng.make_copy() : null;
+                _result.entrynfev = entrynfev;
+                _result.entrynsubproblems = entrynsubproblems;
                 _result.fathomroot = fathomroot;
                 _result.fathomchild0 = fathomchild0;
                 _result.fathomchild1 = fathomchild1;
@@ -2219,7 +2272,7 @@ public partial class alglib
             public int frontsize;
             public ap.objarray entries;
             public alglib.smp.shared_pool entrypool;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
             public int[] jobs;
             public bbgdfront()
             {
@@ -2229,7 +2282,7 @@ public partial class alglib
             {
                 entries = new ap.objarray();
                 entrypool = new alglib.smp.shared_pool();
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
                 jobs = new int[0];
             }
             public override alglib.apobject make_copy()
@@ -2242,7 +2295,7 @@ public partial class alglib
                 _result.frontsize = frontsize;
                 _result.entries = entries!=null ? (ap.objarray)entries.make_copy() : null;
                 _result.entrypool = entrypool!=null ? (alglib.smp.shared_pool)entrypool.make_copy() : null;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
                 _result.jobs = (int[])jobs.Clone();
                 return _result;
             }
@@ -2265,8 +2318,11 @@ public partial class alglib
             public double ctol;
             public double epsx;
             public double epsf;
+            public int subsolveralgo;
+            public int subsolvermemlen;
             public int nonrootmaxitslin;
             public int nonrootmaxitsconst;
+            public double nonrootmaxitsaboveaverage;
             public int nonrootadditsforfeasibility;
             public double pseudocostmu;
             public double pseudocostminfrac;
@@ -2280,10 +2336,12 @@ public partial class alglib
             public int timeout;
             public int bbgdgroupsize;
             public int maxsubsolvers;
+            public bool issuesparserequests;
             public bool forceserial;
             public int softmaxnodes;
             public int hardmaxnodes;
             public int maxprimalcandidates;
+            public int syncinterval;
             public double[] s;
             public double[] bndl;
             public double[] bndu;
@@ -2291,6 +2349,7 @@ public partial class alglib
             public bool[] hasbndu;
             public bool[] isintegral;
             public bool[] isbinary;
+            public bool[] islinear;
             public int objtype;
             public sparse.sparsematrix obja;
             public double[] objb;
@@ -2317,8 +2376,10 @@ public partial class alglib
             public double repf;
             public double reppdgap;
             public apserv.stimer timerglobal;
+            public int lastlaconicreportepoch;
             public bool dotrace;
             public bool dolaconictrace;
+            public bool doanytrace;
             public int nextleafid;
             public bool hasprimalsolution;
             public double[] xprim;
@@ -2326,6 +2387,7 @@ public partial class alglib
             public double hprim;
             public double ffdual;
             public bool timedout;
+            public bool unbounded;
             public bbgdsubproblem rootsubproblem;
             public ap.objarray bbsubproblems;
             public int bbsubproblemsheapsize;
@@ -2341,15 +2403,18 @@ public partial class alglib
             public double globalpseudocostdown;
             public int globalpseudocostcntup;
             public int globalpseudocostcntdown;
+            public int globalsynchronizednfev;
+            public int globalsynchronizednsubproblems;
             public hqrnd.hqrndstate unsafeglobalrng;
             public int requestsource;
             public int lastrequesttype;
+            public ap.rcommstate rcommv2;
+            public bool usehandlersandsync;
             public bbgdsubproblem dummysubproblem;
             public bbgdfrontsubsolver dummysubsolver;
             public ipm2solver.ipm2state dummyqpsubsolver;
             public bbgdfrontentry dummyentry;
             public double[,] densedummy2;
-            public rcommstate rstate;
             public bbgdstate()
             {
                 init();
@@ -2364,6 +2429,7 @@ public partial class alglib
                 hasbndu = new bool[0];
                 isintegral = new bool[0];
                 isbinary = new bool[0];
+                islinear = new bool[0];
                 obja = new sparse.sparsematrix();
                 objb = new double[0];
                 qpordering = new int[0];
@@ -2387,12 +2453,12 @@ public partial class alglib
                 pseudocostscntup = new int[0];
                 pseudocostscntdown = new int[0];
                 unsafeglobalrng = new hqrnd.hqrndstate();
+                rcommv2 = new ap.rcommstate();
                 dummysubproblem = new bbgdsubproblem();
                 dummysubsolver = new bbgdfrontsubsolver();
                 dummyqpsubsolver = new ipm2solver.ipm2state();
                 dummyentry = new bbgdfrontentry();
                 densedummy2 = new double[0,0];
-                rstate = new rcommstate();
             }
             public override alglib.apobject make_copy()
             {
@@ -2406,8 +2472,11 @@ public partial class alglib
                 _result.ctol = ctol;
                 _result.epsx = epsx;
                 _result.epsf = epsf;
+                _result.subsolveralgo = subsolveralgo;
+                _result.subsolvermemlen = subsolvermemlen;
                 _result.nonrootmaxitslin = nonrootmaxitslin;
                 _result.nonrootmaxitsconst = nonrootmaxitsconst;
+                _result.nonrootmaxitsaboveaverage = nonrootmaxitsaboveaverage;
                 _result.nonrootadditsforfeasibility = nonrootadditsforfeasibility;
                 _result.pseudocostmu = pseudocostmu;
                 _result.pseudocostminfrac = pseudocostminfrac;
@@ -2421,10 +2490,12 @@ public partial class alglib
                 _result.timeout = timeout;
                 _result.bbgdgroupsize = bbgdgroupsize;
                 _result.maxsubsolvers = maxsubsolvers;
+                _result.issuesparserequests = issuesparserequests;
                 _result.forceserial = forceserial;
                 _result.softmaxnodes = softmaxnodes;
                 _result.hardmaxnodes = hardmaxnodes;
                 _result.maxprimalcandidates = maxprimalcandidates;
+                _result.syncinterval = syncinterval;
                 _result.s = (double[])s.Clone();
                 _result.bndl = (double[])bndl.Clone();
                 _result.bndu = (double[])bndu.Clone();
@@ -2432,6 +2503,7 @@ public partial class alglib
                 _result.hasbndu = (bool[])hasbndu.Clone();
                 _result.isintegral = (bool[])isintegral.Clone();
                 _result.isbinary = (bool[])isbinary.Clone();
+                _result.islinear = (bool[])islinear.Clone();
                 _result.objtype = objtype;
                 _result.obja = obja!=null ? (sparse.sparsematrix)obja.make_copy() : null;
                 _result.objb = (double[])objb.Clone();
@@ -2458,8 +2530,10 @@ public partial class alglib
                 _result.repf = repf;
                 _result.reppdgap = reppdgap;
                 _result.timerglobal = timerglobal!=null ? (apserv.stimer)timerglobal.make_copy() : null;
+                _result.lastlaconicreportepoch = lastlaconicreportepoch;
                 _result.dotrace = dotrace;
                 _result.dolaconictrace = dolaconictrace;
+                _result.doanytrace = doanytrace;
                 _result.nextleafid = nextleafid;
                 _result.hasprimalsolution = hasprimalsolution;
                 _result.xprim = (double[])xprim.Clone();
@@ -2467,6 +2541,7 @@ public partial class alglib
                 _result.hprim = hprim;
                 _result.ffdual = ffdual;
                 _result.timedout = timedout;
+                _result.unbounded = unbounded;
                 _result.rootsubproblem = rootsubproblem!=null ? (bbgdsubproblem)rootsubproblem.make_copy() : null;
                 _result.bbsubproblems = bbsubproblems!=null ? (ap.objarray)bbsubproblems.make_copy() : null;
                 _result.bbsubproblemsheapsize = bbsubproblemsheapsize;
@@ -2482,15 +2557,18 @@ public partial class alglib
                 _result.globalpseudocostdown = globalpseudocostdown;
                 _result.globalpseudocostcntup = globalpseudocostcntup;
                 _result.globalpseudocostcntdown = globalpseudocostcntdown;
+                _result.globalsynchronizednfev = globalsynchronizednfev;
+                _result.globalsynchronizednsubproblems = globalsynchronizednsubproblems;
                 _result.unsafeglobalrng = unsafeglobalrng!=null ? (hqrnd.hqrndstate)unsafeglobalrng.make_copy() : null;
                 _result.requestsource = requestsource;
                 _result.lastrequesttype = lastrequesttype;
+                _result.rcommv2 = rcommv2!=null ? (ap.rcommstate)rcommv2.make_copy() : null;
+                _result.usehandlersandsync = usehandlersandsync;
                 _result.dummysubproblem = dummysubproblem!=null ? (bbgdsubproblem)dummysubproblem.make_copy() : null;
                 _result.dummysubsolver = dummysubsolver!=null ? (bbgdfrontsubsolver)dummysubsolver.make_copy() : null;
                 _result.dummyqpsubsolver = dummyqpsubsolver!=null ? (ipm2solver.ipm2state)dummyqpsubsolver.make_copy() : null;
                 _result.dummyentry = dummyentry!=null ? (bbgdfrontentry)dummyentry.make_copy() : null;
                 _result.densedummy2 = (double[,])densedummy2.Clone();
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -2498,7 +2576,10 @@ public partial class alglib
 
 
 
+        public const double unboundedf = -1.0E200;
+        public const int laconicreportperiod = 5000;
         public const double safetyfactor = 0.001;
+        public const double nonlinearitythreshold = 1.0E-14;
         public const int backtracklimit = 0;
         public const double alphaint = 0.01;
         public const int ftundefined = -1;
@@ -2511,6 +2592,8 @@ public partial class alglib
         public const int stwaitingforrcomm = 701;
         public const int stsolved = 702;
         public const int sttimeout = 703;
+        public const int stwaitingforsync = 704;
+        public const int stunbounded = 705;
         public const int rqsrcfront = 1;
         public const int rqsrcxc = 2;
         public const int divenever = 0;
@@ -2534,6 +2617,7 @@ public partial class alglib
             double[] x0,
             bool[] isintegral,
             bool[] isbinary,
+            bool[] islinear,
             sparse.sparsematrix sparsea,
             double[] al,
             double[] au,
@@ -2542,6 +2626,7 @@ public partial class alglib
             double[] nl,
             double[] nu,
             int nnlc,
+            bool issuesparserequests,
             int groupsize,
             int nmultistarts,
             int timeout,
@@ -2559,6 +2644,7 @@ public partial class alglib
             alglib.ap.assert(alglib.ap.len(s)>=n, "BBGDCreateBuf: Length(S)<N");
             alglib.ap.assert(alglib.ap.len(isintegral)>=n, "BBGDCreateBuf: Length(IsIntegral)<N");
             alglib.ap.assert(alglib.ap.len(isbinary)>=n, "BBGDCreateBuf: Length(IsBinary)<N");
+            alglib.ap.assert(alglib.ap.len(islinear)>=n, "BBGDCreateBuf: Length(IsLinear)<N");
             alglib.ap.assert(nnlc>=0, "BBGDCreateBuf: NNLC<0");
             alglib.ap.assert(alglib.ap.len(nl)>=nnlc, "BBGDCreateBuf: Length(NL)<NNLC");
             alglib.ap.assert(alglib.ap.len(nu)>=nnlc, "BBGDCreateBuf: Length(NU)<NNLC");
@@ -2567,12 +2653,14 @@ public partial class alglib
             alglib.ap.assert(timeout>=0, "BBGDCreateBuf: Timeout<0");
             alglib.ap.assert((tracelevel==0 || tracelevel==1) || tracelevel==2, "BBGDCreateBuf: unexpected trace level");
             initinternal(n, x0, 0, 0.0, state, _params);
+            state.issuesparserequests = issuesparserequests;
             state.forceserial = false;
             state.bbgdgroupsize = groupsize;
             state.nmultistarts = nmultistarts;
             state.timeout = timeout;
             state.dotrace = tracelevel==2;
             state.dolaconictrace = tracelevel==1;
+            state.doanytrace = state.dotrace || state.dolaconictrace;
             for(i=0; i<=n-1; i++)
             {
                 alglib.ap.assert(math.isfinite(bndl[i]) || Double.IsNegativeInfinity(bndl[i]), "BBGDCreateBuf: BndL contains NAN or +INF");
@@ -2586,6 +2674,7 @@ public partial class alglib
                 state.hasbndu[i] = math.isfinite(bndu[i]);
                 state.isintegral[i] = isintegral[i];
                 state.isbinary[i] = isbinary[i];
+                state.islinear[i] = islinear[i];
                 state.s[i] = apserv.rcase2(isintegral[i], 1.0, Math.Abs(s[i]), _params);
             }
             state.lccnt = lccnt;
@@ -2694,6 +2783,34 @@ public partial class alglib
             state.krel = 1;
             state.kevalunreliable = state.n;
             state.kevalreliable = 1;
+        }
+
+
+        /*************************************************************************
+        Sets IPM subsolver
+
+          -- ALGLIB --
+             Copyright 01.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void bbgdsetipm(bbgdstate state,
+            int memlen,
+            alglib.xparams _params)
+        {
+            state.subsolveralgo = 0;
+            state.subsolvermemlen = memlen;
+        }
+
+
+        /*************************************************************************
+        Sets SQP subsolver
+
+          -- ALGLIB --
+             Copyright 01.01.2025 by Bochkanov Sergey
+        *************************************************************************/
+        public static void bbgdsetsqp(bbgdstate state,
+            alglib.xparams _params)
+        {
+            state.subsolveralgo = 1;
         }
 
 
@@ -2833,19 +2950,17 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
             //   generation - on first subroutine call
             // * values from previous call - on subsequent calls
             //
-            if( state.rstate.stage>=0 )
+            if( state.rcommv2.stage>=0 )
             {
-                n = state.rstate.ia[0];
-                i = state.rstate.ia[1];
-                k = state.rstate.ia[2];
+                n = state.rcommv2.ia[0];
+                i = state.rcommv2.ia[1];
+                k = state.rcommv2.ia[2];
             }
             else
             {
@@ -2853,15 +2968,15 @@ public partial class alglib
                 i = -58;
                 k = -919;
             }
-            if( state.rstate.stage==0 )
+            if( state.rcommv2.stage==0 )
             {
                 goto lbl_0;
             }
-            if( state.rstate.stage==1 )
+            if( state.rcommv2.stage==1 )
             {
                 goto lbl_1;
             }
-            if( state.rstate.stage==2 )
+            if( state.rcommv2.stage==2 )
             {
                 goto lbl_2;
             }
@@ -2886,6 +3001,8 @@ public partial class alglib
             state.globalpseudocostdown = 1.0;
             state.globalpseudocostcntup = 0;
             state.globalpseudocostcntdown = 0;
+            state.globalsynchronizednfev = 0;
+            state.globalsynchronizednsubproblems = 0;
             alglib.ap.assert(state.objtype==0 || state.objtype==1, "BBGD: 661544 failed");
             if( state.objtype==1 )
             {
@@ -2898,6 +3015,23 @@ public partial class alglib
                 }
                 ipm2solver.ipm2proposeordering(state.dummyqpsubsolver, n, true, state.hasbndl, state.hasbndu, state.rawa, state.rawal, state.rawau, state.lccnt, ref state.qpordering, _params);
             }
+            state.usehandlersandsync = state.rcommv2.has_handler();
+            
+            //
+            // Initial synchronization interval
+            //
+            if( state.syncinterval==0 )
+            {
+                state.syncinterval = 5;
+                if( state.subsolveralgo==0 )
+                {
+                    state.syncinterval = 15;
+                }
+                if( state.subsolveralgo==1 )
+                {
+                    state.syncinterval = 5;
+                }
+            }
             
             //
             // Initialize globally shared information
@@ -2906,7 +3040,9 @@ public partial class alglib
             state.hasprimalsolution = false;
             state.fprim = Double.PositiveInfinity;
             state.timedout = false;
+            state.unbounded = false;
             state.ffdual = Double.NegativeInfinity;
+            state.lastlaconicreportepoch = -999;
             frontinitundefined(state.front, state, _params);
             alglib.smp.ae_shared_pool_set_seed_if_different(state.sppool, state.dummysubproblem);
             alglib.smp.ae_shared_pool_set_seed_if_different(state.subsolverspool, state.dummysubsolver);
@@ -2920,6 +3056,7 @@ public partial class alglib
             state.rootsubproblem.leafid = apserv.weakatomicfetchadd(ref state.nextleafid, 1, _params);
             state.rootsubproblem.branchbucket = -1;
             state.rootsubproblem.parentfdual = math.maxrealnumber;
+            ablasf.bcopyallocv(n, state.islinear, ref state.rootsubproblem.parentlinearity, _params);
             state.rootsubproblem.n = n;
             alglib.ap.assert(state.hasx0, "BBGD: integrity check 500655 failed");
             ablasf.rcopyallocv(n, state.x0, ref state.rootsubproblem.x0, _params);
@@ -2953,11 +3090,12 @@ public partial class alglib
             state.rootsubproblem.hasprimalsolution = false;
             state.rootsubproblem.hasdualsolution = false;
             state.rootsubproblem.ncuttingplanes = 0;
+            ablasf.bsetallocv(n, true, ref state.rootsubproblem.subproblemlinearity, _params);
             for(i=0; i<=n-1; i++)
             {
                 if( (math.isfinite(state.rootsubproblem.bndl[i]) && math.isfinite(state.rootsubproblem.bndu[i])) && (double)(state.rootsubproblem.bndl[i])>(double)(state.rootsubproblem.bndu[i]+state.ctol) )
                 {
-                    if( state.dotrace )
+                    if( state.doanytrace )
                     {
                         alglib.ap.trace("> a combination of box and integrality constraints is infeasible, stopping\n");
                     }
@@ -2966,7 +3104,7 @@ public partial class alglib
                     return result;
                 }
             }
-            if( state.dotrace )
+            if( state.doanytrace )
             {
                 alglib.ap.trace("> generated root node, starting to solve it\n");
             }
@@ -2977,21 +3115,31 @@ public partial class alglib
                 goto lbl_4;
             }
             state.requestsource = rqsrcfront;
-            state.rstate.stage = 0;
-            goto lbl_rcomm;
+            state.rcommv2.stage = 0;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
             goto lbl_3;
         lbl_4:
-            alglib.ap.assert(state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout, "BBGD: integrity check 184017 failed");
+            alglib.ap.assert((state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout) || state.front.frontstatus==stunbounded, "BBGD: integrity check 184017 failed");
             if( state.front.frontstatus!=stsolved )
             {
                 goto lbl_5;
             }
-            if( state.dotrace )
+            if( state.doanytrace )
             {
                 alglib.ap.trace(System.String.Format("> root subproblem solved in {0,0:F0} ms\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
                 alglib.ap.trace(System.String.Format(">> primal (upper) bound is {0,0:E12}\n", state.fprim));
                 alglib.ap.trace(System.String.Format(">> dual   (lower) bound is {0,0:E12}\n", state.ffdual));
+                alglib.ap.trace("> proceeding to branch-and-bound tree search\n");
+            }
+            if( state.dolaconictrace )
+            {
+                tracelaconicheader(state, _params);
+                tracelaconic(state, _params);
+                state.lastlaconicreportepoch = (int)Math.Floor(apserv.stimergetmsrunning(state.timerglobal, _params)/laconicreportperiod);
             }
             state.repterminationtype = 1;
             frontstartdynamic(state.front, state, _params);
@@ -3001,28 +3149,54 @@ public partial class alglib
                 goto lbl_8;
             }
             state.requestsource = rqsrcfront;
-            state.rstate.stage = 1;
-            goto lbl_rcomm;
+            state.rcommv2.stage = 1;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_1:
             goto lbl_7;
         lbl_8:
-            alglib.ap.assert(state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout, "BBGD: integrity check 826253 failed");
+            alglib.ap.assert((state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout) || state.front.frontstatus==stunbounded, "BBGD: integrity check 826253 failed");
             if( state.front.frontstatus==sttimeout )
             {
-                if( state.dotrace )
+                if( state.doanytrace )
                 {
                     alglib.ap.trace(System.String.Format("> timeout was signaled, {0,0:F0} ms passed\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
                 }
                 state.timedout = true;
             }
+            if( state.front.frontstatus==stunbounded )
+            {
+                if( state.doanytrace )
+                {
+                    alglib.ap.trace("> unboundedness was signaled, the problem is likely to be unbounded (suspiciously large |x| or -f)\n");
+                }
+                state.unbounded = true;
+            }
             goto lbl_6;
         lbl_5:
-            if( state.dotrace )
+            if( state.front.frontstatus==sttimeout )
             {
-                alglib.ap.trace(System.String.Format("> timeout was signaled during solution of the root subproblem, {0,0:F0} ms passed\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
+                if( state.doanytrace )
+                {
+                    alglib.ap.trace(System.String.Format("> timeout was signaled during solution of the root subproblem, {0,0:F0} ms passed\n", apserv.stimergetmsrunning(state.timerglobal, _params)));
+                }
+                state.timedout = true;
             }
-            state.timedout = true;
+            if( state.front.frontstatus==stunbounded )
+            {
+                if( state.doanytrace )
+                {
+                    alglib.ap.trace("> unboundedness was signaled during solution of the root subproblem\n");
+                }
+                state.unbounded = true;
+            }
         lbl_6:
+            if( state.unbounded )
+            {
+                state.hasprimalsolution = false;
+            }
             
             //
             // Write out solution
@@ -3043,8 +3217,11 @@ public partial class alglib
                 goto lbl_11;
             }
             state.requestsource = rqsrcxc;
-            state.rstate.stage = 2;
-            goto lbl_rcomm;
+            state.rcommv2.stage = 2;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_2:
             goto lbl_12;
         lbl_11:
@@ -3056,9 +3233,9 @@ public partial class alglib
             {
                 state.repterminationtype = 5;
             }
-            if( state.dotrace )
+            if( state.doanytrace )
             {
-                alglib.ap.trace(System.String.Format("> the solution is found: f={0,0:E9}, relative duality gap is {1,0:E3}\n", state.repf, state.reppdgap));
+                alglib.ap.trace(System.String.Format("> a primal solution is found: f={0,0:E9}, relative duality gap is {1,0:E3}; {2,0:F3}s passed\n", state.repf, state.reppdgap, 0.001*apserv.stimergetmsrunning(state.timerglobal, _params)));
             }
             goto lbl_10;
         lbl_9:
@@ -3066,15 +3243,29 @@ public partial class alglib
             //
             // The problem is infeasible
             //
-            alglib.ap.assert(state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout, "BBGD: integrity check 280023 failed");
+            alglib.ap.assert((state.front.frontstatus==stsolved || state.front.frontstatus==sttimeout) || state.front.frontstatus==stunbounded, "BBGD: integrity check 280023 failed");
             state.repterminationtype = -3;
             if( state.timedout )
             {
                 state.repterminationtype = -33;
             }
-            if( state.dotrace )
+            if( state.unbounded )
             {
-                alglib.ap.trace("> the problem is infeasible (or feasible point is too difficult to find)\n");
+                state.repterminationtype = -4;
+            }
+            if( state.doanytrace )
+            {
+                if( state.repterminationtype!=-4 )
+                {
+                    alglib.ap.trace(System.String.Format("> the problem is infeasible (or feasible point is too difficult to find); {0,0:F3}s passed\n", 0.001*apserv.stimergetmsrunning(state.timerglobal, _params)));
+                }
+            }
+            if( state.doanytrace )
+            {
+                if( state.repterminationtype==-4 )
+                {
+                    alglib.ap.trace(System.String.Format("> the problem is unbounded; {0,0:F3}s passed\n", 0.001*apserv.stimergetmsrunning(state.timerglobal, _params)));
+                }
             }
         lbl_10:
             result = false;
@@ -3085,9 +3276,22 @@ public partial class alglib
             //
         lbl_rcomm:
             result = true;
-            state.rstate.ia[0] = n;
-            state.rstate.ia[1] = i;
-            state.rstate.ia[2] = k;
+            state.rcommv2.ia[0] = n;
+            state.rcommv2.ia[1] = i;
+            state.rcommv2.ia[2] = k;
+            return result;
+        }
+
+
+        /*************************************************************************
+        Checks whether request came from front (used for integrity checks)
+        *************************************************************************/
+        public static bool bbgdisrequestfromfront(bbgdstate state,
+            alglib.xparams _params)
+        {
+            bool result = new bool();
+
+            result = state.requestsource==rqsrcfront;
             return result;
         }
 
@@ -3111,12 +3315,11 @@ public partial class alglib
                 requesttype = 0;
                 frontpackqueries(state.front, state, ref requesttype, ref querysize, ref queryfuncs, ref queryvars, ref querydim, ref queryformulasize, ref querydata, _params);
                 alglib.ap.assert(querysize>0, "BBGD: 074812 failed");
-                state.repnfev = state.repnfev+querysize;
                 return;
             }
             if( state.requestsource==rqsrcxc )
             {
-                requesttype = 1;
+                requesttype = apserv.icase2(state.issuesparserequests, 1, 2, _params);
                 querysize = 1;
                 queryfuncs = 1+state.nnlc;
                 queryvars = state.n;
@@ -3203,27 +3406,32 @@ public partial class alglib
             state.n = n;
             state.epsx = 1.0E-7;
             state.epsf = 1.0E-7;
-            state.nonrootmaxitslin = 2;
-            state.nonrootmaxitsconst = 50;
+            state.nonrootmaxitslin = 10;
+            state.nonrootmaxitsconst = 200;
             state.nonrootadditsforfeasibility = 5;
+            state.nonrootmaxitsaboveaverage = 0.0;
             state.nmultistarts = 1;
             state.branchingtype = 1;
+            state.subsolveralgo = 0;
+            state.subsolvermemlen = 0;
             state.krel = 1;
             state.kevalunreliable = 1;
             state.kevalreliable = 1;
             state.dodiving = diveuntilprimal;
-            state.pseudocostmu = 0.001;
+            state.pseudocostmu = 0.15;
             state.pseudocostminfrac = 0.001;
             state.pseudocostinfeaspenaly = 25.0;
             state.nonconvexitygain = 100;
             state.diffstep = diffstep;
             state.userterminationneeded = false;
-            state.maxsubsolvers = 4*apserv.maxconcurrency(_params);
+            state.maxsubsolvers = apserv.icase2(ap.istraceenabled("DBG.BBSYNC.ONESUBSOLVER", _params), 1, 4*apserv.maxconcurrency(_params), _params);
             state.softmaxnodes = 0;
             state.hardmaxnodes = 0;
             state.maxprimalcandidates = 0;
+            state.syncinterval = 0;
             ablasf.bsetallocv(n, false, ref state.isintegral, _params);
             ablasf.bsetallocv(n, false, ref state.isbinary, _params);
+            ablasf.bsetallocv(n, false, ref state.islinear, _params);
             state.bndl = new double[n];
             state.hasbndl = new bool[n];
             state.bndu = new double[n];
@@ -3267,8 +3475,9 @@ public partial class alglib
             //
             // RComm
             //
-            state.rstate.ia = new int[2+1];
-            state.rstate.stage = -1;
+            state.rcommv2.ia = new int[2+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
         }
 
 
@@ -3297,7 +3506,7 @@ public partial class alglib
             // If our request is the first one in a queue, initialize aggregated request.
             // Otherwise, perform compatibility checks.
             //
-            localrequesttype = subsolver.requesttype;
+            localrequesttype = subsolver.rcommv2.requesttype;
             alglib.ap.assert((((localrequesttype==1 || localrequesttype==2) || localrequesttype==3) || localrequesttype==4) || localrequesttype==5, "BBGD: subsolver sends unsupported request");
             if( requesttype==0 )
             {
@@ -3308,19 +3517,19 @@ public partial class alglib
                 requesttype = localrequesttype;
                 state.lastrequesttype = localrequesttype;
                 querysize = 0;
-                alglib.ap.assert(subsolver.queryfuncs>=1, "BBGD: integrity check 946245 failed");
-                alglib.ap.assert(subsolver.queryvars>=1, "BBGD: integrity check 947246 failed");
-                alglib.ap.assert(subsolver.querydim==0, "BBGD: integrity check 947247 failed");
-                queryfuncs = subsolver.queryfuncs;
-                queryvars = subsolver.queryvars;
+                alglib.ap.assert(subsolver.rcommv2.queryfuncs>=1, "BBGD: integrity check 946245 failed");
+                alglib.ap.assert(subsolver.rcommv2.queryvars>=1, "BBGD: integrity check 947246 failed");
+                alglib.ap.assert(subsolver.rcommv2.querydim==0, "BBGD: integrity check 947247 failed");
+                queryfuncs = subsolver.rcommv2.queryfuncs;
+                queryvars = subsolver.rcommv2.queryvars;
                 querydim = 0;
-                queryformulasize = subsolver.queryformulasize;
+                queryformulasize = subsolver.rcommv2.queryformulasize;
             }
             alglib.ap.assert(requesttype==localrequesttype, "BBGD: subsolvers send incompatible request types that can not be aggregated");
-            alglib.ap.assert(queryfuncs==subsolver.queryfuncs, "BBGD: subsolvers send requests that have incompatible sizes and can not be aggregated");
-            alglib.ap.assert(queryvars==subsolver.queryvars, "BBGD: subsolvers send requests that have incompatible sizes and can not be aggregated");
-            alglib.ap.assert(subsolver.querydim==0, "BBGD: subsolver send request with QueryDim<>0, unexpected");
-            alglib.ap.assert((localrequesttype!=3 && localrequesttype!=5) || queryformulasize==subsolver.queryformulasize, "BBGD: subsolvers send requests that are incompatible due to different query formula sizes");
+            alglib.ap.assert(queryfuncs==subsolver.rcommv2.queryfuncs, "BBGD: subsolvers send requests that have incompatible sizes and can not be aggregated");
+            alglib.ap.assert(queryvars==subsolver.rcommv2.queryvars, "BBGD: subsolvers send requests that have incompatible sizes and can not be aggregated");
+            alglib.ap.assert(subsolver.rcommv2.querydim==0, "BBGD: subsolver send request with QueryDim<>0, unexpected");
+            alglib.ap.assert((localrequesttype!=3 && localrequesttype!=5) || queryformulasize==subsolver.rcommv2.queryformulasize, "BBGD: subsolvers send requests that are incompatible due to different query formula sizes");
             n = queryvars;
             
             //
@@ -3332,9 +3541,9 @@ public partial class alglib
                 //
                 // Query sparse Jacobian
                 //
-                ablasf.rgrowv(querysize*queryvars+subsolver.querysize*queryvars, ref querydata, _params);
-                ablasf.rcopyvx(subsolver.querysize*n, subsolver.querydata, 0, querydata, querysize*queryvars, _params);
-                querysize = querysize+subsolver.querysize;
+                ablasf.rgrowv(querysize*queryvars+subsolver.rcommv2.querysize*queryvars, ref querydata, _params);
+                ablasf.rcopyvx(subsolver.rcommv2.querysize*n, subsolver.rcommv2.querydata, 0, querydata, querysize*queryvars, _params);
+                querysize = querysize+subsolver.rcommv2.querysize;
                 return;
             }
             if( localrequesttype==2 )
@@ -3343,9 +3552,9 @@ public partial class alglib
                 //
                 // Query dense Jacobian
                 //
-                ablasf.rgrowv(querysize*queryvars+subsolver.querysize*queryvars, ref querydata, _params);
-                ablasf.rcopyvx(subsolver.querysize*n, subsolver.querydata, 0, querydata, querysize*queryvars, _params);
-                querysize = querysize+subsolver.querysize;
+                ablasf.rgrowv(querysize*queryvars+subsolver.rcommv2.querysize*queryvars, ref querydata, _params);
+                ablasf.rcopyvx(subsolver.rcommv2.querysize*n, subsolver.rcommv2.querydata, 0, querydata, querysize*queryvars, _params);
+                querysize = querysize+subsolver.rcommv2.querysize;
                 return;
             }
             alglib.ap.assert(false, "ReduceAndAppendRequestTo: unsupported protocol");
@@ -3382,12 +3591,12 @@ public partial class alglib
             //
             // Compatibility checks.
             //
-            localrequesttype = subsolver.requesttype;
+            localrequesttype = subsolver.rcommv2.requesttype;
             alglib.ap.assert(localrequesttype==state.lastrequesttype, "BBGD: integrity check 040003 failed");
-            alglib.ap.assert(subsolver.queryfuncs==queryfuncs, "BBGD: integrity check 041003 failed");
-            alglib.ap.assert(subsolver.queryvars==queryvars, "BBGD: integrity check 042003 failed");
+            alglib.ap.assert(subsolver.rcommv2.queryfuncs==queryfuncs, "BBGD: integrity check 041003 failed");
+            alglib.ap.assert(subsolver.rcommv2.queryvars==queryvars, "BBGD: integrity check 042003 failed");
             alglib.ap.assert(querydim==0, "BBGD: integrity check 043003 failed");
-            alglib.ap.assert(requestidx+subsolver.querysize<=querysize, "BBGD: integrity check 044003 failed");
+            alglib.ap.assert(requestidx+subsolver.rcommv2.querysize<=querysize, "BBGD: integrity check 044003 failed");
             n = queryvars;
             
             //
@@ -3403,9 +3612,9 @@ public partial class alglib
                 fisrcoffs = requestidx*queryfuncs;
                 jacdstoffs = 0;
                 jacsrcoffs = requestidx*queryfuncs;
-                ablasf.rcopyvx(subsolver.querysize*queryfuncs, replyfi, fisrcoffs, subsolver.replyfi, fidstoffs, _params);
-                sparse.sparsecreatecrsfromcrsrangebuf(replysj, jacsrcoffs, jacsrcoffs+subsolver.querysize*queryfuncs, subsolver.replysj, _params);
-                requestidx = requestidx+subsolver.querysize;
+                ablasf.rcopyvx(subsolver.rcommv2.querysize*queryfuncs, replyfi, fisrcoffs, subsolver.rcommv2.replyfi, fidstoffs, _params);
+                sparse.sparsecreatecrsfromcrsrangebuf(replysj, jacsrcoffs, jacsrcoffs+subsolver.rcommv2.querysize*queryfuncs, subsolver.rcommv2.replysj, _params);
+                requestidx = requestidx+subsolver.rcommv2.querysize;
                 return;
             }
             if( state.lastrequesttype==2 )
@@ -3418,9 +3627,9 @@ public partial class alglib
                 fisrcoffs = requestidx*queryfuncs;
                 jacdstoffs = 0;
                 jacsrcoffs = requestidx*queryvars*queryfuncs;
-                ablasf.rcopyvx(subsolver.querysize*queryfuncs, replyfi, fisrcoffs, subsolver.replyfi, fidstoffs, _params);
-                ablasf.rcopyvx(n*subsolver.querysize*queryfuncs, replydj, jacsrcoffs, subsolver.replydj, jacdstoffs, _params);
-                requestidx = requestidx+subsolver.querysize;
+                ablasf.rcopyvx(subsolver.rcommv2.querysize*queryfuncs, replyfi, fisrcoffs, subsolver.rcommv2.replyfi, fidstoffs, _params);
+                ablasf.rcopyvx(n*subsolver.rcommv2.querysize*queryfuncs, replydj, jacsrcoffs, subsolver.rcommv2.replydj, jacdstoffs, _params);
+                requestidx = requestidx+subsolver.rcommv2.querysize;
                 return;
             }
             alglib.ap.assert(false, "ExtractExtendAndForwardReplyTo: unsupported protocol");
@@ -3439,6 +3648,7 @@ public partial class alglib
             dst.leafid = newid;
             dst.branchbucket = src.branchbucket;
             dst.parentfdual = src.parentfdual;
+            ablasf.bcopyallocv(src.n, src.parentlinearity, ref dst.parentlinearity, _params);
             dst.branchvar = src.branchvar;
             dst.branchval = src.branchval;
             dst.n = src.n;
@@ -3461,11 +3671,17 @@ public partial class alglib
                 ablasf.rcopyallocv(src.n, src.worstxdual, ref dst.worstxdual, _params);
             }
             dst.bestfdual = src.bestfdual;
+            dst.bestfdualearlyerror = src.bestfdualearlyerror;
             dst.besthdual = src.besthdual;
+            dst.besttt = src.besttt;
+            dst.bestits = src.bestits;
             dst.worstfdual = src.worstfdual;
             dst.worsthdual = src.worsthdual;
             dst.bestdualisintfeas = src.bestdualisintfeas;
             dst.dualbound = src.dualbound;
+            dst.earlystopped = src.earlystopped;
+            dst.donotfathom = src.donotfathom;
+            ablasf.bcopyallocv(src.n, src.subproblemlinearity, ref dst.subproblemlinearity, _params);
         }
 
 
@@ -3484,27 +3700,94 @@ public partial class alglib
             dst.fprim = Double.PositiveInfinity;
             dst.hprim = Double.PositiveInfinity;
             dst.bestfdual = Double.PositiveInfinity;
+            dst.bestfdualearlyerror = 0;
             dst.besthdual = Double.PositiveInfinity;
+            dst.besttt = 0;
+            dst.bestits = 0;
             dst.worstfdual = Double.PositiveInfinity;
             dst.worsthdual = Double.PositiveInfinity;
             dst.dualbound = Double.PositiveInfinity;
+            dst.earlystopped = false;
+            dst.donotfathom = false;
+            ablasf.bsetallocv(src.n, true, ref dst.subproblemlinearity, _params);
         }
 
 
         /*************************************************************************
-        Computes dual bound having best and worst versions of a dual solution.
-        Sets it to +INF if no dual solution is present.
+        "Merges in" a feasible solution, updating primal and dual points as well as
+        dual bound.
+
+        This function can be applied to two kinds of solutions:
+        * fully converged solutions found to be feasible
+        * partially converged solutions subject to early stopping and splitting
+            
+            X               -   solution
+            NLREP           -   array[N], nonlinearity report returned by MinNLC
+                                (when reports are inactive, a vector of 1's is
+                                returned which is a good default value). This report
+                                is ALWAYS present
+            S               -   subproblem to update, must be initialized by
+                                SubproblemCopyAsUnsolved() at some moment in past
+            F               -   objective value
+            EarlyError      -   an upper estimate of error due to early stopping
+                                of an IPM solver; zero for normal convergence
+            SclFeasErr      -   scaled feasibility error; musy be zero for problems
+                                that stopped early due to integral variables
+                                converging to non-integral values
+            IsIntFeas       -   if true, solution is integer feasible. Must be zero
+                                for problems that stopped early due to integral variables
+                                converging to non-integral values
+            IsEarlyStopped  -   if True, the solution was obtained by early stopping
+                                and the dual bound is not reliable
         *************************************************************************/
-        private static void subproblemrecomputedualbound(bbgdsubproblem s,
+        private static void subproblemmergeinsolution(bbgdsubproblem subproblem,
+            double[] x,
+            double[] nlrep,
+            double f,
+            double earlyerror,
+            double sclfeaserr,
+            bool isintfeas,
+            bool isearlystopped,
+            int terminationtype,
+            int its,
             alglib.xparams _params)
         {
+            int i = 0;
             double bestworstspread = 0;
 
-            s.dualbound = Double.PositiveInfinity;
-            if( s.hasdualsolution )
+            alglib.ap.assert(!(isintfeas && (double)(earlyerror)>(double)(0)), "BBGD: 491152 failed");
+            if( !subproblem.hasdualsolution || (double)(f-earlyerror)<(double)(subproblem.bestfdual-subproblem.bestfdualearlyerror) )
             {
-                bestworstspread = Math.Abs(s.bestfdual-s.worstfdual);
-                s.dualbound = s.bestfdual-safetyfactor*bestworstspread;
+                ablasf.rcopyallocv(subproblem.n, x, ref subproblem.bestxdual, _params);
+                subproblem.bestfdual = f;
+                subproblem.bestfdualearlyerror = earlyerror;
+                subproblem.besthdual = sclfeaserr;
+                subproblem.besttt = terminationtype;
+                subproblem.bestits = its;
+                subproblem.bestdualisintfeas = isintfeas;
+                subproblem.earlystopped = isearlystopped;
+                subproblem.donotfathom = false;
+            }
+            if( !subproblem.hasdualsolution || (double)(f)>(double)(subproblem.worstfdual) )
+            {
+                ablasf.rcopyallocv(subproblem.n, x, ref subproblem.worstxdual, _params);
+                subproblem.worstfdual = f;
+                subproblem.worsthdual = sclfeaserr;
+            }
+            subproblem.hasdualsolution = true;
+            if( isintfeas && (!subproblem.hasprimalsolution || (double)(f)<(double)(subproblem.fprim)) )
+            {
+                alglib.ap.assert((double)(earlyerror)==(double)(0), "BBGD: 511154 failed");
+                subproblem.hasprimalsolution = true;
+                ablasf.rcopyallocv(subproblem.n, x, ref subproblem.xprim, _params);
+                subproblem.fprim = f;
+                subproblem.hprim = sclfeaserr;
+            }
+            bestworstspread = Math.Abs(subproblem.bestfdual-subproblem.worstfdual);
+            subproblem.dualbound = subproblem.bestfdual-subproblem.bestfdualearlyerror-safetyfactor*bestworstspread;
+            for(i=0; i<=subproblem.n-1; i++)
+            {
+                subproblem.subproblemlinearity[i] = subproblem.subproblemlinearity[i] && (double)(nlrep[i])<=(double)(nonlinearitythreshold);
             }
         }
 
@@ -3587,16 +3870,21 @@ public partial class alglib
             {
                 if( state.dotrace )
                 {
-                    alglib.ap.trace(System.String.Format("infeasible (err={0,0:E2}), fathomed\n", subproblem.besthdual));
+                    alglib.ap.trace(System.String.Format("infeasible (err={0,0:E2}, tt={1,0:d}, its={2,0:d}), fathomed\n", subproblem.besthdual, subproblem.besttt, subproblem.bestits));
                 }
                 result = true;
                 return result;
             }
             if( state.dotrace )
             {
-                alglib.ap.trace(System.String.Format("(bestfdual={0,0:E12}, dualbound={1,0:E12}, fprim={2,0:E12})", subproblem.bestfdual, subproblem.dualbound, subproblem.fprim));
+                alglib.ap.trace(System.String.Format("(bestfdual={0,0:E12}, tt={1,0:d}, its={2,0:d}, dualbound={3,0:E12}", subproblem.bestfdual, subproblem.besttt, subproblem.bestits, subproblem.dualbound));
+                if( subproblem.earlystopped )
+                {
+                    alglib.ap.trace(", early stopped");
+                }
+                alglib.ap.trace(System.String.Format(", fprim={0,0:E12})", subproblem.fprim));
             }
-            if( state.hasprimalsolution && (double)(subproblem.dualbound)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
+            if( (state.hasprimalsolution && !subproblem.donotfathom) && (double)(subproblem.dualbound)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
             {
                 if( state.dotrace )
                 {
@@ -3658,6 +3946,7 @@ public partial class alglib
             front.entries.get(0, ref e);
             entryprepareroot(e, front, r, state, _params);
             front.rstate.stage = -1;
+            front.rstate.clear_handler();
         }
 
 
@@ -3684,6 +3973,7 @@ public partial class alglib
                 alglib.smp.ae_shared_pool_recycle(front.entrypool, ref e);
             }
             front.rstate.stage = -1;
+            front.rstate.clear_handler();
         }
 
 
@@ -3698,8 +3988,10 @@ public partial class alglib
             bbgdfrontentry e = null;
             bbgdsubproblem p = null;
             int i = 0;
+            bool hasnofathom = new bool();
 
             alglib.ap.assert(front.frontmode==ftroot || front.frontmode==ftdynamic, "BBGD: 647012 failed");
+            hasnofathom = false;
             state.ffdual = math.maxrealnumber;
             if( state.hasprimalsolution )
             {
@@ -3712,6 +4004,7 @@ public partial class alglib
                 if( front.frontmode!=ftroot && e.parentsubproblem.hasdualsolution )
                 {
                     state.ffdual = Math.Min(state.ffdual, e.parentsubproblem.dualbound);
+                    hasnofathom = hasnofathom || e.parentsubproblem.donotfathom;
                 }
             }
             if( state.bbsubproblems.getlength()>0 )
@@ -3720,10 +4013,15 @@ public partial class alglib
                 state.bbsubproblems.get(0, ref p);
                 alglib.ap.assert(p.hasdualsolution, "BBGD: integrity check 810337 failed");
                 state.ffdual = Math.Min(state.ffdual, p.dualbound);
+                hasnofathom = hasnofathom || p.donotfathom;
             }
             if( (double)(state.ffdual)==(double)(math.maxrealnumber) )
             {
                 state.ffdual = -math.maxrealnumber;
+            }
+            if( hasnofathom && state.hasprimalsolution )
+            {
+                state.ffdual = Math.Min(state.ffdual, state.fprim-10*state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params));
             }
         }
 
@@ -3740,8 +4038,6 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
@@ -3774,7 +4070,10 @@ public partial class alglib
                 goto lbl_2;
             }
             front.rstate.stage = 0;
-            goto lbl_rcomm;
+            if( front.rstate.rcomm2_handler!=null && front.rstate.requesttype!=0 && front.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                front.rstate.rcomm2_handler(front.rstate, front.rstate.handler_p0, front.rstate.handler_p1, front.rstate.handler_p2, front.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
             goto lbl_1;
         lbl_2:
@@ -3805,7 +4104,8 @@ public partial class alglib
             int i = 0;
             int j = 0;
             int jobscnt = 0;
-            int waitingcnt = 0;
+            int waitingforrcommcnt = 0;
+            int waitingforsynccnt = 0;
             bool bdummy = new bool();
             bool continuediving = new bool();
             bool handled = new bool();
@@ -3825,17 +4125,22 @@ public partial class alglib
                 //
                 alglib.ap.assert(front.frontsize==1 && state.bbsubproblems.getlength()==0, "BBGD: 909109 failed");
                 front.entries.get(0, ref e);
-                waitingcnt = 0;
+                waitingforrcommcnt = 0;
+                waitingforsynccnt = 0;
                 for(j=0; j<=e.subsolvers.getlength()-1; j++)
                 {
                     e.subsolvers.get(j, ref subsolver);
-                    alglib.ap.assert(subsolver.subsolverstatus==stwaitingforrcomm || subsolver.subsolverstatus==streadytorun, "BBGD: 915110 failed");
+                    alglib.ap.assert((subsolver.subsolverstatus==stwaitingforrcomm || subsolver.subsolverstatus==stwaitingforsync) || subsolver.subsolverstatus==streadytorun, "BBGD: 915110 failed");
                     if( subsolver.subsolverstatus==stwaitingforrcomm )
                     {
-                        waitingcnt = waitingcnt+1;
+                        waitingforrcommcnt = waitingforrcommcnt+1;
+                    }
+                    if( subsolver.subsolverstatus==stwaitingforsync )
+                    {
+                        waitingforsynccnt = waitingforsynccnt+1;
                     }
                 }
-                alglib.ap.assert((e.entrystatus==streadytorun && waitingcnt==0) || (e.entrystatus==stwaitingforrcomm && waitingcnt>0), "BBGD: 919110 failed");
+                alglib.ap.assert(((e.entrystatus==streadytorun && waitingforrcommcnt+waitingforsynccnt==0) || ((e.entrystatus==stwaitingforrcomm && waitingforrcommcnt>0) && waitingforsynccnt==0)) || ((e.entrystatus==stwaitingforsync && waitingforrcommcnt==0) && waitingforsynccnt>0), "BBGD: 919110 failed");
                 
                 //
                 // Internal loop: repeat until front size at the end of the loop is non-zero
@@ -3873,7 +4178,7 @@ public partial class alglib
                     frontparallelrunentries(front, 0, jobscnt, true, state, _params);
                     
                     //
-                    // Analyze solution: signal timeout, check that all entries are stSolved or stWaitingForRComm,
+                    // Analyze solution: signal timeout, check that all entries are stSolved or stWaitingForRComm or stWaitingForSync,
                     // first-phase process solved entries (update global stats).
                     //
                     e.entrystatus = apserv.icase2(e.spqueue.getlength()>0, streadytorun, stsolved, _params);
@@ -3881,16 +4186,31 @@ public partial class alglib
                     while( j<e.subsolvers.getlength() )
                     {
                         e.subsolvers.get(j, ref subsolver);
+                        if( subsolver.subsolverstatus==stunbounded )
+                        {
+                            e.entrystatus = stunbounded;
+                            front.frontstatus = stunbounded;
+                            result = false;
+                            return result;
+                        }
                         if( subsolver.subsolverstatus==sttimeout )
                         {
-                            e.entrystatus = sttimeout;
-                            front.frontstatus = sttimeout;
+                            e.entrystatus = apserv.icase2(e.entrystatus!=stunbounded, sttimeout, e.entrystatus, _params);
+                            front.frontstatus = apserv.icase2(front.frontstatus!=stunbounded, sttimeout, front.frontstatus, _params);
                             result = false;
                             return result;
                         }
                         if( subsolver.subsolverstatus==stwaitingforrcomm )
                         {
+                            alglib.ap.assert(e.entrystatus!=stwaitingforsync, "BBGD: integrity check 858018 failed");
                             e.entrystatus = stwaitingforrcomm;
+                            j = j+1;
+                            continue;
+                        }
+                        if( subsolver.subsolverstatus==stwaitingforsync )
+                        {
+                            alglib.ap.assert(e.entrystatus!=stwaitingforrcomm, "BBGD: integrity check 858018 failed");
+                            e.entrystatus = stwaitingforsync;
                             j = j+1;
                             continue;
                         }
@@ -3902,7 +4222,7 @@ public partial class alglib
                         e.subsolvers.pop_transfer(ref subsolver);
                         alglib.smp.ae_shared_pool_recycle(state.subsolverspool, ref subsolver);
                     }
-                    if( e.entrystatus!=streadytorun && e.entrystatus!=stwaitingforrcomm )
+                    if( (e.entrystatus!=streadytorun && e.entrystatus!=stwaitingforrcomm) && e.entrystatus!=stwaitingforsync )
                     {
                         alglib.ap.assert(e.entrystatus==stsolved, "BBGD: integrity check 670157 failed");
                         entryaggregateandupdateglobalstats(e, state, _params);
@@ -3921,7 +4241,7 @@ public partial class alglib
                     // b) there are entries, with all of them being stWaitingForRComm or stReadyToRun,
                     //    in which case we exit in order for RComm request to be processed by the caller
                     //
-                    if( e.entrystatus!=streadytorun && e.entrystatus!=stwaitingforrcomm )
+                    if( (e.entrystatus!=streadytorun && e.entrystatus!=stwaitingforrcomm) && e.entrystatus!=stwaitingforsync )
                     {
                         alglib.ap.assert(e.entrystatus==stsolved, "BBGD: integrity check 000116 failed");
                         entrypushsolution(e, state, ref bdummy, _params);
@@ -3983,9 +4303,9 @@ public partial class alglib
                     // Count entries that wait for RComm; exit if RComm is needed. Continue iteration if all entries are stReadyToRun,
                     // we will generate RComm requests at the next round.
                     //
-                    waitingcnt = apserv.icase2(e.entrystatus==stwaitingforrcomm, 1, 0, _params);
+                    waitingforrcommcnt = apserv.icase2(e.entrystatus==stwaitingforrcomm, 1, 0, _params);
                 }
-                while( waitingcnt<=0 );
+                while( waitingforrcommcnt<=0 );
                 return result;
             }
             
@@ -4002,17 +4322,22 @@ public partial class alglib
                 for(i=0; i<=front.frontsize-1; i++)
                 {
                     front.entries.get(i, ref e);
-                    waitingcnt = 0;
+                    waitingforrcommcnt = 0;
+                    waitingforsynccnt = 0;
                     for(j=0; j<=e.subsolvers.getlength()-1; j++)
                     {
                         e.subsolvers.get(j, ref subsolver);
-                        alglib.ap.assert(subsolver.subsolverstatus==stwaitingforrcomm || subsolver.subsolverstatus==streadytorun, "BBGD: 713006 failed");
+                        alglib.ap.assert((subsolver.subsolverstatus==stwaitingforrcomm || subsolver.subsolverstatus==stwaitingforsync) || subsolver.subsolverstatus==streadytorun, "BBGD: 713006 failed");
                         if( subsolver.subsolverstatus==stwaitingforrcomm )
                         {
-                            waitingcnt = waitingcnt+1;
+                            waitingforrcommcnt = waitingforrcommcnt+1;
+                        }
+                        if( subsolver.subsolverstatus==stwaitingforsync )
+                        {
+                            waitingforsynccnt = waitingforsynccnt+1;
                         }
                     }
-                    alglib.ap.assert((e.entrystatus==streadytorun && waitingcnt==0) || (e.entrystatus==stwaitingforrcomm && waitingcnt>0), "BBGD: 665242 failed");
+                    alglib.ap.assert(((e.entrystatus==streadytorun && waitingforrcommcnt+waitingforsynccnt==0) || ((e.entrystatus==stwaitingforrcomm && waitingforrcommcnt>0) && waitingforsynccnt==0)) || ((e.entrystatus==stwaitingforsync && waitingforrcommcnt==0) && waitingforsynccnt>0), "BBGD: 665242 failed");
                 }
                 
                 //
@@ -4030,7 +4355,7 @@ public partial class alglib
                         growheapandpoptop(state, _params);
                         state.bbsubproblems.pop_transfer(ref p);
                         alglib.ap.assert(p.hasdualsolution, "BBGD: integrity check 687259 failed");
-                        if( state.hasprimalsolution && (double)(p.dualbound)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
+                        if( (state.hasprimalsolution && !p.donotfathom) && (double)(p.dualbound)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
                         {
                             if( state.dotrace )
                             {
@@ -4062,7 +4387,11 @@ public partial class alglib
                     frontrecomputedualbound(front, state, _params);
                     if( front.frontsize==0 )
                     {
-                        if( state.dotrace )
+                        if( state.dolaconictrace )
+                        {
+                            tracelaconic(state, _params);
+                        }
+                        if( state.doanytrace )
                         {
                             alglib.ap.trace("> B&B tree has no subproblems that can be split, stopping\n");
                         }
@@ -4114,16 +4443,39 @@ public partial class alglib
                         while( j<e.subsolvers.getlength() )
                         {
                             e.subsolvers.get(j, ref subsolver);
+                            if( subsolver.subsolverstatus==stunbounded )
+                            {
+                                if( state.dolaconictrace )
+                                {
+                                    tracelaconic(state, _params);
+                                }
+                                e.entrystatus = stunbounded;
+                                front.frontstatus = stunbounded;
+                                result = false;
+                                return result;
+                            }
                             if( subsolver.subsolverstatus==sttimeout )
                             {
-                                e.entrystatus = sttimeout;
-                                front.frontstatus = sttimeout;
+                                if( state.dolaconictrace )
+                                {
+                                    tracelaconic(state, _params);
+                                }
+                                e.entrystatus = apserv.icase2(e.entrystatus!=stunbounded, sttimeout, stunbounded, _params);
+                                front.frontstatus = apserv.icase2(front.frontstatus!=stunbounded, sttimeout, stunbounded, _params);
                                 result = false;
                                 return result;
                             }
                             if( subsolver.subsolverstatus==stwaitingforrcomm )
                             {
+                                alglib.ap.assert(e.entrystatus!=stwaitingforsync, "BBGD: integrity check 071024 failed");
                                 e.entrystatus = stwaitingforrcomm;
+                                j = j+1;
+                                continue;
+                            }
+                            if( subsolver.subsolverstatus==stwaitingforsync )
+                            {
+                                alglib.ap.assert(e.entrystatus!=stwaitingforrcomm, "BBGD: integrity check 078024 failed");
+                                e.entrystatus = stwaitingforsync;
                                 j = j+1;
                                 continue;
                             }
@@ -4135,7 +4487,7 @@ public partial class alglib
                             e.subsolvers.pop_transfer(ref subsolver);
                             alglib.smp.ae_shared_pool_recycle(state.subsolverspool, ref subsolver);
                         }
-                        if( e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm )
+                        if( (e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) || e.entrystatus==stwaitingforsync )
                         {
                             continue;
                         }
@@ -4164,7 +4516,7 @@ public partial class alglib
                         // Analyze I-th entry, skip if ready to run or waiting for RComm
                         //
                         front.entries.get(i, ref e);
-                        if( e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm )
+                        if( (e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) || e.entrystatus==stwaitingforsync )
                         {
                             i = i+1;
                             continue;
@@ -4211,7 +4563,11 @@ public partial class alglib
                     frontrecomputedualbound(front, state, _params);
                     if( front.frontsize==0 && state.bbsubproblems.getlength()==0 )
                     {
-                        if( state.dotrace )
+                        if( state.dolaconictrace )
+                        {
+                            tracelaconic(state, _params);
+                        }
+                        if( state.doanytrace )
                         {
                             alglib.ap.trace("> B&B tree has no subproblems that can be split, stopping\n");
                         }
@@ -4225,7 +4581,11 @@ public partial class alglib
                     }
                     if( state.hasprimalsolution && (double)(state.ffdual)>=(double)(state.fprim-state.pdgap*apserv.rmaxabs2(state.fprim, 1, _params)) )
                     {
-                        if( state.dotrace )
+                        if( state.dolaconictrace )
+                        {
+                            tracelaconic(state, _params);
+                        }
+                        if( state.doanytrace )
                         {
                             alglib.ap.trace(System.String.Format("> relative duality gap decreased below {0,0:E2}, stopping\n", state.pdgap));
                         }
@@ -4235,7 +4595,11 @@ public partial class alglib
                     }
                     if( (state.softmaxnodes>0 && state.hasprimalsolution) && state.repntreenodes>=state.softmaxnodes )
                     {
-                        if( state.dotrace )
+                        if( state.dolaconictrace )
+                        {
+                            tracelaconic(state, _params);
+                        }
+                        if( state.doanytrace )
                         {
                             alglib.ap.trace("> soft max nodes triggered (stop if have primal solution), stopping\n");
                         }
@@ -4245,7 +4609,11 @@ public partial class alglib
                     }
                     if( state.hardmaxnodes>0 && state.repntreenodes>=state.hardmaxnodes )
                     {
-                        if( state.dotrace )
+                        if( state.dolaconictrace )
+                        {
+                            tracelaconic(state, _params);
+                        }
+                        if( state.doanytrace )
                         {
                             alglib.ap.trace("> hard max nodes triggered (stop independently of primal solution status), stopping\n");
                         }
@@ -4255,7 +4623,11 @@ public partial class alglib
                     }
                     if( (state.maxprimalcandidates>0 && state.hasprimalsolution) && state.repnprimalcandidates>=state.maxprimalcandidates )
                     {
-                        if( state.dotrace )
+                        if( state.dolaconictrace )
+                        {
+                            tracelaconic(state, _params);
+                        }
+                        if( state.doanytrace )
                         {
                             alglib.ap.trace(System.String.Format("> maximum number of primal candidates tried (more than {0,0:d}), stopping\n", state.maxprimalcandidates));
                         }
@@ -4265,20 +4637,29 @@ public partial class alglib
                     }
                     
                     //
+                    // Trace
+                    //
+                    if( state.dolaconictrace && (int)Math.Floor(apserv.stimergetmsrunning(state.timerglobal, _params)/laconicreportperiod)>state.lastlaconicreportepoch )
+                    {
+                        tracelaconic(state, _params);
+                        state.lastlaconicreportepoch = (int)Math.Floor(apserv.stimergetmsrunning(state.timerglobal, _params)/laconicreportperiod);
+                    }
+                    
+                    //
                     // Count entries that wait for RComm; exit if RComm is needed. Continue iteration if all entries are stReadyToRun,
                     // we will generate RComm requests at the next round.
                     //
-                    waitingcnt = 0;
+                    waitingforrcommcnt = 0;
                     for(i=0; i<=front.frontsize-1; i++)
                     {
                         front.entries.get(i, ref e);
                         if( e.entrystatus==stwaitingforrcomm )
                         {
-                            waitingcnt = waitingcnt+1;
+                            waitingforrcommcnt = waitingforrcommcnt+1;
                         }
                     }
                 }
-                while( waitingcnt<=0 );
+                while( waitingforrcommcnt<=0 );
                 return result;
             }
             
@@ -4354,7 +4735,7 @@ public partial class alglib
             if( front.frontmode==ftroot || front.frontmode==ftdynamic )
             {
                 e.subsolvers.get(j, ref s);
-                alglib.ap.assert(s.subsolverstatus==streadytorun || s.subsolverstatus==stwaitingforrcomm, "BBGD: 979201 failed");
+                alglib.ap.assert((s.subsolverstatus==streadytorun || s.subsolverstatus==stwaitingforrcomm) || s.subsolverstatus==stwaitingforsync, "BBGD: 979201 failed");
                 subsolverrun(state, front, e, s, _params);
                 return;
             }
@@ -4384,7 +4765,7 @@ public partial class alglib
             for(i=0; i<=front.frontsize-1; i++)
             {
                 front.entries.get(i, ref e);
-                alglib.ap.assert(((e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) || e.entrystatus==stsolved) || e.entrystatus==sttimeout, "BBGD: integrity check 304325 failed");
+                alglib.ap.assert((((e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) || e.entrystatus==stsolved) || e.entrystatus==sttimeout) || e.entrystatus==stunbounded, "BBGD: integrity check 304325 failed");
                 if( e.entrystatus==stwaitingforrcomm )
                 {
                     if( front.frontmode==ftroot || front.frontmode==ftdynamic )
@@ -4429,7 +4810,7 @@ public partial class alglib
             for(i=0; i<=front.frontsize-1; i++)
             {
                 front.entries.get(i, ref e);
-                alglib.ap.assert(((e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) || e.entrystatus==stsolved) || e.entrystatus==sttimeout, "BBGD: integrity check 304325 failed");
+                alglib.ap.assert((((e.entrystatus==streadytorun || e.entrystatus==stwaitingforrcomm) || e.entrystatus==stsolved) || e.entrystatus==sttimeout) || e.entrystatus==stunbounded, "BBGD: integrity check 304325 failed");
                 if( e.entrystatus==stwaitingforrcomm )
                 {
                     if( front.frontmode==ftroot || front.frontmode==ftdynamic )
@@ -4461,7 +4842,7 @@ public partial class alglib
             int restartidx = 0;
             bbgdsubproblem subproblem = null;
 
-            entrypreparex(entry, front, state, true, _params);
+            entrypreparex(entry, front, state, true, rootsubproblem.leafid, _params);
             subproblemcopyasunsolved(rootsubproblem, rootsubproblem.leafid, entry.parentsubproblem, _params);
             subproblemcopyasunsolved(rootsubproblem, rootsubproblem.leafid, entry.rootproblem, _params);
             alglib.smp.ae_shared_pool_retrieve(state.sppool, ref subproblem);
@@ -4494,6 +4875,7 @@ public partial class alglib
             bool done = new bool();
             int n = 0;
             int i = 0;
+            int j = 0;
             int choiceidx = 0;
             int branchidx = 0;
             double v = 0;
@@ -4518,7 +4900,7 @@ public partial class alglib
             //
             // Entry initialization
             //
-            entrypreparex(entry, front, state, false, _params);
+            entrypreparex(entry, front, state, false, s.leafid, _params);
             subproblemcopy(s, s.leafid, entry.parentsubproblem, _params);
             
             //
@@ -4564,7 +4946,7 @@ public partial class alglib
                     }
                     
                     //
-                    // Evaluate variable potential, add to one of lists
+                    // Evaluate variable potential, add to one of lists, deterministically reshuffle lists to avoid resolving ties the same way
                     //
                     vscore = Math.Min(v, 1-v);
                     isreliable = true;
@@ -4605,6 +4987,24 @@ public partial class alglib
                     }
                 }
                 alglib.ap.assert(cntreliable+cntunreliable>0, "BBGD: integrity check 982152 failed");
+                for(i=0; i<=cntreliable-2; i++)
+                {
+                    j = i+hqrnd.hqrnduniformi(entry.entryrng, cntreliable-i, _params);
+                    if( j!=i )
+                    {
+                        apserv.swapelements(entry.tmpreliablebranchscore, i, j, _params);
+                        apserv.swapelementsi(entry.tmpreliablebranchidx, i, j, _params);
+                    }
+                }
+                for(i=0; i<=cntunreliable-2; i++)
+                {
+                    j = i+hqrnd.hqrnduniformi(entry.entryrng, cntunreliable-i, _params);
+                    if( j!=i )
+                    {
+                        apserv.swapelements(entry.tmpunreliablebranchscore, i, j, _params);
+                        apserv.swapelementsi(entry.tmpunreliablebranchidx, i, j, _params);
+                    }
+                }
                 tsort.tagsortmiddleri(entry.tmpreliablebranchscore, entry.tmpreliablebranchidx, 0, cntreliable, _params);
                 tsort.tagsortmiddleri(entry.tmpunreliablebranchscore, entry.tmpunreliablebranchidx, 0, cntunreliable, _params);
                 
@@ -4661,6 +5061,7 @@ public partial class alglib
                     subproblemcopyasunsolved(s, leaf0, entry.tmpsubproblem, _params);
                     entry.tmpsubproblem.branchbucket = 2*choiceidx+0;
                     entry.tmpsubproblem.parentfdual = s.bestfdual;
+                    ablasf.bcopyv(n, s.subproblemlinearity, entry.tmpsubproblem.parentlinearity, _params);
                     entry.tmpsubproblem.branchvar = branchidx;
                     entry.tmpsubproblem.branchval = s.bestxdual[branchidx];
                     ablasf.rcopyv(n, s.bestxdual, entry.tmpsubproblem.x0, _params);
@@ -4678,6 +5079,7 @@ public partial class alglib
                     subproblemcopyasunsolved(s, leaf1, entry.tmpsubproblem, _params);
                     entry.tmpsubproblem.branchbucket = 2*choiceidx+1;
                     entry.tmpsubproblem.parentfdual = s.bestfdual;
+                    ablasf.bcopyv(n, s.subproblemlinearity, entry.tmpsubproblem.parentlinearity, _params);
                     entry.tmpsubproblem.branchvar = branchidx;
                     entry.tmpsubproblem.branchval = s.bestxdual[branchidx];
                     ablasf.rcopyv(n, s.bestxdual, entry.tmpsubproblem.x0, _params);
@@ -4743,6 +5145,7 @@ public partial class alglib
                     subproblemcopyasunsolved(s, leaf0, entry.tmpsubproblem, _params);
                     entry.tmpsubproblem.branchbucket = 0;
                     entry.tmpsubproblem.parentfdual = s.bestfdual;
+                    ablasf.bcopyv(n, s.subproblemlinearity, entry.tmpsubproblem.parentlinearity, _params);
                     entry.tmpsubproblem.branchvar = branchidx;
                     entry.tmpsubproblem.branchval = vmid;
                     if( (double)(s.bestxdual[branchidx])<=(double)(vmid) )
@@ -4766,6 +5169,7 @@ public partial class alglib
                     subproblemcopyasunsolved(s, leaf1, entry.tmpsubproblem, _params);
                     entry.tmpsubproblem.branchbucket = 1;
                     entry.tmpsubproblem.parentfdual = s.bestfdual;
+                    ablasf.bcopyv(n, s.subproblemlinearity, entry.tmpsubproblem.parentlinearity, _params);
                     entry.tmpsubproblem.branchvar = branchidx;
                     entry.tmpsubproblem.branchval = vmid;
                     if( (double)(s.bestxdual[branchidx])>=(double)(vmid) )
@@ -4812,11 +5216,14 @@ public partial class alglib
         fit.
 
         Sets timers if timeout was specified.
+
+        Uses subproblem ID to deterministically seed entry-local RNG
         *************************************************************************/
         private static void entrypreparex(bbgdfrontentry entry,
             bbgdfront front,
             bbgdstate state,
             bool isroot,
+            int subproblemid,
             alglib.xparams _params)
         {
             bbgdsubproblem subproblem = null;
@@ -4830,7 +5237,9 @@ public partial class alglib
             entry.fathomroot = true;
             entry.fathomchild0 = true;
             entry.fathomchild1 = true;
-            System.Threading.Thread.VolatileWrite(ref entry.entrylock, 0);
+            entry.entrynfev = 0;
+            entry.entrynsubproblems = 0;
+            ap.VolatileWrite(ref entry.entrylock, 0);
             entry.hastimeout = state.timeout>0;
             if( entry.hastimeout )
             {
@@ -4838,6 +5247,7 @@ public partial class alglib
                 apserv.stimerinit(entry.timerlocal, _params);
                 apserv.stimerstart(entry.timerlocal, _params);
             }
+            hqrnd.hqrndseed(1+subproblemid, 1+17*subproblemid, entry.entryrng, _params);
             
             //
             // Generate subproblem queue
@@ -4881,9 +5291,10 @@ public partial class alglib
             alglib.xparams _params)
         {
             alglib.ap.assert((front.frontmode==ftroot && isroot) || (front.frontmode==ftdynamic && !isroot), "BBGD: 415212 failed");
-            subsolver.rstate.ia = new int[1+1];
-            subsolver.rstate.ba = new bool[1+1];
+            subsolver.rstate.ia = new int[2+1];
+            subsolver.rstate.ba = new bool[2+1];
             subsolver.rstate.stage = -1;
+            subsolver.rstate.clear_handler();
             subproblemcopy(subproblem, subproblem.leafid, subsolver.subproblem, _params);
             subsolver.subsolverstatus = streadytorun;
         }
@@ -4901,14 +5312,14 @@ public partial class alglib
             bool result = new bool();
             int i = 0;
             int terminationtype = 0;
+            int repnfevinternal = 0;
             bool uselock = new bool();
+            bool forbidrecognizingintegrality = new bool();
             bool done = new bool();
 
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
@@ -4919,19 +5330,27 @@ public partial class alglib
             {
                 i = subsolver.rstate.ia[0];
                 terminationtype = subsolver.rstate.ia[1];
+                repnfevinternal = subsolver.rstate.ia[2];
                 uselock = subsolver.rstate.ba[0];
-                done = subsolver.rstate.ba[1];
+                forbidrecognizingintegrality = subsolver.rstate.ba[1];
+                done = subsolver.rstate.ba[2];
             }
             else
             {
                 i = -909;
                 terminationtype = 81;
-                uselock = true;
-                done = false;
+                repnfevinternal = 255;
+                uselock = false;
+                forbidrecognizingintegrality = false;
+                done = true;
             }
             if( subsolver.rstate.stage==0 )
             {
                 goto lbl_0;
+            }
+            if( subsolver.rstate.stage==1 )
+            {
+                goto lbl_1;
             }
             
             //
@@ -4941,7 +5360,9 @@ public partial class alglib
             //
             // Init
             //
+            repnfevinternal = 0;
             uselock = true;
+            forbidrecognizingintegrality = true;
             alglib.ap.assert(subsolver.subsolverstatus==streadytorun && ((front.frontmode==ftdynamic && subsolver.subproblem.branchbucket>=0) || (front.frontmode==ftroot && subsolver.subproblem.branchbucket==-1)), "BBGD: integrity check 589220 failed");
             
             //
@@ -4951,6 +5372,7 @@ public partial class alglib
             if( state.objtype==1 && state.nnlc==0 )
             {
                 solveqpnode(entry, subsolver, state, subsolver.subproblem.x0, subsolver.subproblem.bndl, subsolver.subproblem.bndu, entry.solutions, Math.Max(subsolver.subproblem.branchbucket, 0), uselock, _params);
+                apserv.weakatomicfetchadd(ref state.repnsubproblems, 1, _params);
                 if( entry.hastimeout && (double)(apserv.stimergetmsrunning(entry.timerlocal, _params))>(double)(entry.timeout) )
                 {
                     subsolver.subsolverstatus = sttimeout;
@@ -4962,7 +5384,7 @@ public partial class alglib
             }
             if( done )
             {
-                goto lbl_1;
+                goto lbl_2;
             }
             
             //
@@ -4973,47 +5395,143 @@ public partial class alglib
             minnlc.minnlcsetbc(subsolver.nlpsubsolver, subsolver.subproblem.bndl, subsolver.subproblem.bndu, _params);
             minnlc.minnlcsetlc2(subsolver.nlpsubsolver, state.rawa, state.rawal, state.rawau, state.lccnt, _params);
             minnlc.minnlcsetnlc2(subsolver.nlpsubsolver, state.nl, state.nu, state.nnlc, _params);
-            minnlc.minnlcsetprotocolv2s(subsolver.nlpsubsolver, _params);
+            for(i=0; i<=state.n-1; i++)
+            {
+                if( state.islinear[i] || subsolver.subproblem.parentlinearity[i] )
+                {
+                    minnlc.minnlcmarkaslinearvar(subsolver.nlpsubsolver, i, _params);
+                }
+            }
+            if( state.issuesparserequests )
+            {
+                minnlc.minnlcsetprotocolv2s(subsolver.nlpsubsolver, _params);
+            }
+            else
+            {
+                minnlc.minnlcsetprotocolv2(subsolver.nlpsubsolver, _params);
+            }
             if( subsolver.subproblem.branchbucket>=0 )
             {
-                minnlc.minnlcsetcond3(subsolver.nlpsubsolver, state.epsf, state.epsx, state.nonrootmaxitsconst+state.nonrootmaxitslin*subsolver.subproblem.n, _params);
+                i = state.nonrootmaxitsconst+state.nonrootmaxitslin*subsolver.subproblem.n;
+                if( state.globalsynchronizednsubproblems>0 )
+                {
+                    i = Math.Max(i, (int)Math.Round(state.nonrootmaxitsaboveaverage*state.globalsynchronizednfev/state.globalsynchronizednsubproblems));
+                }
+                minnlc.minnlcsetcond3(subsolver.nlpsubsolver, state.epsf, state.epsx, i, _params);
                 minnlc.minnlcsetfsqpadditsforctol(subsolver.nlpsubsolver, state.nonrootadditsforfeasibility, state.ctol, _params);
             }
+            minnlc.minnlcsetearlystopping(subsolver.nlpsubsolver, state.isintegral, subsolver.subproblem.parentfdual, state.fprim, 100+5*state.n, 1.0E-4, _params);
+            if( state.subsolveralgo==0 )
+            {
+                minnlc.minnlcsetalgonlpipm(subsolver.nlpsubsolver, state.subsolvermemlen, _params);
+            }
+            if( state.subsolveralgo==1 )
+            {
+                minnlc.minnlcsetalgosqp(subsolver.nlpsubsolver, _params);
+            }
+            minnlc.minnlcsetpowerfulpresolvernomults(subsolver.nlpsubsolver, _params);
+            minnlc.minnlcsetnonlinearityreports(subsolver.nlpsubsolver, true, _params);
             
             //
             // Solve NLP relaxation
             //
-        lbl_3:
+        lbl_4:
             if( !minnlc.minnlciteration(subsolver.nlpsubsolver, _params) )
-            {
-                goto lbl_4;
-            }
-            if( subsolver.nlpsubsolver.requesttype==-1 )
             {
                 goto lbl_5;
             }
-            subsolver.subsolverstatus = stwaitingforrcomm;
+            
+            //
+            // Handle RComm request
+            //
+            if( subsolver.nlpsubsolver.rcommv2.requesttype==-1 )
+            {
+                goto lbl_6;
+            }
+            if( !state.usehandlersandsync )
+            {
+                goto lbl_8;
+            }
+            
+            //
+            // Handle RComm request with handler
+            //
+            if( !state.rcommv2.apply_handler_to(subsolver.nlpsubsolver.rcommv2, _params) )
+            {
+                alglib.ap.assert(false, "BBSYNC: 784245 failed");
+            }
+            repnfevinternal = repnfevinternal+1;
+            if( !(state.syncinterval>0 && repnfevinternal%state.syncinterval==0) )
+            {
+                goto lbl_10;
+            }
+            subsolver.subsolverstatus = stwaitingforsync;
             subsolver.rstate.stage = 0;
-            goto lbl_rcomm;
+            if( subsolver.rstate.rcomm2_handler!=null && subsolver.rstate.requesttype!=0 && subsolver.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                subsolver.rstate.rcomm2_handler(subsolver.rstate, subsolver.rstate.handler_p0, subsolver.rstate.handler_p1, subsolver.rstate.handler_p2, subsolver.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
-        lbl_5:
+        lbl_10:
+            goto lbl_9;
+        lbl_8:
+            
+            //
+            // Forward RComm request to parent
+            //
+            subsolver.subsolverstatus = stwaitingforrcomm;
+            subsolver.rstate.stage = 1;
+            if( subsolver.rstate.rcomm2_handler!=null && subsolver.rstate.requesttype!=0 && subsolver.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                subsolver.rstate.rcomm2_handler(subsolver.rstate, subsolver.rstate.handler_p0, subsolver.rstate.handler_p1, subsolver.rstate.handler_p2, subsolver.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
+        lbl_1:
+        lbl_9:
+        lbl_6:
+            
+            //
+            // Check for timeout
+            //
             if( entry.hastimeout && (double)(apserv.stimergetmsrunning(entry.timerlocal, _params))>(double)(entry.timeout) )
             {
+                apserv.weakatomicfetchadd(ref state.repnfev, repnfevinternal, _params);
+                apserv.weakatomicfetchadd(ref state.repnsubproblems, 1, _params);
                 subsolver.subsolverstatus = sttimeout;
                 result = false;
                 return result;
             }
-            goto lbl_3;
-        lbl_4:
+            goto lbl_4;
+        lbl_5:
             minnlc.minnlcresultsbuf(subsolver.nlpsubsolver, ref subsolver.xsol, subsolver.nlprep, _params);
+            apserv.weakatomicfetchadd(ref state.repnfev, repnfevinternal, _params);
+            apserv.weakatomicfetchadd(ref state.repnsubproblems, 1, _params);
+            apserv.weakatomicfetchadd(ref entry.entrynfev, repnfevinternal, _params);
+            apserv.weakatomicfetchadd(ref entry.entrynsubproblems, 1, _params);
             
             //
             // Analyze solution
             //
-            analyzenlpsolutionandenforceintegrality(entry, subsolver.xsol, subsolver.nlprep, state, entry.solutions, Math.Max(subsolver.subproblem.branchbucket, 0), uselock, _params);
-            subsolver.subsolverstatus = stsolved;
-            done = true;
-        lbl_1:
+            alglib.ap.assert(!done, "BBGD: 010612 failed");
+            if( (double)(subsolver.nlprep.f)<=(double)(unboundedf) )
+            {
+                subsolver.nlprep.terminationtype = -4;
+            }
+            if( subsolver.nlprep.terminationtype==-4 )
+            {
+                subsolver.subsolverstatus = stunbounded;
+                done = true;
+            }
+            else
+            {
+                
+                //
+                // Analyze bounded solution
+                //
+                analyzenlpsolutionandenforceintegrality(entry, subsolver.xsol, subsolver.nlpsubsolver.repnonlinearityreport, !forbidrecognizingintegrality, subsolver.nlprep, subsolver.nlpsubsolver.repearlyerrorestimate, state, entry.solutions, Math.Max(subsolver.subproblem.branchbucket, 0), uselock, _params);
+                subsolver.subsolverstatus = stsolved;
+                done = true;
+            }
+        lbl_2:
             alglib.ap.assert(done, "BBGD: integrity check 659230 failed");
             result = false;
             return result;
@@ -5025,8 +5543,10 @@ public partial class alglib
             result = true;
             subsolver.rstate.ia[0] = i;
             subsolver.rstate.ia[1] = terminationtype;
+            subsolver.rstate.ia[2] = repnfevinternal;
             subsolver.rstate.ba[0] = uselock;
-            subsolver.rstate.ba[1] = done;
+            subsolver.rstate.ba[1] = forbidrecognizingintegrality;
+            subsolver.rstate.ba[2] = done;
             return result;
         }
 
@@ -5065,7 +5585,6 @@ public partial class alglib
             int besttighten = 0;
             int bestbranchsolidx = 0;
             int besttightensolidx = 0;
-            double bestbranchlowerscore = 0;
             double bestbranchscore = 0;
             double besttightenlowerscore = 0;
             bool isinfeasible = new bool();
@@ -5120,7 +5639,7 @@ public partial class alglib
                             vdown = 0;
                             if( sol.hasdualsolution )
                             {
-                                vdown = Math.Max(sol.bestfdual-sol.parentfdual, 0)/Math.Max(vfrac, math.machineepsilon);
+                                vdown = Math.Max(sol.bestfdual-sol.parentfdual-sol.bestfdualearlyerror-state.epsf*apserv.rmaxabs3(sol.bestfdual, sol.parentfdual, 1, _params), 0)/Math.Max(vfrac, math.machineepsilon);
                             }
                             if( !sol.hasdualsolution && state.globalpseudocostcntdown>0 )
                             {
@@ -5145,7 +5664,7 @@ public partial class alglib
                             vup = 0;
                             if( sol.hasdualsolution )
                             {
-                                vup = Math.Max(sol.bestfdual-sol.parentfdual, 0)/Math.Max(vfrac, math.machineepsilon);
+                                vup = Math.Max(sol.bestfdual-sol.parentfdual-sol.bestfdualearlyerror-state.epsf*apserv.rmaxabs3(sol.bestfdual, sol.parentfdual, 1, _params), 0)/Math.Max(vfrac, math.machineepsilon);
                             }
                             if( !sol.hasdualsolution && state.globalpseudocostcntup>0 )
                             {
@@ -5195,7 +5714,6 @@ public partial class alglib
                 bestbranch = -1;
                 bestbranchsolidx = -1;
                 bestbranchscore = 0;
-                bestbranchlowerscore = 0;
                 besttighten = -1;
                 besttightensolidx = -1;
                 besttightenlowerscore = 0;
@@ -5234,7 +5752,6 @@ public partial class alglib
                             bestbranch = sol0.branchvar;
                             bestbranchsolidx = i;
                             bestbranchscore = vscore;
-                            bestbranchlowerscore = Math.Min(vrnddn, vrndup);
                         }
                         cntsimplebranch = cntsimplebranch+1;
                         continue;
@@ -5309,9 +5826,10 @@ public partial class alglib
             entry.addstatussolutionsaggregated = true;
             
             //
-            // Update subproblem counts
+            // Update subproblem counts and synchronized global NFEV/NSubproblems (used to deterministically decide on solver stopping criteria)
             //
-            state.repnsubproblems = state.repnsubproblems+entry.solutions.getlength()*state.nmultistarts;
+            state.globalsynchronizednfev = state.globalsynchronizednfev+entry.entrynfev;
+            state.globalsynchronizednsubproblems = state.globalsynchronizednsubproblems+entry.entrynsubproblems;
             state.repntreenodes = state.repntreenodes+apserv.icase2(entry.isrootentry, 1, 2, _params);
         }
 
@@ -6097,7 +6615,8 @@ public partial class alglib
                 }
             }
             ablasf.rcopyallocv(n, subsolver.xsol, ref subsolver.tmp0, _params);
-            analyzeqpsolutionandenforceintegrality(entry, subsolver.tmp0, terminationtype, state, subproblemtoupdate, uselock, ref isintfeasible, _params);
+            ablasf.rsetallocv(n, 1.0, ref subsolver.tmp1, _params);
+            analyzeqpsolutionandenforceintegrality(entry, subsolver.tmp0, subsolver.tmp1, terminationtype, state, subproblemtoupdate, uselock, ref isintfeasible, _params);
             
             //
             // Apply rounding heuristic to solutions that are box/linearly feasible, but not integer feasible
@@ -6162,7 +6681,8 @@ public partial class alglib
                     }
                     if( terminationtype>0 )
                     {
-                        analyzeqpsolutionandenforceintegrality(entry, subsolver.tmp0, terminationtype, state, subproblemtoupdate, uselock, ref isintfeasible, _params);
+                        ablasf.rsetallocv(n, 1.0, ref subsolver.tmp3, _params);
+                        analyzeqpsolutionandenforceintegrality(entry, subsolver.tmp0, subsolver.tmp3, terminationtype, state, subproblemtoupdate, uselock, ref isintfeasible, _params);
                     }
                 }
             }
@@ -6175,10 +6695,15 @@ public partial class alglib
 
         Can modify XSol.
 
+        NLREP is a compatibility parameter similar to nonlinearity report that is
+        used by nonlinear version of BBGD, it must be filled by 1's or some other
+        positive values bounded away from zero.
+
         If UseLock=True, then Subproblem is accessed by acquiring Entry.EntryLock
         *************************************************************************/
         private static void analyzeqpsolutionandenforceintegrality(bbgdfrontentry entry,
             double[] xsol,
+            double[] nlrep,
             int terminationtype,
             bbgdstate state,
             bbgdsubproblem subproblem,
@@ -6201,6 +6726,7 @@ public partial class alglib
             maxerr = maxerr/Math.Max(ablasf.rsclnrminf(n, xsol, state.s, _params), 1);
             if( terminationtype>0 && (double)(maxerr)<=(double)(state.ctol) )
             {
+                alglib.ap.assert(terminationtype!=6, "BBGD: 382157 failed");
                 
                 //
                 // Analyze integrality
@@ -6235,31 +6761,10 @@ public partial class alglib
                 {
                     apserv.weakatomicacquirelock(ref entry.entrylock, 0, 1, _params);
                 }
-                if( !subproblem.hasdualsolution || (double)(f)<(double)(subproblem.bestfdual) )
-                {
-                    ablasf.rcopyallocv(n, xsol, ref subproblem.bestxdual, _params);
-                    subproblem.bestfdual = f;
-                    subproblem.besthdual = maxerr;
-                    subproblem.bestdualisintfeas = isintfeas;
-                }
-                if( !subproblem.hasdualsolution || (double)(f)>(double)(subproblem.worstfdual) )
-                {
-                    ablasf.rcopyallocv(n, xsol, ref subproblem.worstxdual, _params);
-                    subproblem.worstfdual = f;
-                    subproblem.worsthdual = maxerr;
-                }
-                subproblem.hasdualsolution = true;
-                subproblemrecomputedualbound(subproblem, _params);
-                if( isintfeas && (!subproblem.hasprimalsolution || (double)(f)<(double)(subproblem.fprim)) )
-                {
-                    subproblem.hasprimalsolution = true;
-                    ablasf.rcopyallocv(n, xsol, ref subproblem.xprim, _params);
-                    subproblem.fprim = f;
-                    subproblem.hprim = maxerr;
-                }
+                subproblemmergeinsolution(subproblem, xsol, nlrep, f, 0.0, maxerr, isintfeas, false, 0, 0, _params);
                 if( uselock )
                 {
-                    System.Threading.Thread.VolatileWrite(ref entry.entrylock, 0);
+                    ap.VolatileWrite(ref entry.entrylock, 0);
                 }
             }
             else
@@ -6272,7 +6777,7 @@ public partial class alglib
                 isintfeas = false;
                 if( uselock )
                 {
-                    System.Threading.Thread.VolatileWrite(ref entry.entrylock, 0);
+                    ap.VolatileWrite(ref entry.entrylock, 0);
                 }
             }
         }
@@ -6285,10 +6790,15 @@ public partial class alglib
         solutions (BestXDual, WorstXDual) are followed.
 
         Can modify XSol.
+
+        NLREP is nonlinearity report as returned by MINNLC
         *************************************************************************/
         private static void analyzenlpsolutionandenforceintegrality(bbgdfrontentry entry,
             double[] xsol,
+            double[] nlrep,
+            bool forbidrecognizingintegrality,
             minnlc.minnlcreport rep,
+            double earlyerror,
             bbgdstate state,
             ap.objarray subproblemarray,
             int itemidx,
@@ -6302,8 +6812,30 @@ public partial class alglib
 
             subproblemarray.get(itemidx, ref subproblem);
             n = subproblem.n;
+            
+            //
+            // An early stopping solution
+            //
+            if( rep.terminationtype==22 )
+            {
+                if( uselock )
+                {
+                    apserv.weakatomicacquirelock(ref entry.entrylock, 0, 1, _params);
+                }
+                subproblemmergeinsolution(subproblem, xsol, nlrep, rep.f, earlyerror, 0.0, false, true, rep.terminationtype, rep.iterationscount, _params);
+                if( uselock )
+                {
+                    ap.VolatileWrite(ref entry.entrylock, 0);
+                }
+                return;
+            }
+            
+            //
+            // A feasible solution
+            //
             if( rep.terminationtype>0 && (double)(rep.sclfeaserr)<=(double)(state.ctol) )
             {
+                alglib.ap.assert(rep.terminationtype!=22, "BBGD: 920254 failed");
                 
                 //
                 // Analyze integrality
@@ -6335,48 +6867,30 @@ public partial class alglib
                 {
                     apserv.weakatomicacquirelock(ref entry.entrylock, 0, 1, _params);
                 }
-                if( !subproblem.hasdualsolution || (double)(rep.f)<(double)(subproblem.bestfdual) )
-                {
-                    ablasf.rcopyallocv(n, xsol, ref subproblem.bestxdual, _params);
-                    subproblem.bestfdual = rep.f;
-                    subproblem.besthdual = rep.sclfeaserr;
-                    subproblem.bestdualisintfeas = isintfeas;
-                }
-                if( !subproblem.hasdualsolution || (double)(rep.f)>(double)(subproblem.worstfdual) )
-                {
-                    ablasf.rcopyallocv(n, xsol, ref subproblem.worstxdual, _params);
-                    subproblem.worstfdual = rep.f;
-                    subproblem.worsthdual = rep.sclfeaserr;
-                }
-                subproblem.hasdualsolution = true;
-                subproblemrecomputedualbound(subproblem, _params);
-                if( isintfeas && (!subproblem.hasprimalsolution || (double)(rep.f)<(double)(subproblem.fprim)) )
-                {
-                    subproblem.hasprimalsolution = true;
-                    ablasf.rcopyallocv(n, xsol, ref subproblem.xprim, _params);
-                    subproblem.fprim = rep.f;
-                    subproblem.hprim = rep.sclfeaserr;
-                }
+                subproblemmergeinsolution(subproblem, xsol, nlrep, rep.f, earlyerror, rep.sclfeaserr, isintfeas && !forbidrecognizingintegrality, false, rep.terminationtype, rep.iterationscount, _params);
                 if( uselock )
                 {
-                    System.Threading.Thread.VolatileWrite(ref entry.entrylock, 0);
+                    ap.VolatileWrite(ref entry.entrylock, 0);
                 }
+                return;
             }
-            else
+            
+            //
+            // Bad solution. Use locks to protect access.
+            //
+            if( uselock )
             {
-                
-                //
-                // Bad solution. Use locks to protect access.
-                //
-                if( uselock )
-                {
-                    apserv.weakatomicacquirelock(ref entry.entrylock, 0, 1, _params);
-                }
-                subproblem.besthdual = Math.Min(subproblem.besthdual, rep.sclfeaserr);
-                if( uselock )
-                {
-                    System.Threading.Thread.VolatileWrite(ref entry.entrylock, 0);
-                }
+                apserv.weakatomicacquirelock(ref entry.entrylock, 0, 1, _params);
+            }
+            if( (double)(subproblem.besthdual)>(double)(rep.sclfeaserr) )
+            {
+                subproblem.besthdual = rep.sclfeaserr;
+                subproblem.besttt = rep.terminationtype;
+                subproblem.bestits = rep.iterationscount;
+            }
+            if( uselock )
+            {
+                ap.VolatileWrite(ref entry.entrylock, 0);
             }
         }
 
@@ -6556,8 +7070,35 @@ public partial class alglib
         }
 
 
+        private static void tracelaconicheader(bbgdstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.trace("                                                       Nodes statistics  \n");
+            alglib.ap.trace("       Time         Dual bound       Primal bound      solved     in heap\n");
+        }
+
+
+        private static void tracelaconic(bbgdstate state,
+            alglib.xparams _params)
+        {
+            alglib.ap.trace(System.String.Format("{0,10:F3}s", 0.001*apserv.stimergetmsrunning(state.timerglobal, _params)));
+            alglib.ap.trace(System.String.Format("    {0,15:E6}", state.ffdual));
+            if( state.hasprimalsolution )
+            {
+                alglib.ap.trace(System.String.Format("    {0,15:E6}", state.fprim));
+            }
+            else
+            {
+                alglib.ap.trace("                INF");
+            }
+            alglib.ap.trace(System.String.Format("    {0,8:d}", state.repnsubproblems));
+            alglib.ap.trace(System.String.Format("    {0,8:d}", state.bbsubproblems.getlength()));
+            alglib.ap.trace("\n");
+        }
+
+
     }
-    public class mirbfvns
+    public partial class mirbfvns
     {
         /*************************************************************************
         This object stores an RBF model, either in dense or sparse model format.
@@ -6778,6 +7319,7 @@ public partial class alglib
             public bbgd.bbgdstate bbgdsubsolver;
             public double[] wrkbndl;
             public double[] wrkbndu;
+            public bool[] tmpb;
             public sparse.sparsematrix diaga;
             public double[] linb;
             public mirbfvnstemporaries()
@@ -6827,6 +7369,7 @@ public partial class alglib
                 bbgdsubsolver = new bbgd.bbgdstate();
                 wrkbndl = new double[0];
                 wrkbndu = new double[0];
+                tmpb = new bool[0];
                 diaga = new sparse.sparsematrix();
                 linb = new double[0];
             }
@@ -6874,6 +7417,7 @@ public partial class alglib
                 _result.bbgdsubsolver = bbgdsubsolver!=null ? (bbgd.bbgdstate)bbgdsubsolver.make_copy() : null;
                 _result.wrkbndl = (double[])wrkbndl.Clone();
                 _result.wrkbndu = (double[])wrkbndu.Clone();
+                _result.tmpb = (bool[])tmpb.Clone();
                 _result.diaga = diaga!=null ? (sparse.sparsematrix)diaga.make_copy() : null;
                 _result.linb = (double[])linb.Clone();
                 return _result;
@@ -7074,7 +7618,7 @@ public partial class alglib
             public double[,] densedummy2;
             public alglib.ap.nxpool rpool;
             public alglib.smp.shared_pool tmppool;
-            public rcommstate rstate;
+            public ap.rcommstate rstate;
             public mirbfvnsstate()
             {
                 init();
@@ -7143,7 +7687,7 @@ public partial class alglib
                 densedummy2 = new double[0,0];
                 rpool = alglib.ap.nxpool.new_nrpool();
                 tmppool = new alglib.smp.shared_pool();
-                rstate = new rcommstate();
+                rstate = new ap.rcommstate();
             }
             public override alglib.apobject make_copy()
             {
@@ -7269,7 +7813,7 @@ public partial class alglib
                 _result.densedummy2 = (double[,])densedummy2.Clone();
                 _result.rpool = rpool!=null ? (alglib.ap.nxpool)rpool.make_copy() : null;
                 _result.tmppool = tmppool!=null ? (alglib.smp.shared_pool)tmppool.make_copy() : null;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rstate = rstate!=null ? (ap.rcommstate)rstate.make_copy() : null;
                 return _result;
             }
         };
@@ -7518,8 +8062,6 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
@@ -7686,7 +8228,10 @@ public partial class alglib
             state.queryvars = n;
             state.querydim = 0;
             state.rstate.stage = 0;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
             state.repnfev = state.repnfev+1;
             if( !apserv.isfinitevector(state.replyfi, 1+nnlc, _params) )
@@ -7802,7 +8347,10 @@ public partial class alglib
             }
             ablasf.rallocv((1+nnlc)*state.evalbatchsize, ref state.replyfi, _params);
             state.rstate.stage = 1;
-            goto lbl_rcomm;
+            if( state.rstate.rcomm2_handler!=null && state.rstate.requesttype!=0 && state.rstate.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rstate.rcomm2_handler(state.rstate, state.rstate.handler_p0, state.rstate.handler_p1, state.rstate.handler_p2, state.rstate.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_1:
             state.repnfev = state.repnfev+state.evalbatchsize;
             ablasf.rallocv(n, ref state.xtrial, _params);
@@ -8009,6 +8557,7 @@ public partial class alglib
             state.rstate.ba = new bool[0+1];
             state.rstate.ra = new double[3+1];
             state.rstate.stage = -1;
+            state.rstate.clear_handler();
         }
 
 
@@ -8494,6 +9043,7 @@ public partial class alglib
             int n = 0;
             int i = 0;
             double v = 0;
+            bool bbgdsparserequests = new bool();
             int bbgdgroupsize = 0;
             int nmultistarts = 0;
             int timeout = 0;
@@ -8550,10 +9100,12 @@ public partial class alglib
             }
             buf.diaga.ridx[n] = n;
             sparse.sparsecreatecrsinplace(buf.diaga, _params);
+            ablasf.bsetallocv(n, false, ref buf.tmpb, _params);
+            bbgdsparserequests = true;
             bbgdgroupsize = 1;
             nmultistarts = 1;
             timeout = 0;
-            bbgd.bbgdcreatebuf(n, buf.wrkbndl, buf.wrkbndu, state.s, x0, state.isintegral, state.isbinary, state.rawa, state.rawal, state.rawau, state.lcsrcidx, state.lccnt, state.nl, state.nu, 0, bbgdgroupsize, nmultistarts, timeout, 0, buf.bbgdsubsolver, _params);
+            bbgd.bbgdcreatebuf(n, buf.wrkbndl, buf.wrkbndu, state.s, x0, state.isintegral, state.isbinary, buf.tmpb, state.rawa, state.rawal, state.rawau, state.lcsrcidx, state.lccnt, state.nl, state.nu, 0, bbgdsparserequests, bbgdgroupsize, nmultistarts, timeout, 0, buf.bbgdsubsolver, _params);
             bbgd.bbgdsetctol(buf.bbgdsubsolver, state.ctol, _params);
             bbgd.bbgdsetquadraticobjective(buf.bbgdsubsolver, buf.diaga, false, buf.linb, 0.0, _params);
             bbgd.bbgdforceserial(buf.bbgdsubsolver, _params);
@@ -11387,7 +11939,7 @@ public partial class alglib
 
 
     }
-    public class minlpsolvers
+    public partial class minlpsolvers
     {
         /*************************************************************************
         This object stores nonlinear optimizer state.
@@ -11408,6 +11960,8 @@ public partial class alglib
             public int nmultistarts;
             public int timeout;
             public int bbgdgroupsize;
+            public int bbsyncsubsolver;
+            public int bbsyncsubsolvermemlen;
             public int mirbfvnsbudget;
             public int mirbfvnsmaxneighborhood;
             public int mirbfvnsbatchsize;
@@ -11418,6 +11972,7 @@ public partial class alglib
             public double[] bndl;
             public double[] bndu;
             public bool[] isintegral;
+            public bool[] islinear;
             public bool[] isbinary;
             public bool hasobjmask;
             public bool[] objmask;
@@ -11441,30 +11996,12 @@ public partial class alglib
             public double repf;
             public double reppdgap;
             public int tracelevel;
-            public int requesttype;
-            public double[] reportx;
-            public double reportf;
-            public int querysize;
-            public int queryfuncs;
-            public int queryvars;
-            public int querydim;
-            public int queryformulasize;
-            public double[] querydata;
-            public double[] replyfi;
-            public double[] replydj;
-            public sparse.sparsematrix replysj;
-            public double[] tmpx1;
-            public double[] tmpc1;
-            public double[] tmpf1;
-            public double[] tmpg1;
-            public double[,] tmpj1;
-            public sparse.sparsematrix tmps1;
             public bbgd.bbgdstate bbgdsubsolver;
             public mirbfvns.mirbfvnsstate mirbfvnssubsolver;
             public double[] rdummy;
             public bool[] tmpb1;
             public sparse.sparsematrix tmpsparse;
-            public rcommstate rstate;
+            public ap.rcommstate rcommv2;
             public minlpsolverstate()
             {
                 init();
@@ -11476,6 +12013,7 @@ public partial class alglib
                 bndl = new double[0];
                 bndu = new double[0];
                 isintegral = new bool[0];
+                islinear = new bool[0];
                 isbinary = new bool[0];
                 objmask = new bool[0];
                 xlc = new opts.xlinearconstraints();
@@ -11485,23 +12023,12 @@ public partial class alglib
                 hasnlcmask = new bool[0];
                 x0 = new double[0];
                 xc = new double[0];
-                reportx = new double[0];
-                querydata = new double[0];
-                replyfi = new double[0];
-                replydj = new double[0];
-                replysj = new sparse.sparsematrix();
-                tmpx1 = new double[0];
-                tmpc1 = new double[0];
-                tmpf1 = new double[0];
-                tmpg1 = new double[0];
-                tmpj1 = new double[0,0];
-                tmps1 = new sparse.sparsematrix();
                 bbgdsubsolver = null;
                 mirbfvnssubsolver = null;
                 rdummy = new double[0];
                 tmpb1 = new bool[0];
                 tmpsparse = new sparse.sparsematrix();
-                rstate = new rcommstate();
+                rcommv2 = new ap.rcommstate();
             }
             public override alglib.apobject make_copy()
             {
@@ -11518,6 +12045,8 @@ public partial class alglib
                 _result.nmultistarts = nmultistarts;
                 _result.timeout = timeout;
                 _result.bbgdgroupsize = bbgdgroupsize;
+                _result.bbsyncsubsolver = bbsyncsubsolver;
+                _result.bbsyncsubsolvermemlen = bbsyncsubsolvermemlen;
                 _result.mirbfvnsbudget = mirbfvnsbudget;
                 _result.mirbfvnsmaxneighborhood = mirbfvnsmaxneighborhood;
                 _result.mirbfvnsbatchsize = mirbfvnsbatchsize;
@@ -11528,6 +12057,7 @@ public partial class alglib
                 _result.bndl = (double[])bndl.Clone();
                 _result.bndu = (double[])bndu.Clone();
                 _result.isintegral = (bool[])isintegral.Clone();
+                _result.islinear = (bool[])islinear.Clone();
                 _result.isbinary = (bool[])isbinary.Clone();
                 _result.hasobjmask = hasobjmask;
                 _result.objmask = (bool[])objmask.Clone();
@@ -11551,30 +12081,12 @@ public partial class alglib
                 _result.repf = repf;
                 _result.reppdgap = reppdgap;
                 _result.tracelevel = tracelevel;
-                _result.requesttype = requesttype;
-                _result.reportx = (double[])reportx.Clone();
-                _result.reportf = reportf;
-                _result.querysize = querysize;
-                _result.queryfuncs = queryfuncs;
-                _result.queryvars = queryvars;
-                _result.querydim = querydim;
-                _result.queryformulasize = queryformulasize;
-                _result.querydata = (double[])querydata.Clone();
-                _result.replyfi = (double[])replyfi.Clone();
-                _result.replydj = (double[])replydj.Clone();
-                _result.replysj = replysj!=null ? (sparse.sparsematrix)replysj.make_copy() : null;
-                _result.tmpx1 = (double[])tmpx1.Clone();
-                _result.tmpc1 = (double[])tmpc1.Clone();
-                _result.tmpf1 = (double[])tmpf1.Clone();
-                _result.tmpg1 = (double[])tmpg1.Clone();
-                _result.tmpj1 = (double[,])tmpj1.Clone();
-                _result.tmps1 = tmps1!=null ? (sparse.sparsematrix)tmps1.make_copy() : null;
                 _result.bbgdsubsolver = bbgdsubsolver!=null ? (bbgd.bbgdstate)bbgdsubsolver.make_copy() : null;
                 _result.mirbfvnssubsolver = mirbfvnssubsolver!=null ? (mirbfvns.mirbfvnsstate)mirbfvnssubsolver.make_copy() : null;
                 _result.rdummy = (double[])rdummy.Clone();
                 _result.tmpb1 = (bool[])tmpb1.Clone();
                 _result.tmpsparse = tmpsparse!=null ? (sparse.sparsematrix)tmpsparse.make_copy() : null;
-                _result.rstate = rstate!=null ? (rcommstate)rstate.make_copy() : null;
+                _result.rcommv2 = rcommv2!=null ? (ap.rcommstate)rcommv2.make_copy() : null;
                 return _result;
             }
         };
@@ -11607,6 +12119,10 @@ public partial class alglib
           -8    internal integrity control detected  infinite  or  NAN  values  in
                 function/gradient, recovery was impossible.  Abnormal  termination
                 signaled.
+          -4    the problem is likely to be unbounded;  for  MINLP  problems it is
+                generally impossible to provide an unboundedness  certificate,  so
+                only heuristics are possible, based on growth of |x| and  decrease
+                of f compared to |f(x0)|.
           -3    integer infeasibility is signaled:
                 * for convex problems: proved to be infeasible
                 * for nonconvex problems: a primal feasible point  is  nonexistent
@@ -11780,7 +12296,7 @@ public partial class alglib
             int k,
             alglib.xparams _params)
         {
-            optserv.xlcsetlc2mixed(state.xlc, state.tmps1, 0, a, k, al, au, _params);
+            optserv.xlcsetlc2mixed(state.xlc, state.rcommv2.tmps1, 0, a, k, al, au, _params);
         }
 
 
@@ -11815,7 +12331,7 @@ public partial class alglib
             int k,
             alglib.xparams _params)
         {
-            optserv.xlcsetlc2mixed(state.xlc, a, k, state.tmpj1, 0, al, au, _params);
+            optserv.xlcsetlc2mixed(state.xlc, a, k, state.rcommv2.tmpj1, 0, al, au, _params);
         }
 
 
@@ -12304,6 +12820,70 @@ public partial class alglib
 
 
         /*************************************************************************
+        This function tells branch-and-bound solvers to use nonlinear interior
+        point method for continuous subproblems.
+
+        This solver needs several times more function evaluations  than  SQP,  but
+        has an order of magnitude smaller per-iteration linear algebra overhead.
+
+        It is a recommended option for
+        * large-scale problems, especially sparse ones
+        * problems with many constraints (hence  high  linear  algebra  cost)  but
+          relatively cheap objective/constraints evaluations
+
+
+        INPUT PARAMETERS:
+            State   -   structure that stores algorithm state
+            MemLen  -   >=0, memory length for quasi-Newton update (similar to
+                        LBFGS memory parameter):
+                        * 0 means default value which may change in future versions;
+                          presently it is 8.
+                        * 8 is a good default value for moderately nonlinear tasks
+                        * 32 is a good value for problems with more nonlinear
+                          objective/constraints
+                        * values larger than the variables count N  are  possible;
+                          these will be silently truncated to N.
+
+          -- ALGLIB --
+             Copyright 01.02.2026 by Bochkanov Sergey
+        *************************************************************************/
+        public static void minlpsolversetbbsyncsubsolveripm(minlpsolverstate state,
+            int memlen,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(memlen>=0, "MINLPSolverSetBBSYNCSubsolverIPM: MemLen<0");
+            state.bbsyncsubsolver = 0;
+            state.bbsyncsubsolvermemlen = memlen;
+        }
+
+
+        /*************************************************************************
+        This function tells branch-and-bound solvers to use SQP method for
+        continuous subproblems.
+
+        This solver needs several times less function evaluations  than  IPM,  but
+        has an order of magnitude larger per-iteration  linear  algebra  overhead.
+        Nevertheless, the solver is fully sparse-capable.
+
+        It is a recommended option for:
+        * problems with  relatively  expensive  objective/constraints  evaluations
+          that outweigh additional expense  of  solving  QP  subproblems  at  each
+          step
+
+        INPUT PARAMETERS:
+            State   -   structure that stores algorithm state
+
+          -- ALGLIB --
+             Copyright 01.02.2026 by Bochkanov Sergey
+        *************************************************************************/
+        public static void minlpsolversetbbsyncsubsolversqp(minlpsolverstate state,
+            alglib.xparams _params)
+        {
+            state.bbsyncsubsolver = 1;
+        }
+
+
+        /*************************************************************************
         This function sets tolerance for nonlinear constraints;  points  violating
         constraints by no more than CTol are considered feasible.
 
@@ -12589,6 +13169,37 @@ public partial class alglib
             alglib.ap.assert(k>=0 && k<state.n, "MINLPSolverSetIntKth: K is outside of [0,N)");
             state.isintegral[k] = true;
             state.isbinary[k] = false;
+        }
+
+
+        /*************************************************************************
+        This function marks K-th variable as a linear one.
+
+        A  linear  variable can appear in objective and all constraint types (box,
+        linear and nonlinear), but the problem must be linear with respect to this
+        variable.
+
+        Knowning that some variables are linear  allows  the  solver  to  do avoid
+        modelling nonlinearities associated with  these  variables  (corresponding
+        rows/cols of a quasi-Newton Hessian will be zero), and, potentially, to do
+        some otherwise unavailable reductions, decreasing linear algebra  overhead
+        and improving convergence.
+
+        By default all variables are nonlinear.
+
+        INPUT PARAMETERS:
+            State   -   structure stores algorithm state
+            K       -   0<=K<N, variable index
+
+          -- ALGLIB --
+             Copyright 01.03.2026 by Bochkanov Sergey
+        *************************************************************************/
+        public static void minlpsolvermarkaslinearvar(minlpsolverstate state,
+            int k,
+            alglib.xparams _params)
+        {
+            alglib.ap.assert(k>=0 && k<state.n, "MINLPSolverMarkAsLinearVar: K is outside of [0,N)");
+            state.islinear[k] = true;
         }
 
 
@@ -13094,23 +13705,21 @@ public partial class alglib
             
             //
             // Reverse communication preparations
-            // I know it looks ugly, but it works the same way
-            // anywhere from C++ to Python.
             //
             // This code initializes locals by:
             // * random values determined during code
             //   generation - on first subroutine call
             // * values from previous call - on subsequent calls
             //
-            if( state.rstate.stage>=0 )
+            if( state.rcommv2.stage>=0 )
             {
-                n = state.rstate.ia[0];
-                i = state.rstate.ia[1];
-                k = state.rstate.ia[2];
-                originalrequesttype = state.rstate.ia[3];
-                done = state.rstate.ba[0];
-                densejac = state.rstate.ba[1];
-                b = state.rstate.ba[2];
+                n = state.rcommv2.ia[0];
+                i = state.rcommv2.ia[1];
+                k = state.rcommv2.ia[2];
+                originalrequesttype = state.rcommv2.ia[3];
+                done = state.rcommv2.ba[0];
+                densejac = state.rcommv2.ba[1];
+                b = state.rcommv2.ba[2];
             }
             else
             {
@@ -13122,11 +13731,11 @@ public partial class alglib
                 densejac = true;
                 b = false;
             }
-            if( state.rstate.stage==0 )
+            if( state.rcommv2.stage==0 )
             {
                 goto lbl_0;
             }
-            if( state.rstate.stage==1 )
+            if( state.rcommv2.stage==1 )
             {
                 goto lbl_1;
             }
@@ -13151,7 +13760,82 @@ public partial class alglib
             //
             // Initial trace messages
             //
-            if( state.tracelevel>0 )
+            if( state.tracelevel==1 )
+            {
+                alglib.ap.trace("------------------------------------------------------------\n");
+                alglib.ap.trace("> Problem parameters:\n");
+                k = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    if( state.isintegral[i] )
+                    {
+                        k = k+1;
+                    }
+                }
+                alglib.ap.trace(System.String.Format("* {0,0:d} variables, including {1,0:d} integral\n", n, k));
+                k = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    if( state.islinear[i] )
+                    {
+                        k = k+1;
+                    }
+                }
+                alglib.ap.trace(System.String.Format("* {0,0:d} variables are linear\n", k));
+                alglib.ap.trace(System.String.Format("* {0,0:d} constraints, including {1,0:d} linear and {2,0:d} nonlinear\n", state.xlc.nsparse+state.xlc.ndense+state.nnlc, state.xlc.nsparse+state.xlc.ndense, state.nnlc));
+                if( state.algoidx==0 )
+                {
+                    alglib.ap.trace("> BBSYNC solver parameters:\n");
+                    alglib.ap.trace(System.String.Format("* batch size {0,0:d}\n", state.bbgdgroupsize));
+                    if( state.nmultistarts>1 )
+                    {
+                        alglib.ap.trace(System.String.Format("* {0,0:d} random restarts\n", state.nmultistarts));
+                    }
+                    if( state.timeout>0 )
+                    {
+                        alglib.ap.trace(System.String.Format("* timeout is {0,0:F1}s\n", 0.001*state.timeout));
+                    }
+                    else
+                    {
+                        alglib.ap.trace("* no timeout\n");
+                    }
+                }
+                if( state.algoidx==1 )
+                {
+                    alglib.ap.trace("> printing MIVNS solver parameters:\n");
+                    if( state.mirbfvnsbudget>0 )
+                    {
+                        alglib.ap.trace(System.String.Format("Budget        = {0,6:d}\n", state.mirbfvnsbudget));
+                    }
+                    else
+                    {
+                        alglib.ap.trace("Budget        =    inf\n");
+                    }
+                    if( state.mirbfvnsmaxneighborhood>0 )
+                    {
+                        alglib.ap.trace(System.String.Format("MaxNeighbors  = {0,6:d}\n", state.mirbfvnsmaxneighborhood));
+                    }
+                    else
+                    {
+                        alglib.ap.trace("MaxNeighbors  =    inf\n");
+                    }
+                    alglib.ap.trace(System.String.Format("BatchSize     = {0,6:d}\n", state.mirbfvnsbatchsize));
+                    if( state.timeout>0 )
+                    {
+                        alglib.ap.trace(System.String.Format("Timeout       = {0,0:F1}s\n", 0.001*state.timeout));
+                    }
+                    else
+                    {
+                        alglib.ap.trace("Timeout       = none\n");
+                    }
+                }
+                alglib.ap.trace("------------------------------------------------------------\n");
+                if( state.algoidx==0 )
+                {
+                    alglib.ap.trace("> Starting BBSYNC solver\n");
+                }
+            }
+            if( state.tracelevel>=2 )
             {
                 alglib.ap.trace("\n\n");
                 alglib.ap.trace("////////////////////////////////////////////////////////////////////////////////////////////////////\n");
@@ -13182,6 +13866,15 @@ public partial class alglib
                     alglib.ap.trace(System.String.Format(" (incl. {0,0:d} binary ones)", k));
                 }
                 alglib.ap.trace("\n");
+                k = 0;
+                for(i=0; i<=n-1; i++)
+                {
+                    if( state.islinear[i] )
+                    {
+                        k = k+1;
+                    }
+                }
+                alglib.ap.trace(System.String.Format("nLinear       = {0,6:d} vars\n", k));
                 if( state.algoidx==0 )
                 {
                     alglib.ap.trace("> printing BBSYNC solver parameters:\n");
@@ -13238,7 +13931,7 @@ public partial class alglib
                 {
                     state.bbgdsubsolver = new bbgd.bbgdstate();
                 }
-                bbgd.bbgdcreatebuf(n, state.bndl, state.bndu, state.s, state.x0, state.isintegral, state.isbinary, state.xlc.effsparsea, state.xlc.effal, state.xlc.effau, state.xlc.lcsrcidx, state.xlc.nsparse+state.xlc.ndense, state.nl, state.nu, state.nnlc, state.bbgdgroupsize, state.nmultistarts, state.timeout, state.tracelevel, state.bbgdsubsolver, _params);
+                bbgd.bbgdcreatebuf(n, state.bndl, state.bndu, state.s, state.x0, state.isintegral, state.isbinary, state.islinear, state.xlc.effsparsea, state.xlc.effal, state.xlc.effau, state.xlc.lcsrcidx, state.xlc.nsparse+state.xlc.ndense, state.nl, state.nu, state.nnlc, state.issuesparserequests, state.bbgdgroupsize, state.nmultistarts, state.timeout, state.tracelevel, state.bbgdsubsolver, _params);
                 if( (double)(state.pdgap)>(double)(0) )
                 {
                     bbgd.bbgdsetpdgap(state.bbgdsubsolver, state.pdgap, _params);
@@ -13263,6 +13956,15 @@ public partial class alglib
                 {
                     bbgd.bbgdsetlargetree(state.bbgdsubsolver, _params);
                 }
+                if( state.bbsyncsubsolver==0 )
+                {
+                    bbgd.bbgdsetipm(state.bbgdsubsolver, state.bbsyncsubsolvermemlen, _params);
+                }
+                if( state.bbsyncsubsolver==1 )
+                {
+                    bbgd.bbgdsetsqp(state.bbgdsubsolver, _params);
+                }
+                state.rcommv2.forward_handler(state.bbgdsubsolver.rcommv2);
                 done = true;
             }
             if( state.algoidx==1 )
@@ -13333,39 +14035,39 @@ public partial class alglib
             {
                 goto lbl_5;
             }
+            alglib.ap.assert(!state.rcommv2.has_handler() || !bbgd.bbgdisrequestfromfront(state.bbgdsubsolver, _params), "MINLPSOLVERS: integrity check 964031 failed (front-issued RCommV2 request escaped handler passed to BBSYNC)");
             
             //
             // Offload request
             //
-            bbgd.bbgdoffloadrcommrequest(state.bbgdsubsolver, ref originalrequesttype, ref state.querysize, ref state.queryfuncs, ref state.queryvars, ref state.querydim, ref state.queryformulasize, ref state.querydata, _params);
-            alglib.ap.assert(originalrequesttype==1, "MINLPSOLVERS: integrity check 328345 failed");
-            state.requesttype = apserv.icase2(state.issuesparserequests, originalrequesttype, 2, _params);
+            bbgd.bbgdoffloadrcommrequest(state.bbgdsubsolver, ref originalrequesttype, ref state.rcommv2.querysize, ref state.rcommv2.queryfuncs, ref state.rcommv2.queryvars, ref state.rcommv2.querydim, ref state.rcommv2.queryformulasize, ref state.rcommv2.querydata, _params);
+            alglib.ap.assert((originalrequesttype==1 && state.issuesparserequests) || (originalrequesttype==2 && !state.issuesparserequests), "MINLPSOLVERS: integrity check 328345 failed");
+            state.rcommv2.requesttype = originalrequesttype;
             
             //
             // Initialize temporaries and prepare place for reply
             //
-            densejac = (state.requesttype==2 || state.requesttype==3) || state.requesttype==5;
-            ablasf.rallocv(n, ref state.tmpg1, _params);
-            ablasf.rallocv(n, ref state.tmpx1, _params);
-            ablasf.rallocv(1+state.nnlc, ref state.tmpf1, _params);
+            densejac = (state.rcommv2.requesttype==2 || state.rcommv2.requesttype==3) || state.rcommv2.requesttype==5;
+            ablasf.rallocv(n, ref state.rcommv2.tmpg1, _params);
+            ablasf.rallocv(n, ref state.rcommv2.tmpx1, _params);
+            ablasf.rallocv(1+state.nnlc, ref state.rcommv2.tmpf1, _params);
             if( densejac )
             {
-                ablasf.rallocm(1+state.nnlc, n, ref state.tmpj1, _params);
-                ablasf.rallocv(state.queryfuncs*state.queryvars*state.querysize, ref state.replydj, _params);
+                ablasf.rallocm(1+state.nnlc, n, ref state.rcommv2.tmpj1, _params);
+                ablasf.rallocv(state.rcommv2.queryfuncs*state.rcommv2.queryvars*state.rcommv2.querysize, ref state.rcommv2.replydj, _params);
             }
-            ablasf.rallocv(state.queryfuncs*state.querysize, ref state.replyfi, _params);
+            ablasf.rallocv(state.rcommv2.queryfuncs*state.rcommv2.querysize, ref state.rcommv2.replyfi, _params);
             
             //
             // RComm and copy back
             //
-            state.rstate.stage = 0;
-            goto lbl_rcomm;
+            state.rcommv2.stage = 0;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_0:
-            if( densejac )
-            {
-                sparse.sparsecreatecrsfromdensevbuf(state.replydj, state.querysize*state.queryfuncs, state.queryvars, state.replysj, _params);
-            }
-            bbgd.bbgdloadrcommreply(state.bbgdsubsolver, originalrequesttype, state.querysize, state.queryfuncs, state.queryvars, state.querydim, state.queryformulasize, state.replyfi, state.rdummy, state.replysj, _params);
+            bbgd.bbgdloadrcommreply(state.bbgdsubsolver, originalrequesttype, state.rcommv2.querysize, state.rcommv2.queryfuncs, state.rcommv2.queryvars, state.rcommv2.querydim, state.rcommv2.queryformulasize, state.rcommv2.replyfi, state.rcommv2.replydj, state.rcommv2.replysj, _params);
             goto lbl_4;
         lbl_5:
             done = true;
@@ -13384,27 +14086,30 @@ public partial class alglib
             // Offload request
             //
             alglib.ap.assert(state.mirbfvnssubsolver.requesttype==4, "MINLPSOLVERS: 993231 failed");
-            state.requesttype = state.mirbfvnssubsolver.requesttype;
-            state.querysize = state.mirbfvnssubsolver.querysize;
-            state.queryfuncs = state.mirbfvnssubsolver.queryfuncs;
-            state.queryvars = state.mirbfvnssubsolver.queryvars;
-            state.querydim = state.mirbfvnssubsolver.querydim;
-            ablasf.rcopyallocv(state.querysize*(state.queryvars+state.querydim), state.mirbfvnssubsolver.querydata, ref state.querydata, _params);
+            state.rcommv2.requesttype = state.mirbfvnssubsolver.requesttype;
+            state.rcommv2.querysize = state.mirbfvnssubsolver.querysize;
+            state.rcommv2.queryfuncs = state.mirbfvnssubsolver.queryfuncs;
+            state.rcommv2.queryvars = state.mirbfvnssubsolver.queryvars;
+            state.rcommv2.querydim = state.mirbfvnssubsolver.querydim;
+            ablasf.rcopyallocv(state.rcommv2.querysize*(state.rcommv2.queryvars+state.rcommv2.querydim), state.mirbfvnssubsolver.querydata, ref state.rcommv2.querydata, _params);
             
             //
             // Initialize temporaries and prepare place for reply
             //
-            ablasf.rallocv(n, ref state.tmpx1, _params);
-            ablasf.rallocv(1+state.nnlc, ref state.tmpf1, _params);
-            ablasf.rallocv(state.queryfuncs*state.querysize, ref state.replyfi, _params);
+            ablasf.rallocv(n, ref state.rcommv2.tmpx1, _params);
+            ablasf.rallocv(1+state.nnlc, ref state.rcommv2.tmpf1, _params);
+            ablasf.rallocv(state.rcommv2.queryfuncs*state.rcommv2.querysize, ref state.rcommv2.replyfi, _params);
             
             //
             // RComm and copy back
             //
-            state.rstate.stage = 1;
-            goto lbl_rcomm;
+            state.rcommv2.stage = 1;
+            if( state.rcommv2.rcomm2_handler!=null && state.rcommv2.requesttype!=0 && state.rcommv2.requesttype<=ap._ALGLIB_MAX_RCOMMV2_REQUEST )
+                state.rcommv2.rcomm2_handler(state.rcommv2, state.rcommv2.handler_p0, state.rcommv2.handler_p1, state.rcommv2.handler_p2, state.rcommv2.handler_p3, _params);
+            else
+                goto lbl_rcomm;
         lbl_1:
-            ablasf.rcopyv(state.querysize*state.queryfuncs, state.replyfi, state.mirbfvnssubsolver.replyfi, _params);
+            ablasf.rcopyv(state.rcommv2.querysize*state.rcommv2.queryfuncs, state.rcommv2.replyfi, state.mirbfvnssubsolver.replyfi, _params);
             goto lbl_8;
         lbl_9:
             done = true;
@@ -13448,13 +14153,13 @@ public partial class alglib
             //
         lbl_rcomm:
             result = true;
-            state.rstate.ia[0] = n;
-            state.rstate.ia[1] = i;
-            state.rstate.ia[2] = k;
-            state.rstate.ia[3] = originalrequesttype;
-            state.rstate.ba[0] = done;
-            state.rstate.ba[1] = densejac;
-            state.rstate.ba[2] = b;
+            state.rcommv2.ia[0] = n;
+            state.rcommv2.ia[1] = i;
+            state.rcommv2.ia[2] = k;
+            state.rcommv2.ia[3] = originalrequesttype;
+            state.rcommv2.ba[0] = done;
+            state.rcommv2.ba[1] = densejac;
+            state.rcommv2.ba[2] = b;
             return result;
         }
 
@@ -13496,9 +14201,10 @@ public partial class alglib
             //
             // prepare RComm facilities
             //
-            state.rstate.ia = new int[3+1];
-            state.rstate.ba = new bool[2+1];
-            state.rstate.stage = -1;
+            state.rcommv2.ia = new int[3+1];
+            state.rcommv2.ba = new bool[2+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
             clearoutputs(state, _params);
         }
 
@@ -13579,9 +14285,11 @@ public partial class alglib
         {
             state.protocolversion = 2;
             state.issuesparserequests = false;
-            state.rstate.ia = new int[3+1];
-            state.rstate.ba = new bool[2+1];
-            state.rstate.stage = -1;
+            state.rcommv2.ia = new int[3+1];
+            state.rcommv2.ba = new bool[2+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
+            state.rcommv2.clear_handler();
         }
 
 
@@ -13593,9 +14301,11 @@ public partial class alglib
         {
             state.protocolversion = 2;
             state.issuesparserequests = true;
-            state.rstate.ia = new int[3+1];
-            state.rstate.ba = new bool[2+1];
-            state.rstate.stage = -1;
+            state.rcommv2.ia = new int[3+1];
+            state.rcommv2.ba = new bool[2+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
+            state.rcommv2.clear_handler();
         }
 
 
@@ -13650,6 +14360,7 @@ public partial class alglib
             state.userterminationneeded = false;
             ablasf.bsetallocv(n, false, ref state.isintegral, _params);
             ablasf.bsetallocv(n, false, ref state.isbinary, _params);
+            ablasf.bsetallocv(n, false, ref state.islinear, _params);
             state.bndl = new double[n];
             state.bndu = new double[n];
             state.s = new double[n];
@@ -13681,16 +14392,18 @@ public partial class alglib
             //
             // RComm
             //
-            state.rstate.ia = new int[3+1];
-            state.rstate.ba = new bool[2+1];
-            state.rstate.stage = -1;
+            state.rcommv2.ia = new int[3+1];
+            state.rcommv2.ba = new bool[2+1];
+            state.rcommv2.stage = -1;
+            state.rcommv2.clear_handler();
             
             //
             // Final setup
             //
-            minlpsolversetbbsyncprofilesmalltree(state, _params);
+            minlpsolversetbbsyncprofilelargetree(state, _params);
             minlpsolvercautiousinternalparallelism(state, _params);
             minlpsolversetalgobbsync(state, 1, _params);
+            minlpsolversetbbsyncsubsolveripm(state, 0, _params);
         }
 
 

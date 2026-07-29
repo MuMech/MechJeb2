@@ -1,5 +1,5 @@
 /**************************************************************************
-ALGLIB 4.07.0 (source code generated 2025-12-29)
+ALGLIB 4.08.0 (source code generated 2026-06-08)
 Copyright (c) Sergey Bochkanov (ALGLIB project).
 
 >>> SOURCE LICENSE >>>
@@ -27,6 +27,9 @@ using Intrinsics = System.Runtime.Intrinsics;
 #pragma warning disable 1691
 #pragma warning disable 8981
 #pragma warning disable 649
+#if NET5_0_OR_GREATER
+#pragma warning disable CS8981
+#endif
 using System;
 public partial class alglib
 {
@@ -95,6 +98,7 @@ public partial class alglib
 
     public delegate void integrator1_func (double x, double xminusa, double bminusx, ref double f, object obj);
 #endif
+    public delegate void rcomm2handler(ap.rcommstate state, object p0, object p1, object p2, object p3, xparams flags);
 
     /********************************************************************
     IronPython compatibility wrappers
@@ -528,38 +532,53 @@ public partial class alglib
         ap.trace_disable();
     }
     
-    /********************************************************************
-    reverse communication structure
-    ********************************************************************/
-    public class rcommstate : apobject
+    public partial class sparse
     {
-        public rcommstate()
+        /********************************************************************
+        sparse matrix object
+        ********************************************************************/
+        public class sparsematrix : apobject
         {
-            init();
-        }
-        public override void init()
-        {
-            stage = -1;
-            ia = new int[0];
-            ba = new bool[0];
-            ra = new double[0];
-            ca = new alglib.complex[0];
-        }
-        public override apobject make_copy()
-        {
-            rcommstate result = new rcommstate();
-            result.stage = stage;
-            result.ia = (int[])ia.Clone();
-            result.ba = (bool[])ba.Clone();
-            result.ra = (double[])ra.Clone();
-            result.ca = (alglib.complex[])ca.Clone();
-            return result;
-        }
-        public int stage;
-        public int[] ia;
-        public bool[] ba;
-        public double[] ra;
-        public alglib.complex[] ca;
+            public double[] vals;
+            public int[] idx;
+            public int[] ridx;
+            public int[] didx;
+            public int[] uidx;
+            public int matrixtype;
+            public int m;
+            public int n;
+            public int nfree;
+            public int ninitialized;
+            public int tablesize;
+            public sparsematrix()
+            {
+                init();
+            }
+            public override void init()
+            {
+                vals = new double[0];
+                idx = new int[0];
+                ridx = new int[0];
+                didx = new int[0];
+                uidx = new int[0];
+            }
+            public override alglib.apobject make_copy()
+            {
+                sparsematrix _result = new sparsematrix();
+                _result.vals = (double[])vals.Clone();
+                _result.idx = (int[])idx.Clone();
+                _result.ridx = (int[])ridx.Clone();
+                _result.didx = (int[])didx.Clone();
+                _result.uidx = (int[])uidx.Clone();
+                _result.matrixtype = matrixtype;
+                _result.m = m;
+                _result.n = n;
+                _result.nfree = nfree;
+                _result.ninitialized = ninitialized;
+                _result.tablesize = tablesize;
+                return _result;
+            }
+        };
     };
 
     /********************************************************************
@@ -567,12 +586,235 @@ public partial class alglib
     ********************************************************************/
     public partial class ap
     {
+        /********************************************************************
+        reverse communication structure
+        ********************************************************************/
+        public const int _ALGLIB_MAX_RCOMMV2_REQUEST = 99;
+        public class rcommstate : apobject
+        {
+            public rcommstate()
+            {
+                init();
+            }
+            public override void init()
+            {
+                /* continuation */
+                stage = -1;
+                ia = new int[0];
+                ba = new bool[0];
+                ra = new double[0];
+                ca = new alglib.complex[0];
+                
+                /* rcomm-v2 fields */
+                requesttype = 0;
+                reportx = new double[0];
+                reportf = 0;
+                querysize = 0;
+                queryfuncs = 0;
+                queryvars = 0;
+                querydim = 0;
+                queryformulasize = 0;
+                querydata = new double[0];
+                replyfi = new double[0];
+                replydj = new double[0];
+                replysj = new alglib.sparse.sparsematrix();
+                tmpx1 = new double[0];
+                tmpc1 = new double[0];
+                tmpf1 = new double[0];
+                tmpg1 = new double[0];
+                tmpj1 = new double[0,0];
+                tmps1 = new alglib.sparse.sparsematrix();
+            
+                /* rcomm handler */
+                rcomm2_handler = null;
+                handler_p0 = null;
+                handler_p1 = null;
+                handler_p2 = null;
+                handler_p3 = null;
+            }
+            public override apobject make_copy()
+            {
+                rcommstate result = new rcommstate();
+                
+                /* continuation */
+                result.stage = stage;
+                result.ia = (int[])ia.Clone();
+                result.ba = (bool[])ba.Clone();
+                result.ra = (double[])ra.Clone();
+                result.ca = (alglib.complex[])ca.Clone();
+                
+                /* rcomm-v2 fields */
+                result.requesttype = requesttype;
+                result.reportf = reportf;
+                result.querysize = querysize;
+                result.queryfuncs = queryfuncs;
+                result.queryvars = queryvars;
+                result.querydim = querydim;
+                result.queryformulasize = queryformulasize;
+                result.reportx = (double[])reportx.Clone();
+                result.querydata = (double[])querydata.Clone();
+                result.replyfi = (double[])replyfi.Clone();
+                result.replydj = (double[])replydj.Clone();
+                result.replysj = (alglib.sparse.sparsematrix)replysj.make_copy();
+                result.tmpx1 = (double[])tmpx1.Clone();
+                result.tmpc1 = (double[])tmpc1.Clone();
+                result.tmpf1 = (double[])tmpf1.Clone();
+                result.tmpg1 = (double[])tmpg1.Clone();
+                result.tmpj1 = (double[,])tmpj1.Clone();
+                result.tmps1 = (alglib.sparse.sparsematrix)tmps1.make_copy();
+            
+                /* rcomm handler */
+                result.rcomm2_handler = rcomm2_handler;
+                result.handler_p0 = handler_p0;
+                result.handler_p1 = handler_p1;
+                result.handler_p2 = handler_p2;
+                result.handler_p3 = handler_p3;
+                
+                /* done */
+                return result;
+            }
+            /* continuation-related fields */
+            public int stage;
+            public int[] ia;
+            public bool[] ba;
+            public double[] ra;
+            public alglib.complex[] ca;
+            
+        
+            /* rcomm interface */
+            public int requesttype;
+            public double[] reportx;
+            public double reportf;
+            public int querysize;
+            public int queryfuncs;
+            public int queryvars;
+            public int querydim;
+            public int queryformulasize;
+            public double[] querydata;
+            public double[] replyfi;
+            public double[] replydj;
+            public alglib.sparse.sparsematrix replysj;
+            public double[] tmpx1;
+            public double[] tmpc1;
+            public double[] tmpf1;
+            public double[] tmpg1;
+            public double[,] tmpj1;
+            public alglib.sparse.sparsematrix tmps1;
+            
+            /* rcomm handler */
+            public rcomm2handler rcomm2_handler;
+            public object handler_p0;
+            public object handler_p1;
+            public object handler_p2;
+            public object handler_p3;
+            
+            /* handler methods */
+            public bool has_handler()
+            {
+                return rcomm2_handler!=null;
+            }
+            public void assign_handler(rcomm2handler handler, object p0, object p1, object p2, object p3)
+            {
+                rcomm2_handler = handler;
+                handler_p0 = p0;
+                handler_p1 = p1;
+                handler_p2 = p2;
+                handler_p3 = p3;
+            }
+            public void clear_handler()
+            {
+                rcomm2_handler = null;
+                handler_p0 = null;
+                handler_p1 = null;
+                handler_p2 = null;
+                handler_p3 = null;
+            }
+            public void forward_handler(rcommstate dst)
+            {
+                dst.rcomm2_handler = rcomm2_handler;
+                dst.handler_p0 = handler_p0;
+                dst.handler_p1 = handler_p1;
+                dst.handler_p2 = handler_p2;
+                dst.handler_p3 = handler_p3;
+            }
+            public bool apply_handler_to(rcommstate dst, xparams _params)
+            {
+                if( rcomm2_handler==null || dst.requesttype==0 || dst.requesttype>_ALGLIB_MAX_RCOMMV2_REQUEST )
+                    return false;
+                int worker_idx = 0;
+                if( alglib.smp.tsk_current_worker!=null )
+                    worker_idx = alglib.smp.tsk_current_worker.worker_idx-1;
+                int prev_worker_idx = alglib._cbck_worker_idx;
+                alglib._cbck_worker_idx = worker_idx;
+                try
+                {
+                    rcomm2_handler(dst, handler_p0, handler_p1, handler_p2, handler_p3, _params);
+                }
+                catch
+                {
+                    alglib._cbck_worker_idx = prev_worker_idx;
+                    throw;
+                }
+                alglib._cbck_worker_idx = prev_worker_idx;
+                return true;
+            }
+        };
+        
+        /********************************************************************
+        Handlers used to debug optimizers
+        ********************************************************************/
+        public static void _rcomm_debugslantedsumhandlerdense(ap.rcommstate state, object p0, object p1, object p2, object p3, alglib.xparams _params)
+        {
+            if( state.requesttype==2 )
+            {
+                for(int qidx=0; qidx<state.querysize; qidx++)
+                {
+                    double s = 1.0;
+                    for(int k=0; k<state.queryvars; k++)
+                        s += state.querydata[qidx*state.queryvars+k]*(1+k+System.Math.Sin(1+k));
+                    state.replyfi[qidx] = s*s;
+                    for(int k=0; k<state.queryvars; k++)
+                        state.replydj[qidx*state.queryvars+k] = 2*s*(1+k+System.Math.Sin(1+k));
+                }
+                return;
+            }
+            ap.assert(false, "_rcomm_debugslantedsumhandlerdense: unsupported request");
+        }
+        
+        public static void _rcomm_debugslantedsumhandlersparse(ap.rcommstate state, object p0, object p1, object p2, object p3, alglib.xparams _params)
+        {
+            if( state.requesttype==1 )
+            {
+                alglib.sparse.sparsecreatecrsemptybuf(state.queryvars, state.replysj, _params);
+                for(int qidx=0; qidx<state.querysize; qidx++)
+                {
+                    double s = 1.0;
+                    for(int k=0; k<state.queryvars; k++)
+                        s += state.querydata[qidx*state.queryvars+k]*(1+k+System.Math.Sin(1+k));
+                    state.replyfi[qidx] = s*s;
+                    alglib.sparse.sparseappendemptyrow(state.replysj, _params);
+                    for(int k=0; k<state.queryvars; k++)
+                        alglib.sparse.sparseappendelement(state.replysj, k, 2*s*(1+k+System.Math.Sin(1+k)), _params);
+                }
+                return;
+            }
+            ap.assert(false, "_rcomm_debugslantedsumhandlersparse: unsupported request");
+        }
+        
 #if !ALGLIB_CORE_ONLY
+        public static void rcommv2_request_csharphandler(ap.rcommstate state, object p0, object p1, object p2, object p3, xparams _params)
+        {
+            ap.rcommv2_request   request   =   (ap.rcommv2_request)p0;
+            ap.rcommv2_callbacks callbacks = (ap.rcommv2_callbacks)p1;
+            ap.rcommv2_buffers   buffers   = new ap.rcommv2_buffers(state.tmpx1, state.tmpc1, state.tmpf1, state.tmpg1, state.tmpj1, state.tmps1);
+            request.process_standard(state, callbacks, buffers, _params);
+        }
         /********************************************************************
         Class encapsulating callbacks
         ********************************************************************/
         public class rcommv2_callbacks
         {
+            public ndimensional_rep   rep;
             public ndimensional_func  func;
             public ndimensional_grad  grad;
             public ndimensional_fvec  fvec;
@@ -590,21 +832,18 @@ public partial class alglib
         ********************************************************************/
         public class rcommv2_request
         {
-            public rcommv2_request(int _rq, int _sz, int _fn, int _vc, int _di, int _fs, double[] _qd,  double[] _rf, double[] _rj, alglib.sparse.sparsematrix _rs, object _obj, string _sp)
+            public rcommv2_request(rcommstate _rs, object _obj, string _sp)
             {
-                request = _rq;
-                size    = _sz;
-                funcs   = _fn;
-                vars    = _vc;
-                dim     = _di;
-                formulasize = _fs;
-                query_data  = _qd;
-                reply_fi    = _rf;
-                reply_dj    = _rj;
-                reply_sj    = new alglib.sparsematrix(_rs);
-                obj         = _obj;
-                subpackage  = _sp;
+                rcommv2      = _rs;
+                obj          = _obj;
+                subpackage   = _sp;
+                request_lock = new smp.ae_lock();
             }
+            
+            //
+            // Request lock
+            //
+            public smp.ae_lock request_lock;
             
             //
             // Subpackage name
@@ -617,20 +856,171 @@ public partial class alglib
             public object obj;
             
             //
-            // Query
+            // RCommV2
             //
-            public double[] query_data;
-            
+            public rcommstate rcommv2;
+    
             //
-            // Params
+            // Process standard (less than _ALGLIB_MAX_RCOMMV2_REQUEST) request. Fails upon encountering a non-standard request.
             //
-            public int request, size, funcs, vars, dim, formulasize;
-            
+            // When called, this function:
+            // * acquires request_lock, if we are inside worker thread, but parallel_callbacks flag was NOT specified.
+            //   long spin-wait can be performed, if the lock is owned by other threads.
+            // * processes request by calling appropriate callbacks
+            // * releases request_lock, if was acquired
             //
-            // Reply
+            // This function may propagate exceptions arising in user callbacks or re-throw them as an instance of alglibexception.
             //
-            public double[] reply_fi, reply_dj;
-            public alglib.sparsematrix reply_sj;
+            public void process_standard(rcommstate state, rcommv2_callbacks callbacks, rcommv2_buffers buffers, alglib.xparams _params)
+            {
+                bool lock_acquired = false;
+                #if _ALGLIB_COMMERCIAL
+                if( smp.isparallelcontext() && !smp.ae_can_parallelize_callbacks(_params) )
+                {
+                    smp.ae_acquire_lock(request_lock);
+                    lock_acquired = true;
+                }
+                #endif
+                try
+                {
+                    if( state.requesttype==-1 )
+                    {
+                        if( callbacks.rep!=null )
+                        {
+                            for(int i=0; i<state.queryvars; i++)
+                                buffers.tmpX[i] = state.reportx[i];
+                            callbacks.rep(buffers.tmpX, state.reportf, obj);
+                        }
+                        state.requesttype = 0;
+                        if( lock_acquired )
+                            smp.ae_release_lock(request_lock);
+                        return;
+                    }
+                    if( state.requesttype==1 )
+                    {
+                        /* try to parallelize callbacks */
+                        #if _ALGLIB_COMMERCIAL
+                        if( state.querysize>1 && !smp.isparallelcontext() && smp.ae_can_parallelize_callbacks(_params) )
+                            if( try_parallelize_v2request1(this, callbacks) )
+                            {
+                                AE_CRITICAL_ASSERT(!lock_acquired);
+                                return;
+                            }
+                        #endif
+                    
+                        /* perform serial execution */
+                        alglib.sparsematrix swrapper = new alglib.sparsematrix(state.replysj);
+                        alglib.sparse.sparsecreatecrsemptybuf(state.queryvars, state.replysj, _params);
+                        for(int qidx=0; qidx<state.querysize; qidx++)
+                            process_v2request_1(this, qidx, callbacks, buffers, swrapper);
+                        state.requesttype = 0;
+                        if( lock_acquired )
+                            smp.ae_release_lock(request_lock);
+                        return;
+                    }
+                    if( state.requesttype==2 )
+                    {
+                        /* try to parallelize callbacks */
+                        #if _ALGLIB_COMMERCIAL
+                        if( state.querysize>1 && !smp.isparallelcontext() && smp.ae_can_parallelize_callbacks(_params) )
+                            if( try_parallelize_v2request2(this, callbacks) )
+                            {
+                                AE_CRITICAL_ASSERT(!lock_acquired);
+                                return;
+                            }
+                        #endif
+
+                        /* perform serial execution */
+                        for(int qidx=0; qidx<state.querysize; qidx++)
+                            process_v2request_2(this, qidx, callbacks, buffers);
+                        state.requesttype = 0;
+                        if( lock_acquired )
+                            smp.ae_release_lock(request_lock);
+                        return;
+                    }
+                    if( state.requesttype==3 )
+                    {
+                        /* try to parallelize callbacks */
+                        #if _ALGLIB_COMMERCIAL
+                        if( (state.queryvars+1)*state.querysize>1 && !smp.isparallelcontext() && smp.ae_can_parallelize_callbacks(_params) )
+                            if( try_parallelize_v2request3(this, callbacks) )
+                            {
+                                AE_CRITICAL_ASSERT(!lock_acquired);
+                                return;
+                            }
+                        #endif
+                        
+                        /* perform serial execution */
+                        int njobs = state.querysize*state.queryvars+state.querysize;
+                        for(int job_idx=0; job_idx<njobs; job_idx++)
+                            process_v2request_3phase0(this, job_idx, callbacks, buffers);
+                        process_v2request_3phase1(this);
+                        state.requesttype = 0;
+                        if( lock_acquired )
+                            smp.ae_release_lock(request_lock);
+                        return;
+                    }
+                    if( state.requesttype==4 )
+                    {
+                        /* try to parallelize callbacks */
+                        #if _ALGLIB_COMMERCIAL
+                        if( state.querysize>1 && !smp.isparallelcontext() && smp.ae_can_parallelize_callbacks(_params) )
+                            if( try_parallelize_v2request4(this, callbacks) )
+                            {
+                                AE_CRITICAL_ASSERT(!lock_acquired);
+                                return;
+                            }
+                        #endif
+                        
+                        /* perform serial execution */
+                        for(int qidx=0; qidx<state.querysize; qidx++)
+                            process_v2request_4(this, qidx, callbacks, buffers);
+                        state.requesttype = 0;
+                        if( lock_acquired )
+                            smp.ae_release_lock(request_lock);
+                        return;
+                    }
+                    if( state.requesttype==5 )
+                    {
+                        /* try to parallelize callbacks */
+                        #if _ALGLIB_COMMERCIAL
+                        if( (state.queryvars+1)*state.querysize>1 && !smp.isparallelcontext() && smp.ae_can_parallelize_callbacks(_params) )
+                            if( try_parallelize_v2request5(this, callbacks) )
+                            {
+                                AE_CRITICAL_ASSERT(!lock_acquired);
+                                return;
+                            }
+                        #endif
+                    
+                        /* perform serial execution */
+                        int njobs = state.querysize*state.queryvars+state.querysize;
+                        for(int job_idx=0; job_idx<njobs; job_idx++)
+                            process_v2request_5phase0(this, job_idx, callbacks, buffers);
+                        process_v2request_5phase1(this);
+                        state.requesttype = 0;
+                        if( lock_acquired )
+                            smp.ae_release_lock(request_lock);
+                        return;
+                    }
+                }
+                catch(alglibexception e)
+                {
+                    if( lock_acquired )
+                        smp.ae_release_lock(request_lock);
+                    trace("ALGLIB: exception in '"+subpackage+"' with the message '"+e.msg+"'");
+                    throw;
+                }
+                catch(Exception e)
+                {
+                    if( lock_acquired )
+                        smp.ae_release_lock(request_lock);
+                    string new_msg = "ALGLIB: non-ALGLIB exception in '"+subpackage+"' with the message '"+e.Message+"'";
+                    trace(new_msg);
+                    throw new alglibexception(new_msg);
+                }
+                trace("ALGLIB: error in '"+subpackage+"' (unexpected RCommV2 request "+state.requesttype.ToString()+")");
+                throw new alglibexception("ALGLIB: error in '"+subpackage+"' (unexpected RCommV2 request)");
+            }
         }
         
         public class rcommv2_buffers
@@ -653,14 +1043,14 @@ public partial class alglib
             //
             public rcommv2_buffers(rcommv2_request rq, bool is_sparse)
             {
-                tmpX = new double[rq.vars];
-                if( rq.dim>0 )
-                    tmpC = new double[rq.dim];
-                tmpF = new double[rq.funcs];
-                tmpG = new double[rq.vars];
-                tmpJ = new double[rq.funcs, rq.vars];
+                tmpX = new double[rq.rcommv2.queryvars];
+                if( rq.rcommv2.querydim>0 )
+                    tmpC = new double[rq.rcommv2.querydim];
+                tmpF = new double[rq.rcommv2.queryfuncs];
+                tmpG = new double[rq.rcommv2.queryvars];
+                tmpJ = new double[rq.rcommv2.queryfuncs, rq.rcommv2.queryvars];
                 if( is_sparse )
-                    alglib.sparsecreatecrsempty(rq.vars, out tmpS);
+                    alglib.sparsecreatecrsempty(rq.rcommv2.queryvars, out tmpS);
             }
             
             //
@@ -674,18 +1064,18 @@ public partial class alglib
             // resize buffers according to the current request size.
             // Does not change size, if requested size is too small.
             //
-            public void resize(rcommv2_request rq)
+            public void resize(rcommstate state)
             {
-                if( tmpX==null || tmpX.Length<rq.vars )
-                    tmpX = new double[rq.vars];
-                if( rq.dim>0 && (tmpC==null || tmpC.Length<rq.dim) )
-                    tmpC = new double[rq.dim];
-                if( tmpF==null || tmpF.Length<rq.funcs )
-                    tmpF = new double[rq.funcs];
-                if( tmpG==null || tmpG.Length<rq.vars )
-                    tmpG = new double[rq.vars];
-                if( tmpJ==null || tmpJ.GetLength(0)<rq.funcs || tmpJ.GetLength(1)<rq.vars )
-                    tmpJ = new double[rq.funcs, rq.vars];
+                if( tmpX==null || tmpX.Length<state.queryvars )
+                    tmpX = new double[state.queryvars];
+                if( state.querydim>0 && (tmpC==null || tmpC.Length<state.querydim) )
+                    tmpC = new double[state.querydim];
+                if( tmpF==null || tmpF.Length<state.queryfuncs )
+                    tmpF = new double[state.queryfuncs];
+                if( tmpG==null || tmpG.Length<state.queryvars )
+                    tmpG = new double[state.queryvars];
+                if( tmpJ==null || tmpJ.GetLength(0)<state.queryfuncs || tmpJ.GetLength(1)<state.queryvars )
+                    tmpJ = new double[state.queryfuncs, state.queryvars];
             }
             
             //
@@ -741,6 +1131,26 @@ public partial class alglib
                 flag = true;
                 sef_xdesc = xdesc;
             }
+        }
+        
+        /****************************************************************
+        Backward-compatible and forward-compatible volatile ops
+        ****************************************************************/
+        public static int VolatileRead(ref int x)
+        {
+#if NET5_0_OR_GREATER
+            return System.Threading.Volatile.Read(ref x);
+#else
+            return System.Threading.Thread.VolatileRead(ref x);
+#endif
+        }
+        public static void VolatileWrite(ref int a, int v)
+        {
+#if NET5_0_OR_GREATER
+            System.Threading.Volatile.Write(ref a, v);
+#else
+            System.Threading.Thread.VolatileWrite(ref a, v);
+#endif
         }
         
         /****************************************************************
@@ -1570,6 +1980,16 @@ public partial class alglib
         public const double maxrealnumber = 1E300;
         public const double minrealnumber = 1E-300;
         
+        public static ulong bitwise_real_to_uint64(double v)
+        {
+            return unchecked((ulong)System.BitConverter.DoubleToInt64Bits(v));
+        }
+
+        public static double bitwise_uint64_to_real(ulong v)
+        {
+            return System.BitConverter.Int64BitsToDouble(unchecked((long)v));
+        }
+
         public static bool isfinite(double d)
         {
             return !System.Double.IsNaN(d) && !System.Double.IsInfinity(d);
@@ -3149,6 +3569,9 @@ using Intrinsics = System.Runtime.Intrinsics;
 #endif
 #pragma warning disable 164
 #pragma warning disable 219
+#if NET5_0_OR_GREATER
+#pragma warning disable CS8981
+#endif
 public partial class alglib
 {
     #if ALGLIB_USE_SIMD
@@ -3700,6 +4123,28 @@ public partial class alglib
                 return true;
             }
             #endif // no-fma
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Subtract(
+                            Avx2.LoadVector256(Src2+i),
+                            Avx2.Multiply(
+                                Avx2.LoadVector256(Src0+i),
+                                Avx2.LoadVector256(Src1+i)
+                                )
+                            )
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] = Src2[i]-Src0[i]*Src1[i];
+                return true;
+            }
             #endif // no-avx2
             #endif // no-sse2
             return false;
@@ -3880,6 +4325,45 @@ public partial class alglib
                 }
                 for(i=head; i<n; i++)
                     Dst[i] = vSrc*Src[i];
+                return true;
+            }
+            #endif // no-avx2
+            #endif // no-sse2
+            return false;
+        }
+        #endif
+
+        #if ALGLIB_USE_SIMD
+        /*************************************************************************
+        SIMD kernel for rcopyrcp()
+
+          -- ALGLIB --
+             Copyright 23.03.2026 by Bochkanov Sergey
+        *************************************************************************/
+        private static unsafe bool try_rcopyrcp(
+            int n,
+            double *Src,
+            double *Dst)
+        {
+            #if !ALGLIB_NO_SSE2
+            #if !ALGLIB_NO_AVX2
+            if( Avx2.IsSupported )
+            {
+                int i;
+                int n4 = n>>2;
+                int head = n4<<2;
+                Intrinsics.Vector256<double> avx_one = Intrinsics.Vector256.Create(1.0);
+                for(i=0; i<head; i+=4)
+                {
+                    Avx2.Store(
+                        Dst+i,
+                        Avx2.Divide(
+                            avx_one,
+                            Avx2.LoadVector256(Src+i))
+                        );
+                }
+                for(i=head; i<n; i++)
+                    Dst[i] = 1.0/Src[i];
                 return true;
             }
             #endif // no-avx2
@@ -4233,6 +4717,49 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
                 x[i] += y[i]*z[i];
         }
+
+        /*************************************************************************
+        Performs inplace addition of Y[]*Z[] to X[] using offsets
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N+OffsY], vector to process
+            OffsY   -   source offset
+            Z       -   array[N+OffsZ], vector to process
+            OffsZ   -   source offset
+            X       -   array[N+OffsX], vector to process
+            OffsX   -   destination offset
+
+        RESULT:
+            X := X + Y*Z (using within-array offsets)
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmuladdvx(int n,
+            double[] y,
+            int offsy,
+            double[] z,
+            int offsz,
+            double[] x,
+            int offsx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y, pz=z)
+                    {
+                        if( try_rmuladdv(n, py+offsy, pz+offsz, px+offsx) )
+                            return;
+                    }
+                }
+            #endif
+            for(i=0; i<=n-1; i++)
+                x[offsx+i] += y[offsy+i]*z[offsz+i];
+        }
         
         /*************************************************************************
         Performs inplace subtraction of Y[]*Z[] from X[]
@@ -4269,6 +4796,49 @@ public partial class alglib
             #endif
             for(i=0; i<=n-1; i++)
                 x[i] -= y[i]*z[i];
+        }
+
+        /*************************************************************************
+        Performs inplace subtraction of Y[]*Z[] from X[] using offsets
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N+OffsY], vector to process
+            OffsY   -   source offset
+            Z       -   array[N+OffsZ], vector to process
+            OffsZ   -   source offset
+            X       -   array[N+OffsX], vector to process
+            OffsX   -   destination offset
+
+        RESULT:
+            X := X - Y*Z (using within-array offsets)
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rnegmuladdvx(int n,
+            double[] y,
+            int offsy,
+            double[] z,
+            int offsz,
+            double[] x,
+            int offsx,
+            alglib.xparams _params)
+        {
+            int i;
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y, pz=z)
+                    {
+                        if( try_rnegmuladdv(n, py+offsy, pz+offsz, px+offsx) )
+                            return;
+                    }
+                }
+            #endif
+            for(i=0; i<=n-1; i++)
+                x[offsx+i] -= y[offsy+i]*z[offsz+i];
         }
         
         /*************************************************************************
@@ -4309,6 +4879,53 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
                 r[i] = x[i]+y[i]*z[i];
         }
+
+        /*************************************************************************
+        Performs addition of Y[]*Z[] to X[], with result being stored to R[] using offsets
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N+OffsY], vector to process
+            OffsY   -   source offset
+            Z       -   array[N+OffsZ], vector to process
+            OffsZ   -   source offset
+            X       -   array[N+OffsX], vector to process
+            OffsX   -   source offset
+            R       -   array[N+OffsR], vector to process
+            OffsR   -   destination offset
+
+        RESULT:
+            R := X + Y*Z (using within-array offsets)
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopymuladdvx(int n,
+            double[] y,
+            int offsy,
+            double[] z,
+            int offsz,
+            double[] x,
+            int offsx,
+            double[] r,
+            int offsr,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y, pz=z, pr=r)
+                    {
+                        if( try_rcopymuladdv(n, py+offsy, pz+offsz, px+offsx, pr+offsr) )
+                            return;
+                    }
+                }
+            #endif
+            for(i=0; i<=n-1; i++)
+                r[offsr+i] = x[offsx+i]+y[offsy+i]*z[offsz+i];
+        }
         
         /*************************************************************************
         Performs subtraction of Y[]*Z[] from X[]
@@ -4348,6 +4965,53 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
                 r[i] = x[i]-y[i]*z[i];
         }
+
+        /*************************************************************************
+        Performs subtraction of Y[]*Z[] from X[], with result being stored to R[] using offsets
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   array[N+OffsY], vector to process
+            OffsY   -   source offset
+            Z       -   array[N+OffsZ], vector to process
+            OffsZ   -   source offset
+            X       -   array[N+OffsX], vector to process
+            OffsX   -   source offset
+            R       -   array[N+OffsR], vector to process
+            OffsR   -   destination offset
+
+        RESULT:
+            R := X - Y*Z (using within-array offsets)
+
+          -- ALGLIB --
+             Copyright 29.10.2021 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopynegmuladdvx(int n,
+            double[] y,
+            int offsy,
+            double[] z,
+            int offsz,
+            double[] x,
+            int offsx,
+            double[] r,
+            int offsr,
+            alglib.xparams _params)
+        {
+            int i = 0;
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y, pz=z, pr=r)
+                    {
+                        if( try_rcopynegmuladdv(n, py+offsy, pz+offsz, px+offsx, pr+offsr) )
+                            return;
+                    }
+                }
+            #endif
+            for(i=0; i<=n-1; i++)
+                r[offsr+i] = x[offsx+i]-y[offsy+i]*z[offsz+i];
+        }
         
         /*************************************************************************
         Performs componentwise multiplication of vector X[] by vector Y[]
@@ -4385,6 +5049,49 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
             {
                 x[i] = x[i]*y[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs componentwise multiplication of vector X[] by vector Y[] using offsets
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            Y       -   vector to multiply by
+            OffsY   -   source offset
+            X       -   target vector
+            OffsX   -   destination offset
+
+        RESULT:
+            X := componentwise(X*Y) using offsets
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rmergemulvx(int n,
+            double[] y,
+            int offsy,
+            double[] x,
+            int offsx,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rmergemul(n, py+offsy, px+offsx) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                x[offsx+i] = x[offsx+i]*y[offsy+i];
             }
         }
 
@@ -5635,6 +6342,88 @@ public partial class alglib
             for(i=0; i<=n-1; i++)
             {
                 y[i] = v*x[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs copying with reciprocation: Y[]:=1/X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[N], source, all elements must be non-zero
+            Y       -   preallocated array[N]
+
+        OUTPUT PARAMETERS:
+            Y       -   array[N], Y = 1/X
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopyrcpv(int n,
+            double[] x,
+            double[] y,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rcopyrcp(n, px, py) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                y[i] = 1.0/x[i];
+            }
+        }
+
+        /*************************************************************************
+        Performs copying with reciprocation, using offsets within arrays: Y[]:=1/X[]
+
+        INPUT PARAMETERS:
+            N       -   vector length
+            X       -   array[OffsX+N], source, all elements must be non-zero
+            OffsX   -   start offset within X
+            Y       -   preallocated array[OffsY+N]
+            OffsY   -   start offset within Y
+
+        OUTPUT PARAMETERS:
+            Y       -   N elements starting from OffsY are replaced by 1/X[OffsX:OffsX+N-1]
+
+          -- ALGLIB --
+             Copyright 20.01.2020 by Bochkanov Sergey
+        *************************************************************************/
+        public static void rcopyrcpvx(int n,
+            double[] x,
+            int offsx,
+            double[] y,
+            int offsy,
+            alglib.xparams _params)
+        {
+            int i = 0;
+
+            #if ALGLIB_USE_SIMD
+            if( n>=_ABLASF_KERNEL_SIZE1 )
+                unsafe
+                {
+                    fixed(double* px=x, py=y)
+                    {
+                        if( try_rcopyrcp(n, px+offsx, py+offsy) )
+                            return;
+                    }
+                }
+            #endif
+
+            for(i=0; i<=n-1; i++)
+            {
+                y[offsy+i] = 1.0/x[offsx+i];
             }
         }
         
@@ -8270,15 +9059,27 @@ public partial class alglib
 }
 #endif
 
+#if NET5_0_OR_GREATER
+#pragma warning disable CS8981
+#endif
 public partial class alglib
 {
     public partial class smp
     {
         public static int cores_count = 1;
         public static volatile int cores_to_use = 1;
+        
+        [System.ThreadStatic]
+        public static ae_worker_thread  tsk_current_worker; /* never change it, must be always null */
+        
         public static bool isparallelcontext()
         {
             return false;
+        }
+        
+        public class ae_worker_thread
+        {
+            public volatile int worker_idx;  /* never change it, must be always 0 */
         }
     }
     public class smpselftests
@@ -8302,6 +9103,9 @@ public partial class alglib
     }
 }
 
+#if NET5_0_OR_GREATER
+#pragma warning disable CS8981
+#endif
 public partial class alglib
 {
     /*
@@ -8336,6 +9140,9 @@ public partial class alglib
     
 }
 
+#if NET5_0_OR_GREATER
+#pragma warning disable CS8981
+#endif
 public partial class alglib
 {
     /*
@@ -8485,18 +9292,18 @@ public partial class alglib
             //
             // Query and reply offsets
             //
-            int query_data_offs = query_idx*(request.vars+request.dim);
-            int reply_fi_offs   = query_idx*request.funcs;
+            int query_data_offs = query_idx*(request.rcommv2.queryvars+request.rcommv2.querydim);
+            int reply_fi_offs   = query_idx*request.rcommv2.queryfuncs;
             
             //
             // Copy inputs to buffers
             //
-            for(int i=0; i<request.vars; i++)
-                buffers.tmpX[i] = request.query_data[query_data_offs+i];
-            if( request.dim>0 )
-                for(int i=0; i<request.dim; i++)
-                    buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
-            alglib.sparsecreatecrsemptybuf(request.vars, buffers.tmpS, alglib.xdefault);
+            for(int i=0; i<request.rcommv2.queryvars; i++)
+                buffers.tmpX[i] = request.rcommv2.querydata[query_data_offs+i];
+            if( request.rcommv2.querydim>0 )
+                for(int i=0; i<request.rcommv2.querydim; i++)
+                    buffers.tmpC[i] = request.rcommv2.querydata[query_data_offs+request.rcommv2.queryvars+i];
+            alglib.sparsecreatecrsemptybuf(request.rcommv2.queryvars, buffers.tmpS, alglib.xdefault);
             
             //
             // Callback
@@ -8504,16 +9311,16 @@ public partial class alglib
             if( callbacks.sjac!=null )
             {
                 callbacks.sjac(buffers.tmpX, buffers.tmpF, buffers.tmpS, request.obj);
-                for(int ridx=0; ridx<request.funcs; ridx++)
-                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                for(int ridx=0; ridx<request.rcommv2.queryfuncs; ridx++)
+                    request.rcommv2.replyfi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
                 alglib.sparseappendmatrix(dst_jacobian, buffers.tmpS);
                 return;
             }
             if( callbacks.sjac_p!=null )
             {
                 callbacks.sjac_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, buffers.tmpS, request.obj);
-                for(int ridx=0; ridx<request.funcs; ridx++)
-                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                for(int ridx=0; ridx<request.rcommv2.queryfuncs; ridx++)
+                    request.rcommv2.replyfi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
                 alglib.sparseappendmatrix(dst_jacobian, buffers.tmpS);
                 return;
             }
@@ -8528,18 +9335,18 @@ public partial class alglib
             //
             // Query and reply offsets
             //
-            int query_data_offs = query_idx*(request.vars+request.dim);
-            int reply_fi_offs   = query_idx*request.funcs;
-            int reply_dj_offs   = query_idx*request.funcs*request.vars;
+            int query_data_offs = query_idx*(request.rcommv2.queryvars+request.rcommv2.querydim);
+            int reply_fi_offs   = query_idx*request.rcommv2.queryfuncs;
+            int reply_dj_offs   = query_idx*request.rcommv2.queryfuncs*request.rcommv2.queryvars;
             
             //
             // Copy inputs to buffers
             //
-            for(int i=0; i<request.vars; i++)
-                buffers.tmpX[i] = request.query_data[query_data_offs+i];
-            if( request.dim>0 )
-                for(int i=0; i<request.dim; i++)
-                    buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+            for(int i=0; i<request.rcommv2.queryvars; i++)
+                buffers.tmpX[i] = request.rcommv2.querydata[query_data_offs+i];
+            if( request.rcommv2.querydim>0 )
+                for(int i=0; i<request.rcommv2.querydim; i++)
+                    buffers.tmpC[i] = request.rcommv2.querydata[query_data_offs+request.rcommv2.queryvars+i];
             
             //
             // Callback
@@ -8547,46 +9354,46 @@ public partial class alglib
             if( callbacks.grad!=null )
             {
                 double f0 = 0;
-                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && request.funcs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0 && request.rcommv2.queryfuncs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                 callbacks.grad(buffers.tmpX, ref f0, buffers.tmpG, request.obj);
-                request.reply_fi[reply_fi_offs] = f0;
-                for(int i=0; i<request.vars; i++)
-                    request.reply_dj[reply_dj_offs+i] = buffers.tmpG[i];
+                request.rcommv2.replyfi[reply_fi_offs] = f0;
+                for(int i=0; i<request.rcommv2.queryvars; i++)
+                    request.rcommv2.replydj[reply_dj_offs+i] = buffers.tmpG[i];
                 return;
             }
             if( callbacks.grad_p!=null )
             {
                 double f0 = 0;
-                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && request.funcs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0 && request.rcommv2.queryfuncs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                 callbacks.grad_p(buffers.tmpX, buffers.tmpC, ref f0, buffers.tmpG, request.obj);
-                request.reply_fi[reply_fi_offs] = f0;
-                for(int i=0; i<request.vars; i++)
-                    request.reply_dj[reply_dj_offs+i] = buffers.tmpG[i];
+                request.rcommv2.replyfi[reply_fi_offs] = f0;
+                for(int i=0; i<request.rcommv2.queryvars; i++)
+                    request.rcommv2.replydj[reply_dj_offs+i] = buffers.tmpG[i];
                 return;
             }
             if( callbacks.jac!=null )
             {
-                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                 callbacks.jac(buffers.tmpX, buffers.tmpF, buffers.tmpJ, request.obj);
-                for(int ridx=0; ridx<request.funcs; ridx++)
+                for(int ridx=0; ridx<request.rcommv2.queryfuncs; ridx++)
                 {
-                    int doffs = reply_dj_offs+ridx*request.vars;
-                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
-                    for(int i=0; i<request.vars; i++)
-                        request.reply_dj[doffs+i] = buffers.tmpJ[ridx,i];
+                    int doffs = reply_dj_offs+ridx*request.rcommv2.queryvars;
+                    request.rcommv2.replyfi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                    for(int i=0; i<request.rcommv2.queryvars; i++)
+                        request.rcommv2.replydj[doffs+i] = buffers.tmpJ[ridx,i];
                 }
                 return;
             }
             if( callbacks.jac_p!=null )
             {
-                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                 callbacks.jac_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, buffers.tmpJ, request.obj);
-                for(int ridx=0; ridx<request.funcs; ridx++)
+                for(int ridx=0; ridx<request.rcommv2.queryfuncs; ridx++)
                 {
-                    int doffs = reply_dj_offs+ridx*request.vars;
-                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
-                    for(int i=0; i<request.vars; i++)
-                        request.reply_dj[doffs+i] = buffers.tmpJ[ridx,i];
+                    int doffs = reply_dj_offs+ridx*request.rcommv2.queryvars;
+                    request.rcommv2.replyfi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                    for(int i=0; i<request.rcommv2.queryvars; i++)
+                        request.rcommv2.replydj[doffs+i] = buffers.tmpJ[ridx,i];
                 }
                 return;
             }
@@ -8604,73 +9411,73 @@ public partial class alglib
             //
             // This job can be completely parallelized without synchronization.
             //
-            if( job_idx<request.size*request.vars )
+            if( job_idx<request.rcommv2.querysize*request.rcommv2.queryvars )
             {
                 //
                 // Compute parts of the numerical differentiation formula that do NOT depend
                 // on the value at origin.
                 //
-                int query_idx = job_idx/request.vars;
-                int var_idx   = job_idx%request.vars;
-                int n = request.vars;
-                int m = request.funcs;
-                int fs = request.formulasize;
-                int query_data_offs   = query_idx*(n+request.dim+n*request.formulasize*2);
-                int formula_data_offs = query_data_offs+n+request.dim+var_idx*fs*2;
+                int query_idx = job_idx/request.rcommv2.queryvars;
+                int var_idx   = job_idx%request.rcommv2.queryvars;
+                int n = request.rcommv2.queryvars;
+                int m = request.rcommv2.queryfuncs;
+                int fs = request.rcommv2.queryformulasize;
+                int query_data_offs   = query_idx*(n+request.rcommv2.querydim+n*request.rcommv2.queryformulasize*2);
+                int formula_data_offs = query_data_offs+n+request.rcommv2.querydim+var_idx*fs*2;
                 int reply_dj_offs     = query_idx*n*m;
                 
                 //
                 // Copy inputs to buffers
                 //
-                for(int i=0; i<request.vars; i++)
-                    buffers.tmpX[i] = request.query_data[query_data_offs+i];
-                if( request.dim>0 )
-                    for(int i=0; i<request.dim; i++)
-                        buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+                for(int i=0; i<request.rcommv2.queryvars; i++)
+                    buffers.tmpX[i] = request.rcommv2.querydata[query_data_offs+i];
+                if( request.rcommv2.querydim>0 )
+                    for(int i=0; i<request.rcommv2.querydim; i++)
+                        buffers.tmpC[i] = request.rcommv2.querydata[query_data_offs+request.rcommv2.queryvars+i];
                 
                 //
                 // compute gradient using numerical differentiation formula provided by the optimizer
                 //
                 double xprev = buffers.tmpX[var_idx];
                 for(int t=0; t<m; t++)
-                    request.reply_dj[reply_dj_offs+t*n+var_idx] = 0;
+                    request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] = 0;
                 for(int idx=0; idx<fs; idx++)
                 {
-                    double xx=request.query_data[formula_data_offs+idx*2+0], coeff=request.query_data[formula_data_offs+idx*2+1];
+                    double xx=request.rcommv2.querydata[formula_data_offs+idx*2+0], coeff=request.rcommv2.querydata[formula_data_offs+idx*2+1];
                     if( coeff==0 )
                         continue;
-                    if( xx==request.query_data[query_data_offs+var_idx] ) // skip terms that depend on the target value at origin - it is still computed
+                    if( xx==request.rcommv2.querydata[query_data_offs+var_idx] ) // skip terms that depend on the target value at origin - it is still computed
                         continue;
                     buffers.tmpX[var_idx] = xx;
                     if( callbacks.func!=null )
                     {
                         double f = 0;
-                        //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                        //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                         callbacks.func(buffers.tmpX, ref f, request.obj);
                         buffers.tmpF[0] = f;
                     }
                     else if( callbacks.func_p!=null )
                     {
                         double f = 0;
-                        //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                        //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                         callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
                         buffers.tmpF[0] = f;
                     }
                     else if( callbacks.fvec!=null )
                     {
-                        //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                        //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                         callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
                     }
                     else if( callbacks.fvec_p!=null )
                     {
-                        //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                        //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                         callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
                     }
                     else
                         alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
                     buffers.tmpX[var_idx] = xprev;
                     for(int t=0; t<m; t++)
-                        request.reply_dj[reply_dj_offs+t*n+var_idx] += coeff*buffers.tmpF[t];
+                        request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] += coeff*buffers.tmpF[t];
                 }
             }
             else
@@ -8678,19 +9485,19 @@ public partial class alglib
                 //
                 // Compute target value at the origin
                 //
-                int query_idx = job_idx-request.size*request.vars;
-                int query_data_offs = query_idx*(request.vars+request.dim+request.vars*request.formulasize*2);
-                int reply_fi_offs   = query_idx*request.funcs;
-                int m = request.funcs;
+                int query_idx = job_idx-request.rcommv2.querysize*request.rcommv2.queryvars;
+                int query_data_offs = query_idx*(request.rcommv2.queryvars+request.rcommv2.querydim+request.rcommv2.queryvars*request.rcommv2.queryformulasize*2);
+                int reply_fi_offs   = query_idx*request.rcommv2.queryfuncs;
+                int m = request.rcommv2.queryfuncs;
                 
                 //
                 // Copy inputs to buffers
                 //
-                for(int i=0; i<request.vars; i++)
-                    buffers.tmpX[i] = request.query_data[query_data_offs+i];
-                if( request.dim>0 )
-                    for(int i=0; i<request.dim; i++)
-                        buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+                for(int i=0; i<request.rcommv2.queryvars; i++)
+                    buffers.tmpX[i] = request.rcommv2.querydata[query_data_offs+i];
+                if( request.rcommv2.querydim>0 )
+                    for(int i=0; i<request.rcommv2.querydim; i++)
+                        buffers.tmpC[i] = request.rcommv2.querydata[query_data_offs+request.rcommv2.queryvars+i];
                 
                 //
                 // Callback
@@ -8698,31 +9505,31 @@ public partial class alglib
                 if( callbacks.func!=null )
                 {
                     double f = 0;
-                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                     callbacks.func(buffers.tmpX, ref f, request.obj);
                     buffers.tmpF[0] = f;
                 }
                 else if( callbacks.func_p!=null )
                 {
                     double f = 0;
-                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                     callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
                     buffers.tmpF[0] = f;
                 }
                 else if( callbacks.fvec!=null )
                 {
-                    //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                     callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
                 }
                 else if( callbacks.fvec_p!=null )
                 {
-                    //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                     callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
                 }
                 else
                     alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
                 for(int t=0; t<m; t++)
-                    request.reply_fi[reply_fi_offs+t] = buffers.tmpF[t];
+                    request.rcommv2.replyfi[reply_fi_offs+t] = buffers.tmpF[t];
             }
         }
 
@@ -8734,29 +9541,29 @@ public partial class alglib
             //
             // Phase 1: compute parts of the numerical differentiation formula that DO depend on the value at origin.
             //
-            // This phase does not need parallelism because all what we need is to add request.size*request.vars precomputed values.
+            // This phase does not need parallelism because all what we need is to add request.rcommv2.querysize*request.rcommv2.queryvars precomputed values.
             //
-            for(int query_idx=0; query_idx<request.size; query_idx++)
-                for(int var_idx=0; var_idx<request.vars; var_idx++)
+            for(int query_idx=0; query_idx<request.rcommv2.querysize; query_idx++)
+                for(int var_idx=0; var_idx<request.rcommv2.queryvars; var_idx++)
                 {
                     //
                     // Compute parts of the numerical differentiation formula that do NOT depend
                     // on the value at origin.
                     //
-                    int n = request.vars;
-                    int m = request.funcs;
-                    int fs = request.formulasize;
-                    int query_data_offs   = query_idx*(n+request.dim+n*request.formulasize*2);
-                    int formula_data_offs = query_data_offs+n+request.dim+var_idx*fs*2;
+                    int n = request.rcommv2.queryvars;
+                    int m = request.rcommv2.queryfuncs;
+                    int fs = request.rcommv2.queryformulasize;
+                    int query_data_offs   = query_idx*(n+request.rcommv2.querydim+n*request.rcommv2.queryformulasize*2);
+                    int formula_data_offs = query_data_offs+n+request.rcommv2.querydim+var_idx*fs*2;
                     int reply_fi_offs     = query_idx*m;
                     int reply_dj_offs     = query_idx*n*m;
                     for(int idx=0; idx<fs; idx++)
                     {
-                        double xx=request.query_data[formula_data_offs+idx*2+0], coeff=request.query_data[formula_data_offs+idx*2+1];
-                        if( coeff==0 || xx!=request.query_data[query_data_offs+var_idx] )
+                        double xx=request.rcommv2.querydata[formula_data_offs+idx*2+0], coeff=request.rcommv2.querydata[formula_data_offs+idx*2+1];
+                        if( coeff==0 || xx!=request.rcommv2.querydata[query_data_offs+var_idx] )
                             continue;
                         for(int t=0; t<m; t++)
-                            request.reply_dj[reply_dj_offs+t*n+var_idx] += coeff*request.reply_fi[reply_fi_offs+t];
+                            request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] += coeff*request.rcommv2.replyfi[reply_fi_offs+t];
                     }
                 }
         }
@@ -8772,36 +9579,36 @@ public partial class alglib
             //
             // This job can be completely parallelized without synchronization.
             //
-            if( job_idx<request.size*request.vars )
+            if( job_idx<request.rcommv2.querysize*request.rcommv2.queryvars )
             {
                 //
                 // Compute parts of the numerical differentiation formula that do NOT depend
                 // on the value at origin.
                 //
-                int query_idx = job_idx/request.vars;
-                int var_idx   = job_idx%request.vars;
-                int n = request.vars;
-                int m = request.funcs;
-                int fs = request.formulasize;
-                int query_data_offs   = query_idx*(n+request.dim+n*request.formulasize*3);
-                int formula_data_offs = query_data_offs+n+request.dim+var_idx*fs*3;
+                int query_idx = job_idx/request.rcommv2.queryvars;
+                int var_idx   = job_idx%request.rcommv2.queryvars;
+                int n = request.rcommv2.queryvars;
+                int m = request.rcommv2.queryfuncs;
+                int fs = request.rcommv2.queryformulasize;
+                int query_data_offs   = query_idx*(n+request.rcommv2.querydim+n*request.rcommv2.queryformulasize*3);
+                int formula_data_offs = query_data_offs+n+request.rcommv2.querydim+var_idx*fs*3;
                 int reply_dj_offs     = query_idx*n*m;
                 
                 //
                 // Copy inputs to buffers
                 //
-                for(int i=0; i<request.vars; i++)
-                    buffers.tmpX[i] = request.query_data[query_data_offs+i];
-                if( request.dim>0 )
-                    for(int i=0; i<request.dim; i++)
-                        buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+                for(int i=0; i<request.rcommv2.queryvars; i++)
+                    buffers.tmpX[i] = request.rcommv2.querydata[query_data_offs+i];
+                if( request.rcommv2.querydim>0 )
+                    for(int i=0; i<request.rcommv2.querydim; i++)
+                        buffers.tmpC[i] = request.rcommv2.querydata[query_data_offs+request.rcommv2.queryvars+i];
                 
                 //
                 // compute gradient using numerical differentiation formula provided by the optimizer
                 //
                 double xprev = buffers.tmpX[var_idx];
                 for(int t=0; t<m; t++)
-                    request.reply_dj[reply_dj_offs+t*n+var_idx] = 0;
+                    request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] = 0;
                 for(int idx=0; idx<fs; idx++)
                 {
                     bool wait_for_value_at_origin = false;
@@ -8809,45 +9616,45 @@ public partial class alglib
                     //
                     // Multiplier
                     //
-                    double w = request.query_data[formula_data_offs+idx*3+2];
+                    double w = request.rcommv2.querydata[formula_data_offs+idx*3+2];
                     if( w==0 )
                         continue;
                     
                     //
                     // The first term
                     //
-                    if( request.query_data[formula_data_offs+idx*3+0]!=xprev )
+                    if( request.rcommv2.querydata[formula_data_offs+idx*3+0]!=xprev )
                     {
-                        buffers.tmpX[var_idx] = request.query_data[formula_data_offs+idx*3+0];
+                        buffers.tmpX[var_idx] = request.rcommv2.querydata[formula_data_offs+idx*3+0];
                         if( callbacks.func!=null )
                         {
                             double f = 0;
-                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                             callbacks.func(buffers.tmpX, ref f, request.obj);
                             buffers.tmpF[0] = f;
                         }
                         else if( callbacks.func_p!=null )
                         {
                             double f = 0;
-                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                             callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
                             buffers.tmpF[0] = f;
                         }
                         else if( callbacks.fvec!=null )
                         {
-                            //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                             callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
                         }
                         else if( callbacks.fvec_p!=null )
                         {
-                            //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                             callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
                         }
                         else
                             alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
                         buffers.tmpX[var_idx] = xprev;
                         for(int t=0; t<m; t++)
-                            request.reply_dj[reply_dj_offs+t*n+var_idx] += buffers.tmpF[t];
+                            request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] += buffers.tmpF[t];
                     }
                     else 
                     {
@@ -8859,38 +9666,38 @@ public partial class alglib
                     //
                     // The second term
                     //
-                    if( request.query_data[formula_data_offs+idx*3+1]!=xprev )
+                    if( request.rcommv2.querydata[formula_data_offs+idx*3+1]!=xprev )
                     {
-                        buffers.tmpX[var_idx] = request.query_data[formula_data_offs+idx*3+1];
+                        buffers.tmpX[var_idx] = request.rcommv2.querydata[formula_data_offs+idx*3+1];
                         if( callbacks.func!=null )
                         {
                             double f = 0;
-                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                             callbacks.func(buffers.tmpX, ref f, request.obj);
                             buffers.tmpF[0] = f;
                         }
                         else if( callbacks.func_p!=null )
                         {
                             double f = 0;
-                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                             callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
                             buffers.tmpF[0] = f;
                         }
                         else if( callbacks.fvec!=null )
                         {
-                            //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                             callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
                         }
                         else if( callbacks.fvec_p!=null )
                         {
-                            //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                            //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                             callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
                         }
                         else
                             alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
                         buffers.tmpX[var_idx] = xprev;
                         for(int t=0; t<m; t++)
-                            request.reply_dj[reply_dj_offs+t*n+var_idx] -= buffers.tmpF[t];
+                            request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] -= buffers.tmpF[t];
                     }
                     else 
                     {
@@ -8905,7 +9712,7 @@ public partial class alglib
                     if( wait_for_value_at_origin )
                         break;
                     for(int t=0; t<m; t++)
-                        request.reply_dj[reply_dj_offs+t*n+var_idx] *= w;
+                        request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] *= w;
                 }
             }
             else
@@ -8913,19 +9720,19 @@ public partial class alglib
                 //
                 // Compute target value at the origin
                 //
-                int query_idx = job_idx-request.size*request.vars;
-                int query_data_offs = query_idx*(request.vars+request.dim+request.vars*request.formulasize*3);
-                int reply_fi_offs   = query_idx*request.funcs;
-                int m = request.funcs;
+                int query_idx = job_idx-request.rcommv2.querysize*request.rcommv2.queryvars;
+                int query_data_offs = query_idx*(request.rcommv2.queryvars+request.rcommv2.querydim+request.rcommv2.queryvars*request.rcommv2.queryformulasize*3);
+                int reply_fi_offs   = query_idx*request.rcommv2.queryfuncs;
+                int m = request.rcommv2.queryfuncs;
                 
                 //
                 // Copy inputs to buffers
                 //
-                for(int i=0; i<request.vars; i++)
-                    buffers.tmpX[i] = request.query_data[query_data_offs+i];
-                if( request.dim>0 )
-                    for(int i=0; i<request.dim; i++)
-                        buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+                for(int i=0; i<request.rcommv2.queryvars; i++)
+                    buffers.tmpX[i] = request.rcommv2.querydata[query_data_offs+i];
+                if( request.rcommv2.querydim>0 )
+                    for(int i=0; i<request.rcommv2.querydim; i++)
+                        buffers.tmpC[i] = request.rcommv2.querydata[query_data_offs+request.rcommv2.queryvars+i];
                 
                 //
                 // Callback
@@ -8933,31 +9740,31 @@ public partial class alglib
                 if( callbacks.func!=null )
                 {
                     double f = 0;
-                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                     callbacks.func(buffers.tmpX, ref f, request.obj);
                     buffers.tmpF[0] = f;
                 }
                 else if( callbacks.func_p!=null )
                 {
                     double f = 0;
-                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0 && m==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                     callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f, request.obj);
                     buffers.tmpF[0] = f;
                 }
                 else if( callbacks.fvec!=null )
                 {
-                    //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    //!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                     callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
                 }
                 else if( callbacks.fvec_p!=null )
                 {
-                    //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                    //!!!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                     callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
                 }
                 else
                     alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
                 for(int t=0; t<m; t++)
-                    request.reply_fi[reply_fi_offs+t] = buffers.tmpF[t];
+                    request.rcommv2.replyfi[reply_fi_offs+t] = buffers.tmpF[t];
             }
         }
 
@@ -8969,42 +9776,42 @@ public partial class alglib
             //
             // Phase 1: compute parts of the numerical differentiation formula that DO depend on the value at origin.
             //
-            // This phase does not need parallelism because all what we need is to add request.size*request.vars precomputed values.
+            // This phase does not need parallelism because all what we need is to add request.rcommv2.querysize*request.rcommv2.queryvars precomputed values.
             //
-            for(int query_idx=0; query_idx<request.size; query_idx++)
-                for(int var_idx=0; var_idx<request.vars; var_idx++)
+            for(int query_idx=0; query_idx<request.rcommv2.querysize; query_idx++)
+                for(int var_idx=0; var_idx<request.rcommv2.queryvars; var_idx++)
                 {
                     //
                     // Compute parts of the numerical differentiation formula that do NOT depend
                     // on the value at origin.
                     //
-                    int n = request.vars;
-                    int m = request.funcs;
-                    int fs = request.formulasize;
-                    int query_data_offs   = query_idx*(n+request.dim+n*request.formulasize*3);
-                    int formula_data_offs = query_data_offs+n+request.dim+var_idx*fs*3;
+                    int n = request.rcommv2.queryvars;
+                    int m = request.rcommv2.queryfuncs;
+                    int fs = request.rcommv2.queryformulasize;
+                    int query_data_offs   = query_idx*(n+request.rcommv2.querydim+n*request.rcommv2.queryformulasize*3);
+                    int formula_data_offs = query_data_offs+n+request.rcommv2.querydim+var_idx*fs*3;
                     int reply_fi_offs     = query_idx*m;
                     int reply_dj_offs     = query_idx*n*m;
-                    double xx = request.query_data[query_data_offs+var_idx];
+                    double xx = request.rcommv2.querydata[query_data_offs+var_idx];
                     for(int idx=0; idx<fs; idx++)
                     {
                         bool uses_value_at_origin = false;
-                        double w = request.query_data[formula_data_offs+idx*3+2];
+                        double w = request.rcommv2.querydata[formula_data_offs+idx*3+2];
                         if( w==0 )
                             continue;
-                        if( request.query_data[formula_data_offs+idx*3+0]==xx )
+                        if( request.rcommv2.querydata[formula_data_offs+idx*3+0]==xx )
                         {
                             // TODO: integrity check for fs-1!!!!!!!!!
                             uses_value_at_origin = true;
                             for(int t=0; t<m; t++)
-                                request.reply_dj[reply_dj_offs+t*n+var_idx] += request.reply_fi[reply_fi_offs+t];
+                                request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] += request.rcommv2.replyfi[reply_fi_offs+t];
                         }
-                        if( request.query_data[formula_data_offs+idx*3+1]==xx )
+                        if( request.rcommv2.querydata[formula_data_offs+idx*3+1]==xx )
                         {
                             // TODO: integrity check for fs-1!!!!!!!!!
                             uses_value_at_origin = true;
                             for(int t=0; t<m; t++)
-                                request.reply_dj[reply_dj_offs+t*n+var_idx] -= request.reply_fi[reply_fi_offs+t];
+                                request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] -= request.rcommv2.replyfi[reply_fi_offs+t];
                         }
 
                         //
@@ -9014,7 +9821,7 @@ public partial class alglib
                             continue;
                         // TODO: integrity check for fs-1!!!!!!!!!
                         for(int t=0; t<m; t++)
-                            request.reply_dj[reply_dj_offs+t*n+var_idx] *= w;
+                            request.rcommv2.replydj[reply_dj_offs+t*n+var_idx] *= w;
                     }
                 }
         }
@@ -9027,17 +9834,17 @@ public partial class alglib
             //
             // Query and reply offsets
             //
-            int query_data_offs = query_idx*(request.vars+request.dim);
-            int reply_fi_offs   = query_idx*request.funcs;
+            int query_data_offs = query_idx*(request.rcommv2.queryvars+request.rcommv2.querydim);
+            int reply_fi_offs   = query_idx*request.rcommv2.queryfuncs;
             
             //
             // Copy inputs to buffers
             //
-            for(int i=0; i<request.vars; i++)
-                buffers.tmpX[i] = request.query_data[query_data_offs+i];
-            if( request.dim>0 )
-                for(int i=0; i<request.dim; i++)
-                    buffers.tmpC[i] = request.query_data[query_data_offs+request.vars+i];
+            for(int i=0; i<request.rcommv2.queryvars; i++)
+                buffers.tmpX[i] = request.rcommv2.querydata[query_data_offs+i];
+            if( request.rcommv2.querydim>0 )
+                for(int i=0; i<request.rcommv2.querydim; i++)
+                    buffers.tmpC[i] = request.rcommv2.querydata[query_data_offs+request.rcommv2.queryvars+i];
             
             //
             // Callback
@@ -9045,33 +9852,33 @@ public partial class alglib
             if( callbacks.func!=null )
             {
                 double f0 = 0;
-                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0 && request.funcs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0 && request.rcommv2.queryfuncs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                 callbacks.func(buffers.tmpX, ref f0, request.obj);
-                request.reply_fi[reply_fi_offs] = f0;
+                request.rcommv2.replyfi[reply_fi_offs] = f0;
                 return;
             }
             if( callbacks.func_p!=null )
             {
                 double f0 = 0;
-                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0 && request.funcs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0 && request.rcommv2.queryfuncs==1, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                 callbacks.func_p(buffers.tmpX, buffers.tmpC, ref f0, request.obj);
-                request.reply_fi[reply_fi_offs] = f0;
+                request.rcommv2.replyfi[reply_fi_offs] = f0;
                 return;
             }
             if( callbacks.fvec!=null )
             {
-                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim==0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                 callbacks.fvec(buffers.tmpX, buffers.tmpF, request.obj);
-                for(int ridx=0; ridx<request.funcs; ridx++)
-                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                for(int ridx=0; ridx<request.rcommv2.queryfuncs; ridx++)
+                    request.rcommv2.replyfi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
                 return;
             }
             if( callbacks.fvec_p!=null )
             {
-                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.dim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
+                //!!!!!_ALGLIB_ASSERT_THROW_OR_BREAK(request.rcommv2.querydim>0, std::string("ALGLIB: integrity check in '")+request.subpackage+"' subpackage failed; incompatible callback for optimizer request");
                 callbacks.fvec_p(buffers.tmpX, buffers.tmpC, buffers.tmpF, request.obj);
-                for(int ridx=0; ridx<request.funcs; ridx++)
-                    request.reply_fi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
+                for(int ridx=0; ridx<request.rcommv2.queryfuncs; ridx++)
+                    request.rcommv2.replyfi[reply_fi_offs+ridx] = buffers.tmpF[ridx];
                 return;
             }
             alglib.ap.assert(false, "ALGLIB: integrity check in '"+request.subpackage+"' subpackage failed; no callback for optimizer request");
@@ -9080,6 +9887,9 @@ public partial class alglib
     }
 }
 
+#if NET5_0_OR_GREATER
+#pragma warning disable CS8981
+#endif
 public partial class alglib
 {
     public partial class ap

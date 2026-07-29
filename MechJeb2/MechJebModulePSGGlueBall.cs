@@ -111,10 +111,10 @@ namespace MuMech
             if (!(_ascent is { IsFaulted: true }))
                 return;
 
-            LastFailureMessage = _ascent.ExceptionMessage;
+            LastFailureMessage = _ascent.Exception?.Message;
 
-            if (LastFailureMessage != null)
-                Debug.Log(LastFailureMessage);
+            if (_ascent.Exception != null)
+                Debug.Log(_ascent.Exception);
         }
 
         private void MarkReady()
@@ -251,14 +251,14 @@ namespace MuMech
 
                 bool massContinuity = false;
 
-                if (!hasCoast)
+                if (!hasCoast && Core.Guidance.IsCoasting() || !Core.Guidance.hasCoasted)
                 {
                     if ((kspStage == _ascentSettings.CoastStage && (CoastingBefore() || CoastingDuring())) ||
                         (kspStage == _ascentSettings.CoastStage - 1 && CoastingAfter()))
                     {
                         // FIXME: pretty sure there's a bug here where if we hit a tiny mjphase stage first, then we'll insert the "coast during"
                         // coast, and then once we find the substantial mjphase stage, we'll insert two burns.
-                        if (CoastingDuring())
+                        if (CoastingDuring() && !Core.Guidance.hasCoasted)
                         {
                             if (fuelStats.DeltaV > _ascentSettings.MinDeltaV)
                             {

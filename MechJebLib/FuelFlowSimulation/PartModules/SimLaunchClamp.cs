@@ -4,6 +4,7 @@
  */
 
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
@@ -25,5 +26,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         private static void Clear(SimLaunchClamp m)
         {
         }
+
+        public override string ToString() => ModuleLine("SimLaunchClamp", CommonFieldList());
     }
 }

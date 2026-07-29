@@ -5,8 +5,10 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {
@@ -181,6 +183,20 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 else
                     ResourceConsumptions.Add(p.id, propVolumeRate);
             }
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(ModuleLine("SimModuleRCS", CommonFieldList()));
+            sb.AppendLine(Invariant(
+                $"  G={G} Isp={Isp} Thrust={Thrust} RcsEnabled={RcsEnabled} ISPMult={ISPMult} ThrustPercentage={ThrustPercentage} MaxFuelFlow={MaxFuelFlow} MassFlowRate={MassFlowRate}"));
+            sb.AppendLine(Invariant($"  AtmosphereCurve: {AtmosphereCurve}"));
+            sb.Append("  Propellants:");
+            foreach (SimPropellant p in Propellants)
+                sb.Append(Invariant(
+                    $" [id={p.id} ignoreForIsp={p.ignoreForIsp} ratio={p.ratio} flowMode={p.FlowMode} density={p.density}]"));
+            return sb.ToString();
         }
     }
 }
