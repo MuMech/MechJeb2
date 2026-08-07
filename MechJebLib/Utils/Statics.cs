@@ -23,14 +23,24 @@ namespace MechJebLib.Utils
         public const double TAU = 2 * PI;
 
         /// <summary>
-        ///     Normal machine epsilon.  The Double.Epsilon in C# is one ULP above zero which is somewhat useless.
+        ///     Normal machine epsilon.  The Double.Epsilon in C# is one ULP above zero, not one.
         /// </summary>
         public const double EPS = 2.2204460492503131e-16;
+
+        /// <summary>
+        ///     Square root of machine epsilon.
+        /// </summary>
+        public const double SQRT_EPS = 1.4901161193847656e-08;
 
         /// <summary>
         ///     Twice machine epsilon.
         /// </summary>
         public const double EPS2 = EPS * 2;
+
+        /// <summary>
+        ///     The natural log of 2.
+        /// </summary>
+        public const double LN2 = 0.69314718055994530941723212146;
 
         /// <summary>
         ///     Value of the standard gravity constant in m/s.
@@ -114,18 +124,15 @@ namespace MechJebLib.Utils
         public static double SafeAsin(double x) => !IsFinite(x) ? double.NaN : Asin(Clamp(x, -1.0, 1.0));
 
         /// <summary>
-        ///     Inverse hyperbolic tangent function.
+        ///     The natural logarithm of one plus the input.
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Atanh(double x)
+        public static double Log1P(double x)
         {
-            if (Abs(x) > 1)
-                throw new ArgumentException($"Argument to Atanh is out of range: {x}");
-
-            return 0.5 * Log((1 + x) / (1 - x));
+            double y = 1 + x;
+            double z = y - 1;
+            return Log(y) - (z - x) / y;
         }
 
         /// <summary>
@@ -133,14 +140,26 @@ namespace MechJebLib.Utils
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Acosh(double x)
         {
-            if (x < 1)
-                throw new ArgumentException($"Argument to Acosh is out of range: {x}");
+            if (x > 1.0 / SQRT_EPS)
+                return Log(x) + LN2;
 
-            return Log(x + Sqrt(x * x - 1));
+            if (x > 2)
+                return Log(2 * x - 1 / (Sqrt(x * x - 1) + x));
+
+            if (x > 1)
+            {
+                double t = x - 1;
+                return Log1P(t + Sqrt(2 * t + t * t));
+            }
+
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (x == 1)
+                return 0;
+
+            return double.NaN;
         }
 
         /// <summary>
@@ -149,7 +168,52 @@ namespace MechJebLib.Utils
         /// <param name="x"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Asinh(double x) => Log(x + Sqrt(x * x + 1));
+        public static double Asinh(double x)
+        {
+            double a = Abs(x);
+            double s = x < 0 ? -1 : 1;
+
+            if (a > 1 / SQRT_EPS)
+                return s * (Log(a) + LN2);
+
+            if (a > 2)
+                return s * Log(2 * a + 1 / (a + Sqrt(a * a + 1)));
+
+            if (a > SQRT_EPS)
+            {
+                double a2 = a * a;
+                return s * Log1P(a + a2 / (1 + Sqrt(1 + a2)));
+            }
+
+            return x;
+        }
+
+        /// <summary>
+        ///     Inverse hyperbolic tangent function.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Atanh(double x)
+        {
+            double a = Abs(x);
+            double s = x < 0 ? -1 : 1;
+
+            if (a > 1)
+                return double.NaN;
+
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (a == 1)
+                return x < 0 ? double.NegativeInfinity : double.PositiveInfinity;
+
+            if (a >= 0.5)
+                return s * 0.5 * Log1P(2 * a / (1 - a));
+
+            if (a > EPS)
+                return s * 0.5 * Log1P(2 * a + 2 * a * a / (1 - a));
+
+            return x;
+        }
 
         /// <summary>
         ///     Raise floating point number to an integral power using exponentiation by squaring.
