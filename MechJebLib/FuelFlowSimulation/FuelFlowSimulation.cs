@@ -15,7 +15,7 @@ namespace MechJebLib.FuelFlowSimulation
 {
     public class FuelFlowSimulation : AsyncJob
     {
-        private const int MAXSTEPS = 100;
+        private const int MAXSTEPS = 10_000;
 
         public readonly List<FuelStats> Segments = new List<FuelStats>();
         private FuelStats _currentSegment;
