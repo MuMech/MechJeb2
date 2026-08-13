@@ -129,7 +129,7 @@ namespace MechJebLib.FuelFlowSimulation
             ComputeRcsUllageTime(vessel);
 
             UpdateResourceDrainsAndResiduals(vessel);
-            double currentThrust = vessel.ThrustMagnitude;
+            int activeAngines = vessel.ActiveEngines.Count;
 
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
@@ -140,13 +140,12 @@ namespace MechJebLib.FuelFlowSimulation
 
                 // FIXME: if we have constructed a segment which is > 0 dV, but less than 0.02s, and there's a
                 // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
-                if (Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
+                if (dt >= 0.02 && activeAngines != vessel.ActiveEngines.Count)
                 {
                     ClearResiduals();
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
-                    currentThrust = vessel.ThrustMagnitude;
                 }
 
                 _time += dt;
@@ -155,6 +154,7 @@ namespace MechJebLib.FuelFlowSimulation
                 vessel.UpdateMass();
                 vessel.UpdateEngineStats();
                 vessel.UpdateActiveEngines();
+                activeAngines = vessel.ActiveEngines.Count;
                 UpdateResourceDrainsAndResiduals(vessel);
             }
 
@@ -388,7 +388,7 @@ namespace MechJebLib.FuelFlowSimulation
         {
             double maxTime = ResourceMaxTime();
 
-            return maxTime < double.MaxValue && maxTime >= 0 ? maxTime : 0;
+            return maxTime < double.MaxValue && maxTime > 0.001 ? maxTime : 0.001;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
