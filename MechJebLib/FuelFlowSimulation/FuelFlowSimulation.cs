@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -138,8 +138,6 @@ namespace MechJebLib.FuelFlowSimulation
 
                 double dt = MinimumTimeStep();
 
-                // FIXME: if we have constructed a segment which is > 0 dV, but less than 0.02s, and there's a
-                // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
                 if (dt >= 0.02 && activeAngines != vessel.ActiveEngines.Count)
                 {
                     ClearResiduals();
