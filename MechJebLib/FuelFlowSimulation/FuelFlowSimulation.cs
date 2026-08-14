@@ -141,8 +141,19 @@ namespace MechJebLib.FuelFlowSimulation
                 && vessel.ActiveEngines.Count > 0
                 && _sources.Count > 0)
             {
-                int earliestDroppedEgineInStage = vessel.ActiveEngines.Max(x => x.Part.DecoupledInStage);
-                int earliestDroppedTankInStage = _sources.Max(x => x.DecoupledInStage);
+                int earliestDroppedEgineInStage = 0, earliestDroppedTankInStage = 0;
+                for (int i = 0; i < vessel.ActiveEngines.Count; i++)
+                {
+                    earliestDroppedEgineInStage = Max(earliestDroppedEgineInStage, vessel.ActiveEngines[i].Part.DecoupledInStage);
+                    if (vessel.ActiveEngines[i].ThrottleLocked)
+                        earliestDroppedTankInStage = Max(earliestDroppedTankInStage, vessel.ActiveEngines[i].Part.DecoupledInStage);
+                }
+
+                for (int i = 0; i < _sources.Count; i++)
+                {
+                    earliestDroppedTankInStage = Max(earliestDroppedTankInStage, _sources[i].DecoupledInStage);
+                }
+
                 if (earliestDroppedEgineInStage > earliestDroppedTankInStage)
                 {
                     _halfStageIsDetected = true;
