@@ -144,6 +144,7 @@ namespace MechJebLib.FuelFlowSimulation
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
+                    activeAngines = vessel.ActiveEngines.Count;
                 }
 
                 _time += dt;
@@ -152,7 +153,6 @@ namespace MechJebLib.FuelFlowSimulation
                 vessel.UpdateMass();
                 vessel.UpdateEngineStats();
                 vessel.UpdateActiveEngines();
-                activeAngines = vessel.ActiveEngines.Count;
                 UpdateResourceDrainsAndResiduals(vessel);
             }
 
