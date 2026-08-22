@@ -139,19 +139,17 @@ namespace MechJebLib.FuelFlowSimulation
 
             if (!_halfStageIsDetected //is anyone insane enough to build a rocket with multiple half-stages? You never know
                 && vessel.ActiveEngines.Count > 0
-                && _sources.Count > 0)
+                && _partsWithResourceDrains.Count > 0)
             {
                 int earliestDroppedEgineInStage = 0, earliestDroppedTankInStage = 0;
                 for (int i = 0; i < vessel.ActiveEngines.Count; i++)
                 {
                     earliestDroppedEgineInStage = Max(earliestDroppedEgineInStage, vessel.ActiveEngines[i].Part.DecoupledInStage);
-                    if (vessel.ActiveEngines[i].ThrottleLocked)
-                        earliestDroppedTankInStage = Max(earliestDroppedTankInStage, vessel.ActiveEngines[i].Part.DecoupledInStage);
                 }
 
-                for (int i = 0; i < _sources.Count; i++)
+                foreach (var tank in _partsWithResourceDrains)
                 {
-                    earliestDroppedTankInStage = Max(earliestDroppedTankInStage, _sources[i].DecoupledInStage);
+                    earliestDroppedTankInStage = Max(earliestDroppedTankInStage, tank.DecoupledInStage);
                 }
 
                 if (earliestDroppedEgineInStage > earliestDroppedTankInStage)
