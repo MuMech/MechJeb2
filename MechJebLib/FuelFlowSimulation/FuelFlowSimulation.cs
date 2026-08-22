@@ -1,10 +1,11 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using MechJebLib.FuelFlowSimulation.PartModules;
 using MechJebLib.Utils;
@@ -25,6 +26,7 @@ namespace MechJebLib.FuelFlowSimulation
         private readonly HashSet<SimPart> _partsWithRCSDrains = new HashSet<SimPart>();
         private readonly HashSet<SimPart> _partsWithRCSDrains2 = new HashSet<SimPart>();
         private bool _allocatedFirstSegment;
+        private bool _halfStageIsDetected;
 
         public override void Run(object? o = null)
         {
@@ -34,6 +36,7 @@ namespace MechJebLib.FuelFlowSimulation
             if (!(o is SimVessel vessel))
                 throw new ArgumentException("o is not a SimVessel", nameof(o));
 
+            _halfStageIsDetected = false;
             _allocatedFirstSegment = false;
             _time = 0;
             Segments.Clear();
@@ -53,6 +56,9 @@ namespace MechJebLib.FuelFlowSimulation
             Segments.Reverse();
 
             _partsWithResourceDrains.Clear();
+
+            if (!_halfStageIsDetected)
+                vessel.HalfStageIndex = -1;
         }
 
         private void SimulateRCS(SimVessel vessel, bool max)
@@ -129,7 +135,29 @@ namespace MechJebLib.FuelFlowSimulation
             ComputeRcsUllageTime(vessel);
 
             UpdateResourceDrainsAndResiduals(vessel);
-            double currentThrust = vessel.ThrustMagnitude;
+            int activeAngines = vessel.ActiveEngines.Count;
+
+            if (!_halfStageIsDetected //is anyone insane enough to build a rocket with multiple half-stages? You never know
+                && vessel.ActiveEngines.Count > 0
+                && _partsWithResourceDrains.Count > 0)
+            {
+                int earliestDroppedEgineInStage = 0, earliestDroppedTankInStage = 0;
+                for (int i = 0; i < vessel.ActiveEngines.Count; i++)
+                {
+                    earliestDroppedEgineInStage = Max(earliestDroppedEgineInStage, vessel.ActiveEngines[i].Part.DecoupledInStage);
+                }
+
+                foreach (var tank in _partsWithResourceDrains)
+                {
+                    earliestDroppedTankInStage = Max(earliestDroppedTankInStage, tank.DecoupledInStage);
+                }
+
+                if (earliestDroppedEgineInStage > earliestDroppedTankInStage)
+                {
+                    _halfStageIsDetected = true;
+                    vessel.HalfStageIndex = earliestDroppedEgineInStage + 1;
+                }
+            }
 
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
@@ -137,16 +165,19 @@ namespace MechJebLib.FuelFlowSimulation
                     return;
 
                 double dt = MinimumTimeStep();
+                if (_currentSegment.KSPStage == vessel.HalfStageIndex)
+                {
+                    double massFlow = ResourceMaxMassFlow(vessel);
+                    dt = Min(dt, (vessel.Mass - vessel.HalfStageEndMass) / massFlow);
+                }
 
-                // FIXME: if we have constructed a segment which is > 0 dV, but less than 0.02s, and there's a
-                // prior > 0dV segment in the same kspStage we should add those together to reduce clutter.
-                if (Abs(vessel.ThrustMagnitude - currentThrust) > 1e-12)
+                if (dt >= 0.02 && activeAngines != vessel.ActiveEngines.Count)
                 {
                     ClearResiduals();
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
-                    currentThrust = vessel.ThrustMagnitude;
+                    activeAngines = vessel.ActiveEngines.Count;
                 }
 
                 _time += dt;
@@ -388,7 +419,7 @@ namespace MechJebLib.FuelFlowSimulation
         {
             double maxTime = ResourceMaxTime();
 
-            return maxTime < double.MaxValue && maxTime >= 0 ? maxTime : 0;
+            return maxTime < double.MaxValue && maxTime > 0.001 ? maxTime : 0.001;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -400,6 +431,17 @@ namespace MechJebLib.FuelFlowSimulation
                 maxTime = Min(part.ResourceMaxTime(), maxTime);
 
             return maxTime;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double ResourceMaxMassFlow(SimVessel vessel)
+        {
+            double massFlow = 0;
+
+            foreach (SimModuleEngines engine in vessel.ActiveEngines)
+                massFlow += engine.MassFlowRate;
+
+            return massFlow;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -486,6 +528,9 @@ namespace MechJebLib.FuelFlowSimulation
         {
             // always stage if all the engines are burned out
             if (vessel.ActiveEngines.Count == 0)
+                return true;
+
+            if (vessel.CurrentStage == vessel.HalfStageIndex && vessel.Mass - vessel.HalfStageEndMass < 1e-6)
                 return true;
 
             for (int i = 0; i < vessel.ActiveEngines.Count; i++)

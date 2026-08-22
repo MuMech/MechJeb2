@@ -300,6 +300,12 @@ namespace MuMech
             UpdateBurnedResources();
             _shouldDropSolids = null; // invalidate the cache; _droppingSolids recomputes lazily if needed this update
 
+            if (Vessel.currentStage == _stats.HalfStageIndex && Vessel.totalMass <= _stats.HalfStageEndMass)
+            {
+                Stage();
+                return;
+            }
+
             // don't decouple active or idle engines or tanks
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(Vessel.currentStage - 1, _burnedResources, _activeModuleEngines) &&
                 !InverseStageReleasesClamps(Vessel.currentStage - 1))
@@ -613,7 +619,7 @@ namespace MuMech
                         PartResource r = p.Resources.Get(propellant.id);
 
                         if (r.amount <= p.resourceRequestRemainingThreshold)
-                            continue;
+                            return false;
                         if (r.info.id == PartResourceLibrary.ElectricityHashcode)
                             continue;
                         if (!tankResources.Contains(r.info.id))
