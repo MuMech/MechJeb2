@@ -15,6 +15,12 @@ namespace MuMech
 
         private static readonly char[] DockingNodeTypeSeparator = { ',' };
 
+        // KSP changes a docking-port target back to its parent vessel while the
+        // target is farther than the part-target range.  Keep the user's port
+        // choice locally so that cycling does not jump back to the first port.
+        private ModuleDockingNode selectedTargetPort;
+        private Vessel selectedTargetVessel;
+
         public override void OnStart(PartModule.StartState state) => autopilot = Core.GetComputerModule<MechJebModuleDockingAutopilot>();
 
         protected override void WindowGUI(int windowID)
@@ -35,13 +41,13 @@ namespace MuMech
                     GuiUtils.YellowLabel); //Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
             }
 
-            if (!(Core.Target.Target is ModuleDockingNode))
+            DrawTargetPortSelector();
+
+            if (!(Core.Target.Target is ModuleDockingNode) && selectedTargetPort == null)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"),
                     GuiUtils.YellowLabel); //Warning: target is not a docking port. Right click the target docking port and select "Set as target"
             }
-
-            DrawTargetPortSelector();
 
             bool onAxisNodeExists = false;
             foreach (ITargetable node in Vessel.GetTargetables()
@@ -148,7 +154,17 @@ namespace MuMech
         {
             Vessel targetVessel = GetTargetVessel();
             if (targetVessel == null || targetVessel == Vessel)
+            {
+                selectedTargetPort = null;
+                selectedTargetVessel = null;
                 return;
+            }
+
+            if (selectedTargetVessel != targetVessel)
+            {
+                selectedTargetPort = null;
+                selectedTargetVessel = targetVessel;
+            }
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPort"), GuiUtils.LayoutNoExpandWidth);
@@ -162,10 +178,19 @@ namespace MuMech
             }
 
             List<ModuleDockingNode> targetPorts = targetVessel.GetModules<ModuleDockingNode>()
-                .Where(port => IsAvailableTargetPort(port) && ArePortsCompatible(referencePort, port))
+                .Where(port => IsAvailableTargetPort(port) && port.GetTransform() != null &&
+                    ArePortsCompatible(referencePort, port))
                 .ToList();
 
             ModuleDockingNode currentPort = Core.Target.Target as ModuleDockingNode;
+            if (currentPort != null && targetPorts.Contains(currentPort))
+                selectedTargetPort = currentPort;
+            else if (selectedTargetPort != null && !targetPorts.Contains(selectedTargetPort))
+                selectedTargetPort = null;
+
+            if (currentPort == null || !targetPorts.Contains(currentPort))
+                currentPort = selectedTargetPort;
+
             int currentIndex = targetPorts.IndexOf(currentPort);
             string portLabel;
             if (currentIndex >= 0)
@@ -265,6 +290,7 @@ namespace MuMech
                 : (currentIndex + direction + targetPorts.Count) % targetPorts.Count;
 
             ModuleDockingNode targetPort = targetPorts[nextIndex];
+            selectedTargetPort = targetPort;
             Core.Target.Set(targetPort);
             // Keep KSP's global target in sync so other docking aids observe the port change immediately.
             FlightGlobals.fetch.SetVesselTarget(targetPort);
