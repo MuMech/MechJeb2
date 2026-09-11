@@ -21,6 +21,23 @@ namespace MechJebLib.PSG
             return dup;
         }
 
+        public void SetControlContinuity()
+        {
+            this[0].ControlContinuity = false;
+
+            for (int p = 1; p < this.Count; p++)
+            {
+                bool thisUnCollocatedControl = this[p].Unguided || this[p].Coast;
+                bool prevUnCollocatedControl = this[p-1].Unguided || this[p-1].Coast;
+                bool eitherIsCoast = this[p].Coast || this[p - 1].Coast;
+
+                if ((thisUnCollocatedControl || prevUnCollocatedControl) && !eitherIsCoast)
+                    this[p].ControlContinuity = true;
+                else
+                    this[p].ControlContinuity = false;
+            }
+        }
+
         public void FixLastShutdownStage()
         {
             int lastShutdownStage = -1;

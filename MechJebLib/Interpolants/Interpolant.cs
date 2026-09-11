@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
-namespace MechJebLib.ODE
+namespace MechJebLib.Interpolants
 {
-    public class DenseOutput : IInterpolant
+    public class Interpolant : IInterpolant
     {
-        private static readonly ObjectPool<DenseOutput> _pool = new ObjectPool<DenseOutput>(New, Clear);
+        private static readonly ObjectPool<Interpolant> _pool = new ObjectPool<Interpolant>(New, Clear);
 
         // list of interpolant frames
-        private readonly List<DenseNode> _nodes = new List<DenseNode>();
+        private readonly List<InterpolantNode> _nodes = new List<InterpolantNode>();
 
         // tracking of last index from FindIndex() for march-order access acceleration
         private int _lastIndex = -1;
@@ -35,13 +34,13 @@ namespace MechJebLib.ODE
         // direction is +1 or -1 and for -1 nodes[].T will be in reverse order
         public int Direction;
 
-        public static DenseOutput Rent() => _pool.Borrow();
+        public static Interpolant Rent() => _pool.Borrow();
 
-        private static DenseOutput New() => new DenseOutput();
+        private static Interpolant New() => new Interpolant();
 
-        private DenseOutput() { }
+        private Interpolant() { }
 
-        private static void Clear(DenseOutput o)
+        private static void Clear(Interpolant o)
         {
             o.N = -1;
             o._firstT = double.NaN;
@@ -52,7 +51,7 @@ namespace MechJebLib.ODE
             o._lastIndex = -1;
         }
 
-        public void Append(DenseNode n, double maxT)
+        public void Append(InterpolantNode n, double maxT)
         {
             _nodes.Add(n);
             if (N < 1)
@@ -75,15 +74,18 @@ namespace MechJebLib.ODE
 
         private int FindIndex(double x)
         {
-            if (Direction * x < Direction * _firstT)
+            if (Direction * x <= Direction * _firstT)
                 return 0;
-            if (Direction * x > Direction * _lastT)
+            if (Direction * x >= Direction * _lastT)
                 return _nodes.Count - 1;
 
             if (_lastIndex > 0 && Direction * x > Direction * _nodes[_lastIndex].T)
             {
                 if (Direction * x < Direction * _nodes[_lastIndex + 1].T)
                     return _lastIndex;
+
+                if (_lastIndex + 2 > _nodes.Count - 1)
+                    return _lastIndex + 1;
 
                 if (Direction * x >= Direction * _nodes[_lastIndex + 1].T && Direction * x < Direction * _nodes[_lastIndex + 2].T)
                     return _lastIndex + 1;
@@ -124,7 +126,7 @@ namespace MechJebLib.ODE
 
         public void Dispose()
         {
-            foreach (DenseNode n in _nodes)
+            foreach (InterpolantNode n in _nodes)
                 n.Dispose();
             _nodes.Clear();
             _pool.Release(this);

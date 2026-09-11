@@ -1,9 +1,9 @@
 ﻿using System;
 using MechJebLib.Primitives;
 
-namespace MechJebLib.ODE
+namespace MechJebLib.Interpolants
 {
-    public abstract class DenseNode : IDisposable
+    public abstract class InterpolantNode : IDisposable
     {
         public double T; // left endpoint
         public int N;
@@ -20,7 +20,7 @@ namespace MechJebLib.ODE
     /// <summary>
     ///     This is a fake "interpolant" for zero-length t0 == tf "integration".
     /// </summary>
-    public class ConstantNode : DenseNode
+    public class ConstantNode : InterpolantNode
     {
         public ConstantNode(double t, Vec y)
         {

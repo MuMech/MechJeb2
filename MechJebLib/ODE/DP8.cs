@@ -4,6 +4,7 @@
  */
 
 using System;
+using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
 using static System.Math;
 using static MechJebLib.Utils.Statics;
@@ -197,7 +198,7 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
-        protected override DenseNode SnapshotStep() => throw new NotImplementedException();
+        protected override InterpolantNode SnapshotStep() => throw new NotImplementedException();
 
         protected override void Init()
         {

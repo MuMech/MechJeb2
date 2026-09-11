@@ -25,7 +25,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
         }
 
         [Fact]
-        public void Delta3GTO()
+        public void Delta3GeoSynchronous()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5605222.973039, 0.000000, 3043387.760956);
@@ -104,7 +104,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
         }
 
         [Fact]
-        public void Falcon9ExpendableGTO()
+        public void Falcon9ExpendableGeoStationary()
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5605222.973039, 0.000000, 3043387.760956);

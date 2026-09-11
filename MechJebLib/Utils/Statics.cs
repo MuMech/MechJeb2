@@ -33,6 +33,11 @@ namespace MechJebLib.Utils
         public const double SQRT_EPS = 1.4901161193847656e-08;
 
         /// <summary>
+        ///     Machine epsilon squared.
+        /// </summary>
+        public const double EPS_SQ = EPS * EPS;
+
+        /// <summary>
         ///     Twice machine epsilon.
         /// </summary>
         public const double EPS2 = EPS * 2;
@@ -41,6 +46,11 @@ namespace MechJebLib.Utils
         ///     The natural log of 2.
         /// </summary>
         public const double LN2 = 0.69314718055994530941723212146;
+
+        /// <summary>
+        ///     The square root of 2.
+        /// </summary>
+        public const double SQRT2 = 1.4142135623730951;
 
         /// <summary>
         ///     Value of the standard gravity constant in m/s.

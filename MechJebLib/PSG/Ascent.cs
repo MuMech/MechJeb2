@@ -46,7 +46,7 @@ namespace MechJebLib.PSG
 
         private Optimizer ConvergedOptimization(Solution oldSolution)
         {
-            Optimizer.ObjectiveType cost = _fixedBurnTime ? Optimizer.ObjectiveType.MAX_ENERGY : Optimizer.ObjectiveType.MIN_THRUST_ACCEL;
+            Optimizer.ObjectiveType cost = _fixedBurnTime ? Optimizer.ObjectiveType.MAX_ENERGY : Optimizer.ObjectiveType.MIN_TIME;
             var psg = new Optimizer(_problem, _phases, _problem.Terminal, cost);
             psg.TranscribePreviousSolution(oldSolution);
             Solution? solution = psg.Run();
@@ -94,7 +94,7 @@ namespace MechJebLib.PSG
                 return psg;
 
             DebugPrint("*** PHASE 6: Imposing QAlpha Constraints ***");
-            var psg2 = new Optimizer(_problem, psg.Phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
+            var psg2 = new Optimizer(_problem, psg.Phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_TIME);
             psg2.TranscribePreviousBootSolution(solution);
             Solution? solution2 = psg2.Run();
 
@@ -125,7 +125,7 @@ namespace MechJebLib.PSG
             Problem problemNoQa = _problem.WithoutDynamicPressure();
 
             DebugPrint("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
-            var psg = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
+            var psg = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
             Solution? solution = _guesser.InitialGuess(bootPhases, _problem.Terminal.IncT(), _problem.Terminal.TargetOrbitalEnergy());
             psg.TranscribePreviousBootSolution(solution);
             solution = psg.Run();
@@ -147,7 +147,7 @@ namespace MechJebLib.PSG
             if (reConverge)
             {
                 DebugPrint("*** PHASE 4: ADDING BACK UNGUIDED STAGES ***");
-                psg = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
+                psg = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
                 psg.TranscribePreviousBootSolution(solution);
                 solution = psg.Run();
 
@@ -163,7 +163,7 @@ namespace MechJebLib.PSG
              */
 
             DebugPrint("*** PHASE 5: RELAXING TO FREE ATTACHMENT ***");
-            var psg2 = new Optimizer(problemNoQa, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
+            var psg2 = new Optimizer(problemNoQa, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MIN_TIME);
             psg2.TranscribePreviousBootSolution(solution);
             Solution? solution2 = psg2.Run();
 

@@ -5,6 +5,7 @@
 
 using System.Collections.Generic;
 using MechJebLib.Functions;
+using MechJebLib.Interpolants;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
@@ -24,8 +25,6 @@ namespace MechJebLib.PSG
 
         private class VacuumThrustKernel
         {
-            public static int N => InterpolantLayout.INTERPOLANT_LAYOUT_LEN;
-
             // ReSharper disable once NullableWarningSuppressionIsUsed
             public Phase Phase = null!;
 
@@ -44,7 +43,7 @@ namespace MechJebLib.PSG
                 double r3 = r2 * r;
 
                 dy.R = y.V;
-                dy.V = -y.R / r3 + at * y.U;
+                dy.V = -y.R / r3 + at * y.U.normalized;
                 dy.M = -Phase.Mdot;
                 dy.U = V3.zero;
 
@@ -68,14 +67,14 @@ namespace MechJebLib.PSG
         private readonly DP5 _solver = new DP5();
         private readonly List<Event> _events;
 
-        private DenseOutput Integrate(Vec y0, Vec yf, Phase phase, double t0, double tf)
+        private Interpolant Integrate(Vec y0, Vec yf, Phase phase, double t0, double tf)
         {
             _solver.ThrowOnMaxIter = true;
             _solver.Maxiter = 2000;
-            _solver.Rtol = 1e-6;
-            _solver.Atol = 1e-6;
+            _solver.Rtol = 1e-9;
+            _solver.Atol = 1e-9;
             _ode.Phase = phase;
-            var interpolant = DenseOutput.Rent();
+            var interpolant = Interpolant.Rent();
             if (phase.Coast)
                 _solver.Solve(_ode.Rhs, y0, yf, t0, tf, interpolant);
             else
@@ -126,13 +125,13 @@ namespace MechJebLib.PSG
 
                 y0.CopyTo(initial);
 
-                DenseOutput interpolant = Integrate(initial, terminal, phase, t0, t0 + bt);
+                Interpolant interpolant = Integrate(initial, terminal, phase, t0, t0 + bt);
 
                 if (WillIntraPhaseCoast(phases, p))
                 {
                     double btActual = interpolant.MaxT - interpolant.MinT;
                     interpolant.Dispose();
-                    DenseOutput interpolant2 = Integrate(initial, terminal, phase, t0, t0 + btActual * 0.75);
+                    Interpolant interpolant2 = Integrate(initial, terminal, phase, t0, t0 + 0.75 * btActual);
                     solution.AddSegment(interpolant2, phase);
                 }
                 else

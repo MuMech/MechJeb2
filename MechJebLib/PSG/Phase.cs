@@ -54,6 +54,9 @@ namespace MechJebLib.PSG
         // mass continuity assigned to the last two stages in a burn-coast-burn sequence in the same phase (coast during)
         public bool MassContinuity;
 
+        // false in between two guidedburn-guidedburn phases, true for anything else.
+        public bool ControlContinuity;
+
         // true if the stage is inertially fixed
         public bool Unguided;
 
@@ -202,6 +205,8 @@ namespace MechJebLib.PSG
             sb.Append(!AllowShutdown ? " (no shutdown)" : " (allow shutdown)");
             if (MassContinuity)
                 sb.Append(" (mass-continuity)");
+            if (ControlContinuity)
+                sb.Append(" (control-continuity)");
             return sb.ToString();
         }
 
