@@ -109,17 +109,19 @@ namespace MechJebLib.PSG
             var y1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             var dy1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
-            var y0layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k] };
-            var y1layout = new InterpolantLayout { R = thisPhase.R[k + 3], V = thisPhase.V[k + 3], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k + 3] };
+            var y0Layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k] };
+            var y1Layout = new InterpolantLayout { R = thisPhase.R[k + 3], V = thisPhase.V[k + 3], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k + 3] };
 
-            V3 uSlope;
+            const double FINITE_DIFF = 1e-8;
+
+            V3 dy0U, dy1U;
 
             if (phase.GuidedCoast)
             {
-                PhaseProxy prevPhase = _vars[p-1];
-                PhaseProxy nextPhase = _vars[p+1];
-                bool nextUnCollocatedControl = _phases[p+1].Unguided;
-                bool prevUnCollocatedControl = _phases[p-1].Unguided;
+                PhaseProxy prevPhase = _vars[p - 1];
+                PhaseProxy nextPhase = _vars[p + 1];
+                bool nextUnCollocatedControl = _phases[p + 1].Unguided;
+                bool prevUnCollocatedControl = _phases[p - 1].Unguided;
 
                 int nextControlIndex = nextUnCollocatedControl ? 0 : 1;
                 int prevControlIndex = prevUnCollocatedControl ? -1 : -2;
@@ -127,32 +129,33 @@ namespace MechJebLib.PSG
                 V3 u0 = prevPhase.U[prevControlIndex];
                 V3 uf = nextPhase.U[nextControlIndex];
 
-                y0layout.U = V3.Slerp(u0, uf, (double)n / (_n + 1));
-                y1layout.U = V3.Slerp(u0, uf, (double)(n + 1) / (_n + 1));
-                uSlope = (y1layout.U - y0layout.U) / h;
+                y0Layout.U = V3.Slerp(u0, uf, (double)n / (_n + 1));
+                y1Layout.U = V3.Slerp(u0, uf, (double)(n + 1) / (_n + 1));
+                dy0U = (V3.Slerp(y0Layout.U, y1Layout.U, FINITE_DIFF) - y0Layout.U) / FINITE_DIFF * h;
+                dy1U = (V3.Slerp(y1Layout.U, y0Layout.U, -FINITE_DIFF) - y1Layout.U) / FINITE_DIFF * h;
             }
             else if (phase.Unguided)
             {
-                y0layout.U = thisPhase.U[0];
-                y1layout.U = thisPhase.U[0];
-                uSlope = V3.zero;
+                y0Layout.U = thisPhase.U[0];
+                y1Layout.U = thisPhase.U[0];
+                dy0U = dy1U = V3.zero;
             }
             else
             {
                 double tau1 = 0.5 - Math.Sqrt(3) / 6;
                 double tau2 = 0.5 + Math.Sqrt(3) / 6;
-                uSlope = (thisPhase.U[k + 2] - thisPhase.U[k + 1]) / ((tau2 - tau1) * h);
-                y0layout.U = thisPhase.U[k + 1] - uSlope * tau1 * h;
-                y1layout.U = thisPhase.U[k + 2] + uSlope * tau1 * h;
+                dy0U = dy1U = (thisPhase.U[k + 2] - thisPhase.U[k + 1]) / ((tau2 - tau1) * h);
+                y0Layout.U = thisPhase.U[k + 1] - dy0U * tau1 * h;
+                y1Layout.U = thisPhase.U[k + 2] + dy1U * tau1 * h;
             }
 
-            var dy0layout = new InterpolantLayout { R = thisPhase.V[k], V = VDot(y0layout, _problem, phase), M = -phase.Mdot * y0layout.U.magnitude, U = uSlope };
-            var dy1layout = new InterpolantLayout { R = thisPhase.V[k + 3], V = VDot(y1layout, _problem, phase), M = -phase.Mdot * y1layout.U.magnitude, U = uSlope };
+            var dy0Layout = new InterpolantLayout { R = thisPhase.V[k], V = VDot(y0Layout, _problem, phase), M = -phase.Mdot * y0Layout.U.magnitude, U = dy0U };
+            var dy1Layout = new InterpolantLayout { R = thisPhase.V[k + 3], V = VDot(y1Layout, _problem, phase), M = -phase.Mdot * y1Layout.U.magnitude, U = dy1U };
 
-            y0layout.CopyTo(y0);
-            dy0layout.CopyTo(dy0);
-            y1layout.CopyTo(y1);
-            dy1layout.CopyTo(dy1);
+            y0Layout.CopyTo(y0);
+            dy0Layout.CopyTo(dy0);
+            y1Layout.CopyTo(y1);
+            dy1Layout.CopyTo(dy1);
 
             return (y0, dy0, y1, dy1);
         }
