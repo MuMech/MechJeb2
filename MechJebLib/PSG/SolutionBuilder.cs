@@ -35,7 +35,7 @@ namespace MechJebLib.PSG
             {
                 Phase phase = _phases[p];
                 PhaseProxy thisPhase = _vars[p];
-                double mf = thisPhase.M[-1];
+                double mf = thisPhase.M.Last;
                 double bt = thisPhase.Bt();
 
                 // is there unburned propellant going to be left in this stage?
@@ -109,8 +109,8 @@ namespace MechJebLib.PSG
             var y1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             var dy1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
-            var y0Layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k] };
-            var y1Layout = new InterpolantLayout { R = thisPhase.R[k + 3], V = thisPhase.V[k + 3], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k + 3] };
+            var y0Layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k] };
+            var y1Layout = new InterpolantLayout { R = thisPhase.R[k + 3], V = thisPhase.V[k + 3], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k + 3] };
 
             const double FINITE_DIFF = 1e-8;
 
@@ -120,14 +120,9 @@ namespace MechJebLib.PSG
             {
                 PhaseProxy prevPhase = _vars[p - 1];
                 PhaseProxy nextPhase = _vars[p + 1];
-                bool nextUnCollocatedControl = _phases[p + 1].Unguided;
-                bool prevUnCollocatedControl = _phases[p - 1].Unguided;
 
-                int nextControlIndex = nextUnCollocatedControl ? 0 : 1;
-                int prevControlIndex = prevUnCollocatedControl ? -1 : -2;
-
-                V3 u0 = prevPhase.U[prevControlIndex];
-                V3 uf = nextPhase.U[nextControlIndex];
+                V3 u0 = prevPhase.U.Last;
+                V3 uf = nextPhase.U.First;
 
                 y0Layout.U = V3.Slerp(u0, uf, (double)n / (_n + 1));
                 y1Layout.U = V3.Slerp(u0, uf, (double)(n + 1) / (_n + 1));
@@ -136,8 +131,7 @@ namespace MechJebLib.PSG
             }
             else if (phase.Unguided)
             {
-                y0Layout.U = thisPhase.U[0];
-                y1Layout.U = thisPhase.U[0];
+                y0Layout.U = y1Layout.U = thisPhase.U.First;
                 dy0U = dy1U = V3.zero;
             }
             else

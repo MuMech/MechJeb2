@@ -117,17 +117,17 @@ namespace MechJebLib.PSG
                 for (int k = 0; k < K; k++)
                 {
                     int n = k / 3;
-                    double dt = (n + _tau[k%3]) * h;
-                    double olddt = (n + _tau[k%3]) * oldh;
+                    double dt = (n + _tau[k % 3]) * h;
+                    double olddt = (n + _tau[k % 3]) * oldh;
 
                     TranscribePoint(oldSolution, k, thisPhase, phase, m0, oldt0 + olddt, dt);
                 }
 
                 if (phase.Coast)
-                    thisPhase.M[0] = m0;
+                    thisPhase.M.First = m0;
 
                 if (phase.Unguided)
-                    thisPhase.U[0] = thisPhase.U[0].normalized;
+                    thisPhase.U.First = thisPhase.U.First.normalized;
 
                 thisPhase.Bt() = bt;
 
@@ -206,7 +206,7 @@ namespace MechJebLib.PSG
             }
             else if (phase.Unguided)
             {
-                thisPhase.U[0] += u;
+                thisPhase.U.First += u;
             }
             else
             {
@@ -244,17 +244,17 @@ namespace MechJebLib.PSG
                 for (int k = 0; k < K; k++)
                 {
                     int n = k / 3;
-                    double dt = (n + _tau[k%3]) * h;
-                    double olddt = (n + _tau[k%3]) * oldh;
+                    double dt = (n + _tau[k % 3]) * h;
+                    double olddt = (n + _tau[k % 3]) * oldh;
 
                     TranscribePoint(oldSolution, k, thisPhase, phase, m0, oldt0 + olddt, dt);
                 }
 
                 if (phase.Coast)
-                    thisPhase.M[0] = m0;
+                    thisPhase.M.First = m0;
 
                 if (phase.Unguided)
-                    thisPhase.U[0] = thisPhase.U[0].normalized;
+                    thisPhase.U.First = thisPhase.U.First.normalized;
 
                 thisPhase.Bt() = bt;
 

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using MechJebLib.Primitives;
 using static System.Math;
 using static MechJebLib.Utils.AutoDiff;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.PSG
 {
@@ -65,7 +64,7 @@ namespace MechJebLib.PSG
 
             int start = ci;
 
-            _optimizer.Terminal.Constraints(x, lastPhase.R.Idx(-1), lastPhase.V.Idx(-1), f, j, ref ci);
+            _optimizer.Terminal.Constraints(x, lastPhase.R.LastIdx, lastPhase.V.LastIdx, f, j, ref ci);
 
             if (_firstPass)
                 for (int i = start; i < ci; i++)
@@ -134,15 +133,12 @@ namespace MechJebLib.PSG
             PhaseProxy thisPhase = _vars[p];
             PhaseProxy prevPhase = _vars[p - 1];
 
-            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.R[-1], thisPhase.R[0] }, new[] { prevPhase.R.Idx(-1), thisPhase.R.Idx(0) });
-            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.V[-1], thisPhase.V[0] }, new[] { prevPhase.V.Idx(-1), thisPhase.V.Idx(0) });
+            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.R.Last, thisPhase.R.First }, new[] { prevPhase.R.LastIdx, thisPhase.R.FirstIdx });
+            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.V.Last, thisPhase.V.First }, new[] { prevPhase.V.LastIdx, thisPhase.V.FirstIdx });
 
             bool thisUnCollocatedControl = _optimizer.Phases[p].Unguided;
-            bool prevUnCollocatedControl = _optimizer.Phases[p-1].Unguided;
+            bool prevUnCollocatedControl = _optimizer.Phases[p - 1].Unguided;
             bool eitherIsCoast = _optimizer.Phases[p].Coast || _optimizer.Phases[p - 1].Coast;
-
-            int thisControlIndex = thisUnCollocatedControl ? 0 : 1;
-            int prevControlIndex = prevUnCollocatedControl ? -1 : -2;
 
             if ((thisUnCollocatedControl || prevUnCollocatedControl) && !eitherIsCoast)
             {
@@ -153,7 +149,7 @@ namespace MechJebLib.PSG
                     ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: Uz";
                 }
 
-                ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.U[prevControlIndex], thisPhase.U[thisControlIndex] }, new[] { prevPhase.U.Idx(prevControlIndex), thisPhase.U.Idx(thisControlIndex) });
+                ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.U.Last, thisPhase.U.First }, new[] { prevPhase.U.LastIdx, thisPhase.U.FirstIdx });
             }
 
             // mass continuity for coast-within-phase
@@ -161,7 +157,7 @@ namespace MechJebLib.PSG
 
             if (_firstPass) ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: M";
 
-            ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M[-1], thisPhase.M[0] }, new[] { prevPhase.M.Idx(-1), thisPhase.M.Idx(0) });
+            ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M.Last, thisPhase.M.First }, new[] { prevPhase.M.LastIdx, thisPhase.M.FirstIdx });
 
             return ci;
 
@@ -228,16 +224,16 @@ namespace MechJebLib.PSG
             double postM0 = _optimizer.Phases[postIdx].M0;
 
             // fractional propellant remaining at the end of the burn, ending here
-            double b = prePhase.M[-1] / preMf - 1.0;
+            double b = prePhase.M.Last / preMf - 1.0;
             // fractional propellant consumed by the burn starting next
-            double a = 1.0 - postPhase.M[-1] / postM0;
+            double a = 1.0 - postPhase.M.Last / postM0;
             double u = a * a + b * b + 2e-6;
 
             // smoothed Fischer-Burmeister constraint on burned/unburned mass
             f[ci++] = Sqrt(u) - (a + b);
             alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, prePhase.M.Idx(-1), (b / Sqrt(u) - 1) / preMf);
-            alglib.sparseappendelement(j, postPhase.M.Idx(-1), (1 - a / Sqrt(u)) / postM0);
+            alglib.sparseappendelement(j, prePhase.M.LastIdx, (b / Sqrt(u) - 1) / preMf);
+            alglib.sparseappendelement(j, postPhase.M.LastIdx, (1 - a / Sqrt(u)) / postM0);
 
             return ci;
         }
@@ -271,7 +267,7 @@ namespace MechJebLib.PSG
                         if (_firstPass) ConstraintNames[ci] = $"QAlpha constraint for phase {p} grid {k}";
 
                         if (_optimizer.Phases[p].Unguided)
-                            ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U[0] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(0) });
+                            ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U.First }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.FirstIdx });
                         else
                             ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U[k] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(k) });
                     }
@@ -369,8 +365,8 @@ namespace MechJebLib.PSG
 
                 if (_optimizer.Phases[p].Coast)
                 {
-                    m0 = m1 = m2 = m3 = thisPhase.M[0];
-                    m0Idx = m1Idx = m2Idx = m3Idx = thisPhase.M.Idx(0);
+                    m0 = m1 = m2 = m3 = thisPhase.M.First;
+                    m0Idx = m1Idx = m2Idx = m3Idx = thisPhase.M.FirstIdx;
                 }
                 else
                 {
@@ -389,13 +385,13 @@ namespace MechJebLib.PSG
 
                 if (_optimizer.Phases[p].Unguided)
                 {
-                    u1 = u2 = thisPhase.U[0];
-                    u1Idx = u2Idx = thisPhase.U.Idx(0);
+                    u1 = u2 = thisPhase.U.First;
+                    u1Idx = u2Idx = thisPhase.U.FirstIdx;
                 }
                 else if (_optimizer.Phases[p].GuidedCoast)
                 {
                     u1 = u2 = V3.zero;
-                    u1Idx = u2Idx = (-1,-1,-1);
+                    u1Idx = u2Idx = (-1, -1, -1);
                 }
                 else
                 {
@@ -513,16 +509,16 @@ namespace MechJebLib.PSG
 
                     break;
                 case Optimizer.ObjectiveType.MAX_MASS: // this doesn't work for upper stages with fixed burntimes
-                    f[ci++] = -lastPhase.M[-1];
+                    f[ci++] = -lastPhase.M.Last;
                     alglib.sparseappendemptyrow(j);
-                    alglib.sparseappendelement(j, lastPhase.M.Idx(-1), -1.0);
+                    alglib.sparseappendelement(j, lastPhase.M.LastIdx, -1.0);
 
                     break;
                 case Optimizer.ObjectiveType.MAX_ENERGY:
-                    V3 rf = lastPhase.R[-1];
-                    V3 vf = lastPhase.V[-1];
-                    (int, int, int) ri = lastPhase.R.Idx(-1);
-                    (int, int, int) vi = lastPhase.V.Idx(-1);
+                    V3 rf = lastPhase.R.Last;
+                    V3 vf = lastPhase.V.Last;
+                    (int, int, int) ri = lastPhase.R.LastIdx;
+                    (int, int, int) vi = lastPhase.V.LastIdx;
 
                     ci = ApplyScalarConstraintV3(f, j, ci, MaxOrbitalEnergyObjective, new[] { rf, vf }, new[] { ri, vi });
 
