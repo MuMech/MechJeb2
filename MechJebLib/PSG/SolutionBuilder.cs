@@ -91,7 +91,7 @@ namespace MechJebLib.PSG
                 solution.AddSegment(interpolant, _phases[p]);
                 ti = tf;
 
-                solution.DVBar(solution.Tmax);
+                //solution.DVBar(solution.Tmax);
             }
 
             return solution;
@@ -121,8 +121,8 @@ namespace MechJebLib.PSG
                 PhaseProxy prevPhase = _vars[p - 1];
                 PhaseProxy nextPhase = _vars[p + 1];
 
-                V3 u0 = prevPhase.U.Last;
-                V3 uf = nextPhase.U.First;
+                V3 u0 = prevPhase.U.Last * V3.forward;
+                V3 uf = nextPhase.U.First * V3.forward;
 
                 y0Layout.U = V3.Slerp(u0, uf, (double)n / (_n + 1));
                 y1Layout.U = V3.Slerp(u0, uf, (double)(n + 1) / (_n + 1));
@@ -131,16 +131,16 @@ namespace MechJebLib.PSG
             }
             else if (phase.Unguided)
             {
-                y0Layout.U = y1Layout.U = thisPhase.U.First;
+                y0Layout.U = y1Layout.U = thisPhase.U.First * V3.forward;
                 dy0U = dy1U = V3.zero;
             }
             else
             {
                 double tau1 = 0.5 - Math.Sqrt(3) / 6;
                 double tau2 = 0.5 + Math.Sqrt(3) / 6;
-                dy0U = dy1U = (thisPhase.U[k + 2] - thisPhase.U[k + 1]) / ((tau2 - tau1) * h);
-                y0Layout.U = thisPhase.U[k + 1] - dy0U * tau1 * h;
-                y1Layout.U = thisPhase.U[k + 2] + dy1U * tau1 * h;
+                dy0U = dy1U = (thisPhase.U[k + 2] * V3.forward - thisPhase.U[k + 1] * V3.forward) / ((tau2 - tau1) * h);
+                y0Layout.U = thisPhase.U[k + 1] * V3.forward - dy0U * tau1 * h;
+                y1Layout.U = thisPhase.U[k + 2] * V3.forward + dy1U * tau1 * h;
             }
 
             var dy0Layout = new InterpolantLayout { R = thisPhase.V[k], V = VDot(y0Layout, _problem, phase), M = -phase.Mdot * y0Layout.U.magnitude, U = dy0U };

@@ -428,7 +428,7 @@ namespace MechJebLib.Maneuvers
                 if (ogrep.badgradsuspected)
                     if (!DoubleMatrixSparsityValidation(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2))
                         throw new Exception(
-                            $"badgradsuspected: constraint: {ogrep.badgradfidx} variable: {ogrep.badgradvidx} user: {ogrep.badgraduser[ogrep.badgradfidx, ogrep.badgradvidx]:e} != numerical: {ogrep.badgradnum[ogrep.badgradfidx, ogrep.badgradvidx]:e}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2)}");
+                            $"badgradsuspected:\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, null, boxConstrained, 1e-2)}");
 
                 if (ogrep.nonc0suspected)
                     throw new Exception("nonc0suspected");
@@ -499,7 +499,7 @@ namespace MechJebLib.Maneuvers
                 if (ogrep2.badgradsuspected)
                     if (!DoubleMatrixSparsityValidation(ogrep2.badgraduser, ogrep2.badgradnum, boxConstrained, 1e-2))
                         throw new Exception(
-                            $"badgradsuspected: constraint: {ogrep2.badgradfidx} variable: {ogrep2.badgradvidx} user: {ogrep2.badgraduser[ogrep2.badgradfidx, ogrep2.badgradvidx]:e} != numerical: {ogrep2.badgradnum[ogrep2.badgradfidx, ogrep2.badgradvidx]:e}\nuser:\n{DoubleMatrixString(ogrep2.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep2.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep2.badgraduser, ogrep2.badgradnum, boxConstrained, 1e-2)}");
+                            $"badgradsuspected:\nuser:\n{DoubleMatrixString(ogrep2.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep2.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep2.badgraduser, ogrep2.badgradnum, null, boxConstrained, 1e-2)}");
 
                 if (ogrep2.nonc0suspected)
                     throw new Exception("nonc0suspected");

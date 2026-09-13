@@ -178,7 +178,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             const double RHO0 = 1.225;
             const double H0 = 7200;
             const double Q_ALPHA_MAX = 2000;
-            const double Q_MAX = 35000;
+            const double Q_MAX = 0;
             V3 w = 7.29211585e-5 * V3.northpole;
 
             Ascent ascent = Ascent.Builder()

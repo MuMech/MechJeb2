@@ -38,7 +38,7 @@ namespace MechJebLib.PSG
         public int    K                   => 3 * N + 1;
         public int    N                   { get; set; } = 7;
         public int    Maxits              { get; set; } = 4000;
-        public double SQPTrustRegionLimit { get; set; } = 1e-4;
+        public double SQPTrustRegionLimit { get; set; } = 1e-5;
         public double Epsf                { get; set; } = 0; // 1e-9;
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
@@ -206,12 +206,18 @@ namespace MechJebLib.PSG
             }
             else if (phase.Unguided)
             {
-                thisPhase.U.First += u;
+                // pick roughly the midpoint
+                if (k < K / 2)
+                    thisPhase.U.First = Q3.FromToRotation(V3.forward, u.normalized);
+                thisPhase.T.First = phase.Coast ? 0.0 : 1.0;
             }
             else
             {
                 if (k % 3 != 0)
-                    thisPhase.U[k] = u.normalized;
+                {
+                    thisPhase.U[k] = Q3.FromToRotation(V3.forward, u.normalized);
+                    thisPhase.T[k] = 1.0;
+                }
             }
         }
 
@@ -326,10 +332,10 @@ namespace MechJebLib.PSG
                     // skip non-collocated points
                     if (thisPhase.U.Length > 2 && k % 3 == 0)
                         continue;
-                    (int idxX, int idxY, int idxZ) = thisPhase.U.Idx(k);
+                    (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(k);
 
-                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = -2.0;
-                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = 2.0;
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -2.0;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 2.0;
                 }
             }
 
@@ -397,7 +403,7 @@ namespace MechJebLib.PSG
                 }
             }
 
-            // Control norm inequality constraints
+            // thrust magnitude inequality constraints
             foreach (Phase phase in Phases)
             {
                 if (phase.GuidedCoast)
@@ -459,7 +465,7 @@ namespace MechJebLib.PSG
             if (ogrep.badgradsuspected)
                 if (!DoubleMatrixSparsityValidation(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 5e-2))
                     throw new Exception(
-                        $"badgradsuspected: constraint: {ogrep.badgradfidx} ({_ascentProblem.ConstraintNames[ogrep.badgradfidx]}) variable: {ogrep.badgradvidx} user: {ogrep.badgraduser[ogrep.badgradfidx, ogrep.badgradvidx]:e} != numerical: {ogrep.badgradnum[ogrep.badgradfidx, ogrep.badgradvidx]:e}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2)}");
+                        $"badgradsuspected:\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, _ascentProblem.ConstraintNames, boxConstrained, 1e-2)}");
 
             if (ogrep.nonc0suspected)
                 throw new Exception("nonc0suspected");

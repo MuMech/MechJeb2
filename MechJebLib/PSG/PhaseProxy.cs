@@ -310,6 +310,179 @@ namespace MechJebLib.PSG
             public void WrapVars(double[] vars) => _vars = vars;
         }
 
+        public interface IQ3ArrayProxy
+        {
+            int Length { get; }
+            Q3 this[int index] { get; set; }
+            (int, int, int, int) Idx(int index);
+            void            WrapVars(double[] vars);
+            Q3              First    { get; set; }
+            Q3              Last     { get; set; }
+            (int, int, int, int) FirstIdx { get; }
+            (int, int, int, int) LastIdx  { get; }
+        }
+
+        private class Q3ArrayProxy : IQ3ArrayProxy
+        {
+            // reference to the array of decision variables
+            // ReSharper disable once NullableWarningSuppressionIsUsed (late initialized in WrapVars())
+            private double[] _vars = null!;
+
+            private readonly int _xOffset, _yOffset, _zOffset, _wOffset;
+
+            public int Length { get; }
+
+            public Q3 First
+            {
+                get => new Q3(_vars[_xOffset], _vars[_yOffset], _vars[_zOffset], _vars[_wOffset]);
+                set
+                {
+                    _vars[_xOffset] = value.x;
+                    _vars[_yOffset] = value.y;
+                    _vars[_zOffset] = value.z;
+                    _vars[_wOffset] = value.w;
+                }
+            }
+
+            public Q3 Last
+            {
+                get => new Q3(_vars[_xOffset + Length - 1], _vars[_yOffset + Length - 1], _vars[_zOffset + Length - 1], _vars[_wOffset + Length - 1]);
+                set
+                {
+                    _vars[_xOffset + Length - 1] = value.x;
+                    _vars[_yOffset + Length - 1] = value.y;
+                    _vars[_zOffset + Length - 1] = value.z;
+                    _vars[_wOffset + Length - 1] = value.w;
+                }
+            }
+
+            public (int, int, int, int) FirstIdx => (_xOffset, _yOffset, _zOffset, _wOffset);
+            public (int, int, int, int) LastIdx  => (_xOffset + Length - 1, _yOffset + Length - 1, _zOffset + Length - 1, _wOffset + Length - 1);
+
+            public Q3ArrayProxy(int k, int xOffset, int yOffset, int zOffset, int wOffset)
+            {
+                Length = k;
+                _xOffset = xOffset;
+                _yOffset = yOffset;
+                _zOffset = zOffset;
+                _wOffset = wOffset;
+            }
+
+            public Q3 this[int index]
+            {
+                get
+                {
+                    if (index < 0 || index >= Length)
+                        throw new Exception("out of bounds access in proxy");
+                    return new Q3(_vars[_xOffset + index], _vars[_yOffset + index], _vars[_zOffset + index], _vars[_wOffset + index]);
+                }
+                set
+                {
+                    if (index < 0 || index >= Length)
+                        throw new Exception("out of bounds access in proxy");
+                    _vars[_xOffset + index] = value.x;
+                    _vars[_yOffset + index] = value.y;
+                    _vars[_zOffset + index] = value.z;
+                    _vars[_wOffset + index] = value.w;
+                }
+            }
+
+            public (int, int, int, int) Idx(int index)
+            {
+                if (index < 0 || index >= Length)
+                    throw new Exception("out of bounds access in proxy");
+                return (_xOffset + index, _yOffset + index, _zOffset + index, _wOffset + index);
+            }
+
+            public void WrapVars(double[] vars) => _vars = vars;
+        }
+
+        private class ControlQ3ArrayProxy : IQ3ArrayProxy
+        {
+            // reference to the array of decision variables
+            // ReSharper disable once NullableWarningSuppressionIsUsed (late initialized in WrapVars())
+            private double[] _vars = null!;
+
+            private readonly int _xOffset, _yOffset, _zOffset, _wOffset;
+
+            public int Length { get; }
+
+            public Q3 First
+            {
+                get => new Q3(_vars[_xOffset], _vars[_yOffset], _vars[_zOffset], _vars[_wOffset]);
+                set
+                {
+                    _vars[_xOffset] = value.x;
+                    _vars[_yOffset] = value.y;
+                    _vars[_zOffset] = value.z;
+                    _vars[_wOffset] = value.w;
+                }
+            }
+
+            public Q3 Last
+            {
+                get => new Q3(_vars[_xOffset + Length - 1], _vars[_yOffset + Length - 1], _vars[_zOffset + Length - 1], _vars[_wOffset + Length - 1]);
+                set
+                {
+                    _vars[_xOffset + Length - 1] = value.x;
+                    _vars[_yOffset + Length - 1] = value.y;
+                    _vars[_zOffset + Length - 1] = value.z;
+                    _vars[_wOffset + Length - 1] = value.w;
+                }
+            }
+
+            public (int, int, int, int) FirstIdx => (_xOffset, _yOffset, _zOffset,  _wOffset);
+            public (int, int, int, int) LastIdx  => (_xOffset + Length - 1, _yOffset + Length - 1, _zOffset + Length - 1,  _wOffset + Length - 1);
+
+            public ControlQ3ArrayProxy(int k, int xOffset, int yOffset, int zOffset, int wOffset)
+            {
+                Length = k;
+                _xOffset = xOffset;
+                _yOffset = yOffset;
+                _zOffset = zOffset;
+                _wOffset = wOffset;
+            }
+
+            private int MangleIndex(int index)
+            {
+                if (index % 3 == 0)
+                    throw new Exception("internal transcription error - accessing control at invalid point");
+
+                return index / 3 * 2 + index % 3 - 1;
+            }
+
+            public Q3 this[int index]
+            {
+                get
+                {
+                    index = MangleIndex(index);
+                    if (index < 0 || index >= Length)
+                        throw new Exception("out of bounds access in proxy");
+                    return new Q3(_vars[_xOffset + index], _vars[_yOffset + index], _vars[_zOffset + index],_vars[_wOffset + index]);
+                }
+                set
+                {
+                    index = MangleIndex(index);
+                    if (index < 0 || index >= Length)
+                        throw new Exception("out of bounds access in proxy");
+                    _vars[_xOffset + index] = value.x;
+                    _vars[_yOffset + index] = value.y;
+                    _vars[_zOffset + index] = value.z;
+                    _vars[_wOffset + index] = value.w;
+                }
+            }
+
+            public (int, int, int, int) Idx(int index)
+            {
+                index = MangleIndex(index);
+                if (index < 0 || index >= Length)
+                    throw new Exception("out of bounds access in proxy");
+                return (_xOffset + index, _yOffset + index, _zOffset + index,  _wOffset + index);
+            }
+
+            public void WrapVars(double[] vars) => _vars = vars;
+        }
+
         // reference to the array of decision variables
         // ReSharper disable once NullableWarningSuppressionIsUsed (late initialized in WrapVars())
         private double[] _vars = null!;
@@ -351,28 +524,34 @@ namespace MechJebLib.PSG
             if (phase.Unguided)
             {
                 // unguided phases (including coasts) only have one set of control decision variables
-                Ux = new DoubleArrayProxy(1, idx);
-                Uy = new DoubleArrayProxy(1, idx + 1);
-                Uz = new DoubleArrayProxy(1, idx + 2);
-                U = new V3ArrayProxy(1, idx, idx + 1, idx + 2);
-                idx += 3;
+                UX = new DoubleArrayProxy(1, idx);
+                UY = new DoubleArrayProxy(1, idx + 1);
+                UZ = new DoubleArrayProxy(1, idx + 2);
+                UW = new DoubleArrayProxy(1, idx + 3);
+                U = new Q3ArrayProxy(1, idx, idx + 1, idx + 2, idx + 3);
+                T = new DoubleArrayProxy(1, idx + 4);
+                idx += 5;
             }
             else if (phase.GuidedCoast)
             {
                 // guided coasts have no controls (freely interpolates between the two endpoints
-                Ux = new DoubleArrayProxy(0, -1);
-                Uy = new DoubleArrayProxy(0, -1);
-                Uz = new DoubleArrayProxy(0, -1);
-                U = new V3ArrayProxy(0, -1, -1, -1);
+                UX = new DoubleArrayProxy(0, -1);
+                UY = new DoubleArrayProxy(0, -1);
+                UZ = new DoubleArrayProxy(0, -1);
+                UW = new DoubleArrayProxy(0, -1);
+                U = new Q3ArrayProxy(0, -1, -1, -1, -1);
+                T = new DoubleArrayProxy(0, -1);
             }
             else
             {
                 // control grid points only at the midpoints
-                Ux = new ControlArrayProxy(k2, idx);
-                Uy = new ControlArrayProxy(k2, idx + k2);
-                Uz = new ControlArrayProxy(k2, idx + 2 * k2);
-                U = new ControlV3ArrayProxy(k2, idx, idx + k2, idx + 2 * k2);
-                idx += 3 * k2;
+                UX = new ControlArrayProxy(k2, idx);
+                UY = new ControlArrayProxy(k2, idx + k2);
+                UZ = new ControlArrayProxy(k2, idx + 2 * k2);
+                UW = new ControlArrayProxy(k2, idx + 3 * k2);
+                U = new ControlQ3ArrayProxy(k2, idx, idx + k2, idx + 2 * k2,  idx + 3 * k2);
+                T = new ControlArrayProxy(k2, idx + 4 * k2);
+                idx += 5 * k2;
             }
 
             _btOffset = idx;
@@ -382,14 +561,17 @@ namespace MechJebLib.PSG
             NumConstraints += (k - 1) * 6; // dynamical constraints for r, v
             NumConstraints += 1; // staging constraint
             if (!phase.GuidedCoast)
-                NumConstraints += phase.Unguided ? 1 : k2; // control magnitude constraint
+            {
+                NumConstraints += phase.Unguided ? 1 : k2; // unit quaternion constraint
+                NumConstraints += phase.Unguided ? 1 : k2; // thrust magnitude constraint
+            }
             if (!phase.Coast)
                 NumConstraints += k - 1; // dynamical constraints for m
             if (p > 0)
             {
                 NumConstraints += 6; // continuity constraints
                 if (phase.ControlContinuity)
-                    NumConstraints += 3;
+                    NumConstraints += 4;
             }
 
             if (p > 0 && phase.MassContinuity)
@@ -409,10 +591,12 @@ namespace MechJebLib.PSG
         public     IDoubleArrayProxy Vz             { get; }
         public     IV3ArrayProxy     V              { get; }
         public     IDoubleArrayProxy M              { get; }
-        public     IDoubleArrayProxy Ux             { get; }
-        public     IDoubleArrayProxy Uy             { get; }
-        public     IDoubleArrayProxy Uz             { get; }
-        public     IV3ArrayProxy     U              { get; }
+        public     IDoubleArrayProxy UX             { get; }
+        public     IDoubleArrayProxy UY             { get; }
+        public     IDoubleArrayProxy UZ             { get; }
+        public     IDoubleArrayProxy UW             { get; }
+        public     IQ3ArrayProxy     U              { get; }
+        public     IDoubleArrayProxy T              { get; }
         public ref double            Bt()           => ref _vars[_btOffset];
         public     int               BtIdx()        => _btOffset;
         public     int               NumVars        { get; }
@@ -430,10 +614,12 @@ namespace MechJebLib.PSG
             Vz.WrapVars(vars);
             V.WrapVars(vars);
             M.WrapVars(vars);
-            Ux.WrapVars(vars);
-            Uy.WrapVars(vars);
-            Uz.WrapVars(vars);
+            UX.WrapVars(vars);
+            UY.WrapVars(vars);
+            UZ.WrapVars(vars);
+            UW.WrapVars(vars);
             U.WrapVars(vars);
+            T.WrapVars(vars);
         }
     }
 }

@@ -51,6 +51,8 @@ namespace MechJebLib.PSG
 
             ci = DynamicPressureConstraints(f, j, ci);
 
+            ci = ThrustMagnitudeConstraints(f, j, ci);
+
             ci = ControlNormConstraints(f, j, ci);
 
             for (int p = 0; p < _optimizer.Phases.Count; p++)
@@ -79,6 +81,40 @@ namespace MechJebLib.PSG
                         throw new Exception($"Missing constraint in dictionary: {i}");
         }
 
+        private int ThrustMagnitudeConstraints(double[] f, alglib.sparsematrix j, int ci)
+        {
+            for (int p = 0; p < _optimizer.Phases.Count; p++)
+            {
+                PhaseProxy thisPhase = _vars[p];
+
+                if (_optimizer.Phases[p].GuidedCoast)
+                    continue;
+
+                if (_optimizer.Phases[p].Unguided)
+                {
+                    int k = 0;
+
+                    if (_firstPass) ConstraintNames[ci] = $"Thrust magnitude inequality constraint for phase {p} grid {k}";
+
+                    ci = ApplyScalarConstraint(f, j, ci, x => x[0], new[] { thisPhase.T[k] }, new[] { thisPhase.T.Idx(k) });
+
+                    continue;
+                }
+
+                for (int k = 0; k < _optimizer.K; k++)
+                {
+                    if (k % 3 == 0)
+                        continue;
+
+                    if (_firstPass) ConstraintNames[ci] = $"Thrust magnitude inequality constraint for phase {p} grid {k}";
+
+                    ci = ApplyScalarConstraint(f, j, ci, x => x[0], new[] { thisPhase.T[k] }, new[] { thisPhase.T.Idx(k) });
+                }
+            }
+
+            return ci;
+        }
+
         private int ControlNormConstraints(double[] f, alglib.sparsematrix j, int ci)
         {
             for (int p = 0; p < _optimizer.Phases.Count; p++)
@@ -92,9 +128,9 @@ namespace MechJebLib.PSG
                 {
                     int k = 0;
 
-                    if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} grid {k}";
+                    if (_firstPass) ConstraintNames[ci] = $"Control unit quaternion constraint for phase {p} grid {k}";
 
-                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
+                    ci = ApplyScalarConstraintQ3(f, j, ci, x => x[0].magnitude - 1, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
 
                     continue;
                 }
@@ -104,9 +140,9 @@ namespace MechJebLib.PSG
                     if (k % 3 == 0)
                         continue;
 
-                    if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} grid {k}";
+                    if (_firstPass) ConstraintNames[ci] = $"Control unit quaternion constraint for phase {p} grid {k}";
 
-                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
+                    ci = ApplyScalarConstraintQ3(f, j, ci, x => x[0].magnitude - 1, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
                 }
             }
 
@@ -147,9 +183,10 @@ namespace MechJebLib.PSG
                     ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: Ux";
                     ConstraintNames[ci + 1] = $"Continuity constraint for phase {p} and phase {p - 1}: Uy";
                     ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: Uz";
+                    ConstraintNames[ci + 3] = $"Continuity constraint for phase {p} and phase {p - 1}: Uw";
                 }
 
-                ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.U.Last, thisPhase.U.First }, new[] { prevPhase.U.LastIdx, thisPhase.U.FirstIdx });
+                ci = ApplyVectorConstraintQ3(f, j, ci, Q3Diff, new[] { prevPhase.U.Last, thisPhase.U.First }, new[] { prevPhase.U.LastIdx, thisPhase.U.FirstIdx });
             }
 
             // mass continuity for coast-within-phase
@@ -160,6 +197,8 @@ namespace MechJebLib.PSG
             ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M.Last, thisPhase.M.First }, new[] { prevPhase.M.LastIdx, thisPhase.M.FirstIdx });
 
             return ci;
+
+            DualQ3 Q3Diff(DualQ3[] x) => x[0] - x[1];
 
             DualV3 VecDiff(DualV3[] x) => x[0] - x[1];
 
@@ -267,9 +306,9 @@ namespace MechJebLib.PSG
                         if (_firstPass) ConstraintNames[ci] = $"QAlpha constraint for phase {p} grid {k}";
 
                         if (_optimizer.Phases[p].Unguided)
-                            ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U.First }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.FirstIdx });
+                            ci = ApplyQAlphaConstraint(f, j, ci, QAlphaConstraint, thisPhase.R[k], thisPhase.V[k], thisPhase.U.First, thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.FirstIdx);
                         else
-                            ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U[k] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(k) });
+                            ci = ApplyQAlphaConstraint(f, j, ci, QAlphaConstraint, thisPhase.R[k], thisPhase.V[k], thisPhase.U[k], thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(k));
                     }
                 }
             }
@@ -291,16 +330,12 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            Dual QAlphaConstraint(DualV3[] x)
+            Dual QAlphaConstraint(DualV3 r, DualV3 v, DualQ3 u)
             {
-                DualV3 r = x[0];
-                DualV3 v = x[1];
-                DualV3 u = x[2];
-
                 Dual rm = r.magnitude;
                 DualV3 vr = v - DualV3.Cross(w, r);
                 Dual q = 0.5 * rho0InvQAlphaMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
-                Dual alpha = DualV3.AngleUnit(vr.normalized, u);
+                Dual alpha = DualV3.AngleUnit(vr.normalized, u * V3.forward);
 
                 return q * alpha / 100.0;
             }
@@ -380,18 +415,26 @@ namespace MechJebLib.PSG
                     m3Idx = thisPhase.M.Idx(idx + 3);
                 }
 
-                V3 u1, u2;
-                (int, int, int) u1Idx, u2Idx;
+                Q3 u1, u2;
+                (int, int, int, int) u1Idx, u2Idx;
+                double t1, t2;
+                int t1Idx, t2Idx;
 
                 if (_optimizer.Phases[p].Unguided)
                 {
                     u1 = u2 = thisPhase.U.First;
                     u1Idx = u2Idx = thisPhase.U.FirstIdx;
+                    // TODO: we could support fully collocated thrust for throtlleable solids
+                    // TODO: unguided coasts shoudn't have throttle
+                    t1 = t2 = thisPhase.T.First;
+                    t1Idx = t2Idx = thisPhase.T.FirstIdx;
                 }
                 else if (_optimizer.Phases[p].GuidedCoast)
                 {
-                    u1 = u2 = V3.zero;
-                    u1Idx = u2Idx = (-1, -1, -1);
+                    u1 = u2 = Q3.zero;
+                    t1 = t2 = 0;
+                    u1Idx = u2Idx = (-1, -1, -1, -1);
+                    t1Idx = t2Idx = -1;
                 }
                 else
                 {
@@ -399,6 +442,10 @@ namespace MechJebLib.PSG
                     u2 = thisPhase.U[idx + 2];
                     u1Idx = thisPhase.U.Idx(idx + 1);
                     u2Idx = thisPhase.U.Idx(idx + 2);
+                    t1 = thisPhase.T[idx + 1];
+                    t2 = thisPhase.T[idx + 2];
+                    t1Idx = thisPhase.T.Idx(idx + 1);
+                    t2Idx = thisPhase.T.Idx(idx + 2);
                 }
 
                 var point = new GaussLegendreSegment
@@ -417,6 +464,8 @@ namespace MechJebLib.PSG
                     M3 = m3,
                     U1 = u1,
                     U2 = u2,
+                    T1 = t1,
+                    T2 = t2,
                     Bt = thisPhase.Bt()
                 };
 
@@ -436,6 +485,8 @@ namespace MechJebLib.PSG
                     M3Idx = m3Idx,
                     U1Idx = u1Idx,
                     U2Idx = u2Idx,
+                    T1Idx = t1Idx,
+                    T2Idx = t2Idx,
                     BtIdx = thisPhase.BtIdx()
                 };
 
@@ -462,7 +513,7 @@ namespace MechJebLib.PSG
             DualV3 VDotVacuum(ref GaussLegendreDualPoint d)
             {
                 Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
-                return -d.R / r3 + vacThrust / d.M * d.U;
+                return -d.R / r3 + vacThrust / d.M * (d.U * V3.forward) * d.T;
             }
 
             DualV3 VDotAtmo(ref GaussLegendreDualPoint d)
@@ -475,7 +526,7 @@ namespace MechJebLib.PSG
                 DualV3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
                 //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
                 Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
-                return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
+                return -d.R / r3 + thrust / d.M * (d.U * V3.forward) * d.T - drag / d.M;
             }
         }
 
@@ -542,17 +593,17 @@ namespace MechJebLib.PSG
                             {
                                 double mk = thisPhase.M[k];
                                 double u = thisPhase.U[k].magnitude;
-                                double ux = thisPhase.Ux[k];
-                                double uy = thisPhase.Uy[k];
-                                double uz = thisPhase.Uz[k];
+                                double ux = thisPhase.UX[k];
+                                double uy = thisPhase.UY[k];
+                                double uz = thisPhase.UZ[k];
 
                                 if (k == 0 || k == _optimizer.K - 1)
                                 {
                                     val += u * thrust * h6 / mk;
                                     jac[thisPhase.M.Idx(k)] = -u * thrust * h6 / (mk * mk);
-                                    jac[thisPhase.Ux.Idx(k)] = ux * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uy.Idx(k)] = uy * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uz.Idx(k)] = uz * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UX.Idx(k)] = ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UY.Idx(k)] = uy * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UZ.Idx(k)] = uz * thrust * h6 / (u * mk);
                                     jac[thisPhase.BtIdx()] += u * thrust / mk / den;
                                     continue;
                                 }
@@ -561,18 +612,18 @@ namespace MechJebLib.PSG
                                 {
                                     val += u * thrust * h6 * 2.0 / mk;
                                     jac[thisPhase.M.Idx(k)] = -2.0 * u * thrust * h6 / (mk * mk);
-                                    jac[thisPhase.Ux.Idx(k)] = 2.0 * ux * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uy.Idx(k)] = 2.0 * uy * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uz.Idx(k)] = 2.0 * uz * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UX.Idx(k)] = 2.0 * ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UY.Idx(k)] = 2.0 * uy * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UZ.Idx(k)] = 2.0 * uz * thrust * h6 / (u * mk);
                                     jac[thisPhase.BtIdx()] += 2.0 * u * thrust / mk / den;
                                 }
                                 else
                                 {
                                     val += u * thrust * h6 * 4.0 / mk;
                                     jac[thisPhase.M.Idx(k)] = -4.0 * u * thrust * h6 / (mk * mk);
-                                    jac[thisPhase.Ux.Idx(k)] = 4.0 * ux * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uy.Idx(k)] = 4.0 * uy * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uz.Idx(k)] = 4.0 * uz * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UX.Idx(k)] = 4.0 * ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UY.Idx(k)] = 4.0 * uy * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UZ.Idx(k)] = 4.0 * uz * thrust * h6 / (u * mk);
                                     jac[thisPhase.BtIdx()] += 4.0 * u * thrust / mk / den;
                                 }
                             }
