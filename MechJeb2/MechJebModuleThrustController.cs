@@ -586,6 +586,16 @@ namespace MuMech
             }
         }
 
+        // Docking and undocking move engines between vessels.  Restore their original
+        // limits before the next differential-throttle solve sees the new topology.
+        public override void OnVesselWasModified(Vessel v) => DisableDifferentialThrottle();
+
+        public override void OnDestroy()
+        {
+            DisableDifferentialThrottle();
+            base.OnDestroy();
+        }
+
         //A throttle setting that throttles down when the dynamic pressure exceed a set value
         private float MaximumDynamicPressureThrottle()
         {
