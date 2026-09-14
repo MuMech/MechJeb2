@@ -190,18 +190,19 @@ namespace MuMech
             if (!Core.Guidance.IsReady())
                 return;
 
+            bool vesselOutsideAtmosphere = !MainBody.atmosphere || VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude();
+
+            // suspend guidance for long coast phases out of the atmosphere
+            if (Core.Guidance.IsCoasting() && Core.Guidance.CurrentPhaseTgo > 20 && vesselOutsideAtmosphere)
+                return;
+
             if (Core.Guidance.Solution != null)
             {
-                int solutionIndex = Core.Guidance.Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
-
-                if (solutionIndex >= 0)
+                // check for prestaging as the current stage gets low
+                if (Core.Guidance.CurrentPhaseTgo < _ascentSettings.PreStageTime)
                 {
-                    // check for prestaging as the current stage gets low
-                    if (Core.Guidance.Solution?.Tgo(VesselState.Time, solutionIndex) < _ascentSettings.PreStageTime)
-                    {
-                        _blockOptimizerUntilTime = VesselState.Time + _ascentSettings.OptimizerPauseTime;
-                        return;
-                    }
+                    _blockOptimizerUntilTime = VesselState.Time + _ascentSettings.OptimizerPauseTime;
+                    return;
                 }
             }
 
@@ -216,6 +217,8 @@ namespace MuMech
                   , MainBody.gravParameter, MainBody.Radius)
                .SetTarget(peR, apR, attR, Deg2Rad(inclination), Deg2Rad(lan), argp, fpa, attachAltFlag, lanflag, argpFlag);
 
+            // note that we have to solve the atmospheric solution even when flying in vacuum, or the optimzer may decide to dip back
+            // into the atmosphere again and burn up the rocket.
             if (MainBody.atmosphere)
             {
                 // This very crudely fits an exponential between "sea" level and 15% of the way to space to find rho0 and h0
@@ -251,7 +254,7 @@ namespace MuMech
 
                 bool massContinuity = false;
 
-                if (!hasCoast && Core.Guidance.IsCoasting() || !Core.Guidance.hasCoasted)
+                if ((!hasCoast && Core.Guidance.IsCoasting()) || !Core.Guidance.hasCoasted)
                 {
                     if ((kspStage == _ascentSettings.CoastStage && (CoastingBefore() || CoastingDuring())) ||
                         (kspStage == _ascentSettings.CoastStage - 1 && CoastingAfter()))

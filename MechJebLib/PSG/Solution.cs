@@ -249,6 +249,7 @@ namespace MechJebLib.PSG
                     continue;
                 sum += TgoBar(tbar, i) * _timeScale;
             }
+
             return sum;
         }
 
@@ -375,23 +376,17 @@ namespace MechJebLib.PSG
 
         public int IndexForKSPStage(int kspStage, bool coasting)
         {
-            int idx = -1;
-
             for (int i = Phases.Count - 1; i >= 0; i--)
             {
-                if (coasting)
-                {
-                    if (Phases[i].Coast)
-                        return i;
-                }
-                else
-                {
-                    if (Phases[i].KSPStage <= kspStage)
-                        idx = i;
-                }
+                // only ever one coast phase so this test is good enough
+                if (Phases[i].Coast && coasting)
+                    return i;
+                // the kspstage may not match (fairing jettison), hence the inequality test
+                if (!Phases[i].Coast && !coasting && Phases[i].KSPStage <= kspStage)
+                    return i;
             }
 
-            return idx;
+            return -1;
         }
 
         private Vec Interpolate(double tbar) => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);

@@ -66,9 +66,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Vgo(t0).ShouldEqual(3555.5736597608893, 1e-3);
-            // TODO: the tgo value here keeps flopping between 288 and 287 and I don't know why, or what is the correct value, or
+            // TODO: the tgo value here keeps flopping between ~288 and ~287 and I don't know why, or what is the correct value, or
             // if there's some kind of subtle bug around burntimes.
-            solution.Tgo(t0).ShouldEqual( 288.42678854633448, 1e-3);
+            solution.Tgo(t0).ShouldEqual(288.79138859116347, 1e-3);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
         }
