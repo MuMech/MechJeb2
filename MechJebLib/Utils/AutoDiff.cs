@@ -162,10 +162,10 @@ namespace MechJebLib.Utils
         public static (Q3, Vec partialX, Vec partialY, Vec partialZ, Vec partialW) JacobianQ3(Func<DualQ3[], DualQ3> f, Q3[] point)
         {
             int n = point.Length;
-            var partialX = Vec.Rent(3 * n);
-            var partialY = Vec.Rent(3 * n);
-            var partialZ = Vec.Rent(3 * n);
-            var partialW = Vec.Rent(3 * n);
+            var partialX = Vec.Rent(4 * n);
+            var partialY = Vec.Rent(4 * n);
+            var partialZ = Vec.Rent(4 * n);
+            var partialW = Vec.Rent(4 * n);
             var ans = new DualQ3(Q3.zero, Q3.zero);
 
             DualQ3[] duals = RentDualQ3Array(n);
@@ -174,15 +174,15 @@ namespace MechJebLib.Utils
 
             for (int i = 0; i < n; i++)
             {
-                for (int k = 0; k < 3; k++)
+                for (int k = 0; k < 4; k++)
                 {
                     duals[i] = new DualQ3(point[i], k switch { 0 => Q3.xaxis, 1 => Q3.yaxis, 2 => Q3.zaxis, _ => Q3.waxis });
 
                     ans = f(duals);
-                    partialX[i * 3 + k] = ans.D.x;
-                    partialY[i * 3 + k] = ans.D.y;
-                    partialZ[i * 3 + k] = ans.D.z;
-                    partialW[i * 3 + k] = ans.D.w;
+                    partialX[i * 4 + k] = ans.D.x;
+                    partialY[i * 4 + k] = ans.D.y;
+                    partialZ[i * 4 + k] = ans.D.z;
+                    partialW[i * 4 + k] = ans.D.w;
 
                     duals[i] = new DualQ3(point[i], Q3.zero);
                 }
@@ -343,10 +343,10 @@ namespace MechJebLib.Utils
 
             for (int i = 0; i < n; i++)
             {
-                elements[idx[i].Item1] = partialX[3 * i];
-                elements[idx[i].Item2] = partialX[3 * i + 1];
-                elements[idx[i].Item3] = partialX[3 * i + 2];
-                elements[idx[i].Item4] = partialX[3 * i + 3];
+                elements[idx[i].Item1] = partialX[4 * i];
+                elements[idx[i].Item2] = partialX[4 * i + 1];
+                elements[idx[i].Item3] = partialX[4 * i + 2];
+                elements[idx[i].Item4] = partialX[4 * i + 3];
             }
 
             f[ci++] = value.x;
@@ -356,10 +356,10 @@ namespace MechJebLib.Utils
 
             for (int i = 0; i < n; i++)
             {
-                elements[idx[i].Item1] = partialY[3 * i];
-                elements[idx[i].Item2] = partialY[3 * i + 1];
-                elements[idx[i].Item3] = partialY[3 * i + 2];
-                elements[idx[i].Item4] = partialY[3 * i + 3];
+                elements[idx[i].Item1] = partialY[4 * i];
+                elements[idx[i].Item2] = partialY[4 * i + 1];
+                elements[idx[i].Item3] = partialY[4 * i + 2];
+                elements[idx[i].Item4] = partialY[4 * i + 3];
             }
 
             f[ci++] = value.y;
@@ -369,10 +369,10 @@ namespace MechJebLib.Utils
 
             for (int i = 0; i < n; i++)
             {
-                elements[idx[i].Item1] = partialZ[3 * i];
-                elements[idx[i].Item2] = partialZ[3 * i + 1];
-                elements[idx[i].Item3] = partialZ[3 * i + 2];
-                elements[idx[i].Item4] = partialZ[3 * i + 3];
+                elements[idx[i].Item1] = partialZ[4 * i];
+                elements[idx[i].Item2] = partialZ[4 * i + 1];
+                elements[idx[i].Item3] = partialZ[4 * i + 2];
+                elements[idx[i].Item4] = partialZ[4 * i + 3];
             }
 
             f[ci++] = value.z;
@@ -382,10 +382,10 @@ namespace MechJebLib.Utils
 
             for (int i = 0; i < n; i++)
             {
-                elements[idx[i].Item1] = partialW[3 * i];
-                elements[idx[i].Item2] = partialW[3 * i + 1];
-                elements[idx[i].Item3] = partialW[3 * i + 2];
-                elements[idx[i].Item4] = partialW[3 * i + 3];
+                elements[idx[i].Item1] = partialW[4 * i];
+                elements[idx[i].Item2] = partialW[4 * i + 1];
+                elements[idx[i].Item3] = partialW[4 * i + 2];
+                elements[idx[i].Item4] = partialW[4 * i + 3];
             }
 
             f[ci++] = value.w;
@@ -394,6 +394,7 @@ namespace MechJebLib.Utils
             partialX.Dispose();
             partialY.Dispose();
             partialZ.Dispose();
+            partialW.Dispose();
 
             return ci;
         }
@@ -835,7 +836,31 @@ namespace MechJebLib.Utils
 
                 ans = d0.V - d1.V + h4 * vDot(ref d1) + ha * vDot(ref d2);
 
-                if (singleControlVariable && (k == 36 || k == 37))
+                if (singleControlVariable && (k == 28 || k == 29))
+                {
+                    jacX[28] += ans.D.x;
+                    jacY[28] += ans.D.y;
+                    jacZ[28] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 30 || k == 31))
+                {
+                    jacX[30] += ans.D.x;
+                    jacY[30] += ans.D.y;
+                    jacZ[30] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 32 || k == 33))
+                {
+                    jacX[32] += ans.D.x;
+                    jacY[32] += ans.D.y;
+                    jacZ[32] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 34 || k == 35))
+                {
+                    jacX[34] += ans.D.x;
+                    jacY[34] += ans.D.y;
+                    jacZ[34] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 36 || k == 37))
                 {
                     jacX[36] += ans.D.x;
                     jacY[36] += ans.D.y;
@@ -928,7 +953,31 @@ namespace MechJebLib.Utils
 
                 ans = d0.V - d2.V + hb * vDot(ref d1) + h4 * vDot(ref d2);
 
-                if (singleControlVariable && (k == 36 || k == 37))
+                if (singleControlVariable && (k == 28 || k == 29))
+                {
+                    jacX[28] += ans.D.x;
+                    jacY[28] += ans.D.y;
+                    jacZ[28] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 30 || k == 31))
+                {
+                    jacX[30] += ans.D.x;
+                    jacY[30] += ans.D.y;
+                    jacZ[30] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 32 || k == 33))
+                {
+                    jacX[32] += ans.D.x;
+                    jacY[32] += ans.D.y;
+                    jacZ[32] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 34 || k == 35))
+                {
+                    jacX[34] += ans.D.x;
+                    jacY[34] += ans.D.y;
+                    jacZ[34] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 36 || k == 37))
                 {
                     jacX[36] += ans.D.x;
                     jacY[36] += ans.D.y;
@@ -1020,7 +1069,31 @@ namespace MechJebLib.Utils
 
                 ans = d0.V - d3.V + h2 * (vDot(ref d1) + vDot(ref d2));
 
-                if (singleControlVariable && (k == 36 || k == 37))
+                if (singleControlVariable && (k == 28 || k == 29))
+                {
+                    jacX[28] += ans.D.x;
+                    jacY[28] += ans.D.y;
+                    jacZ[28] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 30 || k == 31))
+                {
+                    jacX[30] += ans.D.x;
+                    jacY[30] += ans.D.y;
+                    jacZ[30] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 32 || k == 33))
+                {
+                    jacX[32] += ans.D.x;
+                    jacY[32] += ans.D.y;
+                    jacZ[32] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 34 || k == 35))
+                {
+                    jacX[34] += ans.D.x;
+                    jacY[34] += ans.D.y;
+                    jacZ[34] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 36 || k == 37))
                 {
                     jacX[36] += ans.D.x;
                     jacY[36] += ans.D.y;
