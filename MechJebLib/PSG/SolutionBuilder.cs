@@ -74,7 +74,7 @@ namespace MechJebLib.PSG
             for (int p = 0; p < _phases.Count; p++)
             {
                 PhaseProxy thisPhase = _vars[p];
-                var interpolant = Interpolant.Rent();
+                var interpolant = VecInterpolant.Rent();
 
                 double bt = thisPhase.Bt();
                 double h = bt / _n;

@@ -23,7 +23,7 @@ namespace MechJebLib.PSG
         private readonly List<double> _tmax = new List<double>();
         private readonly List<double> _dvstart = new List<double>();
         private readonly List<double> _dvend = new List<double>();
-        private readonly List<IInterpolant> _interpolants = new List<IInterpolant>();
+        private readonly List<VecInterpolant> _interpolants = new List<VecInterpolant>();
         public readonly List<Phase> Phases = new List<Phase>();
         private readonly double _mu;
         private readonly double _rbody;
@@ -48,7 +48,7 @@ namespace MechJebLib.PSG
             T0 = problem.T0;
         }
 
-        public void AddSegment(IInterpolant interpolant, Phase phase)
+        public void AddSegment(VecInterpolant interpolant, Phase phase)
         {
             _tmin.Add(interpolant.MinT);
             _tmax.Add(interpolant.MaxT);
@@ -452,7 +452,7 @@ namespace MechJebLib.PSG
 
         public void Dispose()
         {
-            foreach (IInterpolant i in _interpolants)
+            foreach (VecInterpolant i in _interpolants)
                 i.Dispose();
             _interpolants.Clear();
         }

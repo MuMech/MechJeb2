@@ -1,10 +1,15 @@
-﻿using MechJebLib.ODE;
+﻿/*
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
+ */
+
+using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 
 namespace MechJebLib.Interpolants
 {
-    internal class Tsit5Node : InterpolantNode
+    internal class Tsit5Node : InterpolantNode<Vec>
     {
         private static readonly ObjectPool<Tsit5Node> _pool = new ObjectPool<Tsit5Node>(New, Clear);
 
@@ -13,8 +18,7 @@ namespace MechJebLib.Interpolants
             Tsit5Node node = _pool.Borrow();
             node.T = t;
             node.H = h;
-            node.Y = y.Dup();
-            node.N = y.Length;
+            node._y = y.Dup();
             node._k1 = k1.Dup();
             node._k2 = k2.Dup();
             node._k3 = k3.Dup();
@@ -32,13 +36,13 @@ namespace MechJebLib.Interpolants
         private static void Clear(Tsit5Node o)
         {
             // ReSharper disable once NullableWarningSuppressionIsUsed
-            o.Y = o._k1 = o._k2 = o._k3 = o._k4 = o._k5 = o._k6 = o._k7 = null!;
-            o.N = -1;
+            o._y = o._k1 = o._k2 = o._k3 = o._k4 = o._k5 = o._k6 = o._k7 = null!;
             o.T = 0;
             o.H = 0;
         }
 
         // ReSharper disable NullableWarningSuppressionIsUsed
+        private Vec _y = null!;
         private Vec _k1 = null!;
         private Vec _k2 = null!;
         private Vec _k3 = null!;
@@ -49,11 +53,16 @@ namespace MechJebLib.Interpolants
         // ReSharper restore NullableWarningSuppressionIsUsed
 
 
-        public override void Evaluate(double x, Vec yout) => Tsit5Math.Interpolate(x, T, H, Y, _k1, _k2, _k3, _k4, _k5, _k6, _k7, yout);
+        public override Vec Evaluate(double x)
+        {
+            var yout = Vec.Rent(_y.Length);
+            Tsit5Math.Interpolate(x, T, H, _y, _k1, _k2, _k3, _k4, _k5, _k6, _k7, yout);
+            return yout;
+        }
 
         public override void Dispose()
         {
-            base.Dispose();
+            _y.Dispose();
             _k1.Dispose();
             _k2.Dispose();
             _k3.Dispose();

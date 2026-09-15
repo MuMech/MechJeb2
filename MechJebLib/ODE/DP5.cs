@@ -125,7 +125,7 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
-        protected override InterpolantNode SnapshotStep() => DP5Node.Rent(T, Habs * Direction, Y, _k1, _k3, _k4, _k5, _k6, _k7);
+        protected override InterpolantNode<Vec> SnapshotStep() => DP5Node.Rent(T, Habs * Direction, Y, _k1, _k3, _k4, _k5, _k6, _k7);
 
         protected override void Init()
         {

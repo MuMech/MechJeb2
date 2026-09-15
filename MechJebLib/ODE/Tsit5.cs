@@ -141,7 +141,7 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
-        protected override InterpolantNode SnapshotStep() => Tsit5Node.Rent(T, Habs * Direction, Y, _k1, _k2, _k3, _k4, _k5, _k6, _k7);
+        protected override InterpolantNode<Vec> SnapshotStep() => Tsit5Node.Rent(T, Habs * Direction, Y, _k1, _k2, _k3, _k4, _k5, _k6, _k7);
 
         protected override void Interpolate(double x, Vec yout) => Tsit5Math.Interpolate(x, T, Habs * Direction, Y, _k1, _k2, _k3, _k4, _k5, _k6, _k7, yout);
     }

@@ -152,7 +152,7 @@ namespace MechJebLib.PSG
                 solution = psg.Run();
 
                 if (!psg.Success() || solution == null)
-                    throw new Exception("Target unreachable (readding unguided stages)");
+                    throw new Exception("Target unreachable (re-adding unguided stages)");
             }
 
             if (_problem.Terminal.IsFPA())

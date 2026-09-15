@@ -1,25 +1,26 @@
-﻿using System;
+﻿/*
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
+ */
+
+using System;
 using System.Collections.Generic;
-using MechJebLib.Primitives;
-using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Interpolants
 {
-    public class Interpolant : IInterpolant
+    public class Interpolant<T>
     {
-        private static readonly ObjectPool<Interpolant> _pool = new ObjectPool<Interpolant>(New, Clear);
-
         // list of interpolant frames
-        private readonly List<InterpolantNode> _nodes = new List<InterpolantNode>();
+        private readonly List<InterpolantNode<T>> _nodes = new List<InterpolantNode<T>>();
 
         // tracking of last index from FindIndex() for march-order access acceleration
         private int _lastIndex = -1;
 
-        // nodes[0].T (in march order)
+        // nodes[0].T (in march-order)
         private double _firstT = double.NaN;
 
-        // nodes[^1].T (in march order)
+        // nodes[^1].T (in march-order)
         private double _lastT = double.NaN;
 
         // actual MaxT (for Direction=+1 this is _lastT plus a delta, for Direction=-1 this is _firstT)
@@ -28,21 +29,15 @@ namespace MechJebLib.Interpolants
         // actual MinT (for Direction=-1 this is _lastT minus a delta, for Direction=+1 this is _firstT)
         public double MinT { get; private set; } = double.PositiveInfinity;
 
-        // size of the Vec being interpolated
-        public int N = -1;
-
         // direction is +1 or -1 and for -1 nodes[].T will be in reverse order
         public int Direction;
 
-        public static Interpolant Rent() => _pool.Borrow();
+        public bool IsEmpty => _nodes.Count == 0;
 
-        private static Interpolant New() => new Interpolant();
+        protected Interpolant() { }
 
-        private Interpolant() { }
-
-        private static void Clear(Interpolant o)
+        protected static void Clear(Interpolant<T> o)
         {
-            o.N = -1;
             o._firstT = double.NaN;
             o._lastT = double.NaN;
             o.MinT = double.PositiveInfinity;
@@ -51,13 +46,11 @@ namespace MechJebLib.Interpolants
             o._lastIndex = -1;
         }
 
-        public void Append(InterpolantNode n, double maxT)
+        public void Clear() => Clear(this);
+
+        public void Append(InterpolantNode<T> n, double maxT)
         {
             _nodes.Add(n);
-            if (N < 1)
-                N = n.N;
-            else if (N != n.N)
-                throw new ArgumentException($"[MechJeb2] DenseOutput.Add(): node lengths do not match {N} != {n.N}");
             Direction = Math.Sign(n.H);
             if (Direction * n.T < Direction * _firstT || !IsFinite(_firstT))
                 _firstT = n.T;
@@ -111,25 +104,32 @@ namespace MechJebLib.Interpolants
             return lo - 1; // lo is the hi value here
         }
 
-        public Vec Evaluate(double x)
+        public T Evaluate(double x)
         {
             int i = FindIndex(x);
 
-            var yout = Vec.Rent(N);
-
-            _nodes[i].Evaluate(x, yout);
+            T yout = _nodes[i].Evaluate(x);
 
             _lastIndex = i;
 
             return yout;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
-            foreach (InterpolantNode n in _nodes)
+            foreach (InterpolantNode<T> n in _nodes)
                 n.Dispose();
             _nodes.Clear();
-            _pool.Release(this);
         }
+    }
+
+    public abstract class InterpolantNode<Typ> : IDisposable
+    {
+        public double T; // left endpoint
+        public double H; // signed step (Habs * Direction)
+
+        public abstract Typ Evaluate(double t);
+
+        public abstract void Dispose();
     }
 }

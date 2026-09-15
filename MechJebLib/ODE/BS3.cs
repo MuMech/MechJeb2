@@ -67,7 +67,7 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
-        protected override InterpolantNode SnapshotStep() => CubicHermiteNode.Rent(T, Habs * Direction, Y, Dy, Ynew, Dynew);
+        protected override InterpolantNode<Vec> SnapshotStep() => CubicHermiteNode.Rent(T, Habs * Direction, Y, Dy, Ynew, Dynew);
 
         protected override void Init()
         {

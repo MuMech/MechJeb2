@@ -67,14 +67,14 @@ namespace MechJebLib.PSG
         private readonly DP5 _solver = new DP5();
         private readonly List<Event> _events;
 
-        private Interpolant Integrate(Vec y0, Vec yf, Phase phase, double t0, double tf)
+        private VecInterpolant Integrate(Vec y0, Vec yf, Phase phase, double t0, double tf)
         {
             _solver.ThrowOnMaxIter = true;
             _solver.Maxiter = 2000;
             _solver.Rtol = 1e-9;
             _solver.Atol = 1e-9;
             _ode.Phase = phase;
-            var interpolant = Interpolant.Rent();
+            var interpolant = VecInterpolant.Rent();
             if (phase.Coast)
                 _solver.Solve(_ode.Rhs, y0, yf, t0, tf, interpolant);
             else
@@ -125,18 +125,18 @@ namespace MechJebLib.PSG
 
                 y0.CopyTo(initial);
 
-                Interpolant interpolant = Integrate(initial, terminal, phase, t0, t0 + bt);
+                VecInterpolant interpolantBase = Integrate(initial, terminal, phase, t0, t0 + bt);
 
                 if (WillIntraPhaseCoast(phases, p))
                 {
-                    double btActual = interpolant.MaxT - interpolant.MinT;
-                    interpolant.Dispose();
-                    Interpolant interpolant2 = Integrate(initial, terminal, phase, t0, t0 + 0.75 * btActual);
+                    double btActual = interpolantBase.MaxT - interpolantBase.MinT;
+                    interpolantBase.Dispose();
+                    VecInterpolant interpolant2 = Integrate(initial, terminal, phase, t0, t0 + 0.75 * btActual);
                     solution.AddSegment(interpolant2, phase);
                 }
                 else
                 {
-                    solution.AddSegment(interpolant, phase);
+                    solution.AddSegment(interpolantBase, phase);
                 }
 
                 y0.CopyFrom(terminal);

@@ -198,7 +198,7 @@ namespace MechJebLib.ODE
             // intentionally left blank
         }
 
-        protected override InterpolantNode SnapshotStep() => throw new NotImplementedException();
+        protected override InterpolantNode<Vec> SnapshotStep() => throw new NotImplementedException();
 
         protected override void Init()
         {

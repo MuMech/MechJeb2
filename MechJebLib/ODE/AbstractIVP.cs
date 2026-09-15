@@ -108,7 +108,7 @@ namespace MechJebLib.ODE
         /// <param name="events"></param>
         /// <exception cref="ArgumentException"></exception>
         public void Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
-            Interpolant? interpolant = null,
+            Interpolant<Vec>? interpolant = null,
             IReadOnlyList<Event>? events = null)
         {
             try
@@ -146,7 +146,7 @@ namespace MechJebLib.ODE
         }
 
         private void _Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
-            Interpolant? interpolant,
+            Interpolant<Vec>? interpolant,
             IReadOnlyList<Event>? events)
         {
             Status = IVPStatus.Initialized;
@@ -290,10 +290,10 @@ namespace MechJebLib.ODE
         protected abstract double SelectInitialStep(IVPFunc f, double t0, Vec y0,
             Vec f0, int direction);
 
-        protected abstract void            InitInterpolant();
-        protected abstract InterpolantNode SnapshotStep();
-        protected abstract void            Interpolate(double x, Vec yout);
-        protected abstract void            Init();
-        protected abstract void            Cleanup();
+        protected abstract void                 InitInterpolant();
+        protected abstract InterpolantNode<Vec> SnapshotStep();
+        protected abstract void                 Interpolate(double x, Vec yout);
+        protected abstract void                 Init();
+        protected abstract void                 Cleanup();
     }
 }
