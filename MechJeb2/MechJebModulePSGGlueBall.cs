@@ -285,7 +285,7 @@ namespace MuMech
 
                         double mf = CoastingDuring() ? fuelStats.EndMass * 1000 : fuelStats.StartMass * 1000;
 
-                        ascentBuilder.AddCoast(fuelStats.StartMass * 1000, mf, mint, maxt, _ascentSettings.CoastStage, mjPhase, unguidedCoast);
+                        ascentBuilder.AddCoast(fuelStats.StartMass * 1000, mf, mint, maxt, _ascentSettings.CoastStage, mjPhase, unguidedCoast, massContinuity: CoastingDuring());
                     }
                 }
 
