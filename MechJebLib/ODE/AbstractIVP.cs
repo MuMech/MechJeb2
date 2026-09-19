@@ -224,7 +224,7 @@ namespace MechJebLib.ODE
                             {
                                 terminate = true;
                                 // take a snapshot of the full interpolant with all values
-                                interpolant?.Append(SnapshotStep(), _activeEvents[i].Time);
+                                interpolant?.Append(SnapshotStep(), T, _activeEvents[i].Time);
                                 // evaluate the interpolant and update Ynew, Tnew, Dynew for next step
                                 using var yinterp = Vec.Rent(N);
                                 Interpolate(_activeEvents[i].Time, yinterp);
@@ -241,7 +241,7 @@ namespace MechJebLib.ODE
                 }
 
                 if (!terminate)
-                    interpolant?.Append(SnapshotStep(), Tnew);
+                    interpolant?.Append(SnapshotStep(), T, Tnew);
 
                 // take a step
                 Y.CopyFrom(Ynew);
@@ -268,7 +268,7 @@ namespace MechJebLib.ODE
             }
 
             if (t0 == tf)
-                interpolant?.Append(new ConstantNode(T, Y), T);
+                interpolant?.Append(ConstantVecNode.Rent(Y), T, T);
 
             Y.CopyTo(yf);
 

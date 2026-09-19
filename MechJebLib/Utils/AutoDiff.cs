@@ -106,7 +106,7 @@ namespace MechJebLib.Utils
         private static (double, Vec) GradientQ3(Func<DualQ3[], Dual> f, Q3[] point)
         {
             int n = point.Length;
-            var partials = Vec.Rent(3 * n);
+            var partials = Vec.Rent(4 * n);
             var ans = new Dual(0);
 
             DualQ3[] duals = RentDualQ3Array(n);
@@ -120,7 +120,7 @@ namespace MechJebLib.Utils
                     duals[i] = new DualQ3(point[i], k switch { 0 => Q3.xaxis, 1 => Q3.yaxis, 2 => Q3.zaxis, _ => Q3.waxis });
 
                     ans = f(duals);
-                    partials[i * 3 + k] = ans.D;
+                    partials[i * 4 + k] = ans.D;
 
                     duals[i] = new DualQ3(point[i], Q3.zero);
                 }
@@ -268,10 +268,10 @@ namespace MechJebLib.Utils
 
             for (int i = 0; i < n; i++)
             {
-                elements[idx[i].Item1] = partials[3 * i];
-                elements[idx[i].Item2] = partials[3 * i + 1];
-                elements[idx[i].Item3] = partials[3 * i + 2];
-                elements[idx[i].Item4] = partials[3 * i + 3];
+                elements[idx[i].Item1] = partials[4 * i];
+                elements[idx[i].Item2] = partials[4 * i + 1];
+                elements[idx[i].Item3] = partials[4 * i + 2];
+                elements[idx[i].Item4] = partials[4 * i + 3];
             }
 
             f[ci++] = value;
@@ -647,10 +647,38 @@ namespace MechJebLib.Utils
             var jac = Vec.Rent(NUM_VARS, true);
             var ans = new Dual();
 
-            var d0 = new GaussLegendreDualPoint { R = segment.R0, V = segment.V0, U = Q3.nan, T = double.NaN, M = segment.M0 };
-            var d1 = new GaussLegendreDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, T = segment.T1, M = segment.M1 };
-            var d2 = new GaussLegendreDualPoint { R = segment.R2, V = segment.V2, U = segment.U2, T = segment.T2, M = segment.M2 };
-            var d3 = new GaussLegendreDualPoint { R = segment.R3, V = segment.V3, U = Q3.nan, T = double.NaN, M = segment.M3 };
+            var d0 = new GaussLegendreDualPoint
+            {
+                R = segment.R0,
+                V = segment.V0,
+                U = Q3.nan,
+                T = double.NaN,
+                M = segment.M0
+            };
+            var d1 = new GaussLegendreDualPoint
+            {
+                R = segment.R1,
+                V = segment.V1,
+                U = segment.U1,
+                T = segment.T1,
+                M = segment.M1
+            };
+            var d2 = new GaussLegendreDualPoint
+            {
+                R = segment.R2,
+                V = segment.V2,
+                U = segment.U2,
+                T = segment.T2,
+                M = segment.M2
+            };
+            var d3 = new GaussLegendreDualPoint
+            {
+                R = segment.R3,
+                V = segment.V3,
+                U = Q3.nan,
+                T = double.NaN,
+                M = segment.M3
+            };
             var dbt = new Dual(segment.Bt);
 
             bool singleControlVariable = indexes.Index(36) == indexes.Index(37);
@@ -699,7 +727,7 @@ namespace MechJebLib.Utils
             jac.Dispose();
             jac = Vec.Rent(NUM_VARS, true);
 
-            int[] idxs2 = { 24, 26, 36, 37, 38};
+            int[] idxs2 = { 24, 26, 36, 37, 38 };
 
             foreach (int k in idxs2)
             {
@@ -793,10 +821,38 @@ namespace MechJebLib.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ApplyGaussLegendreDynamics(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot, GaussLegendreSegment segment, GaussLegendreIndexes indexes, int n)
         {
-            var d0 = new GaussLegendreDualPoint { R = segment.R0, V = segment.V0, U = Q3.nan, T = double.NaN, M = segment.M0 };
-            var d1 = new GaussLegendreDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, T = segment.T1, M = segment.M1 };
-            var d2 = new GaussLegendreDualPoint { R = segment.R2, V = segment.V2, U = segment.U2, T = segment.T2, M = segment.M2 };
-            var d3 = new GaussLegendreDualPoint { R = segment.R3, V = segment.V3, U = Q3.nan, T = double.NaN, M = segment.M3 };
+            var d0 = new GaussLegendreDualPoint
+            {
+                R = segment.R0,
+                V = segment.V0,
+                U = Q3.nan,
+                T = double.NaN,
+                M = segment.M0
+            };
+            var d1 = new GaussLegendreDualPoint
+            {
+                R = segment.R1,
+                V = segment.V1,
+                U = segment.U1,
+                T = segment.T1,
+                M = segment.M1
+            };
+            var d2 = new GaussLegendreDualPoint
+            {
+                R = segment.R2,
+                V = segment.V2,
+                U = segment.U2,
+                T = segment.T2,
+                M = segment.M2
+            };
+            var d3 = new GaussLegendreDualPoint
+            {
+                R = segment.R3,
+                V = segment.V3,
+                U = Q3.nan,
+                T = double.NaN,
+                M = segment.M3
+            };
             var dbt = new Dual(segment.Bt);
 
             ci = RDotEquation1(f, j, ci, segment, indexes, n, dbt, d0, d1, d2);
@@ -825,7 +881,7 @@ namespace MechJebLib.Utils
 
             for (int k = 0; k < NUM_VARS; k++)
             {
-                if (k < NUM_VARS-1)
+                if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
                 else
                     dbt = new Dual(segment.Bt, 1);
@@ -873,7 +929,7 @@ namespace MechJebLib.Utils
                     jacZ[k] = ans.D.z;
                 }
 
-                if (k < NUM_VARS-1)
+                if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
                 else
                     dbt = new Dual(segment.Bt);
@@ -942,7 +998,7 @@ namespace MechJebLib.Utils
 
             for (int k = 0; k < NUM_VARS; k++)
             {
-                if (k < NUM_VARS-1)
+                if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
                 else
                     dbt = new Dual(segment.Bt, 1);
@@ -990,7 +1046,7 @@ namespace MechJebLib.Utils
                     jacZ[k] = ans.D.z;
                 }
 
-                if (k < NUM_VARS-1)
+                if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
                 else
                     dbt = new Dual(segment.Bt);
@@ -1059,7 +1115,7 @@ namespace MechJebLib.Utils
 
             for (int k = 0; k < NUM_VARS; k++)
             {
-                if (k < NUM_VARS-1)
+                if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
                 else
                     dbt = new Dual(segment.Bt, 1);
@@ -1106,7 +1162,7 @@ namespace MechJebLib.Utils
                     jacZ[k] = ans.D.z;
                 }
 
-                if (k < NUM_VARS-1)
+                if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
                 else
                     dbt = new Dual(segment.Bt);
@@ -1215,13 +1271,13 @@ namespace MechJebLib.Utils
 
             ans = d0.R - d1.R + h4 * d1.V + ha * d2.V;
 
-            jacX[NUM_VARS-1] = ans.x.D;
-            jacY[NUM_VARS-1] = ans.y.D;
-            jacZ[NUM_VARS-1] = ans.z.D;
+            jacX[NUM_VARS - 1] = ans.x.D;
+            jacY[NUM_VARS - 1] = ans.y.D;
+            jacZ[NUM_VARS - 1] = ans.z.D;
 
             f[ci++] = ans.M.x;
 
-            int[] idxs1 = { 0, 1, 13, 14, NUM_VARS-1 };
+            int[] idxs1 = { 0, 1, 13, 14, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs1)
@@ -1229,7 +1285,7 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.y;
 
-            int[] idxs2 = { 4, 5, 17, 18, NUM_VARS-1 };
+            int[] idxs2 = { 4, 5, 17, 18, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs2)
@@ -1237,7 +1293,7 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.z;
 
-            int[] idxs3 = { 8, 9, 21, 22, NUM_VARS-1 };
+            int[] idxs3 = { 8, 9, 21, 22, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs3)
@@ -1301,13 +1357,13 @@ namespace MechJebLib.Utils
 
             ans = d0.R - d2.R + hb * d1.V + h4 * d2.V;
 
-            jacX[NUM_VARS-1] = ans.x.D;
-            jacY[NUM_VARS-1] = ans.y.D;
-            jacZ[NUM_VARS-1] = ans.z.D;
+            jacX[NUM_VARS - 1] = ans.x.D;
+            jacY[NUM_VARS - 1] = ans.y.D;
+            jacZ[NUM_VARS - 1] = ans.z.D;
 
             f[ci++] = ans.M.x;
 
-            int[] idxs1 = { 0, 2, 13, 14, NUM_VARS-1 };
+            int[] idxs1 = { 0, 2, 13, 14, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs1)
@@ -1315,7 +1371,7 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.y;
 
-            int[] idxs2 = { 4, 6, 17, 18, NUM_VARS-1 };
+            int[] idxs2 = { 4, 6, 17, 18, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs2)
@@ -1323,7 +1379,7 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.z;
 
-            int[] idxs3 = { 8, 10, 21, 22, NUM_VARS-1 };
+            int[] idxs3 = { 8, 10, 21, 22, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs3)
@@ -1385,13 +1441,13 @@ namespace MechJebLib.Utils
 
             ans = d0.R - d3.R + h2 * (d1.V + d2.V);
 
-            jacX[NUM_VARS-1] = ans.x.D;
-            jacY[NUM_VARS-1] = ans.y.D;
-            jacZ[NUM_VARS-1] = ans.z.D;
+            jacX[NUM_VARS - 1] = ans.x.D;
+            jacY[NUM_VARS - 1] = ans.y.D;
+            jacZ[NUM_VARS - 1] = ans.z.D;
 
             f[ci++] = ans.M.x;
 
-            int[] idxs1 = { 0, 3, 13, 14, NUM_VARS-1 };
+            int[] idxs1 = { 0, 3, 13, 14, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs1)
@@ -1399,7 +1455,7 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.y;
 
-            int[] idxs2 = { 4, 7, 17, 18, NUM_VARS-1 };
+            int[] idxs2 = { 4, 7, 17, 18, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs2)
@@ -1407,7 +1463,7 @@ namespace MechJebLib.Utils
 
             f[ci++] = ans.M.z;
 
-            int[] idxs3 = { 8, 11, 21, 22, NUM_VARS-1 };
+            int[] idxs3 = { 8, 11, 21, 22, NUM_VARS - 1 };
 
             alglib.sparseappendemptyrow(j);
             foreach (int k in idxs3)

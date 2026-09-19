@@ -16,8 +16,8 @@ namespace MechJebLib.Interpolants
         public static DP5Node Rent(double t, double h, Vec y, Vec k1, Vec k3, Vec k4, Vec k5, Vec k6, Vec k7)
         {
             DP5Node node = _pool.Borrow();
-            node.T = t;
-            node.H = h;
+            node._t = t;
+            node._h = h;
             node._y = y.Dup();
             node._k1 = k1.Dup();
             node._k3 = k3.Dup();
@@ -34,13 +34,16 @@ namespace MechJebLib.Interpolants
 
         private static void Clear(DP5Node o)
         {
+            o.LeftT = o.RightT = 0;
             // ReSharper disable once NullableWarningSuppressionIsUsed
             o._y = o._k1 = o._k3 = o._k4 = o._k5 = o._k6 = o._k7 = null!;
-            o.T = 0;
-            o.H = 0;
+            o._t = 0;
+            o._h = 0;
         }
 
         // ReSharper disable NullableWarningSuppressionIsUsed
+        private double _t;
+        private double _h;
         private Vec _y = null!;
         private Vec _k1 = null!;
         private Vec _k3 = null!;
@@ -53,7 +56,7 @@ namespace MechJebLib.Interpolants
         public override Vec Evaluate(double x)
         {
             var yout = Vec.Rent(_y.Length);
-            DP5Math.Interpolate(x, T, H, _y, _k1, _k3, _k4, _k5, _k6, _k7, yout);
+            DP5Math.Interpolate(x, _t, _h, _y, _k1, _k3, _k4, _k5, _k6, _k7, yout);
             return yout;
         }
 

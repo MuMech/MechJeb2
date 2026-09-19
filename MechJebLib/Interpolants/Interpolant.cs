@@ -17,20 +17,20 @@ namespace MechJebLib.Interpolants
         // tracking of last index from FindIndex() for march-order access acceleration
         private int _lastIndex = -1;
 
-        // nodes[0].T (in march-order)
+        // nodes[0].LeftT (in march-order)
         private double _firstT = double.NaN;
 
-        // nodes[^1].T (in march-order)
+        // nodes[^1].LeftT (in march-order)
         private double _lastT = double.NaN;
 
-        // actual MaxT (for Direction=+1 this is _lastT plus a delta, for Direction=-1 this is _firstT)
+        // actual MaxT
         public double MaxT { get; private set; } = double.NegativeInfinity;
 
-        // actual MinT (for Direction=-1 this is _lastT minus a delta, for Direction=+1 this is _firstT)
+        // actual MinT
         public double MinT { get; private set; } = double.PositiveInfinity;
 
-        // direction is +1 or -1 and for -1 nodes[].T will be in reverse order
-        public int Direction;
+        // direction is +1 or -1 and for -1 nodes[].LeftT will be in reverse order
+        private int _direction;
 
         public bool IsEmpty => _nodes.Count == 0;
 
@@ -38,49 +38,70 @@ namespace MechJebLib.Interpolants
 
         protected static void Clear(Interpolant<T> o)
         {
+            foreach (InterpolantNode<T> n in o._nodes)
+                n.Dispose();
+            o._nodes.Clear();
             o._firstT = double.NaN;
             o._lastT = double.NaN;
             o.MinT = double.PositiveInfinity;
             o.MaxT = double.NegativeInfinity;
-            o.Direction = 0;
+            o._direction = 0;
             o._lastIndex = -1;
         }
 
         public void Clear() => Clear(this);
 
-        public void Append(InterpolantNode<T> n, double maxT)
+        public void Append(InterpolantNode<T> n, double leftT, double rightT)
         {
-            _nodes.Add(n);
-            Direction = Math.Sign(n.H);
-            if (Direction * n.T < Direction * _firstT || !IsFinite(_firstT))
-                _firstT = n.T;
-            if (Direction * n.T > Direction * _lastT || !IsFinite(_lastT))
-                _lastT = n.T;
+            n.LeftT = leftT;
+            n.RightT = rightT;
 
-            double min = Direction < 0 ? maxT : n.T;
-            if (min < MinT)
-                MinT = min;
-            double max = Direction > 0 ? maxT : n.T;
+            _nodes.Add(n);
+
+            int newDirection = Math.Sign(rightT - leftT);
+            if (newDirection != 0)
+            {
+                if (_direction != 0 && newDirection != _direction)
+                    throw new InvalidOperationException("[MechJeb] internal error: appending an interpolant node that changes interpolant direction");
+                _direction = newDirection;
+            }
+
+            if (!IsFinite(_firstT))
+                _firstT = leftT;
+            if (!IsFinite(_lastT))
+                _lastT = rightT;
+            if (_direction * leftT < _direction * _firstT)
+                _firstT = leftT;
+            if (_direction * leftT > _direction * _lastT)
+                _lastT = leftT;
+
+            double max = _direction > 0 ? rightT : leftT;
             if (max > MaxT)
                 MaxT = max;
+
+            double min = _direction > 0 ? leftT : rightT;
+            if (min < MinT)
+                MinT = min;
         }
 
         private int FindIndex(double x)
         {
-            if (Direction * x <= Direction * _firstT)
+            if (IsEmpty)
+                throw new InvalidOperationException("[MechJeb] internal error: interpolant is empty.");
+
+            int direction = _direction != 0 ? _direction : 1;
+
+            if (direction * x <= direction * _nodes[0].RightT)
                 return 0;
-            if (Direction * x >= Direction * _lastT)
+            if (direction * x >= direction * _nodes[_nodes.Count - 1].LeftT)
                 return _nodes.Count - 1;
 
-            if (_lastIndex > 0 && Direction * x > Direction * _nodes[_lastIndex].T)
+            if (_lastIndex > 0 && direction * x > direction * _nodes[_lastIndex].LeftT)
             {
-                if (Direction * x < Direction * _nodes[_lastIndex + 1].T)
+                if (direction * x < direction * _nodes[_lastIndex].RightT)
                     return _lastIndex;
 
-                if (_lastIndex + 2 > _nodes.Count - 1)
-                    return _lastIndex + 1;
-
-                if (Direction * x >= Direction * _nodes[_lastIndex + 1].T && Direction * x < Direction * _nodes[_lastIndex + 2].T)
+                if (direction * x >= direction * _nodes[_lastIndex + 1].LeftT && direction * x < direction * _nodes[_lastIndex + 1].RightT)
                     return _lastIndex + 1;
             }
 
@@ -90,7 +111,7 @@ namespace MechJebLib.Interpolants
             while (lo <= hi)
             {
                 int i = lo + ((hi - lo) >> 1);
-                int order = Direction * x.CompareTo(_nodes[i].T);
+                int order = direction * x.CompareTo(_nodes[i].LeftT);
 
                 if (order == 0)
                     return i;
@@ -115,18 +136,13 @@ namespace MechJebLib.Interpolants
             return yout;
         }
 
-        public virtual void Dispose()
-        {
-            foreach (InterpolantNode<T> n in _nodes)
-                n.Dispose();
-            _nodes.Clear();
-        }
+        public virtual void Dispose() => Clear(this);
     }
 
     public abstract class InterpolantNode<Typ> : IDisposable
     {
-        public double T; // left endpoint
-        public double H; // signed step (Habs * Direction)
+        public double LeftT;
+        public double RightT;
 
         public abstract Typ Evaluate(double t);
 

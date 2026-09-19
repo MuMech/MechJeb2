@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -323,7 +323,7 @@ namespace MechJebLib.PSG
             var x = InterpolantLayout.CreateFrom(xRaw);
             V3 u0 = x.U.normalized;
 
-            double thrustPct = x.U.magnitude;
+            double thrustPct = x.T;
             int phase = IndexForTbar(tBar);
             double minThrottle = Phases[phase].MinThrottle;
             double kspThrottle = minThrottle < 1.0 ? (thrustPct - minThrottle) / (1.0 - minThrottle) : 1.0;
@@ -376,6 +376,10 @@ namespace MechJebLib.PSG
 
         public int IndexForKSPStage(int kspStage, bool coasting)
         {
+            // phases are in chronological order, which is descending KSPStage order, so walking backwards and
+            // keeping the last match lands on the earliest (currently active) phase rather than the final one.
+            int idx = -1;
+
             for (int i = Phases.Count - 1; i >= 0; i--)
             {
                 // only ever one coast phase so this test is good enough
@@ -383,10 +387,10 @@ namespace MechJebLib.PSG
                     return i;
                 // the kspstage may not match (fairing jettison), hence the inequality test
                 if (!Phases[i].Coast && !coasting && Phases[i].KSPStage <= kspStage)
-                    return i;
+                    idx = i;
             }
 
-            return -1;
+            return idx;
         }
 
         private Vec Interpolate(double tbar) => _interpolants[IndexForTbar(tbar)].Evaluate(tbar);

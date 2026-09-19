@@ -14,8 +14,8 @@ namespace MechJebLib.Interpolants
         public static CubicHermiteDoubleNode Rent(double t, double h, double y, double dy, double ynew, double dynew)
         {
             CubicHermiteDoubleNode node = _pool.Borrow();
-            node.T = t;
-            node.H = h;
+            node._t = t;
+            node._h = h;
             node._y = y;
             node._dy = dy;
             node._ynew = ynew;
@@ -29,20 +29,21 @@ namespace MechJebLib.Interpolants
 
         private static void Clear(CubicHermiteDoubleNode o)
         {
+            o.LeftT = o.RightT = 0;
             // ReSharper disable once NullableWarningSuppressionIsUsed
             o._y = o._dy = o._ynew = o._dynew = 0;
-            o.T = 0;
-            o.H = 0;
         }
 
         // ReSharper disable NullableWarningSuppressionIsUsed
+        private double _t;
+        private double _h;
         private double _y;
         private double _dy;
         private double _ynew;
         private double _dynew;
         // ReSharper restore NullableWarningSuppressionIsUsed
 
-        public override double Evaluate(double x) => Functions.Interpolants.CubicHermiteInterpolant(T, _y, _dy, T + H, _ynew, _dynew, x);
+        public override double Evaluate(double x) => Functions.Interpolants.CubicHermiteInterpolant(_t, _y, _dy, _t + _h, _ynew, _dynew, x);
 
         public override void Dispose() => _pool.Release(this);
     }

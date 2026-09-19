@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
-using System;
 using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
+using static System.Math;
 
 namespace MechJebLib.PSG
 {
@@ -24,6 +24,8 @@ namespace MechJebLib.PSG
             _phases = phases.DeepCopy();
             AnalyzeStages();
         }
+
+        private readonly double[] _tau = { 0, 0.5 - Sqrt(3) / 6, 0.5 + Sqrt(3) / 6 };
 
         private void AnalyzeStages()
         {
@@ -82,9 +84,11 @@ namespace MechJebLib.PSG
                 for (int n = 0; n < _n; n++)
                 {
                     double t0 = ti + n * h;
-                    double t1 = ti + (n + 1) * h;
+                    double t1 = ti + (n + _tau[1]) * h;
+                    double t2 = ti + (n + _tau[2]) * h;
+                    double t3 = ti + (n + 1) * h;
                     (Vec y0, Vec dy0, Vec y1, Vec dy1) = InterpolantValues(n, h, p);
-                    interpolant.Append(CubicHermiteNode.Rent(t0, h, y0, dy0, y1, dy1), t1);
+                    interpolant.Append(CubicHermiteVecNode.Rent(t1, t2 - t1, y0, dy0, y1, dy1), t0, t3);
                 }
 
                 double tf = ti + bt;
@@ -109,42 +113,73 @@ namespace MechJebLib.PSG
             var y1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
             var dy1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
-            var y0Layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k] };
-            var y1Layout = new InterpolantLayout { R = thisPhase.R[k + 3], V = thisPhase.V[k + 3], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k + 3] };
+            var y0Layout = new InterpolantLayout { R = thisPhase.R[k + 1], V = thisPhase.V[k + 1], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k + 1] };
+            var y1Layout = new InterpolantLayout { R = thisPhase.R[k + 2], V = thisPhase.V[k + 2], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k + 2] };
 
             const double FINITE_DIFF = 1e-8;
 
             V3 dy0U, dy1U;
+            double dyT;
+            double htau = h * (_tau[2] - _tau[1]);
 
             if (phase.GuidedCoast)
             {
-                PhaseProxy prevPhase = _vars[p - 1];
-                PhaseProxy nextPhase = _vars[p + 1];
+                V3 u0;
 
-                V3 u0 = prevPhase.U.Last * V3.forward;
+                if (p - 1 >= 0)
+                {
+                    PhaseProxy prevPhase = _vars[p - 1];
+                    u0 = prevPhase.U.Last * V3.forward;
+                }
+                else
+                {
+                    u0 = _problem.U0;
+                }
+
+                PhaseProxy nextPhase = _vars[p + 1];
                 V3 uf = nextPhase.U.First * V3.forward;
 
                 y0Layout.U = V3.Slerp(u0, uf, (double)n / (_n + 1));
                 y1Layout.U = V3.Slerp(u0, uf, (double)(n + 1) / (_n + 1));
-                dy0U = (V3.Slerp(y0Layout.U, y1Layout.U, FINITE_DIFF) - y0Layout.U) / FINITE_DIFF * h;
-                dy1U = (V3.Slerp(y1Layout.U, y0Layout.U, -FINITE_DIFF) - y1Layout.U) / FINITE_DIFF * h;
+                dy0U = (V3.Slerp(y0Layout.U, y1Layout.U, FINITE_DIFF) - y0Layout.U) / (FINITE_DIFF * h);
+                dy1U = (V3.Slerp(y1Layout.U, y0Layout.U, -FINITE_DIFF) - y1Layout.U) / (FINITE_DIFF * h);
+
+                y0Layout.T = y1Layout.T = 0;
+                dyT = 0;
             }
             else if (phase.Unguided)
             {
                 y0Layout.U = y1Layout.U = thisPhase.U.First * V3.forward;
                 dy0U = dy1U = V3.zero;
+                y0Layout.T = y1Layout.T = thisPhase.T.First;
+                dyT = 0;
             }
             else
             {
-                double tau1 = 0.5 - Math.Sqrt(3) / 6;
-                double tau2 = 0.5 + Math.Sqrt(3) / 6;
-                dy0U = dy1U = (thisPhase.U[k + 2] * V3.forward - thisPhase.U[k + 1] * V3.forward) / ((tau2 - tau1) * h);
-                y0Layout.U = thisPhase.U[k + 1] * V3.forward - dy0U * tau1 * h;
-                y1Layout.U = thisPhase.U[k + 2] * V3.forward + dy1U * tau1 * h;
+                dy0U = dy1U = (thisPhase.U[k + 2] * V3.forward - thisPhase.U[k + 1] * V3.forward) / htau;
+                y0Layout.U = thisPhase.U[k + 1] * V3.forward;
+                y1Layout.U = thisPhase.U[k + 2] * V3.forward;
+                y0Layout.T = thisPhase.T[k + 1];
+                y1Layout.T = thisPhase.T[k + 2];
+                dyT = (y1Layout.T - y0Layout.T) / htau;
             }
 
-            var dy0Layout = new InterpolantLayout { R = thisPhase.V[k], V = VDot(y0Layout, _problem, phase), M = -phase.Mdot * y0Layout.U.magnitude, U = dy0U };
-            var dy1Layout = new InterpolantLayout { R = thisPhase.V[k + 3], V = VDot(y1Layout, _problem, phase), M = -phase.Mdot * y1Layout.U.magnitude, U = dy1U };
+            var dy0Layout = new InterpolantLayout
+            {
+                R = thisPhase.V[k + 1],
+                V = VDot(y0Layout, _problem, phase),
+                M = -phase.Mdot * y0Layout.T,
+                U = dy0U,
+                T = dyT
+            };
+            var dy1Layout = new InterpolantLayout
+            {
+                R = thisPhase.V[k + 2],
+                V = VDot(y1Layout, _problem, phase),
+                M = -phase.Mdot * y1Layout.T,
+                U = dy1U,
+                T = dyT
+            };
 
             y0Layout.CopyTo(y0);
             dy0Layout.CopyTo(dy0);
@@ -169,7 +204,7 @@ namespace MechJebLib.PSG
             double vacThrust = phase.VacThrust;
 
             double r3 = d.R.sqrMagnitude * d.R.magnitude;
-            return -d.R / r3 + vacThrust / d.M * d.U;
+            return -d.R / r3 + vacThrust / d.M * d.U * d.T;
         }
 
         private static V3 VDotAtmo(InterpolantLayout d, Problem problem, Phase phase)
@@ -187,12 +222,12 @@ namespace MechJebLib.PSG
             double r = d.R.magnitude;
             double r3 = d.R.sqrMagnitude * r;
             V3 vr = d.V - V3.Cross(w, d.R);
-            double normAtmosphere = Math.Exp(-(r - rBody) / h0);
-            double normAtmosphere2 = Math.Exp(-(r - r0) / h0);
+            double normAtmosphere = Exp(-(r - rBody) / h0);
+            double normAtmosphere2 = Exp(-(r - r0) / h0);
             V3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
             //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
             double thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
-            return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
+            return -d.R / r3 + thrust / d.M * d.U * d.T - drag / d.M;
         }
     }
 }

@@ -112,7 +112,7 @@ namespace MechJebLib.PSG
                 double h = bt / N;
                 double oldh = oldbt / N;
 
-                double m0 = phase.MassContinuity ? oldSolution.MBar(t0) : phase.M0;
+                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0) : phase.M0;
 
                 for (int k = 0; k < K; k++)
                 {
@@ -245,7 +245,7 @@ namespace MechJebLib.PSG
                 double h = bt / N;
                 double oldh = oldbt / N;
 
-                double m0 = phase.MassContinuity ? oldSolution.MBar(t0) : phase.M0;
+                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0) : phase.M0;
 
                 for (int k = 0; k < K; k++)
                 {
@@ -327,15 +327,28 @@ namespace MechJebLib.PSG
             {
                 PhaseProxy thisPhase = _vars[p];
 
-                for (int k = 0; k < thisPhase.U.Length; k++)
+                Phase phase = Phases[p];
+
+                if (phase.GuidedCoast)
+                    continue;
+
+                if (phase.Unguided)
+                {
+                    (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(0);
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -1.2;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 1.2;
+                    continue;
+                }
+
+                for (int k = 0; k < K; k++)
                 {
                     // skip non-collocated points
-                    if (thisPhase.U.Length > 2 && k % 3 == 0)
+                    if (k % 3 == 0)
                         continue;
                     (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(k);
 
-                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -2.0;
-                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 2.0;
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -1.2;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 1.2;
                 }
             }
 

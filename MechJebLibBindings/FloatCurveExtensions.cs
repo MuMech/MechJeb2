@@ -21,17 +21,21 @@ namespace MechJebLibBindings
             double lastTime = double.NaN;
             double lastOutTangent = double.NaN;
 
+            // Unity out-of-bounds behavior is to reproduce the constant value, which we do here by using initial and
+            // final constant nodes.  This also correctly reproduces a FloatCurve with a single frame that has no
+            // interpolation.
             foreach (Keyframe frame in f.Curve.keys)
             {
-                // convert from frames to nodes.
-                // XXX: if the first or last frame in the FloatCurve has intangent != outtangent we don't reproduce correct
-                // out-of-bounds behavior (Q: do FloatCurves support out of bounds behavior?)
                 if (IsFinite(lastValue))
-                    h.Append(CubicHermiteDoubleNode.Rent(frame.time, lastTime - frame.time, lastValue, lastOutTangent, frame.value, frame.inTangent), frame.time);
+                    h.Append(CubicHermiteDoubleNode.Rent(lastTime, frame.time - lastTime, lastValue, lastOutTangent, frame.value, frame.inTangent), lastTime, frame.time);
+                else
+                    h.Append(ConstantDoubleNode.Rent(frame.value), frame.time, frame.time);
                 lastValue = frame.value;
                 lastTime = frame.time;
                 lastOutTangent = frame.outTangent;
             }
+            if (IsFinite(lastValue))
+                h.Append(ConstantDoubleNode.Rent(lastValue), lastTime, lastTime);
         }
     }
 }
