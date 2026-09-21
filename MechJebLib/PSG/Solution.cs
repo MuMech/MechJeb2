@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -23,7 +23,7 @@ namespace MechJebLib.PSG
         private readonly List<double> _tmax = new List<double>();
         private readonly List<double> _dvstart = new List<double>();
         private readonly List<double> _dvend = new List<double>();
-        private readonly List<IInterpolant> _interpolants = new List<IInterpolant>();
+        private readonly List<VecInterpolant> _interpolants = new List<VecInterpolant>();
         public readonly List<Phase> Phases = new List<Phase>();
         private readonly double _mu;
         private readonly double _rbody;
@@ -48,7 +48,7 @@ namespace MechJebLib.PSG
             T0 = problem.T0;
         }
 
-        public void AddSegment(IInterpolant interpolant, Phase phase)
+        public void AddSegment(VecInterpolant interpolant, Phase phase)
         {
             _tmin.Add(interpolant.MinT);
             _tmax.Add(interpolant.MaxT);
@@ -249,6 +249,7 @@ namespace MechJebLib.PSG
                     continue;
                 sum += TgoBar(tbar, i) * _timeScale;
             }
+
             return sum;
         }
 
@@ -322,7 +323,7 @@ namespace MechJebLib.PSG
             var x = InterpolantLayout.CreateFrom(xRaw);
             V3 u0 = x.U.normalized;
 
-            double thrustPct = x.U.magnitude;
+            double thrustPct = x.T;
             int phase = IndexForTbar(tBar);
             double minThrottle = Phases[phase].MinThrottle;
             double kspThrottle = minThrottle < 1.0 ? (thrustPct - minThrottle) / (1.0 - minThrottle) : 1.0;
@@ -375,20 +376,18 @@ namespace MechJebLib.PSG
 
         public int IndexForKSPStage(int kspStage, bool coasting)
         {
+            // phases are in chronological order, which is descending KSPStage order, so walking backwards and
+            // keeping the last match lands on the earliest (currently active) phase rather than the final one.
             int idx = -1;
 
             for (int i = Phases.Count - 1; i >= 0; i--)
             {
-                if (coasting)
-                {
-                    if (Phases[i].Coast)
-                        return i;
-                }
-                else
-                {
-                    if (Phases[i].KSPStage <= kspStage)
-                        idx = i;
-                }
+                // only ever one coast phase so this test is good enough
+                if (Phases[i].Coast && coasting)
+                    return i;
+                // the kspstage may not match (fairing jettison), hence the inequality test
+                if (!Phases[i].Coast && !coasting && Phases[i].KSPStage <= kspStage)
+                    idx = i;
             }
 
             return idx;
@@ -457,7 +456,7 @@ namespace MechJebLib.PSG
 
         public void Dispose()
         {
-            foreach (IInterpolant i in _interpolants)
+            foreach (VecInterpolant i in _interpolants)
                 i.Dispose();
             _interpolants.Clear();
         }

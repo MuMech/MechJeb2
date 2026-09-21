@@ -243,14 +243,14 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 engine.UseThrustCurve = kspEngine.useThrustCurve;
                 engine.UseVelCurve = kspEngine.useVelCurve;
                 engine.UseVelCurveIsp = kspEngine.useVelCurveIsp;
-                engine.ThrustCurve.LoadH1(kspEngine.thrustCurve);
-                engine.ThrottleIspCurve.LoadH1(kspEngine.throttleIspCurve);
-                engine.ThrottleIspCurveAtmStrength.LoadH1(kspEngine.throttleIspCurveAtmStrength);
-                engine.VelCurve.LoadH1(kspEngine.velCurve);
-                engine.VelCurveIsp.LoadH1(kspEngine.velCurveIsp);
-                engine.ATMCurve.LoadH1(kspEngine.atmCurve);
-                engine.ATMCurveIsp.LoadH1(kspEngine.atmCurveIsp);
-                engine.AtmosphereCurve.LoadH1(kspEngine.atmosphereCurve);
+                engine.ThrustCurve.LoadFromFloatCurve(kspEngine.thrustCurve);
+                engine.ThrottleIspCurve.LoadFromFloatCurve(kspEngine.throttleIspCurve);
+                engine.ThrottleIspCurveAtmStrength.LoadFromFloatCurve(kspEngine.throttleIspCurveAtmStrength);
+                engine.VelCurve.LoadFromFloatCurve(kspEngine.velCurve);
+                engine.VelCurveIsp.LoadFromFloatCurve(kspEngine.velCurveIsp);
+                engine.ATMCurve.LoadFromFloatCurve(kspEngine.atmCurve);
+                engine.ATMCurveIsp.LoadFromFloatCurve(kspEngine.atmCurveIsp);
+                engine.AtmosphereCurve.LoadFromFloatCurve(kspEngine.atmosphereCurve);
 
                 engine.ThrustTransformMultipliers.Clear();
                 foreach (double multiplier in kspEngine.thrustTransformMultipliers)
@@ -298,7 +298,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 rcs.ThrustPercentage = kspModuleRCS.thrustPercentage;
                 rcs.MaxFuelFlow = kspModuleRCS.maxFuelFlow;
 
-                rcs.AtmosphereCurve.LoadH1(kspModuleRCS.atmosphereCurve);
+                rcs.AtmosphereCurve.LoadFromFloatCurve(kspModuleRCS.atmosphereCurve);
 
                 rcs.Propellants.Clear();
 

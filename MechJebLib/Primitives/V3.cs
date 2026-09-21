@@ -183,6 +183,10 @@ namespace MechJebLib.Primitives
 
         public static V3 Lerp(V3 a, V3 b, double t) => a + t * (b - a);
 
+        /// <summary>
+        ///     Interpolates along the great circle from a to b at constant angular rate, with the magnitude
+        ///     interpolated linearly.  Extrapolates for t outside of [0,1].
+        /// </summary>
         public static V3 Slerp(V3 a, V3 b, double t)
         {
             double magA = a.magnitude;
@@ -191,15 +195,22 @@ namespace MechJebLib.Primitives
             if (magA == 0 || magB == 0)
                 return Lerp(a, b, t);
 
-            var qa = Q3.FromToRotation(forward, a.normalized);
-            var qb = Q3.FromToRotation(forward, b.normalized);
-            var qSlerp = Q3.Slerp(qa, qb, t);
-
-            V3 direction = qSlerp * forward;
+            V3 na = a / magA;
+            V3 nb = b / magB;
 
             double magnitude = magA + t * (magB - magA);
+            double dot = Clamp(Dot(na, nb), -1.0, 1.0);
 
-            return direction * magnitude;
+            // nearly parallel: the great circle is ill conditioned here and the chord is accurate to O(theta^2)
+            if (dot > 1.0 - 1e-12)
+                return Lerp(na, nb, t).normalized * magnitude;
+
+            // antiparallel: the great circle is not unique, so pick one deterministically
+            V3 perp = dot < -1.0 + 1e-12 ? na.orthonormal : (nb - dot * na).normalized;
+
+            double theta = Acos(dot) * t;
+
+            return (Cos(theta) * na + Sin(theta) * perp) * magnitude;
         }
 
         public static double Angle(V3 from, V3 to)

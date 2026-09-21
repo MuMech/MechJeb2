@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
@@ -70,14 +71,14 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public bool IsUnrestartableDeadEngine;
         public bool Ullage;
 
-        public readonly H1 ThrustCurve = H1.Get(true);
-        public readonly H1 ThrottleIspCurve = H1.Get(true);
-        public readonly H1 ThrottleIspCurveAtmStrength = H1.Get(true);
-        public readonly H1 VelCurve = H1.Get(true);
-        public readonly H1 VelCurveIsp = H1.Get(true);
-        public readonly H1 ATMCurve = H1.Get(true);
-        public readonly H1 ATMCurveIsp = H1.Get(true);
-        public readonly H1 AtmosphereCurve = H1.Get(true);
+        public readonly DoubleInterpolant ThrustCurve = DoubleInterpolant.Rent();
+        public readonly DoubleInterpolant ThrottleIspCurve = DoubleInterpolant.Rent();
+        public readonly DoubleInterpolant ThrottleIspCurveAtmStrength = DoubleInterpolant.Rent();
+        public readonly DoubleInterpolant VelCurve = DoubleInterpolant.Rent();
+        public readonly DoubleInterpolant VelCurveIsp = DoubleInterpolant.Rent();
+        public readonly DoubleInterpolant ATMCurve = DoubleInterpolant.Rent();
+        public readonly DoubleInterpolant ATMCurveIsp = DoubleInterpolant.Rent();
+        public readonly DoubleInterpolant AtmosphereCurve = DoubleInterpolant.Rent();
 
         private double _throttle    => Part.Vessel.MainThrottle;
         private double _atmPressure => Part.Vessel.ATMPressure;
@@ -404,7 +405,8 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                 $"  AtmChangeFlow={AtmChangeFlow} UseAtmCurve={UseAtmCurve} UseAtmCurveIsp={UseAtmCurveIsp} UseThrottleIspCurve={UseThrottleIspCurve} UseThrustCurve={UseThrustCurve} UseVelCurve={UseVelCurve} UseVelCurveIsp={UseVelCurveIsp}"));
             sb.AppendLine(Invariant(
                 $"  ModuleResiduals={ModuleResiduals} ModuleSpoolupTime={ModuleSpoolupTime} AutoCutoff={AutoCutoff} IsModuleEnginesRf={IsModuleEnginesRf} Ullage={Ullage}"));
-            void AppendCurve(string name, H1 curve)
+
+            void AppendCurve(string name, DoubleInterpolant curve)
             {
                 // empty curves are the default and very common, so omit them to keep the dump readable
                 if (!curve.IsEmpty)

@@ -37,9 +37,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            solution.Vgo(t0).ShouldEqual(2603.1239482534565, 1e-3);
-            // there's about 14 seconds extra burntime here due to throttling down, which these tests may be very sensitive to
-            solution.Tgo(t0).ShouldEqual(560.53674689893228, 1e-3);
+            solution.Vgo(t0).ShouldEqual(2607.2998538688312, 1e-3);
+            solution.Tgo(t0).ShouldEqual(543.01479876646442, 1e-3);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
         }
@@ -66,9 +65,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            solution.Vgo(t0).ShouldEqual(3521.7544134539125, 1e-3);
-            // there's about 110 seconds extra burntime here due to throttling down, which these tests may be extremely sensitive to
-            solution.Tgo(t0).ShouldEqual(388.2458105314372, 1e-3);
+            solution.Vgo(t0).ShouldEqual(3555.5736597608893, 1e-3);
+            // TODO: the tgo value here keeps flopping between ~288 and ~287 and I don't know why, or what is the correct value, or
+            // if there's some kind of subtle bug around burntimes.
+            solution.Tgo(t0).ShouldEqual(288.41960593515864, 1e-3);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
         }

@@ -51,6 +51,8 @@ namespace MechJebLib.PSG
 
             ci = DynamicPressureConstraints(f, j, ci);
 
+            ci = ThrustMagnitudeConstraints(f, j, ci);
+
             ci = ControlNormConstraints(f, j, ci);
 
             for (int p = 0; p < _optimizer.Phases.Count; p++)
@@ -64,20 +66,53 @@ namespace MechJebLib.PSG
 
             int start = ci;
 
-            _optimizer.Terminal.Constraints(x, lastPhase.R.Idx(-1), lastPhase.V.Idx(-1), f, j, ref ci);
+            _optimizer.Terminal.Constraints(x, lastPhase.R.LastIdx, lastPhase.V.LastIdx, f, j, ref ci);
 
             if (_firstPass)
                 for (int i = start; i < ci; i++)
                     ConstraintNames[i] = $"Terminal Constraint number {i - start + 1}";
 
-
             if (ci != _vars.TotalConstraints + 1)
-                throw new Exception("Constraint num mismatch");
+                throw new Exception($"Constraint num mismatch {ci} != {_vars.TotalConstraints + 1}");
 
             if (_firstPass)
                 for (int i = 0; i < _vars.TotalConstraints + 1; i++)
                     if (!ConstraintNames.ContainsKey(i))
                         throw new Exception($"Missing constraint in dictionary: {i}");
+        }
+
+        private int ThrustMagnitudeConstraints(double[] f, alglib.sparsematrix j, int ci)
+        {
+            for (int p = 0; p < _optimizer.Phases.Count; p++)
+            {
+                PhaseProxy thisPhase = _vars[p];
+
+                if (_optimizer.Phases[p].GuidedCoast)
+                    continue;
+
+                if (_optimizer.Phases[p].Unguided)
+                {
+                    int k = 0;
+
+                    if (_firstPass) ConstraintNames[ci] = $"Thrust magnitude inequality constraint for phase {p} grid {k}";
+
+                    ci = ApplyScalarConstraint(f, j, ci, x => x[0], new[] { thisPhase.T[k] }, new[] { thisPhase.T.Idx(k) });
+
+                    continue;
+                }
+
+                for (int k = 0; k < _optimizer.K; k++)
+                {
+                    if (k % 3 == 0)
+                        continue;
+
+                    if (_firstPass) ConstraintNames[ci] = $"Thrust magnitude inequality constraint for phase {p} grid {k}";
+
+                    ci = ApplyScalarConstraint(f, j, ci, x => x[0], new[] { thisPhase.T[k] }, new[] { thisPhase.T.Idx(k) });
+                }
+            }
+
+            return ci;
         }
 
         private int ControlNormConstraints(double[] f, alglib.sparsematrix j, int ci)
@@ -89,13 +124,25 @@ namespace MechJebLib.PSG
                 if (_optimizer.Phases[p].GuidedCoast)
                     continue;
 
+                if (_optimizer.Phases[p].Unguided)
+                {
+                    int k = 0;
+
+                    if (_firstPass) ConstraintNames[ci] = $"Control unit quaternion constraint for phase {p} grid {k}";
+
+                    ci = ApplyScalarConstraintQ3(f, j, ci, x => x[0].magnitude - 1, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
+
+                    continue;
+                }
+
                 for (int k = 0; k < _optimizer.K; k++)
                 {
-                    if (_firstPass) ConstraintNames[ci] = $"Control norm constraint for phase {p} knot {k}";
+                    if (k % 3 == 0)
+                        continue;
 
-                    ci = ApplyScalarConstraintV3(f, j, ci, x => x[0].magnitude, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
-                    if (_optimizer.Phases[p].Unguided)
-                        break;
+                    if (_firstPass) ConstraintNames[ci] = $"Control unit quaternion constraint for phase {p} grid {k}";
+
+                    ci = ApplyScalarConstraintQ3(f, j, ci, x => x[0].magnitude - 1, new[] { thisPhase.U[k] }, new[] { thisPhase.U.Idx(k) });
                 }
             }
 
@@ -104,9 +151,11 @@ namespace MechJebLib.PSG
 
         private int ContinuityConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
         {
+            // skip the first phase, nothing to link to
             if (p == 0)
                 return ci;
 
+            // state continuity
             if (_firstPass)
             {
                 ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: Rx";
@@ -115,26 +164,41 @@ namespace MechJebLib.PSG
                 ConstraintNames[ci + 3] = $"Continuity constraint for phase {p} and phase {p - 1}: Vx";
                 ConstraintNames[ci + 4] = $"Continuity constraint for phase {p} and phase {p - 1}: Vy";
                 ConstraintNames[ci + 5] = $"Continuity constraint for phase {p} and phase {p - 1}: Vz";
-                ConstraintNames[ci + 6] = $"Continuity constraint for phase {p} and phase {p - 1}: Ux";
-                ConstraintNames[ci + 7] = $"Continuity constraint for phase {p} and phase {p - 1}: Uy";
-                ConstraintNames[ci + 8] = $"Continuity constraint for phase {p} and phase {p - 1}: Uz";
             }
 
             PhaseProxy thisPhase = _vars[p];
             PhaseProxy prevPhase = _vars[p - 1];
 
-            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.R[-1], thisPhase.R[0] }, new[] { prevPhase.R.Idx(-1), thisPhase.R.Idx(0) });
-            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.V[-1], thisPhase.V[0] }, new[] { prevPhase.V.Idx(-1), thisPhase.V.Idx(0) });
-            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.U[-1], thisPhase.U[0] }, new[] { prevPhase.U.Idx(-1), thisPhase.U.Idx(0) });
+            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.R.Last, thisPhase.R.First }, new[] { prevPhase.R.LastIdx, thisPhase.R.FirstIdx });
+            ci = ApplyVectorConstraintV3(f, j, ci, VecDiff, new[] { prevPhase.V.Last, thisPhase.V.First }, new[] { prevPhase.V.LastIdx, thisPhase.V.FirstIdx });
+
+            bool thisUnCollocatedControl = _optimizer.Phases[p].Unguided;
+            bool prevUnCollocatedControl = _optimizer.Phases[p - 1].Unguided;
+            bool eitherIsCoast = _optimizer.Phases[p].Coast || _optimizer.Phases[p - 1].Coast;
+
+            if ((thisUnCollocatedControl || prevUnCollocatedControl) && !eitherIsCoast)
+            {
+                if (_firstPass)
+                {
+                    ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: Ux";
+                    ConstraintNames[ci + 1] = $"Continuity constraint for phase {p} and phase {p - 1}: Uy";
+                    ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: Uz";
+                    ConstraintNames[ci + 3] = $"Continuity constraint for phase {p} and phase {p - 1}: Uw";
+                }
+
+                ci = ApplyVectorConstraintQ3(f, j, ci, Q3Diff, new[] { prevPhase.U.Last, thisPhase.U.First }, new[] { prevPhase.U.LastIdx, thisPhase.U.FirstIdx });
+            }
 
             // mass continuity for coast-within-phase
             if (p <= 0 || !_optimizer.Phases[p].MassContinuity) return ci;
 
             if (_firstPass) ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: M";
 
-            ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M[-1], thisPhase.M[0] }, new[] { prevPhase.M.Idx(-1), thisPhase.M.Idx(0) });
+            ci = ApplyScalarConstraint(f, j, ci, Diff, new[] { prevPhase.M.Last, thisPhase.M.First }, new[] { prevPhase.M.LastIdx, thisPhase.M.FirstIdx });
 
             return ci;
+
+            DualQ3 Q3Diff(DualQ3[] x) => x[0] - x[1];
 
             DualV3 VecDiff(DualV3[] x) => x[0] - x[1];
 
@@ -199,16 +263,16 @@ namespace MechJebLib.PSG
             double postM0 = _optimizer.Phases[postIdx].M0;
 
             // fractional propellant remaining at the end of the burn, ending here
-            double b = prePhase.M[-1] / preMf - 1.0;
+            double b = prePhase.M.Last / preMf - 1.0;
             // fractional propellant consumed by the burn starting next
-            double a = 1.0 - postPhase.M[-1] / postM0;
+            double a = 1.0 - postPhase.M.Last / postM0;
             double u = a * a + b * b + 2e-6;
 
             // smoothed Fischer-Burmeister constraint on burned/unburned mass
             f[ci++] = Sqrt(u) - (a + b);
             alglib.sparseappendemptyrow(j);
-            alglib.sparseappendelement(j, prePhase.M.Idx(-1), (b / Sqrt(u) - 1) / preMf);
-            alglib.sparseappendelement(j, postPhase.M.Idx(-1), (1 - a / Sqrt(u)) / postM0);
+            alglib.sparseappendelement(j, prePhase.M.LastIdx, (b / Sqrt(u) - 1) / preMf);
+            alglib.sparseappendelement(j, postPhase.M.LastIdx, (1 - a / Sqrt(u)) / postM0);
 
             return ci;
         }
@@ -224,21 +288,27 @@ namespace MechJebLib.PSG
             if (h0 <= 0)
                 return ci;
 
-
             if (rho0InvQAlphaMax > 0)
             {
                 for (int p = 0; p < _optimizer.Phases.Count; p++)
                 {
+                    if (_optimizer.Phases[p].GuidedCoast)
+                        continue;
+
                     PhaseProxy thisPhase = _vars[p];
 
                     for (int k = 0; k < _optimizer.K; k++)
                     {
-                        if (_firstPass) ConstraintNames[ci] = $"QAlpha constraint for phase {p} knot {k}";
+                        // this is a control constraint so can only be applied at the collocation points
+                        if (k % 3 == 0)
+                            continue;
+
+                        if (_firstPass) ConstraintNames[ci] = $"QAlpha constraint for phase {p} grid {k}";
 
                         if (_optimizer.Phases[p].Unguided)
-                            ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U[0] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(0) });
+                            ci = ApplyQAlphaConstraint(f, j, ci, QAlphaConstraint, thisPhase.R[k], thisPhase.V[k], thisPhase.U.First, thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.FirstIdx);
                         else
-                            ci = ApplyScalarConstraintV3(f, j, ci, QAlphaConstraint, new[] { thisPhase.R[k], thisPhase.V[k], thisPhase.U[k] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(k) });
+                            ci = ApplyQAlphaConstraint(f, j, ci, QAlphaConstraint, thisPhase.R[k], thisPhase.V[k], thisPhase.U[k], thisPhase.R.Idx(k), thisPhase.V.Idx(k), thisPhase.U.Idx(k));
                     }
                 }
             }
@@ -251,7 +321,7 @@ namespace MechJebLib.PSG
 
                     for (int k = 0; k < _optimizer.K; k++)
                     {
-                        if (_firstPass) ConstraintNames[ci] = $"MaxQ constraint for phase {p} knot {k}";
+                        if (_firstPass) ConstraintNames[ci] = $"MaxQ constraint for phase {p} grid {k}";
 
                         ci = ApplyScalarConstraintV3(f, j, ci, QConstraint, new[] { thisPhase.R[k], thisPhase.V[k] }, new[] { thisPhase.R.Idx(k), thisPhase.V.Idx(k) });
                     }
@@ -260,16 +330,12 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            Dual QAlphaConstraint(DualV3[] x)
+            Dual QAlphaConstraint(DualV3 r, DualV3 v, DualQ3 u)
             {
-                DualV3 r = x[0];
-                DualV3 v = x[1];
-                DualV3 u = x[2];
-
                 Dual rm = r.magnitude;
                 DualV3 vr = v - DualV3.Cross(w, r);
                 Dual q = 0.5 * rho0InvQAlphaMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
-                Dual alpha = DualV3.AngleUnit(vr.normalized, u);
+                Dual alpha = DualV3.AngleUnit(vr.normalized, u * V3.forward);
 
                 return q * alpha / 100.0;
             }
@@ -303,110 +369,139 @@ namespace MechJebLib.PSG
             V3 w = _optimizer.Problem.W;
 
             // dynamical constraints per phase
-            for (int n = 0; n < _optimizer.N - 1; n += 1)
+            for (int n = 0; n < _optimizer.N; n++)
             {
                 if (_firstPass)
                 {
-                    ConstraintNames[ci] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX";
-                    ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX midpoint";
-                    ConstraintNames[ci + 2] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY";
-                    ConstraintNames[ci + 3] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY midpoint";
-                    ConstraintNames[ci + 4] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ";
-                    ConstraintNames[ci + 5] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ midpoint";
-                    ConstraintNames[ci + 6] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX";
-                    ConstraintNames[ci + 7] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX midpoint";
-                    ConstraintNames[ci + 8] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY";
-                    ConstraintNames[ci + 9] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY midpoint";
-                    ConstraintNames[ci + 10] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ";
-                    ConstraintNames[ci + 11] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ midpoint";
+                    ConstraintNames[ci] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX midpoint1";
+                    ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY midpoint1";
+                    ConstraintNames[ci + 2] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ midpoint1";
+                    ConstraintNames[ci + 3] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX midpoint2";
+                    ConstraintNames[ci + 4] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY midpoint2";
+                    ConstraintNames[ci + 5] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ midpoint2";
+                    ConstraintNames[ci + 6] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotX endpoint";
+                    ConstraintNames[ci + 7] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotY endpoint";
+                    ConstraintNames[ci + 8] = $"Dynamical Constraints for phase {p} {n}th constraint: RDotZ endpoint";
+                    ConstraintNames[ci + 9] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX midpoint1";
+                    ConstraintNames[ci + 10] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY midpoint1";
+                    ConstraintNames[ci + 11] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ midpoint1";
+                    ConstraintNames[ci + 12] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX midpoint2";
+                    ConstraintNames[ci + 13] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY midpoint2";
+                    ConstraintNames[ci + 14] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ midpoint2";
+                    ConstraintNames[ci + 15] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotX endpoint";
+                    ConstraintNames[ci + 16] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotY endpoint";
+                    ConstraintNames[ci + 17] = $"Dynamical Constraints for phase {p} {n}th constraint: VDotZ endpoint";
                 }
 
-                int idx = 2 * n;
+                int idx = 3 * n;
 
-                double m0, m1, m2;
-                int m0Idx, m1Idx, m2Idx;
+                double m0, m1, m2, m3;
+                int m0Idx, m1Idx, m2Idx, m3Idx;
 
                 if (_optimizer.Phases[p].Coast)
                 {
-                    m0 = m1 = m2 = thisPhase.M[0];
-                    m0Idx = m1Idx = m2Idx = thisPhase.M.Idx(0);
+                    m0 = m1 = m2 = m3 = thisPhase.M.First;
+                    m0Idx = m1Idx = m2Idx = m3Idx = thisPhase.M.FirstIdx;
                 }
                 else
                 {
                     m0 = thisPhase.M[idx];
                     m1 = thisPhase.M[idx + 1];
                     m2 = thisPhase.M[idx + 2];
+                    m3 = thisPhase.M[idx + 3];
                     m0Idx = thisPhase.M.Idx(idx);
                     m1Idx = thisPhase.M.Idx(idx + 1);
                     m2Idx = thisPhase.M.Idx(idx + 2);
+                    m3Idx = thisPhase.M.Idx(idx + 3);
                 }
 
-                V3 u0, u1, u2;
-                (int, int, int) u0Idx, u1Idx, u2Idx;
+                Q3 u1, u2;
+                (int, int, int, int) u1Idx, u2Idx;
+                double t1, t2;
+                int t1Idx, t2Idx;
 
-                if (_optimizer.Phases[p].Unguided || _optimizer.Phases[p].GuidedCoast)
+                if (_optimizer.Phases[p].Unguided)
                 {
-                    u0 = u1 = u2 = thisPhase.U[0];
-                    u0Idx = u1Idx = u2Idx = thisPhase.U.Idx(0);
+                    u1 = u2 = thisPhase.U.First;
+                    u1Idx = u2Idx = thisPhase.U.FirstIdx;
+                    // TODO: we could support fully collocated thrust for throtlleable solids
+                    // TODO: unguided coasts shoudn't have throttle
+                    t1 = t2 = thisPhase.T.First;
+                    t1Idx = t2Idx = thisPhase.T.FirstIdx;
+                }
+                else if (_optimizer.Phases[p].GuidedCoast)
+                {
+                    u1 = u2 = Q3.zero;
+                    t1 = t2 = 0;
+                    u1Idx = u2Idx = (-1, -1, -1, -1);
+                    t1Idx = t2Idx = -1;
                 }
                 else
                 {
-                    u0 = thisPhase.U[idx];
                     u1 = thisPhase.U[idx + 1];
                     u2 = thisPhase.U[idx + 2];
-                    u0Idx = thisPhase.U.Idx(idx);
                     u1Idx = thisPhase.U.Idx(idx + 1);
                     u2Idx = thisPhase.U.Idx(idx + 2);
+                    t1 = thisPhase.T[idx + 1];
+                    t2 = thisPhase.T[idx + 2];
+                    t1Idx = thisPhase.T.Idx(idx + 1);
+                    t2Idx = thisPhase.T.Idx(idx + 2);
                 }
 
-                var point = new HermiteSimpsonSegment
+                var point = new GaussLegendreSegment
                 {
                     R0 = thisPhase.R[idx],
                     R1 = thisPhase.R[idx + 1],
                     R2 = thisPhase.R[idx + 2],
+                    R3 = thisPhase.R[idx + 3],
                     V0 = thisPhase.V[idx],
                     V1 = thisPhase.V[idx + 1],
                     V2 = thisPhase.V[idx + 2],
+                    V3 = thisPhase.V[idx + 3],
                     M0 = m0,
                     M1 = m1,
                     M2 = m2,
-                    U0 = u0,
+                    M3 = m3,
                     U1 = u1,
                     U2 = u2,
+                    T1 = t1,
+                    T2 = t2,
                     Bt = thisPhase.Bt()
                 };
 
-                var indexes = new HermiteSimpsonIndexes
+                var indexes = new GaussLegendreIndexes
                 {
                     R0Idx = thisPhase.R.Idx(idx),
                     R1Idx = thisPhase.R.Idx(idx + 1),
                     R2Idx = thisPhase.R.Idx(idx + 2),
+                    R3Idx = thisPhase.R.Idx(idx + 3),
                     V0Idx = thisPhase.V.Idx(idx),
                     V1Idx = thisPhase.V.Idx(idx + 1),
                     V2Idx = thisPhase.V.Idx(idx + 2),
+                    V3Idx = thisPhase.V.Idx(idx + 3),
                     M0Idx = m0Idx,
                     M1Idx = m1Idx,
                     M2Idx = m2Idx,
-                    U0Idx = u0Idx,
+                    M3Idx = m3Idx,
                     U1Idx = u1Idx,
                     U2Idx = u2Idx,
+                    T1Idx = t1Idx,
+                    T2Idx = t2Idx,
                     BtIdx = thisPhase.BtIdx()
                 };
 
-
                 if (h0 > 0 && rho0CdAref > 0)
-                    ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDot, point, indexes, _optimizer.N);
+                    ci = ApplyGaussLegendreDynamics(f, j, ci, VDotAtmo, point, indexes, _optimizer.N);
                 else
-                    ci = ApplyHermiteSimpsonDynamics(f, j, ci, VDotVacuum, point, indexes, _optimizer.N);
-
-                // dm/dt = -mdot (as algebraic constraints rather than defect constraints)
+                    ci = ApplyGaussLegendreDynamics(f, j, ci, VDotVacuum, point, indexes, _optimizer.N);
 
                 if (!_optimizer.Phases[p].Coast)
                 {
                     if (_firstPass)
                     {
-                        ConstraintNames[ci] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot";
-                        ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot midpoint";
+                        ConstraintNames[ci] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot midpoint1";
+                        ConstraintNames[ci + 1] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot midpoint2";
+                        ConstraintNames[ci + 2] = $"Dynamical Constraints for phase {p} {n}th constraint: MDot continuity";
                     }
 
                     ci = ApplyMDotDynamics(f, j, ci, mdot, point, indexes, _optimizer.N);
@@ -415,13 +510,13 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            DualV3 VDotVacuum(ref HermiteSimpsonDualPoint d)
+            DualV3 VDotVacuum(ref GaussLegendreDualPoint d)
             {
                 Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
-                return -d.R / r3 + vacThrust / d.M * d.U;
+                return -d.R / r3 + vacThrust / d.M * (d.U * V3.forward) * d.T;
             }
 
-            DualV3 VDot(ref HermiteSimpsonDualPoint d)
+            DualV3 VDotAtmo(ref GaussLegendreDualPoint d)
             {
                 Dual r = d.R.magnitude;
                 Dual r3 = d.R.sqrMagnitude * r;
@@ -431,7 +526,7 @@ namespace MechJebLib.PSG
                 DualV3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
                 //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
                 Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
-                return -d.R / r3 + thrust / d.M * d.U - drag / d.M;
+                return -d.R / r3 + thrust / d.M * (d.U * V3.forward) * d.T - drag / d.M;
             }
         }
 
@@ -465,21 +560,21 @@ namespace MechJebLib.PSG
 
                     break;
                 case Optimizer.ObjectiveType.MAX_MASS: // this doesn't work for upper stages with fixed burntimes
-                    f[ci++] = -lastPhase.M[-1];
+                    f[ci++] = -lastPhase.M.Last;
                     alglib.sparseappendemptyrow(j);
-                    alglib.sparseappendelement(j, lastPhase.M.Idx(-1), -1.0);
+                    alglib.sparseappendelement(j, lastPhase.M.LastIdx, -1.0);
 
                     break;
                 case Optimizer.ObjectiveType.MAX_ENERGY:
-                    V3 rf = lastPhase.R[-1];
-                    V3 vf = lastPhase.V[-1];
-                    (int, int, int) ri = lastPhase.R.Idx(-1);
-                    (int, int, int) vi = lastPhase.V.Idx(-1);
+                    V3 rf = lastPhase.R.Last;
+                    V3 vf = lastPhase.V.Last;
+                    (int, int, int) ri = lastPhase.R.LastIdx;
+                    (int, int, int) vi = lastPhase.V.LastIdx;
 
                     ci = ApplyScalarConstraintV3(f, j, ci, MaxOrbitalEnergyObjective, new[] { rf, vf }, new[] { ri, vi });
 
                     break;
-                case Optimizer.ObjectiveType.MIN_THRUST_ACCEL:
+                case Optimizer.ObjectiveType.MIN_THRUST_ACCEL: // TODO: fix this
                     {
                         using var jac = Vec.Rent(_vars.TotalVariables, true);
 
@@ -498,17 +593,17 @@ namespace MechJebLib.PSG
                             {
                                 double mk = thisPhase.M[k];
                                 double u = thisPhase.U[k].magnitude;
-                                double ux = thisPhase.Ux[k];
-                                double uy = thisPhase.Uy[k];
-                                double uz = thisPhase.Uz[k];
+                                double ux = thisPhase.UX[k];
+                                double uy = thisPhase.UY[k];
+                                double uz = thisPhase.UZ[k];
 
                                 if (k == 0 || k == _optimizer.K - 1)
                                 {
                                     val += u * thrust * h6 / mk;
                                     jac[thisPhase.M.Idx(k)] = -u * thrust * h6 / (mk * mk);
-                                    jac[thisPhase.Ux.Idx(k)] = ux * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uy.Idx(k)] = uy * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uz.Idx(k)] = uz * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UX.Idx(k)] = ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UY.Idx(k)] = uy * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UZ.Idx(k)] = uz * thrust * h6 / (u * mk);
                                     jac[thisPhase.BtIdx()] += u * thrust / mk / den;
                                     continue;
                                 }
@@ -517,18 +612,18 @@ namespace MechJebLib.PSG
                                 {
                                     val += u * thrust * h6 * 2.0 / mk;
                                     jac[thisPhase.M.Idx(k)] = -2.0 * u * thrust * h6 / (mk * mk);
-                                    jac[thisPhase.Ux.Idx(k)] = 2.0 * ux * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uy.Idx(k)] = 2.0 * uy * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uz.Idx(k)] = 2.0 * uz * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UX.Idx(k)] = 2.0 * ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UY.Idx(k)] = 2.0 * uy * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UZ.Idx(k)] = 2.0 * uz * thrust * h6 / (u * mk);
                                     jac[thisPhase.BtIdx()] += 2.0 * u * thrust / mk / den;
                                 }
                                 else
                                 {
                                     val += u * thrust * h6 * 4.0 / mk;
                                     jac[thisPhase.M.Idx(k)] = -4.0 * u * thrust * h6 / (mk * mk);
-                                    jac[thisPhase.Ux.Idx(k)] = 4.0 * ux * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uy.Idx(k)] = 4.0 * uy * thrust * h6 / (u * mk);
-                                    jac[thisPhase.Uz.Idx(k)] = 4.0 * uz * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UX.Idx(k)] = 4.0 * ux * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UY.Idx(k)] = 4.0 * uy * thrust * h6 / (u * mk);
+                                    jac[thisPhase.UZ.Idx(k)] = 4.0 * uz * thrust * h6 / (u * mk);
                                     jac[thisPhase.BtIdx()] += 4.0 * u * thrust / mk / den;
                                 }
                             }
