@@ -139,10 +139,12 @@ namespace MechJebLib.PSG
                 PhaseProxy nextPhase = _vars[p + 1];
                 V3 uf = nextPhase.U.First * V3.forward;
 
-                y0Layout.U = V3.Slerp(u0, uf, (double)n / (_n + 1));
-                y1Layout.U = V3.Slerp(u0, uf, (double)(n + 1) / (_n + 1));
-                dy0U = (V3.Slerp(y0Layout.U, y1Layout.U, FINITE_DIFF) - y0Layout.U) / (FINITE_DIFF * h);
-                dy1U = (V3.Slerp(y1Layout.U, y0Layout.U, -FINITE_DIFF) - y1Layout.U) / (FINITE_DIFF * h);
+                // the slerp fraction has to be the node's own fraction of the coast, since the hermite is anchored at
+                // t1 = (n + tau1) * h and t2 = (n + tau2) * h and gets extrapolated out to the ends of the segment.
+                y0Layout.U = V3.Slerp(u0, uf, (n + _tau[1]) / _n);
+                y1Layout.U = V3.Slerp(u0, uf, (n + _tau[2]) / _n);
+                dy0U = (V3.Slerp(y0Layout.U, y1Layout.U, FINITE_DIFF) - y0Layout.U) / (FINITE_DIFF * htau);
+                dy1U = (V3.Slerp(y1Layout.U, y0Layout.U, -FINITE_DIFF) - y1Layout.U) / (FINITE_DIFF * htau);
 
                 y0Layout.T = y1Layout.T = 0;
                 dyT = 0;
