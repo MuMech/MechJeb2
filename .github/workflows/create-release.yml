@@ -40,9 +40,10 @@ jobs:
 
   build:
     needs: validate
-    # A called workflow can not be granted more than its caller: build.yml comments on PRs, which this run never does
+    # A called workflow can not be granted more than its caller: build.yml comments on PRs and publishes the dev
+    # pre-release, which this run never does (each job of build.yml only asks for what it needs)
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/build.yml
     with:
