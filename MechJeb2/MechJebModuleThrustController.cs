@@ -163,6 +163,12 @@ namespace MuMech
 
         public DifferentialThrottleStatus DifferentialThrottleSuccess = DifferentialThrottleStatus.SUCCESS;
 
+        // Differential throttle temporarily writes ModuleEngines.thrustPercentage.  Keep the
+        // user's value so disabling the controller does not leave a vessel with the last
+        // solver output as its permanent thrust limit.
+        private readonly Dictionary<ModuleEngines, float> _thrustLimitsBeforeDifferentialThrottle =
+            new Dictionary<ModuleEngines, float>();
+
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool ElectricThrottle;
 
@@ -567,9 +573,28 @@ namespace MuMech
             }
         }
 
-        public override void OnFixedUpdate() =>
-            DifferentialThrottleSuccess =
-                DifferentialThrottle ? ComputeDifferentialThrottle(DifferentialThrottleDemandedTorque) : DifferentialThrottleStatus.SUCCESS;
+        public override void OnFixedUpdate()
+        {
+            if (DifferentialThrottle)
+            {
+                DifferentialThrottleSuccess = ComputeDifferentialThrottle(DifferentialThrottleDemandedTorque);
+            }
+            else
+            {
+                DisableDifferentialThrottle();
+                DifferentialThrottleSuccess = DifferentialThrottleStatus.SUCCESS;
+            }
+        }
+
+        // Docking and undocking move engines between vessels.  Restore their original
+        // limits before the next differential-throttle solve sees the new topology.
+        public override void OnVesselWasModified(Vessel v) => DisableDifferentialThrottle();
+
+        public override void OnDestroy()
+        {
+            DisableDifferentialThrottle();
+            base.OnDestroy();
+        }
 
         //A throttle setting that throttles down when the dynamic pressure exceed a set value
         private float MaximumDynamicPressureThrottle()
@@ -936,6 +961,9 @@ namespace MuMech
 
             for (int i = 0; i < n; i++)
             {
+                if (!_thrustLimitsBeforeDifferentialThrottle.ContainsKey(engines[i].Engine))
+                    _thrustLimitsBeforeDifferentialThrottle.Add(engines[i].Engine, engines[i].Engine.thrustPercentage);
+
                 engines[i].ThrustRatio = (float)(x[i] / mainThrottle);
             }
 
@@ -944,14 +972,13 @@ namespace MuMech
 
         private void DisableDifferentialThrottle()
         {
-            foreach (Part p in Vessel.parts)
+            foreach (var entry in _thrustLimitsBeforeDifferentialThrottle)
             {
-                foreach (PartModule pm in p.Modules)
-                {
-                    if (pm is ModuleEngines engine)
-                        engine.thrustPercentage = 100;
-                }
+                if (entry.Key != null)
+                    entry.Key.thrustPercentage = entry.Value;
             }
+
+            _thrustLimitsBeforeDifferentialThrottle.Clear();
         }
     }
 }
