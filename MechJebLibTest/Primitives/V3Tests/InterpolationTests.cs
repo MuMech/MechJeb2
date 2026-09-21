@@ -387,6 +387,63 @@ namespace MechJebLibTest.Primitives.V3Tests
             lerped.ShouldEqual(slerped, 1e-14);
         }
 
+        // The following tests pin down great-circle tracking.  They use vectors deliberately far away from
+        // V3.forward, because the previous implementation slerped two Q3.FromToRotation(V3.forward, ...)
+        // quaternions, which tracks the great circle only when the inputs are near that reference axis.
+
+        [Fact]
+        private void SlerpStaysInThePlaneOfItsInputs()
+        {
+            V3 a = new V3(-0.5, 0.7, 0.3).normalized;
+            V3 b = new V3(-0.2, 0.4, -0.8).normalized;
+
+            V3 normal = V3.Cross(a, b).normalized;
+
+            V3.Dot(V3.Slerp(a, b, 0.25), normal).ShouldBeZero(1e-14);
+            V3.Dot(V3.Slerp(a, b, 0.5), normal).ShouldBeZero(1e-14);
+            V3.Dot(V3.Slerp(a, b, 0.75), normal).ShouldBeZero(1e-14);
+        }
+
+        [Fact]
+        private void SlerpSweepsAngleProportionalToT()
+        {
+            V3 a = new V3(-0.5, 0.7, 0.3).normalized;
+            V3 b = new V3(-0.2, 0.4, -0.8).normalized;
+
+            double total = V3.Angle(a, b);
+
+            V3.Angle(a, V3.Slerp(a, b, 0.25)).ShouldEqual(0.25 * total, 1e-14);
+            V3.Angle(a, V3.Slerp(a, b, 0.5)).ShouldEqual(0.5 * total, 1e-14);
+            V3.Angle(a, V3.Slerp(a, b, 0.75)).ShouldEqual(0.75 * total, 1e-14);
+        }
+
+        [Fact]
+        private void SlerpPartitionsTheArcBetweenTheEndpoints()
+        {
+            V3 a = new V3(-0.5, 0.7, 0.3).normalized;
+            V3 b = new V3(-0.2, 0.4, -0.8).normalized;
+
+            double total = V3.Angle(a, b);
+
+            foreach (double t in new[] { 0.25, 0.5, 0.75 })
+            {
+                var p = V3.Slerp(a, b, t);
+                (V3.Angle(a, p) + V3.Angle(p, b)).ShouldEqual(total, 1e-14);
+            }
+        }
+
+        [Fact]
+        private void SlerpIsRotationInvariant()
+        {
+            V3 a = new V3(-0.5, 0.7, 0.3).normalized;
+            V3 b = new V3(-0.2, 0.4, -0.8).normalized;
+
+            var q = Q3.AngleAxis(1.1, new V3(0.3, -0.5, 0.8).normalized);
+
+            foreach (double t in new[] { 0.25, 0.5, 0.75 })
+                (q * V3.Slerp(a, b, t)).ShouldEqual(V3.Slerp(q * a, q * b, t), 1e-14);
+        }
+
         [Fact]
         private void SlerpNearlyParallelVectors()
         {
