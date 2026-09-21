@@ -4,30 +4,63 @@ using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 using Object = UnityEngine.Object;
+using RecordType = MuMech.MechJebModuleFlightRecorder.RecordType;
 
 namespace MuMech
 {
     public class MechJebModuleFlightRecorderGraph : DisplayModule
     {
         private const int ScaleTicks = 11;
+        private const string DISPLAYED_GRAPHS_NODE = "displayedGraphs";
 
         public struct graphState
         {
-            public double minimum;
-            public double maximum;
+            public double   minimum;
+            public double   maximum;
             public string[] labels;
             public double[] labelsPos;
-            public int labelsActive;
-            public bool display;
+            public int      labelsActive;
+        }
 
-            public void Reset()
+        // One row per graph the user can tick, in on-screen order. NewRow breaks the checkbox row.
+        private readonly struct GraphInfo
+        {
+            public readonly RecordType Type;
+            public readonly Color      Color;
+            public readonly string     Label;      // checkbox label (localization tag, or a literal)
+            public readonly string     ScaleLabel; // label in the scale picker
+            public readonly bool       NewRow;
+
+            public GraphInfo(RecordType type, Color color, string label, string scaleLabel, bool newRow = false)
             {
-                minimum = 0;
-                maximum = 0;
-                labels = new string[ScaleTicks];
-                labelsPos = new double[ScaleTicks];
+                Type       = type;
+                Color      = color;
+                Label      = label;
+                ScaleLabel = scaleLabel;
+                NewRow     = newRow;
             }
         }
+
+        // Blue, Navy, Teal, Magenta, Purple all have poor contrast on black or against other colors here
+        // Maybe some of them could be lightened up, but many of the lighter variants are already in this list.
+        private static readonly GraphInfo[] graphInfos =
+        {
+            new GraphInfo(RecordType.ALTITUDE_ASL,     XKCDColors.White,      "#MechJeb_Flightrecord_checkbox4", "#MechJeb_Flightrecord_checkbox18"),                // Altitude / ASL
+            new GraphInfo(RecordType.ALTITUDE_TRUE,    XKCDColors.Grey,       "#MechJeb_Flightrecord_checkbox5", "#MechJeb_Flightrecord_checkbox19"),                // True Altitude / AGL
+            new GraphInfo(RecordType.ACCELERATION,     XKCDColors.LightRed,   "#MechJeb_Flightrecord_checkbox6", "#MechJeb_Flightrecord_checkbox20"),                // Acceleration / Acc
+            new GraphInfo(RecordType.SPEED_SURFACE,    XKCDColors.Yellow,     "#MechJeb_Flightrecord_checkbox7", "#MechJeb_Flightrecord_checkbox21"),                // Surface speed / SrfVel
+            new GraphInfo(RecordType.SPEED_ORBITAL,    XKCDColors.Apricot,    "#MechJeb_Flightrecord_checkbox8", "#MechJeb_Flightrecord_checkbox22"),                // Orbital speed / ObtVel
+            new GraphInfo(RecordType.MASS,             XKCDColors.Pink,       "#MechJeb_Flightrecord_checkbox9", "#MechJeb_Flightrecord_checkbox23"),                // Mass
+            new GraphInfo(RecordType.Q,                XKCDColors.Cyan,       "#MechJeb_Flightrecord_checkbox10", "#MechJeb_Flightrecord_checkbox24", newRow: true), // Q
+            new GraphInfo(RecordType.AO_A,             XKCDColors.Lavender,   "#MechJeb_Flightrecord_checkbox11", "#MechJeb_Flightrecord_checkbox25"),               // AoA
+            new GraphInfo(RecordType.AO_S,             XKCDColors.Lime,       "#MechJeb_Flightrecord_checkbox12", "#MechJeb_Flightrecord_checkbox26"),               // AoS
+            new GraphInfo(RecordType.AO_D,             XKCDColors.Orange,     "#MechJeb_Flightrecord_checkbox13", "#MechJeb_Flightrecord_checkbox27"),               // AoD
+            new GraphInfo(RecordType.PITCH,            XKCDColors.Mint,       "#MechJeb_Flightrecord_checkbox14", "#MechJeb_Flightrecord_checkbox28"),               // Pitch
+            new GraphInfo(RecordType.DELTA_V_EXPENDED, XKCDColors.Beige,      "ΔV",                              "ΔV"),                                              // ΔV
+            new GraphInfo(RecordType.GRAVITY_LOSSES,   XKCDColors.Green,      "#MechJeb_Flightrecord_checkbox15", "#MechJeb_Flightrecord_checkbox29"),               // Gravity Loss
+            new GraphInfo(RecordType.DRAG_LOSSES,      XKCDColors.LightBrown, "#MechJeb_Flightrecord_checkbox16", "#MechJeb_Flightrecord_checkbox30"),               // Drag Loss
+            new GraphInfo(RecordType.STEERING_LOSSES,  XKCDColors.Cerise,     "#MechJeb_Flightrecord_checkbox17", "#MechJeb_Flightrecord_checkbox31"),               // Steering Loss
+        };
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool downrange = true;
@@ -60,9 +93,13 @@ namespace MuMech
 
         private static Texture2D backgroundTexture;
         private CelestialBody oldMainBody;
-        private static readonly int typeCount = Enum.GetValues(typeof(MechJebModuleFlightRecorder.RecordType)).Length;
+        private static readonly int typeCount = Enum.GetValues(typeof(RecordType)).Length;
 
         private readonly graphState[] graphStates;
+
+        // Which graphs the user has ticked, indexed by (int)RecordType. Persisted by name; see OnSave/OnLoad.
+        private readonly bool[] displayed;
+
         private double lastMaximumAltitude;
         private readonly double precision = 0.2;
 
@@ -82,6 +119,42 @@ namespace MuMech
         {
             Priority = 2000;
             graphStates = new graphState[typeCount];
+            displayed   = new bool[typeCount];
+        }
+
+        public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnSave(local, type, global);
+
+            if (global == null)
+                return;
+
+            ConfigNode node = global.AddNode(DISPLAYED_GRAPHS_NODE);
+
+            foreach (GraphInfo g in graphInfos)
+                node.AddValue(g.Type.ToString(), displayed[(int)g.Type]);
+        }
+
+        public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
+        {
+            base.OnLoad(local, type, global);
+
+            if (global == null || !global.HasNode(DISPLAYED_GRAPHS_NODE))
+                return;
+
+            ConfigNode node = global.GetNode(DISPLAYED_GRAPHS_NODE);
+
+            // Keyed by name so that reordering or extending RecordType cannot scramble the saved flags.
+            // Anything unrecognized or malformed is skipped rather than thrown: an exception here would
+            // cost the module every one of its settings, since MechJebCore catches OnLoad per module.
+            for (int i = 0; i < node.values.Count; i++)
+            {
+                ConfigNode.Value v = node.values[i];
+
+                if (Enum.TryParse(v.name, out RecordType recordType) && Enum.IsDefined(typeof(RecordType), recordType) &&
+                    bool.TryParse(v.value, out bool display))
+                    displayed[(int)recordType] = display;
+            }
         }
 
         public override void OnStart(PartModule.StartState state)
@@ -99,11 +172,11 @@ namespace MuMech
         {
             //DefaultAscentPath path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentAutopilot>().ascentPath;
 
-            if (oldMainBody != MainBody || lastMaximumAltitude != graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].maximum ||
+            if (oldMainBody != MainBody || lastMaximumAltitude != graphStates[(int)RecordType.ALTITUDE_ASL].maximum ||
                 height != backgroundTexture.height)
             {
                 UpdateScale();
-                lastMaximumAltitude = graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].maximum;
+                lastMaximumAltitude = graphStates[(int)RecordType.ALTITUDE_ASL].maximum;
 
                 if (backgroundTexture == null || height != backgroundTexture.height)
                 {
@@ -169,8 +242,8 @@ namespace MuMech
             }
 
             float maxX = (float)(downrange
-                ? recorder.Maximums[(int)MechJebModuleFlightRecorder.RecordType.DOWN_RANGE]
-                : recorder.Maximums[(int)MechJebModuleFlightRecorder.RecordType.TIME_SINCE_MARK]);
+                ? recorder.Maximums[(int)RecordType.DOWN_RANGE]
+                : recorder.Maximums[(int)RecordType.TIME_SINCE_MARK]);
 
             double maxXScaled = (downrange ? maxX : maxX / precision) / width;
             double autoScaleX = Math.Max(Math.Ceiling(Math.Log(maxXScaled, 2)), 0);
@@ -245,89 +318,21 @@ namespace MuMech
 
             Color color = GUI.color;
 
-            // Blue, Navy, Teal, Magenta, Purple all have poor contrast on black or against other colors here
-            // Maybe some of them could be lightened up, but many of the lighter variants are already in this list.
-
             //ascentPath = GUILayout.Toggle(ascentPath, "Ascent path", GuiUtils.LayoutNoExpandWidth);
             stages = GUILayout.Toggle(stages, Localizer.Format("#MechJeb_Flightrecord_checkbox3"), GuiUtils.LayoutNoExpandWidth); //"Stages"
 
-            GUI.color = XKCDColors.White;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].display, Localizer.Format("#MechJeb_Flightrecord_checkbox4"),
-                GuiUtils.LayoutNoExpandWidth); //"Altitude"
+            foreach (GraphInfo g in graphInfos)
+            {
+                if (g.NewRow)
+                {
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                }
 
-            GUI.color = XKCDColors.Grey;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].display, Localizer.Format("#MechJeb_Flightrecord_checkbox5"),
-                GuiUtils.LayoutNoExpandWidth); //"True Altitude"
-
-            GUI.color = XKCDColors.LightRed;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].display, Localizer.Format("#MechJeb_Flightrecord_checkbox6"),
-                GuiUtils.LayoutNoExpandWidth); //"Acceleration"
-
-            GUI.color = XKCDColors.Yellow;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].display, Localizer.Format("#MechJeb_Flightrecord_checkbox7"),
-                GuiUtils.LayoutNoExpandWidth); //"Surface speed"
-
-            GUI.color = XKCDColors.Apricot;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].display, Localizer.Format("#MechJeb_Flightrecord_checkbox8"),
-                GuiUtils.LayoutNoExpandWidth); //"Orbital speed"
-
-            GUI.color = XKCDColors.Pink;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].display, Localizer.Format("#MechJeb_Flightrecord_checkbox9"),
-                GuiUtils.LayoutNoExpandWidth); //"Mass"
-
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-
-            GUI.color = XKCDColors.Cyan;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].display, Localizer.Format("#MechJeb_Flightrecord_checkbox10"),
-                GuiUtils.LayoutNoExpandWidth); //"Q"
-
-            GUI.color = XKCDColors.Lavender;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].display, Localizer.Format("#MechJeb_Flightrecord_checkbox11"),
-                GuiUtils.LayoutNoExpandWidth); //"AoA"
-
-            GUI.color = XKCDColors.Lime;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].display, Localizer.Format("#MechJeb_Flightrecord_checkbox12"),
-                GuiUtils.LayoutNoExpandWidth); //"AoS"
-
-            GUI.color = XKCDColors.Orange;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].display, Localizer.Format("#MechJeb_Flightrecord_checkbox13"),
-                GuiUtils.LayoutNoExpandWidth); //"AoD"
-
-            GUI.color = XKCDColors.Mint;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].display, Localizer.Format("#MechJeb_Flightrecord_checkbox14"),
-                GuiUtils.LayoutNoExpandWidth); //"Pitch"
-
-            GUI.color = XKCDColors.Beige;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].display, "ΔV", GuiUtils.LayoutNoExpandWidth);
-
-            GUI.color = XKCDColors.Green;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].display, Localizer.Format("#MechJeb_Flightrecord_checkbox15"),
-                GuiUtils.LayoutNoExpandWidth); //"Gravity Loss"
-
-            GUI.color = XKCDColors.LightBrown;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].display, Localizer.Format("#MechJeb_Flightrecord_checkbox16"),
-                GuiUtils.LayoutNoExpandWidth); //"Drag Loss"
-
-            GUI.color = XKCDColors.Cerise;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].display = GUILayout.Toggle(
-                graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].display,
-                Localizer.Format("#MechJeb_Flightrecord_checkbox17"),
-                GuiUtils.LayoutNoExpandWidth); //"Steering Loss"
+                GUI.color = g.Color;
+                displayed[(int)g.Type] =
+                    GUILayout.Toggle(displayed[(int)g.Type], Localizer.Format(g.Label), GuiUtils.LayoutNoExpandWidth);
+            }
 
             GUI.color = color;
 
@@ -350,10 +355,10 @@ namespace MuMech
 
             color = GUI.color;
 
-            if (!graphStates[scaleIdx].display)
+            if (!displayed[scaleIdx])
             {
                 int newIdx = 0;
-                while (newIdx < typeCount && !graphStates[newIdx].display)
+                while (newIdx < typeCount && !displayed[newIdx])
                 {
                     newIdx++;
                 }
@@ -363,138 +368,14 @@ namespace MuMech
                 scaleIdx = newIdx;
             }
 
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].display)
+            foreach (GraphInfo g in graphInfos)
             {
-                GUI.color = XKCDColors.White;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.AltitudeASL, "ASL " + MuUtils.ToSI(graphStates[(int)recordType.AltitudeASL].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AltitudeASL].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox18"), GuiUtils.LayoutExpandWidth)) //"ASL"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL;
-            }
+                if (!displayed[(int)g.Type])
+                    continue;
 
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].display)
-            {
-                GUI.color = XKCDColors.Grey;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.AltitudeTrue, "AGL " + MuUtils.ToSI(graphStates[(int)recordType.AltitudeTrue].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AltitudeTrue].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox19"), GuiUtils.LayoutExpandWidth)) //"AGL"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].display)
-            {
-                GUI.color = XKCDColors.LightRed;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.Acceleration, "Acc " + MuUtils.ToSI(graphStates[(int)recordType.Acceleration].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Acceleration].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.ACCELERATION,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox20"), GuiUtils.LayoutExpandWidth)) // "Acc"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.ACCELERATION;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].display)
-            {
-                GUI.color = XKCDColors.Yellow;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.SpeedSurface, "SrfVel " + MuUtils.ToSI(graphStates[(int)recordType.SpeedSurface].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.SpeedSurface].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox21"), GuiUtils.LayoutExpandWidth)) //"SrfVel"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].display)
-            {
-                GUI.color = XKCDColors.Apricot;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.SpeedOrbital, "ObtVel " + MuUtils.ToSI(graphStates[(int)recordType.SpeedOrbital].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.SpeedOrbital].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox22"), GuiUtils.LayoutExpandWidth)) //"ObtVel"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].display)
-            {
-                GUI.color = XKCDColors.Pink;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.Mass, "Mass " + MuUtils.ToSI(graphStates[(int)recordType.Mass].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Mass].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.MASS,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox23"), GuiUtils.LayoutExpandWidth)) //"Mass"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.MASS;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].display)
-            {
-                GUI.color = XKCDColors.Cyan;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.Q, "Q " + MuUtils.ToSI(graphStates[(int)recordType.Q].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Q].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.Q, Localizer.Format("#MechJeb_Flightrecord_checkbox24"),
-                        GuiUtils.LayoutExpandWidth)) //"Q"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.Q;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].display)
-            {
-                GUI.color = XKCDColors.Lavender;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.AoA, "AoA " + MuUtils.ToSI(graphStates[(int)recordType.AoA].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AoA].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.AO_A,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox25"), GuiUtils.LayoutExpandWidth)) //"AoA"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.AO_A;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].display)
-            {
-                GUI.color = XKCDColors.Lime;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.AoS, "AoS " + MuUtils.ToSI(graphStates[(int)recordType.AoS].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AoS].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.AO_S,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox26"), GuiUtils.LayoutExpandWidth)) //"AoS"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.AO_S;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].display)
-            {
-                GUI.color = XKCDColors.Orange;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.AoD, "AoD " + MuUtils.ToSI(graphStates[(int)recordType.AoD].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.AoD].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.AO_D,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox27"), GuiUtils.LayoutExpandWidth)) //"AoD"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.AO_D;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].display)
-            {
-                GUI.color = XKCDColors.Mint;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.Pitch, "Pitch " + MuUtils.ToSI(graphStates[(int)recordType.Pitch].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.Pitch].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.PITCH,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox28"), GuiUtils.LayoutExpandWidth)) //"Pitch"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.PITCH;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].display)
-            {
-                GUI.color = XKCDColors.Beige;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.DeltaVExpended, "DeltaVExpended " + MuUtils.ToSI(graphStates[(int)recordType.DeltaVExpended].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.DeltaVExpended].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED, "ΔV", GuiUtils.LayoutExpandWidth))
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].display)
-            {
-                GUI.color = XKCDColors.Green;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.GravityLosses, "GravityLosses " + MuUtils.ToSI(graphStates[(int)recordType.GravityLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.GravityLosses].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox29"), GuiUtils.LayoutExpandWidth)) //"Gravity Loss"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].display)
-            {
-                GUI.color = XKCDColors.LightBrown;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.DragLosses, "DragLosses " + MuUtils.ToSI(graphStates[(int)recordType.DragLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.DragLosses].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox30"), GuiUtils.LayoutExpandWidth)) //"Drag Loss"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES;
-            }
-
-            if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].display)
-            {
-                GUI.color = XKCDColors.Cerise;
-                //if (GUILayout.Toggle(scaleIdx == (int)recordType.SteeringLosses, "SteeringLosses " + MuUtils.ToSI(graphStates[(int)recordType.SteeringLosses].minimum, -1, 3) + " " + MuUtils.ToSI(graphStates[(int)recordType.SteeringLosses].maximum, -1, 3), GuiUtils.LayoutExpandWidth))
-                if (GUILayout.Toggle(scaleIdx == (int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES,
-                        Localizer.Format("#MechJeb_Flightrecord_checkbox31"), GuiUtils.LayoutExpandWidth)) //"Steering Loss"
-                    scaleIdx = (int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES;
+                GUI.color = g.Color;
+                if (GUILayout.Toggle(scaleIdx == (int)g.Type, Localizer.Format(g.ScaleLabel), GuiUtils.LayoutExpandWidth))
+                    scaleIdx = (int)g.Type;
             }
 
             GUI.color = color;
@@ -521,43 +402,17 @@ namespace MuMech
             {
                 UpdateScale();
 
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].display ||
-                    graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].display)
+                if (displayed[(int)RecordType.ALTITUDE_ASL] || displayed[(int)RecordType.ALTITUDE_TRUE])
                     GUI.DrawTexture(r, backgroundTexture, ScaleMode.StretchToFill);
 
                 if (stages)
                     DrawnStages(r, scaleX, downrange);
 
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL, hPos, scaleX, downrange, XKCDColors.White);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE, hPos, scaleX, downrange, XKCDColors.Grey);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.ACCELERATION, hPos, scaleX, downrange, XKCDColors.LightRed);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE, hPos, scaleX, downrange, XKCDColors.Yellow);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL, hPos, scaleX, downrange, XKCDColors.Apricot);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.MASS, hPos, scaleX, downrange, XKCDColors.Pink);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.Q, hPos, scaleX, downrange, XKCDColors.Cyan);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.AO_A, hPos, scaleX, downrange, XKCDColors.Lavender);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.AO_S, hPos, scaleX, downrange, XKCDColors.Lime);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.AO_D, hPos, scaleX, downrange, XKCDColors.Orange);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.PITCH, hPos, scaleX, downrange, XKCDColors.Mint);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED, hPos, scaleX, downrange, XKCDColors.Beige);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES, hPos, scaleX, downrange, XKCDColors.Green);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES, hPos, scaleX, downrange, XKCDColors.LightBrown);
-                if (graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].display)
-                    DrawnPath(r, MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES, hPos, scaleX, downrange, XKCDColors.Cerise);
+                foreach (GraphInfo g in graphInfos)
+                {
+                    if (displayed[(int)g.Type])
+                        DrawnPath(r, g.Type, hPos, scaleX, downrange, g.Color);
+                }
 
                 // Fix : the scales are different so the result is not useful
                 //if (ascentPath)
@@ -594,7 +449,7 @@ namespace MuMech
             }
         }
 
-        private void DrawnPath(Rect r, MechJebModuleFlightRecorder.RecordType type, float minimum, double scaleX, bool downRange, Color color)
+        private void DrawnPath(Rect r, RecordType type, float minimum, double scaleX, bool downRange, Color color)
         {
             if (recorder.History.Length <= 2 || recorder.HistoryIdx == 0)
                 return;
@@ -727,40 +582,40 @@ namespace MuMech
         private void ResetScale()
         {
             // Avoid min = max and set sane minimums
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DOWN_RANGE].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].minimum = -5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].minimum = -5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].minimum = 0; // is never negative
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].minimum = 0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].minimum = 0;
+            graphStates[(int)RecordType.ALTITUDE_ASL].minimum = 0;
+            graphStates[(int)RecordType.DOWN_RANGE].minimum = 0;
+            graphStates[(int)RecordType.ACCELERATION].minimum = 0;
+            graphStates[(int)RecordType.SPEED_SURFACE].minimum = 0;
+            graphStates[(int)RecordType.SPEED_ORBITAL].minimum = 0;
+            graphStates[(int)RecordType.MASS].minimum = 0;
+            graphStates[(int)RecordType.Q].minimum = 0;
+            graphStates[(int)RecordType.AO_A].minimum = -5;
+            graphStates[(int)RecordType.AO_S].minimum = -5;
+            graphStates[(int)RecordType.AO_D].minimum = 0; // is never negative
+            graphStates[(int)RecordType.ALTITUDE_TRUE].minimum = 0;
+            graphStates[(int)RecordType.PITCH].minimum = 0;
+            graphStates[(int)RecordType.DELTA_V_EXPENDED].minimum = 0;
+            graphStates[(int)RecordType.GRAVITY_LOSSES].minimum = 0;
+            graphStates[(int)RecordType.DRAG_LOSSES].minimum = 0;
+            graphStates[(int)RecordType.STEERING_LOSSES].minimum = 0;
 
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_ASL].maximum =
+            graphStates[(int)RecordType.ALTITUDE_ASL].maximum =
                 MainBody != null && MainBody.atmosphere ? MainBody.RealMaxAtmosphereAltitude() : 10000.0;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DOWN_RANGE].maximum = 500;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ACCELERATION].maximum = 2;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_SURFACE].maximum = 300;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.SPEED_ORBITAL].maximum = 300;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.MASS].maximum = 5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.Q].maximum = 1000;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_A].maximum = 5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_S].maximum = 5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.AO_D].maximum = 5;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.ALTITUDE_TRUE].maximum = 100;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.PITCH].maximum = 90;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DELTA_V_EXPENDED].maximum = 100;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.GRAVITY_LOSSES].maximum = 100;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.DRAG_LOSSES].maximum = 100;
-            graphStates[(int)MechJebModuleFlightRecorder.RecordType.STEERING_LOSSES].maximum = 100;
+            graphStates[(int)RecordType.DOWN_RANGE].maximum = 500;
+            graphStates[(int)RecordType.ACCELERATION].maximum = 2;
+            graphStates[(int)RecordType.SPEED_SURFACE].maximum = 300;
+            graphStates[(int)RecordType.SPEED_ORBITAL].maximum = 300;
+            graphStates[(int)RecordType.MASS].maximum = 5;
+            graphStates[(int)RecordType.Q].maximum = 1000;
+            graphStates[(int)RecordType.AO_A].maximum = 5;
+            graphStates[(int)RecordType.AO_S].maximum = 5;
+            graphStates[(int)RecordType.AO_D].maximum = 5;
+            graphStates[(int)RecordType.ALTITUDE_TRUE].maximum = 100;
+            graphStates[(int)RecordType.PITCH].maximum = 90;
+            graphStates[(int)RecordType.DELTA_V_EXPENDED].maximum = 100;
+            graphStates[(int)RecordType.GRAVITY_LOSSES].maximum = 100;
+            graphStates[(int)RecordType.DRAG_LOSSES].maximum = 100;
+            graphStates[(int)RecordType.STEERING_LOSSES].maximum = 100;
         }
 
         private double heckbertNiceNum(double x, bool round)
