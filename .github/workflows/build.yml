@@ -2,7 +2,8 @@ name: build
 
 # pull_request:      build, run the tests and comment the build zip on the PR
 # push (dev/master): build, run the tests and publish the release zip as a workflow artifact
-#                    (dev builds are stamped "Dev #<run number>" in the MechJeb window title)
+#                    (dev builds are stamped "Dev #<run number>" in the MechJeb window title and
+#                    also published as a public pre-release, the last 10 are kept)
 # workflow_call:     used by create-release.yml, which passes the version to release
 on:
   push:
@@ -46,6 +47,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: write # comment the build on the PR
+    outputs:
+      label: ${{ steps.meta.outputs.label }}
     steps:
       - uses: actions/checkout@v7
 
@@ -174,3 +177,51 @@ jobs:
             } else {
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+
+  # Publishes every dev build as a public pre-release (dev-<run number>) and keeps the 10 most recent ones.
+  publish-dev:
+    needs: build
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-dev-release
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      LABEL: ${{ needs.build.outputs.label }}
+      KEEP: 100
+    steps:
+      - name: Download the build
+        uses: actions/download-artifact@v8
+        with:
+          name: MechJeb2-${{ needs.build.outputs.label }}
+          path: package
+
+      - name: Create the zip
+        run: |
+          test -f package/MechJeb2/Plugins/MechJeb2.dll
+          (cd package && zip -q -9 -r "$GITHUB_WORKSPACE/MechJeb2-$LABEL.zip" MechJeb2)
+          unzip -tq "MechJeb2-$LABEL.zip"
+
+      # Skipped when the workflow is run locally with act
+      - name: Publish the dev pre-release
+        if: ${{ !env.ACT }}
+        run: |
+          tag="$LABEL"
+          title="Dev build ${LABEL#dev-}"
+          notes="Automated build of the dev branch at ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}. Unstable: use a release for normal play."
+          if gh release view "$tag" > /dev/null 2>&1; then
+            # re-run of a job: replace the zip
+            gh release upload "$tag" "MechJeb2-$LABEL.zip" --clobber
+          else
+            gh release create "$tag" "MechJeb2-$LABEL.zip" --prerelease --latest=false --target "$GITHUB_SHA" --title "$title" --notes "$notes"
+          fi
+
+          # keep the $KEEP most recent dev builds: delete the older ones with their tags
+          gh release list --limit 100 --json tagName --jq "[.[].tagName | select(test(\"^dev-[0-9]+\$\"))] | sort_by(ltrimstr(\"dev-\") | tonumber) | reverse | .[$KEEP:] | .[]" |
+            while read -r old; do
+              gh release delete "$old" --cleanup-tag --yes
+            done
