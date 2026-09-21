@@ -191,6 +191,7 @@ jobs:
       cancel-in-progress: false
     env:
       GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }} # this job has no checkout, so gh can not get the repository from a git directory
       LABEL: ${{ needs.build.outputs.label }}
       KEEP: 100
     steps:
@@ -221,7 +222,8 @@ jobs:
           fi
 
           # keep the $KEEP most recent dev builds: delete the older ones with their tags
-          gh release list --limit 100 --json tagName --jq "[.[].tagName | select(test(\"^dev-[0-9]+\$\"))] | sort_by(ltrimstr(\"dev-\") | tonumber) | reverse | .[$KEEP:] | .[]" |
+          # (the list must be longer than $KEEP, or the old builds are never seen)
+          gh release list --limit $((KEEP + 20)) --json tagName --jq "[.[].tagName | select(test(\"^dev-[0-9]+\$\"))] | sort_by(ltrimstr(\"dev-\") | tonumber) | reverse | .[$KEEP:] | .[]" |
             while read -r old; do
               gh release delete "$old" --cleanup-tag --yes
             done
