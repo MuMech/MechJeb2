@@ -1,5 +1,7 @@
 name: create-release
 
+# Builds and tests the given version (build.yml), then commits the version bump, tags it and creates a draft GitHub release
+# with the build zipped. Nothing is pushed or created unless the build and the tests pass.
 on:
   workflow_dispatch:
     inputs:
@@ -13,77 +15,91 @@ defaults:
     shell: bash
 
 jobs:
-  create-release:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check version and branch
+        env:
+          VERSION: ${{ inputs.version-string }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$VERSION' is not in major.minor.patch.build format (e.g. 2.15.2.0)"
+            exit 1
+          fi
+          if [ "$REF_TYPE" != branch ]; then
+            echo "::error::Run this workflow from a branch, the version bump is committed to it"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "refs/tags/$VERSION" > /dev/null 2>&1; then
+            echo "::error::The tag $VERSION already exists"
+            exit 1
+          fi
+
+  build:
+    needs: validate
+    # A called workflow can not be granted more than its caller: build.yml comments on PRs, which this run never does
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ inputs.version-string }}
+
+  release:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      VERSION: ${{ inputs.version-string }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Download the build
+        uses: actions/download-artifact@v8
         with:
-          dotnet-version: 8.x
+          name: MechJeb2-${{ inputs.version-string }}
+          path: package
 
-      - name: Update AssemblyFileVersion
+      # Stop here, before anything is pushed, if the build did not come through as expected
+      - name: Create the release zip
         run: |
-          VERSION="${{ inputs.version-string }}"
-
-          VERSION=`awk -F '"' '/^\[.*AssemblyFileVersion/{print $2}' MechJeb2/Properties/AssemblyInfo.cs`
-
-          sed -i "s/\[assembly: AssemblyFileVersion(\"[^\"]*\")\]/[assembly: AssemblyFileVersion(\"$VERSION\")]/" MechJeb2/Properties/AssemblyInfo.cs
-          #sed -i "s/AssemblyInformationalVersion(\"\(.*\)\")/AssemblyInformationalVersion(\"Dev #${BUILD_NUMBER} Sarbian\")/" MechJeb2/Properties/AssemblyInfo.cs
-
-          echo "Updated to:"
-          grep AssemblyFileVersion MechJeb2/Properties/AssemblyInfo.cs
-
-      - name: Download KSP Libs
-        run: |
-          wget --quiet https://github.com/KSPModdingLibs/KSPLibs/raw/main/KSP-1.12.5.zip -O /tmp/ksp.zip
-          unzip -q /tmp/ksp.zip -d /tmp/ksp
-
-      - name: Restore
-        run: dotnet restore MechJeb2.sln
-
-      # This is required to test the workflow localy on Windows...
-      - name: FixWinPerm
-        run: chmod u+x MechJeb2/copy_build.sh
-
-      - name: Build
-        run: >
-          dotnet msbuild -m:1
-          -p:Configuration=Release
-          -p:KspData=/tmp/ksp/KSP_x64_Data
-          -p:KspDir=/tmp/ksp
-          MechJeb2.sln
-
-      # - name: Test
-      #   run: dotnet test MechJebLibTest/MechJebLibTest.csproj --configuration Release --no-build
-
-      - name: Assemble package
-        run: |
-          VERSION="${{ inputs.version-string }}"
-          cd /tmp/ksp/GameData/ && zip -9 -r "../MechJeb2-$VERSION.zip" MechJeb2
-          echo "RELEASE_ZIP=MechJeb2-$VERSION.zip" >> "$GITHUB_ENV"
+          test -f package/MechJeb2/Plugins/MechJeb2.dll
+          (cd package && zip -q -9 -r "$GITHUB_WORKSPACE/MechJeb2-$VERSION.zip" MechJeb2)
+          unzip -tq "MechJeb2-$VERSION.zip"
 
       - name: Commit version and create tag
         run: |
-          VERSION="${{ inputs.version-string }}"
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add MechJeb2/Properties/AssemblyInfo.cs
-          git commit -m "bump version to $VERSION"
-          git tag -f -a "$VERSION" -m "$VERSION"
-          git push
+          file=MechJeb2/Properties/AssemblyInfo.cs
+          sed -i -E "s/(AssemblyFileVersion\(\")[^\"]*(\"\))/\1${VERSION}\2/" "$file"
+          grep -qF "AssemblyFileVersion(\"$VERSION\")" "$file"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- "$file"; then
+            echo "$file is already at $VERSION, nothing to commit"
+          else
+            git add "$file"
+            git commit -m "bump version to $VERSION"
+          fi
+          git tag -a "$VERSION" -m "$VERSION"
+
+      # These two steps are skipped when the workflow is run locally with act
+      - name: Push version and tag
+        if: ${{ !env.ACT }}
+        run: git push --atomic origin "HEAD:refs/heads/$GITHUB_REF_NAME" "refs/tags/$VERSION"
 
       - name: Create GitHub release
+        if: ${{ !env.ACT }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          VERSION="${{ inputs.version-string }}"
-          gh release create "$VERSION" \
-            --draft \
-            --target "${{ github.ref_name }}" \
-            --title "$VERSION" \
-            --generate-notes \
-            "${{ env.RELEASE_ZIP }}"
+        run: >
+          gh release create "$VERSION"
+          --draft
+          --verify-tag
+          --title "$VERSION"
+          --generate-notes
+          "MechJeb2-$VERSION.zip"
