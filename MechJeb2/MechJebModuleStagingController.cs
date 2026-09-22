@@ -524,7 +524,10 @@ namespace MuMech
             foreach (ModuleEngines engine in allEngines)
             {
                 Part p = engine.part;
-                if (p.inverseStage >= Vessel.currentStage && !p.IsDecoupledInStage(Vessel.currentStage - 1) && engine.isEnabled)
+                // a flamed out engine cannot burn anything, so it must not keep tanks alive: an LFO booster that has run its
+                // oxidizer dry still has leftover LF, and a burned out SRB is still isEnabled
+                if (p.inverseStage >= Vessel.currentStage && !p.IsDecoupledInStage(Vessel.currentStage - 1) && engine.isEnabled &&
+                    !engine.getFlameoutState)
                     _activeModuleEngines.Add(engine);
             }
         }
@@ -613,7 +616,7 @@ namespace MuMech
                         PartResource r = p.Resources.Get(propellant.id);
 
                         if (r.amount <= p.resourceRequestRemainingThreshold)
-                            return false;
+                            continue;
                         if (r.info.id == PartResourceLibrary.ElectricityHashcode)
                             continue;
                         if (!tankResources.Contains(r.info.id))
