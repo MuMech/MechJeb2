@@ -1,6 +1,6 @@
 name: create-release
 
-# Builds and tests the given version (build.yml), then commits the version bump, tags it and creates a draft GitHub release
+# Builds and tests the given version (build.yml), then commits the version bump, tags it and publishes a GitHub release
 # with the build zipped. Nothing is pushed or created unless the build and the tests pass.
 on:
   workflow_dispatch:
@@ -75,8 +75,24 @@ jobs:
       - name: Commit version and create tag
         run: |
           file=MechJeb2/Properties/AssemblyInfo.cs
+          IFS=. read -r V1 V2 V3 V4 <<< "$VERSION"
+
+          # AssemblyFileVersion and KSPAssembly are bumped every release, per the comment above them in the file
           sed -i -E "s/(AssemblyFileVersion\(\")[^\"]*(\"\))/\1${VERSION}\2/" "$file"
+          sed -i -E "s/(KSPAssembly\(\"MechJeb2\", )[0-9]+, [0-9]+, [0-9]+(\))/\1${V1}, ${V2}, ${V3}\2/" "$file"
           grep -qF "AssemblyFileVersion(\"$VERSION\")" "$file"
+          grep -qF "KSPAssembly(\"MechJeb2\", $V1, $V2, $V3)" "$file"
+
+          # AssemblyVersion only changes for a major version, when the 2nd number changes, per the comment above it
+          current_assembly_version=$(sed -n -E 's/.*AssemblyVersion\("([^"]*)"\).*/\1/p' "$file")
+          current_major=$(cut -d. -f2 <<< "$current_assembly_version")
+          if [ "$current_major" != "$V2" ]; then
+            sed -i -E "s/(AssemblyVersion\(\")[^\"]*(\"\))/\1${VERSION}\2/" "$file"
+            grep -qF "AssemblyVersion(\"$VERSION\")" "$file"
+            echo "AssemblyVersion bumped to $VERSION (major changed from $current_major to $V2)"
+          else
+            echo "AssemblyVersion unchanged at $current_assembly_version: major version did not change"
+          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -99,7 +115,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create "$VERSION"
-          --draft
           --verify-tag
           --title "$VERSION"
           --generate-notes
