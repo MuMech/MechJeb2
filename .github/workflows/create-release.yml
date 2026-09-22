@@ -1,0 +1,132 @@
+name: create-release
+
+# Builds and tests the given version (build.yml), then commits the version bump, tags it and publishes a GitHub release
+# with the build zipped. Nothing is pushed or created unless the build and the tests pass.
+on:
+  workflow_dispatch:
+    inputs:
+      version-string:
+        type: string
+        required: true
+        description: 'Version in major.minor.patch.build format (e.g. 2.15.2.0)'
+      # GitHub's own "Use workflow from" branch picker always defaults to the repo's default branch (dev), and
+      # that can not be changed from here. This input is what is actually built and released, regardless of it.
+      branch:
+        type: string
+        required: false
+        default: 'master'
+        description: 'Branch to release from'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check version and branch
+        env:
+          VERSION: ${{ inputs.version-string }}
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$VERSION' is not in major.minor.patch.build format (e.g. 2.15.2.0)"
+            exit 1
+          fi
+          if ! git ls-remote --exit-code --heads "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "refs/heads/$BRANCH" > /dev/null 2>&1; then
+            echo "::error::Branch '$BRANCH' does not exist"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "refs/tags/$VERSION" > /dev/null 2>&1; then
+            echo "::error::The tag $VERSION already exists"
+            exit 1
+          fi
+
+  build:
+    needs: validate
+    # A called workflow can not be granted more than its caller: build.yml comments on PRs and publishes the dev
+    # pre-release, which this run never does (each job of build.yml only asks for what it needs)
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ inputs.version-string }}
+      ref: ${{ inputs.branch }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.version-string }}
+      BRANCH: ${{ inputs.branch }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Download the build
+        uses: actions/download-artifact@v8
+        with:
+          name: MechJeb2-${{ inputs.version-string }}
+          path: package
+
+      # Stop here, before anything is pushed, if the build did not come through as expected
+      - name: Create the release zip
+        run: |
+          test -f package/MechJeb2/Plugins/MechJeb2.dll
+          (cd package && zip -q -9 -r "$GITHUB_WORKSPACE/MechJeb2-$VERSION.zip" MechJeb2)
+          unzip -tq "MechJeb2-$VERSION.zip"
+
+      - name: Commit version and create tag
+        run: |
+          file=MechJeb2/Properties/AssemblyInfo.cs
+          IFS=. read -r V1 V2 V3 V4 <<< "$VERSION"
+
+          # AssemblyFileVersion and KSPAssembly are bumped every release, per the comment above them in the file
+          sed -i -E "s/(AssemblyFileVersion\(\")[^\"]*(\"\))/\1${VERSION}\2/" "$file"
+          sed -i -E "s/(KSPAssembly\(\"MechJeb2\", )[0-9]+, [0-9]+, [0-9]+(\))/\1${V1}, ${V2}, ${V3}\2/" "$file"
+          grep -qF "AssemblyFileVersion(\"$VERSION\")" "$file"
+          grep -qF "KSPAssembly(\"MechJeb2\", $V1, $V2, $V3)" "$file"
+
+          # AssemblyVersion only changes for a major version, when the 2nd number changes, per the comment above it
+          current_assembly_version=$(sed -n -E 's/.*AssemblyVersion\("([^"]*)"\).*/\1/p' "$file")
+          current_major=$(cut -d. -f2 <<< "$current_assembly_version")
+          if [ "$current_major" != "$V2" ]; then
+            sed -i -E "s/(AssemblyVersion\(\")[^\"]*(\"\))/\1${VERSION}\2/" "$file"
+            grep -qF "AssemblyVersion(\"$VERSION\")" "$file"
+            echo "AssemblyVersion bumped to $VERSION (major changed from $current_major to $V2)"
+          else
+            echo "AssemblyVersion unchanged at $current_assembly_version: major version did not change"
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- "$file"; then
+            echo "$file is already at $VERSION, nothing to commit"
+          else
+            git add "$file"
+            git commit -m "bump version to $VERSION"
+          fi
+          git tag -a "$VERSION" -m "$VERSION"
+
+      # These two steps are skipped when the workflow is run locally with act
+      - name: Push version and tag
+        if: ${{ !env.ACT }}
+        run: git push --atomic origin "HEAD:refs/heads/$BRANCH" "refs/tags/$VERSION"
+
+      - name: Create GitHub release
+        if: ${{ !env.ACT }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$VERSION"
+          --verify-tag
+          --title "$VERSION"
+          --generate-notes
+          "MechJeb2-$VERSION.zip"

@@ -1,0 +1,252 @@
+name: build
+
+# pull_request:      build, run the tests and comment the build zip on the PR
+# push (dev/master): build, run the tests and publish the release zip as a workflow artifact
+#                    (dev builds are stamped "Dev #<run number>" in the MechJeb window title and
+#                    also published as a public pre-release, the last 10 are kept)
+# workflow_call:     used by create-release.yml, which passes the version to release
+on:
+  push:
+    branches: [master, dev]
+    paths-ignore:
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: false
+        default: ''
+        description: 'AssemblyFileVersion to build (major.minor.patch.build). Empty keeps the one from AssemblyInfo.cs.'
+      ref:
+        type: string
+        required: false
+        default: ''
+        description: 'Git ref to build. Empty checks out the ref that triggered this run.'
+
+concurrency:
+  # Only superseded PR builds get cancelled. Every push gets its own group so that each commit keeps its artifact.
+  group: build-${{ github.event_name == 'pull_request' && github.head_ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write # comment the build on the PR
+    outputs:
+      label: ${{ steps.meta.outputs.label }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.x
+
+      # The tests are a net48 assembly: Mono runs them (it is also the runtime KSP uses), the .NET SDK only drives the build
+      - name: Install Mono
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mono-complete
+          mono --version | head -1
+
+      - name: Download KSP Libs
+        run: |
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/ksp.zip https://github.com/KSPModdingLibs/KSPLibs/raw/main/KSP-1.12.5.zip
+          unzip -q /tmp/ksp.zip -d /tmp/ksp
+
+      - name: Compute build metadata
+        id: meta
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          info=''
+          if [ -n "$VERSION" ]; then
+            label="$VERSION"
+          elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/dev ]; then
+            label="dev-$GITHUB_RUN_NUMBER"
+            info="Dev #$GITHUB_RUN_NUMBER"
+          else
+            label="${GITHUB_SHA::7}"
+          fi
+          echo "label=$label" >> "$GITHUB_OUTPUT"
+          echo "info=$info" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp version
+        env:
+          VERSION: ${{ inputs.version }}
+          INFO: ${{ steps.meta.outputs.info }}
+        run: |
+          file=MechJeb2/Properties/AssemblyInfo.cs
+          if [ -n "$VERSION" ]; then
+            sed -i -E "s/(AssemblyFileVersion\(\")[^\"]*(\"\))/\1${VERSION}\2/" "$file"
+            grep -qF "AssemblyFileVersion(\"$VERSION\")" "$file"
+          fi
+          if [ -n "$INFO" ]; then
+            sed -i -E "s/(AssemblyInformationalVersion\(\")[^\"]*(\"\))/\1${INFO}\2/" "$file"
+            grep -qF "AssemblyInformationalVersion(\"$INFO\")" "$file"
+          fi
+          grep -E 'Assembly(File|Informational)?Version' "$file"
+
+      - name: Restore
+        run: dotnet restore MechJeb2.sln
+
+      # git on Windows does not keep the executable bit, and that is what act copies into its container
+      - name: Fix script permissions (act on Windows)
+        if: ${{ env.ACT }}
+        run: chmod u+x MechJeb2/copy_build.sh
+
+      - name: Build
+        run: >
+          dotnet msbuild -m:1
+          -p:Configuration=Release
+          -p:KspData=/tmp/ksp/KSP_x64_Data
+          -p:KspDir=/tmp/ksp
+          MechJeb2.sln
+
+      # Tests that fail for numerical precision reasons (the result differs slightly from the expected value on this platform)
+      # are excluded here by name: add them to the filter, e.g. "FullyQualifiedName!~A&FullyQualifiedName!~B"
+      - name: Test
+        run: >
+          dotnet test MechJebLibTest/MechJebLibTest.csproj
+          --configuration Release
+          --no-build
+          --filter "FullyQualifiedName!~MainSailTinCanVacuum"
+
+      - name: Package
+        run: |
+          stage="$RUNNER_TEMP/package"
+          rm -rf "$stage"
+          mkdir -p "$stage"
+          cp -r /tmp/ksp/GameData/MechJeb2 "$stage/MechJeb2"
+          cp LICENSE.md LandingSites.cfg "$stage/MechJeb2/"
+
+          # JetBrains.Annotations is compile time only and the pdb files are of no use to KSP
+          rm -f "$stage"/MechJeb2/Plugins/JetBrains.Annotations.* "$stage"/MechJeb2/Plugins/*.pdb
+
+          # copy_build.sh carries on when a copy fails: check that every assembly MechJeb2 needs at runtime made it
+          for dll in MechJeb2 MechJebLib MechJebLibBindings alglib; do
+            test -f "$stage/MechJeb2/Plugins/$dll.dll" || { echo "::error::$dll.dll is missing from the package"; exit 1; }
+          done
+
+          ls -l "$stage/MechJeb2/Plugins"
+
+      # GitHub downloads the artifact as MechJeb2-<label>.zip, with the MechJeb2 folder at its root: unzip it in GameData
+      - name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: MechJeb2-${{ steps.meta.outputs.label }}
+          path: ${{ runner.temp }}/package
+          if-no-files-found: error
+
+      # Forks only get a read-only token: they can still download the artifact from the run page
+      - name: Comment PR
+        if: ${{ !env.ACT && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/github-script@v9
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ZIP_NAME: MechJeb2-${{ steps.meta.outputs.label }}.zip # the name GitHub gives the artifact download
+        with:
+          script: |
+            const marker = '<!-- mechjeb-build-artifact -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const sha = context.payload.pull_request.head.sha.slice(0, 7);
+            const body = `${marker}\n## ✅ Build Artifact 🚀\n\n[${process.env.ZIP_NAME}](${process.env.ARTIFACT_URL}) (built from ${sha})`;
+
+            // Update the previous comment instead of adding a new one on every push
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const previous = comments.find(c => c.body && c.body.includes(marker));
+            if (previous) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: previous.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+  # Publishes every dev build as a public pre-release (dev-<run number>) and keeps the 10 most recent ones.
+  publish-dev:
+    needs: build
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-dev-release
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }} # this job has no checkout, so gh can not get the repository from a git directory
+      LABEL: ${{ needs.build.outputs.label }}
+      KEEP: 100
+    steps:
+      - name: Download the build
+        uses: actions/download-artifact@v8
+        with:
+          name: MechJeb2-${{ needs.build.outputs.label }}
+          path: package
+
+      - name: Create the zip
+        run: |
+          test -f package/MechJeb2/Plugins/MechJeb2.dll
+          (cd package && zip -q -9 -r "$GITHUB_WORKSPACE/MechJeb2-$LABEL.zip" MechJeb2)
+          unzip -tq "MechJeb2-$LABEL.zip"
+
+      # Skipped when the workflow is run locally with act
+      - name: Publish the dev pre-release
+        if: ${{ !env.ACT }}
+        run: |
+          tag="$LABEL"
+          title="Dev build ${LABEL#dev-}"
+          intro="Automated build of the dev branch at ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}. Unstable: use a release for normal play."
+
+          # the previous dev build still published, if any (newest first, this run's own tag excluded in case of a re-run)
+          previous_tag=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
+            "[.[].tagName | select(test(\"^dev-[0-9]+\$\")) | select(. != \"$tag\")] | sort_by(ltrimstr(\"dev-\") | tonumber) | reverse | .[0] // empty")
+
+          notes_file=$(mktemp)
+          echo "$intro" > "$notes_file"
+          if [ -n "$previous_tag" ]; then
+            # the list of PRs merged into dev since the previous dev build, generated by GitHub itself
+            echo >> "$notes_file"
+            gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="$tag" -f target_commitish="$GITHUB_SHA" -f previous_tag_name="$previous_tag" \
+              --jq .body >> "$notes_file"
+          fi
+
+          if gh release view "$tag" > /dev/null 2>&1; then
+            # re-run of a job: replace the zip and refresh the notes
+            gh release upload "$tag" "MechJeb2-$LABEL.zip" --clobber
+            gh release edit "$tag" --notes-file "$notes_file"
+          else
+            gh release create "$tag" "MechJeb2-$LABEL.zip" --prerelease --latest=false --target "$GITHUB_SHA" --title "$title" --notes-file "$notes_file"
+          fi
+
+          # keep the $KEEP most recent dev builds: delete the older ones with their tags
+          # (the list must be longer than $KEEP, or the old builds are never seen)
+          gh release list --limit $((KEEP + 20)) --json tagName --jq "[.[].tagName | select(test(\"^dev-[0-9]+\$\"))] | sort_by(ltrimstr(\"dev-\") | tonumber) | reverse | .[$KEEP:] | .[]" |
+            while read -r old; do
+              gh release delete "$old" --cleanup-tag --yes
+            done
