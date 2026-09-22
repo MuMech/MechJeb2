@@ -232,7 +232,7 @@ namespace MechJebLib.FuelFlowSimulation
                 if (resource.Free)
                     continue;
 
-                if (resource.Amount <= p.ResourceRequestRemainingThreshold)
+                if (resource.Amount <= resource.ResidualThreshold + p.ResourceRequestRemainingThreshold)
                     continue;
 
                 if (usePriority)
@@ -367,7 +367,7 @@ namespace MechJebLib.FuelFlowSimulation
         {
             double maxTime = RCSMaxTime();
 
-            return maxTime < double.MaxValue && maxTime >= 0 ? maxTime : 0;
+            return maxTime < double.MaxValue && maxTime > 0.001 ? maxTime : 0.001;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
