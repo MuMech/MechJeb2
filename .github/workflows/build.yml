@@ -44,6 +44,10 @@ defaults:
 env:
   DOTNET_NOLOGO: 1
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  KEEP: 100 # dev pre-releases to keep
+  # The old Jenkins-based build reached this number; new dev builds continue counting up from here instead of
+  # restarting from GitHub's own per-workflow run number (which would also count PR and non-dev runs).
+  DEV_BUILD_FLOOR: 1716
 
 jobs:
   build:
@@ -80,13 +84,17 @@ jobs:
         id: meta
         env:
           VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           info=''
           if [ -n "$VERSION" ]; then
             label="$VERSION"
           elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/dev ]; then
-            label="dev-$GITHUB_RUN_NUMBER"
-            info="Dev #$GITHUB_RUN_NUMBER"
+            # one past the highest of: DEV_BUILD_FLOOR, and any dev-<number> release already published
+            build=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
+              "([.[].tagName | select(test(\"^dev-[0-9]+\$\")) | ltrimstr(\"dev-\") | tonumber] + [$DEV_BUILD_FLOOR]) | max + 1")
+            label="dev-$build"
+            info="Dev #$build"
           else
             label="${GITHUB_SHA::7}"
           fi
@@ -200,7 +208,6 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }} # this job has no checkout, so gh can not get the repository from a git directory
       LABEL: ${{ needs.build.outputs.label }}
-      KEEP: 100
     steps:
       - name: Download the build
         uses: actions/download-artifact@v8
