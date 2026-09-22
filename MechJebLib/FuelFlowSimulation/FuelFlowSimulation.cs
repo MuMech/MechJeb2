@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -129,7 +129,7 @@ namespace MechJebLib.FuelFlowSimulation
             ComputeRcsUllageTime(vessel);
 
             UpdateResourceDrainsAndResiduals(vessel);
-            int activeAngines = vessel.ActiveEngines.Count;
+            int activeEngines = vessel.ActiveEngines.Count;
 
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
@@ -138,13 +138,13 @@ namespace MechJebLib.FuelFlowSimulation
 
                 double dt = MinimumTimeStep();
 
-                if (dt >= 0.02 && activeAngines != vessel.ActiveEngines.Count)
+                if (dt >= 0.02 && activeEngines != vessel.ActiveEngines.Count)
                 {
                     ClearResiduals();
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
-                    activeAngines = vessel.ActiveEngines.Count;
+                    activeEngines = vessel.ActiveEngines.Count;
                 }
 
                 _time += dt;
