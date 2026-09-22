@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using static System.Math;
+
 namespace MechJebLib.FuelFlowSimulation
 {
     public struct SimResource
@@ -27,17 +29,22 @@ namespace MechJebLib.FuelFlowSimulation
         public SimResource Drain(double resourceDrain)
         {
             _amount -= resourceDrain;
-            if (_amount < 0)
-                _amount = 0;
+            if (_amount < ResidualThreshold)
+                _amount = ResidualThreshold;
 
             return this;
         }
 
         public SimResource RCSDrain(double rcsDrain)
         {
+            // the RCS drain registration only screens on ResourceRequestRemainingThreshold, so a resource that is already
+            // below its residual can reach here -- clamp to the residual without ever handing any propellant back
+            double floor = Min(Amount, ResidualThreshold);
+
             _rcsAmount -= rcsDrain;
-            if (Amount < 0)
-                _rcsAmount = -_amount;
+
+            if (Amount < floor)
+                _rcsAmount = floor - _amount;
 
             return this;
         }
