@@ -9,6 +9,13 @@ on:
         type: string
         required: true
         description: 'Version in major.minor.patch.build format (e.g. 2.15.2.0)'
+      # GitHub's own "Use workflow from" branch picker always defaults to the repo's default branch (dev), and
+      # that can not be changed from here. This input is what is actually built and released, regardless of it.
+      branch:
+        type: string
+        required: false
+        default: 'master'
+        description: 'Branch to release from'
 
 defaults:
   run:
@@ -23,14 +30,14 @@ jobs:
       - name: Check version and branch
         env:
           VERSION: ${{ inputs.version-string }}
-          REF_TYPE: ${{ github.ref_type }}
+          BRANCH: ${{ inputs.branch }}
         run: |
           if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::'$VERSION' is not in major.minor.patch.build format (e.g. 2.15.2.0)"
             exit 1
           fi
-          if [ "$REF_TYPE" != branch ]; then
-            echo "::error::Run this workflow from a branch, the version bump is committed to it"
+          if ! git ls-remote --exit-code --heads "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "refs/heads/$BRANCH" > /dev/null 2>&1; then
+            echo "::error::Branch '$BRANCH' does not exist"
             exit 1
           fi
           if git ls-remote --exit-code --tags "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "refs/tags/$VERSION" > /dev/null 2>&1; then
@@ -48,6 +55,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ inputs.version-string }}
+      ref: ${{ inputs.branch }}
 
   release:
     needs: build
@@ -56,8 +64,11 @@ jobs:
       contents: write
     env:
       VERSION: ${{ inputs.version-string }}
+      BRANCH: ${{ inputs.branch }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.branch }}
 
       - name: Download the build
         uses: actions/download-artifact@v8
@@ -107,7 +118,7 @@ jobs:
       # These two steps are skipped when the workflow is run locally with act
       - name: Push version and tag
         if: ${{ !env.ACT }}
-        run: git push --atomic origin "HEAD:refs/heads/$GITHUB_REF_NAME" "refs/tags/$VERSION"
+        run: git push --atomic origin "HEAD:refs/heads/$BRANCH" "refs/tags/$VERSION"
 
       - name: Create GitHub release
         if: ${{ !env.ACT }}
