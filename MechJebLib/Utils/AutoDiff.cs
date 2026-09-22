@@ -159,14 +159,13 @@ namespace MechJebLib.Utils
             return (ans.M, partialX, partialY, partialZ);
         }
 
-        public static (Q3, Vec partialX, Vec partialY, Vec partialZ, Vec partialW) JacobianQ3(Func<DualQ3[], DualQ3> f, Q3[] point)
+        public static (V3, Vec partialX, Vec partialY, Vec partialZ) JacobianQ3(Func<DualQ3[], DualV3> f, Q3[] point)
         {
             int n = point.Length;
             var partialX = Vec.Rent(4 * n);
             var partialY = Vec.Rent(4 * n);
             var partialZ = Vec.Rent(4 * n);
-            var partialW = Vec.Rent(4 * n);
-            var ans = new DualQ3(Q3.zero, Q3.zero);
+            var ans = new DualV3(V3.zero, V3.zero);
 
             DualQ3[] duals = RentDualQ3Array(n);
             for (int j = 0; j < n; j++)
@@ -182,13 +181,12 @@ namespace MechJebLib.Utils
                     partialX[i * 4 + k] = ans.D.x;
                     partialY[i * 4 + k] = ans.D.y;
                     partialZ[i * 4 + k] = ans.D.z;
-                    partialW[i * 4 + k] = ans.D.w;
 
                     duals[i] = new DualQ3(point[i], Q3.zero);
                 }
             }
 
-            return (ans.M, partialX, partialY, partialZ, partialW);
+            return (ans.M, partialX, partialY, partialZ);
         }
 
         private static readonly ThreadLocal<Dictionary<int, double>> _elementDictionary = new ThreadLocal<Dictionary<int, double>>(() => new Dictionary<int, double>());
@@ -332,9 +330,9 @@ namespace MechJebLib.Utils
             return ci;
         }
 
-        public static int ApplyVectorConstraintQ3(double[] f, alglib.sparsematrix j, int ci, Func<DualQ3[], DualQ3> g, Q3[] p, (int, int, int, int)[] idx)
+        public static int ApplyVectorConstraintQ3(double[] f, alglib.sparsematrix j, int ci, Func<DualQ3[], DualV3> g, Q3[] p, (int, int, int, int)[] idx)
         {
-            (Q3 value, Vec partialX, Vec partialY, Vec partialZ, Vec partialW) = JacobianQ3(g, p);
+            (V3 value, Vec partialX, Vec partialY, Vec partialZ) = JacobianQ3(g, p);
 
             int n = p.Length;
 
@@ -378,23 +376,9 @@ namespace MechJebLib.Utils
             f[ci++] = value.z;
             AppendSortedRow(j, elements);
 
-            elements.Clear();
-
-            for (int i = 0; i < n; i++)
-            {
-                elements[idx[i].Item1] = partialW[4 * i];
-                elements[idx[i].Item2] = partialW[4 * i + 1];
-                elements[idx[i].Item3] = partialW[4 * i + 2];
-                elements[idx[i].Item4] = partialW[4 * i + 3];
-            }
-
-            f[ci++] = value.w;
-            AppendSortedRow(j, elements);
-
             partialX.Dispose();
             partialY.Dispose();
             partialZ.Dispose();
-            partialW.Dispose();
 
             return ci;
         }
