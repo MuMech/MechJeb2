@@ -23,6 +23,11 @@ on:
         required: false
         default: ''
         description: 'AssemblyFileVersion to build (major.minor.patch.build). Empty keeps the one from AssemblyInfo.cs.'
+      ref:
+        type: string
+        required: false
+        default: ''
+        description: 'Git ref to build. Empty checks out the ref that triggered this run.'
 
 concurrency:
   # Only superseded PR builds get cancelled. Every push gets its own group so that each commit keeps its artifact.
@@ -51,6 +56,8 @@ jobs:
       label: ${{ steps.meta.outputs.label }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
