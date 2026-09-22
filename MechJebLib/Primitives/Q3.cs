@@ -100,10 +100,11 @@ namespace MechJebLib.Primitives
 
         public static bool operator !=(Q3 lhs, Q3 rhs) => !(lhs == rhs);
 
-        // TODO: this is elementwise subtraction for getting residuals between two quaternions, I haven't checked to see
-        // if there is a more appropriate subtraction operator between quaternions and this should maybe be renamed.  The result
-        // being a Q3 may also be a bit of an abuse but we don't have a V4 struct to load the diff into.
-        public static Q3 operator -(Q3 lhs, Q3 rhs) => new Q3(lhs.x -  rhs.x, lhs.y - rhs.y, lhs.z - rhs.z,  lhs.w - rhs.w);
+        // Quaternion addition and subtraction are componentwise (the quaternions are a 4D vector space).  The result is
+        // generally not a unit quaternion or a rotation.  For the relative rotation between a and b use a.conjugate * b.
+        public static Q3 operator +(Q3 lhs, Q3 rhs) => new Q3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w);
+
+        public static Q3 operator -(Q3 lhs, Q3 rhs) => new Q3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w);
 
         public static Q3 operator /(Q3 q, double d) => new Q3(q.x / d, q.y / d, q.z / d, q.w / d);
 

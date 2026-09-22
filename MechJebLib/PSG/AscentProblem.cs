@@ -180,13 +180,12 @@ namespace MechJebLib.PSG
             {
                 if (_firstPass)
                 {
-                    ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: Ux";
-                    ConstraintNames[ci + 1] = $"Continuity constraint for phase {p} and phase {p - 1}: Uy";
-                    ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: Uz";
-                    ConstraintNames[ci + 3] = $"Continuity constraint for phase {p} and phase {p - 1}: Uw";
+                    ConstraintNames[ci] = $"Continuity constraint for phase {p} and phase {p - 1}: U attitude error x";
+                    ConstraintNames[ci + 1] = $"Continuity constraint for phase {p} and phase {p - 1}: U attitude error y";
+                    ConstraintNames[ci + 2] = $"Continuity constraint for phase {p} and phase {p - 1}: U attitude error z";
                 }
 
-                ci = ApplyVectorConstraintQ3(f, j, ci, Q3Diff, new[] { prevPhase.U.Last, thisPhase.U.First }, new[] { prevPhase.U.LastIdx, thisPhase.U.FirstIdx });
+                ci = ApplyVectorConstraintQ3(f, j, ci, AttitudeError, new[] { prevPhase.U.Last, thisPhase.U.First }, new[] { prevPhase.U.LastIdx, thisPhase.U.FirstIdx });
             }
 
             // mass continuity for coast-within-phase
@@ -198,7 +197,13 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            DualQ3 Q3Diff(DualQ3[] x) => x[0] - x[1];
+            // Vector part of the relative rotation, sin(theta/2)*axis, which is zero iff x[1] = +/-x[0].  Three components instead
+            // of the four of x[0] - x[1], since the four would be linearly dependent with the unit norm constraints on both sides.
+            DualV3 AttitudeError(DualQ3[] x)
+            {
+                DualQ3 e = x[0].conjugate * x[1];
+                return new DualV3(e.x, e.y, e.z);
+            }
 
             DualV3 VecDiff(DualV3[] x) => x[0] - x[1];
 

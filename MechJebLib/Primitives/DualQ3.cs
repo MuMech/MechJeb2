@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable InconsistentNaming
 namespace MechJebLib.Primitives
 {
-    public class DualQ3 //: IEquatable<DualQ3>, IComparable<DualQ3>, IFormattable
+    public readonly struct DualQ3 //: IEquatable<DualQ3>, IComparable<DualQ3>, IFormattable
     {
         public readonly Q3 M;
         public readonly Q3 D;
@@ -55,7 +55,17 @@ namespace MechJebLib.Primitives
         public static implicit operator DualQ3(Q3 d) => new DualQ3(d);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DualQ3 operator -(DualQ3 lhs, DualQ3 rhs) => new DualQ3(lhs.x -  rhs.x, lhs.y - rhs.y, lhs.z - rhs.z,  lhs.w - rhs.w);
+        public static DualQ3 operator -(DualQ3 lhs, DualQ3 rhs) => new DualQ3(lhs.M - rhs.M, lhs.D - rhs.D);
+
+        // Hamilton product, the derivative follows the (non-commutative) product rule
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static DualQ3 operator *(DualQ3 a, DualQ3 b) => new DualQ3(a.M * b.M, a.M * b.D + a.D * b.M);
+
+        public DualQ3 conjugate
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new DualQ3(M.conjugate, D.conjugate);
+        }
 
         public static DualV3 operator *(DualQ3 q, DualV3 v)
         {

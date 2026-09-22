@@ -571,7 +571,7 @@ namespace MechJebLib.PSG
             {
                 NumConstraints += 6; // continuity constraints
                 if (phase.ControlContinuity)
-                    NumConstraints += 4;
+                    NumConstraints += 3; // control attitude continuity
             }
 
             if (p > 0 && phase.MassContinuity)
