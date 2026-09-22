@@ -2,8 +2,9 @@ name: build
 
 # pull_request:      build, run the tests and comment the build zip on the PR
 # push (dev/master): build, run the tests and publish the release zip as a workflow artifact
-#                    (dev builds are stamped "Dev #<run number>" in the MechJeb window title and
-#                    also published as a public pre-release, the last 10 are kept)
+#                    (dev builds are stamped "Dev #<build>" in the MechJeb window title and also
+#                    published as a public pre-release named dev-<AssemblyFileVersion>-<build>,
+#                    keeping the most recent ones, see KEEP)
 # workflow_call:     used by create-release.yml, which passes the version to release
 on:
   push:
@@ -48,6 +49,9 @@ env:
   # The old Jenkins-based build reached this number; new dev builds continue counting up from here instead of
   # restarting from GitHub's own per-workflow run number (which would also count PR and non-dev runs).
   DEV_BUILD_FLOOR: 1716
+  # Range advertised in the dev builds' CKAN entries; matches the KSP version build.yml itself targets.
+  KSP_VERSION_MIN: '1.12.0'
+  KSP_VERSION_MAX: '1.12.90'
 
 jobs:
   build:
@@ -90,10 +94,11 @@ jobs:
           if [ -n "$VERSION" ]; then
             label="$VERSION"
           elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/dev ]; then
-            # one past the highest of: DEV_BUILD_FLOOR, and any dev-<number> release already published
+            file_version=$(sed -n -E 's/.*AssemblyFileVersion\("([^"]*)"\).*/\1/p' MechJeb2/Properties/AssemblyInfo.cs)
+            # one past the highest build number of: DEV_BUILD_FLOOR, and any "dev-<version>-<build>" release already published
             build=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
-              "([.[].tagName | select(test(\"^dev-[0-9]+\$\")) | ltrimstr(\"dev-\") | tonumber] + [$DEV_BUILD_FLOOR]) | max + 1")
-            label="dev-$build"
+              "([.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\")) | split(\"-\") | .[-1] | tonumber] + [$DEV_BUILD_FLOOR]) | max + 1")
+            label="dev-$file_version-$build"
             info="Dev #$build"
           else
             label="${GITHUB_SHA::7}"
@@ -193,7 +198,7 @@ jobs:
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
 
-  # Publishes every dev build as a public pre-release (dev-<run number>) and keeps the 10 most recent ones.
+  # Publishes every dev build as a public pre-release (dev-<AssemblyFileVersion>-<build>) and keeps the most recent ones.
   publish-dev:
     needs: build
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
@@ -231,7 +236,7 @@ jobs:
 
           # the previous dev build still published, if any (newest first, this run's own tag excluded in case of a re-run)
           previous_tag=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
-            "[.[].tagName | select(test(\"^dev-[0-9]+\$\")) | select(. != \"$tag\")] | sort_by(ltrimstr(\"dev-\") | tonumber) | reverse | .[0] // empty")
+            "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\")) | select(. != \"$tag\")] | sort_by(split(\"-\") | .[-1] | tonumber) | reverse | .[0] // empty")
 
           notes_file=$(mktemp)
           echo "$intro" > "$notes_file"
@@ -253,7 +258,94 @@ jobs:
 
           # keep the $KEEP most recent dev builds: delete the older ones with their tags
           # (the list must be longer than $KEEP, or the old builds are never seen)
-          gh release list --limit $((KEEP + 20)) --json tagName --jq "[.[].tagName | select(test(\"^dev-[0-9]+\$\"))] | sort_by(ltrimstr(\"dev-\") | tonumber) | reverse | .[$KEEP:] | .[]" |
+          gh release list --limit $((KEEP + 20)) --json tagName --jq "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\"))] | sort_by(split(\"-\") | .[-1] | tonumber) | reverse | .[$KEEP:] | .[]" |
             while read -r old; do
               gh release delete "$old" --cleanup-tag --yes
             done
+
+  # Publishes a CKAN "repository" archive (see https://github.com/KSP-CKAN/CKAN/blob/master/Spec.md) listing every
+  # currently-published dev build, so CKAN users can pick any of them ("Settings > CKAN Settings > New" in the
+  # client). Rebuilt from scratch each run from whichever dev-<version>-<build> releases are still live (see KEEP
+  # in publish-dev above), so it never lists a build whose download link has already been pruned away.
+  publish-ckan-dev-repo:
+    needs: [build, publish-dev]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-ckan-dev-repo
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }} # this job has no checkout, so gh can not get the repository from a git directory
+    steps:
+      - name: Build the CKAN dev repository
+        run: |
+          repo_dir="$RUNNER_TEMP/MechJeb2-dev"
+          rm -rf "$repo_dir"
+          mkdir -p "$repo_dir"
+
+          # every dev build still published (see KEEP in publish-dev): each becomes one .ckan entry below
+          tags=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
+            "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\"))] | .[]")
+
+          for tag in $tags; do
+            IFS=- read -r _ version build <<< "$tag"
+            # GitHub computes this sha256 itself at upload time, no need to download the zip to hash it
+            asset=$(gh release view "$tag" --json assets --jq '.assets[0] | "\(.name)\t\(.url)\t\(.size)\t\(.digest)"')
+            IFS=$'\t' read -r asset_name asset_url asset_size asset_digest <<< "$asset"
+            sha256=$(printf '%s' "${asset_digest#sha256:}" | tr a-f A-F)
+
+            jq -n \
+              --arg version "$version-$build" \
+              --arg download "$asset_url" \
+              --argjson size "$asset_size" \
+              --arg sha256 "$sha256" \
+              --arg ksp_min "$KSP_VERSION_MIN" \
+              --arg ksp_max "$KSP_VERSION_MAX" \
+              '{
+                spec_version: "v1.34",
+                identifier: "MechJeb2-dev",
+                name: "MechJeb 2 - DEV RELEASE",
+                abstract: "Anatid Robotics and Multiversal Mechatronics proudly presents the first flight assistant autopilot: MechJeb",
+                author: "sarbian",
+                license: "GPL-3.0",
+                ksp_version_min: $ksp_min,
+                ksp_version_max: $ksp_max,
+                provides: ["MechJeb2"],
+                conflicts: [{name: "MechJeb2"}, {name: "MechJeb2-RO"}],
+                install: [{find: "MechJeb2", install_to: "GameData"}],
+                resources: {
+                  ci: "https://github.com/MuMech/MechJeb2/actions/workflows/build.yml",
+                  homepage: "https://forum.kerbalspaceprogram.com/index.php?/topic/154834-*",
+                  repository: "https://github.com/MuMech/MechJeb2/"
+                },
+                version: $version,
+                download: $download,
+                download_size: $size,
+                download_hash: {sha256: $sha256}
+              }' > "$repo_dir/MechJeb2-dev-$version-$build.ckan"
+          done
+
+          count=$(find "$repo_dir" -name '*.ckan' | wc -l)
+          echo "Built $count .ckan entries"
+          test "$count" -gt 0
+
+          tar -czf "$RUNNER_TEMP/MechJeb2-dev-ckan-repo.tar.gz" -C "$RUNNER_TEMP" MechJeb2-dev
+
+      # Skipped when the workflow is run locally with act
+      - name: Publish the CKAN dev repository
+        if: ${{ !env.ACT }}
+        run: |
+          tag=ckan-dev-repo
+          zip="$RUNNER_TEMP/MechJeb2-dev-ckan-repo.tar.gz"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" "$zip" --clobber
+          else
+            gh release create "$tag" "$zip" \
+              --prerelease --latest=false --target "$GITHUB_SHA" \
+              --title "MechJeb2 dev CKAN repository" \
+              --notes "Add this as a custom repository in CKAN to install any current dev build of MechJeb2 (Settings > CKAN Settings > New). Rebuilt automatically on every dev push."
+          fi
