@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -32,6 +32,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
         public V3     V => _vessel.V;
         public V3     U => _vessel.U;
 
+        public int HalfStageIndex => _vessel.HalfStageIndex;
+
         public SimVesselManager()
         {
             _builder = new SimVesselBuilder(this);
@@ -42,9 +44,12 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
         public void Build(IShipconstruct vessel)
         {
+            _vessel.Dispose();
+            _vessel = SimVessel.Borrow();
+            _kspVessel = vessel;
+
             Clear();
-            _builder.BuildVessel(vessel);
-            _builder.BuildParts();
+            _builder.BuildVessel();
             Update();
             _builder.UpdateLinks();
             _builder.UpdateCrossFeedSet();
@@ -61,6 +66,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
             _vessel.SetConditions(atmDensity, atmPressure, machNumber);
 
         public void SetInitial(double t, V3 r, V3 v, V3 u) => _vessel.SetInitial(t, r, v, u);
+
+        public void SetupStageAndAHalf(double endMass) => _vessel.SetupStageAndAHalf(endMass);
 
         public bool TryStartFuelFlowSimulationJob()
         {
