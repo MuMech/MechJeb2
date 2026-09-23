@@ -622,7 +622,7 @@ namespace MuMech
                         PartResource r = p.Resources.Get(propellant.id);
 
                         if (r.amount <= p.resourceRequestRemainingThreshold)
-                            return false;
+                            continue;
                         if (r.info.id == PartResourceLibrary.ElectricityHashcode)
                             continue;
                         if (!tankResources.Contains(r.info.id))
