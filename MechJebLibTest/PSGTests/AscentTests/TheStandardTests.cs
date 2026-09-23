@@ -72,9 +72,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(t0).ShouldEqual(r0);
-            solution.V(t0).ShouldEqual(v0);
-            solution.M(t0).ShouldEqual(49119.7842689869);
+            solution.R(t0).ShouldEqual(r0, 1e-8);
+            solution.V(t0).ShouldEqual(v0, 1e-8);
+            solution.M(t0).ShouldEqual(49119.7842689869, 1e-8);
             solution.Vgo(t0).ShouldEqual(9664.381839407506, 1e-3);
             solution.U(t0).normalized.ShouldEqual(new V3(0.77936242810570966, -0.56640344307712909, 0.26792040856856347), 1e-1);
 
@@ -136,9 +136,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(t0).ShouldEqual(r0);
-            solution.V(t0).ShouldEqual(v0);
-            solution.M(t0).ShouldEqual(49119.7842689869);
+            solution.R(t0).ShouldEqual(r0, 1e-8);
+            solution.V(t0).ShouldEqual(v0, 1e-8);
+            solution.M(t0).ShouldEqual(49119.7842689869, 1e-8);
             solution.Vgo(t0).ShouldEqual(OPTIMUMVGO, 1e-2);
             solution.U(t0).normalized.ShouldEqual(new V3(0.77953530499830737, -0.56621745928946121, 0.26781056188467101), 1e-1);
 
@@ -209,9 +209,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(t0).ShouldEqual(r0);
-            solution.V(t0).ShouldEqual(v0);
-            solution.M(t0).ShouldEqual(49119.7842689869);
+            solution.R(t0).ShouldEqual(r0, 1e-8);
+            solution.V(t0).ShouldEqual(v0, 1e-8);
+            solution.M(t0).ShouldEqual(49119.7842689869, 1e-8);
             solution.Vgo(t0).ShouldEqual(10510.620490322281, 1e-3);
             solution.U(t0).normalized.ShouldEqual(new V3(-0.012214116666567524, -0.87839128647452269, 0.47778610611830125), 1e-2);
 

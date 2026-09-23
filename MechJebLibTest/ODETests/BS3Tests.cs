@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using MechJebLib.Functions;
+using MechJebLib.Interpolants;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
@@ -104,7 +105,7 @@ namespace MechJebLibTest.ODETests
                 yf[0].ShouldEqual(expected[i], 1e-5);
             }
 
-            using (var interpolant = DenseOutput.Rent())
+            using (var interpolant = VecInterpolant.Rent())
             {
                 solver.Solve(f, y0, yf, t0, tf, interpolant);
 
@@ -127,7 +128,7 @@ namespace MechJebLibTest.ODETests
 
             long start = GC.GetAllocatedBytesForCurrentThread();
 
-            using (var interpolant = DenseOutput.Rent())
+            using (var interpolant = VecInterpolant.Rent())
             {
                 solver.Solve(f, y0, yf, t0, tf, interpolant);
 
@@ -194,7 +195,7 @@ namespace MechJebLibTest.ODETests
             y0.Set(0, r0);
             y0.Set(3, v0);
 
-            using (var interpolant = DenseOutput.Rent())
+            using (var interpolant = VecInterpolant.Rent())
             {
                 solver.Solve(_keplerRHS, y0, yf, 0, 10, interpolant, e);
 
@@ -210,7 +211,7 @@ namespace MechJebLibTest.ODETests
                 e[0].Time.ShouldEqual(Astro.TimeToNextRadius(1.0, r0, v0, 1.5), 1e-7);
             }
 
-            using var interpolant2 = DenseOutput.Rent();
+            using var interpolant2 = VecInterpolant.Rent();
 
             long start = GC.GetAllocatedBytesForCurrentThread();
             solver.Solve(_keplerRHS, y0, yf, 0, e[0].Time, interpolant2);

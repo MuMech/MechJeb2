@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
 using MechJebLib.Rootfinding;
 using static MechJebLib.Utils.Statics;
@@ -107,7 +108,7 @@ namespace MechJebLib.ODE
         /// <param name="events"></param>
         /// <exception cref="ArgumentException"></exception>
         public void Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
-            DenseOutput? interpolant = null,
+            Interpolant<Vec>? interpolant = null,
             IReadOnlyList<Event>? events = null)
         {
             try
@@ -145,7 +146,7 @@ namespace MechJebLib.ODE
         }
 
         private void _Solve(IVPFunc f, Vec y0, Vec yf, double t0, double tf,
-            DenseOutput? interpolant,
+            Interpolant<Vec>? interpolant,
             IReadOnlyList<Event>? events)
         {
             Status = IVPStatus.Initialized;
@@ -223,7 +224,7 @@ namespace MechJebLib.ODE
                             {
                                 terminate = true;
                                 // take a snapshot of the full interpolant with all values
-                                interpolant?.Append(SnapshotStep(), _activeEvents[i].Time);
+                                interpolant?.Append(SnapshotStep(), T, _activeEvents[i].Time);
                                 // evaluate the interpolant and update Ynew, Tnew, Dynew for next step
                                 using var yinterp = Vec.Rent(N);
                                 Interpolate(_activeEvents[i].Time, yinterp);
@@ -240,7 +241,7 @@ namespace MechJebLib.ODE
                 }
 
                 if (!terminate)
-                    interpolant?.Append(SnapshotStep(), Tnew);
+                    interpolant?.Append(SnapshotStep(), T, Tnew);
 
                 // take a step
                 Y.CopyFrom(Ynew);
@@ -267,7 +268,7 @@ namespace MechJebLib.ODE
             }
 
             if (t0 == tf)
-                interpolant?.Append(new ConstantNode(T, Y), T);
+                interpolant?.Append(ConstantVecNode.Rent(Y), T, T);
 
             Y.CopyTo(yf);
 
@@ -289,10 +290,10 @@ namespace MechJebLib.ODE
         protected abstract double SelectInitialStep(IVPFunc f, double t0, Vec y0,
             Vec f0, int direction);
 
-        protected abstract void      InitInterpolant();
-        protected abstract DenseNode SnapshotStep();
-        protected abstract void      Interpolate(double x, Vec yout);
-        protected abstract void      Init();
-        protected abstract void      Cleanup();
+        protected abstract void                 InitInterpolant();
+        protected abstract InterpolantNode<Vec> SnapshotStep();
+        protected abstract void                 Interpolate(double x, Vec yout);
+        protected abstract void                 Init();
+        protected abstract void                 Cleanup();
     }
 }

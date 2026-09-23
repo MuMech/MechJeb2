@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
+using static System.Math;
 
 namespace MechJebLib.PSG
 {
@@ -14,8 +16,6 @@ namespace MechJebLib.PSG
         private readonly Problem _problem;
         private readonly PhaseCollection _phases;
 
-        private int _k => 2 * _n - 1;
-
         public SolutionBuilder(int n, VariableProxy vars, Problem problem, PhaseCollection phases)
         {
             _n = n;
@@ -24,6 +24,8 @@ namespace MechJebLib.PSG
             _phases = phases.DeepCopy();
             AnalyzeStages();
         }
+
+        private readonly double[] _tau = { 0, 0.5 - Sqrt(3) / 6, 0.5 + Sqrt(3) / 6 };
 
         private void AnalyzeStages()
         {
@@ -35,7 +37,7 @@ namespace MechJebLib.PSG
             {
                 Phase phase = _phases[p];
                 PhaseProxy thisPhase = _vars[p];
-                double mf = thisPhase.M[-1];
+                double mf = thisPhase.M.Last;
                 double bt = thisPhase.Bt();
 
                 // is there unburned propellant going to be left in this stage?
@@ -73,72 +75,161 @@ namespace MechJebLib.PSG
 
             for (int p = 0; p < _phases.Count; p++)
             {
-                Phase phase = _phases[p];
                 PhaseProxy thisPhase = _vars[p];
-                var interpolant = Hn.Get(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+                var interpolant = VecInterpolant.Rent();
 
                 double bt = thisPhase.Bt();
-                double h = bt / (_n - 1);
+                double h = bt / _n;
 
-                using var outTangent = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-                using var inTangent = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-
-                for (int n = 0; n < _n - 1; n++)
+                for (int n = 0; n < _n; n++)
                 {
-                    double dt1 = n * h;
-                    using Vec array1 = InterpolantValues(thisPhase, 2 * n, phase);
-
-                    using Vec array2 = InterpolantValues(thisPhase, 2 * n + 1, phase);
-
-                    double dt3 = (n + 1.0) * h;
-                    using Vec array3 = InterpolantValues(thisPhase, 2 * n + 2, phase);
-
-                    outTangent.CopyFrom(array1).Scal(-3.0 / h);
-                    outTangent.LinComb2(outTangent, 4.0 / h, array2, -1.0 / h, array3);
-
-                    if (n == 0)
-                        outTangent.CopyTo(inTangent);
-
-                    interpolant.Add(ti + dt1, array1, inTangent, outTangent);
-
-                    inTangent.CopyFrom(array1).Scal(1.0 / h);
-                    inTangent.LinComb2(inTangent, -4.0 / h, array2, 3.0 / h, array3);
-
-                    if (n < _n - 2) continue;
-
-                    inTangent.CopyTo(outTangent);
-                    interpolant.Add(ti + dt3, array3, inTangent, outTangent);
+                    double t0 = ti + n * h;
+                    double t1 = ti + (n + _tau[1]) * h;
+                    double t2 = ti + (n + _tau[2]) * h;
+                    double t3 = ti + (n + 1) * h;
+                    (Vec y0, Vec dy0, Vec y1, Vec dy1) = InterpolantValues(n, h, p);
+                    interpolant.Append(CubicHermiteVecNode.Rent(t1, t2 - t1, y0, dy0, y1, dy1), t0, t3);
                 }
 
                 double tf = ti + bt;
                 solution.AddSegment(interpolant, _phases[p]);
                 ti = tf;
 
-                solution.DVBar(solution.Tmax);
+                //solution.DVBar(solution.Tmax);
             }
 
             return solution;
         }
 
-        private Vec InterpolantValues(PhaseProxy thisPhase, int k, Phase phase)
+        private (Vec y0, Vec dy0, Vec y1, Vec dy1) InterpolantValues(int n, double h, int p)
         {
-            var layout = new InterpolantLayout { R = thisPhase.R[k], V = thisPhase.V[k], M = phase.Coast ? thisPhase.M[0] : thisPhase.M[k] };
+            Phase phase = _phases[p];
+            PhaseProxy thisPhase = _vars[p];
+
+            int k = 3 * n;
+
+            var y0 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            var dy0 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            var y1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            var dy1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+
+            var y0Layout = new InterpolantLayout { R = thisPhase.R[k + 1], V = thisPhase.V[k + 1], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k + 1] };
+            var y1Layout = new InterpolantLayout { R = thisPhase.R[k + 2], V = thisPhase.V[k + 2], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k + 2] };
+
+            const double FINITE_DIFF = 1e-8;
+
+            V3 dy0U, dy1U;
+            double dyT;
+            double htau = h * (_tau[2] - _tau[1]);
 
             if (phase.GuidedCoast)
             {
-                V3 u0 = thisPhase.U[0];
-                V3 uf = thisPhase.U[-1];
+                V3 u0;
 
-                layout.U = V3.Slerp(u0, uf, (double)k / (_k - 1));
+                if (p - 1 >= 0)
+                {
+                    PhaseProxy prevPhase = _vars[p - 1];
+                    u0 = prevPhase.U.Last * V3.forward;
+                }
+                else
+                {
+                    u0 = _problem.U0;
+                }
+
+                PhaseProxy nextPhase = _vars[p + 1];
+                V3 uf = nextPhase.U.First * V3.forward;
+
+                // the slerp fraction has to be the node's own fraction of the coast, since the hermite is anchored at
+                // t1 = (n + tau1) * h and t2 = (n + tau2) * h and gets extrapolated out to the ends of the segment.
+                y0Layout.U = V3.Slerp(u0, uf, (n + _tau[1]) / _n);
+                y1Layout.U = V3.Slerp(u0, uf, (n + _tau[2]) / _n);
+                dy0U = (V3.Slerp(y0Layout.U, y1Layout.U, FINITE_DIFF) - y0Layout.U) / (FINITE_DIFF * htau);
+                dy1U = (V3.Slerp(y1Layout.U, y0Layout.U, -FINITE_DIFF) - y1Layout.U) / (FINITE_DIFF * htau);
+
+                y0Layout.T = y1Layout.T = 0;
+                dyT = 0;
+            }
+            else if (phase.Unguided)
+            {
+                y0Layout.U = y1Layout.U = thisPhase.U.First * V3.forward;
+                dy0U = dy1U = V3.zero;
+                y0Layout.T = y1Layout.T = thisPhase.T.First;
+                dyT = 0;
             }
             else
             {
-                layout.U = phase.Unguided ? thisPhase.U[0] : thisPhase.U[k];
+                dy0U = dy1U = (thisPhase.U[k + 2] * V3.forward - thisPhase.U[k + 1] * V3.forward) / htau;
+                y0Layout.U = thisPhase.U[k + 1] * V3.forward;
+                y1Layout.U = thisPhase.U[k + 2] * V3.forward;
+                y0Layout.T = thisPhase.T[k + 1];
+                y1Layout.T = thisPhase.T[k + 2];
+                dyT = (y1Layout.T - y0Layout.T) / htau;
             }
 
-            var array = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-            layout.CopyTo(array);
-            return array;
+            var dy0Layout = new InterpolantLayout
+            {
+                R = thisPhase.V[k + 1],
+                V = VDot(y0Layout, _problem, phase),
+                M = -phase.Mdot * y0Layout.T,
+                U = dy0U,
+                T = dyT
+            };
+            var dy1Layout = new InterpolantLayout
+            {
+                R = thisPhase.V[k + 2],
+                V = VDot(y1Layout, _problem, phase),
+                M = -phase.Mdot * y1Layout.T,
+                U = dy1U,
+                T = dyT
+            };
+
+            y0Layout.CopyTo(y0);
+            dy0Layout.CopyTo(dy0);
+            y1Layout.CopyTo(y1);
+            dy1Layout.CopyTo(dy1);
+
+            return (y0, dy0, y1, dy1);
+        }
+
+        //TODO: this duplicates code with AscentProblem
+
+        private static V3 VDot(InterpolantLayout d, Problem problem, Phase phase)
+        {
+            double rho0CdAref = problem.Rho0CdAref;
+            double h0 = problem.H0;
+
+            return h0 > 0 && rho0CdAref > 0 ? VDotAtmo(d, problem, phase) : VDotVacuum(d, phase);
+        }
+
+        private static V3 VDotVacuum(InterpolantLayout d, Phase phase)
+        {
+            double vacThrust = phase.VacThrust;
+
+            double r3 = d.R.sqrMagnitude * d.R.magnitude;
+            return -d.R / r3 + vacThrust / d.M * d.U * d.T;
+        }
+
+        private static V3 VDotAtmo(InterpolantLayout d, Problem problem, Phase phase)
+        {
+            double rho0CdAref = problem.Rho0CdAref;
+            double rBody = problem.RBody;
+            double h0 = problem.H0;
+            double r0 = problem.R0.magnitude;
+            V3 w = problem.W;
+
+            double mdot = phase.Mdot;
+            double vexCurrent = phase.VexCurrent;
+            double vexVacuum = phase.VexVacuum;
+
+            double r = d.R.magnitude;
+            double r3 = d.R.sqrMagnitude * r;
+            V3 vr = d.V - V3.Cross(w, d.R);
+            double normAtmosphere = Exp(-(r - rBody) / h0);
+            double normAtmosphere2 = Exp(-(r - r0) / h0);
+            V3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
+            //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
+            double thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
+            return -d.R / r3 + thrust / d.M * d.U * d.T - drag / d.M;
         }
     }
 }

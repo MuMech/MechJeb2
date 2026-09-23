@@ -41,6 +41,7 @@ namespace MuMech
         public Vector3d Inertial = Vector3d.zero; // inertial in rotating coordinates
         public double Tgo;
         public double Vgo;
+        public double CurrentPhaseTgo;
         public double StartCoast;
         public bool hasCoasted;
 
@@ -347,19 +348,21 @@ namespace MuMech
             if (IsGrounded())
                 Solution.T0 = VesselState.Time;
 
-            if (Status != PSGStatus.TERMINAL_RCS)
+            int idx = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
+
+            if (Status != PSGStatus.TERMINAL_RCS) // don't update vgo/tgo if we're in RCS
             {
-                // don't update vgo/tgo if we're in RCS
                 Tgo = Solution.Tgo(VesselState.Time);
                 Vgo = Solution.Vgo(VesselState.Time);
+                if (idx >= 0)
+                    CurrentPhaseTgo = Solution.Tgo(VesselState.Time, idx);
             }
 
             V3 r0 = VesselState.OrbitalPosition.WorldToV3Rotated();
 
             // lock the inertial heading at tgo < 2.0 for any staging event or terminal burnout
             // (2 seconds is to hopefully allow for variance due to residuals, it may be less)
-            int idx = Solution.IndexForKSPStage(Vessel.currentStage, Core.Guidance.IsCoasting());
-            if (IsGrounded() || Solution.Tgo(VesselState.Time, idx) > 2.0)
+            if (IsGrounded() || (idx >= 0 && Solution.Tgo(VesselState.Time, idx) > 2.0))
                 (_inertial, _throttle) = Solution.InertialGuidance(VesselState.Time);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, _inertial);

@@ -1,4 +1,6 @@
 extern alias JetBrainsAnnotations;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using KSP.Localization;
 using UnityEngine;
@@ -10,6 +12,14 @@ namespace MuMech
         public MechJebModuleDockingGuidance(MechJebCore core) : base(core) { }
 
         private MechJebModuleDockingAutopilot autopilot;
+
+        private static readonly char[] DockingNodeTypeSeparator = { ',' };
+
+        // KSP changes a docking-port target back to its parent vessel while the
+        // target is farther than the part-target range.  Keep the user's port
+        // choice locally so that cycling does not jump back to the first port.
+        private ModuleDockingNode selectedTargetPort;
+        private Vessel selectedTargetVessel;
 
         public override void OnStart(PartModule.StartState state) => autopilot = Core.GetComputerModule<MechJebModuleDockingAutopilot>();
 
@@ -31,7 +41,9 @@ namespace MuMech
                     GuiUtils.YellowLabel); //Warning: You need to control the vessel from a docking port. Right click a docking port and select "Control from here"
             }
 
-            if (!(Core.Target.Target is ModuleDockingNode))
+            DrawTargetPortSelector();
+
+            if (!(Core.Target.Target is ModuleDockingNode) && selectedTargetPort == null)
             {
                 GUILayout.Label(Localizer.Format("#MechJeb_Docking_label3"),
                     GuiUtils.YellowLabel); //Warning: target is not a docking port. Right click the target docking port and select "Set as target"
@@ -136,6 +148,161 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+        }
+
+        private void DrawTargetPortSelector()
+        {
+            Vessel targetVessel = GetTargetVessel();
+            if (targetVessel == null || targetVessel == Vessel)
+            {
+                selectedTargetPort = null;
+                selectedTargetVessel = null;
+                return;
+            }
+
+            if (selectedTargetVessel != targetVessel)
+            {
+                selectedTargetPort = null;
+                selectedTargetVessel = targetVessel;
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPort"), GuiUtils.LayoutNoExpandWidth);
+
+            ModuleDockingNode referencePort = GetReferenceDockingPort();
+            if (!targetVessel.loaded || targetVessel.packed)
+            {
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPortUnavailable"), GuiUtils.ArrowSelectorStyeGuiStyleExpand);
+                GUILayout.EndHorizontal();
+                return;
+            }
+
+            List<ModuleDockingNode> targetPorts = targetVessel.GetModules<ModuleDockingNode>()
+                .Where(port => IsAvailableTargetPort(port) && port.GetTransform() != null &&
+                    ArePortsCompatible(referencePort, port))
+                .ToList();
+
+            ModuleDockingNode currentPort = Core.Target.Target as ModuleDockingNode;
+            if (currentPort != null && targetPorts.Contains(currentPort))
+                selectedTargetPort = currentPort;
+            else if (selectedTargetPort != null && !targetPorts.Contains(selectedTargetPort))
+                selectedTargetPort = null;
+
+            if (currentPort == null || !targetPorts.Contains(currentPort))
+                currentPort = selectedTargetPort;
+
+            int currentIndex = targetPorts.IndexOf(currentPort);
+            string portLabel;
+            if (currentIndex >= 0)
+            {
+                portLabel = Localizer.Format("#MechJeb_Docking_targetPortSelected", GetPortName(currentPort), currentIndex + 1,
+                    targetPorts.Count);
+            }
+            else if (targetPorts.Count > 0)
+            {
+                portLabel = Localizer.Format("#MechJeb_Docking_targetPortSelect", targetPorts.Count);
+            }
+            else
+            {
+                portLabel = Localizer.Format("#MechJeb_Docking_targetPortNone");
+            }
+
+            bool guiEnabled = GUI.enabled;
+            GUI.enabled = guiEnabled && targetPorts.Count > 0 && !autopilot.Enabled;
+            if (GUILayout.Button("<", GUILayout.ExpandWidth(false)))
+                SelectTargetPort(targetPorts, currentIndex, -1);
+            GUILayout.Label(portLabel, GuiUtils.ArrowSelectorStyeGuiStyleExpand);
+            if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
+                SelectTargetPort(targetPorts, currentIndex, 1);
+            GUI.enabled = guiEnabled;
+            GUILayout.EndHorizontal();
+        }
+
+        private Vessel GetTargetVessel()
+        {
+            if (Core.Target.Target is Vessel targetVessel)
+                return targetVessel;
+
+            return Core.Target.Target?.GetVessel();
+        }
+
+        private ModuleDockingNode GetReferenceDockingPort()
+        {
+            Part referencePart = Vessel.GetReferenceTransformPart();
+            if (referencePart == null || Vessel.ReferenceTransform == null)
+                return null;
+
+            ModuleDockingNode referencePort = null;
+            double smallestAngle = 2;
+            foreach (ModuleDockingNode port in referencePart.Modules.OfType<ModuleDockingNode>())
+            {
+                Transform portTransform = port.GetTransform();
+                if (portTransform == null)
+                    continue;
+
+                double angle = Vector3d.Angle(portTransform.forward, Vessel.ReferenceTransform.up);
+                if (angle < smallestAngle)
+                {
+                    smallestAngle = angle;
+                    referencePort = port;
+                }
+            }
+
+            return referencePort;
+        }
+
+        private static bool IsAvailableTargetPort(ModuleDockingNode port) =>
+            port != null && !IsDockedState(port.state);
+
+        private static bool IsDockedState(string state) =>
+            state != null && (state.StartsWith("Docked", StringComparison.Ordinal) || state == "PreAttached");
+
+        private static bool ArePortsCompatible(ModuleDockingNode sourcePort, ModuleDockingNode targetPort)
+        {
+            if (sourcePort == null || targetPort == null)
+                return false;
+
+            return ArePortsCompatible(sourcePort.nodeType, sourcePort.gendered, sourcePort.genderFemale, targetPort.nodeType,
+                targetPort.gendered, targetPort.genderFemale);
+        }
+
+        private static bool ArePortsCompatible(string sourceNodeType, bool sourceGendered, bool sourceFemale, string targetNodeType,
+            bool targetGendered, bool targetFemale)
+        {
+            if (sourceGendered != targetGendered)
+                return false;
+
+            if (sourceGendered && sourceFemale == targetFemale)
+                return false;
+
+            if (string.IsNullOrEmpty(sourceNodeType) || string.IsNullOrEmpty(targetNodeType))
+                return false;
+
+            string[] sourceNodeTypes = sourceNodeType.Split(DockingNodeTypeSeparator, StringSplitOptions.RemoveEmptyEntries);
+            string[] targetNodeTypes = targetNodeType.Split(DockingNodeTypeSeparator, StringSplitOptions.RemoveEmptyEntries);
+            return sourceNodeTypes.Intersect(targetNodeTypes).Any();
+        }
+
+        private void SelectTargetPort(IReadOnlyList<ModuleDockingNode> targetPorts, int currentIndex, int direction)
+        {
+            int nextIndex = currentIndex < 0
+                ? direction > 0 ? 0 : targetPorts.Count - 1
+                : (currentIndex + direction + targetPorts.Count) % targetPorts.Count;
+
+            ModuleDockingNode targetPort = targetPorts[nextIndex];
+            selectedTargetPort = targetPort;
+            Core.Target.Set(targetPort);
+            // Keep KSP's global target in sync so other docking aids observe the port change immediately.
+            FlightGlobals.fetch.SetVesselTarget(targetPort);
+        }
+
+        private static string GetPortName(ModuleDockingNode port)
+        {
+            string portName = port.GetName();
+            if (!string.IsNullOrEmpty(portName))
+                return portName;
+
+            return port.part?.partInfo?.title ?? port.part?.name ?? "?";
         }
 
         protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(300), GUILayout.Height(50) };

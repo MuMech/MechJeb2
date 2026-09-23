@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using System.Collections.Generic;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
@@ -19,6 +20,23 @@ namespace MechJebLib.PSG
                 dup.Add(phase.DeepCopy());
 
             return dup;
+        }
+
+        public void SetControlContinuity()
+        {
+            this[0].ControlContinuity = false;
+
+            for (int p = 1; p < this.Count; p++)
+            {
+                bool thisUnCollocatedControl = this[p].Unguided || this[p].Coast;
+                bool prevUnCollocatedControl = this[p-1].Unguided || this[p-1].Coast;
+                bool eitherIsCoast = this[p].Coast || this[p - 1].Coast;
+
+                if ((thisUnCollocatedControl || prevUnCollocatedControl) && !eitherIsCoast)
+                    this[p].ControlContinuity = true;
+                else
+                    this[p].ControlContinuity = false;
+            }
         }
 
         public void FixLastShutdownStage()
@@ -46,6 +64,8 @@ namespace MechJebLib.PSG
             {
                 // this is the coast before the massContinuity burn
                 phase = this[lastShutdownStage - 1];
+                if (!phase.Coast || !phase.MassContinuity)
+                    throw new Exception("PSG internal error: phase before masscontinuity burn should be masscontinuity coast");
                 phase.MinM = Sqrt(EPS);
                 this[lastShutdownStage - 1] = phase;
 
@@ -53,6 +73,8 @@ namespace MechJebLib.PSG
                 {
                     // this is the burn before the massContinuity coast
                     phase = this[lastShutdownStage - 2];
+                    if (phase.Coast || phase.MassContinuity)
+                        throw new Exception("PSG internal error: phase before masscontinuity coast should be normal burn");
                     phase.MaxT = maxt;
                     phase.MinM = Sqrt(EPS);
                     this[lastShutdownStage - 2] = phase;

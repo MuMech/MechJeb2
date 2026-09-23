@@ -135,7 +135,7 @@ namespace MechJebLib.FuelFlowSimulation
             ComputeRcsUllageTime(vessel);
 
             UpdateResourceDrainsAndResiduals(vessel);
-            int activeAngines = vessel.ActiveEngines.Count;
+            int activeEngines = vessel.ActiveEngines.Count;
 
             if (!_halfStageIsDetected //is anyone insane enough to build a rocket with multiple half-stages? You never know
                 && vessel.ActiveEngines.Count > 0
@@ -171,13 +171,13 @@ namespace MechJebLib.FuelFlowSimulation
                     dt = Min(dt, (vessel.Mass - vessel.HalfStageEndMass) / massFlow);
                 }
 
-                if (dt >= 0.02 && activeAngines != vessel.ActiveEngines.Count)
+                if (dt >= 0.02 && activeEngines != vessel.ActiveEngines.Count)
                 {
                     ClearResiduals();
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
                     GetNextSegment(vessel);
-                    activeAngines = vessel.ActiveEngines.Count;
+                    activeEngines = vessel.ActiveEngines.Count;
                 }
 
                 _time += dt;
@@ -265,7 +265,7 @@ namespace MechJebLib.FuelFlowSimulation
                 if (resource.Free)
                     continue;
 
-                if (resource.Amount <= p.ResourceRequestRemainingThreshold)
+                if (resource.Amount <= resource.ResidualThreshold + p.ResourceRequestRemainingThreshold)
                     continue;
 
                 if (usePriority)
@@ -400,7 +400,7 @@ namespace MechJebLib.FuelFlowSimulation
         {
             double maxTime = RCSMaxTime();
 
-            return maxTime < double.MaxValue && maxTime >= 0 ? maxTime : 0;
+            return maxTime < double.MaxValue && maxTime > 0.001 ? maxTime : 0.001;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

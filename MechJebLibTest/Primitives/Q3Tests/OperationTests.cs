@@ -647,5 +647,17 @@ namespace MechJebLibTest.Primitives.Q3Tests
 
             (sum * s).ShouldEqual(scaledSum);
         }
+
+        [Fact]
+        private void AdditionSubtractionComponentwise()
+        {
+            var q1 = new Q3(1, 2, 3, 4);
+            var q2 = new Q3(5, -7, 11, -13);
+
+            (q1 + q2).ShouldEqual(new Q3(6, -5, 14, -9));
+            (q1 - q2).ShouldEqual(new Q3(-4, 9, -8, 17));
+            (q1 + q2 - q2).ShouldEqual(q1);
+            (q1 - q1).ShouldEqual(Q3.zero);
+        }
     }
 }

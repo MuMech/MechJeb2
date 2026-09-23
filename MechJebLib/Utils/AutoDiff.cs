@@ -15,6 +15,7 @@ namespace MechJebLib.Utils
     {
         private static readonly ThreadLocal<Dual[]> _dualBuffer = new ThreadLocal<Dual[]>(() => new Dual[16]);
         private static readonly ThreadLocal<DualV3[]> _dualV3Buffer = new ThreadLocal<DualV3[]>(() => new DualV3[16]);
+        private static readonly ThreadLocal<DualQ3[]> _dualQ3Buffer = new ThreadLocal<DualQ3[]>(() => new DualQ3[16]);
 
         private static Dual[] RentDualArray(int n)
         {
@@ -35,6 +36,18 @@ namespace MechJebLib.Utils
             {
                 buf = new DualV3[n];
                 _dualV3Buffer.Value = buf;
+            }
+
+            return buf;
+        }
+
+        private static DualQ3[] RentDualQ3Array(int n)
+        {
+            DualQ3[] buf = _dualQ3Buffer.Value;
+            if (buf.Length < n)
+            {
+                buf = new DualQ3[n];
+                _dualQ3Buffer.Value = buf;
             }
 
             return buf;
@@ -90,6 +103,32 @@ namespace MechJebLib.Utils
             return (ans.M, partials);
         }
 
+        private static (double, Vec) GradientQ3(Func<DualQ3[], Dual> f, Q3[] point)
+        {
+            int n = point.Length;
+            var partials = Vec.Rent(4 * n);
+            var ans = new Dual(0);
+
+            DualQ3[] duals = RentDualQ3Array(n);
+            for (int j = 0; j < n; j++)
+                duals[j] = new DualQ3(point[j], Q3.zero);
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int k = 0; k < 4; k++)
+                {
+                    duals[i] = new DualQ3(point[i], k switch { 0 => Q3.xaxis, 1 => Q3.yaxis, 2 => Q3.zaxis, _ => Q3.waxis });
+
+                    ans = f(duals);
+                    partials[i * 4 + k] = ans.D;
+
+                    duals[i] = new DualQ3(point[i], Q3.zero);
+                }
+            }
+
+            return (ans.M, partials);
+        }
+
         public static (V3, Vec partialX, Vec partialY, Vec partialZ) JacobianV3(Func<DualV3[], DualV3> f, V3[] point)
         {
             int n = point.Length;
@@ -120,6 +159,36 @@ namespace MechJebLib.Utils
             return (ans.M, partialX, partialY, partialZ);
         }
 
+        public static (V3, Vec partialX, Vec partialY, Vec partialZ) JacobianQ3(Func<DualQ3[], DualV3> f, Q3[] point)
+        {
+            int n = point.Length;
+            var partialX = Vec.Rent(4 * n);
+            var partialY = Vec.Rent(4 * n);
+            var partialZ = Vec.Rent(4 * n);
+            var ans = new DualV3(V3.zero, V3.zero);
+
+            DualQ3[] duals = RentDualQ3Array(n);
+            for (int j = 0; j < n; j++)
+                duals[j] = new DualQ3(point[j], Q3.zero);
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int k = 0; k < 4; k++)
+                {
+                    duals[i] = new DualQ3(point[i], k switch { 0 => Q3.xaxis, 1 => Q3.yaxis, 2 => Q3.zaxis, _ => Q3.waxis });
+
+                    ans = f(duals);
+                    partialX[i * 4 + k] = ans.D.x;
+                    partialY[i * 4 + k] = ans.D.y;
+                    partialZ[i * 4 + k] = ans.D.z;
+
+                    duals[i] = new DualQ3(point[i], Q3.zero);
+                }
+            }
+
+            return (ans.M, partialX, partialY, partialZ);
+        }
+
         private static readonly ThreadLocal<Dictionary<int, double>> _elementDictionary = new ThreadLocal<Dictionary<int, double>>(() => new Dictionary<int, double>());
         private static readonly ThreadLocal<List<int>> _elementKeys = new ThreadLocal<List<int>>(() => new List<int>());
 
@@ -133,11 +202,11 @@ namespace MechJebLib.Utils
             keys.Sort();
 
             alglib.sparseappendemptyrow(j);
-            for (int i = 0; i < keys.Count; i++)
+            foreach (int element in keys)
             {
-                double v = elements[keys[i]];
+                double v = elements[element];
                 if (v != 0)
-                    alglib.sparseappendelement(j, keys[i], v);
+                    alglib.sparseappendelement(j, element, v);
             }
         }
 
@@ -176,6 +245,31 @@ namespace MechJebLib.Utils
                 elements[idx[i].Item1] = partials[3 * i];
                 elements[idx[i].Item2] = partials[3 * i + 1];
                 elements[idx[i].Item3] = partials[3 * i + 2];
+            }
+
+            f[ci++] = value;
+            AppendSortedRow(j, elements);
+
+            partials.Dispose();
+
+            return ci;
+        }
+
+        public static int ApplyScalarConstraintQ3(double[] f, alglib.sparsematrix j, int ci, Func<DualQ3[], Dual> g, Q3[] p, (int, int, int, int)[] idx)
+        {
+            (double value, Vec partials) = GradientQ3(g, p);
+
+            int n = p.Length;
+
+            Dictionary<int, double> elements = _elementDictionary.Value;
+            elements.Clear();
+
+            for (int i = 0; i < n; i++)
+            {
+                elements[idx[i].Item1] = partials[4 * i];
+                elements[idx[i].Item2] = partials[4 * i + 1];
+                elements[idx[i].Item3] = partials[4 * i + 2];
+                elements[idx[i].Item4] = partials[4 * i + 3];
             }
 
             f[ci++] = value;
@@ -236,109 +330,148 @@ namespace MechJebLib.Utils
             return ci;
         }
 
-        public struct HermiteSimpsonSegment
+        public static int ApplyVectorConstraintQ3(double[] f, alglib.sparsematrix j, int ci, Func<DualQ3[], DualV3> g, Q3[] p, (int, int, int, int)[] idx)
         {
-            public V3 R0, R1, R2, V0, V1, V2, U0, U1, U2;
-            public double M0, M1, M2;
+            (V3 value, Vec partialX, Vec partialY, Vec partialZ) = JacobianQ3(g, p);
+
+            int n = p.Length;
+
+            Dictionary<int, double> elements = _elementDictionary.Value;
+            elements.Clear();
+
+            for (int i = 0; i < n; i++)
+            {
+                elements[idx[i].Item1] = partialX[4 * i];
+                elements[idx[i].Item2] = partialX[4 * i + 1];
+                elements[idx[i].Item3] = partialX[4 * i + 2];
+                elements[idx[i].Item4] = partialX[4 * i + 3];
+            }
+
+            f[ci++] = value.x;
+            AppendSortedRow(j, elements);
+
+            elements.Clear();
+
+            for (int i = 0; i < n; i++)
+            {
+                elements[idx[i].Item1] = partialY[4 * i];
+                elements[idx[i].Item2] = partialY[4 * i + 1];
+                elements[idx[i].Item3] = partialY[4 * i + 2];
+                elements[idx[i].Item4] = partialY[4 * i + 3];
+            }
+
+            f[ci++] = value.y;
+            AppendSortedRow(j, elements);
+
+            elements.Clear();
+
+            for (int i = 0; i < n; i++)
+            {
+                elements[idx[i].Item1] = partialZ[4 * i];
+                elements[idx[i].Item2] = partialZ[4 * i + 1];
+                elements[idx[i].Item3] = partialZ[4 * i + 2];
+                elements[idx[i].Item4] = partialZ[4 * i + 3];
+            }
+
+            f[ci++] = value.z;
+            AppendSortedRow(j, elements);
+
+            partialX.Dispose();
+            partialY.Dispose();
+            partialZ.Dispose();
+
+            return ci;
+        }
+
+        public struct GaussLegendreSegment
+        {
+            public V3 R0, R1, R2, R3, V0, V1, V2, V3;
+            public double M0, M1, M2, M3;
+            public Q3 U1, U2;
+            public double T1, T2;
             public double Bt;
         }
 
-        public struct HermiteSimpsonDualPoint
+        public struct GaussLegendreDualPoint
         {
-            public DualV3 R, V, U;
+            public DualV3 R, V;
             public Dual M;
-
-            public void Seed(int k, double s)
-            {
-                int field = k / 3;
-                int axis = k % 3;
-                V3 seedVec = s * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
-
-                switch (field)
-                {
-                    case 0: R = new DualV3(R.M, seedVec); break;
-                    case 1: V = new DualV3(V.M, seedVec); break;
-                    case 2: U = new DualV3(U.M, seedVec); break;
-                    case 3: M = new Dual(M.M, s); break;
-                }
-            }
+            public DualQ3 U;
+            public Dual T;
         }
 
-        public struct HermiteSimpsonIndexes
+        public struct GaussLegendreIndexes
         {
-            public (int, int, int) R0Idx, R1Idx, R2Idx, V0Idx, V1Idx, V2Idx, U0Idx, U1Idx, U2Idx;
-            public int M0Idx, M1Idx, M2Idx;
+            public (int, int, int) R0Idx, R1Idx, R2Idx, R3Idx, V0Idx, V1Idx, V2Idx, V3Idx;
+            public int M0Idx, M1Idx, M2Idx, M3Idx;
+            public (int, int, int, int) U1Idx, U2Idx;
+            public int T1Idx, T2Idx;
             public int BtIdx;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int Index(int k)
             {
-                if (k < 18)
+                if (k < 24)
                 {
-                    int bank = k / 9;
-                    int axis = k % 9 / 3;
-                    int point = k % 3;
+                    int bank = k / 12;
+                    int axis = k % 12 / 4;
+                    int point = k % 4;
                     return bank switch
                     {
                         0 => axis switch
                         {
-                            0 => point switch { 0 => R0Idx.Item1, 1 => R1Idx.Item1, _ => R2Idx.Item1 },
-                            1 => point switch { 0 => R0Idx.Item2, 1 => R1Idx.Item2, _ => R2Idx.Item2 },
-                            _ => point switch { 0 => R0Idx.Item3, 1 => R1Idx.Item3, _ => R2Idx.Item3 }
+                            0 => point switch { 0 => R0Idx.Item1, 1 => R1Idx.Item1, 2 => R2Idx.Item1, _ => R3Idx.Item1 },
+                            1 => point switch { 0 => R0Idx.Item2, 1 => R1Idx.Item2, 2 => R2Idx.Item2, _ => R3Idx.Item2 },
+                            _ => point switch { 0 => R0Idx.Item3, 1 => R1Idx.Item3, 2 => R2Idx.Item3, _ => R3Idx.Item3 }
                         },
                         _ => axis switch
                         {
-                            0 => point switch { 0 => V0Idx.Item1, 1 => V1Idx.Item1, _ => V2Idx.Item1 },
-                            1 => point switch { 0 => V0Idx.Item2, 1 => V1Idx.Item2, _ => V2Idx.Item2 },
-                            _ => point switch { 0 => V0Idx.Item3, 1 => V1Idx.Item3, _ => V2Idx.Item3 }
+                            0 => point switch { 0 => V0Idx.Item1, 1 => V1Idx.Item1, 2 => V2Idx.Item1, _ => V3Idx.Item1 },
+                            1 => point switch { 0 => V0Idx.Item2, 1 => V1Idx.Item2, 2 => V2Idx.Item2, _ => V3Idx.Item2 },
+                            _ => point switch { 0 => V0Idx.Item3, 1 => V1Idx.Item3, 2 => V2Idx.Item3, _ => V3Idx.Item3 }
                         }
                     };
                 }
 
-                if (k < 21)
+                if (k < 28)
                 {
-                    int point = k % 3;
-                    return point switch { 0 => M0Idx, 1 => M1Idx, _ => M2Idx };
+                    int point = k % 4;
+                    return point switch { 0 => M0Idx, 1 => M1Idx, 2 => M2Idx, _ => M3Idx };
                 }
 
-                if (k < 30)
+                if (k < 36)
                 {
-                    int axis = (k - 21) / 3;
-                    int point = k % 3;
+                    int axis = (k - 28) / 2;
+                    int point = k % 2;
                     return axis switch
                     {
-                        0 => point switch { 0 => U0Idx.Item1, 1 => U1Idx.Item1, _ => U2Idx.Item1 },
-                        1 => point switch { 0 => U0Idx.Item2, 1 => U1Idx.Item2, _ => U2Idx.Item2 },
-                        _ => point switch { 0 => U0Idx.Item3, 1 => U1Idx.Item3, _ => U2Idx.Item3 }
+                        0 => point switch { 0 => U1Idx.Item1, _ => U2Idx.Item1 },
+                        1 => point switch { 0 => U1Idx.Item2, _ => U2Idx.Item2 },
+                        2 => point switch { 0 => U1Idx.Item3, _ => U2Idx.Item3 },
+                        _ => point switch { 0 => U1Idx.Item4, _ => U2Idx.Item4 }
                     };
+                }
+
+                if (k < 38)
+                {
+                    int point = k % 2;
+                    return point switch { 0 => T1Idx, _ => T2Idx };
                 }
 
                 return BtIdx;
             }
         }
 
-        /*
-         * state2 - state0 - h6*(g(p0) + 4*g(p1) + g(p2))
-         * state1 - 0.5*(state0 + state2) - h8*(g(p0) - g(p2))
-         *
-         * V3 dR1 = r2 - r0 - h6 * (v0 + 4 * v1 + v2);
-         * V3 dR2 = r1 - 0.5 * (r0 + r2) - h8 * (v0 - v2);
-         * V3 dv1 = v2 - v0 - h6 * (dvdt0 + 4 * dvdt1 + dvdt2);
-         * V3 dv2 = v1 - 0.5 * (v0 + v2) - h8 * (dvdt0 - dvdt2);
-         */
-
-        public delegate DualV3 DynamicsCallback(ref HermiteSimpsonDualPoint d);
-
-        public delegate Dual ScalarDynamicsCallback(ref HermiteSimpsonDualPoint d);
+        public delegate DualV3 DynamicsCallback(ref GaussLegendreDualPoint d);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetDual(int k, ref HermiteSimpsonDualPoint d0, ref HermiteSimpsonDualPoint d1, ref HermiteSimpsonDualPoint d2, double val)
+        private static void SetDual(int k, ref GaussLegendreDualPoint d0, ref GaussLegendreDualPoint d1, ref GaussLegendreDualPoint d2, ref GaussLegendreDualPoint d3, double val)
         {
-            if (k < 18)
+            if (k < 24)
             {
-                int bank = k / 9;
-                int axis = k % 9 / 3;
-                int point = k % 3;
+                int bank = k / 12;
+                int axis = k % 12 / 4;
+                int point = k % 4;
                 V3 vec = val * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
                 switch (bank)
                 {
@@ -352,8 +485,11 @@ namespace MechJebLib.Utils
                                 case 1:
                                     d1.R = new DualV3(d1.R.M, vec);
                                     break;
-                                default:
+                                case 2:
                                     d2.R = new DualV3(d2.R.M, vec);
+                                    break;
+                                default:
+                                    d3.R = new DualV3(d3.R.M, vec);
                                     break;
                             }
                         }
@@ -368,17 +504,20 @@ namespace MechJebLib.Utils
                                 case 1:
                                     d1.V = new DualV3(d1.V.M, vec);
                                     break;
-                                default:
+                                case 2:
                                     d2.V = new DualV3(d2.V.M, vec);
+                                    break;
+                                default:
+                                    d3.V = new DualV3(d3.V.M, vec);
                                     break;
                             }
                         }
                         break;
                 }
             }
-            else if (k < 21)
+            else if (k < 28)
             {
-                int point = k % 3;
+                int point = k % 4;
                 switch (point)
                 {
                     case 0:
@@ -387,76 +526,169 @@ namespace MechJebLib.Utils
                     case 1:
                         d1.M = new Dual(d1.M.M, val);
                         break;
-                    default:
+                    case 2:
                         d2.M = new Dual(d2.M.M, val);
+                        break;
+                    default:
+                        d3.M = new Dual(d3.M.M, val);
                         break;
                 }
             }
-            else if (k < 30)
+            else if (k < 36)
             {
-                int axis = (k - 21) / 3;
-                int point = k % 3;
-                V3 vec = val * axis switch { 0 => V3.xaxis, 1 => V3.yaxis, _ => V3.zaxis };
+                int axis = (k - 28) / 2;
+                int point = k % 2;
+                Q3 vec = val * axis switch { 0 => Q3.xaxis, 1 => Q3.yaxis, 2 => Q3.zaxis, _ => Q3.waxis };
                 switch (point)
                 {
                     case 0:
-                        d0.U = new DualV3(d0.U.M, vec);
-                        break;
-                    case 1:
-                        d1.U = new DualV3(d1.U.M, vec);
+                        d1.U = new DualQ3(d1.U.M, vec);
                         break;
                     default:
-                        d2.U = new DualV3(d2.U.M, vec);
+                        d2.U = new DualQ3(d2.U.M, vec);
+                        break;
+                }
+            }
+            else if (k < 38)
+            {
+                int point = k % 2;
+                switch (point)
+                {
+                    case 0:
+                        d1.T = new Dual(d1.T.M, val);
+                        break;
+                    default:
+                        d2.T = new Dual(d2.T.M, val);
                         break;
                 }
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ApplyMDotDynamics(double[] f, alglib.sparsematrix j, int ci, double mdot, HermiteSimpsonSegment segment, HermiteSimpsonIndexes indexes, int n)
+        // 0 = d0.Rx, 1 = d1.Rx, 2 = d2.Rx, 3 = d3.Rx
+        // 4 = d0.Ry, 5 = d1.Ry, 6 = d2.Ry, 7 = d3.Ry
+        // 8 = d0.Rz, 9 = d1.Rz, 10 = d2.Rz, 11 = d3.Rz
+        // 12 = d0.Vx, 13 = d1.Vx, 14 = d2.Vx, 15 = d3.Vx
+        // 16 = d0.Vy, 17 = d1.Vy, 18 = d2.Vy, 19 = d3.Vy
+        // 20 = d0.Vz, 21 = d1.Vz, 22 = d2.Vz, 23 = d3.Vz
+        // 24 = d0.M, 25 = d1.M, 26 = d2.M, 27 = d3.M
+        // 28 = d1.Ux, 29 = d2.Ux
+        // 30 = d1.Uy, 31 = d2.Uy
+        // 32 = d1.Uz, 33 = d2.Uz
+        // 34 = d1.Uw, 35 = d2.Uw
+        // 36 = d1.T, 37 = d2.T
+        // 38 = Bt
+
+        public static int ApplyQAlphaConstraint(double[] f, alglib.sparsematrix j, int ci, Func<DualV3, DualV3, DualQ3, Dual> g, V3 r, V3 v, Q3 u, (int, int, int) ridx, (int, int, int) vidx, (int, int, int, int) uidx)
         {
-            const int NUM_VARS = 31;
+            var rd = new DualV3(r, V3.zero);
+            var vd = new DualV3(v, V3.zero);
+            var ud = new DualQ3(u, Q3.zero);
+
+            alglib.sparseappendemptyrow(j);
+
+            rd = new DualV3(rd.M, V3.xaxis);
+            Dual ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, ridx.Item1, ans.D);
+            rd = new DualV3(rd.M, V3.yaxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, ridx.Item2, ans.D);
+            rd = new DualV3(rd.M, V3.zaxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, ridx.Item3, ans.D);
+            rd = new DualV3(rd.M, V3.zero);
+
+            vd = new DualV3(vd.M, V3.xaxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, vidx.Item1, ans.D);
+            vd = new DualV3(vd.M, V3.yaxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, vidx.Item2, ans.D);
+            vd = new DualV3(vd.M, V3.zaxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, vidx.Item3, ans.D);
+            vd = new DualV3(vd.M, V3.zero);
+
+            ud = new DualQ3(ud.M, Q3.xaxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, uidx.Item1, ans.D);
+            ud = new DualQ3(ud.M, Q3.yaxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, uidx.Item2, ans.D);
+            ud = new DualQ3(ud.M, Q3.zaxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, uidx.Item3, ans.D);
+            ud = new DualQ3(ud.M, Q3.waxis);
+            ans = g(rd, vd, ud);
+            alglib.sparseappendelement(j, uidx.Item4, ans.D);
+
+            f[ci++] = ans.M;
+
+            return ci;
+        }
+
+        public static int ApplyMDotDynamics(double[] f, alglib.sparsematrix j, int ci, double mdot, GaussLegendreSegment segment, GaussLegendreIndexes indexes, int n)
+        {
             var jac = Vec.Rent(NUM_VARS, true);
             var ans = new Dual();
 
-            var d0 = new HermiteSimpsonDualPoint { R = segment.R0, V = segment.V0, U = segment.U0, M = segment.M0 };
-            var d1 = new HermiteSimpsonDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, M = segment.M1 };
-            var d2 = new HermiteSimpsonDualPoint { R = segment.R2, V = segment.V2, U = segment.U2, M = segment.M2 };
+            var d0 = new GaussLegendreDualPoint
+            {
+                R = segment.R0,
+                V = segment.V0,
+                U = Q3.nan,
+                T = double.NaN,
+                M = segment.M0
+            };
+            var d1 = new GaussLegendreDualPoint
+            {
+                R = segment.R1,
+                V = segment.V1,
+                U = segment.U1,
+                T = segment.T1,
+                M = segment.M1
+            };
+            var d2 = new GaussLegendreDualPoint
+            {
+                R = segment.R2,
+                V = segment.V2,
+                U = segment.U2,
+                T = segment.T2,
+                M = segment.M2
+            };
+            var d3 = new GaussLegendreDualPoint
+            {
+                R = segment.R3,
+                V = segment.V3,
+                U = Q3.nan,
+                T = double.NaN,
+                M = segment.M3
+            };
             var dbt = new Dual(segment.Bt);
 
-            bool singleControlVariable = indexes.Index(21) == indexes.Index(22);
+            bool singleControlVariable = indexes.Index(36) == indexes.Index(37);
 
-            for (int k = 18; k < NUM_VARS; k++)
+            int[] idxs1 = { 24, 25, 36, 37, 38 };
+
+            foreach (int k in idxs1)
             {
-                if (k < 30)
-                    SetDual(k, ref d0, ref d1, ref d2, 1);
+                if (k < 38)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
                 else
                     dbt = new Dual(segment.Bt, 1);
 
-                Dual h = dbt / (n - 1);
-                Dual h6 = h / 6.0;
+                Dual h = dbt / n;
+                Dual h4 = h / 4.0;
+                Dual ha = h * (3 - 2 * Math.Sqrt(3)) / 12;
 
-                ans = d2.M - d0.M + mdot * h6 * (d0.U.magnitude + 4 * d1.U.magnitude + d2.U.magnitude);
+                ans = d0.M - d1.M - mdot * (h4 * d1.T + ha * d2.T);
 
-                if (singleControlVariable && k >= 21 && k <= 23)
-                {
-                    jac[21] += ans.D;
-                }
-                else if (singleControlVariable && k >= 24 && k <= 26)
-                {
-                    jac[24] += ans.D;
-                }
-                else if (singleControlVariable && k >= 27 && k <= 29)
-                {
-                    jac[27] += ans.D;
-                }
+                if (singleControlVariable && (k == 36 || k == 37))
+                    jac[36] += ans.D;
                 else
-                {
                     jac[k] = ans.D;
-                }
 
-                if (k < 30)
-                    SetDual(k, ref d0, ref d1, ref d2, 0);
+                if (k < 38)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
                 else
                     dbt = new Dual(segment.Bt);
             }
@@ -466,7 +698,7 @@ namespace MechJebLib.Utils
             int lastindex = -1;
 
             alglib.sparseappendemptyrow(j);
-            for (int k = 18; k < NUM_VARS; k++)
+            foreach (int k in idxs1)
                 if (jac[k] != 0)
                 {
                     int index = indexes.Index(k);
@@ -479,37 +711,28 @@ namespace MechJebLib.Utils
             jac.Dispose();
             jac = Vec.Rent(NUM_VARS, true);
 
-            for (int k = 18; k < NUM_VARS; k++)
+            int[] idxs2 = { 24, 26, 36, 37, 38 };
+
+            foreach (int k in idxs2)
             {
-                if (k < 30)
-                    SetDual(k, ref d0, ref d1, ref d2, 1);
+                if (k < 38)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
                 else
                     dbt = new Dual(segment.Bt, 1);
 
-                Dual h = dbt / (n - 1);
-                Dual h8 = h * 0.125;
+                Dual h = dbt / n;
+                Dual h4 = h / 4.0;
+                Dual hb = h * (3 + 2 * Math.Sqrt(3)) / 12;
 
-                ans = d1.M - 0.5 * (d0.M + d2.M) + mdot* h8 * (d0.U.magnitude - d2.U.magnitude);
+                ans = d0.M - d2.M - mdot * (hb * d1.T + h4 * d2.T);
 
-                if (singleControlVariable && k >= 21 && k <= 23)
-                {
-                    jac[21] += ans.D;
-                }
-                else if (singleControlVariable && k >= 24 && k <= 26)
-                {
-                    jac[24] += ans.D;
-                }
-                else if (singleControlVariable && k >= 27 && k <= 29)
-                {
-                    jac[27] += ans.D;
-                }
+                if (singleControlVariable && (k == 36 || k == 37))
+                    jac[36] += ans.D;
                 else
-                {
                     jac[k] = ans.D;
-                }
 
-                if (k < 30)
-                    SetDual(k, ref d0, ref d1, ref d2, 0);
+                if (k < 38)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
                 else
                     dbt = new Dual(segment.Bt);
             }
@@ -519,7 +742,50 @@ namespace MechJebLib.Utils
             lastindex = -1;
 
             alglib.sparseappendemptyrow(j);
-            for (int k = 18; k < NUM_VARS; k++)
+            foreach (int k in idxs2)
+                if (jac[k] != 0)
+                {
+                    int index = indexes.Index(k);
+                    if (lastindex == index)
+                        continue;
+                    alglib.sparseappendelement(j, index, jac[k]);
+                    lastindex = index;
+                }
+
+            jac.Dispose();
+            jac = Vec.Rent(NUM_VARS, true);
+
+            int[] idxs3 = { 24, 27, 36, 37, 38 };
+
+            foreach (int k in idxs3)
+            {
+                if (k < 38)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
+                else
+                    dbt = new Dual(segment.Bt, 1);
+
+                Dual h = dbt / n;
+                Dual h2 = h / 2.0;
+
+                ans = d0.M - d3.M - mdot * (h2 * d1.T + h2 * d2.T);
+
+                if (singleControlVariable && (k == 36 || k == 37))
+                    jac[36] += ans.D;
+                else
+                    jac[k] = ans.D;
+
+                if (k < 38)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
+                else
+                    dbt = new Dual(segment.Bt);
+            }
+
+            f[ci++] = ans.M;
+
+            lastindex = -1;
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs3)
                 if (jac[k] != 0)
                 {
                     int index = indexes.Index(k);
@@ -534,239 +800,111 @@ namespace MechJebLib.Utils
             return ci;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ApplyHermiteSimpsonDynamics(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot, HermiteSimpsonSegment segment, HermiteSimpsonIndexes indexes, int n)
-        {
-            const int NUM_VARS = 31;
-            DualV3 ans;
-            var jacX = Vec.Rent(NUM_VARS, true);
-            var jacY = Vec.Rent(NUM_VARS, true);
-            var jacZ = Vec.Rent(NUM_VARS, true);
+        private const int NUM_VARS = 39;
 
-            var d0 = new HermiteSimpsonDualPoint { R = segment.R0, V = segment.V0, U = segment.U0, M = segment.M0 };
-            var d1 = new HermiteSimpsonDualPoint { R = segment.R1, V = segment.V1, U = segment.U1, M = segment.M1 };
-            var d2 = new HermiteSimpsonDualPoint { R = segment.R2, V = segment.V2, U = segment.U2, M = segment.M2 };
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ApplyGaussLegendreDynamics(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot, GaussLegendreSegment segment, GaussLegendreIndexes indexes, int n)
+        {
+            var d0 = new GaussLegendreDualPoint
+            {
+                R = segment.R0,
+                V = segment.V0,
+                U = Q3.nan,
+                T = double.NaN,
+                M = segment.M0
+            };
+            var d1 = new GaussLegendreDualPoint
+            {
+                R = segment.R1,
+                V = segment.V1,
+                U = segment.U1,
+                T = segment.T1,
+                M = segment.M1
+            };
+            var d2 = new GaussLegendreDualPoint
+            {
+                R = segment.R2,
+                V = segment.V2,
+                U = segment.U2,
+                T = segment.T2,
+                M = segment.M2
+            };
+            var d3 = new GaussLegendreDualPoint
+            {
+                R = segment.R3,
+                V = segment.V3,
+                U = Q3.nan,
+                T = double.NaN,
+                M = segment.M3
+            };
             var dbt = new Dual(segment.Bt);
 
-            /*
-             * RDot
-             */
+            ci = RDotEquation1(f, j, ci, segment, indexes, n, dbt, d0, d1, d2);
+            ci = RDotEquation2(f, j, ci, segment, indexes, n, dbt, d0, d1, d2);
+            ci = RDotEquation3(f, j, ci, segment, indexes, n, dbt, d0, d1, d2, d3);
 
-            Dual H = dbt / (n - 1);
-            Dual H6 = H / 6.0;
+            ci = VDotEquation1(f, j, ci, vDot, segment, indexes, n, dbt, d0, d1, d2, d3);
+            ci = VDotEquation2(f, j, ci, vDot, segment, indexes, n, dbt, d0, d1, d2, d3);
+            ci = VDotEquation3(f, j, ci, vDot, segment, indexes, n, dbt, d0, d1, d2, d3);
 
-            d0.R = new DualV3(d0.R.M, V3.one);
+            return ci;
+        }
 
-            ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
+        private static int VDotEquation1(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot,
+            GaussLegendreSegment segment, GaussLegendreIndexes indexes, int n, Dual dbt,
+            GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2,
+            GaussLegendreDualPoint d3)
+        {
+            bool singleControlVariable = indexes.Index(36) == indexes.Index(37);
 
-            jacX[0] = ans.x.D;
-            jacY[3] = ans.y.D;
-            jacZ[6] = ans.z.D;
+            using var jacX = Vec.Rent(NUM_VARS, true);
+            using var jacY = Vec.Rent(NUM_VARS, true);
+            using var jacZ = Vec.Rent(NUM_VARS, true);
 
-            d0.R = new DualV3(d0.R.M, V3.zero);
-            d2.R = new DualV3(d2.R.M, V3.one);
-
-            ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
-
-            jacX[2] = ans.x.D;
-            jacY[5] = ans.y.D;
-            jacZ[8] = ans.z.D;
-
-            d2.R = new DualV3(d2.R.M, V3.zero);
-            d0.V = new DualV3(d0.V.M, V3.one);
-
-            ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
-
-            jacX[9] = ans.x.D;
-            jacY[12] = ans.y.D;
-            jacZ[15] = ans.z.D;
-
-            d0.V = new DualV3(d0.V.M, V3.zero);
-            d1.V = new DualV3(d1.V.M, V3.one);
-
-            ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
-
-            jacX[10] = ans.x.D;
-            jacY[13] = ans.y.D;
-            jacZ[16] = ans.z.D;
-
-            d1.V = new DualV3(d1.V.M, V3.zero);
-            d2.V = new DualV3(d2.V.M, V3.one);
-
-            ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
-
-            jacX[11] = ans.x.D;
-            jacY[14] = ans.y.D;
-            jacZ[17] = ans.z.D;
-
-            d2.V = new DualV3(d2.V.M, V3.zero);
-            dbt = new Dual(segment.Bt, 1);
-
-            H = dbt / (n - 1);
-            H6 = H / 6.0;
-
-            ans = d2.R - d0.R - H6 * (d0.V + 4 * d1.V + d2.V);
-
-            jacX[30] = ans.x.D;
-            jacY[30] = ans.y.D;
-            jacZ[30] = ans.z.D;
-
-            dbt = new Dual(segment.Bt);
-
-            f[ci++] = ans.M.x;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacX[k] != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
-
-            f[ci++] = ans.M.y;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacY[k] != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
-
-            f[ci++] = ans.M.z;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacZ[k] != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
-
-            jacX.Dispose();
-            jacY.Dispose();
-            jacZ.Dispose();
-
-            jacX = Vec.Rent(NUM_VARS, true);
-            jacY = Vec.Rent(NUM_VARS, true);
-            jacZ = Vec.Rent(NUM_VARS, true);
-
-            H = dbt / (n - 1);
-            Dual H8 = H * 0.125;
-
-            d0.R = new DualV3(d0.R.M, V3.one);
-
-            ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
-
-            jacX[0] = ans.x.D;
-            jacY[3] = ans.y.D;
-            jacZ[6] = ans.z.D;
-
-            d0.R = new DualV3(d0.R.M, V3.zero);
-            d1.R = new DualV3(d1.R.M, V3.one);
-
-            ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
-
-            jacX[1] = ans.x.D;
-            jacY[4] = ans.y.D;
-            jacZ[7] = ans.z.D;
-
-            d1.R = new DualV3(d1.R.M, V3.zero);
-            d2.R = new DualV3(d2.R.M, V3.one);
-
-            ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
-
-            jacX[2] = ans.x.D;
-            jacY[5] = ans.y.D;
-            jacZ[8] = ans.z.D;
-
-            d2.R = new DualV3(d2.R.M, V3.zero);
-            d0.V = new DualV3(d0.V.M, V3.one);
-
-            ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
-
-            jacX[9] = ans.x.D;
-            jacY[12] = ans.y.D;
-            jacZ[15] = ans.z.D;
-
-            d0.V = new DualV3(d0.V.M, V3.zero);
-            d2.V = new DualV3(d2.V.M, V3.one);
-
-            ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
-
-            jacX[11] = ans.x.D;
-            jacY[14] = ans.y.D;
-            jacZ[17] = ans.z.D;
-
-            d2.V = new DualV3(d2.V.M, V3.zero);
-            dbt = new Dual(segment.Bt, 1);
-
-            H = dbt / (n - 1);
-            H8 = H * 0.125;
-
-            ans = d1.R - 0.5 * (d0.R + d2.R) - H8 * (d0.V - d2.V);
-
-            jacX[30] = ans.x.D;
-            jacY[30] = ans.y.D;
-            jacZ[30] = ans.z.D;
-
-            dbt = new Dual(segment.Bt);
-
-            f[ci++] = ans.M.x;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacX[k] != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
-
-            f[ci++] = ans.M.y;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacY[k] != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
-
-            f[ci++] = ans.M.z;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacZ[k] != 0)
-                    alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
-
-            /*
-             * VDOT
-             */
-
-            bool singleControlVariable = indexes.Index(21) == indexes.Index(22);
-
-            jacX.Dispose();
-            jacY.Dispose();
-            jacZ.Dispose();
-
-            jacX = Vec.Rent(NUM_VARS, true);
-            jacY = Vec.Rent(NUM_VARS, true);
-            jacZ = Vec.Rent(NUM_VARS, true);
+            var ans = new DualV3(0, 0, 0);
 
             for (int k = 0; k < NUM_VARS; k++)
             {
-                if (k < 30)
-                    SetDual(k, ref d0, ref d1, ref d2, 1);
+                if (k < NUM_VARS - 1)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
                 else
                     dbt = new Dual(segment.Bt, 1);
 
-                Dual h = dbt / (n - 1);
-                Dual h6 = h / 6.0;
+                Dual h = dbt / n;
+                Dual h4 = h / 4.0;
+                Dual ha = h * (3 - 2 * Math.Sqrt(3)) / 12;
 
-                ans = d2.V - d0.V - h6 * (vDot(ref d0) + 4 * vDot(ref d1) + vDot(ref d2));
+                ans = d0.V - d1.V + h4 * vDot(ref d1) + ha * vDot(ref d2);
 
-                if (singleControlVariable && k >= 21 && k <= 23)
+                if (singleControlVariable && (k == 28 || k == 29))
                 {
-                    jacX[21] += ans.D.x;
-                    jacY[21] += ans.D.y;
-                    jacZ[21] += ans.D.z;
+                    jacX[28] += ans.D.x;
+                    jacY[28] += ans.D.y;
+                    jacZ[28] += ans.D.z;
                 }
-                else if (singleControlVariable && k >= 24 && k <= 26)
+                else if (singleControlVariable && (k == 30 || k == 31))
                 {
-                    jacX[24] += ans.D.x;
-                    jacY[24] += ans.D.y;
-                    jacZ[24] += ans.D.z;
+                    jacX[30] += ans.D.x;
+                    jacY[30] += ans.D.y;
+                    jacZ[30] += ans.D.z;
                 }
-                else if (singleControlVariable && k >= 27 && k <= 29)
+                else if (singleControlVariable && (k == 32 || k == 33))
                 {
-                    jacX[27] += ans.D.x;
-                    jacY[27] += ans.D.y;
-                    jacZ[27] += ans.D.z;
+                    jacX[32] += ans.D.x;
+                    jacY[32] += ans.D.y;
+                    jacZ[32] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 34 || k == 35))
+                {
+                    jacX[34] += ans.D.x;
+                    jacY[34] += ans.D.y;
+                    jacZ[34] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 36 || k == 37))
+                {
+                    jacX[36] += ans.D.x;
+                    jacY[36] += ans.D.y;
+                    jacZ[36] += ans.D.z;
                 }
                 else
                 {
@@ -775,8 +913,8 @@ namespace MechJebLib.Utils
                     jacZ[k] = ans.D.z;
                 }
 
-                if (k < 30)
-                    SetDual(k, ref d0, ref d1, ref d2, 0);
+                if (k < NUM_VARS - 1)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
                 else
                     dbt = new Dual(segment.Bt);
             }
@@ -826,43 +964,64 @@ namespace MechJebLib.Utils
                     lastindex = index;
                 }
 
-            jacX.Dispose();
-            jacY.Dispose();
-            jacZ.Dispose();
+            return ci;
+        }
 
-            jacX = Vec.Rent(NUM_VARS, true);
-            jacY = Vec.Rent(NUM_VARS, true);
-            jacZ = Vec.Rent(NUM_VARS, true);
+        private static int VDotEquation2(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot,
+            GaussLegendreSegment segment, GaussLegendreIndexes indexes, int n, Dual dbt,
+            GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2,
+            GaussLegendreDualPoint d3)
+        {
+            bool singleControlVariable = indexes.Index(28) == indexes.Index(29);
+
+            using var jacX = Vec.Rent(NUM_VARS, true);
+            using var jacY = Vec.Rent(NUM_VARS, true);
+            using var jacZ = Vec.Rent(NUM_VARS, true);
+
+            var ans = new DualV3(0, 0, 0);
 
             for (int k = 0; k < NUM_VARS; k++)
             {
-                if (k < 30)
-                    SetDual(k, ref d0, ref d1, ref d2, 1);
+                if (k < NUM_VARS - 1)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
                 else
                     dbt = new Dual(segment.Bt, 1);
 
-                Dual h = dbt / (n - 1);
-                Dual h8 = h * 0.125;
+                Dual h = dbt / n;
+                Dual h4 = h / 4.0;
+                Dual hb = h * (3 + 2 * Math.Sqrt(3)) / 12;
 
-                ans = d1.V - 0.5 * (d0.V + d2.V) - h8 * (vDot(ref d0) - vDot(ref d2));
+                ans = d0.V - d2.V + hb * vDot(ref d1) + h4 * vDot(ref d2);
 
-                if (singleControlVariable && k >= 21 && k <= 23)
+                if (singleControlVariable && (k == 28 || k == 29))
                 {
-                    jacX[21] += ans.D.x;
-                    jacY[21] += ans.D.y;
-                    jacZ[21] += ans.D.z;
+                    jacX[28] += ans.D.x;
+                    jacY[28] += ans.D.y;
+                    jacZ[28] += ans.D.z;
                 }
-                else if (singleControlVariable && k >= 24 && k <= 26)
+                else if (singleControlVariable && (k == 30 || k == 31))
                 {
-                    jacX[24] += ans.D.x;
-                    jacY[24] += ans.D.y;
-                    jacZ[24] += ans.D.z;
+                    jacX[30] += ans.D.x;
+                    jacY[30] += ans.D.y;
+                    jacZ[30] += ans.D.z;
                 }
-                else if (singleControlVariable && k >= 27 && k <= 29)
+                else if (singleControlVariable && (k == 32 || k == 33))
                 {
-                    jacX[27] += ans.D.x;
-                    jacY[27] += ans.D.y;
-                    jacZ[27] += ans.D.z;
+                    jacX[32] += ans.D.x;
+                    jacY[32] += ans.D.y;
+                    jacZ[32] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 34 || k == 35))
+                {
+                    jacX[34] += ans.D.x;
+                    jacY[34] += ans.D.y;
+                    jacZ[34] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 36 || k == 37))
+                {
+                    jacX[36] += ans.D.x;
+                    jacY[36] += ans.D.y;
+                    jacZ[36] += ans.D.z;
                 }
                 else
                 {
@@ -871,15 +1030,15 @@ namespace MechJebLib.Utils
                     jacZ[k] = ans.D.z;
                 }
 
-                if (k < 30)
-                    SetDual(k, ref d0, ref d1, ref d2, 0);
+                if (k < NUM_VARS - 1)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
                 else
                     dbt = new Dual(segment.Bt);
             }
 
             f[ci++] = ans.M.x;
 
-            lastindex = -1;
+            int lastindex = -1;
 
             alglib.sparseappendemptyrow(j);
             for (int k = 0; k < NUM_VARS; k++)
@@ -892,7 +1051,6 @@ namespace MechJebLib.Utils
                     lastindex = index;
                 }
 
-            // here
             f[ci++] = ans.M.y;
 
             lastindex = -1;
@@ -923,9 +1081,377 @@ namespace MechJebLib.Utils
                     lastindex = index;
                 }
 
-            jacX.Dispose();
-            jacY.Dispose();
-            jacZ.Dispose();
+            return ci;
+        }
+
+        private static int VDotEquation3(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot,
+            GaussLegendreSegment segment, GaussLegendreIndexes indexes, int n, Dual dbt,
+            GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2,
+            GaussLegendreDualPoint d3)
+        {
+            bool singleControlVariable = indexes.Index(28) == indexes.Index(29);
+
+            using var jacX = Vec.Rent(NUM_VARS, true);
+            using var jacY = Vec.Rent(NUM_VARS, true);
+            using var jacZ = Vec.Rent(NUM_VARS, true);
+
+            var ans = new DualV3(0, 0, 0);
+
+            for (int k = 0; k < NUM_VARS; k++)
+            {
+                if (k < NUM_VARS - 1)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 1);
+                else
+                    dbt = new Dual(segment.Bt, 1);
+
+                Dual h = dbt / n;
+                Dual h2 = h / 2.0;
+
+                ans = d0.V - d3.V + h2 * (vDot(ref d1) + vDot(ref d2));
+
+                if (singleControlVariable && (k == 28 || k == 29))
+                {
+                    jacX[28] += ans.D.x;
+                    jacY[28] += ans.D.y;
+                    jacZ[28] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 30 || k == 31))
+                {
+                    jacX[30] += ans.D.x;
+                    jacY[30] += ans.D.y;
+                    jacZ[30] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 32 || k == 33))
+                {
+                    jacX[32] += ans.D.x;
+                    jacY[32] += ans.D.y;
+                    jacZ[32] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 34 || k == 35))
+                {
+                    jacX[34] += ans.D.x;
+                    jacY[34] += ans.D.y;
+                    jacZ[34] += ans.D.z;
+                }
+                else if (singleControlVariable && (k == 36 || k == 37))
+                {
+                    jacX[36] += ans.D.x;
+                    jacY[36] += ans.D.y;
+                    jacZ[36] += ans.D.z;
+                }
+                else
+                {
+                    jacX[k] = ans.D.x;
+                    jacY[k] = ans.D.y;
+                    jacZ[k] = ans.D.z;
+                }
+
+                if (k < NUM_VARS - 1)
+                    SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
+                else
+                    dbt = new Dual(segment.Bt);
+            }
+
+            f[ci++] = ans.M.x;
+
+            int lastindex = -1;
+
+            alglib.sparseappendemptyrow(j);
+            for (int k = 0; k < NUM_VARS; k++)
+                if (jacX[k] != 0)
+                {
+                    int index = indexes.Index(k);
+                    if (lastindex == index)
+                        continue;
+                    alglib.sparseappendelement(j, index, jacX[k]);
+                    lastindex = index;
+                }
+
+            f[ci++] = ans.M.y;
+
+            lastindex = -1;
+
+            alglib.sparseappendemptyrow(j);
+            for (int k = 0; k < NUM_VARS; k++)
+                if (jacY[k] != 0)
+                {
+                    int index = indexes.Index(k);
+                    if (lastindex == index)
+                        continue;
+                    alglib.sparseappendelement(j, index, jacY[k]);
+                    lastindex = index;
+                }
+
+            f[ci++] = ans.M.z;
+
+            lastindex = -1;
+
+            alglib.sparseappendemptyrow(j);
+            for (int k = 0; k < NUM_VARS; k++)
+                if (jacZ[k] != 0)
+                {
+                    int index = indexes.Index(k);
+                    if (lastindex == index)
+                        continue;
+                    alglib.sparseappendelement(j, index, jacZ[k]);
+                    lastindex = index;
+                }
+
+            return ci;
+        }
+
+        private static int RDotEquation1(double[] f, alglib.sparsematrix j, int ci, GaussLegendreSegment segment,
+            GaussLegendreIndexes indexes, int n, Dual dbt, GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2)
+        {
+            using var jacX = Vec.Rent(NUM_VARS, true);
+            using var jacY = Vec.Rent(NUM_VARS, true);
+            using var jacZ = Vec.Rent(NUM_VARS, true);
+
+            Dual h = dbt / n;
+            Dual h4 = h / 4.0;
+            Dual ha = h * (3 - 2 * Math.Sqrt(3)) / 12;
+
+            d0.R = new DualV3(d0.R.M, V3.one);
+
+            DualV3 ans = d0.R - d1.R + h4 * d1.V + ha * d2.V;
+
+            jacX[0] = ans.x.D;
+            jacY[4] = ans.y.D;
+            jacZ[8] = ans.z.D;
+
+            d0.R = new DualV3(d0.R.M, V3.zero);
+            d1.R = new DualV3(d1.R.M, V3.one);
+
+            ans = d0.R - d1.R + h4 * d1.V + ha * d2.V;
+
+            jacX[1] = ans.x.D;
+            jacY[5] = ans.y.D;
+            jacZ[9] = ans.z.D;
+
+            d1.R = new DualV3(d1.R.M, V3.zero);
+            d1.V = new DualV3(d1.V.M, V3.one);
+
+            ans = d0.R - d1.R + h4 * d1.V + ha * d2.V;
+
+            jacX[13] = ans.x.D;
+            jacY[17] = ans.y.D;
+            jacZ[21] = ans.z.D;
+
+            d1.V = new DualV3(d1.V.M, V3.zero);
+            d2.V = new DualV3(d2.V.M, V3.one);
+
+            ans = d0.R - d1.R + h4 * d1.V + ha * d2.V;
+
+            jacX[14] = ans.x.D;
+            jacY[18] = ans.y.D;
+            jacZ[22] = ans.z.D;
+
+            d2.V = new DualV3(d2.V.M, V3.zero);
+            dbt = new Dual(segment.Bt, 1);
+
+            h = dbt / n;
+            h4 = h / 4.0;
+            ha = h * (3 - 2 * Math.Sqrt(3)) / 12;
+
+            ans = d0.R - d1.R + h4 * d1.V + ha * d2.V;
+
+            jacX[NUM_VARS - 1] = ans.x.D;
+            jacY[NUM_VARS - 1] = ans.y.D;
+            jacZ[NUM_VARS - 1] = ans.z.D;
+
+            f[ci++] = ans.M.x;
+
+            int[] idxs1 = { 0, 1, 13, 14, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs1)
+                alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
+
+            f[ci++] = ans.M.y;
+
+            int[] idxs2 = { 4, 5, 17, 18, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs2)
+                alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
+
+            f[ci++] = ans.M.z;
+
+            int[] idxs3 = { 8, 9, 21, 22, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs3)
+                alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
+
+            return ci;
+        }
+
+        private static int RDotEquation2(double[] f, alglib.sparsematrix j, int ci, GaussLegendreSegment segment,
+            GaussLegendreIndexes indexes, int n, Dual dbt, GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2)
+        {
+            using var jacX = Vec.Rent(NUM_VARS, true);
+            using var jacY = Vec.Rent(NUM_VARS, true);
+            using var jacZ = Vec.Rent(NUM_VARS, true);
+
+            Dual h = dbt / n;
+            Dual h4 = h / 4.0;
+            Dual hb = h * (3 + 2 * Math.Sqrt(3)) / 12;
+
+            d0.R = new DualV3(d0.R.M, V3.one);
+
+            DualV3 ans = d0.R - d2.R + hb * d1.V + h4 * d2.V;
+
+            jacX[0] = ans.x.D;
+            jacY[4] = ans.y.D;
+            jacZ[8] = ans.z.D;
+
+            d0.R = new DualV3(d0.R.M, V3.zero);
+            d2.R = new DualV3(d2.R.M, V3.one);
+
+            ans = d0.R - d2.R + hb * d1.V + h4 * d2.V;
+
+            jacX[2] = ans.x.D;
+            jacY[6] = ans.y.D;
+            jacZ[10] = ans.z.D;
+
+            d2.R = new DualV3(d2.R.M, V3.zero);
+            d1.V = new DualV3(d1.V.M, V3.one);
+
+            ans = d0.R - d2.R + hb * d1.V + h4 * d2.V;
+
+            jacX[13] = ans.x.D;
+            jacY[17] = ans.y.D;
+            jacZ[21] = ans.z.D;
+
+            d1.V = new DualV3(d1.V.M, V3.zero);
+            d2.V = new DualV3(d2.V.M, V3.one);
+
+            ans = d0.R - d2.R + hb * d1.V + h4 * d2.V;
+
+            jacX[14] = ans.x.D;
+            jacY[18] = ans.y.D;
+            jacZ[22] = ans.z.D;
+
+            d2.V = new DualV3(d2.V.M, V3.zero);
+            dbt = new Dual(segment.Bt, 1);
+
+            h = dbt / n;
+            h4 = h / 4.0;
+            hb = h * (3 + 2 * Math.Sqrt(3)) / 12;
+
+            ans = d0.R - d2.R + hb * d1.V + h4 * d2.V;
+
+            jacX[NUM_VARS - 1] = ans.x.D;
+            jacY[NUM_VARS - 1] = ans.y.D;
+            jacZ[NUM_VARS - 1] = ans.z.D;
+
+            f[ci++] = ans.M.x;
+
+            int[] idxs1 = { 0, 2, 13, 14, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs1)
+                alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
+
+            f[ci++] = ans.M.y;
+
+            int[] idxs2 = { 4, 6, 17, 18, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs2)
+                alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
+
+            f[ci++] = ans.M.z;
+
+            int[] idxs3 = { 8, 10, 21, 22, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs3)
+                alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
+
+            return ci;
+        }
+
+        private static int RDotEquation3(double[] f, alglib.sparsematrix j, int ci, GaussLegendreSegment segment,
+            GaussLegendreIndexes indexes, int n, Dual dbt, GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2, GaussLegendreDualPoint d3)
+        {
+            using var jacX = Vec.Rent(NUM_VARS, true);
+            using var jacY = Vec.Rent(NUM_VARS, true);
+            using var jacZ = Vec.Rent(NUM_VARS, true);
+
+            Dual h = dbt / n;
+            Dual h2 = 0.5 * h;
+
+            d0.R = new DualV3(d0.R.M, V3.one);
+
+            DualV3 ans = d0.R - d3.R + h2 * d1.V + h2 * d2.V;
+
+            jacX[0] = ans.x.D;
+            jacY[4] = ans.y.D;
+            jacZ[8] = ans.z.D;
+
+            d0.R = new DualV3(d0.R.M, V3.zero);
+            d3.R = new DualV3(d3.R.M, V3.one);
+
+            ans = d0.R - d3.R + h2 * (d1.V + d2.V);
+
+            jacX[3] = ans.x.D;
+            jacY[7] = ans.y.D;
+            jacZ[11] = ans.z.D;
+
+            d3.R = new DualV3(d3.R.M, V3.zero);
+            d1.V = new DualV3(d1.V.M, V3.one);
+
+            ans = d0.R - d3.R + h2 * (d1.V + d2.V);
+
+            jacX[13] = ans.x.D;
+            jacY[17] = ans.y.D;
+            jacZ[21] = ans.z.D;
+
+            d1.V = new DualV3(d1.V.M, V3.zero);
+            d2.V = new DualV3(d2.V.M, V3.one);
+
+            ans = d0.R - d3.R + h2 * (d1.V + d2.V);
+
+            jacX[14] = ans.x.D;
+            jacY[18] = ans.y.D;
+            jacZ[22] = ans.z.D;
+
+            d2.V = new DualV3(d2.V.M, V3.zero);
+            dbt = new Dual(segment.Bt, 1);
+
+            h = dbt / n;
+            h2 = 0.5 * h;
+
+            ans = d0.R - d3.R + h2 * (d1.V + d2.V);
+
+            jacX[NUM_VARS - 1] = ans.x.D;
+            jacY[NUM_VARS - 1] = ans.y.D;
+            jacZ[NUM_VARS - 1] = ans.z.D;
+
+            f[ci++] = ans.M.x;
+
+            int[] idxs1 = { 0, 3, 13, 14, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs1)
+                alglib.sparseappendelement(j, indexes.Index(k), jacX[k]);
+
+            f[ci++] = ans.M.y;
+
+            int[] idxs2 = { 4, 7, 17, 18, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs2)
+                alglib.sparseappendelement(j, indexes.Index(k), jacY[k]);
+
+            f[ci++] = ans.M.z;
+
+            int[] idxs3 = { 8, 11, 21, 22, NUM_VARS - 1 };
+
+            alglib.sparseappendemptyrow(j);
+            foreach (int k in idxs3)
+                alglib.sparseappendelement(j, indexes.Index(k), jacZ[k]);
 
             return ci;
         }

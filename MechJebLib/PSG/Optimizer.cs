@@ -35,10 +35,10 @@ namespace MechJebLib.PSG
         public double Cost;
         public Solution? Solution;
 
-        public int    K                   => 2 * N - 1;
-        public int    N                   { get; set; } = 8;
+        public int    K                   => 3 * N + 1;
+        public int    N                   { get; set; } = 7;
         public int    Maxits              { get; set; } = 4000;
-        public double SQPTrustRegionLimit { get; set; } = 1e-4;
+        public double SQPTrustRegionLimit { get; set; } = 1e-5;
         public double Epsf                { get; set; } = 0; // 1e-9;
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
@@ -47,6 +47,7 @@ namespace MechJebLib.PSG
         public Optimizer(Problem problem, PhaseCollection phases, ITerminal terminal, ObjectiveType objective)
         {
             Phases = phases.DeepCopy();
+            Phases.SetControlContinuity();
             Terminal = terminal;
             Objective = objective;
             _vars = new VariableProxy(problem, Phases, Terminal, N);
@@ -84,8 +85,6 @@ namespace MechJebLib.PSG
             PrimalFeasibility = Sqrt(PrimalFeasibility);
         }
 
-        // TODO: somewhere I need a burntime constraint across the massContinuity phase
-
         private (double t0, double oldt0) TranscribePhasesFromOldSolution(int phaseStart, int phaseLimit, double t0, Solution oldSolution, double oldt0, double oldtf)
         {
             double tbt = 0;
@@ -109,55 +108,30 @@ namespace MechJebLib.PSG
                 double bt = Phases[p].Coast ? oldtbt : Clamp(phase.Bt, 0, oldtbt / frac);
                 double oldbt = bt * frac;
                 oldbt = Min(oldbt, oldtf - oldt0);
-                double oldh = oldbt / (K - 1);
 
-                double tf = t0 + bt;
-                double h = bt / (K - 1);
+                double h = bt / N;
+                double oldh = oldbt / N;
 
                 double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0) : phase.M0;
-                double mdot = -phase.Mdot;
 
                 for (int k = 0; k < K; k++)
                 {
-                    double dt = k * h;
-                    double olddt = k * oldh;
+                    int n = k / 3;
+                    double dt = (n + _tau[k % 3]) * h;
+                    double olddt = (n + _tau[k % 3]) * oldh;
 
-                    V3 r = oldSolution.RBar(oldt0 + olddt);
-                    thisPhase.R[k] = r;
-
-                    V3 v = oldSolution.VBar(oldt0 + olddt);
-                    thisPhase.V[k] = v;
-
-                    V3 u = oldSolution.UBar(oldt0 + olddt);
-
-                    if (phase.GuidedCoast)
-                    {
-                        if (k == 0)
-                            thisPhase.U[0] = u;
-                        if (k == K - 1)
-                            thisPhase.U[-1] = u;
-                    }
-                    else
-                    {
-                        if (phase.Unguided)
-                            thisPhase.U[0] += u;
-                        else
-                            thisPhase.U[k] = u;
-                    }
-
-                    if (!phase.Coast)
-                        thisPhase.M[k] = m0 + mdot * dt;
+                    TranscribePoint(oldSolution, k, thisPhase, phase, m0, oldt0 + olddt, dt);
                 }
 
                 if (phase.Coast)
-                    thisPhase.M[0] = m0;
+                    thisPhase.M.First = m0;
 
                 if (phase.Unguided)
-                    thisPhase.U[0] = thisPhase.U[0].normalized;
+                    thisPhase.U.First = thisPhase.U.First.normalized;
 
-                thisPhase.Bt() = tf - t0;
+                thisPhase.Bt() = bt;
 
-                t0 = tf;
+                t0 += bt;
                 oldt0 += oldbt;
             }
 
@@ -213,6 +187,42 @@ namespace MechJebLib.PSG
             TranscribePhasesFromOldSolution(coastPhaseIndex + 1, Phases.Count, t0, oldSolution, oldt0, oldtf3);
         }
 
+        private void TranscribePoint(Solution oldSolution, int k, PhaseProxy thisPhase, Phase phase, double m0, double oldt, double dt)
+        {
+            V3 r = oldSolution.RBar(oldt);
+            thisPhase.R[k] = r;
+
+            V3 v = oldSolution.VBar(oldt);
+            thisPhase.V[k] = v;
+
+            if (!phase.Coast)
+                thisPhase.M[k] = m0 - phase.Mdot * dt;
+
+            V3 u = oldSolution.UBar(oldt);
+
+            if (phase.GuidedCoast)
+            {
+                // no points to set
+            }
+            else if (phase.Unguided)
+            {
+                // pick roughly the midpoint
+                if (k < K / 2)
+                    thisPhase.U.First = Q3.FromToRotation(V3.forward, u.normalized);
+                thisPhase.T.First = phase.Coast ? 0.0 : 1.0;
+            }
+            else
+            {
+                if (k % 3 != 0)
+                {
+                    thisPhase.U[k] = Q3.FromToRotation(V3.forward, u.normalized);
+                    thisPhase.T[k] = 1.0;
+                }
+            }
+        }
+
+        private readonly double[] _tau = { 0, 0.5 - Sqrt(3) / 6, 0.5 + Sqrt(3) / 6 };
+
         // the phases in the old solution must match the phases in this optimizer.
         // variables on the phases may change, but the number and order of phases must not.
         public void TranscribePreviousBootSolution(Solution oldSolution)
@@ -228,64 +238,34 @@ namespace MechJebLib.PSG
                 PhaseProxy thisPhase = _vars[p];
 
                 double oldbt = oldSolution.BtBar(p, 0);
-                double oldtf = oldt0 + oldbt;
-                double oldh = (oldtf - oldt0) / (K - 1);
-
-                // a previous infinite stage can exceed the burn time, so start by clamping it back
-                // down, but we want to end at the same location, so we index into the old solution
-                // by steps from the old burn time.
                 double bt = oldbt;
                 if (!phase.Coast)
                     bt = Min(oldbt, phase.Bt);
-                double tf = t0 + bt;
-                double h = (tf - t0) / (K - 1);
 
-                double m0 = phase.MassContinuity ? oldSolution.MBar(t0) : phase.M0;
-                double mdot = -phase.Mdot;
+                double h = bt / N;
+                double oldh = oldbt / N;
+
+                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0) : phase.M0;
 
                 for (int k = 0; k < K; k++)
                 {
-                    double dt = k * h;
-                    double olddt = k * oldh;
+                    int n = k / 3;
+                    double dt = (n + _tau[k % 3]) * h;
+                    double olddt = (n + _tau[k % 3]) * oldh;
 
-                    V3 r = oldSolution.RBar(t0 + olddt);
-                    thisPhase.R[k] = r;
-
-                    V3 v = oldSolution.VBar(t0 + olddt);
-                    thisPhase.V[k] = v;
-
-                    V3 u = oldSolution.UBar(t0 + olddt);
-
-                    if (phase.GuidedCoast)
-                    {
-                        if (k == 0)
-                            thisPhase.U[0] = u;
-                        if (k == K - 1)
-                            thisPhase.U[-1] = u;
-                    }
-                    else if (phase.Unguided)
-                    {
-                        thisPhase.U[0] += u;
-                    }
-                    else
-                    {
-                        thisPhase.U[k] = u;
-                    }
-
-                    if (!phase.Coast)
-                        thisPhase.M[k] = m0 + mdot * dt;
+                    TranscribePoint(oldSolution, k, thisPhase, phase, m0, oldt0 + olddt, dt);
                 }
 
                 if (phase.Coast)
-                    thisPhase.M[0] = m0;
+                    thisPhase.M.First = m0;
 
                 if (phase.Unguided)
-                    thisPhase.U[0] = thisPhase.U[0].normalized;
+                    thisPhase.U.First = thisPhase.U.First.normalized;
 
-                thisPhase.Bt() = tf - t0;
+                thisPhase.Bt() = bt;
 
-                t0 = tf;
-                oldt0 = oldtf;
+                t0 += bt;
+                oldt0 += oldbt;
             }
         }
 
@@ -347,12 +327,28 @@ namespace MechJebLib.PSG
             {
                 PhaseProxy thisPhase = _vars[p];
 
-                for (int k = 0; k < thisPhase.U.Length; k++)
-                {
-                    (int idxX, int idxY, int idxZ) = thisPhase.U.Idx(k);
+                Phase phase = Phases[p];
 
-                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = -2.0;
-                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = 2.0;
+                if (phase.GuidedCoast)
+                    continue;
+
+                if (phase.Unguided)
+                {
+                    (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(0);
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -1.2;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 1.2;
+                    continue;
+                }
+
+                for (int k = 0; k < K; k++)
+                {
+                    // skip non-collocated points
+                    if (k % 3 == 0)
+                        continue;
+                    (int idxX, int idxY, int idxZ, int idxW) = thisPhase.U.Idx(k);
+
+                    bndl[idxX] = bndl[idxY] = bndl[idxZ] = bndl[idxW] = -1.2;
+                    bndu[idxX] = bndu[idxY] = bndu[idxZ] = bndu[idxW] = 1.2;
                 }
             }
 
@@ -396,17 +392,31 @@ namespace MechJebLib.PSG
             // Dynamic Pressure inequality constraints
             if (Problem.Rho0InvQAlphaMax > 0 && Problem.H0 > 0)
             {
-                for (int i = 0; i < K * Phases.Count; i++)
-                    _nu[ci++] = 1.0 / 100.0;
+                foreach (Phase p in Phases)
+                {
+                    if (p.GuidedCoast)
+                        continue;
+
+                    for (int i = 0; i < K; i++)
+                    {
+                        // only at collocation points
+                        if (i % 3 == 0)
+                            continue;
+                        _nu[ci++] = 1.0 / 100.0;
+                    }
+                }
             }
 
             if (Problem.Rho0InvQMax > 0 && Problem.H0 > 0)
             {
-                for (int i = 0; i < K * Phases.Count; i++)
-                    _nu[ci++] = 1.0 / 100.0;
+                for (int p = 0; p < Phases.Count; p++)
+                {
+                    for (int i = 0; i < K; i++)
+                        _nu[ci++] = 1.0 / 100.0;
+                }
             }
 
-            // Control norm inequality constraints
+            // thrust magnitude inequality constraints
             foreach (Phase phase in Phases)
             {
                 if (phase.GuidedCoast)
@@ -421,6 +431,9 @@ namespace MechJebLib.PSG
                 {
                     for (int i = 0; i < K; i++)
                     {
+                        // only at collocation points
+                        if (i % 3 == 0)
+                            continue;
                         _nl[ci] = phase.MinThrottle;
                         _nu[ci++] = 1.0;
                     }
@@ -465,7 +478,7 @@ namespace MechJebLib.PSG
             if (ogrep.badgradsuspected)
                 if (!DoubleMatrixSparsityValidation(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 5e-2))
                     throw new Exception(
-                        $"badgradsuspected: constraint: {ogrep.badgradfidx} ({_ascentProblem.ConstraintNames[ogrep.badgradfidx]}) variable: {ogrep.badgradvidx} user: {ogrep.badgraduser[ogrep.badgradfidx, ogrep.badgradvidx]:e} != numerical: {ogrep.badgradnum[ogrep.badgradfidx, ogrep.badgradvidx]:e}\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2)}");
+                        $"badgradsuspected:\nuser:\n{DoubleMatrixString(ogrep.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep.badgraduser, ogrep.badgradnum, _ascentProblem.ConstraintNames, boxConstrained, 1e-2)}");
 
             if (ogrep.nonc0suspected)
                 throw new Exception("nonc0suspected");

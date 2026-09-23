@@ -33,6 +33,11 @@ namespace MechJebLib.Utils
         public const double SQRT_EPS = 1.4901161193847656e-08;
 
         /// <summary>
+        ///     Machine epsilon squared.
+        /// </summary>
+        public const double EPS_SQ = EPS * EPS;
+
+        /// <summary>
         ///     Twice machine epsilon.
         /// </summary>
         public const double EPS2 = EPS * 2;
@@ -41,6 +46,11 @@ namespace MechJebLib.Utils
         ///     The natural log of 2.
         /// </summary>
         public const double LN2 = 0.69314718055994530941723212146;
+
+        /// <summary>
+        ///     The square root of 2.
+        /// </summary>
+        public const double SQRT2 = 1.4142135623730951;
 
         /// <summary>
         ///     Value of the standard gravity constant in m/s.
@@ -502,12 +512,12 @@ namespace MechJebLib.Utils
             return sb.ToString();
         }
 
-        public static string DoubleArraySparsity(int row, IList<double> user, IList<double> numerical, bool[] boxConstrained, double tol)
+        public static bool DoubleArraySparsity(StringBuilder sb, int row, IList<double> user, IList<double> numerical, bool[] boxConstrained, double tol)
         {
-            var sb = new StringBuilder();
-
             sb.Append($"{row:0000}: ");
             int last = user.Count - 1;
+
+            bool failed =  false;
 
             for (int i = 0; i <= last; i++)
             {
@@ -518,12 +528,20 @@ namespace MechJebLib.Utils
                 else if (NearlyEqual(user[i], numerical[i], tol, tol))
                     sb.Append("✅"); // agrees
                 else if (user[i] == 0)
+                {
                     sb.Append("❗"); // not done yet
+                    failed = true;
+                }
                 else
+                {
                     sb.Append("❌"); // mistake
-            }
+                    failed = true;
+                }
 
-            return sb.ToString();
+            }
+            sb.Append("\n");
+
+            return failed;
         }
 
         public static string DoubleMatrixString(double[,] matrix)
@@ -536,12 +554,23 @@ namespace MechJebLib.Utils
             return sb.ToString();
         }
 
-        public static string DoubleMatrixSparsityCheck(double[,] user, double[,] numerical, bool[] boxConstrained, double tol)
+        public static string DoubleMatrixSparsityCheck(double[,] user, double[,] numerical, Dictionary<int, string>? ascentProblemConstraintNames, bool[] boxConstrained, double tol)
         {
             var sb = new StringBuilder();
 
+            var failedConstraints = new List<int>();
+
             for (int i = 0; i <= user.GetUpperBound(0); i++)
-                sb.AppendLine(DoubleArraySparsity(i, GetRow(user, i), GetRow(numerical, i), boxConstrained, tol));
+            {
+                if (DoubleArraySparsity(sb, i, GetRow(user, i), GetRow(numerical, i), boxConstrained, tol))
+                    failedConstraints.Add(i);
+            }
+
+            if (ascentProblemConstraintNames != null)
+            {
+                foreach (var idx in failedConstraints)
+                    sb.AppendLine(ascentProblemConstraintNames[idx]);
+            }
 
             return sb.ToString();
         }

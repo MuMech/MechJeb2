@@ -46,6 +46,15 @@ namespace MechJebLib.Primitives
         // The identity rotation (RO). This quaternion corresponds to "no rotation": the object
         public static Q3 identity { get; } = new Q3(0.0, 0.0, 0.0, 1.0);
 
+        public static Q3 zero  { get; } = new Q3(0.0, 0.0, 0.0, 0.0);
+
+        // TODO: rename to xcomponent, etc?
+        public static Q3 xaxis { get; } = new Q3(1.0, 0.0, 0.0, 0.0);
+        public static Q3 yaxis { get; } = new Q3(0.0, 1.0, 0.0, 0.0);
+        public static Q3 zaxis { get; } = new Q3(0.0, 0.0, 1.0, 0.0);
+        public static Q3 waxis { get; } = new Q3(0.0, 0.0, 0.0, 1.0);
+        public static Q3 nan   { get; } = new Q3(double.NaN, double.NaN, double.NaN, double.NaN);
+
         // Combines rotations /lhs/ and /rhs/.
         public static Q3 operator *(Q3 q1, Q3 q2) =>
             new Q3(
@@ -55,6 +64,8 @@ namespace MechJebLib.Primitives
                 q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
             );
 
+        // TODO: need a method/property to just convert a quaternion to a vector direction
+        // TODO: also need method/property to convert to a DCM (M3.Rotate)
         // Rotates the point /point/ with /rotation/.
         public static V3 operator *(Q3 q, V3 v)
         {
@@ -88,6 +99,12 @@ namespace MechJebLib.Primitives
         // ReSharper restore CompareOfFloatsByEqualityOperator
 
         public static bool operator !=(Q3 lhs, Q3 rhs) => !(lhs == rhs);
+
+        // Quaternion addition and subtraction are componentwise (the quaternions are a 4D vector space).  The result is
+        // generally not a unit quaternion or a rotation.  For the relative rotation between a and b use a.conjugate * b.
+        public static Q3 operator +(Q3 lhs, Q3 rhs) => new Q3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w);
+
+        public static Q3 operator -(Q3 lhs, Q3 rhs) => new Q3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w);
 
         public static Q3 operator /(Q3 q, double d) => new Q3(q.x / d, q.y / d, q.z / d, q.w / d);
 
@@ -138,7 +155,7 @@ namespace MechJebLib.Primitives
         }
 
         // FIXME: kill degrees with fire, fix euler angles
-        // Makes euler angles positive 0/360 with 0.0001 hacked to support old behaviour of Q3ToEuler
+        // Makes euler angles positive 0/360 with 0.0001 hacked to support old behavior of Q3ToEuler
         private static V3 Internal_MakePositive(V3 euler)
         {
             double negativeFlip = Rad2Deg(-0.0001f);

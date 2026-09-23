@@ -6,7 +6,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
-using MechJebLib.Primitives;
+using MechJebLib.Interpolants;
 using MechJebLib.Utils;
 using static System.FormattableString;
 
@@ -19,7 +19,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         public readonly Dictionary<int, SimFlowMode> PropellantFlowModes = new Dictionary<int, SimFlowMode>();
         public readonly Dictionary<int, double> ResourceConsumptions = new Dictionary<int, double>();
 
-        public readonly H1 AtmosphereCurve = H1.Get(true);
+        public readonly DoubleInterpolant AtmosphereCurve = DoubleInterpolant.Rent();
 
         public double G;
         public double Isp;
