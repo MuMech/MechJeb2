@@ -87,10 +87,29 @@ namespace MechJebLib.PSG
 
         private Optimizer InitialBootstrappingOptimized()
         {
+            Optimizer psg = InitialBootstrappingOptimizedWithQAlpha();
+            Solution? solution = psg.Solution;
+
+            // The MIN_TIME objective effectively disables throttling, so run with MIN_THRUST_ACCEL to add it back
+            if (psg.Objective == Optimizer.ObjectiveType.MIN_THRUST_ACCEL || solution == null)
+                return psg;
+
+            var psg2 = new Optimizer(_problem, psg.Phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_THRUST_ACCEL);
+            psg2.TranscribePreviousBootSolution(solution);
+            Solution? solution2 = psg2.Run();
+
+            if (!psg2.Success() || solution2 == null)
+                return psg;
+
+            return psg2;
+        }
+
+        private Optimizer InitialBootstrappingOptimizedWithQAlpha()
+        {
             Optimizer psg = InitialBootstrappingOptimizedWithoutQAlpha();
             Solution? solution = psg.Solution;
 
-            if (_problem.Rho0InvQAlphaMax <= 0 || solution == null)
+            if ((_problem.Rho0InvQAlphaMax <= 0 && _problem.Rho0InvQMax <= 0) || solution == null)
                 return psg;
 
             DebugPrint("*** PHASE 6: Imposing QAlpha Constraints ***");

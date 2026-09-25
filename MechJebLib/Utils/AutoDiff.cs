@@ -767,7 +767,7 @@ namespace MechJebLib.Utils
                 Dual h = dbt / n;
                 Dual h2 = h / 2.0;
 
-                ans = d0.M - d3.M - mdot * (h2 * d1.T + h2 * d2.T);
+                ans = d0.M - d3.M - mdot * h2 * (d1.T + d2.T);
 
                 if (singleControlVariable && (k == 36 || k == 37))
                     jac[36] += ans.D;
