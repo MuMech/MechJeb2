@@ -178,7 +178,7 @@ namespace MechJebLib.PSG
             phase.MaxT = bt / minThrottle;
             phase.Unguided = unguided;
             phase.MassContinuity = massContinuity;
-            phase.MinThrottle = minThrottle;
+            phase.MinThrottle = Clamp(minThrottle, 0.05, 1.0);
 
             return phase;
         }

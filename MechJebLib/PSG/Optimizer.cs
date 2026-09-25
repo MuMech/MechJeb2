@@ -14,7 +14,7 @@ namespace MechJebLib.PSG
 {
     public class Optimizer
     {
-        public enum ObjectiveType { MAX_MASS, MAX_ENERGY, MIN_THRUST_ACCEL, MIN_TIME }
+        public enum ObjectiveType { MIN_MASS_BURNED, MAX_ENERGY, MIN_THRUST_ACCEL, MIN_TIME }
 
         public readonly Problem Problem;
         public readonly PhaseCollection Phases;
@@ -38,8 +38,8 @@ namespace MechJebLib.PSG
         public int    K                   => 3 * N + 1;
         public int    N                   { get; set; } = 7;
         public int    Maxits              { get; set; } = 4000;
-        public double SQPTrustRegionLimit { get; set; } = 1e-5;
-        public double Epsf                { get; set; } = 0; // 1e-9;
+        public double SQPTrustRegionLimit { get; set; } = 1e-6;
+        public double Epsf                { get; set; } = 0;
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
         public int    OptimizerTimeout    { get; set; } = 120_000; // milliseconds
@@ -402,7 +402,7 @@ namespace MechJebLib.PSG
                         // only at collocation points
                         if (i % 3 == 0)
                             continue;
-                        _nu[ci++] = 1.0 / 100.0;
+                        _nu[ci++] = 1.0 / AscentProblem.FUDGE_FACTOR;
                     }
                 }
             }
@@ -412,7 +412,7 @@ namespace MechJebLib.PSG
                 for (int p = 0; p < Phases.Count; p++)
                 {
                     for (int i = 0; i < K; i++)
-                        _nu[ci++] = 1.0 / 100.0;
+                        _nu[ci++] = 1.0 / AscentProblem.FUDGE_FACTOR;
                 }
             }
 
@@ -459,9 +459,8 @@ namespace MechJebLib.PSG
 
 #if DEBUG
             alglib.minnlcoptguardgradient(_state, Diffstep);
+            alglib.minnlcoptguardsmoothness(_state, 1);
 #endif
-
-            //alglib.minnlcoptguardsmoothness(_state, 1);
             //alglib.trace_file("SQP,PREC.F6", "/tmp/trace.log");
 
             alglib.minnlcoptimize(_state, _constraintHandle, null, null);
@@ -486,10 +485,9 @@ namespace MechJebLib.PSG
             if (ogrep.nonc1suspected)
                 throw new Exception("nonc1suspected");
 
+            alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix jac);
 
-            alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j);
-
-            _ascentProblem.ConstraintFunction(f, j, x, null);
+            _ascentProblem.ConstraintFunction(f, jac, x, null);
             CalculatePrimalFeasibility(f, true);
 
             DebugPrint($"Cost: {Cost}");
@@ -516,6 +514,11 @@ namespace MechJebLib.PSG
             }
             catch (OperationCanceledException)
             {
+            }
+            catch (alglib.alglibexception e)
+            {
+                // alglibexception never passes its message to the base constructor, so Message is useless
+                throw new Exception(e.msg, e);
             }
 
             return null;
