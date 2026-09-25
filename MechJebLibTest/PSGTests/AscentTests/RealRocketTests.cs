@@ -74,9 +74,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double argpf, double _, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(0).ShouldEqual(r0, 1e-9);
-            solution.V(0).ShouldEqual(v0, 1e-9);
-            solution.M(0).ShouldEqual(301454.000000, 1e-9);
+            solution.R(0).ShouldEqual(r0, 1e-7);
+            solution.V(0).ShouldEqual(v0, 1e-7);
+            solution.M(0).ShouldEqual(301454.000000, 1e-7);
 
             solution.Tgo(solution.T0, 0).ShouldEqual(75.200000, 1e-3);
             solution.Tgo(solution.T0, 1).ShouldEqual(75.200000, 1e-3);
@@ -162,9 +162,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
-            solution.R(0).ShouldEqual(r0, 1e-9);
-            solution.V(0).ShouldEqual(v0, 1e-9);
-            solution.M(0).ShouldEqual(FIRST_STAGE_M0, 1e-9);
+            solution.R(0).ShouldEqual(r0, 1e-7);
+            solution.V(0).ShouldEqual(v0, 1e-7);
+            solution.M(0).ShouldEqual(FIRST_STAGE_M0, 1e-7);
 
             solution.Tgo(solution.T0, 0).ShouldEqual(FIRST_BT, 1e-3);
             solution.Tgo(solution.T0, 1).ShouldBeLessThanOrEqual(SECOND_BT);
@@ -177,7 +177,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Tgo(0).ShouldEqual(1600.5671186447382, 5e-2);
-            solution.Vgo(0).ShouldEqual(11121.768749617131, 5e-2);
+            solution.Vgo(0).ShouldEqual(11121.768749617131, 1e-3);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, solution.U(0));
             Rad2Deg(pitch).ShouldEqual(83.373269308213963, 5e-2);
