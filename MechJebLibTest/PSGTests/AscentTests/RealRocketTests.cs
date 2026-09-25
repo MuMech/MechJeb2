@@ -166,17 +166,17 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.V(0).ShouldEqual(v0, 1e-7);
             solution.M(0).ShouldEqual(FIRST_STAGE_M0, 1e-7);
 
-            //solution.Tgo(solution.T0, 0).ShouldEqual(FIRST_BT, 1e-3);
+            solution.Tgo(solution.T0, 0).ShouldEqual(FIRST_BT, 1e-3);
             solution.Tgo(solution.T0, 1).ShouldBeLessThanOrEqual(SECOND_BT);
             // NOTE: this GTO case sits at the edge of what the SQP solver can handle (ultimately wants a
             // convex SCvx formulation), so the optimizer converges to slightly different feasible solutions
             // across runtimes/platforms. The soft outputs below carry loose tolerances; the terminal orbit
             // (per/apr/inc/lan/argp) is still pinned tightly. See TODO: convert to SCvx.
-            //solution.Tgo(solution.T0, 2).ShouldEqual(1055.0665736765161, 5e-2);
-            //(solution.Tgo(solution.T0, 1) + solution.Tgo(solution.T0, 3)).ShouldEqual(381.26954084989723, 5e-2);
+            solution.Tgo(solution.T0, 2).ShouldEqual(1055.0665736765161, 5e-2);
+            (solution.Tgo(solution.T0, 1) + solution.Tgo(solution.T0, 3)).ShouldEqual(381.26954084989723, 5e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
-            //solution.Tgo(0).ShouldEqual(1600.5671186447382, 5e-2);
+            solution.Tgo(0).ShouldEqual(1600.5671186447382, 5e-2);
             solution.Vgo(0).ShouldEqual(11121.768749617131, 1e-3);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, solution.U(0));
