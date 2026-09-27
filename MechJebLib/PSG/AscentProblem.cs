@@ -347,7 +347,7 @@ namespace MechJebLib.PSG
                 Dual rm = r.magnitude;
                 DualV3 vr = v - DualV3.Cross(w, r);
                 Dual q = 0.5 * rho0InvQAlphaMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
-                Dual alpha = DualV3.AngleUnit(vr.normalized, u * V3.forward);
+                Dual alpha = DualV3.AngleUnit(vr.normalized, u.forward);
 
                 return q * alpha / FUDGE_FACTOR;
             }
@@ -525,7 +525,7 @@ namespace MechJebLib.PSG
             DualV3 VDotVacuum(ref GaussLegendreDualPoint d)
             {
                 Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
-                return -d.R / r3 + vacThrust / d.M * (d.U * V3.forward) * d.T;
+                return -d.R / r3 + vacThrust / d.M * d.U.forward * d.T;
             }
 
             DualV3 VDotAtmo(ref GaussLegendreDualPoint d)
@@ -538,7 +538,7 @@ namespace MechJebLib.PSG
                 DualV3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
                 //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
                 Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
-                return -d.R / r3 + thrust / d.M * (d.U * V3.forward) * d.T - drag / d.M;
+                return -d.R / r3 + thrust / d.M * d.U.forward * d.T - drag / d.M;
             }
         }
 
@@ -625,7 +625,7 @@ namespace MechJebLib.PSG
 
                                 val += h2 * tk * maxThrust / mk;
 
-                                jac[thisPhase.M.Idx(k)] = - h2 * tk * maxThrust / (mk * mk);
+                                jac[thisPhase.M.Idx(k)] = -h2 * tk * maxThrust / (mk * mk);
                                 if (!_optimizer.Phases[p].Unguided)
                                     jac[thisPhase.T.Idx(k)] = h2 * maxThrust / mk;
                                 jac[thisPhase.BtIdx()] += 0.5 * tk * maxThrust / mk / _optimizer.N;

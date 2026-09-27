@@ -90,6 +90,27 @@ namespace MechJebLib.Primitives
             return res;
         }
 
+        // Rotates V3.forward (the x-axis) by this quaternion.  Equivalent to q * V3.forward (bit-identical up to the
+        // sign of zero components) but only computes the first column of the rotation matrix.
+        public DualV3 forward
+        {
+            get
+            {
+                Dual qx = x;
+                Dual qy = y;
+                Dual qz = z;
+                Dual qw = w;
+                Dual y2 = qy * 2.0;
+                Dual z2 = qz * 2.0;
+
+                return new DualV3(
+                    1.0 - (qy * y2 + qz * z2),
+                    qx * y2 + qw * z2,
+                    qx * z2 - qw * y2
+                );
+            }
+        }
+
         public Dual magnitude
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

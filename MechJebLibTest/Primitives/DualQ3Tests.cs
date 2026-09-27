@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.AutoDiff;
@@ -11,10 +13,16 @@ namespace MechJebLibTest.Primitives
 {
     public class DualQ3Tests
     {
-        private static readonly Q3 _a  = new Q3(0.1, -0.2, 0.3, 0.9);
+        private static readonly Q3 _a = new Q3(0.1, -0.2, 0.3, 0.9);
         private static readonly Q3 _da = new Q3(0.5, 0.25, -0.75, 1.5);
-        private static readonly Q3 _b  = new Q3(-0.4, 0.6, 0.2, 0.5);
+        private static readonly Q3 _b = new Q3(-0.4, 0.6, 0.2, 0.5);
         private static readonly Q3 _db = new Q3(-1.0, 0.3, 0.7, -0.2);
+
+        public static IEnumerable<object[]> Seeds()
+        {
+            for (int i = 0; i <= 500; i++)
+                yield return new object[] { i };
+        }
 
         [Fact]
         private void HamiltonProductValue()
@@ -53,6 +61,34 @@ namespace MechJebLibTest.Primitives
             d.D.ShouldEqual(_da - _db);
         }
 
+        [Theory, MemberData(nameof(Seeds))]
+        private void ForwardMatchesRotateForward(int seed)
+        {
+            var rng = new Random(seed);
+
+            var q = new DualQ3(rng.NextDouble() - 0.5, rng.NextDouble() - 0.5, rng.NextDouble() - 0.5,
+                rng.NextDouble() - 0.5, rng.NextDouble() - 0.5, rng.NextDouble() - 0.5,
+                rng.NextDouble() - 0.5, rng.NextDouble() - 0.5);
+
+            DualV3 expected = q * V3.forward;
+            DualV3 actual = q.forward;
+
+            Assert.Equal(expected.M, actual.M);
+            Assert.Equal(expected.D, actual.D);
+        }
+
+        [Fact]
+        private void ForwardDerivativeMatchesFiniteDifference()
+        {
+            DualV3 f = new DualQ3(_a, _da).forward;
+
+            const double h = 1e-6;
+            V3 fd = ((_a + h * _da).forward - (_a - h * _da).forward) / (2 * h);
+
+            f.M.ShouldEqual(_a.forward);
+            f.D.ShouldEqual(fd, 1e-8);
+        }
+
         private static DualV3 AttitudeError(DualQ3[] x)
         {
             DualQ3 e = x[0].conjugate * x[1];
@@ -68,7 +104,7 @@ namespace MechJebLibTest.Primitives
         [Fact]
         private void AttitudeErrorZeroForSameRotation()
         {
-            Q3 q = Q3.AngleAxis(0.7, new V3(1, 2, 3));
+            var q = Q3.AngleAxis(0.7, new V3(1, 2, 3));
 
             (V3 same, Vec sx, Vec sy, Vec sz) = JacobianQ3(AttitudeError, new[] { q, q });
             same.ShouldBeZero();
@@ -100,9 +136,9 @@ namespace MechJebLibTest.Primitives
             {
                 for (int k = 0; k < 4; k++)
                 {
-                    var plus  = (Q3[])point.Clone();
+                    var plus = (Q3[])point.Clone();
                     var minus = (Q3[])point.Clone();
-                    plus[i]  += h * seeds[k];
+                    plus[i] += h * seeds[k];
                     minus[i] -= h * seeds[k];
 
                     V3 fd = (AttitudeError(plus[0], plus[1]) - AttitudeError(minus[0], minus[1])) / (2 * h);

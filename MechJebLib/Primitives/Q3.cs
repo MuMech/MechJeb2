@@ -46,7 +46,7 @@ namespace MechJebLib.Primitives
         // The identity rotation (RO). This quaternion corresponds to "no rotation": the object
         public static Q3 identity { get; } = new Q3(0.0, 0.0, 0.0, 1.0);
 
-        public static Q3 zero  { get; } = new Q3(0.0, 0.0, 0.0, 0.0);
+        public static Q3 zero { get; } = new Q3(0.0, 0.0, 0.0, 0.0);
 
         // TODO: rename to xcomponent, etc?
         public static Q3 xaxis { get; } = new Q3(1.0, 0.0, 0.0, 0.0);
@@ -64,8 +64,6 @@ namespace MechJebLib.Primitives
                 q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
             );
 
-        // TODO: need a method/property to just convert a quaternion to a vector direction
-        // TODO: also need method/property to convert to a DCM (M3.Rotate)
         // Rotates the point /point/ with /rotation/.
         public static V3 operator *(Q3 q, V3 v)
         {
@@ -127,6 +125,26 @@ namespace MechJebLib.Primitives
         }
 
         public Q3 conjugate => new Q3(-x, -y, -z, w);
+
+        // Rotates V3.forward (the x-axis) by this quaternion.  Equivalent to q * V3.forward (bit-identical up to the
+        // sign of zero components) but only computes the first column of the rotation matrix.
+        public V3 forward
+        {
+            get
+            {
+                double y2 = y * 2.0;
+                double z2 = z * 2.0;
+
+                return new V3(
+                    1.0 - (y * y2 + z * z2),
+                    x * y2 + w * z2,
+                    x * z2 - w * y2
+                );
+            }
+        }
+
+        // The equivalent rotation matrix (DCM).  Alias for M3.Rotate / M3.FromQuaternion for API discoverability.
+        public M3 matrix => M3.Rotate(this);
 
         /*
         public void SetLookRotation(V3 view)

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
+using System.Collections.Generic;
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
@@ -12,6 +14,12 @@ namespace MechJebLibTest.Primitives.Q3Tests
 {
     public class MatrixConversionTests
     {
+        public static IEnumerable<object[]> Seeds()
+        {
+            for (int i = 0; i <= 500; i++)
+                yield return new object[] { i };
+        }
+
         [Fact]
         private void LookRotationForwardOnly()
         {
@@ -352,6 +360,40 @@ namespace MechJebLibTest.Primitives.Q3Tests
             double mag = Sqrt(normalized.x * normalized.x + normalized.y * normalized.y +
                 normalized.z * normalized.z + normalized.w * normalized.w);
             mag.ShouldEqual(1.0, 1e-14);
+        }
+
+        [Fact]
+        private void ForwardMatchesRotateForward()
+        {
+            Q3[] qs = { Q3.identity, Q3.xaxis, Q3.yaxis, Q3.zaxis, Q3.AngleAxis(PI / 2, V3.up), Q3.AngleAxis(-PI / 3, V3.right), Q3.LookRotation(new V3(1, 2, 3), new V3(-1, 0, 1)) };
+
+            foreach (Q3 q in qs)
+                Assert.Equal(q * V3.forward, q.forward);
+        }
+
+        [Theory, MemberData(nameof(Seeds))]
+        private void RandomForwardMatchesRotateForward(int seed)
+        {
+            var rng = new Random(seed);
+
+            Q3 q = new Q3(rng.NextDouble() - 0.5, rng.NextDouble() - 0.5, rng.NextDouble() - 0.5,
+                rng.NextDouble() - 0.5).normalized;
+
+            Assert.Equal(q * V3.forward, q.forward);
+        }
+
+        [Theory, MemberData(nameof(Seeds))]
+        private void MatrixMatchesM3Rotate(int seed)
+        {
+            var rng = new Random(seed);
+
+            Q3 q = new Q3(rng.NextDouble() - 0.5, rng.NextDouble() - 0.5, rng.NextDouble() - 0.5,
+                rng.NextDouble() - 0.5).normalized;
+            var v = new V3(rng.NextDouble() - 0.5, rng.NextDouble() - 0.5, rng.NextDouble() - 0.5);
+
+            Assert.Equal(M3.Rotate(q), q.matrix);
+            (q.matrix * v).ShouldEqual(q * v, 1e-14);
+            q.matrix.GetColumn(0).ShouldEqual(q.forward, 1e-15);
         }
     }
 }
