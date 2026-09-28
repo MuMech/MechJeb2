@@ -64,7 +64,9 @@ namespace MechJebLibTest.ManeuversTests
         }
 
         [Theory, MemberData(nameof(Seeds))]
-        private void EarthToMercuryRandom(int seed)
+        private void EarthToMercuryRandom(int seed) => EarthToMercuryFromSeed(seed);
+
+        private void EarthToMercuryFromSeed(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
@@ -155,7 +157,14 @@ namespace MechJebLibTest.ManeuversTests
         }
 
         [Theory, MemberData(nameof(Seeds))]
-        private void EarthToCeresRandom(int seed)
+        private void EarthToCeresRandom(int seed) => EarthToCeresFromSeed(seed);
+
+        [Theory]
+        [InlineData(915)]
+        [InlineData(969)]
+        private void EarthToCeresHardSeeds(int seed) => EarthToCeresFromSeed(seed);
+
+        private void EarthToCeresFromSeed(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
@@ -249,7 +258,13 @@ namespace MechJebLibTest.ManeuversTests
         }
 
         [Theory, MemberData(nameof(Seeds))]
-        private void EarthToMarsRandom(int seed)
+        private void EarthToMarsRandom(int seed) => EarthToMarsFromSeed(seed);
+
+        [Theory]
+        [InlineData(2243)]
+        private void EarthToMarsHardSeeds(int seed) => EarthToMarsFromSeed(seed);
+
+        private void EarthToMarsFromSeed(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
@@ -339,7 +354,9 @@ namespace MechJebLibTest.ManeuversTests
         }
 
         [Theory, MemberData(nameof(Seeds))]
-        private void EarthToAsteroidRandom(int seed)
+        private void EarthToAsteroidRandom(int seed) => EarthToAsteroidFromSeed(seed);
+
+        private void EarthToAsteroidFromSeed(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
@@ -430,7 +447,22 @@ namespace MechJebLibTest.ManeuversTests
         }
 
         [Theory, MemberData(nameof(Seeds))]
-        private void EarthToJupiterRandom(int seed)
+        private void EarthToJupiterRandom(int seed) => EarthToJupiterFromSeed(seed);
+
+        [Theory]
+        [InlineData(379)]
+        [InlineData(921)]
+        [InlineData(1051)]
+        [InlineData(1167)]
+        [InlineData(1423)]
+        [InlineData(1511)]
+        [InlineData(1640)]
+        [InlineData(1851)]
+        [InlineData(1961)]
+        [InlineData(2488)]
+        private void EarthToJupiterHardSeeds(int seed) => EarthToJupiterFromSeed(seed);
+
+        private void EarthToJupiterFromSeed(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
@@ -522,7 +554,9 @@ namespace MechJebLibTest.ManeuversTests
         }
 
         [Theory, MemberData(nameof(Seeds))]
-        private void EarthToVenusRandom(int seed)
+        private void EarthToVenusRandom(int seed) => EarthToVenusFromSeed(seed);
+
+        private void EarthToVenusFromSeed(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
 
