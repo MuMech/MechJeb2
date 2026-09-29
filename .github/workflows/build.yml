@@ -73,17 +73,21 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: 8.x
-
-      # The tests are a net48 assembly: Mono runs them (it is also the runtime KSP uses), the .NET SDK only drives the build
-      - name: Install Mono
+      # master still has the legacy (non SDK-style) projects: they are built with Mono's msbuild, the way the Jenkins
+      # build did it, against KSP's own assemblies (see the Build step). The mono-project repository is needed for
+      # msbuild and nuget, Ubuntu's own Mono has neither. This differs from dev until the next dev->master merge.
+      - name: Install Mono, msbuild and nuget
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq mono-complete
+          sudo apt-get install -y -qq ca-certificates gnupg curl
+          curl -fsSL --retry 5 --retry-all-errors https://download.mono-project.com/repo/xamarin.gpg \
+            | sudo gpg --dearmor --yes -o /usr/share/keyrings/mono-official-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" \
+            | sudo tee /etc/apt/sources.list.d/mono-official-stable.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mono-complete msbuild nuget
           mono --version | head -1
+          msbuild -version | tail -1
 
       - name: Download KSP Libs
         run: |
@@ -128,30 +132,56 @@ jobs:
           fi
           grep -E 'Assembly(File|Informational)?Version' "$file"
 
+      # the legacy projects use packages.config, which only nuget restores (into ./packages)
       - name: Restore
-        run: dotnet restore MechJeb2.sln
+        run: nuget restore MechJeb2.sln -NonInteractive
 
       # git on Windows does not keep the executable bit, and that is what act copies into its container
       - name: Fix script permissions (act on Windows)
         if: ${{ env.ACT }}
         run: chmod u+x MechJeb2/copy_build.sh
 
+      # The KSP references of the legacy projects have no HintPath: they are found through ReferencePath, which comes
+      # before the framework directory, so mscorlib/System also come from KSP (Unity's Mono), as they do in game.
+      # KspDir is where MechJeb2/copy_build.sh deploys the build, which the Package step picks up.
       - name: Build
         run: >
-          dotnet msbuild -m:1
+          msbuild -m:1 -nologo -verbosity:minimal
           -p:Configuration=Release
-          -p:KspData=/tmp/ksp/KSP_x64_Data
+          -p:ReferencePath=/tmp/ksp/KSP_x64_Data/Managed
           -p:KspDir=/tmp/ksp
           MechJeb2.sln
 
-      # Tests that fail for numerical precision reasons (the result differs slightly from the expected value on this platform)
-      # are excluded here by name: add them to the filter, e.g. "FullyQualifiedName!~A&FullyQualifiedName!~B"
+      # master's tests have to run in a Debug build: some of them expect Check.* failures, and the Check methods are
+      # [Conditional("DEBUG")]. In Release those checks disappear and BrentRootTests.TestGuess even loops forever.
+      # The package is still the Release build above. The timeout turns any other endless loop into a failure.
+      # -parallel none: Logger.Register sets a single static field, so a test running in parallel replaces the logger
+      # of another test, which then fails with "There is no currently active test case" once that test is done.
+      # master's test project has no runner package: the xunit console runner is fetched and run with Mono.
       - name: Test
-        run: >
-          dotnet test MechJebLibTest/MechJebLibTest.csproj
-          --configuration Release
-          --no-build
-          --filter "FullyQualifiedName!~MainSailTinCanVacuum"
+        run: |
+          msbuild -m:1 -nologo -verbosity:minimal -p:Configuration=Debug \
+            -p:ReferencePath=/tmp/ksp/KSP_x64_Data/Managed MechJebLibTest/MechJebLibTest.csproj
+          nuget install xunit.runner.console -Version 2.4.2 -OutputDirectory "$RUNNER_TEMP/xunit" -NonInteractive -Verbosity quiet
+
+          # Excluded: known failures of master's own code, they fail the same way with .NET Framework on Windows
+          #  - precision: exact floating point comparisons, or a result that no longer matches a stale expected value
+          #  - the optimizer does not converge on these extreme cases (ReturnFromMoonHard, Buggy/Titan2 extreme ascents)
+          #  - random tests (unseeded Random, dev seeds them) whose random inputs sometimes hit a failing case: measured
+          #    at 3% to 20% of runs each, about one CI run in three would fail at random
+          timeout 15m mono "$RUNNER_TEMP"/xunit/xunit.runner.console.2.4.2/tools/net472/xunit.console.exe \
+            MechJebLibTest/bin/Debug/MechJebLibTest.dll -noshadow -parallel none \
+            -nomethod MechJebLibTest.Primitives.V3Tests.CoordinateConversionTests.CartesianToSphericalSmallAnglePrecision \
+            -nomethod MechJebLibTest.Primitives.Q3Tests.EulerAngleTests \
+            -nomethod MechJebLibTest.Primitives.Q3Tests.AngleAxisTests \
+            -nomethod MechJebLibTest.PVGTests.AscentTests.TheStandardTests.TheStandardPeriapsis \
+            -nomethod MechJebLibTest.PVGTests.AscentTests.BuggyTests.BuggyDelta4ExtremelyHeavy \
+            -nomethod MechJebLibTest.PVGTests.AscentTests.Titan2Tests.Kepler3ExtremeElliptical \
+            -nomethod MechJebLibTest.ManeuversTests.ReturnFromMoonTests.NextManeuverToReturnFromMoonHard \
+            -nomethod MechJebLibTest.TwoBodyTests.ShepperdTests.RandomForwardAndBack2 \
+            -nomethod MechJebLibTest.TwoBodyTests.FarnocchiaTests.RandomComparedToDormandPrince \
+            -nomethod MechJebLibTest.ManeuversTests.ChangeOrbitalElementTests.ChangeOrbitalElementTest \
+            -nomethod MechJebLibTest.ManeuversTests.ReturnFromMoonTests.NextManeuverToReturnFromMoonRandomTest
 
       - name: Package
         run: |
