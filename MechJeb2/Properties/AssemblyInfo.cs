@@ -25,7 +25,7 @@ using System.Runtime.InteropServices;
 
 // We use a 2.[Major].[Minor/Patch].0 naming convention
 [assembly: AssemblyVersion("2.15.0.0")] // This should be bumped for major versions/breaking changes when the 2nd number changes
-[assembly: AssemblyFileVersion("2.15.3.0")] // this one is bumped every single time for both minor/patch
+[assembly: AssemblyFileVersion("2.15.3.1")] // this one is bumped every single time for both minor/patch
 [assembly: AssemblyInformationalVersion("")] // Displayed in the window title if not empty (used to display dev #)
 
 [assembly: KSPAssembly("MechJeb2", 2, 15, 3)] // this one is bumped every single time for both minor/patch
