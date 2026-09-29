@@ -63,7 +63,13 @@ jobs:
     outputs:
       label: ${{ steps.meta.outputs.label }}
     steps:
+      # Two variants so that act can still use its local-copy checkout: any "ref:" key, even an empty one, makes act
+      # run the real checkout action instead, which clones from GitHub and needs a token
       - uses: actions/checkout@v7
+        if: ${{ !inputs.ref }}
+
+      - uses: actions/checkout@v7
+        if: ${{ inputs.ref }}
         with:
           ref: ${{ inputs.ref }}
 
