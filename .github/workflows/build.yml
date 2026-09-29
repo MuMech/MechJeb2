@@ -1,0 +1,387 @@
+name: build
+
+# pull_request:      build, run the tests and comment the build zip on the PR
+# push (dev/master): build, run the tests and publish the release zip as a workflow artifact
+#                    (dev builds are stamped "Dev #<build>" in the MechJeb window title and also
+#                    published as a public pre-release named dev-<AssemblyFileVersion>-<build>,
+#                    keeping the most recent ones, see KEEP)
+# workflow_call:     used by create-release.yml, which passes the version to release
+on:
+  push:
+    branches: [master, dev]
+    paths-ignore:
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: false
+        default: ''
+        description: 'AssemblyFileVersion to build (major.minor.patch.build). Empty keeps the one from AssemblyInfo.cs.'
+      ref:
+        type: string
+        required: false
+        default: ''
+        description: 'Git ref to build. Empty checks out the ref that triggered this run.'
+
+concurrency:
+  # Only superseded PR builds get cancelled. Every push gets its own group so that each commit keeps its artifact.
+  group: build-${{ github.event_name == 'pull_request' && github.head_ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  KEEP: 100 # dev pre-releases to keep
+  # The old Jenkins-based build reached this number; new dev builds continue counting up from here instead of
+  # restarting from GitHub's own per-workflow run number (which would also count PR and non-dev runs).
+  DEV_BUILD_FLOOR: 1716
+  # Range advertised in the dev builds' CKAN entries; matches the KSP version build.yml itself targets.
+  KSP_VERSION_MIN: '1.12.0'
+  KSP_VERSION_MAX: '1.12.90'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write # comment the build on the PR
+    outputs:
+      label: ${{ steps.meta.outputs.label }}
+    steps:
+      # Two variants so that act can still use its local-copy checkout: any "ref:" key, even an empty one, makes act
+      # run the real checkout action instead, which clones from GitHub and needs a token
+      - uses: actions/checkout@v7
+        if: ${{ !inputs.ref }}
+
+      - uses: actions/checkout@v7
+        if: ${{ inputs.ref }}
+        with:
+          ref: ${{ inputs.ref }}
+
+      # master still has the legacy (non SDK-style) projects: they are built with Mono's msbuild, the way the Jenkins
+      # build did it, against KSP's own assemblies (see the Build step). The mono-project repository is needed for
+      # msbuild and nuget, Ubuntu's own Mono has neither. This differs from dev until the next dev->master merge.
+      - name: Install Mono, msbuild and nuget
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ca-certificates gnupg curl
+          curl -fsSL --retry 5 --retry-all-errors https://download.mono-project.com/repo/xamarin.gpg \
+            | sudo gpg --dearmor --yes -o /usr/share/keyrings/mono-official-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" \
+            | sudo tee /etc/apt/sources.list.d/mono-official-stable.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mono-complete msbuild nuget
+          mono --version | head -1
+          msbuild -version | tail -1
+
+      - name: Download KSP Libs
+        run: |
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o /tmp/ksp.zip https://github.com/KSPModdingLibs/KSPLibs/raw/main/KSP-1.12.5.zip
+          unzip -q /tmp/ksp.zip -d /tmp/ksp
+
+      - name: Compute build metadata
+        id: meta
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          info=''
+          if [ -n "$VERSION" ]; then
+            label="$VERSION"
+          elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/dev ]; then
+            file_version=$(sed -n -E 's/.*AssemblyFileVersion\("([^"]*)"\).*/\1/p' MechJeb2/Properties/AssemblyInfo.cs)
+            # one past the highest build number of: DEV_BUILD_FLOOR, and any "dev-<version>-<build>" release already published
+            build=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
+              "([.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\")) | split(\"-\") | .[-1] | tonumber] + [$DEV_BUILD_FLOOR]) | max + 1")
+            label="dev-$file_version-$build"
+            info="Dev #$build"
+          else
+            label="${GITHUB_SHA::7}"
+          fi
+          echo "label=$label" >> "$GITHUB_OUTPUT"
+          echo "info=$info" >> "$GITHUB_OUTPUT"
+
+      - name: Stamp version
+        env:
+          VERSION: ${{ inputs.version }}
+          INFO: ${{ steps.meta.outputs.info }}
+        run: |
+          file=MechJeb2/Properties/AssemblyInfo.cs
+          if [ -n "$VERSION" ]; then
+            sed -i -E "s/(AssemblyFileVersion\(\")[^\"]*(\"\))/\1${VERSION}\2/" "$file"
+            grep -qF "AssemblyFileVersion(\"$VERSION\")" "$file"
+          fi
+          if [ -n "$INFO" ]; then
+            sed -i -E "s/(AssemblyInformationalVersion\(\")[^\"]*(\"\))/\1${INFO}\2/" "$file"
+            grep -qF "AssemblyInformationalVersion(\"$INFO\")" "$file"
+          fi
+          grep -E 'Assembly(File|Informational)?Version' "$file"
+
+      # the legacy projects use packages.config, which only nuget restores (into ./packages)
+      - name: Restore
+        run: nuget restore MechJeb2.sln -NonInteractive
+
+      # git on Windows does not keep the executable bit, and that is what act copies into its container
+      - name: Fix script permissions (act on Windows)
+        if: ${{ env.ACT }}
+        run: chmod u+x MechJeb2/copy_build.sh
+
+      # The KSP references of the legacy projects have no HintPath: they are found through ReferencePath, which comes
+      # before the framework directory, so mscorlib/System also come from KSP (Unity's Mono), as they do in game.
+      # KspDir is where MechJeb2/copy_build.sh deploys the build, which the Package step picks up.
+      - name: Build
+        run: >
+          msbuild -m:1 -nologo -verbosity:minimal
+          -p:Configuration=Release
+          -p:ReferencePath=/tmp/ksp/KSP_x64_Data/Managed
+          -p:KspDir=/tmp/ksp
+          MechJeb2.sln
+
+      # master's tests have to run in a Debug build: some of them expect Check.* failures, and the Check methods are
+      # [Conditional("DEBUG")]. In Release those checks disappear and BrentRootTests.TestGuess even loops forever.
+      # The package is still the Release build above. The timeout turns any other endless loop into a failure.
+      # -parallel none: Logger.Register sets a single static field, so a test running in parallel replaces the logger
+      # of another test, which then fails with "There is no currently active test case" once that test is done.
+      # master's test project has no runner package: the xunit console runner is fetched and run with Mono.
+      - name: Test
+        run: |
+          msbuild -m:1 -nologo -verbosity:minimal -p:Configuration=Debug \
+            -p:ReferencePath=/tmp/ksp/KSP_x64_Data/Managed MechJebLibTest/MechJebLibTest.csproj
+          nuget install xunit.runner.console -Version 2.4.2 -OutputDirectory "$RUNNER_TEMP/xunit" -NonInteractive -Verbosity quiet
+
+          # Excluded: known failures of master's own code, they fail the same way with .NET Framework on Windows
+          #  - precision: exact floating point comparisons, or a result that no longer matches a stale expected value
+          #  - the optimizer does not converge on these extreme cases (ReturnFromMoonHard, Buggy/Titan2 extreme ascents)
+          #  - random tests (unseeded Random, dev seeds them) whose random inputs sometimes hit a failing case: measured
+          #    at 3% to 20% of runs each, about one CI run in three would fail at random
+          timeout 15m mono "$RUNNER_TEMP"/xunit/xunit.runner.console.2.4.2/tools/net472/xunit.console.exe \
+            MechJebLibTest/bin/Debug/MechJebLibTest.dll -noshadow -parallel none \
+            -nomethod MechJebLibTest.Primitives.V3Tests.CoordinateConversionTests.CartesianToSphericalSmallAnglePrecision \
+            -nomethod MechJebLibTest.Primitives.Q3Tests.EulerAngleTests \
+            -nomethod MechJebLibTest.Primitives.Q3Tests.AngleAxisTests \
+            -nomethod MechJebLibTest.PVGTests.AscentTests.TheStandardTests.TheStandardPeriapsis \
+            -nomethod MechJebLibTest.PVGTests.AscentTests.BuggyTests.BuggyDelta4ExtremelyHeavy \
+            -nomethod MechJebLibTest.PVGTests.AscentTests.Titan2Tests.Kepler3ExtremeElliptical \
+            -nomethod MechJebLibTest.ManeuversTests.ReturnFromMoonTests.NextManeuverToReturnFromMoonHard \
+            -nomethod MechJebLibTest.TwoBodyTests.ShepperdTests.RandomForwardAndBack2 \
+            -nomethod MechJebLibTest.TwoBodyTests.FarnocchiaTests.RandomComparedToDormandPrince \
+            -nomethod MechJebLibTest.ManeuversTests.ChangeOrbitalElementTests.ChangeOrbitalElementTest \
+            -nomethod MechJebLibTest.ManeuversTests.ReturnFromMoonTests.NextManeuverToReturnFromMoonRandomTest
+
+      - name: Package
+        run: |
+          stage="$RUNNER_TEMP/package"
+          rm -rf "$stage"
+          mkdir -p "$stage"
+          cp -r /tmp/ksp/GameData/MechJeb2 "$stage/MechJeb2"
+          cp LICENSE.md LandingSites.cfg "$stage/MechJeb2/"
+
+          # JetBrains.Annotations is compile time only and the pdb files are of no use to KSP
+          rm -f "$stage"/MechJeb2/Plugins/JetBrains.Annotations.* "$stage"/MechJeb2/Plugins/*.pdb
+
+          # copy_build.sh carries on when a copy fails: check that every assembly MechJeb2 needs at runtime made it
+          for dll in MechJeb2 MechJebLib MechJebLibBindings alglib; do
+            test -f "$stage/MechJeb2/Plugins/$dll.dll" || { echo "::error::$dll.dll is missing from the package"; exit 1; }
+          done
+
+          ls -l "$stage/MechJeb2/Plugins"
+
+      # GitHub downloads the artifact as MechJeb2-<label>.zip, with the MechJeb2 folder at its root: unzip it in GameData
+      - name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: MechJeb2-${{ steps.meta.outputs.label }}
+          path: ${{ runner.temp }}/package
+          if-no-files-found: error
+
+      # Forks only get a read-only token: they can still download the artifact from the run page
+      - name: Comment PR
+        if: ${{ !env.ACT && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/github-script@v9
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ZIP_NAME: MechJeb2-${{ steps.meta.outputs.label }}.zip # the name GitHub gives the artifact download
+        with:
+          script: |
+            const marker = '<!-- mechjeb-build-artifact -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const sha = context.payload.pull_request.head.sha.slice(0, 7);
+            const body = `${marker}\n## ✅ Build Artifact 🚀\n\n[${process.env.ZIP_NAME}](${process.env.ARTIFACT_URL}) (built from ${sha})`;
+
+            // Update the previous comment instead of adding a new one on every push
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const previous = comments.find(c => c.body && c.body.includes(marker));
+            if (previous) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: previous.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+  # Publishes every dev build as a public pre-release (dev-<AssemblyFileVersion>-<build>) and keeps the most recent ones.
+  publish-dev:
+    needs: build
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-dev-release
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }} # this job has no checkout, so gh can not get the repository from a git directory
+      LABEL: ${{ needs.build.outputs.label }}
+    steps:
+      - name: Download the build
+        uses: actions/download-artifact@v8
+        with:
+          name: MechJeb2-${{ needs.build.outputs.label }}
+          path: package
+
+      - name: Create the zip
+        run: |
+          test -f package/MechJeb2/Plugins/MechJeb2.dll
+          (cd package && zip -q -9 -r "$GITHUB_WORKSPACE/MechJeb2-$LABEL.zip" MechJeb2)
+          unzip -tq "MechJeb2-$LABEL.zip"
+
+      # Skipped when the workflow is run locally with act
+      - name: Publish the dev pre-release
+        if: ${{ !env.ACT }}
+        run: |
+          tag="$LABEL"
+          title="Dev build ${LABEL#dev-}"
+          intro="Automated build of the dev branch at ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}. Unstable: use a release for normal play."
+
+          # the previous dev build still published, if any (newest first, this run's own tag excluded in case of a re-run)
+          previous_tag=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
+            "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\")) | select(. != \"$tag\")] | sort_by(split(\"-\") | .[-1] | tonumber) | reverse | .[0] // empty")
+
+          notes_file=$(mktemp)
+          echo "$intro" > "$notes_file"
+          if [ -n "$previous_tag" ]; then
+            # the list of PRs merged into dev since the previous dev build, generated by GitHub itself
+            echo >> "$notes_file"
+            gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="$tag" -f target_commitish="$GITHUB_SHA" -f previous_tag_name="$previous_tag" \
+              --jq .body >> "$notes_file"
+          fi
+
+          if gh release view "$tag" > /dev/null 2>&1; then
+            # re-run of a job: replace the zip and refresh the notes
+            gh release upload "$tag" "MechJeb2-$LABEL.zip" --clobber
+            gh release edit "$tag" --notes-file "$notes_file"
+          else
+            gh release create "$tag" "MechJeb2-$LABEL.zip" --prerelease --latest=false --target "$GITHUB_SHA" --title "$title" --notes-file "$notes_file"
+          fi
+
+          # keep the $KEEP most recent dev builds: delete the older ones with their tags
+          # (the list must be longer than $KEEP, or the old builds are never seen)
+          gh release list --limit $((KEEP + 20)) --json tagName --jq "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\"))] | sort_by(split(\"-\") | .[-1] | tonumber) | reverse | .[$KEEP:] | .[]" |
+            while read -r old; do
+              gh release delete "$old" --cleanup-tag --yes
+            done
+
+  # Publishes a CKAN "repository" archive (see https://github.com/KSP-CKAN/CKAN/blob/master/Spec.md) listing every
+  # currently-published dev build, so CKAN users can pick any of them ("Settings > CKAN Settings > New" in the
+  # client). Rebuilt from scratch each run from whichever dev-<version>-<build> releases are still live (see KEEP
+  # in publish-dev above), so it never lists a build whose download link has already been pruned away.
+  publish-ckan-dev-repo:
+    needs: [build, publish-dev]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-ckan-dev-repo
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }} # this job has no checkout, so gh can not get the repository from a git directory
+    steps:
+      - name: Build the CKAN dev repository
+        run: |
+          repo_dir="$RUNNER_TEMP/MechJeb2-dev"
+          rm -rf "$repo_dir"
+          mkdir -p "$repo_dir"
+
+          # every dev build still published (see KEEP in publish-dev): each becomes one .ckan entry below
+          tags=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
+            "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\"))] | .[]")
+
+          for tag in $tags; do
+            IFS=- read -r _ version build <<< "$tag"
+            # GitHub computes this sha256 itself at upload time, no need to download the zip to hash it
+            asset=$(gh release view "$tag" --json assets --jq '.assets[0] | "\(.name)\t\(.url)\t\(.size)\t\(.digest)"')
+            IFS=$'\t' read -r asset_name asset_url asset_size asset_digest <<< "$asset"
+            sha256=$(printf '%s' "${asset_digest#sha256:}" | tr a-f A-F)
+
+            jq -n \
+              --arg version "$version-$build" \
+              --arg download "$asset_url" \
+              --argjson size "$asset_size" \
+              --arg sha256 "$sha256" \
+              --arg ksp_min "$KSP_VERSION_MIN" \
+              --arg ksp_max "$KSP_VERSION_MAX" \
+              '{
+                spec_version: "v1.34",
+                identifier: "MechJeb2-dev",
+                name: "MechJeb 2 - DEV RELEASE",
+                abstract: "Anatid Robotics and Multiversal Mechatronics proudly presents the first flight assistant autopilot: MechJeb",
+                author: "sarbian",
+                license: "GPL-3.0",
+                ksp_version_min: $ksp_min,
+                ksp_version_max: $ksp_max,
+                provides: ["MechJeb2"],
+                conflicts: [{name: "MechJeb2"}, {name: "MechJeb2-RO"}],
+                install: [{find: "MechJeb2", install_to: "GameData"}],
+                resources: {
+                  ci: "https://github.com/MuMech/MechJeb2/actions/workflows/build.yml",
+                  homepage: "https://forum.kerbalspaceprogram.com/index.php?/topic/154834-*",
+                  repository: "https://github.com/MuMech/MechJeb2/"
+                },
+                version: $version,
+                download: $download,
+                download_size: $size,
+                download_hash: {sha256: $sha256}
+              }' > "$repo_dir/MechJeb2-dev-$version-$build.ckan"
+          done
+
+          count=$(find "$repo_dir" -name '*.ckan' | wc -l)
+          echo "Built $count .ckan entries"
+          test "$count" -gt 0
+
+          tar -czf "$RUNNER_TEMP/MechJeb2-dev-ckan-repo.tar.gz" -C "$RUNNER_TEMP" MechJeb2-dev
+
+      # Skipped when the workflow is run locally with act
+      - name: Publish the CKAN dev repository
+        if: ${{ !env.ACT }}
+        run: |
+          tag=ckan-dev-repo
+          zip="$RUNNER_TEMP/MechJeb2-dev-ckan-repo.tar.gz"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" "$zip" --clobber
+          else
+            gh release create "$tag" "$zip" \
+              --prerelease --latest=false --target "$GITHUB_SHA" \
+              --title "MechJeb2 dev CKAN repository" \
+              --notes "Add this as a custom repository in CKAN to install any current dev build of MechJeb2 (Settings > CKAN Settings > New). Rebuilt automatically on every dev push."
+          fi
