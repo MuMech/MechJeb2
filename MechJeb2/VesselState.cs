@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -572,6 +572,7 @@ namespace MuMech
             Roll = RotationVesselSurface.eulerAngles.z > 180
                 ? RotationVesselSurface.eulerAngles.z - 360.0
                 : RotationVesselSurface.eulerAngles.z;
+            Roll = -Roll; //Invert to follow the rule that a roll to the right is positive roll
 
             AltitudeASL = _vessel.mainBody.GetAltitude(CoM);
 
