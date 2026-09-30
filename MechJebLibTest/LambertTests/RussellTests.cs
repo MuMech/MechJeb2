@@ -1,0 +1,512 @@
+/*
+ * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
+ * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
+ */
+
+using System;
+using System.Collections.Generic;
+using MechJebLib.Functions;
+using MechJebLib.Lambert;
+using MechJebLib.Maths;
+using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
+using MechJebLib.Utils;
+using Xunit;
+using Xunit.Abstractions;
+using static System.Math;
+
+namespace MechJebLibTest.LambertTests
+{
+    public class RussellTests
+    {
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public RussellTests(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
+
+        public static IEnumerable<object[]> Seeds()
+        {
+            for (int i = 0; i < 250; i++)
+                yield return new object[] { i };
+        }
+
+        // the direction (short way or long way) of a transfer from r0 with velocity v0 to rf
+        private static int Direction(V3 r0, V3 v0, V3 rf) => V3.Dot(V3.Cross(r0, v0), V3.Cross(r0, rf)) >= 0 ? 1 : -1;
+
+        // recover the vercosine iteration variables (k, p) from the solution velocity, to check which code paths were tested
+        private static (double k, double p) VercosineKP(V3 r0, V3 rf, V3 v0, int direction)
+        {
+            double r1 = r0.magnitude;
+            double r2 = rf.magnitude;
+            double ctheta = V3.Dot(r0, rf) / (r1 * r2);
+            double semiLatusRectum = V3.Cross(r0, v0).sqrMagnitude;
+            double p = r1 * r2 * (1 - ctheta) / (semiLatusRectum * (r1 + r2));
+            double tau = direction * Sqrt(r1 * r2 * (1 + ctheta)) / (r1 + r2);
+            return ((1 - p) / tau, p);
+        }
+
+        // within the limit of Russell (2022) around the r1 == r2 singularity
+        private static bool NearSingularity(V3 r0, V3 rf)
+        {
+            double r1 = r0.magnitude;
+            double r2 = rf.magnitude;
+            return Sqrt(0.5) - Sqrt(Max(r1 * r2 + V3.Dot(r0, rf), 0)) / (r1 + r2) < 1e-7;
+        }
+
+        // parabolic time of flight (Russell 2019, Eq. 39), mu = 1
+        private static double ParabolicTof(V3 r0, V3 rf, int direction)
+        {
+            double r1 = r0.magnitude;
+            double r2 = rf.magnitude;
+            double tau = direction * Sqrt(r1 * r2 + V3.Dot(r0, rf)) / (r1 + r2);
+            return (r1 + r2) * Sqrt(r1 + r2) * Sqrt(1 - Sqrt(2) * tau) * (tau + Sqrt(2)) / 3;
+        }
+
+        private static void CheckTransfer(V3 r0, V3 rf, double dt, V3 vi, V3 vf, double tol)
+        {
+            (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, vi);
+            rfShepperd.ShouldEqual(rf, tol);
+            vfShepperd.ShouldEqual(vf, tol);
+        }
+
+        [Theory, MemberData(nameof(Seeds))]
+        private void RandomMultipleRevolution(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            double tol = 1e-6;
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double dt, period;
+            double ecc = Astro.EccFromStateVectors(1.0, r0, v0);
+
+            if (ecc < 1)
+            {
+                period = Astro.PeriodFromStateVectors(1.0, r0, v0);
+                dt = random.NextDouble() * period;
+            }
+            else
+            {
+                period = 0;
+                dt = random.NextDouble() * 5;
+            }
+
+            (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, v0);
+
+            int direction = Direction(r0, v0, rfShepperd);
+
+            if (NearSingularity(r0, rfShepperd))
+            {
+                _testOutputHelper.WriteLine($"skipping, too close to r1 == r2: {Sqrt(0.5) - Sqrt(r0.magnitude * rfShepperd.magnitude + V3.Dot(r0, rfShepperd)) / (r0.magnitude + rfShepperd.magnitude):E2}");
+                Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfShepperd, dt, direction));
+                return;
+            }
+
+            (V3 viRussell, V3 vfRussell) = Russell.Solve(1.0, r0, rfShepperd, dt, direction);
+
+            viRussell.ShouldEqual(v0, tol);
+            vfRussell.ShouldEqual(vfShepperd, tol);
+
+            if (period <= 0) return;
+
+            for (int m = 1; m < 10; m++)
+            {
+                try
+                {
+                    (V3 viNRev, V3 vfNRev) = Russell.Solve(1.0, r0, rfShepperd, dt + m * period, direction, m);
+                    viNRev.ShouldEqual(viRussell, tol);
+                    vfNRev.ShouldEqual(vfRussell, tol);
+                }
+                catch (Exception)
+                {
+                    (V3 viNRev, V3 vfNRev) = Russell.Solve(1.0, r0, rfShepperd, dt + m * period, direction, -m);
+
+                    viNRev.ShouldEqual(viRussell, tol);
+                    vfNRev.ShouldEqual(vfRussell, tol);
+                }
+            }
+        }
+
+        [Theory, MemberData(nameof(Seeds))]
+        private void RandomPositions(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            double tol = 1e-6;
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double dt = random.NextDouble() * 6 + 0.05;
+
+            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, 1);
+            CheckTransfer(r0, rf, dt, viShort, vfShort, tol);
+
+            (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, -1);
+            CheckTransfer(r0, rf, dt, viLong, vfLong, tol);
+        }
+
+        [Theory, MemberData(nameof(Seeds))]
+        private void RandomPositionsComparedToIzzoAndGooding(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            double tol = 1e-6;
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double dt = random.NextDouble() * 6 + 0.05;
+
+            // avoid inherent singularity at nearly collinear ri, rf for longway/shortway
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.99998)
+                return;
+
+            // relax tolerance for nearly collinear
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
+                tol = 2e-3;
+
+            V3 vi1, vf1, vi2, vf2;
+
+            (vi1, vf1) = Russell.Solve(1.0, r0, rf, dt, 1);
+            (vi2, vf2) = Izzo.Solve(1.0, r0, rf, dt);
+            vi1.ShouldEqual(vi2, tol);
+            vf1.ShouldEqual(vf2, tol);
+            (vi2, vf2) = Gooding.Solve(1.0, r0, rf, dt);
+            vi1.ShouldEqual(vi2, tol);
+            vf1.ShouldEqual(vf2, tol);
+
+            (vi1, vf1) = Russell.Solve(1.0, r0, rf, dt, -1);
+            (vi2, vf2) = Izzo.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay);
+            vi1.ShouldEqual(vi2, tol);
+            vf1.ShouldEqual(vf2, tol);
+            (vi2, vf2) = Gooding.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay);
+            vi1.ShouldEqual(vi2, tol);
+            vf1.ShouldEqual(vf2, tol);
+        }
+
+        // both multi-rev branches are solutions, and n > 0 is the long-period branch
+        [Theory, MemberData(nameof(Seeds))]
+        private void RandomMultipleRevolutionBranches(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            double tol = 1e-6;
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            int m = random.Next(1, 20);
+            double dt = Pow(10, 2 * random.NextDouble() + 2) * m;
+            int direction = random.Next(2) == 0 ? 1 : -1;
+
+            (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, direction, m);
+            CheckTransfer(r0, rf, dt, viLong, vfLong, tol);
+
+            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, direction, -m);
+            CheckTransfer(r0, rf, dt, viShort, vfShort, tol);
+
+            Assert.True(Astro.SmaFromStateVectors(1.0, r0, viLong) > Astro.SmaFromStateVectors(1.0, r0, viShort));
+        }
+
+        // the sign of n selects the same branch as the nrev argument of Izzo and Gooding
+        [Theory, MemberData(nameof(Seeds))]
+        private void RandomMultipleRevolutionComparedToIzzoAndGooding(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            double tol = 1e-6;
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            int m = random.Next(1, 6);
+            double dt = Pow(10, 2 * random.NextDouble() + 2) * m;
+            int direction = random.Next(2) == 0 ? 1 : -1;
+            TransferGeometry geometry = direction == 1 ? TransferGeometry.ShortWay : TransferGeometry.LongWay;
+
+            foreach (int n in new[] { m, -m })
+            {
+                (V3 vi1, V3 vf1) = Russell.Solve(1.0, r0, rf, dt, direction, n);
+
+                (V3 vi2, V3 vf2) = Izzo.Solve(1.0, r0, rf, dt, geometry, n, rtol: 1e-12);
+                vi1.ShouldEqual(vi2, tol);
+                vf1.ShouldEqual(vf2, tol);
+
+                (vi2, vf2) = Gooding.Solve(1.0, r0, rf, dt, geometry, n);
+                vi1.ShouldEqual(vi2, tol);
+                vf1.ShouldEqual(vf2, tol);
+            }
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(-1)]
+        private void NearHalfRevolution(int direction)
+        {
+            var r0 = new V3(1, 0, 0);
+            double theta = PI - 1e-6;
+            V3 rf = 1.3 * new V3(Cos(theta), Sin(theta), 0);
+
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 3.0, direction);
+            CheckTransfer(r0, rf, 3.0, vi, vf, 1e-6);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(-1)]
+        private void NearFullRevolution(int direction)
+        {
+            // for d=1 the transfer angle is 1e-4 and for d=-1 it is 2pi - 1e-4
+            var r0 = new V3(1, 0, 0);
+            V3 rf = 1.5 * new V3(Cos(1e-4), Sin(1e-4), 0);
+
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 5.0, direction);
+            CheckTransfer(r0, rf, 5.0, vi, vf, 1e-6);
+        }
+
+        [Fact]
+        private void HugeKIteration()
+        {
+            // very fast long way hyperbola uses the series in 1/k.  the periapsis is ~1e-7 which is too close for Shepperd
+            // to check, so compare to the other solvers.
+            var r0 = new V3(1, 0, 0);
+            var rf = new V3(0, 1, 0);
+
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 2e-3, -1);
+
+            (V3 viIzzo, V3 vfIzzo) = Izzo.Solve(1.0, r0, rf, 2e-3, TransferGeometry.LongWay, rtol: 1e-14);
+            vi.ShouldEqual(viIzzo, 1e-12);
+            vf.ShouldEqual(vfIzzo, 1e-12);
+
+            (V3 viGooding, V3 vfGooding) = Gooding.Solve(1.0, r0, rf, 2e-3, TransferGeometry.LongWay);
+            vi.ShouldEqual(viGooding, 1e-12);
+            vf.ShouldEqual(vfGooding, 1e-12);
+
+            (double k, _) = VercosineKP(r0, rf, vi, -1);
+            Assert.True(k > 1000, $"k = {k}");
+        }
+
+        [Fact]
+        private void LittlePIteration()
+        {
+            // very fast short way hyperbola iterates on p instead of k
+            var r0 = new V3(1, 0, 0);
+            var rf = new V3(0, 1, 0);
+
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 2e-3, 1);
+            CheckTransfer(r0, rf, 2e-3, vi, vf, 1e-6);
+
+            (_, double p) = VercosineKP(r0, rf, vi, 1);
+            Assert.True(p < 0.1, $"p = {p}");
+        }
+
+        // down to the minimum time of flight of 1e-3 times the parabolic time of flight
+        [Theory, MemberData(nameof(Seeds))]
+        private void RandomSmallTimeOfFlightComparedToGooding(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            double tol = 1e-9;
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            int direction = random.Next(2) == 0 ? 1 : -1;
+            double dt = ParabolicTof(r0, rf, direction) * Pow(10, -1 - 1.9 * random.NextDouble());
+
+            // avoid inherent singularity at nearly collinear ri, rf
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.99998)
+                return;
+
+            // relax tolerance for nearly collinear
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
+                tol = 2e-3;
+
+            (V3 vi1, V3 vf1) = Russell.Solve(1.0, r0, rf, dt, direction);
+            (V3 vi2, V3 vf2) = Gooding.Solve(1.0, r0, rf, dt, direction == 1 ? TransferGeometry.ShortWay : TransferGeometry.LongWay);
+            vi1.ShouldEqual(vi2, tol);
+            vf1.ShouldEqual(vf2, tol);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(-1)]
+        private void HugeTimeOfFlight(int direction)
+        {
+            // TOF/S > 1e4 root-solves log(TOF/S)
+            var r0 = new V3(1, 0, 0);
+            var rf = new V3(0, 1, 0);
+
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 1e5, direction);
+            CheckTransfer(r0, rf, 1e5, vi, vf, 1e-6);
+        }
+
+        [Theory]
+        [InlineData(1000)]
+        [InlineData(-1000)]
+        private void HugeNumberOfRevolutions(int n)
+        {
+            var r0 = new V3(1, 0, 0);
+            var rf = new V3(0, 1.2, 0);
+            double dt = 2e4;
+
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, dt, 1, n);
+            CheckTransfer(r0, rf, dt, vi, vf, 1e-6);
+        }
+
+        [Theory]
+        [InlineData(1, 1)]
+        [InlineData(1, 3)]
+        [InlineData(-1, 1)]
+        [InlineData(-1, 3)]
+        private void MultipleRevolutionNearMinimumTime(int direction, int m)
+        {
+            var r0 = new V3(1, 0, 0);
+            var rf = new V3(0, 1.2, 0);
+
+            // bisect for the minimum time of flight
+            double lo = 0.1;
+            double hi = 100 * m;
+
+            for (int i = 0; i < 60; i++)
+            {
+                double mid = 0.5 * (lo + hi);
+                try
+                {
+                    Russell.Solve(1.0, r0, rf, mid, direction, m);
+                    hi = mid;
+                }
+                catch (Exception)
+                {
+                    lo = mid;
+                }
+            }
+
+            Assert.Throws<Exception>(() => Russell.Solve(1.0, r0, rf, lo, direction, m));
+            Assert.Throws<Exception>(() => Russell.Solve(1.0, r0, rf, lo, direction, -m));
+
+            (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, hi, direction, m);
+            CheckTransfer(r0, rf, hi, viLong, vfLong, 1e-6);
+
+            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, hi, direction, -m);
+            CheckTransfer(r0, rf, hi, viShort, vfShort, 1e-6);
+        }
+
+        [Fact]
+        private void InvalidInputsThrow()
+        {
+            var r0 = new V3(1, 0, 0);
+
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(0, 1, 0), 1.0, 0));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, r0, 1.0));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(-2, 0, 0), 1.0));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(-2, 0, 0), 1.0, -1));
+
+            // too close to the r1 == r2 singularity
+            var rf = new V3(Cos(1e-4), Sin(1e-4), 0);
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 1.0, 1));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, -1));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, 1, 1));
+
+            // zero-rev time of flight too small
+            rf = new V3(0, 1, 0);
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1), 1));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, -1), -1));
+            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, 1), 1);
+            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, -1), -1);
+        }
+
+        // central differences of the V3 solver along the direction of the dual parts
+        private static void CheckDualAgainstFiniteDifferences(V3 r0, V3 rf, double dt, int direction, int n, V3 dr0, V3 drf, double ddt, double tol)
+        {
+            (DualV3 vi, DualV3 vf) = Russell.Solve(1.0, new DualV3(r0, dr0), new DualV3(rf, drf), new Dual(dt, ddt), direction, n);
+
+            double h = 1e-6 * Min(1.0, dt);
+            (V3 viPlus, V3 vfPlus) = Russell.Solve(1.0, r0 + h * dr0, rf + h * drf, dt + h * ddt, direction, n);
+            (V3 viMinus, V3 vfMinus) = Russell.Solve(1.0, r0 - h * dr0, rf - h * drf, dt - h * ddt, direction, n);
+
+            double scale = Max(1.0, Max(vi.D.magnitude, vf.D.magnitude));
+
+            ((viPlus - viMinus) / (2 * h) / scale).ShouldEqual(vi.D / scale, tol);
+            ((vfPlus - vfMinus) / (2 * h) / scale).ShouldEqual(vf.D / scale, tol);
+        }
+
+        [Theory, MemberData(nameof(Seeds))]
+        private void DualMatchesFiniteDifferences(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var dr0 = new V3(2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1);
+            var drf = new V3(2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1);
+            double dt = random.NextDouble() * 6 + 0.05;
+            double ddt = 2 * random.NextDouble() - 1;
+            int direction = random.Next(2) == 0 ? 1 : -1;
+
+            // the partials are singular at the half-rev
+            if (V3.Dot(r0.normalized, rf.normalized) < -0.999)
+                return;
+
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, direction, 0, dr0, drf, ddt, 1e-5);
+        }
+
+        [Theory, MemberData(nameof(Seeds))]
+        private void DualMultipleRevolutionMatchesFiniteDifferences(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var dr0 = new V3(2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1);
+            var drf = new V3(2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1);
+            int m = random.Next(1, 20);
+            double dt = Pow(10, 2 * random.NextDouble() + 2) * m;
+            double ddt = 2 * random.NextDouble() - 1;
+            int direction = random.Next(2) == 0 ? 1 : -1;
+
+            if (V3.Dot(r0.normalized, rf.normalized) < -0.999)
+                return;
+
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, direction, m, dr0, drf, ddt, 1e-5);
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, direction, -m, dr0, drf, ddt, 1e-5);
+        }
+
+        // fast hyperbolas, which use the series in 1/k (long way) or iterate on p (short way)
+        [Theory, MemberData(nameof(Seeds))]
+        private void DualSmallTimeOfFlightMatchesFiniteDifferences(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var dr0 = new V3(2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1);
+            var drf = new V3(2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1);
+            int direction = random.Next(2) == 0 ? 1 : -1;
+            double dt = ParabolicTof(r0, rf, direction) * Pow(10, -1.5 - 1.4 * random.NextDouble());
+            double ddt = 2 * random.NextDouble() - 1;
+
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
+                return;
+
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, direction, 0, dr0, drf, ddt, 1e-5);
+        }
+    }
+}
