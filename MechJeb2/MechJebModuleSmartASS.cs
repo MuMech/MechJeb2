@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using System.Linq;
 using KSP.Localization;
@@ -445,7 +445,7 @@ namespace MuMech
 
                             if (GUILayout.Button("CUR", GuiUtils.LayoutNoExpandWidth))
                             {
-                                srfVelRol = -VesselState.Roll;
+                                srfVelRol = VesselState.Roll;
                                 changed = true;
                             }
 
