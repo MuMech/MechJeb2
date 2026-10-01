@@ -262,7 +262,7 @@ namespace MuMech
             SetAxisControl(AxisCtrlPitch, AxisCtrlYaw, AxisCtrlRoll);
         }
 
-        public void attitudeTo(Vector3d direction, AttitudeReference reference, object controller, bool killRollRotation = false)
+        public void attitudeTo(Vector3d direction, AttitudeReference reference, object controller, bool killRollRotation = true)
         {
             //double ang_diff = Math.Abs(Vector3d.Angle(attitudeGetReferenceRotation(attitudeReference) * attitudeTarget * Vector3d.forward, attitudeGetReferenceRotation(reference) * direction));
 
