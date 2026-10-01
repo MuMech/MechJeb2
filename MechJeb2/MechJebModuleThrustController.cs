@@ -11,8 +11,6 @@ namespace MuMech
 {
     public class MechJebModuleThrustController : ComputerModule
     {
-        private static bool _isLoadedRealFuels => ReflectionUtils.IsAssemblyLoaded("RealFuels");
-
         public enum DifferentialThrottleStatus
         {
             SUCCESS,
@@ -129,17 +127,22 @@ namespace MuMech
         }
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
-        public bool LimiterMinThrottle = true;
+        public bool LimiterMinThrottle;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult MinThrottle = new EditableDoubleMult(0.05, 0.01);
 
+        private static GUIContent _limiterMinThrottleContent;
+
         [GeneralInfoItem("#MechJeb_LowerThrottleLimit", InfoItem.Category.Thrust)] //Lower throttle limit
         public void LimiterMinThrottleInfoItem()
         {
-            GUIStyle s = Limiter == LimitMode.MIN_THROTTLE ? GuiUtils.GreenToggle : null;
-            GuiUtils.ToggledTextBox(ref LimiterMinThrottle, CachedLocalizer.Instance.MechJebAscentCheckbox18, MinThrottle, "%", s,
-                30); //"Keep limited throttle over"
+            // RF users should almost always have this set, "stock" users should almost always never have this set
+            bool warn = ReflectionUtils.IsLoadedRealFuels ? !LimiterMinThrottle || MinThrottle <= 0d : LimiterMinThrottle && MinThrottle > 0d;
+            GUIStyle s = Limiter == LimitMode.MIN_THROTTLE ? GuiUtils.GreenToggle : warn ? GuiUtils.YellowToggle : null;
+            _limiterMinThrottleContent ??= new GUIContent(CachedLocalizer.Instance.MechJebAscentCheckbox18,
+                Localizer.Format("#MechJeb_Ascent_checkbox18_tooltip"));
+            GuiUtils.ToggledTextBox(ref LimiterMinThrottle, _limiterMinThrottleContent, MinThrottle, "%", s, 30); //"Keep limited throttle over"
         }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.TYPE)]
@@ -852,7 +855,7 @@ namespace MuMech
         {
             // because we don't always return when ullage is stable below, we have to
             // explicitly check for RF being loaded.
-            if (!_isLoadedRealFuels)
+            if (!ReflectionUtils.IsLoadedRealFuels)
                 return;
 
             if (!AutoRCSUllaging || s.mainThrottle <= 0F || ThrottleLimit <= 0F)

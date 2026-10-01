@@ -586,6 +586,19 @@ namespace MuMech
             Profiler.EndSample();
         }
 
+        // GUIContent overload for callers that need a tooltip on the toggle (cache the content to avoid per-frame allocations).
+        public static void ToggledTextBox(ref bool toggle, GUIContent toggleContent, IEditable ed, string? rightLabel = null,
+            GUIStyle? toggleStyle = null, float width = 100)
+        {
+            Profiler.BeginSample("ToggledTextField");
+            GUILayout.BeginHorizontal();
+            toggle = toggleStyle != null ? GUILayout.Toggle(toggle, toggleContent, toggleStyle) : GUILayout.Toggle(toggle, toggleContent);
+            SimpleTextField(ed, width);
+            if (!string.IsNullOrEmpty(rightLabel)) GUILayout.Label(rightLabel);
+            GUILayout.EndHorizontal();
+            Profiler.EndSample();
+        }
+
         public static bool ButtonTextBox(string buttonText, IEditable ed, string? rightLabel = null, GUIStyle? buttonStyle = null, float width = 100)
         {
             Profiler.BeginSample("ButtonTextBox");
