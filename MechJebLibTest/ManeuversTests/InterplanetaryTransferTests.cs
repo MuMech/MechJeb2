@@ -23,7 +23,7 @@ namespace MechJebLibTest.ManeuversTests
 
         public static IEnumerable<object[]> Seeds()
         {
-            for (int i = 0; i <= 25; i++)
+            for (int i = 0; i < 25; i++)
                 yield return new object[] { i };
         }
 
@@ -262,6 +262,7 @@ namespace MechJebLibTest.ManeuversTests
 
         [Theory]
         [InlineData(2243)]
+        [InlineData(505)]
         private void EarthToMarsHardSeeds(int seed) => EarthToMarsFromSeed(seed);
 
         private void EarthToMarsFromSeed(int seed)
