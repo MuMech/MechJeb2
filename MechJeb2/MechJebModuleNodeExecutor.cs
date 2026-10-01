@@ -9,9 +9,6 @@ namespace MuMech
 {
     public class MechJebModuleNodeExecutor : ComputerModule
     {
-        private static bool _isLoadedRealFuels => ReflectionUtils.IsAssemblyLoaded("RealFuels");
-        private static bool _isLoadedPrincipia => ReflectionUtils.IsAssemblyLoaded("principia.ksp_plugin_adapter");
-
         // whether to auto-warp to nodes
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool Autowarp = true;
@@ -47,7 +44,7 @@ namespace MuMech
                 return "-";
 
             double dV;
-            if (_isLoadedPrincipia && _dvLeft > 0)
+            if (ReflectionUtils.IsLoadedPrincipia && _dvLeft > 0)
             {
                 dV = _dvLeft;
             }
@@ -68,11 +65,11 @@ namespace MuMech
             if (!Vessel.patchedConicsUnlocked() || Vessel.patchedConicSolver.maneuverNodes.Count == 0)
                 return "-";
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
-            double dV = _isLoadedPrincipia ? _dvLeft : node.GetBurnVector(Orbit).magnitude;
+            double dV = ReflectionUtils.IsLoadedPrincipia ? _dvLeft : node.GetBurnVector(Orbit).magnitude;
 
             double ut = node.UT;
             BurnTime(dV, out double halfBurnTIme, out double spool);
-            if (_isLoadedPrincipia)
+            if (ReflectionUtils.IsLoadedPrincipia)
                 ut -= spool;
             else
                 ut -= halfBurnTIme; // already takes spoolup into account
@@ -165,7 +162,7 @@ namespace MuMech
             if (State != States.LEAD || RCSOnly)
                 return;
 
-            if (!Core.Thrust.AutoRCSUllaging || !_isLoadedRealFuels)
+            if (!Core.Thrust.AutoRCSUllaging || !ReflectionUtils.IsLoadedRealFuels)
                 return;
 
             // always apply MIN_RCS_TIME of ullage right before the ignition time
@@ -195,7 +192,7 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (!Vessel.patchedConicsUnlocked() || (!_isLoadedPrincipia && !_hasNodes) || State == States.IDLE)
+            if (!Vessel.patchedConicsUnlocked() || (!ReflectionUtils.IsLoadedPrincipia && !_hasNodes) || State == States.IDLE)
             {
                 Abort();
                 return;
@@ -371,7 +368,7 @@ namespace MuMech
             return true;
         }
 
-        private bool ShouldTerminate() => _isLoadedPrincipia ? ShouldTerminatePrincipia() : ShouldTerminateStock();
+        private bool ShouldTerminate() => ReflectionUtils.IsLoadedPrincipia ? ShouldTerminatePrincipia() : ShouldTerminateStock();
 
         private bool Aligned() => AngleFromDirection() < Deg2Rad(AlignedToleranceDegrees);
 
@@ -424,11 +421,11 @@ namespace MuMech
             if (_direction == Vector3d.zero)
                 return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized; // handle initialization
 
-            if (_isLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
+            if (ReflectionUtils.IsLoadedPrincipia && SafeCurrentPrincipiaNode() == null)
                 return _direction;
 
             // FIXME: need to deal with RCS forward thrust accel here if we're RCSOnly
-            if (!_isLoadedPrincipia && _dvLeft < VesselState.MaxThrustAcceleration)
+            if (!ReflectionUtils.IsLoadedPrincipia && _dvLeft < VesselState.MaxThrustAcceleration)
                 return _direction;
 
             return invRot * Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
@@ -437,7 +434,7 @@ namespace MuMech
         private double CalculateIgnitionUT()
         {
             BurnTime(_dvLeft, out double halfBurnTime, out double spool);
-            if (_isLoadedPrincipia)
+            if (ReflectionUtils.IsLoadedPrincipia)
             {
                 ManeuverNode node = SafeCurrentPrincipiaNode();
                 // in principia node.UT is the start of the burn and we need to subtract off the spool time
@@ -451,7 +448,7 @@ namespace MuMech
 
         private void UpdateDvLeft()
         {
-            if (!_isLoadedPrincipia)
+            if (!ReflectionUtils.IsLoadedPrincipia)
                 _dvLeft = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).magnitude;
             else
                 DecrementDvLeft();
