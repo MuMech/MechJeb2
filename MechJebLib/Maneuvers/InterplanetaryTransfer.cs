@@ -35,11 +35,11 @@ namespace MechJebLib.Maneuvers
 
         private void NLPFunctionColumn(Dual[] x, double[] fi, double[,] jac, int i)
         {
-            DualV3 rsoi1, vsoi1, rsoi2, vsoi2, dv1, dv2, dv3, dv4, dv5, dv6;
+            DualV3 rsoi1, vsoi1, rsoi2, vsoi2, dv1, dv2, dv3, dv4, dv5;
 
             try
             {
-                (rsoi1, vsoi1, rsoi2, vsoi2, dv1, dv2, dv3, dv4, dv5, dv6) = EvaluateTrajectory(x);
+                (rsoi1, vsoi1, rsoi2, vsoi2, dv1, dv2, dv3, dv4, dv5) = EvaluateTrajectory(x);
             }
             catch (Exception)
             {
@@ -98,18 +98,12 @@ namespace MechJebLib.Maneuvers
             jac[13, i] = dv5.y.D;
             fi[14] = dv5.z.M;
             jac[14, i] = dv5.z.D;
-            fi[15] = dv6.x.M;
-            jac[15, i] = dv6.x.D;
-            fi[16] = dv6.y.M;
-            jac[16, i] = dv6.y.D;
-            fi[17] = dv6.z.M;
-            jac[17, i] = dv6.z.D;
-            Dual fi12 = -DualV3.Dot(rsoi1.normalized, vsoi1.normalized);
-            fi[18] = fi12.M;
-            jac[18, i] = fi12.D;
-            Dual fi13 = _soi2 == 0 ? new Dual(0) : DualV3.Dot(rsoi2.normalized, vsoi2.normalized);
-            fi[19] = fi13.M;
-            jac[19, i] = fi13.D;
+            Dual fi15 = -DualV3.Dot(rsoi1.normalized, vsoi1.normalized);
+            fi[15] = fi15.M;
+            jac[15, i] = fi15.D;
+            Dual fi16 = _soi2 == 0 ? new Dual(0) : DualV3.Dot(rsoi2.normalized, vsoi2.normalized);
+            fi[16] = fi16.M;
+            jac[16, i] = fi16.D;
 
             if (_initialFeasibility)
             {
@@ -131,7 +125,7 @@ namespace MechJebLib.Maneuvers
             }
         }
 
-        private (DualV3 rsoi1, DualV3 vsoi1, DualV3 rsoi2, DualV3 vsoi2, DualV3 dv1, DualV3 dv2, DualV3 dv3, DualV3 dv4, DualV3 dv5, DualV3 dv6) EvaluateTrajectory(Dual[] x)
+        private (DualV3 rsoi1, DualV3 vsoi1, DualV3 rsoi2, DualV3 vsoi2, DualV3 dv1, DualV3 dv2, DualV3 dv3, DualV3 dv4, DualV3 dv5) EvaluateTrajectory(Dual[] x)
         {
             if (x.Any(v => !IsFinite(v.M)))
                 throw new Exception("invalid value");
@@ -139,20 +133,18 @@ namespace MechJebLib.Maneuvers
             Dual dt1 = x[0]; // coast time on initial orbit to burn (source scale)
             Dual dt2 = x[1]; // coast time after burn to soi1 interface (source scale)
             Dual dt3 = x[2]; // arrival time at destination soi (helio scale)
-            Dual heliocoast = x[2] - (x[0] + x[1]) / _sourceToHelioScale.TimeScale;
+            Dual heliocoast = dt3 - (dt1 + dt2) / _sourceToHelioScale.TimeScale; // coast time on heliocentric orbit (helio scale)
 
-            var rmid1 = new DualV3(x[3], x[4], x[5]); // midpoint in source SOI (source scale)
-
-            var rsoiSph1 = new DualV3(_soi1, x[6], x[7]); // spherical position at soi1 boundary (source scale)
-            var vsoiSph1 = new DualV3(x[8], x[9], x[10]); // spherical velocity at soi1 boundary (source scale)
+            var rsoiSph1 = new DualV3(_soi1, x[3], x[4]); // spherical position at soi1 boundary (source scale)
+            var vsoiSph1 = new DualV3(x[5], x[6], x[7]); // spherical velocity at soi1 boundary (source scale)
 
             DualV3 rsoi1 = rsoiSph1.sph2cart;
             DualV3 vsoi1 = vsoiSph1.sph2cart;
 
-            var rmid2 = new DualV3(x[11], x[12], x[13]); // midpoint in target SOI (target scale)
+            var rmidHelio = new DualV3(x[8], x[9], x[10]); // heliocentric position at the midpoint of the heliocentric coast (helio scale)
 
-            DualV3 rsoiSph2 = _soi2 == 0 ? new DualV3(0, 0, 0) : new DualV3(_soi2, x[14], x[15]); // spherical position at soi2 boundary (target scale)
-            var vsoiSph2 = new DualV3(x[16], x[17], x[18]); // spherical velocity at soi2 boundary (target scale)
+            DualV3 rsoiSph2 = _soi2 == 0 ? new DualV3(0, 0, 0) : new DualV3(_soi2, x[11], x[12]); // spherical position at soi2 boundary (target scale)
+            var vsoiSph2 = new DualV3(x[13], x[14], x[15]); // spherical velocity at soi2 boundary (target scale)
 
             DualV3 rsoi2 = rsoiSph2.sph2cart;
             DualV3 vsoi2 = vsoiSph2.sph2cart;
@@ -174,33 +166,34 @@ namespace MechJebLib.Maneuvers
             DualV3 rsoi2helio = r2soi2 + rsoi2 / _targetToHelioScale.LengthScale;
             DualV3 vsoi2helio = v2soi2 + vsoi2 / _targetToHelioScale.VelocityScale;
 
-            // solve from the burn to the soi1 midpoint
-            (DualV3 vi1, DualV3 vf1) = Izzo.Solve(1.0, r0Burn, rmid1, 0.5*dt2, TransferGeometry.Prograde, rtol: 1e-12, h: V3.Cross(rsoi1.M, vsoi1.M));
-            // solve from the soi1 interface to soi1
-            (DualV3 vi2, DualV3 vf2) = Izzo.Solve(1.0, rmid1, rsoi1, 0.5*dt2, TransferGeometry.Prograde, rtol: 1e-12, h: V3.Cross(rsoi1.M, vsoi1.M));
+            // solve from the burn to the soi1 interface
+            // (this uses the prograde sense of the rsoi1 x vsoi1 plane, equivalent to the departure arc, which avoids lambert discontinuities)
+            (DualV3 vi1, DualV3 vf1) = Izzo.Solve(1.0, r0Burn, rsoi1, dt2, TransferGeometry.Prograde, rtol: 1e-12, h: V3.Cross(rsoi1.M, vsoi1.M));
 
-            // solve the heliocentric trajectory from soi1 to the heliocentric midpoint
-            (DualV3 vi3, DualV3 vf3) = Izzo.Solve(1.0, rsoi1helio, rmid2, 0.5*heliocoast, TransferGeometry.Prograde, rtol: 1e-12, h: V3.Cross(rsoi1helio.M, vsoi1helio.M));
-            // solve the heliocentric trajectory from the heliocentric midpoint to soi2
-            (DualV3 vi4, DualV3 vf4) = Izzo.Solve(1.0, rmid2, rsoi2helio, 0.5* heliocoast, TransferGeometry.Prograde, rtol: 1e-12, h: V3.Cross(rsoi1helio.M, vsoi1helio.M));
+            // solve the heliocentric trajectory from soi1 to soi2 as two equal-time legs through a free midpoint, so that
+            // neither leg sits on the 180 degree lambert singularity when the overall transfer angle is near 180 degrees
+            // (this uses prograde sense from the rsoi1helio x vsoi1helio plane, which avoids lambert discontinuities)
+            V3 hHelio = V3.Cross(rsoi1helio.M, vsoi1helio.M);
+            (DualV3 vi2, DualV3 vf2) = Izzo.Solve(1.0, rsoi1helio, rmidHelio, 0.5 * heliocoast, TransferGeometry.Prograde, rtol: 1e-12, h: hHelio);
+            (DualV3 vi3, DualV3 vf3) = Izzo.Solve(1.0, rmidHelio, rsoi2helio, 0.5 * heliocoast, TransferGeometry.Prograde, rtol: 1e-12, h: hHelio);
 
-            return (rsoi1, vsoi1, rsoi2, vsoi2, vi1 - v0Burn, vi2 - vf1, vsoi1 - vf2, vsoi1helio - vi3, vi4 - vf3, vf4 - vsoi2helio);
+            return (rsoi1, vsoi1, rsoi2, vsoi2, vi1 - v0Burn, vsoi1 - vf1, vsoi1helio - vi2, vi3 - vf2, vf3 - vsoi2helio);
         }
 
-        private (V3 rsoi1, V3 vsoi1, V3 rsoi2, V3 vsoi2, V3 dv1, V3 dv2, V3 dv3, V3 dv4, V3 dv5, V3 dv6) EvaluateTrajectory(double[] x)
+        private (V3 rsoi1, V3 vsoi1, V3 rsoi2, V3 vsoi2, V3 dv1, V3 dv2, V3 dv3, V3 dv4, V3 dv5) EvaluateTrajectory(double[] x)
         {
             for (int j = 0; j < x.Length; j++)
                 _duals[j] = new Dual(x[j]);
 
-            (DualV3 rsoi1, DualV3 vsoi1, DualV3 rsoi2, DualV3 vsoi2, DualV3 dv1, DualV3 dv2, DualV3 dv3, DualV3 dv4, DualV3 dv5, DualV3 dv6) = EvaluateTrajectory(_duals);
+            (DualV3 rsoi1, DualV3 vsoi1, DualV3 rsoi2, DualV3 vsoi2, DualV3 dv1, DualV3 dv2, DualV3 dv3, DualV3 dv4, DualV3 dv5) = EvaluateTrajectory(_duals);
 
-            return (rsoi1.M, vsoi1.M, rsoi2.M, vsoi2.M, dv1.M, dv2.M, dv3.M, dv4.M, dv5.M, dv6.M);
+            return (rsoi1.M, vsoi1.M, rsoi2.M, vsoi2.M, dv1.M, dv2.M, dv3.M, dv4.M, dv5.M);
         }
 
-        private const int NUM_EQUALITY_CONSTRAINTS = 17;
+        private const int NUM_EQUALITY_CONSTRAINTS = 14;
         private const int NUM_INEQUALITY_CONSTRAINTS = 2;
         private const int MAXITS = 5000;
-        private const int NVARIABLES = 19;
+        private const int NVARIABLES = 16;
 
         public (V3 dv, double dt1, double dt2, double dt3) Maneuver(V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi1, double mu2, V3 r2, V3 v2, double soi2, double mu3, double arrivalDT, double arrivalDTlower = 0, double arrivalDTupper = double.PositiveInfinity, double peR = double.PositiveInfinity, double inc = double.NaN, bool captureBurn = false, bool optguard = false)
         {
@@ -260,7 +253,6 @@ namespace MechJebLib.Maneuvers
 
             // re-solve the ZSOI helicentric trajectory with estimated travel time to the first SOI boundary
             (V3 vi, V3 vf) = Izzo.Solve(1.0, r1soi1, r2soi2, arrivalUTscaled - dt1HelioBootstrap, TransferGeometry.Prograde, h: V3.Cross(r1soi1, v1soi1));
-            (V3 rmid2, V3 _) = Shepperd.Solve(1.0, 0.5 * (arrivalUTscaled - dt1HelioBootstrap), r1soi1, vi);
 
             // refine the ZSOI solution into finite SOI
             (V3 _, V3 vsoi1) = Astro.StateVectorsAtDistance(1.0, r1soi1, vi, soi1 / _helioScale.LengthScale);
@@ -269,19 +261,23 @@ namespace MechJebLib.Maneuvers
             vsoi1 = ((vsoi1 - v1soi1) * _sourceToHelioScale.VelocityScale).cart2sph;
             V3 vsoi2 = ((vf - v2soi2) * _targetToHelioScale.VelocityScale).cart2sph;
 
-            x0[11] = rmid2.x;
-            x0[12] = rmid2.y;
-            x0[13] = rmid2.z;
-            x0[14] = 0;
-            x0[15] = 0;
-            x0[16] = vsoi2.x;
-            x0[17] = vsoi2.y;
-            x0[18] = vsoi2.z;
+            x0[11] = 0;
+            x0[12] = 0;
+            x0[13] = vsoi2.x;
+            x0[14] = vsoi2.y;
+            x0[15] = vsoi2.z;
 
             (V3 _, V3 vPos, V3 rBurn, double dt1) = Astro.SingleImpulseHyperbolicBurn(1.0, _r0, _v0, vsoi1.sph2cart);
             double dt2 = Astro.TimeToNextRadius(1.0, rBurn, vPos, _soi1);
-            (V3 rmid1, V3 _) = Shepperd.Solve(1.0, 0.5*dt2, rBurn, vPos);
             (V3 rsoiSph1, V3 vsoiSph1) = Shepperd.Solve(1.0, dt2, rBurn, vPos);
+
+            // midpoint of the heliocentric coast from the soi1 exit point to the target, using the refined departure times
+            double dt12Helio = (dt1 + dt2) / _sourceToHelioScale.TimeScale;
+            (V3 r1exit, V3 v1exit) = Shepperd.Solve(1.0, dt12Helio, _r1, _v1);
+            V3 rexitHelio = r1exit + rsoiSph1 / _sourceToHelioScale.LengthScale;
+            V3 vexitHelio = v1exit + vsoiSph1 / _sourceToHelioScale.VelocityScale;
+            (V3 viExit, V3 _) = Izzo.Solve(1.0, rexitHelio, r2soi2, arrivalUTscaled - dt12Helio, TransferGeometry.Prograde, h: V3.Cross(rexitHelio, vexitHelio));
+            (V3 rmidHelio, V3 _) = Shepperd.Solve(1.0, 0.5 * (arrivalUTscaled - dt12Helio), rexitHelio, viExit);
 
             rsoiSph1 = rsoiSph1.cart2sph;
             vsoiSph1 = vsoiSph1.cart2sph;
@@ -289,14 +285,14 @@ namespace MechJebLib.Maneuvers
             x0[0] = dt1;
             x0[1] = dt2;
             x0[2] = arrivalUTscaled;
-            x0[3] = rmid1.x;
-            x0[4] = rmid1.y;
-            x0[5] = rmid1.z;
-            x0[6] = rsoiSph1.y;
-            x0[7] = rsoiSph1.z;
-            x0[8] = vsoiSph1.x;
-            x0[9] = vsoiSph1.y;
-            x0[10] = vsoiSph1.z;
+            x0[3] = rsoiSph1.y;
+            x0[4] = rsoiSph1.z;
+            x0[5] = vsoiSph1.x;
+            x0[6] = vsoiSph1.y;
+            x0[7] = vsoiSph1.z;
+            x0[8] = rmidHelio.x;
+            x0[9] = rmidHelio.y;
+            x0[10] = rmidHelio.z;
 
             // box constraints
 
@@ -315,7 +311,7 @@ namespace MechJebLib.Maneuvers
             bndl[1] = EPS;
             bndl[2] = Max(arrivalDTlower / _helioScale.TimeScale, EPS);
             bndu[2] = arrivalDTupper / _helioScale.TimeScale;
-            bndl[16] = Sqrt(EPS);
+            bndl[13] = Sqrt(EPS);
 
             Solution sol = RunOptimizer(x0, bndl, bndu, optguard);
 
@@ -402,7 +398,7 @@ namespace MechJebLib.Maneuvers
 
             // we should start with a near zero periapsis infalling vsoi2
             // nudge the solution in the b-plane to closer to the _peR that we want to target
-            var vsoiSph2 = new V3(x1[16], x1[17], x1[18]);
+            var vsoiSph2 = new V3(x1[13], x1[14], x1[15]);
             V3 vsoi2 = vsoiSph2.sph2cart;
 
             double vinf = vsoi2.magnitude;
@@ -414,11 +410,11 @@ namespace MechJebLib.Maneuvers
 
             V3 rsoiSph2 = rsoi2.cart2sph;
 
-            x1[14] = rsoiSph2.y;
-            x1[15] = rsoiSph2.z;
-            x1[16] = vsoiSph2.x;
-            x1[17] = vsoiSph2.y;
-            x1[18] = vsoiSph2.z;
+            x1[11] = rsoiSph2.y;
+            x1[12] = rsoiSph2.z;
+            x1[13] = vsoiSph2.x;
+            x1[14] = vsoiSph2.y;
+            x1[15] = vsoiSph2.z;
 
             for (int i = 0; i < x1.Length; i++)
                 DebugPrint($"x1[{i}] = {x1[i]}");
@@ -498,7 +494,7 @@ namespace MechJebLib.Maneuvers
             double[] fi0 = new double[m];
             NLPFunction(x, fi0, _jac);
 
-            foreach (int i in new[]{8, 9, 10, 11, 12})
+            foreach (int i in new[]{11, 12, 13, 14, 15})
             {
                 DebugPrint($"--- var {i} = {x[i]} ---");
                 foreach (double h in new[]{1e-1, 1e-2, 1e-3,1e-4,1e-5,1e-6,1e-7,1e-8,1e-9,1e-10})
@@ -518,7 +514,7 @@ namespace MechJebLib.Maneuvers
             V3 dv;
             try
             {
-                (_, _, _, _, dv, _, _, _, _, _) = EvaluateTrajectory(x);
+                (_, _, _, _, dv, _, _, _, _) = EvaluateTrajectory(x);
             }
             catch (Exception)
             {
