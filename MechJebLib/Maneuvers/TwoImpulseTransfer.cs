@@ -24,9 +24,10 @@ namespace MechJebLib.Maneuvers
             public V3 R2;
             public V3 V2;
             public bool Capture;
+            public double MinPeR;
         }
 
-        private static (V3 dv1, V3 dv2) LambertFunction(double dt, double tt, double offset, Args args)
+        private static (V3 dv1, V3 dv2, double peR) LambertFunction(double dt, double tt, double offset, Args args)
         {
             V3 r1 = args.R1;
             V3 v1 = args.V1;
@@ -37,7 +38,8 @@ namespace MechJebLib.Maneuvers
             (V3 rf2, V3 vf2) = Shepperd.Solve(1.0, dt + tt + offset, r2, v2);
             (V3 vi, V3 vf) = Izzo.Solve(1.0, rburn, rf2, tt, TransferGeometry.Prograde, 0, V3.Cross(rburn, vburn));
 
-            return (vi - vburn, vf2 - vf);
+            double peR = Astro.PeriapsisFromStateVectors(1.0, rburn, vi);
+            return (vi - vburn, vf2 - vf, peR);
         }
 
         private static void NLPFunction(double[] x, ref double func, object obj)
@@ -55,7 +57,16 @@ namespace MechJebLib.Maneuvers
                 return;
             }
 
-            (V3 dv1, V3 dv2) = LambertFunction(dt, tt, offset, args);
+            (V3 dv1, V3 dv2, double peR) = LambertFunction(dt, tt, offset, args);
+
+            if (IsFinite(args.MinPeR) && peR < args.MinPeR)
+            {
+                double shortfall = args.MinPeR - peR;
+
+                // Keep a gradient toward valid space instead of returning a completely flat 1e300 region to the numerical optimizer.
+                func = 1e6 + shortfall * shortfall * 1e6;
+                return;
+            }
 
             if (args.Capture)
                 func = dv1.magnitude + dv2.magnitude;
@@ -64,7 +75,7 @@ namespace MechJebLib.Maneuvers
         }
 
         private static (V3 dv1, double dt1, V3 dv2, double dt2) Maneuver(double mu, V3 r1, V3 v1, V3 r2, V3 v2, double dtguess, double offsetGuess,
-            bool coplanar = true, bool capture = true, double dtmin = double.NegativeInfinity,
+            bool coplanar = true, bool capture = true, double dtmin = double.NegativeInfinity, double minPeR = double.NegativeInfinity,
             double dtmax = double.PositiveInfinity,
             double ttmin = double.NegativeInfinity, double ttmax = double.PositiveInfinity, double offsetMin = double.NegativeInfinity,
             double offsetMax = double.PositiveInfinity, bool optguard = false)
@@ -113,6 +124,7 @@ namespace MechJebLib.Maneuvers
             ttmax /= scale.TimeScale;
             offsetMin /= scale.TimeScale;
             offsetMax /= scale.TimeScale;
+            minPeR /= scale.LengthScale;
 
             (_, _, double ttguess, _) = Astro.HohmannTransferParameters(1.0, r1, r2);
 
@@ -126,7 +138,8 @@ namespace MechJebLib.Maneuvers
                 V1 = v1,
                 R2 = r2,
                 V2 = v2,
-                Capture = capture
+                Capture = capture,
+                MinPeR = minPeR
             };
 
             double[] bndl = { dtmin, ttmin, offsetMin };
@@ -161,14 +174,14 @@ namespace MechJebLib.Maneuvers
                     throw new MechJebLibException("nonc1suspected error");
             }
 
-            (V3 dv1, V3 dv2) = LambertFunction(x[0], x[1], x[2], args);
+            (V3 dv1, V3 dv2, _) = LambertFunction(x[0], x[1], x[2], args);
 
             return (dv1 * scale.VelocityScale, x[0] * scale.TimeScale, dv2 * scale.VelocityScale, (x[0] + x[1]) * scale.TimeScale);
         }
 
         private static (V3 dv1, double dt1, V3 dv2, double dt2) ManeuverInternal(double mu, V3 r1, V3 v1, V3 r2, V3 v2, double dtguess,
             double lagTime = double.NaN, bool coplanar = true, bool rendezvous = true, bool capture = true,
-            bool fixedtime = false, bool optguard = false)
+            bool fixedtime = false, bool optguard = false, double minPeR = double.NegativeInfinity)
         {
             V3 dv1, dv2;
             double dt1, dt2;
@@ -196,12 +209,12 @@ namespace MechJebLib.Maneuvers
 
                 (dv1, dt1, dv2, dt2) =
                     Maneuver(mu, r1, v1, r2, v2, dtguess, offsetGuess, dtmin: dtmin, dtmax: dtmax, offsetMin: offsetMin, offsetMax: offsetMax,
-                        coplanar: coplanar, capture: capture, optguard: optguard);
+                        coplanar: coplanar, capture: capture, optguard: optguard, minPeR: minPeR);
             }
             else
             {
                 (dv1, dt1, dv2, dt2) =
-                    Maneuver(mu, r1, v1, r2, v2, dtguess, 0, dtmin: dtmin, dtmax: dtmax, coplanar: coplanar, capture: capture, optguard: optguard);
+                    Maneuver(mu, r1, v1, r2, v2, dtguess, 0, dtmin: dtmin, dtmax: dtmax, coplanar: coplanar, capture: capture, optguard: optguard, minPeR: minPeR);
 
                 // we have to try the other side of the target orbit since we might get eg. the DN instead of the AN when the AN is closer
                 // (this may be insufficient and may need more of a search box but then we're O(N^2) and i think basinhopping or porkchop
@@ -209,7 +222,7 @@ namespace MechJebLib.Maneuvers
                 double targetPeriod = Astro.PeriodFromStateVectors(mu, r2, v2);
 
                 (V3 a, double b, V3 c, double d) =
-                    Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar, capture, optguard: optguard);
+                    Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar, capture, optguard: optguard, minPeR: minPeR);
 
                 if (b > 0 && (b < dt1 || dt1 < 0))
                 {
@@ -225,21 +238,21 @@ namespace MechJebLib.Maneuvers
 
         public static (V3 dv1, double dt1, V3 dv2, double dt2) NextManeuver(double mu, V3 r1, V3 v1, V3 r2, V3 v2, int maxiter = 50,
             double lagTime = double.NaN, bool coplanar = true, bool rendezvous = true, bool capture = true,
-            bool fixedTime = false, bool optguard = false)
+            bool fixedTime = false, bool optguard = false, double minPeR = double.NegativeInfinity)
         {
-            Print($"[MechJebLib] Maneuvers.NextManeuver.TwoImpulseTransfer({mu}, {r1}, {r2}, {v1}, {v2}, maxiter: {maxiter}, lagTime: {lagTime}, coplanar: {coplanar}, rendezvous: {rendezvous}, capture: {capture}, fixedTime: {fixedTime}, optguard: {optguard})");
+            Print($"[MechJebLib] Maneuvers.NextManeuver.TwoImpulseTransfer({mu}, {r1}, {r2}, {v1}, {v2}, maxiter: {maxiter}, lagTime: {lagTime}, coplanar: {coplanar}, rendezvous: {rendezvous}, capture: {capture}, fixedTime: {fixedTime}, optguard: {optguard}, minPeR: {minPeR})");
 
             double synodicPeriod = Astro.SynodicPeriod(mu, r1, v1, r2, v2);
 
             if (fixedTime)
                 return ManeuverInternal(mu, r1, v1, r2, v2, 0, coplanar: coplanar, rendezvous: rendezvous, capture: capture, optguard: optguard,
-                    lagTime: lagTime, fixedtime: true);
+                    lagTime: lagTime, fixedtime: true, minPeR: minPeR);
 
             double dtguess = 0;
             for (int iter = 0; iter < maxiter; iter++)
             {
                 (V3 dv1, double dt1, V3 dv2, double dt2) = ManeuverInternal(mu, r1, v1, r2, v2, dtguess, coplanar: coplanar, rendezvous: rendezvous,
-                    capture: capture, optguard: optguard, lagTime: lagTime);
+                    capture: capture, optguard: optguard, lagTime: lagTime, minPeR: minPeR);
 
                 if (dt1 > 0)
                     return (dv1, dt1, dv2, dt2);
