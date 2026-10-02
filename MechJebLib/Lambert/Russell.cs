@@ -99,14 +99,16 @@ namespace MechJebLib.Lambert
         /// <param name="mu">Gravitational parameter (mu)</param>
         /// <param name="r1">Initial position vector</param>
         /// <param name="r2">Final position vector</param>
-        /// <param name="tof">Time of flight between both positions, must be positive (and at least 1e-3 times the parabolic time for n = 0)</param>
-        /// <param name="direction">1 for the short way (transfer angle in [0, pi]), -1 for the long way (transfer angle in [pi, 2pi])</param>
-        /// <param name="n">Number of full revolutions (+ long-period, - short-period for n != 0)</param>
+        /// <param name="tof">Time of flight between both positions, must be positive (and at least 1e-3 times the parabolic time for nrev = 0)</param>
+        /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
+        /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
+        /// <param name="h">Axis to use for prograde/retrograde (does not need to be normalized)</param>
         /// <param name="numiter">Maximum number of iterations</param>
         /// <returns>The initial (v1) and final (v2) velocity vectors</returns>
-        public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof, int direction = 1, int n = 0, int numiter = 50)
+        public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null, int numiter = 50)
         {
-            (V3 v1, V3 v2, _, _, _) = SolveWithState(mu, r1, r2, tof, direction, n, numiter);
+            (V3 v1, V3 v2, _, _, _) = SolveWithState(mu, r1, r2, tof, direction, nrev, h, numiter);
             return (v1, v2);
         }
 
@@ -118,14 +120,16 @@ namespace MechJebLib.Lambert
         /// <param name="mu">Gravitational parameter (mu)</param>
         /// <param name="r1">Initial position vector</param>
         /// <param name="r2">Final position vector</param>
-        /// <param name="tof">Time of flight between both positions, must be positive (and at least 1e-3 times the parabolic time for n = 0)</param>
-        /// <param name="direction">1 for the short way (transfer angle in [0, pi]), -1 for the long way (transfer angle in [pi, 2pi])</param>
-        /// <param name="n">Number of full revolutions (+ long-period, - short-period for n != 0)</param>
+        /// <param name="tof">Time of flight between both positions, must be positive (and at least 1e-3 times the parabolic time for nrev = 0)</param>
+        /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
+        /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
+        /// <param name="h">Axis to use for prograde/retrograde (does not need to be normalized)</param>
         /// <param name="numiter">Maximum number of iterations</param>
         /// <returns>The initial (v1) and final (v2) velocity vectors, with derivatives along the dual parts of the inputs</returns>
-        public static (DualV3 v1, DualV3 v2) Solve(double mu, DualV3 r1, DualV3 r2, Dual tof, int direction = 1, int n = 0, int numiter = 50)
+        public static (DualV3 v1, DualV3 v2) Solve(double mu, DualV3 r1, DualV3 r2, Dual tof,
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null, int numiter = 50)
         {
-            (V3 v1, V3 v2, double k, double p, double tau) = SolveWithState(mu, r1.M, r2.M, tof.M, direction, n, numiter);
+            (V3 v1, V3 v2, double k, double p, double tau) = SolveWithState(mu, r1.M, r2.M, tof.M, direction, nrev, h, numiter);
 
             // derivatives of the geometry: sigma = r1 + r2, S = sqrt(sigma^3 / mu) and tau = d sqrt(q) / sigma where
             // q = r1 r2 (1 + cos(theta)) = r1 r2 + r1vec . r2vec.
@@ -141,7 +145,7 @@ namespace MechJebLib.Lambert
             double dtau = dq / (2.0 * sigma * sigma * tau) - tau * dsigma / sigma;
 
             // implicit derivative of the converged k from Lambert's equation F = S L(k, tau) - tof = 0 (Russell 2022, Eq. 16)
-            (double L, double Lk, double Ltau) = TofPartials(k, p, tau, Abs(n));
+            (double L, double Lk, double Ltau) = TofPartials(k, p, tau, Abs(nrev));
             double dk = -(S * Ltau * dtau + L * dS - tof.D) / (S * Lk);
             double dp = -tau * dk - k * dtau;
 
@@ -168,19 +172,16 @@ namespace MechJebLib.Lambert
         ///     Solves Lambert's problem, and returns the converged iteration variable k, p = 1 - k tau and tau along with
         ///     the velocities.
         /// </summary>
-        private static (V3 v1, V3 v2, double k, double p, double tau) SolveWithState(double mu, V3 r1, V3 r2, double tof, int direction, int n,
-            int numiter)
+        private static (V3 v1, V3 v2, double k, double p, double tau) SolveWithState(double mu, V3 r1, V3 r2, double tof,
+            TransferGeometry direction, int nrev, V3? h, int numiter)
         {
             Check.PositiveFinite(mu);
             Check.PositiveFinite(tof);
             Check.NonZeroFinite(r1);
             Check.NonZeroFinite(r2);
 
-            if (direction != 1 && direction != -1)
-                throw new ArgumentException("Russell's Lambert solver requires a direction of 1 (short way) or -1 (long way)");
-
-            int nabs = Abs(n);
-            bool zeroRev = n == 0;
+            int nabs = Abs(nrev);
+            bool zeroRev = nrev == 0;
 
             // Normalize to canonical units (mu = 1, |r1| = 1)
             double lRef = r1.magnitude;
@@ -189,6 +190,16 @@ namespace MechJebLib.Lambert
             V3 r2Hat = r2 / lRef;
             double r2Norm = r2Hat.magnitude;
             double tofHat = tof / tRef;
+
+            // The transfer angle measured around h is in [0, pi] when (r1 x r2) . h >= 0, so prograde and retrograde just
+            // pick the short way or long way (Russell 2019, Eq. 1).
+            bool longWay = direction == TransferGeometry.LongWay || direction == TransferGeometry.Retrograde;
+            if (direction == TransferGeometry.Prograde || direction == TransferGeometry.Retrograde)
+            {
+                if (h == null)
+                    throw new ArgumentException("Russell's Lambert solver requires a normal vector for prograde or retrograde directions");
+                longWay ^= V3.Dot(V3.Cross(r1Hat, r2Hat), h.Value) < 0;
+            }
 
             // Geometry
             double r1pr2 = 1.0 + r2Norm;
@@ -216,7 +227,9 @@ namespace MechJebLib.Lambert
             if (abstau < SQRT_TINY)
                 throw new ArgumentException("Russell's Lambert solver cannot compute velocities for an exact half-revolution transfer");
 
-            double tau = direction * abstau;
+            // tau is proportional to cos(theta / 2), so the long way is the negative branch.  Everything downstream (the
+            // initial guess, the bounds on k and the sign of g in the velocities) follows from the sign of tau.
+            double tau = longWay ? -abstau : abstau;
             double tau2 = tau * tau;
             double tau3 = tau2 * tau;
             double S = r1pr2 * Sqrt(r1pr2);
@@ -242,7 +255,7 @@ namespace MechJebLib.Lambert
             double k;
             if (zeroRev)
             {
-                k = InitialGuessZeroRev(tau, S, tofHat, direction);
+                k = InitialGuessZeroRev(tau, S, tofHat);
 
                 // defensive, the interpolation should always produce a finite guess
                 if (!IsFinite(k))
@@ -251,12 +264,12 @@ namespace MechJebLib.Lambert
             else
             {
                 double kBottom, tofbySBottom;
-                (k, kBottom, tofbySBottom) = InitialGuessMultiRev(tau, tofbyS, nabs, n > 0);
+                (k, kBottom, tofbySBottom) = InitialGuessMultiRev(tau, tofbyS, nabs, nrev > 0);
 
                 if (tofbyS <= tofbySBottom)
                     throw new Exception("Russell's Lambert solver found no solution: time of flight is less than the minimum for this number of revolutions");
 
-                if (n > 0)
+                if (nrev > 0)
                     kLeft = kBottom;
                 else
                     kRight = kBottom;
@@ -269,7 +282,7 @@ namespace MechJebLib.Lambert
             bool iterateOnP = zeroRev && p < LITTLE_P;
 
             // for multi-rev, if the TOF curve slope says we are on the other branch then bump back towards the requested branch
-            double signBump = zeroRev ? 0.0 : n > 0 ? BOTTOM_BUMP : -BOTTOM_BUMP;
+            double signBump = zeroRev ? 0.0 : nrev > 0 ? BOTTOM_BUMP : -BOTTOM_BUMP;
 
             bool converged = false;
 
@@ -648,7 +661,7 @@ namespace MechJebLib.Lambert
         ///     Zero-rev initial guess for k using the piecewise rational interpolation of Arora and Russell (2013).
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double InitialGuessZeroRev(double tau, double S, double tofHat, int direction)
+        private static double InitialGuessZeroRev(double tau, double S, double tofHat)
         {
             // parabolic time of flight
             double tofP = S * Sqrt(1.0 - SQRT2 * tau) * (tau + SQRT2) / 3.0;
@@ -656,7 +669,7 @@ namespace MechJebLib.Lambert
             if (tofHat <= tofP)
             {
                 // hyperbolic
-                if (direction == 1)
+                if (tau > 0.0)
                 {
                     const double kn = SQRT2;
                     double km = 1.0 / tau;

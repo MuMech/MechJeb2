@@ -168,14 +168,14 @@ namespace MechJebLib.Maneuvers
 
             // solve from the burn to the soi1 interface
             // (this uses the prograde sense of the rsoi1 x vsoi1 plane, equivalent to the departure arc, which avoids lambert discontinuities)
-            (DualV3 vi1, DualV3 vf1) = Izzo.Solve(1.0, r0Burn, rsoi1, dt2, TransferGeometry.Prograde, rtol: 1e-12, h: V3.Cross(rsoi1.M, vsoi1.M));
+            (DualV3 vi1, DualV3 vf1) = Russell.Solve(1.0, r0Burn, rsoi1, dt2, TransferGeometry.Prograde, h: V3.Cross(rsoi1.M, vsoi1.M));
 
             // solve the heliocentric trajectory from soi1 to soi2 as two equal-time legs through a free midpoint, so that
             // neither leg sits on the 180 degree lambert singularity when the overall transfer angle is near 180 degrees
             // (this uses prograde sense from the rsoi1helio x vsoi1helio plane, which avoids lambert discontinuities)
             V3 hHelio = V3.Cross(rsoi1helio.M, vsoi1helio.M);
-            (DualV3 vi2, DualV3 vf2) = Izzo.Solve(1.0, rsoi1helio, rmidHelio, 0.5 * heliocoast, TransferGeometry.Prograde, rtol: 1e-12, h: hHelio);
-            (DualV3 vi3, DualV3 vf3) = Izzo.Solve(1.0, rmidHelio, rsoi2helio, 0.5 * heliocoast, TransferGeometry.Prograde, rtol: 1e-12, h: hHelio);
+            (DualV3 vi2, DualV3 vf2) = Russell.Solve(1.0, rsoi1helio, rmidHelio, 0.5 * heliocoast, TransferGeometry.Prograde, h: hHelio);
+            (DualV3 vi3, DualV3 vf3) = Russell.Solve(1.0, rmidHelio, rsoi2helio, 0.5 * heliocoast, TransferGeometry.Prograde, h: hHelio);
 
             return (rsoi1, vsoi1, rsoi2, vsoi2, vi1 - v0Burn, vsoi1 - vf1, vsoi1helio - vi2, vi3 - vf2, vf3 - vsoi2helio);
         }
@@ -243,7 +243,7 @@ namespace MechJebLib.Maneuvers
             (V3 r2soi2, V3 v2soi2) = Shepperd.Solve(1.0, arrivalUTscaled, _r2, _v2);
 
             // solve the ZSOI heliocentric trajectory from source to target
-            (V3 viBootstrap, V3 _) = Izzo.Solve(1.0, _r1, r2soi2, arrivalUTscaled, TransferGeometry.Prograde, h: V3.Cross(_r1, _v1));
+            (V3 viBootstrap, V3 _) = Russell.Solve(1.0, _r1, r2soi2, arrivalUTscaled, TransferGeometry.Prograde, h: V3.Cross(_r1, _v1));
 
             // estimate travel time to the SOI boundary and propagate the source celestial
             (V3 _, V3 vPosBootstrap, V3 rBurnBootstrap, double dt1Bootstrap) = Astro.SingleImpulseHyperbolicBurn(1.0, _r0, _v0, (viBootstrap - _v1) * _sourceToHelioScale.VelocityScale);
@@ -252,7 +252,7 @@ namespace MechJebLib.Maneuvers
             (V3 r1soi1, V3 v1soi1) = Shepperd.Solve(1.0, dt1HelioBootstrap, _r1, _v1);
 
             // re-solve the ZSOI helicentric trajectory with estimated travel time to the first SOI boundary
-            (V3 vi, V3 vf) = Izzo.Solve(1.0, r1soi1, r2soi2, arrivalUTscaled - dt1HelioBootstrap, TransferGeometry.Prograde, h: V3.Cross(r1soi1, v1soi1));
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r1soi1, r2soi2, arrivalUTscaled - dt1HelioBootstrap, TransferGeometry.Prograde, h: V3.Cross(r1soi1, v1soi1));
 
             // refine the ZSOI solution into finite SOI
             (V3 _, V3 vsoi1) = Astro.StateVectorsAtDistance(1.0, r1soi1, vi, soi1 / _helioScale.LengthScale);
@@ -276,7 +276,7 @@ namespace MechJebLib.Maneuvers
             (V3 r1exit, V3 v1exit) = Shepperd.Solve(1.0, dt12Helio, _r1, _v1);
             V3 rexitHelio = r1exit + rsoiSph1 / _sourceToHelioScale.LengthScale;
             V3 vexitHelio = v1exit + vsoiSph1 / _sourceToHelioScale.VelocityScale;
-            (V3 viExit, V3 _) = Izzo.Solve(1.0, rexitHelio, r2soi2, arrivalUTscaled - dt12Helio, TransferGeometry.Prograde, h: V3.Cross(rexitHelio, vexitHelio));
+            (V3 viExit, V3 _) = Russell.Solve(1.0, rexitHelio, r2soi2, arrivalUTscaled - dt12Helio, TransferGeometry.Prograde, h: V3.Cross(rexitHelio, vexitHelio));
             (V3 rmidHelio, V3 _) = Shepperd.Solve(1.0, 0.5 * (arrivalUTscaled - dt12Helio), rexitHelio, viExit);
 
             rsoiSph1 = rsoiSph1.cart2sph;

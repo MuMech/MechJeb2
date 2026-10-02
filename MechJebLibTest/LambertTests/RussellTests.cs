@@ -32,8 +32,8 @@ namespace MechJebLibTest.LambertTests
                 yield return new object[] { i };
         }
 
-        // the direction (short way or long way) of a transfer from r0 with velocity v0 to rf
-        private static int Direction(V3 r0, V3 v0, V3 rf) => V3.Dot(V3.Cross(r0, v0), V3.Cross(r0, rf)) >= 0 ? 1 : -1;
+        // the transfer geometry for d = 1 (short way) or d = -1 (long way)
+        private static TransferGeometry Geometry(int direction) => direction == 1 ? TransferGeometry.ShortWay : TransferGeometry.LongWay;
 
         // recover the vercosine iteration variables (k, p) from the solution velocity, to check which code paths were tested
         private static (double k, double p) VercosineKP(V3 r0, V3 rf, V3 v0, int direction)
@@ -98,16 +98,17 @@ namespace MechJebLibTest.LambertTests
 
             (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, v0);
 
-            int direction = Direction(r0, v0, rfShepperd);
+            // the arc that goes the same way around as v0
+            V3 h = V3.Cross(r0, v0);
 
             if (NearSingularity(r0, rfShepperd))
             {
                 _testOutputHelper.WriteLine($"skipping, too close to r1 == r2: {Sqrt(0.5) - Sqrt(r0.magnitude * rfShepperd.magnitude + V3.Dot(r0, rfShepperd)) / (r0.magnitude + rfShepperd.magnitude):E2}");
-                Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfShepperd, dt, direction));
+                Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfShepperd, dt, TransferGeometry.Prograde, h: h));
                 return;
             }
 
-            (V3 viRussell, V3 vfRussell) = Russell.Solve(1.0, r0, rfShepperd, dt, direction);
+            (V3 viRussell, V3 vfRussell) = Russell.Solve(1.0, r0, rfShepperd, dt, TransferGeometry.Prograde, h: h);
 
             viRussell.ShouldEqual(v0, tol);
             vfRussell.ShouldEqual(vfShepperd, tol);
@@ -118,13 +119,13 @@ namespace MechJebLibTest.LambertTests
             {
                 try
                 {
-                    (V3 viNRev, V3 vfNRev) = Russell.Solve(1.0, r0, rfShepperd, dt + m * period, direction, m);
+                    (V3 viNRev, V3 vfNRev) = Russell.Solve(1.0, r0, rfShepperd, dt + m * period, TransferGeometry.Prograde, m, h);
                     viNRev.ShouldEqual(viRussell, tol);
                     vfNRev.ShouldEqual(vfRussell, tol);
                 }
                 catch (Exception)
                 {
-                    (V3 viNRev, V3 vfNRev) = Russell.Solve(1.0, r0, rfShepperd, dt + m * period, direction, -m);
+                    (V3 viNRev, V3 vfNRev) = Russell.Solve(1.0, r0, rfShepperd, dt + m * period, TransferGeometry.Prograde, -m, h);
 
                     viNRev.ShouldEqual(viRussell, tol);
                     vfNRev.ShouldEqual(vfRussell, tol);
@@ -145,10 +146,10 @@ namespace MechJebLibTest.LambertTests
             var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt = random.NextDouble() * 6 + 0.05;
 
-            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, 1);
+            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.ShortWay);
             CheckTransfer(r0, rf, dt, viShort, vfShort, tol);
 
-            (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, -1);
+            (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay);
             CheckTransfer(r0, rf, dt, viLong, vfLong, tol);
         }
 
@@ -175,7 +176,7 @@ namespace MechJebLibTest.LambertTests
 
             V3 vi1, vf1, vi2, vf2;
 
-            (vi1, vf1) = Russell.Solve(1.0, r0, rf, dt, 1);
+            (vi1, vf1) = Russell.Solve(1.0, r0, rf, dt);
             (vi2, vf2) = Izzo.Solve(1.0, r0, rf, dt);
             vi1.ShouldEqual(vi2, tol);
             vf1.ShouldEqual(vf2, tol);
@@ -183,7 +184,7 @@ namespace MechJebLibTest.LambertTests
             vi1.ShouldEqual(vi2, tol);
             vf1.ShouldEqual(vf2, tol);
 
-            (vi1, vf1) = Russell.Solve(1.0, r0, rf, dt, -1);
+            (vi1, vf1) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay);
             (vi2, vf2) = Izzo.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay);
             vi1.ShouldEqual(vi2, tol);
             vf1.ShouldEqual(vf2, tol);
@@ -206,18 +207,18 @@ namespace MechJebLibTest.LambertTests
             var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             int m = random.Next(1, 20);
             double dt = Pow(10, 2 * random.NextDouble() + 2) * m;
-            int direction = random.Next(2) == 0 ? 1 : -1;
+            TransferGeometry geometry = random.Next(2) == 0 ? TransferGeometry.ShortWay : TransferGeometry.LongWay;
 
-            (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, direction, m);
+            (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, geometry, m);
             CheckTransfer(r0, rf, dt, viLong, vfLong, tol);
 
-            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, direction, -m);
+            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, geometry, -m);
             CheckTransfer(r0, rf, dt, viShort, vfShort, tol);
 
             Assert.True(Astro.SmaFromStateVectors(1.0, r0, viLong) > Astro.SmaFromStateVectors(1.0, r0, viShort));
         }
 
-        // the sign of n selects the same branch as the nrev argument of Izzo and Gooding
+        // the sign of nrev selects the same branch as the nrev argument of Izzo and Gooding
         [Theory, MemberData(nameof(Seeds))]
         private void RandomMultipleRevolutionComparedToIzzoAndGooding(int seed)
         {
@@ -231,12 +232,11 @@ namespace MechJebLibTest.LambertTests
             var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             int m = random.Next(1, 6);
             double dt = Pow(10, 2 * random.NextDouble() + 2) * m;
-            int direction = random.Next(2) == 0 ? 1 : -1;
-            TransferGeometry geometry = direction == 1 ? TransferGeometry.ShortWay : TransferGeometry.LongWay;
+            TransferGeometry geometry = random.Next(2) == 0 ? TransferGeometry.ShortWay : TransferGeometry.LongWay;
 
             foreach (int n in new[] { m, -m })
             {
-                (V3 vi1, V3 vf1) = Russell.Solve(1.0, r0, rf, dt, direction, n);
+                (V3 vi1, V3 vf1) = Russell.Solve(1.0, r0, rf, dt, geometry, n);
 
                 (V3 vi2, V3 vf2) = Izzo.Solve(1.0, r0, rf, dt, geometry, n, rtol: 1e-12);
                 vi1.ShouldEqual(vi2, tol);
@@ -248,10 +248,62 @@ namespace MechJebLibTest.LambertTests
             }
         }
 
+        // prograde and retrograde pick the short way or long way, depending on which way around h the transfer goes
+        [Theory, MemberData(nameof(Seeds))]
+        private void RandomProgradeRetrograde(int seed)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            double tol = 1e-6;
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var h = new V3(2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1, 2 * random.NextDouble() - 1);
+            double dt = random.NextDouble() * 6 + 0.05;
+
+            // avoid inherent singularity at nearly collinear ri, rf for longway/shortway
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.99998)
+                return;
+
+            // relax tolerance for nearly collinear
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
+                tol = 2e-3;
+
+            bool shortWayIsPrograde = V3.Dot(V3.Cross(r0, rf), h) >= 0;
+
+            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.ShortWay);
+            (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay);
+
+            (V3 viPro, V3 vfPro) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.Prograde, h: h);
+            viPro.ShouldEqual(shortWayIsPrograde ? viShort : viLong, tol);
+            vfPro.ShouldEqual(shortWayIsPrograde ? vfShort : vfLong, tol);
+            Assert.True(V3.Dot(V3.Cross(r0, viPro), h) > 0);
+
+            (V3 viRetro, V3 vfRetro) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.Retrograde, h: h);
+            viRetro.ShouldEqual(shortWayIsPrograde ? viLong : viShort, tol);
+            vfRetro.ShouldEqual(shortWayIsPrograde ? vfLong : vfShort, tol);
+            Assert.True(V3.Dot(V3.Cross(r0, viRetro), h) < 0);
+
+            foreach (TransferGeometry geometry in new[] { TransferGeometry.Prograde, TransferGeometry.Retrograde })
+            {
+                (V3 vi1, V3 vf1) = Russell.Solve(1.0, r0, rf, dt, geometry, h: h);
+
+                (V3 vi2, V3 vf2) = Izzo.Solve(1.0, r0, rf, dt, geometry, h: h);
+                vi1.ShouldEqual(vi2, tol);
+                vf1.ShouldEqual(vf2, tol);
+
+                (vi2, vf2) = Gooding.Solve(1.0, r0, rf, dt, geometry, h: h);
+                vi1.ShouldEqual(vi2, tol);
+                vf1.ShouldEqual(vf2, tol);
+            }
+        }
+
         [Theory]
-        [InlineData(1)]
-        [InlineData(-1)]
-        private void NearHalfRevolution(int direction)
+        [InlineData(TransferGeometry.ShortWay)]
+        [InlineData(TransferGeometry.LongWay)]
+        private void NearHalfRevolution(TransferGeometry direction)
         {
             var r0 = new V3(1, 0, 0);
             double theta = PI - 1e-6;
@@ -262,11 +314,11 @@ namespace MechJebLibTest.LambertTests
         }
 
         [Theory]
-        [InlineData(1)]
-        [InlineData(-1)]
-        private void NearFullRevolution(int direction)
+        [InlineData(TransferGeometry.ShortWay)]
+        [InlineData(TransferGeometry.LongWay)]
+        private void NearFullRevolution(TransferGeometry direction)
         {
-            // for d=1 the transfer angle is 1e-4 and for d=-1 it is 2pi - 1e-4
+            // for the short way the transfer angle is 1e-4 and for the long way it is 2pi - 1e-4
             var r0 = new V3(1, 0, 0);
             V3 rf = 1.5 * new V3(Cos(1e-4), Sin(1e-4), 0);
 
@@ -282,7 +334,7 @@ namespace MechJebLibTest.LambertTests
             var r0 = new V3(1, 0, 0);
             var rf = new V3(0, 1, 0);
 
-            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 2e-3, -1);
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 2e-3, TransferGeometry.LongWay);
 
             (V3 viIzzo, V3 vfIzzo) = Izzo.Solve(1.0, r0, rf, 2e-3, TransferGeometry.LongWay, rtol: 1e-14);
             vi.ShouldEqual(viIzzo, 1e-12);
@@ -303,7 +355,7 @@ namespace MechJebLibTest.LambertTests
             var r0 = new V3(1, 0, 0);
             var rf = new V3(0, 1, 0);
 
-            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 2e-3, 1);
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 2e-3, TransferGeometry.ShortWay);
             CheckTransfer(r0, rf, 2e-3, vi, vf, 1e-6);
 
             (_, double p) = VercosineKP(r0, rf, vi, 1);
@@ -333,16 +385,16 @@ namespace MechJebLibTest.LambertTests
             if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
                 tol = 2e-3;
 
-            (V3 vi1, V3 vf1) = Russell.Solve(1.0, r0, rf, dt, direction);
-            (V3 vi2, V3 vf2) = Gooding.Solve(1.0, r0, rf, dt, direction == 1 ? TransferGeometry.ShortWay : TransferGeometry.LongWay);
+            (V3 vi1, V3 vf1) = Russell.Solve(1.0, r0, rf, dt, Geometry(direction));
+            (V3 vi2, V3 vf2) = Gooding.Solve(1.0, r0, rf, dt, Geometry(direction));
             vi1.ShouldEqual(vi2, tol);
             vf1.ShouldEqual(vf2, tol);
         }
 
         [Theory]
-        [InlineData(1)]
-        [InlineData(-1)]
-        private void HugeTimeOfFlight(int direction)
+        [InlineData(TransferGeometry.ShortWay)]
+        [InlineData(TransferGeometry.LongWay)]
+        private void HugeTimeOfFlight(TransferGeometry direction)
         {
             // TOF/S > 1e4 root-solves log(TOF/S)
             var r0 = new V3(1, 0, 0);
@@ -361,16 +413,16 @@ namespace MechJebLibTest.LambertTests
             var rf = new V3(0, 1.2, 0);
             double dt = 2e4;
 
-            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, dt, 1, n);
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.ShortWay, n);
             CheckTransfer(r0, rf, dt, vi, vf, 1e-6);
         }
 
         [Theory]
-        [InlineData(1, 1)]
-        [InlineData(1, 3)]
-        [InlineData(-1, 1)]
-        [InlineData(-1, 3)]
-        private void MultipleRevolutionNearMinimumTime(int direction, int m)
+        [InlineData(TransferGeometry.ShortWay, 1)]
+        [InlineData(TransferGeometry.ShortWay, 3)]
+        [InlineData(TransferGeometry.LongWay, 1)]
+        [InlineData(TransferGeometry.LongWay, 3)]
+        private void MultipleRevolutionNearMinimumTime(TransferGeometry direction, int m)
         {
             var r0 = new V3(1, 0, 0);
             var rf = new V3(0, 1.2, 0);
@@ -408,27 +460,31 @@ namespace MechJebLibTest.LambertTests
         {
             var r0 = new V3(1, 0, 0);
 
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(0, 1, 0), 1.0, 0));
+            // prograde and retrograde need an axis
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(0, 1, 0), 1.0, TransferGeometry.Prograde));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(0, 1, 0), 1.0, TransferGeometry.Retrograde));
+
             Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, r0, 1.0));
             Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(-2, 0, 0), 1.0));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(-2, 0, 0), 1.0, -1));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(-2, 0, 0), 1.0, TransferGeometry.LongWay));
 
             // too close to the r1 == r2 singularity
             var rf = new V3(Cos(1e-4), Sin(1e-4), 0);
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 1.0, 1));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, -1));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, 1, 1));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 1.0, TransferGeometry.ShortWay));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.LongWay));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.ShortWay, 1));
 
             // zero-rev time of flight too small
             rf = new V3(0, 1, 0);
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1), 1));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, -1), -1));
-            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, 1), 1);
-            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, -1), -1);
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1), TransferGeometry.ShortWay));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, -1), TransferGeometry.LongWay));
+            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, 1), TransferGeometry.ShortWay);
+            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, -1), TransferGeometry.LongWay);
         }
 
         // central differences of the V3 solver along the direction of the dual parts
-        private static void CheckDualAgainstFiniteDifferences(V3 r0, V3 rf, double dt, int direction, int n, V3 dr0, V3 drf, double ddt, double tol)
+        private static void CheckDualAgainstFiniteDifferences(V3 r0, V3 rf, double dt, TransferGeometry direction, int n, V3 dr0, V3 drf, double ddt,
+            double tol)
         {
             (DualV3 vi, DualV3 vf) = Russell.Solve(1.0, new DualV3(r0, dr0), new DualV3(rf, drf), new Dual(dt, ddt), direction, n);
 
@@ -461,7 +517,7 @@ namespace MechJebLibTest.LambertTests
             if (V3.Dot(r0.normalized, rf.normalized) < -0.999)
                 return;
 
-            CheckDualAgainstFiniteDifferences(r0, rf, dt, direction, 0, dr0, drf, ddt, 1e-5);
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, Geometry(direction), 0, dr0, drf, ddt, 1e-5);
         }
 
         [Theory, MemberData(nameof(Seeds))]
@@ -483,8 +539,8 @@ namespace MechJebLibTest.LambertTests
             if (V3.Dot(r0.normalized, rf.normalized) < -0.999)
                 return;
 
-            CheckDualAgainstFiniteDifferences(r0, rf, dt, direction, m, dr0, drf, ddt, 1e-5);
-            CheckDualAgainstFiniteDifferences(r0, rf, dt, direction, -m, dr0, drf, ddt, 1e-5);
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, Geometry(direction), m, dr0, drf, ddt, 1e-5);
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, Geometry(direction), -m, dr0, drf, ddt, 1e-5);
         }
 
         // fast hyperbolas, which use the series in 1/k (long way) or iterate on p (short way)
@@ -506,7 +562,7 @@ namespace MechJebLibTest.LambertTests
             if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
                 return;
 
-            CheckDualAgainstFiniteDifferences(r0, rf, dt, direction, 0, dr0, drf, ddt, 1e-5);
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, Geometry(direction), 0, dr0, drf, ddt, 1e-5);
         }
     }
 }
