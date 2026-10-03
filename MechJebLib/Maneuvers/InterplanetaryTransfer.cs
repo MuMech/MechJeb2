@@ -2,7 +2,6 @@
 using System.Linq;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
-using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
@@ -313,7 +312,16 @@ namespace MechJebLib.Maneuvers
             bndu[2] = arrivalDTupper / _helioScale.TimeScale;
             bndl[13] = Sqrt(EPS);
 
-            Solution sol = RunOptimizer(x0, bndl, bndu, optguard);
+            Solution sol;
+            try
+            {
+                sol = RunOptimizer(x0, bndl, bndu, optguard);
+            }
+            catch (alglib.alglibexception e)
+            {
+                // alglibexception never passes its message to the base constructor, so Message is useless
+                throw new Exception(e.msg, e);
+            }
 
             Print($"dv: {sol.dv * _sourceScale.VelocityScale} dt1: {sol.dt1 * _sourceScale.TimeScale} dt2: {sol.dt2 * _sourceScale.TimeScale}, dt3: {sol.dt3 * _helioScale.TimeScale}");
             return (sol.dv * _sourceScale.VelocityScale, sol.dt1 * _sourceScale.TimeScale, sol.dt2 * _sourceScale.TimeScale, sol.dt3 * _helioScale.TimeScale);
