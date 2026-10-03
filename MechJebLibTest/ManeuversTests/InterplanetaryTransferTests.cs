@@ -638,5 +638,60 @@ namespace MechJebLibTest.ManeuversTests
             V3 rsoi2 = rsoi2helio - r2soi2;
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
+
+        [Fact]
+        private void HeliocentricExactHalfRevolution()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            // Fake solar system in canonical units (sun mu = 1, length unit of 1 AU) with coplanar circular source and target
+            // orbits at r = 1/2 and r = 2, so the heliocentric scale in Maneuver() is exactly 1.0 and the scaled state is
+            // bit-identical to the inputs.  The target is wound back from [-2, 0, 0], so the ZSOI bootstrap Lambert solve from
+            // the source's initial position [1/2, 0, 0] is an exact 180 degree transfer.
+            const double MU_SUN = 1.3271244004193939E+20;
+            const double AU = 149597870700;
+
+            double mu1 = 398600435436096 / MU_SUN;    // earth
+            double mu2 = 42828373620699.094 / MU_SUN; // mars
+            double mu3 = 1.0;
+            double soi1 = 0.5 * Pow(mu1, 0.4);
+            double soi2 = 2.0 * Pow(mu2, 0.4);
+            double peR = 3510800 / AU;
+            double rpark = 6563145 / AU;
+
+            var r0 = new V3(rpark, 0, 0);
+            var v0 = new V3(0, Sqrt(mu1 / rpark), 0);
+            var r1 = new V3(0.5, 0, 0);
+            var v1 = new V3(0, Sqrt(2), 0);
+
+            // the Hohmann time of flight PI * 1.25^1.5 = 4.3905092069004539, moved 6 ulps so that propagating the wound back
+            // target forward lands exactly on [-2, 0, 0] (at most nearby times it misses by an ulp in y, or |r2| != 2)
+            double arrivalDT = 4.3905092069004485;
+            (V3 r2, V3 v2) = Shepperd.Solve(mu3, -arrivalDT, new V3(-2, 0, 0), new V3(0, -Sqrt(0.5), 0));
+
+            // check the premise of the test, which depends on the exact rounding of Shepperd
+            Sqrt(r1.magnitude * r2.magnitude).ShouldEqual(1.0, 0);
+            (V3 r2Arrival, V3 _) = Shepperd.Solve(mu3, arrivalDT, r2, v2);
+            r2Arrival.ShouldEqual(new V3(-2, 0, 0), 0);
+
+            var maneuver = new InterplanetaryTransfer();
+            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: peR, optguard: true);
+            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+
+            // the solution for the neighboring arrival times which are not exactly 180 degrees
+            dv.magnitude.ShouldEqual(0.262904358179138, 1e-6);
+
+            // the soi radii are small in canonical units, so check them relatively
+            (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
+            (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
+            (rsoi1.magnitude / soi1).ShouldEqual(1.0, 1e-6);
+            (V3 r1soi1, V3 v1soi1) = Shepperd.Solve(mu3, dt1out + dt2out, r1, v1);
+            V3 rsoi1helio = rsoi1 + r1soi1;
+            V3 vsoi1helio = vsoi1 + v1soi1;
+            (V3 rsoi2helio, V3 _) = Shepperd.Solve(mu3, dt3out - (dt1out + dt2out), rsoi1helio, vsoi1helio);
+            (V3 r2soi2, V3 _) = Shepperd.Solve(mu3, dt3out, r2, v2);
+            V3 rsoi2 = rsoi2helio - r2soi2;
+            (rsoi2.magnitude / soi2).ShouldEqual(1.0, 1e-6);
+        }
     }
 }

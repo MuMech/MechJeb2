@@ -315,6 +315,81 @@ namespace MechJebLibTest.LambertTests
         }
 
         [Theory]
+        [InlineData(TransferGeometry.Prograde, 2.0, 1.0, 0)]
+        [InlineData(TransferGeometry.Prograde, 0.5, 0.2, 0)]
+        [InlineData(TransferGeometry.Prograde, 4.0, 3.0, 0)]
+        [InlineData(TransferGeometry.Retrograde, 2.0, 1.0, 0)]
+        [InlineData(TransferGeometry.ShortWay, 2.0, 1.0, 0)]
+        [InlineData(TransferGeometry.LongWay, 2.0, 1.0, 0)]
+        [InlineData(TransferGeometry.Prograde, 2.0, 5.0, 1)]
+        [InlineData(TransferGeometry.Prograde, 2.0, 5.0, -1)]
+        [InlineData(TransferGeometry.Retrograde, 0.5, 5.0, 1)]
+        private void ExactHalfRevolution(TransferGeometry direction, double ratio, double tofByHohmann, int nrev)
+        {
+            // rf is a power of two multiple of r0 so it is still exactly antiparallel after rounding, and h is not normal to r0
+            var r0 = new V3(0.3, -0.7, 0.6);
+            V3 rf = -ratio * r0;
+            var h = new V3(0.2, 0.5, 0.9);
+            double dt = tofByHohmann * PI * Pow(0.5 * (r0.magnitude + rf.magnitude), 1.5);
+
+            // the exact half-rev uses h even without the band around it
+            (V3 vi, V3 vf, _, _, double tau, bool halfRev) = Russell.SolveWithState(1.0, r0, rf, dt, direction, nrev, h, 50, 0.0, out _);
+            Assert.Equal(0.0, tau);
+            Assert.True(halfRev);
+            CheckTransfer(r0, rf, dt, vi, vf, 1e-10);
+
+            // the transfer plane contains h projected normal to r0, and the motion is counterclockwise around h for prograde
+            // and the short way
+            V3 hHat = (h - V3.Dot(h, r0) / r0.sqrMagnitude * r0).normalized;
+            bool clockwise = direction == TransferGeometry.Retrograde || direction == TransferGeometry.LongWay;
+            V3.Cross(r0, vi).normalized.ShouldEqual(clockwise ? -hHat : hHat, 1e-12);
+
+            // continuous with transfer angles just short of pi with (r0 x rf) . h > 0
+            double theta = PI - 1e-7;
+            V3 rfNear = rf.magnitude * (Cos(theta) * r0.normalized + Sin(theta) * V3.Cross(hHat, r0).normalized);
+            (V3 viNear, V3 vfNear) = Russell.Solve(1.0, r0, rfNear, dt, direction, nrev, h);
+            vi.ShouldEqual(viNear, 1e-6);
+            vf.ShouldEqual(vfNear, 1e-6);
+        }
+
+        [Theory]
+        [InlineData(TransferGeometry.Prograde, 1)]
+        [InlineData(TransferGeometry.Prograde, -1)]
+        [InlineData(TransferGeometry.Retrograde, 1)]
+        [InlineData(TransferGeometry.Retrograde, -1)]
+        [InlineData(TransferGeometry.ShortWay, 1)]
+        [InlineData(TransferGeometry.ShortWay, -1)]
+        [InlineData(TransferGeometry.LongWay, 1)]
+        [InlineData(TransferGeometry.LongWay, -1)]
+        private void HalfRevolutionBand(TransferGeometry direction, int side)
+        {
+            var r0 = new V3(0.3, -0.7, 0.6);
+            var h = new V3(0.2, 0.5, 0.9);
+            V3 hHat = (h - V3.Dot(h, r0) / r0.sqrMagnitude * r0).normalized;
+            V3 tHat = V3.Cross(hHat, r0).normalized;
+            double delta = side * 1e-13;
+            double dt = 4.0;
+
+            // r2 on either side of the half-rev in the plane of h is exact, where the Lagrange coefficients miss by about 1e-3
+            V3 rf = 2.0 * r0.magnitude * (-Cos(delta) * r0.normalized + Sin(delta) * tHat);
+            (V3 vi, V3 vf, _, _, _, bool halfRev) = Russell.SolveWithState(1.0, r0, rf, dt, direction, 0, h, 50, 1e-12, out _);
+            Assert.True(halfRev);
+            CheckTransfer(r0, rf, dt, vi, vf, 1e-10);
+            Assert.False(Russell.SolveWithState(1.0, r0, rf, dt, direction, 0, h, 50, 0.0, out _).halfRev);
+
+            // r2 out of the plane of h misses by about the angle from the half-rev
+            V3 rfOut = 2.0 * r0.magnitude * (-Cos(delta) * r0.normalized + Sin(delta) * hHat);
+            (vi, vf) = Russell.Solve(1.0, r0, rfOut, dt, direction, 0, h);
+            (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, vi);
+            rfShepperd.ShouldEqual(rfOut, 1e-11);
+            vfShepperd.ShouldEqual(vf, 1e-10);
+
+            // there are no derivatives inside the band
+            Assert.Throws<ArgumentException>(() =>
+                Russell.Solve(1.0, new DualV3(r0, V3.zero), new DualV3(rf, V3.zero), new Dual(dt, 1.0), direction, 0, h));
+        }
+
+        [Theory]
         [InlineData(TransferGeometry.ShortWay)]
         [InlineData(TransferGeometry.LongWay)]
         private void NearFullRevolution(TransferGeometry direction)
@@ -527,7 +602,7 @@ namespace MechJebLibTest.LambertTests
             foreach ((double tau, double tofbyS, int nrev) in DomainSamples(20000, multiRev))
             {
                 (V3 r0, V3 rf, TransferGeometry direction, double S) = GeometryFromTau(tau);
-                (_, _, double k, _, double tauSolved) = Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, out _);
+                (_, _, double k, _, double tauSolved, _) = Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, 0.0, out _);
 
                 double guess;
                 if (nrev == 0)
@@ -601,7 +676,7 @@ namespace MechJebLibTest.LambertTests
                 foreach ((double tau, double tofbyS, int nrev) in DomainSamples(20000, multiRev))
                 {
                     (V3 r0, V3 rf, TransferGeometry direction, double S) = GeometryFromTau(tau);
-                    Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, out int iters);
+                    Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, 0.0, out int iters);
                     iterations.Add(iters);
                 }
 
@@ -624,7 +699,7 @@ namespace MechJebLibTest.LambertTests
                 if (NearSingularity(r0, rf))
                     continue;
 
-                Russell.SolveWithState(1.0, r0, rf, dt, geometry, nrev, null, 50, out int iters);
+                Russell.SolveWithState(1.0, r0, rf, dt, geometry, nrev, null, 50, 0.0, out int iters);
                 typical.Add(iters);
             }
 
@@ -643,8 +718,15 @@ namespace MechJebLibTest.LambertTests
             Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(0, 1, 0), 1.0, TransferGeometry.Retrograde));
 
             Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, r0, 1.0));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(-2, 0, 0), 1.0));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, new V3(-2, 0, 0), 1.0, TransferGeometry.LongWay));
+
+            // the exact half-rev needs an axis which is not parallel to r0, and has no derivatives
+            var rfHalfRev = new V3(-2, 0, 0);
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfHalfRev, 1.0));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfHalfRev, 1.0, TransferGeometry.LongWay));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfHalfRev, 1.0, TransferGeometry.Prograde, h: new V3(3, 0, 0)));
+            Assert.Throws<ArgumentException>(() =>
+                Russell.Solve(1.0, new DualV3(r0, V3.zero), new DualV3(rfHalfRev, V3.zero), new Dual(1.0, 1.0), TransferGeometry.Prograde, h: new V3(0, 0, 1)));
+            Russell.Solve(1.0, r0, rfHalfRev, 1.0, TransferGeometry.Prograde, h: new V3(0, 0, 1));
 
             // too close to the r1 == r2 singularity
             var rf = new V3(Cos(1e-4), Sin(1e-4), 0);

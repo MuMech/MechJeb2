@@ -52,6 +52,10 @@ using static System.Math;
  * - Added the domain limits of Russell (2022): the geometry must not be too close to the
  *   r1 == r2 singularity, and the zero-rev time of flight must be at least 1e-3 times the
  *   parabolic time of flight.  Solutions outside these limits are inaccurate.
+ * - Close to the half-rev, where the transfer plane is undefined or swamped by roundoff, the
+ *   plane comes from the prograde/retrograde axis h, and the velocities come from a radial
+ *   and transverse split of the Lagrange coefficients which is not singular.  Lambert.jl and
+ *   ivLam instead offset g away from zero, which returns corrupt velocities.
  *
  * The first-order partial derivatives of the velocities with respect to the positions and
  * time of flight are computed by differentiating the converged root-solve of Lambert's
@@ -66,7 +70,7 @@ namespace MechJebLib.Lambert
     /// <summary>
     ///     Solves Lambert's problem using Russell's vercosine formulation, iterating on k with
     ///     up to third order corrections.  The formulation has no singularities other than
-    ///     r1 == r2 (and the undefined transfer plane of the exact half-rev).
+    ///     r1 == r2 (and the undefined transfer plane of the exact half-rev, which needs h).
     /// </summary>
     public static class Russell
     {
@@ -101,6 +105,10 @@ namespace MechJebLib.Lambert
         // sqrt of the smallest normal double
         private const double SQRT_TINY = 1.4916681462400413e-154;
 
+        // default angle from the half-rev inside which h defines the transfer plane, where the Lagrange coefficients miss r2
+        // by about 1e-4 (relative) due to roundoff (not from ivLam)
+        private const double HALF_REV_ANGLE = 1e-12;
+
         /// <summary>
         ///     Applies Russell's algorithm to solve Lambert's problem.
         /// </summary>
@@ -110,20 +118,26 @@ namespace MechJebLib.Lambert
         /// <param name="tof">Time of flight between both positions, must be positive (and at least 1e-3 times the parabolic time for nrev = 0)</param>
         /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
         /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
-        /// <param name="h">Axis to use for prograde/retrograde (does not need to be normalized)</param>
+        /// <param name="h">Axis to use for prograde/retrograde, and for the transfer plane close to a half-rev (does not need to be normalized)</param>
         /// <param name="numiter">Maximum number of iterations</param>
+        /// <param name="halfRevAngle">
+        ///     Angle in radians (at most about 0.1) from a half-rev inside which the transfer plane comes from h instead of
+        ///     r1 x r2.  Inside it the solution misses r2 by up to about this angle times |r2|, when r2 is out of the plane of h.
+        /// </param>
         /// <returns>The initial (v1) and final (v2) velocity vectors</returns>
         public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof,
-            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null, int numiter = 50)
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null, int numiter = 50,
+            double halfRevAngle = HALF_REV_ANGLE)
         {
-            (V3 v1, V3 v2, _, _, _) = SolveWithState(mu, r1, r2, tof, direction, nrev, h, numiter, out _);
+            (V3 v1, V3 v2, _, _, _, _) = SolveWithState(mu, r1, r2, tof, direction, nrev, h, numiter, halfRevAngle, out _);
             return (v1, v2);
         }
 
         /// <summary>
         ///     Applies Russell's algorithm to solve Lambert's problem, including the first-order partial derivatives of the
         ///     velocities with respect to the positions and time of flight.  The derivatives are singular at the minimum time
-        ///     of flight for multi-rev transfers and at the half-rev, and lose precision close to them.
+        ///     of flight for multi-rev transfers and at the half-rev, and lose precision close to them.  Inside halfRevAngle of
+        ///     the half-rev this throws, since the transfer plane from h is discontinuous.
         /// </summary>
         /// <param name="mu">Gravitational parameter (mu)</param>
         /// <param name="r1">Initial position vector</param>
@@ -131,13 +145,20 @@ namespace MechJebLib.Lambert
         /// <param name="tof">Time of flight between both positions, must be positive (and at least 1e-3 times the parabolic time for nrev = 0)</param>
         /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
         /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
-        /// <param name="h">Axis to use for prograde/retrograde (does not need to be normalized)</param>
+        /// <param name="h">Axis to use for prograde/retrograde, and for the transfer plane close to a half-rev (does not need to be normalized)</param>
         /// <param name="numiter">Maximum number of iterations</param>
+        /// <param name="halfRevAngle">Angle in radians (at most about 0.1) from a half-rev inside which the transfer plane comes from h</param>
         /// <returns>The initial (v1) and final (v2) velocity vectors, with derivatives along the dual parts of the inputs</returns>
         public static (DualV3 v1, DualV3 v2) Solve(double mu, DualV3 r1, DualV3 r2, Dual tof,
-            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null, int numiter = 50)
+            TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null, int numiter = 50,
+            double halfRevAngle = HALF_REV_ANGLE)
         {
-            (V3 v1, V3 v2, double k, double p, double tau) = SolveWithState(mu, r1.M, r2.M, tof.M, direction, nrev, h, numiter, out _);
+            (V3 v1, V3 v2, double k, double p, double tau, bool halfRev) =
+                SolveWithState(mu, r1.M, r2.M, tof.M, direction, nrev, h, numiter, halfRevAngle, out _);
+
+            // the transfer plane from h jumps with out of plane motion of r1 or r2
+            if (halfRev)
+                throw new ArgumentException("Russell's Lambert solver cannot compute derivatives close to a half-revolution transfer");
 
             // derivatives of the geometry: sigma = r1 + r2, S = sqrt(sigma^3 / mu) and tau = d sqrt(q) / sigma where
             // q = r1 r2 (1 + cos(theta)) = r1 r2 + r1vec . r2vec.
@@ -178,10 +199,10 @@ namespace MechJebLib.Lambert
 
         /// <summary>
         ///     Solves Lambert's problem, and returns the converged iteration variable k, p = 1 - k tau and tau along with
-        ///     the velocities and the number of iterations taken.
+        ///     the velocities, whether the transfer plane came from h close to the half-rev, and the number of iterations taken.
         /// </summary>
-        internal static (V3 v1, V3 v2, double k, double p, double tau) SolveWithState(double mu, V3 r1, V3 r2, double tof,
-            TransferGeometry direction, int nrev, V3? h, int numiter, out int iterations)
+        internal static (V3 v1, V3 v2, double k, double p, double tau, bool halfRev) SolveWithState(double mu, V3 r1, V3 r2, double tof,
+            TransferGeometry direction, int nrev, V3? h, int numiter, double halfRevAngle, out int iterations)
         {
             Check.PositiveFinite(mu);
             Check.PositiveFinite(tof);
@@ -218,9 +239,12 @@ namespace MechJebLib.Lambert
 
             // Alternative form of tau for precision when theta is close to pi
             double abstau;
+            V3 r1xr2 = V3.zero;
+            double sthetar1r2 = 0.0;
             if (onePctheta < ALT_TAU_THRESH)
             {
-                double sthetar1r2 = V3.Cross(r1Hat, r2Hat).magnitude;
+                r1xr2 = V3.Cross(r1Hat, r2Hat);
+                sthetar1r2 = r1xr2.magnitude;
                 abstau = Sqrt(1.0 / (oneMctheta * r1r2)) / r1pr2 * sthetar1r2;
             }
             else
@@ -231,9 +255,25 @@ namespace MechJebLib.Lambert
             if (SQRT2 / 2 - abstau < TAU_MARGIN)
                 throw new ArgumentException("Russell's Lambert solver requires initial and final positions which are not too close to each other");
 
-            // The Lambert equation is still solvable here, but the transfer plane is undefined so the velocities are not
-            if (abstau < SQRT_TINY)
-                throw new ArgumentException("Russell's Lambert solver cannot compute velocities for an exact half-revolution transfer");
+            // The Lambert equation is still solvable at the half-rev, but r1 x r2 does not define the transfer plane there and
+            // roundoff swamps it close by, so within halfRevAngle (compared to sin(pi - theta)) h is used for the plane.  The
+            // motion around h is the one that the direction picks when (r1 x r2) . h is not zero.  At the exact half-rev it is
+            // counterclockwise around h for prograde and the short way, and clockwise for retrograde and the long way.
+            bool halfRev = false;
+            V3 t1Hat = V3.zero;
+            if (h != null && onePctheta < ALT_TAU_THRESH && (sthetar1r2 < halfRevAngle * r2Norm || abstau < SQRT_TINY))
+            {
+                bool counterclockwise = longWay == (V3.Dot(r1xr2, h.Value) < 0);
+                t1Hat = V3.Cross(counterclockwise ? h.Value : -h.Value, r1Hat).safeNormalized;
+                halfRev = t1Hat != V3.zero;
+            }
+
+            if (!halfRev && abstau < SQRT_TINY)
+            {
+                throw new ArgumentException(h == null
+                    ? "Russell's Lambert solver requires a normal vector for an exact half-revolution transfer"
+                    : "Russell's Lambert solver requires a normal vector which is not parallel to r1 for an exact half-revolution transfer");
+            }
 
             // tau is proportional to cos(theta / 2), so the long way is the negative branch.  Everything downstream (the
             // initial guess, the bounds on k and the sign of g in the velocities) follows from the sign of tau.
@@ -397,18 +437,39 @@ namespace MechJebLib.Lambert
             if (!converged)
                 throw new Exception("Russell's Lambert solver failed to converge");
 
-            // Reconstruct the velocities from the Lagrange coefficients
-            double pr12 = p * r1pr2;
-            double f = 1.0 - pr12;
-            double g = S * tau * Sqrt(p);
-            double gdot = 1.0 - pr12 / r2Norm;
+            V3 v1, v2;
 
-            V3 v1 = (r2Hat - f * r1Hat) / g;
-            V3 v2 = (gdot * r2Hat - r1Hat) / g;
+            if (halfRev)
+            {
+                // The Lagrange coefficients below are 0/0 at the exact half-rev and lose precision close to it.  Split into
+                // radial and transverse parts they are not singular, in units where r1 = 1:
+                //   v1 = ((tau (1 + r2) - k) r1hat + sqrt(2 r2) sin(theta / 2) t1hat) / sqrt((1 + r2) p)
+                //   v2 = ((k - tau (1 + r2) / r2) u2hat + sqrt(2 / r2) sin(theta / 2) t2hat) / sqrt((1 + r2) p)
+                // where t1hat and t2hat are the directions of motion, and u2hat is where the transfer angle in the plane of h
+                // lands (which is r2hat when r2 is in that plane).
+                double stheta = (tau < 0 ? -sthetar1r2 : sthetar1r2) / r2Norm;
+                V3 u2Hat = ctheta * r1Hat + stheta * t1Hat;
+                V3 t2Hat = ctheta * t1Hat - stheta * r1Hat;
+                double sthetaHalf = Sqrt(0.5 * oneMctheta);
+                double sqrtr1pr2p = Sqrt(r1pr2 * p);
+                v1 = ((tau * r1pr2 - k) * r1Hat + Sqrt(2.0 * r2Norm) * sthetaHalf * t1Hat) / sqrtr1pr2p;
+                v2 = ((k - tau * r1pr2 / r2Norm) * u2Hat + Sqrt(2.0 / r2Norm) * sthetaHalf * t2Hat) / sqrtr1pr2p;
+            }
+            else
+            {
+                // Reconstruct the velocities from the Lagrange coefficients
+                double pr12 = p * r1pr2;
+                double f = 1.0 - pr12;
+                double g = S * tau * Sqrt(p);
+                double gdot = 1.0 - pr12 / r2Norm;
+
+                v1 = (r2Hat - f * r1Hat) / g;
+                v2 = (gdot * r2Hat - r1Hat) / g;
+            }
 
             double vScale = lRef / tRef;
 
-            return (v1 * vScale, v2 * vScale, k, p, tau);
+            return (v1 * vScale, v2 * vScale, k, p, tau, halfRev);
         }
 
         /// <summary>
