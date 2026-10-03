@@ -66,6 +66,10 @@ namespace MechJebLibTest.ManeuversTests
         [Theory, MemberData(nameof(Seeds))]
         private void EarthToMercuryRandom(int seed) => EarthToMercuryFromSeed(seed);
 
+        [Theory]
+        [InlineData(1357)]
+        private void EarthToMercuryHardSeeds(int seed) => EarthToMercuryFromSeed(seed);
+
         private void EarthToMercuryFromSeed(int seed)
         {
             Logger.Register(o => _testOutputHelper.WriteLine((string)o));
@@ -162,6 +166,18 @@ namespace MechJebLibTest.ManeuversTests
         [Theory]
         [InlineData(915)]
         [InlineData(969)]
+        [InlineData(1002)]
+        [InlineData(1244)]
+        [InlineData(1526)]
+        [InlineData(1660)]
+        [InlineData(1875)]
+        [InlineData(1967)]
+        [InlineData(225)]
+        [InlineData(2381)]
+        [InlineData(475)]
+        [InlineData(637)]
+        [InlineData(725)]
+        [InlineData(999)]
         private void EarthToCeresHardSeeds(int seed) => EarthToCeresFromSeed(seed);
 
         private void EarthToCeresFromSeed(int seed)
@@ -263,6 +279,16 @@ namespace MechJebLibTest.ManeuversTests
         [Theory]
         [InlineData(2243)]
         [InlineData(505)]
+        [InlineData(1009)]
+        [InlineData(1059)]
+        [InlineData(113)]
+        [InlineData(1135)]
+        [InlineData(1292)]
+        [InlineData(1922)]
+        [InlineData(2052)]
+        [InlineData(525)]
+        [InlineData(890)]
+        [InlineData(92)]
         private void EarthToMarsHardSeeds(int seed) => EarthToMarsFromSeed(seed);
 
         private void EarthToMarsFromSeed(int seed)
@@ -461,6 +487,9 @@ namespace MechJebLibTest.ManeuversTests
         [InlineData(1851)]
         [InlineData(1961)]
         [InlineData(2488)]
+        [InlineData(1661)]
+        [InlineData(2170)]
+        [InlineData(2350)]
         private void EarthToJupiterHardSeeds(int seed) => EarthToJupiterFromSeed(seed);
 
         private void EarthToJupiterFromSeed(int seed)
