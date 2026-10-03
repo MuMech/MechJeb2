@@ -41,8 +41,10 @@ namespace MechJebLib.Maneuvers
             {
                 (rsoi1, vsoi1, rsoi2, vsoi2, dv1, dv2, dv3, dv4, dv5) = EvaluateTrajectory(x);
             }
-            catch (Exception)
+            catch (Exception) // FIXME: Exception types for the Lambert solvers and catch specific ones here
             {
+                // The SQP solver can wander into bad parameter spaces of the Lambert solver, and this
+                // value causes alglib to back off.
                 fi[0] = 1e300;
                 return;
             }
