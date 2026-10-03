@@ -2,6 +2,7 @@
 using System.Linq;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
+using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;

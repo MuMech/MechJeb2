@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Maths;
@@ -417,6 +418,20 @@ namespace MechJebLibTest.LambertTests
             CheckTransfer(r0, rf, dt, vi, vf, 1e-6);
         }
 
+        // above the largest number of revolutions in the interpolation table
+        [Theory]
+        [InlineData(10000)]
+        [InlineData(-10000)]
+        private void BeyondInterpolatedNumberOfRevolutions(int n)
+        {
+            var r0 = new V3(1, 0, 0);
+            var rf = new V3(0, 1.2, 0);
+            double dt = 2e5;
+
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay, n);
+            CheckTransfer(r0, rf, dt, vi, vf, 1e-6);
+        }
+
         [Theory]
         [InlineData(TransferGeometry.ShortWay, 1)]
         [InlineData(TransferGeometry.ShortWay, 3)]
@@ -453,6 +468,169 @@ namespace MechJebLibTest.LambertTests
 
             (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, hi, direction, -m);
             CheckTransfer(r0, rf, hi, viShort, vfShort, 1e-6);
+        }
+
+        // r1 == r2 == 1 geometry with the given tau, where tau < 0 is the long way, and its S
+        private static (V3 r0, V3 rf, TransferGeometry direction, double S) GeometryFromTau(double tau)
+        {
+            double theta = 2 * Acos(Sqrt(2) * Abs(tau));
+            return (new V3(1, 0, 0), new V3(Cos(theta), Sin(theta), 0), tau >= 0 ? TransferGeometry.ShortWay : TransferGeometry.LongWay,
+                2 * Sqrt(2));
+        }
+
+        // the error metric for k from Russell (2022), Eq. 28
+        private static double GuessError(double k, double kTrue) => Abs(k - kTrue) / Max(Abs(kTrue), 1.0);
+
+        // samples over the whole domain of the interpolation tables (Russell 2022), as (tau, tofbyS, nrev)
+        private static IEnumerable<(double tau, double tofbyS, int nrev)> DomainSamples(int count, bool multiRev)
+        {
+            var random = new Random(42);
+
+            for (int i = 0; i < count; i++)
+            {
+                double x = 0.995 * (2 * random.NextDouble() - 1);
+                double tau = RussellGuess.TauFromX(x);
+
+                if (!multiRev)
+                {
+                    double y = 0.001 + 0.999 * random.NextDouble();
+                    yield return (tau, RussellGuess.ZeroRevTofbyS(x, y), 0);
+                }
+                else
+                {
+                    int n = (int)Pow(RussellGuess.N_MAX, random.NextDouble());
+                    int nrev = random.Next(2) == 0 ? n : -n;
+                    double y = 0.001 + 0.999 * random.NextDouble();
+                    (_, double tofbySBottom) = Russell.MultiRevBottom(tau, n);
+                    yield return (tau, tofbySBottom + RussellGuess.MultiRevGamma(y, n), nrev);
+                }
+            }
+        }
+
+        private void LogIterations(string name, List<int> iterations)
+        {
+            var histogram = new SortedDictionary<int, int>();
+            foreach (int i in iterations)
+                histogram[i] = histogram.TryGetValue(i, out int c) ? c + 1 : 1;
+            _testOutputHelper.WriteLine(
+                $"{name}: mean {iterations.Average():F3} max {iterations.Max()} histogram {string.Join(" ", histogram.Select(kv => $"{kv.Key}:{kv.Value}"))}");
+        }
+
+        // the interpolated initial guess is within tolerance of the solution over the domain of the tables
+        [Theory]
+        [InlineData(false, 2e-3)]
+        [InlineData(true, 4e-4)]
+        private void InitialGuessAccuracy(bool multiRev, double tol)
+        {
+            double maxError = 0;
+
+            foreach ((double tau, double tofbyS, int nrev) in DomainSamples(20000, multiRev))
+            {
+                (V3 r0, V3 rf, TransferGeometry direction, double S) = GeometryFromTau(tau);
+                (_, _, double k, _, double tauSolved) = Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, out _);
+
+                double guess;
+                if (nrev == 0)
+                {
+                    guess = RussellGuess.ZeroRev(tauSolved, tofbyS);
+                }
+                else
+                {
+                    (double kBottom, double tofbySBottom) = Russell.MultiRevBottom(tauSolved, Abs(nrev));
+                    guess = RussellGuess.MultiRev(RussellGuess.X(tauSolved), RussellGuess.Z(Abs(nrev)), tofbyS - tofbySBottom, nrev, kBottom);
+                }
+
+                double error = GuessError(guess, k);
+                maxError = Max(maxError, error);
+                Assert.True(error < tol, $"tau = {tau:R} tofbyS = {tofbyS:R} nrev = {nrev} k = {k:R} guess = {guess:R} error = {error:E3}");
+            }
+
+            _testOutputHelper.WriteLine($"max error {maxError:E3}");
+        }
+
+        // the interpolated seed for the Newton iteration for kBottom is accurate relative to the distance of kBottom from
+        // +-sqrt(2), and the iteration takes at most two steps, also beyond the largest number of revolutions in the table
+        // where the seed is extrapolated.
+        [Fact]
+        private void KBottomSeed()
+        {
+            var random = new Random(42);
+            var iterations = new List<int>();
+            double maxError = 0;
+            double maxErrorBeyond = 0;
+
+            for (int i = 0; i < 20000; i++)
+            {
+                double tau = RussellGuess.TauFromX(0.995 * (2 * random.NextDouble() - 1));
+                int n = (int)Pow(1e6, random.NextDouble());
+
+                double seed = RussellGuess.KBottom(tau, RussellGuess.X(tau), RussellGuess.Z(n), n);
+                (double kBottom, _) = Russell.MultiRevBottom(tau, n, Russell.KBottomAsymptotic(tau), out _);
+                (double kSeeded, _) = Russell.MultiRevBottom(tau, n, seed, out int iters);
+
+                double error = Abs(seed - kBottom) / Min(Sqrt(2) - Abs(kBottom), 1.0);
+                iterations.Add(iters);
+
+                if (n <= RussellGuess.N_MAX)
+                {
+                    maxError = Max(maxError, error);
+                    Assert.True(error < 2e-6, $"tau = {tau:R} n = {n} kBottom = {kBottom:R} seed = {seed:R} error = {error:E3}");
+                }
+                else
+                {
+                    maxErrorBeyond = Max(maxErrorBeyond, error);
+                }
+
+                Assert.True(Abs(kSeeded - kBottom) < 1e-12, $"tau = {tau:R} n = {n} kBottom = {kBottom:R} kSeeded = {kSeeded:R}");
+                Assert.True(iters <= 2, $"tau = {tau:R} n = {n} kBottom = {kBottom:R} seed = {seed:R} error = {error:E3} iterations = {iters}");
+            }
+
+            _testOutputHelper.WriteLine($"max error {maxError:E3}, beyond the table {maxErrorBeyond:E3}");
+            LogIterations("kBottom", iterations);
+        }
+
+        // the number of iterations from the initial guess, over the domain of the tables and typical problems.  more
+        // iterations are only needed for zero-rev long way transfers with very long times of flight and r1 ~= r2 (which
+        // approach the r1 == r2 singularity).
+        [Fact]
+        private void IterationCounts()
+        {
+            foreach (bool multiRev in new[] { false, true })
+            {
+                var iterations = new List<int>();
+                foreach ((double tau, double tofbyS, int nrev) in DomainSamples(20000, multiRev))
+                {
+                    (V3 r0, V3 rf, TransferGeometry direction, double S) = GeometryFromTau(tau);
+                    Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, out int iters);
+                    iterations.Add(iters);
+                }
+
+                LogIterations(multiRev ? "multi-rev domain" : "zero-rev domain", iterations);
+                Assert.True(iterations.Average() < 2.0);
+                Assert.True(iterations.Max() <= (multiRev ? 3 : 15));
+            }
+
+            var random = new Random(42);
+            var typical = new List<int>();
+            for (int i = 0; i < 20000; i++)
+            {
+                var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+                TransferGeometry geometry = random.Next(2) == 0 ? TransferGeometry.ShortWay : TransferGeometry.LongWay;
+                int m = random.Next(0, 20);
+                double dt = m == 0 ? random.NextDouble() * 6 + 0.05 : Pow(10, 2 * random.NextDouble() + 2) * m;
+                int nrev = random.Next(2) == 0 ? m : -m;
+
+                if (NearSingularity(r0, rf))
+                    continue;
+
+                Russell.SolveWithState(1.0, r0, rf, dt, geometry, nrev, null, 50, out int iters);
+                typical.Add(iters);
+            }
+
+            LogIterations("typical", typical);
+            Assert.True(typical.Average() < 2.0);
+            Assert.True(typical.Max() <= 3);
         }
 
         [Fact]
