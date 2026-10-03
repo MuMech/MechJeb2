@@ -23,6 +23,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJebLibBindings", "MechJ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MechJebKos", "MechJebKos\MechJebKos.csproj", "{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{F9092BA5-1B00-40FB-9727-88D3C309091E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RussellTableGenerator", "Tools\RussellTableGenerator\RussellTableGenerator.csproj", "{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,11 +81,22 @@ Global
 		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Debug-kOS|Any CPU.Build.0 = Debug|Any CPU
 		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Release-kOS|Any CPU.ActiveCfg = Release|Any CPU
 		{51BD942E-6E68-4F1F-80CA-9B353DD2F8C3}.Release-kOS|Any CPU.Build.0 = Release|Any CPU
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}.Debug-kOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}.Debug-kOS|Any CPU.Build.0 = Debug|Any CPU
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}.Release-kOS|Any CPU.ActiveCfg = Release|Any CPU
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9}.Release-kOS|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F853724E-B055-4A0F-86AC-32E5C4D8CCFA}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5D204A16-A3EF-4D11-889F-A3AEA2276BA9} = {F9092BA5-1B00-40FB-9727-88D3C309091E}
 	EndGlobalSection
 EndGlobal

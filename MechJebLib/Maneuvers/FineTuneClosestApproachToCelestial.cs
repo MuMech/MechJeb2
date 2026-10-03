@@ -97,7 +97,7 @@ namespace MechJebLib.Maneuvers
             DualV3 rsoi2 = rf1 + rsoi;
             DualV3 vsoi2 = vf1 + vsoi;
 
-            (DualV3 vi, DualV3 vf) = Izzo.Solve(1.0, r0Burn, rsoi2, dt2, _direction);
+            (DualV3 vi, DualV3 vf) = Russell.Solve(1.0, r0Burn, rsoi2, dt2, _direction);
             return (rsoi, vsoi, vi - v0Burn, vsoi2 - vf);
         }
 

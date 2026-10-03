@@ -121,7 +121,7 @@ namespace MuMech
             V3 v2;
             try
             {
-                (v1, v2) = Gooding.Solve(originPlanet.referenceBody.gravParameter, r1, r2, dt, TransferGeometry.Prograde, 0, V3.Cross(r1, v10));
+                (v1, v2) = Russell.Solve(originPlanet.referenceBody.gravParameter, r1, r2, dt, TransferGeometry.Prograde, 0, V3.Cross(r1, v10));
             }
             catch
             {

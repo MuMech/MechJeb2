@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net48</TargetFramework>
+        <RootNamespace>RussellTableGenerator</RootNamespace>
+        <AssemblyName>RussellTableGenerator</AssemblyName>
+        <LangVersion>8</LangVersion>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <!-- dotnet run executes the .exe directly, which needs mono outside of Windows -->
+    <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
+        <RunCommand>mono</RunCommand>
+        <RunArguments>"$(MSBuildProjectDirectory)/bin/$(Configuration)/$(TargetFramework)/$(AssemblyName).exe"</RunArguments>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\MechJebLib\MechJebLib.csproj"/>
+        <ProjectReference Include="..\..\alglib\alglib.csproj"/>
+    </ItemGroup>
+
+</Project>

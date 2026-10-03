@@ -91,7 +91,7 @@ namespace MechJebLib.Maneuvers
             // All moon scaled
             (DualV3 rBurn, DualV3 vNeg) = Shepperd.Solve(1.0, tBurn, _r0, _v0);
 
-            (DualV3 vPos, DualV3 vSoiNeg) = Izzo.Solve(1.0, rBurn, rSoi, tCoast, _direction);
+            (DualV3 vPos, DualV3 vSoiNeg) = Russell.Solve(1.0, rBurn, rSoi, tCoast, _direction);
             DualV3 dv1 = vPos - vNeg;
             DualV3 dv2 = vSoiPos - vSoiNeg;
 

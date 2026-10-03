@@ -35,7 +35,7 @@ namespace MechJebLib.Maneuvers
 
             (V3 rburn, V3 vburn) = Shepperd.Solve(1.0, dt, r1, v1);
             (V3 rf2, V3 vf2) = Shepperd.Solve(1.0, dt + tt + offset, r2, v2);
-            (V3 vi, V3 vf) = Izzo.Solve(1.0, rburn, rf2, tt, TransferGeometry.Prograde, 0, V3.Cross(rburn, vburn));
+            (V3 vi, V3 vf) = Russell.Solve(1.0, rburn, rf2, tt, TransferGeometry.Prograde, 0, V3.Cross(rburn, vburn));
 
             return (vi - vburn, vf2 - vf);
         }
