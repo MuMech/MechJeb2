@@ -37,6 +37,10 @@ namespace MuMech
 
         private EditableDouble _periapsisHeight = new EditableDouble(0);
 
+        private EditableDouble _targetInclination = new EditableDouble(90);
+
+        private bool _targetInclinationFlag = false;
+
         private const double MIN_SAMPLING_STEP = 12 * 3600;
 
         private Mode _selectionMode = Mode.PORKCHOP;
@@ -250,7 +254,13 @@ namespace MuMech
                 }
             }
 
+            GUILayout.BeginHorizontal();
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_adv_periapsis"), _periapsisHeight, "km");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GuiUtils.ToggledTextBox(ref _targetInclinationFlag, "Inclination", _targetInclination, "°");
+            GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_adv_label2")); //"Select: "
@@ -373,7 +383,9 @@ namespace MuMech
             // FIXME: we can now better expose user-tweakable brackets around arrivalDt
             (double epoch, double arrivalDt, double arrivalDtLower, double arrivalDtUpper) = ResolveTimes(_worker);
 
-            return OrbitalManeuverCalculator.OptimizeEjectionToTarget(o, target, targetPeR, epoch, arrivalDt, arrivalDtLower, arrivalDtUpper);
+            double inc = _targetInclinationFlag ? _targetInclination.Val : double.NaN;
+
+            return OrbitalManeuverCalculator.OptimizeEjectionToTarget(o, target, targetPeR, epoch, arrivalDt, arrivalDtLower, arrivalDtUpper, inc: inc);
         }
     }
 }
