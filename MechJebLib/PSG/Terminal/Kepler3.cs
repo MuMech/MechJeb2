@@ -54,7 +54,7 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual AngularVelocityMagnitudeConstraint(DualV3[] p) => 0.5 * DualV3.Cross(p[0], p[1]).sqrMagnitude - 0.5 * hTm * hTm;
+            Dual AngularVelocityMagnitudeConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]).sqrMagnitude / (hTm * hTm) - 1.0;
 
             Dual OrbitalEnergyConstraint(DualV3[] p) => 0.5 * DualV3.Dot(p[1], p[1]) - 1.0 / p[0].magnitude - energyT;
 
