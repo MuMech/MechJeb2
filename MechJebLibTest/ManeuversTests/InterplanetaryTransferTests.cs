@@ -545,6 +545,87 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
+        [Theory, MemberData(nameof(Seeds))]
+        private void EarthToJupiterTargetRandom(int seed) => EarthToJupiterTargetFromSeed(seed);
+
+        // These all target an inclination below the declination of the arrival v-infinity (about 5-8 degrees here, and the
+        // plane of the arrival hyperbola has to contain v-infinity).  Before the inclination was clamped the optimizer bent
+        // the heliocentric arc to rotate v-infinity, and crawled until it hit the iteration limit unconverged.
+        [Theory]
+        [InlineData(45)]  // inc 3.81, peR 4.1 Rj
+        [InlineData(62)]  // inc 1.67, peR 2.0 Rj
+        [InlineData(154)] // inc 0.68, peR 3.0 Rj
+        [InlineData(621)] // inc 5.45, peR 2.5 Rj
+        [InlineData(914)] // inc 0.35, peR 3.8 Rj
+        [InlineData(171)] // inc 178.54, peR 1.4 Rj
+        [InlineData(280)] // inc 175.42, peR 1.0 Rj
+        [InlineData(413)] // inc 179.86, peR 18.9 Rj
+        [InlineData(597)] // inc 177.88, peR 40.5 Rj
+        private void EarthToJupiterTargetHardSeeds(int seed) => EarthToJupiterTargetFromSeed(seed);
+
+        // equatorial at a low periapsis is out of reach, so these are clamped
+        [Theory]
+        [InlineData(0)]
+        [InlineData(180)]
+        private void EarthToJupiterEquatorial(double inc) => EarthToJupiterTarget(70941833.416772693, Deg2Rad(inc));
+
+        private void EarthToJupiterTargetFromSeed(int seed)
+        {
+            var random = new Random(seed);
+
+            const double JUPITER_RADIUS = 69911000;
+            const double SOI2 = 48196176124.28714;
+
+            // log-uniform so that low capture periapses are sampled as often as wide ones
+            double peR = JUPITER_RADIUS * Pow(SOI2 * 0.6 / JUPITER_RADIUS, random.NextDouble());
+            double inc = PI * random.NextDouble();
+
+            EarthToJupiterTarget(peR, inc);
+        }
+
+        // the parking orbit is fixed (EarthToJupiterHardSeeds seed 1961), and the target periapsis and inclination vary
+        private void EarthToJupiterTarget(double peR, double inc)
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var r0 = new V3(51482894.10388647, 41045292.464912385, -100399372.32897358);
+            var v0 = new V3(1092.8263078123787, 1091.4884781926173, 962.33550081447856);
+            var r1 = new V3(137412324343.95822, -23942591869.675461, -60338571254.994019);
+            var v1 = new V3(5424.8571535079955, 28799.680047142847, 733.01461940330978);
+            var r2 = new V3(172357530979.00909, 720778222761.22327, -15224336000.222565);
+            var v2 = new V3(-12248.149100605306, 2887.3625226233494, 5401.8948520706454);
+            double mu1 = 398600435436096;
+            double soi1 = 924649202.46102285;
+            double mu2 = 1.2668653492180082E+17;
+            double soi2 = 48196176124.28714;
+            double mu3 = 1.3271244004193939E+20;
+            double arrivalDT = 96640527.803545117;
+            double arrivalDTlower = 0;
+            double arrivalDTupper = double.PositiveInfinity;
+
+            var maneuver = new InterplanetaryTransfer();
+            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, inc: inc, optguard: false);
+            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out} inc: {Rad2Deg(inc)} targetInc: {Rad2Deg(maneuver.TargetInc)}");
+
+            // the inclination may only be clamped away from equatorial
+            ((maneuver.TargetInc - PI / 2) * (inc - PI / 2)).ShouldBeGreaterThanOrEqual(0);
+            Abs(maneuver.TargetInc - PI / 2).ShouldBeLessThanOrEqual(Abs(inc - PI / 2));
+
+            (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
+            (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
+            rsoi1.magnitude.ShouldEqual(soi1, 1e-6);
+            (V3 r1soi1, V3 v1soi1) = Shepperd.Solve(mu3, dt1out + dt2out, r1, v1);
+            V3 rsoi1helio = rsoi1 + r1soi1;
+            V3 vsoi1helio = vsoi1 + v1soi1;
+            (V3 rsoi2helio, V3 vsoi2helio) = Shepperd.Solve(mu3, dt3out - (dt1out + dt2out), rsoi1helio, vsoi1helio);
+            (V3 r2soi2, V3 v2soi2) = Shepperd.Solve(mu3, dt3out, r2, v2);
+            V3 rsoi2 = rsoi2helio - r2soi2;
+            V3 vsoi2 = vsoi2helio - v2soi2;
+            rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
+            Astro.PeriapsisFromStateVectors(mu2, rsoi2, vsoi2).ShouldEqual(peR, 1e-6);
+            Astro.IncFromStateVectors(rsoi2, vsoi2).ShouldEqual(maneuver.TargetInc, 1e-6);
+        }
+
         [Fact]
         private void EarthToVenus()
         {

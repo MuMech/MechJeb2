@@ -27,6 +27,13 @@ namespace MechJebLib.Maneuvers
 
         private bool _initialFeasibility;
 
+        /// <summary>
+        ///     The inclination that Maneuver() targeted, which is the requested inclination clamped to be at least
+        ///     INC_CLAMP_MARGIN further from equatorial than the declination of the arrival v-infinity (NaN if no
+        ///     inclination was requested).
+        /// </summary>
+        public double TargetInc { get; private set; } = double.NaN;
+
         private Scale _sourceScale;
         private Scale _targetScale;
         private Scale _helioScale;
@@ -195,6 +202,7 @@ namespace MechJebLib.Maneuvers
         private const int NUM_EQUALITY_CONSTRAINTS = 14;
         private const int NUM_INEQUALITY_CONSTRAINTS = 2;
         private const int MAXITS = 5000;
+        private const double INC_CLAMP_MARGIN = 2 * DEG2RAD;
         private const int NVARIABLES = 16;
 
         public (V3 dv, double dt1, double dt2, double dt3) Maneuver(V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi1, double mu2, V3 r2, V3 v2, double soi2, double mu3, double arrivalDT, double arrivalDTlower = 0, double arrivalDTupper = double.PositiveInfinity, double peR = double.PositiveInfinity, double inc = double.NaN, bool captureBurn = false, bool optguard = false)
@@ -233,6 +241,7 @@ namespace MechJebLib.Maneuvers
             _r2 = r2 / _helioScale.LengthScale;
             _v2 = v2 / _helioScale.VelocityScale;
             _cosInc = Cos(inc);
+            TargetInc = inc;
             _captureBurn = captureBurn;
 
             // initialization
@@ -350,15 +359,8 @@ namespace MechJebLib.Maneuvers
             }
         }
 
-        private Solution RunOptimizer(double[] x0, double[] bndl, double[] bndu, bool optguard)
+        private (double[] x, alglib.minnlcreport rep) RunPass(double[] x0, double[] bndl, double[] bndu, bool optguard)
         {
-            _initialFeasibility = true;
-            double savedsoi2 = _soi2;
-            _soi2 = 0;
-
-            DebugPrint("initial constraint violation:");
-            GetCost(x0);
-
             alglib.minnlccreate(x0, out alglib.minnlcstate state);
             alglib.minnlcsetbc(state, bndl, bndu);
             alglib.minnlcsetalgosqp(state);
@@ -369,15 +371,14 @@ namespace MechJebLib.Maneuvers
                 alglib.minnlcoptguardgradient(state, 1e-8);
 #endif
             alglib.minnlcoptimize(state, NLPFunction, null, null);
-            alglib.minnlcresults(state, out double[] x1, out alglib.minnlcreport rep1);
+            alglib.minnlcresults(state, out double[] x, out alglib.minnlcreport rep);
 
 #if DEBUG
-            bool[] boxConstrained = new bool[NVARIABLES];
-
             if (optguard)
             {
-                alglib.minnlcoptguardresults(state, out alglib.optguardreport ogrep);
+                bool[] boxConstrained = new bool[NVARIABLES];
 
+                alglib.minnlcoptguardresults(state, out alglib.optguardreport ogrep);
 
                 if (ogrep.badgradsuspected)
                     if (!DoubleMatrixSparsityValidation(ogrep.badgraduser, ogrep.badgradnum, boxConstrained, 1e-2))
@@ -391,6 +392,20 @@ namespace MechJebLib.Maneuvers
                     throw new Exception("nonc1suspected");
             }
 #endif
+
+            return (x, rep);
+        }
+
+        private Solution RunOptimizer(double[] x0, double[] bndl, double[] bndu, bool optguard)
+        {
+            _initialFeasibility = true;
+            double savedsoi2 = _soi2;
+            _soi2 = 0;
+
+            DebugPrint("initial constraint violation:");
+            GetCost(x0);
+
+            (double[] x1, alglib.minnlcreport rep1) = RunPass(x0, bndl, bndu, optguard);
 
             (double cost, double err) = AnalyzeSolution(x1, rep1);
 
@@ -430,47 +445,61 @@ namespace MechJebLib.Maneuvers
             for (int i = 0; i < x1.Length; i++)
                 DebugPrint($"x1[{i}] = {x1[i]}");
 
+            // the plane of the arrival hyperbola contains v-infinity, so its inclination is no less than the declination of
+            // v-infinity (and no more than 180 degrees minus it).  getting any closer to equatorial means bending the
+            // heliocentric trajectory to rotate v-infinity, which is expensive and stalls the optimizer.  so solve with the
+            // inclination free first, then clamp the inclination to what that v-infinity can reach and solve again.  the
+            // ZSOI v-infinity is not good enough for this, at Jupiter its declination is off by up to ~5 degrees.
+            double cosInc = _cosInc;
+            _cosInc = double.NaN;
+
             DebugPrint("second-pass initial constraint violation:");
             GetCost(x1);
 
-            alglib.minnlccreate(x1, out alglib.minnlcstate state2);
-            alglib.minnlcsetbc(state2, bndl, bndu);
-            alglib.minnlcsetalgosqp(state2);
-            alglib.minnlcsetcond(state2, 0, MAXITS);
-            alglib.minnlcsetnlc(state2, NUM_EQUALITY_CONSTRAINTS, NUM_INEQUALITY_CONSTRAINTS);
-#if DEBUG
-            if (optguard)
-                alglib.minnlcoptguardgradient(state2, 1e-8);
-#endif
-            alglib.minnlcoptimize(state2, NLPFunction, null, null);
-            alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
+            (double[] x2, alglib.minnlcreport rep2) = RunPass(x1, bndl, bndu, optguard);
 
-#if DEBUG
-            if (optguard)
+            (double cost2, double err2) = AnalyzeSolution(x2, rep2);
+
+            _cosInc = cosInc;
+
+            if (IsFinite(_cosInc) && IsFinite(_peR) && _peR > 0 && err2 <= 1e-4)
             {
-                alglib.minnlcoptguardresults(state2, out alglib.optguardreport ogrep2);
+                // the margin is because the inclination at the limit is degenerate (the two b-plane solutions merge), and
+                // because rotating the plane moves the soi entry point which moves v-infinity a bit.
+                (_, _, rsoi2, vsoi2, _, _, _, _, _) = EvaluateTrajectory(x2);
+                double decl = Asin(Abs(IncomingAsymptote(1.0, rsoi2, vsoi2).z));
+                double cosIncMax = Cos(Min(decl + INC_CLAMP_MARGIN, PI / 2));
+                if (Abs(_cosInc) > cosIncMax)
+                {
+                    _cosInc = Sign(_cosInc) * cosIncMax;
+                    TargetInc = Acos(_cosInc);
+                    Print($"clamping inc to {Rad2Deg(TargetInc):G17} degrees, the arrival v-infinity has a declination of {Rad2Deg(decl):G17} degrees");
+                }
 
-                if (ogrep2.badgradsuspected)
-                    if (!DoubleMatrixSparsityValidation(ogrep2.badgraduser, ogrep2.badgradnum, boxConstrained, 1e-2))
-                        throw new Exception(
-                            $"badgradsuspected:\nuser:\n{DoubleMatrixString(ogrep2.badgraduser)}\nnumerical:\n{DoubleMatrixString(ogrep2.badgradnum)}\nsparsity check:\n{DoubleMatrixSparsityCheck(ogrep2.badgraduser, ogrep2.badgradnum, null, boxConstrained, 1e-2)}");
+                DebugPrint("third-pass initial constraint violation:");
+                GetCost(x2);
 
-                if (ogrep2.nonc0suspected)
-                    throw new Exception("nonc0suspected");
+                (x2, rep2) = RunPass(x2, bndl, bndu, optguard);
 
-                if (ogrep2.nonc1suspected)
-                    throw new Exception("nonc1suspected");
+                (cost2, err2) = AnalyzeSolution(x2, rep2);
             }
-#endif
 
             for (int i = 0; i < x2.Length; i++)
                 DebugPrint($"x2[{i}] = {x2[i]}");
 
-            (double cost2, double err2) = AnalyzeSolution(x2, rep2);
-
             V3 dv2 = GetManeuverDeltaV(x2, ref cost2, ref err2);
 
             return new Solution(dv2, x2[0], x2[1], x2[2], cost2, err2);
+        }
+
+        // direction of the incoming asymptote of a hyperbolic orbit
+        private static V3 IncomingAsymptote(double mu, V3 r, V3 v)
+        {
+            V3 ecc = Astro.EccVecFromStateVectors(mu, r, v);
+            double e = ecc.magnitude;
+            V3 p = ecc / e;
+            V3 q = V3.Cross(V3.Cross(r, v).normalized, p);
+            return (p + Sqrt(e * e - 1) * q) / e;
         }
 
         private (double cost, double err) AnalyzeSolution(double[] x, alglib.minnlcreport rep)

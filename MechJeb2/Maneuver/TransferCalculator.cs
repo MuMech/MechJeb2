@@ -106,7 +106,7 @@ namespace MuMech
         private bool IsBetter(int dateIndex1, int durationIndex1, int dateIndex2, int durationIndex2) =>
             Computed[dateIndex1, durationIndex1] > Computed[dateIndex2, durationIndex2];
 
-        private void CalcLambertDVs(double t0, double dt, out Vector3d exitDV, out Vector3d captureDV)
+        private bool CalcLambertDVs(double t0, double dt, out Vector3d exitDV, out Vector3d captureDV)
         {
             double t1 = t0 + dt;
             CelestialBody originPlanet = _origin.referenceBody;
@@ -125,13 +125,16 @@ namespace MuMech
             }
             catch
             {
-                v1 = v10;
-                v2 = v21;
-                // ignored
+                // e.g. Russell rejects a time of flight below 1e-3 times the parabolic time of flight, and the minimum
+                // transfer time of 3600 seconds is below that for Earth to Jupiter
+                exitDV = Vector3d.zero;
+                captureDV = Vector3d.zero;
+                return false;
             }
 
             exitDV = (v1 - v10).ToVector3d();
             captureDV = (v21 - v2).ToVector3d();
+            return true;
         }
 
         private void ComputeDeltaV(object args)
@@ -152,12 +155,19 @@ namespace MuMech
 
                     double dt = DurationFromIndex(durationIndex);
 
-                    CalcLambertDVs(t0, dt, out Vector3d exitDV, out Vector3d captureDV);
-                    ManeuverParameters maneuver = ComputeEjectionManeuver(exitDV, _origin, t0);
+                    double dV = double.PositiveInfinity;
+                    if (CalcLambertDVs(t0, dt, out Vector3d exitDV, out Vector3d captureDV))
+                    {
+                        ManeuverParameters maneuver = ComputeEjectionManeuver(exitDV, _origin, t0);
 
-                    Computed[dateIndex, durationIndex] = maneuver.dV.magnitude;
-                    if (_includeCaptureBurn)
-                        Computed[dateIndex, durationIndex] += captureDV.magnitude;
+                        dV = maneuver.dV.magnitude;
+                        if (_includeCaptureBurn)
+                            dV += captureDV.magnitude;
+                    }
+
+                    // a cell that has no solution must never be the best one, and a NaN in the first cell would pin the best
+                    // point there because it never compares as worse
+                    Computed[dateIndex, durationIndex] = double.IsNaN(dV) ? double.PositiveInfinity : dV;
 #if DEBUG
                     _log[dateIndex, durationIndex] += "," + Computed[dateIndex, durationIndex];
 #endif
