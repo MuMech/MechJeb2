@@ -53,6 +53,28 @@ namespace MechJebLibTest.TwoBodyTests
             vp.ShouldEqual(v0, 1e-8);
         }
 
+        // Kepler's equation holds for negative and multi-rev mean anomalies (0.995 also exercises the near-parabolic branch)
+        [Theory]
+        [InlineData(0.0)]
+        [InlineData(0.3)]
+        [InlineData(0.7)]
+        [InlineData(0.9)]
+        [InlineData(0.98)]
+        [InlineData(0.995)]
+        public void NuFromDeltaTSatisfiesKepler(double ecc)
+        {
+            double n = Pow(1 - ecc, 1.5);
+
+            for (int i = -500; i <= 500; i++)
+            {
+                double M = 0.1 * i;
+                double nu = Farnocchia.NuFromDeltaT(M / n, ecc);
+                double M2 = Angles.MFromE(Angles.EFromNu(nu, ecc), ecc);
+
+                ClampPi(M2 - M).ShouldBeZero(1e-8);
+            }
+        }
+
         private readonly VacuumKernel _ode = new VacuumKernel();
 
         private class VacuumKernel

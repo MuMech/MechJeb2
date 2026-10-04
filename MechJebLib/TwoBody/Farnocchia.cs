@@ -196,7 +196,7 @@ namespace MechJebLib.TwoBody
             {
                 n = Math.Sqrt(k * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
                 M = n * delta_t;
-                E = Angles.EFromM((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
+                E = Angles.EFromM(ClampPi(M), ecc);
                 nu = Angles.NuFromE(E, ecc);
             }
             else if (1 - delta <= ecc && ecc < 1)
@@ -206,7 +206,7 @@ namespace MechJebLib.TwoBody
                 M = n * delta_t;
                 if (Angles.MFromE(E_delta, ecc) <= Math.Abs(M))
                 {
-                    E = Angles.EFromM((M + Math.PI) % (2 * Math.PI) - Math.PI, ecc);
+                    E = Angles.EFromM(ClampPi(M), ecc);
                     nu = Angles.NuFromE(E, ecc);
                 }
                 else

@@ -28,9 +28,9 @@ namespace MuMech
 
         public static Vector3d DeltaEuler(this Quaternion delta) =>
             new Vector3d(
-                delta.eulerAngles.x > 180 ? delta.eulerAngles.x - 360.0F : delta.eulerAngles.x,
-                -(delta.eulerAngles.y > 180 ? delta.eulerAngles.y - 360.0F : delta.eulerAngles.y),
-                delta.eulerAngles.z > 180 ? delta.eulerAngles.z - 360.0F : delta.eulerAngles.z
+                Clamp180(delta.eulerAngles.x),
+                -Clamp180(delta.eulerAngles.y),
+                Clamp180(delta.eulerAngles.z)
             );
 
         public static Vector3d Clamp(this Vector3d value, double min, double max) =>

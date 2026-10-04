@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -78,7 +79,7 @@ namespace MuMech
             double currentBodyRotationRad = (o.referenceBody.rotationAngle + 360.0 * (ut / o.referenceBody.rotationPeriod)) * Math.PI / 180.0;
 
             double targMNA = targetLongitude * Math.PI / 180.0 + currentBodyRotationRad;
-            targMNA = (targMNA % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+            targMNA = Clamp2Pi(targMNA);
             double syncAlt = syncSMA - o.referenceBody.Radius;
             Vector3d targetWorldPos = o.referenceBody.GetWorldSurfacePosition(0, targetLongitude, syncAlt);
             Vector3d radiusVector = targetWorldPos - o.referenceBody.position;

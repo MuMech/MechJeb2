@@ -516,9 +516,7 @@ namespace MuMech
 
         private static string LonToString(double lon)
         {
-            while (lon > 180) { lon -= 360; }
-
-            while (lon < -180) { lon += 360; }
+            lon = Clamp180(lon);
 
             string ew = lon >= 0 ? "E" : "W";
             lon = Math.Abs(lon);
