@@ -58,7 +58,7 @@ namespace MuMech
             if (v1.magnitude == 0 || v2.magnitude == 0)
                 return double.NaN;
 
-            double angle = MuUtils.ClampDegrees360(Math.Acos(Vector3d.Dot(v1.normalized, v2.normalized)) * UtilMath.Rad2Deg);
+            double angle = Clamp360(Math.Acos(Vector3d.Dot(v1.normalized, v2.normalized)) * UtilMath.Rad2Deg);
             if (Vector3d.Dot(Vector3d.Cross(v1, v2), planeNormal) < 0)
                 return -angle;
             return angle;

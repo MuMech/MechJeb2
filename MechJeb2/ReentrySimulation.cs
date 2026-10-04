@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Smooth.Dispose;
 using Smooth.Pools;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -999,7 +1000,7 @@ namespace MuMech
             double longitude = UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(vector3d.normalized, _lat0Lon90AtStart),
                 Vector3d.Dot(vector3d.normalized, _lat0Lon0AtStart));
             longitude -= 360 * (ut - _epoch) / _referenceBody.rotationPeriod;
-            absolute.Longitude = MuUtils.ClampDegrees180(longitude);
+            absolute.Longitude = Clamp180(longitude);
 
             absolute.Radius = vector3d.magnitude;
 
@@ -1021,7 +1022,7 @@ namespace MuMech
         public Vector3d WorldVelocityAtCurrentTime(AbsoluteVector absolute)
         {
             double now = Planetarium.GetUniversalTime();
-            double unrotatedLongitude = MuUtils.ClampDegrees360(absolute.Longitude - 360 * (now - absolute.UT) / _referenceBody.rotationPeriod);
+            double unrotatedLongitude = Clamp360(absolute.Longitude - 360 * (now - absolute.UT) / _referenceBody.rotationPeriod);
             return absolute.Radius * _referenceBody.GetSurfaceNVector(absolute.Latitude, unrotatedLongitude);
         }
 

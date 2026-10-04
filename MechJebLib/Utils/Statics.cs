@@ -274,6 +274,19 @@ namespace MechJebLib.Utils
         }
 
         /// <summary>
+        ///     Returns the equivalent value in degrees between 0 and 360.
+        /// </summary>
+        /// <param name="x">Degrees</param>
+        /// <returns>Degrees</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Clamp360(double x)
+        {
+            x %= 360;
+            x = x < 0 ? x + 360 : x;
+            return x >= 360 ? 0 : x;
+        }
+
+        /// <summary>
         ///     Returns the equivalent value in radians between -pi and pi.
         /// </summary>
         /// <param name="x">Radians</param>
@@ -283,6 +296,18 @@ namespace MechJebLib.Utils
         {
             x = Clamp2Pi(x);
             return x > PI ? x - TAU : x;
+        }
+
+        /// <summary>
+        ///     Returns the equivalent value in degrees between -180 and 180.
+        /// </summary>
+        /// <param name="x">Degrees</param>
+        /// <returns>Degrees</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Clamp180(double x)
+        {
+            x = Clamp360(x);
+            return x > 180 ? x - 360 : x;
         }
 
         /// <summary>

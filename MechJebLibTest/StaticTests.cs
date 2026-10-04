@@ -48,6 +48,37 @@ namespace MechJebLibTest
         }
 
         [Fact]
+        public void Clamp180Test()
+        {
+            Clamp180(-360).ShouldBeZero(double.Epsilon);
+            Clamp180(-270).ShouldEqual(90, double.Epsilon);
+            Clamp180(-180).ShouldEqual(180, double.Epsilon);
+            Clamp180(-90).ShouldEqual(-90, double.Epsilon);
+            Clamp180(0).ShouldBeZero(double.Epsilon);
+            Clamp180(90).ShouldEqual(90, double.Epsilon);
+            Clamp180(180).ShouldEqual(180, double.Epsilon);
+            Clamp180(270).ShouldEqual(-90, double.Epsilon);
+            Clamp180(360).ShouldBeZero(double.Epsilon);
+            Clamp180(540).ShouldEqual(180, double.Epsilon);
+        }
+
+        [Fact]
+        public void Clamp360Test()
+        {
+            Clamp360(-360).ShouldBeZero(double.Epsilon);
+            Clamp360(-270).ShouldEqual(90, double.Epsilon);
+            Clamp360(-180).ShouldEqual(180, double.Epsilon);
+            Clamp360(-90).ShouldEqual(270, double.Epsilon);
+            Clamp360(0).ShouldBeZero(double.Epsilon);
+            Clamp360(90).ShouldEqual(90, double.Epsilon);
+            Clamp360(180).ShouldEqual(180, double.Epsilon);
+            Clamp360(270).ShouldEqual(270, double.Epsilon);
+            Clamp360(360).ShouldBeZero(double.Epsilon);
+            Clamp360(540).ShouldEqual(180, double.Epsilon);
+            Clamp360(-double.Epsilon).ShouldEqual(0);
+        }
+
+        [Fact]
         public void ClampTest()
         {
             Clamp(-2.0, 0, 1).ShouldEqual(0);

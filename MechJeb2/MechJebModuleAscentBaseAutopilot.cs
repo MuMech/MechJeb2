@@ -350,7 +350,7 @@ namespace MuMech
 
             // calculate pitch and heading after applying AoA limiter
             double pitch = 90 - Vector3d.Angle(desiredThrustVector, VesselState.Up);
-            double hdg = MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(desiredThrustVector, VesselState.East),
+            double hdg = Clamp360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(desiredThrustVector, VesselState.East),
                 Vector3d.Dot(desiredThrustVector, VesselState.North)));
 
             if (AscentSettings.ForceRoll)

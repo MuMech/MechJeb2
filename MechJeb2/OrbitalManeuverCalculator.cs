@@ -329,7 +329,7 @@ namespace MuMech
             double lat_b_rad = UtilMath.Deg2Rad * lat_b;
             double long_diff_rad = UtilMath.Deg2Rad * (long_b - long_a);
 
-            return MuUtils.ClampDegrees360(180.0 / PI * Atan2(
+            return Clamp360(180.0 / PI * Atan2(
                 Sin(long_diff_rad),
                 Cos(lat_a_rad) * Tan(lat_b_rad) - Sin(lat_a_rad) * Cos(long_diff_rad)));
         }
@@ -355,30 +355,30 @@ namespace MuMech
                     // DN is closer than AN
                     // Burning for the AN would entail flipping the orbit around, and would be very expensive
                     // therefore, burn for the corresponding Longitude of the Descending Node
-                    target_longitude = MuUtils.ClampDegrees360(newLAN + 180.0);
+                    target_longitude = Clamp360(newLAN + 180.0);
                 }
                 else
                 {
                     // DN is closer than AN
-                    target_longitude = MuUtils.ClampDegrees360(newLAN);
+                    target_longitude = Clamp360(newLAN);
                 }
             }
             else if (o.AscendingNodeEquatorialExists() && !o.DescendingNodeEquatorialExists())
             {
                 // No DN
-                target_longitude = MuUtils.ClampDegrees360(newLAN);
+                target_longitude = Clamp360(newLAN);
             }
             else if (!o.AscendingNodeEquatorialExists() && o.DescendingNodeEquatorialExists())
             {
                 // No AN
-                target_longitude = MuUtils.ClampDegrees360(newLAN + 180.0);
+                target_longitude = Clamp360(newLAN + 180.0);
             }
             else
             {
                 throw new ArgumentException("OrbitalManeuverCalculator.DeltaVToShiftLAN: No Equatorial Nodes");
             }
 
-            double desiredHeading = MuUtils.ClampDegrees360(Heading(burn_latitude, burn_longitude, target_latitude, target_longitude));
+            double desiredHeading = Clamp360(Heading(burn_latitude, burn_longitude, target_latitude, target_longitude));
             var actualHorizontalVelocity = Vector3d.Exclude(o.Up(UT), o.WorldOrbitalVelocityAtUT(UT));
             Vector3d eastComponent = actualHorizontalVelocity.magnitude * Sin(UtilMath.Deg2Rad * desiredHeading) * o.East(UT);
             Vector3d northComponent = actualHorizontalVelocity.magnitude * Cos(UtilMath.Deg2Rad * desiredHeading) * o.North(UT);
