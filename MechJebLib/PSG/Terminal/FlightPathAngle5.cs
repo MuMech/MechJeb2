@@ -46,6 +46,7 @@ namespace MechJebLib.PSG.Terminal
             V3 hT = _hT;
             double gammaT = _gammaT;
             double rT = _rT;
+            double vT = _vT;
 
             var rf = V3.CopyFromIndices(x, ri);
             var vf = V3.CopyFromIndices(x, vi);
@@ -58,9 +59,9 @@ namespace MechJebLib.PSG.Terminal
 
             DualV3 AngularMomentumConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]) - hT;
 
-            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) - Sin(gammaT);
+            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) / (rT * vT) - Sin(gammaT);
 
-            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - rT * rT;
+            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) / (rT * rT) - 1.0;
         }
 
         public ITerminal GetFPA() => this;

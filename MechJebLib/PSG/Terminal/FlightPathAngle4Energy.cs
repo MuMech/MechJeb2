@@ -51,9 +51,9 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) - Sin(gammaT);
+            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) / (rT * p[1].magnitude) - Sin(gammaT);
 
-            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - rT * rT;
+            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) / (rT * rT) - 1.0;
 
             Dual RadiusOrthogonalityConstraint(DualV3[] p) => DualV3.Dot(p[0], iHT);
 

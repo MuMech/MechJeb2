@@ -54,13 +54,13 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) - Sin(gammaT);
+            Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) / (rT * vT) - Sin(gammaT);
 
-            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - rT * rT;
+            Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) / (rT * rT) - 1.0;
 
             Dual InclinationConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
 
-            Dual VelocityConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) - vT * vT;
+            Dual VelocityConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) / (vT * vT) - 1.0;
         }
 
         public ITerminal GetFPA() => this;
