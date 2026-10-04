@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using JetBrainsAnnotations::JetBrains.Annotations;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -169,7 +170,7 @@ namespace MuMech
             Vector3d vesselVector = VesselState.CoM - markBody.transform.position;
             double traversedAngle = Vector3d.Angle(markVector, vesselVector);
             double circularOrbitAngle = 360 * TimeSinceMark / Orbit.CircularOrbitPeriod();
-            return MuUtils.ClampDegrees360(circularOrbitAngle - traversedAngle);
+            return Clamp360(circularOrbitAngle - traversedAngle);
         }
 
         [Persistent(pass = (int)Pass.LOCAL), ValueInfoItem("#MechJeb_MarkLAN", InfoItem.Category.Recorder, format = ValueInfoItem.ANGLE_EW)]

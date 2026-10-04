@@ -565,14 +565,10 @@ namespace MuMech
                 Math.Acos(Clamp(Vector3.Dot(_vessel.ReferenceTransform.up, SurfaceVelocity.normalized), -1, 1));
             AoD = double.IsNaN(tempAoD) || SpeedSurface < 0.01 ? 0 : tempAoD;
 
+            // Fix Unity Left-Handed NEU eulerAngles to Right-Handed NED
             Heading = RotationVesselSurface.eulerAngles.y;
-            Pitch = RotationVesselSurface.eulerAngles.x > 180
-                ? 360.0 - RotationVesselSurface.eulerAngles.x
-                : -RotationVesselSurface.eulerAngles.x;
-            Roll = RotationVesselSurface.eulerAngles.z > 180
-                ? RotationVesselSurface.eulerAngles.z - 360.0
-                : RotationVesselSurface.eulerAngles.z;
-            Roll = -Roll; //Invert to follow the rule that a roll to the right is positive roll
+            Pitch = Clamp180(-RotationVesselSurface.eulerAngles.x);
+            Roll = Clamp180(-RotationVesselSurface.eulerAngles.z);
 
             AltitudeASL = _vessel.mainBody.GetAltitude(CoM);
 
@@ -612,13 +608,13 @@ namespace MuMech
             OrbitSemiMajorAxis = _vessel.orbit.semiMajorAxis;
             CelestialLongitude = Planetarium.right.AngleInPlane(-Planetarium.up, OrbitalPosition);
             Latitude = _vessel.mainBody.GetLatitude(CoM);
-            Longitude = MuUtils.ClampDegrees180(_vessel.mainBody.GetLongitude(CoM));
+            Longitude = Clamp180(_vessel.mainBody.GetLongitude(CoM));
 
             if (_vessel.mainBody != Planetarium.fetch.Sun)
             {
                 Vector3d prograde = _vessel.mainBody.orbit.getOrbitalVelocityAtUT(Time).xzy;
                 Vector3d normal = _vessel.mainBody.orbit.GetOrbitNormal().xzy;
-                AngleToPrograde = MuUtils.ClampDegrees360((_vessel.orbit.inclination > 90 || _vessel.orbit.inclination < -90 ? 1 : -1) *
+                AngleToPrograde = Clamp360((_vessel.orbit.inclination > 90 || _vessel.orbit.inclination < -90 ? 1 : -1) *
                     OrbitalPosition.AngleInPlane(normal, prograde));
             }
             else
@@ -1225,7 +1221,7 @@ namespace MuMech
         public double ThrustAccel(double throttle) => (1.0 - throttle) * MinThrustAcceleration + throttle * MaxThrustAcceleration;
 
         public double HeadingFromDirection(Vector3d dir) =>
-            MuUtils.ClampDegrees360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(dir, East), Vector3d.Dot(dir, North)));
+            Clamp360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(dir, East), Vector3d.Dot(dir, North)));
 
         private double ComputeVesselBottomAltitude()
         {

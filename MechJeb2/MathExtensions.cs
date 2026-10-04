@@ -28,9 +28,9 @@ namespace MuMech
 
         public static Vector3d DeltaEuler(this Quaternion delta) =>
             new Vector3d(
-                delta.eulerAngles.x > 180 ? delta.eulerAngles.x - 360.0F : delta.eulerAngles.x,
-                -(delta.eulerAngles.y > 180 ? delta.eulerAngles.y - 360.0F : delta.eulerAngles.y),
-                delta.eulerAngles.z > 180 ? delta.eulerAngles.z - 360.0F : delta.eulerAngles.z
+                Clamp180(delta.eulerAngles.x),
+                -Clamp180(delta.eulerAngles.y),
+                Clamp180(delta.eulerAngles.z)
             );
 
         public static Vector3d Clamp(this Vector3d value, double min, double max) =>
@@ -58,7 +58,7 @@ namespace MuMech
             if (v1.magnitude == 0 || v2.magnitude == 0)
                 return double.NaN;
 
-            double angle = MuUtils.ClampDegrees360(Math.Acos(Vector3d.Dot(v1.normalized, v2.normalized)) * UtilMath.Rad2Deg);
+            double angle = Clamp360(Math.Acos(Vector3d.Dot(v1.normalized, v2.normalized)) * UtilMath.Rad2Deg);
             if (Vector3d.Dot(Vector3d.Cross(v1, v2), planeNormal) < 0)
                 return -angle;
             return angle;

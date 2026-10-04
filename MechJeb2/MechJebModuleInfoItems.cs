@@ -545,7 +545,7 @@ namespace MuMech
         public string TargetLDN()
         {
             if (!Core.Target.NormalTargetExists) return "N/A";
-            return MuUtils.ClampDegrees360(Core.Target.TargetOrbit.LAN + 180).ToString("F2") + "º";
+            return Clamp360(Core.Target.TargetOrbit.LAN + 180).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetTimeToAN", InfoItem.Category.Target)] //Target Time to AN
@@ -591,7 +591,7 @@ namespace MuMech
         public string TargetMeanAnomaly()
         {
             if (!Core.Target.NormalTargetExists) return "N/A";
-            return MuUtils.ClampDegrees360(Core.Target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg).ToString("F2") + "º";
+            return Clamp360(Core.Target.TargetOrbit.meanAnomaly * UtilMath.Rad2Deg).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_TargetTrueLongitude", InfoItem.Category.Target)] //Target Mean Anomaly
@@ -599,7 +599,7 @@ namespace MuMech
         {
             if (!Core.Target.NormalTargetExists) return "N/A";
             double longitudeOfPeriapsis = Core.Target.TargetOrbit.LAN + Core.Target.TargetOrbit.argumentOfPeriapsis;
-            return MuUtils.ClampDegrees360(Core.Target.TargetOrbit.trueAnomaly * UtilMath.Rad2Deg + longitudeOfPeriapsis).ToString("F2") + "º";
+            return Clamp360(Core.Target.TargetOrbit.trueAnomaly * UtilMath.Rad2Deg + longitudeOfPeriapsis).ToString("F2") + "º";
         }
 
         [ValueInfoItem("#MechJeb_SynodicPeriod", InfoItem.Category.Target)] //Synodic period

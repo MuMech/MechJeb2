@@ -6,6 +6,7 @@ using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Profiling;
 using Object = UnityEngine.Object;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -142,7 +143,7 @@ namespace MuMech
 
         public EditableAngle(double angle)
         {
-            angle = MuUtils.ClampDegrees180(angle);
+            angle = Clamp180(angle);
 
             Negative = angle < 0;
             angle = Math.Abs(angle);
@@ -782,7 +783,7 @@ namespace MuMech
                     double error = Math.Abs(curRadius - alt);
                     if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
                     {
-                        return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
+                        return new Coordinates(body.GetLatitude(surfacePoint), Clamp180(body.GetLongitude(surfacePoint)));
                     }
 
                     lastRadius = curRadius;
@@ -997,7 +998,7 @@ namespace MuMech
         [UsedImplicitly]
         public static string ToStringDecimal(double latitude, double longitude, bool newline = false, int precision = 3)
         {
-            double clampedLongitude = MuUtils.ClampDegrees180(longitude);
+            double clampedLongitude = Clamp180(longitude);
             double latitudeAbs = Math.Abs(latitude);
             double longitudeAbs = Math.Abs(clampedLongitude);
             return latitudeAbs.ToString("F" + precision) + "° " + (latitude > 0 ? "N" : "S") + (newline ? "\n" : ", ")
@@ -1008,7 +1009,7 @@ namespace MuMech
 
         public static string ToStringDMS(double latitude, double longitude, bool newline = false)
         {
-            double clampedLongitude = MuUtils.ClampDegrees180(longitude);
+            double clampedLongitude = Clamp180(longitude);
             return AngleToDMS(latitude) + (latitude > 0 ? " N" : " S") + (newline ? "\n" : ", ")
                 + AngleToDMS(clampedLongitude) + (clampedLongitude > 0 ? " E" : " W");
         }

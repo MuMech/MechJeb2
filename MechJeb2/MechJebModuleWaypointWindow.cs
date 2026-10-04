@@ -414,7 +414,7 @@ namespace MuMech
             Vector3d relOrigin = mouseRay.origin - body.position;
             if (Physics.Raycast(mouseRay, out RaycastHit raycast, (float)body.Radius * 4f, 1 << 15, QueryTriggerInteraction.Ignore))
             {
-                return new Coordinates(body.GetLatitude(raycast.point), MuUtils.ClampDegrees180(body.GetLongitude(raycast.point)));
+                return new Coordinates(body.GetLatitude(raycast.point), Clamp180(body.GetLongitude(raycast.point)));
             }
 
             double curRadius = body.pqsController.radiusMax;
@@ -431,7 +431,7 @@ namespace MuMech
                     double error = Math.Abs(curRadius - alt);
                     if (error < (body.pqsController.radiusMax - body.pqsController.radiusMin) / 100)
                     {
-                        return new Coordinates(body.GetLatitude(surfacePoint), MuUtils.ClampDegrees180(body.GetLongitude(surfacePoint)));
+                        return new Coordinates(body.GetLatitude(surfacePoint), Clamp180(body.GetLongitude(surfacePoint)));
                     }
 
                     lastRadius = curRadius;
@@ -485,7 +485,7 @@ namespace MuMech
             //					hit = point;
             ////					redLine.SetPosition(0, ray.origin);
             ////					redLine.SetPosition(1, hit);
-            //					return new Coordinates(body.GetLatitude(hit), MuUtils.ClampDegrees180(body.GetLongitude(hit)));
+            //					return new Coordinates(body.GetLatitude(hit), Clamp180(body.GetLongitude(hit)));
             //				}
             //				else {
             //					return null;
@@ -516,9 +516,7 @@ namespace MuMech
 
         private static string LonToString(double lon)
         {
-            while (lon > 180) { lon -= 360; }
-
-            while (lon < -180) { lon += 360; }
+            lon = Clamp180(lon);
 
             string ew = lon >= 0 ? "E" : "W";
             lon = Math.Abs(lon);

@@ -44,22 +44,6 @@ namespace MuMech
             "[" + PadPositive(quaternion.x, format) + ", " + PadPositive(quaternion.y, format) + ", " + PadPositive(quaternion.z, format) +
             ", " + PadPositive(quaternion.w, format) + "]";
 
-        //keeps angles in the range 0 to 360
-        public static double ClampDegrees360(double angle)
-        {
-            angle = angle % 360.0;
-            if (angle < 0) return angle + 360.0;
-            return angle;
-        }
-
-        //keeps angles in the range -180 to 180
-        public static double ClampDegrees180(double angle)
-        {
-            angle = ClampDegrees360(angle);
-            if (angle > 180) angle -= 360;
-            return angle;
-        }
-
         public static Orbit OrbitFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody body, double ut)
         {
             var ret = new Orbit();
