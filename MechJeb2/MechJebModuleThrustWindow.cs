@@ -69,8 +69,6 @@ namespace MuMech
                 Core.Thrust.AutoRCsUllageInfoItem();
             }
 
-            Core.Thrust.SmoothThrottle =
-                GUILayout.Toggle(Core.Thrust.SmoothThrottle, Localizer.Format("#MechJeb_Utilities_checkbox2")); //"Smooth throttle"
             Core.Thrust.ManageIntakes =
                 GUILayout.Toggle(Core.Thrust.ManageIntakes, Localizer.Format("#MechJeb_Utilities_checkbox3")); //"Manage air intakes"
             GUILayout.BeginHorizontal(GuiUtils.LayoutExpandWidth);
