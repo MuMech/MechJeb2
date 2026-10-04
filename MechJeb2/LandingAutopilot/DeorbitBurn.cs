@@ -21,7 +21,7 @@ namespace MuMech
                 if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 5)
                     Core.Thrust.TargetThrottle = 1.0F;
                 else
-                    Core.Thrust.TargetThrottle = 0;
+                    Core.Thrust.ThrustOff();
 
                 return this;
             }
@@ -32,7 +32,7 @@ namespace MuMech
                 //in the orbit to deorbt; we already have deorbited.
                 if (Orbit.ApA < MainBody.RealMaxAtmosphereAltitude())
                 {
-                    Core.Thrust.TargetThrottle = 0;
+                    Core.Thrust.ThrustOff();
                     return new CourseCorrection(Core);
                 }
 

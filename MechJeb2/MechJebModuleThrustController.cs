@@ -267,6 +267,7 @@ namespace MuMech
             if (Vessel == null || Vessel.ctrlState == null)
                 return;
 
+            LastThrottle = 0; // ignore smooth throttling for commanded throttle cut
             TargetThrottle = 0;
             Vessel.ctrlState.mainThrottle = 0;
             Tmode = TMode.OFF;

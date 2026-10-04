@@ -14,12 +14,15 @@ namespace MuMech
             {
                 if (Orbit.PeA < -0.1 * MainBody.Radius)
                 {
-                    Core.Thrust.TargetThrottle = 0;
+                    Core.Thrust.ThrustOff();
                     return new FinalDescent(Core);
                 }
 
                 Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT_HORIZONTAL, Core.Landing);
-                Core.Thrust.TargetThrottle = Core.Attitude.attitudeAngleFromTarget() < 5 ? 1 : 0;
+                if (Core.Attitude.attitudeAngleFromTarget() < 5)
+                    Core.Thrust.TargetThrottle = 1;
+                else
+                    Core.Thrust.ThrustOff();
 
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status16"); //"Doing deorbit burn."
 

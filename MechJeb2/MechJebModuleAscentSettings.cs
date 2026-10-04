@@ -349,6 +349,7 @@ namespace MuMech
             Core.Thrust.LimitToPreventOverheats = false;
             Core.Thrust.LimitDynamicPressure = false;
             Core.Thrust.MaxDynamicPressure.Val = 20000;
+            Core.Thrust.SmoothThrottle = false;
 
             // reset the staging controller, turn on hot-staging and drop solids
             Autostage = true;
