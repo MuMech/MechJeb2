@@ -187,7 +187,11 @@ namespace MuMech
 
             _pwm.MinOnTime = PWMPulseWidth;
             _pwm.MinOffTime = TimeWarp.fixedDeltaTime;
-            Core.Thrust.TargetThrottle = _pwm.ThrottleCommand(accel, VesselState.MinThrustAcceleration, VesselState.MaxThrustAcceleration, TimeWarp.fixedDeltaTime);
+            float throttle = _pwm.ThrottleCommand(accel, VesselState.MinThrustAcceleration, VesselState.MaxThrustAcceleration, TimeWarp.fixedDeltaTime);
+            if (throttle > 0)
+                Core.Thrust.TargetThrottle = throttle;
+            else
+                Core.Thrust.ThrustOff();
         }
 
         private void OnEnterFinished()

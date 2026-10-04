@@ -147,22 +147,21 @@ namespace MuMech
 
         private void DriveCoastToApoapsis()
         {
-            Core.Thrust.TargetThrottle = 0;
-
             if (VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
             {
+                Core.Thrust.ThrustOff();
                 _mode = AscentMode.EXIT;
                 Core.Warp.MinimumWarp();
                 return;
             }
-
-            Core.Thrust.TargetThrottle = 0;
 
             // follow surface velocity to reduce flipping
             AttitudeTo(VesselState.OrbitalVelocity);
 
             if (Orbit.ApA < AscentSettings.DesiredOrbitAltitude)
                 Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
+            else
+                Core.Thrust.ThrustOff();
 
             if (Core.Node.Autowarp)
                 Core.Warp.WarpPhysicsAtRate(2); // 2x physics warp

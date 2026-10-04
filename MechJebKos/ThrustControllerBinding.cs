@@ -57,10 +57,6 @@ namespace MuMech.MechJebKos
                 "Charge fraction (0-1) at which electric throttle reaches full."));
             AddSuffix("AUTORCSULLAGING", new SetSuffix<BooleanValue>(() => Module.AutoRCSUllaging, value => Module.AutoRCSUllaging = value,
                 "Toggle to use RCS to settle propellant (ullage) before ignition."));
-            AddSuffix("SMOOTHTHROTTLE", new SetSuffix<BooleanValue>(() => Module.SmoothThrottle, value => Module.SmoothThrottle = value,
-                "Toggle to smooth throttle changes over time."));
-            AddSuffix("THROTTLESMOOTHINGTIME", new SetSuffix<ScalarValue>(() => Module.ThrottleSmoothingTime, value => Module.ThrottleSmoothingTime = value,
-                "Throttle smoothing time constant in seconds."));
             AddSuffix("LIMITER", new Suffix<StringValue>(() => Module.Limiter.ToString(),
                 "The currently active throttle limiter (NONE, THROTTLE, DYNAMIC_PRESSURE, ...)."));
             AddSuffix("THROTTLELIMIT", new Suffix<ScalarValue>(() => Module.ThrottleLimit,
