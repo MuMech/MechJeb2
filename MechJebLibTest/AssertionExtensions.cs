@@ -39,6 +39,19 @@ namespace MechJebLibTest
                 );
         }
 
+        public static void ShouldEqual(this V2 actual, V2 expected, double epsilon = EPS)
+        {
+            if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
+                throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
+
+            if (!NearlyEqual(actual, expected, epsilon))
+                throw new ApproximateEqualException(
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
+                );
+        }
+
         public static void ShouldEqual(this V3 actual, V3 expected, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
@@ -160,6 +173,20 @@ namespace MechJebLibTest
         {
             if (actual == 0)
                 throw new XunitException($"Expected non-zero value, but was {actual}");
+        }
+
+        // Comparison to zero within a tolerance
+        public static void ShouldBeZero(this V2 actual, double epsilon = EPS)
+        {
+            if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
+                throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
+
+            if (Abs(actual.x) > epsilon || Abs(actual.y) > epsilon)
+                throw new ApproximateEqualException(
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", 0.0),
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
+                );
         }
 
         // Comparison to zero within a tolerance
