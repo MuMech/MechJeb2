@@ -199,34 +199,4 @@ namespace MuMech
 
         public string ToString(string format) => MuUtils.PrettyPrint(Value, format);
     }
-
-    //Represents a 2x2 matrix
-    public class Matrix2X2
-    {
-        private readonly double _a, _b, _c, _d;
-
-        //  [a    b]
-        //  [      ]
-        //  [c    d]
-
-        public Matrix2X2(double a, double b, double c, double d)
-        {
-            _a = a;
-            _b = b;
-            _c = c;
-            _d = d;
-        }
-
-        public Matrix2X2 Inverse()
-        {
-            //           1  [d   -c]
-            //inverse = --- [      ]
-            //          det [-b   a]
-
-            double det = _a * _d - _b * _c;
-            return new Matrix2X2(_d / det, -_b / det, -_c / det, _a / det);
-        }
-
-        public static Vector2d operator *(Matrix2X2 m, Vector2d vec) => new Vector2d(m._a * vec.x + m._b * vec.y, m._c * vec.x + m._d * vec.y);
-    }
 }
