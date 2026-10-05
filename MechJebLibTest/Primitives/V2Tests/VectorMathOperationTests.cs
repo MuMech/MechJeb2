@@ -20,6 +20,40 @@ namespace MechJebLibTest.Primitives.V2Tests
         }
 
         [Fact]
+        private void OuterProductEntries()
+        {
+            V2.Outer(new V2(1, 2), new V2(3, 4)).ShouldEqual(new M2(3, 4, 6, 8));
+            V2.Outer(V2.xaxis, V2.yaxis)[0, 1].ShouldEqual(1);
+        }
+
+        [Fact]
+        private void OuterProductIdentities()
+        {
+            var a = new V2(1.5, -2);
+            var b = new V2(-1, 4);
+            var c = new V2(2, 0.5);
+
+            (V2.Outer(a, b) * c).ShouldEqual(a * V2.Dot(b, c));
+            V2.Outer(a, b).transpose.ShouldEqual(V2.Outer(b, a));
+            V2.Outer(a, b).trace.ShouldEqual(V2.Dot(a, b));
+            V2.Outer(a, b).determinant.ShouldEqual(0);
+        }
+
+        [Fact]
+        private void OuterProductMatchesV3OuterInUpperBlock()
+        {
+            var a = new V2(1.5, -2);
+            var b = new V2(-1, 4);
+
+            M3 m3 = V3.Outer(new V3(a.x, a.y, 0), new V3(b.x, b.y, 0));
+            M2 m2 = V2.Outer(a, b);
+
+            for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                m2[i, j].ShouldEqual(m3[i, j]);
+        }
+
+        [Fact]
         private void CrossProductMatchesV3CrossZComponent()
         {
             var a = new V2(1.5, -2.7);

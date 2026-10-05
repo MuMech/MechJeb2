@@ -104,6 +104,8 @@ namespace MechJebLib.Primitives
 
         public static double Dot(V2 v1, V2 v2) => v1.x * v2.x + v1.y * v2.y;
 
+        public static M2 Outer(V2 v1, V2 v2) => new M2(v1 * v2.x, v1 * v2.y);
+
         public static V2 Project(V2 vector, V2 onNormal)
         {
             double invC = 1.0 / Math.Max(vector.max_magnitude, onNormal.max_magnitude);

@@ -505,6 +505,32 @@ namespace MechJebLib.Utils
         }
 
         /// <summary>
+        ///     Compares two M2 matrices with a relative tolerance.
+        /// </summary>
+        /// <param name="a">first matrix</param>
+        /// <param name="b">second matrix</param>
+        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
+        /// <returns>true if the values are nearly the same</returns>
+        public static bool NearlyEqual(M2 a, M2 b, double epsilon = EPS)
+        {
+            if (a.Equals(b))
+                return true;
+
+            double epsilon2 = Max(a.max_magnitude, b.max_magnitude) * epsilon;
+
+            for (int i = 0; i < 4; i++)
+            {
+                if ((a[i] == 0 || b[i] == 0) && Abs(a[i] - b[i]) > epsilon)
+                    return false;
+
+                if (Abs(a[i] - b[i]) > epsilon2)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         ///     Compares two M3 matrices with a relative tolerance.
         /// </summary>
         /// <param name="a">first vector</param>
