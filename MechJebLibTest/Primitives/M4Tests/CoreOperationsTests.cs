@@ -224,6 +224,41 @@ namespace MechJebLibTest.Primitives.M4Tests
         }
 
         [Fact]
+        private void MinMagnitudeTest()
+        {
+            _a.min_magnitude.ShouldEqual(1);
+            (-_a).min_magnitude.ShouldEqual(1);
+            _a.WithDiagonal(1, 6, 11, -0.5).min_magnitude.ShouldEqual(0.5);
+            _b.min_magnitude.ShouldEqual(0);
+            M4.zero.min_magnitude.ShouldEqual(0);
+            M4.identity.min_magnitude.ShouldEqual(0);
+            (M4.identity + M4.Diagonal(-2)).min_magnitude.ShouldEqual(0);
+        }
+
+        [Fact]
+        private void TransposeStaticMethodTest()
+        {
+            M4.Transpose(_a).ShouldEqual(_a.transpose);
+            M4.Transpose(M4.Transpose(_b)).ShouldEqual(_b);
+        }
+
+        [Fact]
+        private void LerpTest()
+        {
+            M4.Lerp(_a, _b, 0).ShouldEqual(_a);
+            M4.Lerp(_a, _b, 1).ShouldEqual(_b);
+            M4.Lerp(_a, _b, 0.5).ShouldEqual((_a + _b) * 0.5);
+            M4.Lerp(_a, _b, 0.25).ShouldEqual(_a * 0.75 + _b * 0.25);
+        }
+
+        [Fact]
+        private void LerpClampsTest()
+        {
+            M4.Lerp(_a, _b, -1).ShouldEqual(_a);
+            M4.Lerp(_a, _b, 2).ShouldEqual(_b);
+        }
+
+        [Fact]
         private void DiagonalScalarTest()
         {
             Assert.True(M4.Diagonal(2) == new M4(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2));

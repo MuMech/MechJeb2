@@ -641,6 +641,34 @@ namespace MechJebLib.Primitives
         public double trace => m00 + m11 + m22 + m33;
 
         /// <summary>
+        ///     Gets the determinant of the matrix.
+        /// </summary>
+        /// <remarks>
+        ///     Laplace expansion along the 2x2 minors of the first two rows and the complementary minors of the last two.
+        /// </remarks>
+        public double determinant
+        {
+            get
+            {
+                double s0 = m00 * m11 - m10 * m01;
+                double s1 = m00 * m12 - m10 * m02;
+                double s2 = m00 * m13 - m10 * m03;
+                double s3 = m01 * m12 - m11 * m02;
+                double s4 = m01 * m13 - m11 * m03;
+                double s5 = m02 * m13 - m12 * m03;
+
+                double c0 = m20 * m31 - m30 * m21;
+                double c1 = m20 * m32 - m30 * m22;
+                double c2 = m20 * m33 - m30 * m23;
+                double c3 = m21 * m32 - m31 * m22;
+                double c4 = m21 * m33 - m31 * m23;
+                double c5 = m22 * m33 - m32 * m23;
+
+                return s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
+            }
+        }
+
+        /// <summary>
         ///     Gets the transpose of the matrix (rows and columns swapped).
         /// </summary>
         public M4 transpose =>
@@ -657,6 +685,11 @@ namespace MechJebLib.Primitives
         public M4 T() => transpose;
 
         /// <summary>
+        ///     Gets the inverse of the matrix.
+        /// </summary>
+        public M4 inverse => Inverse(this);
+
+        /// <summary>
         ///     Gets whether this matrix is the identity matrix (strict comparison).
         /// </summary>
         public bool isIdentity =>
@@ -669,6 +702,21 @@ namespace MechJebLib.Primitives
         ///     Gets whether this matrix is symmetric (M ≈ M^T).
         /// </summary>
         public bool isSymmetric => NearlyEqual(this, transpose);
+
+        /// <summary>
+        ///     Gets whether this matrix is orthogonal (M * M^T ≈ I).
+        /// </summary>
+        public bool isOrthogonal => NearlyEqual(this * transpose, identity, 1e-15);
+
+        /// <summary>
+        ///     Gets whether this matrix is skew-symmetric (M ≈ -M^T).
+        /// </summary>
+        public bool isSkewSymmetric => NearlyEqual(this, -transpose);
+
+        /// <summary>
+        ///     Gets whether this matrix is singular (determinant ≈ 0).
+        /// </summary>
+        public bool isSingular => Abs(determinant) < EPS;
 
         /// <summary>
         ///     Gets the maximum absolute element value in the matrix.
@@ -684,6 +732,144 @@ namespace MechJebLib.Primitives
             }
         }
 
+        /// <summary>
+        ///     Gets the minimum absolute element value in the matrix.
+        /// </summary>
+        public double min_magnitude
+        {
+            get
+            {
+                double min = Abs(m00);
+                for (int i = 1; i < 16; i++)
+                    min = Min(min, Abs(this[i]));
+                return min;
+            }
+        }
+
+        #endregion
+
+        #region Matrix Norms
+
+        /// <summary>
+        ///     Gets the Frobenius norm (square root of sum of squared elements).
+        /// </summary>
+        public double frobeniusNorm => Sqrt(
+            m00 * m00 + m01 * m01 + m02 * m02 + m03 * m03 +
+            m10 * m10 + m11 * m11 + m12 * m12 + m13 * m13 +
+            m20 * m20 + m21 * m21 + m22 * m22 + m23 * m23 +
+            m30 * m30 + m31 * m31 + m32 * m32 + m33 * m33
+        );
+
+        /// <summary>
+        ///     Gets the infinity norm (maximum absolute row sum).
+        /// </summary>
+        public double infinityNorm => Max(
+            Max(
+                Abs(m00) + Abs(m01) + Abs(m02) + Abs(m03),
+                Abs(m10) + Abs(m11) + Abs(m12) + Abs(m13)
+            ),
+            Max(
+                Abs(m20) + Abs(m21) + Abs(m22) + Abs(m23),
+                Abs(m30) + Abs(m31) + Abs(m32) + Abs(m33)
+            )
+        );
+
+        /// <summary>
+        ///     Computes the Frobenius norm of a matrix.
+        /// </summary>
+        /// <param name="m">The matrix.</param>
+        /// <returns>The Frobenius norm.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double FrobeniusNorm(in M4 m) => m.frobeniusNorm;
+
+        #endregion
+
+        #region Matrix Operations (Static Methods)
+
+        /// <summary>
+        ///     Computes the trace of a matrix (sum of diagonal elements).
+        /// </summary>
+        /// <param name="m">The matrix.</param>
+        /// <returns>The trace value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Trace(in M4 m) => m.trace;
+
+        /// <summary>
+        ///     Computes the determinant of a matrix.
+        /// </summary>
+        /// <param name="m">The matrix.</param>
+        /// <returns>The determinant value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Determinant(in M4 m) => m.determinant;
+
+        /// <summary>
+        ///     Computes the transpose of a matrix (rows and columns swapped).
+        /// </summary>
+        /// <param name="m">The matrix.</param>
+        /// <returns>The transposed matrix.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static M4 Transpose(in M4 m) => m.transpose;
+
+        /// <summary>
+        ///     Computes the inverse of a matrix.
+        /// </summary>
+        /// <param name="m">The matrix to invert.</param>
+        /// <returns>The inverse matrix.</returns>
+        /// <remarks>
+        ///     Uses the classical adjoint method with the cofactors built from 2x2 minors. Does not check for singularity.
+        /// </remarks>
+        public static M4 Inverse(in M4 m)
+        {
+            double s0 = m.m00 * m.m11 - m.m10 * m.m01;
+            double s1 = m.m00 * m.m12 - m.m10 * m.m02;
+            double s2 = m.m00 * m.m13 - m.m10 * m.m03;
+            double s3 = m.m01 * m.m12 - m.m11 * m.m02;
+            double s4 = m.m01 * m.m13 - m.m11 * m.m03;
+            double s5 = m.m02 * m.m13 - m.m12 * m.m03;
+
+            double c0 = m.m20 * m.m31 - m.m30 * m.m21;
+            double c1 = m.m20 * m.m32 - m.m30 * m.m22;
+            double c2 = m.m20 * m.m33 - m.m30 * m.m23;
+            double c3 = m.m21 * m.m32 - m.m31 * m.m22;
+            double c4 = m.m21 * m.m33 - m.m31 * m.m23;
+            double c5 = m.m22 * m.m33 - m.m32 * m.m23;
+
+            double invDet = 1.0 / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
+
+            return new M4(
+                (m.m11 * c5 - m.m12 * c4 + m.m13 * c3) * invDet,
+                (-m.m01 * c5 + m.m02 * c4 - m.m03 * c3) * invDet,
+                (m.m31 * s5 - m.m32 * s4 + m.m33 * s3) * invDet,
+                (-m.m21 * s5 + m.m22 * s4 - m.m23 * s3) * invDet,
+                (-m.m10 * c5 + m.m12 * c2 - m.m13 * c1) * invDet,
+                (m.m00 * c5 - m.m02 * c2 + m.m03 * c1) * invDet,
+                (-m.m30 * s5 + m.m32 * s2 - m.m33 * s1) * invDet,
+                (m.m20 * s5 - m.m22 * s2 + m.m23 * s1) * invDet,
+                (m.m10 * c4 - m.m11 * c2 + m.m13 * c0) * invDet,
+                (-m.m00 * c4 + m.m01 * c2 - m.m03 * c0) * invDet,
+                (m.m30 * s4 - m.m31 * s2 + m.m33 * s0) * invDet,
+                (-m.m20 * s4 + m.m21 * s2 - m.m23 * s0) * invDet,
+                (-m.m10 * c3 + m.m11 * c1 - m.m12 * c0) * invDet,
+                (m.m00 * c3 - m.m01 * c1 + m.m02 * c0) * invDet,
+                (-m.m30 * s3 + m.m31 * s1 - m.m32 * s0) * invDet,
+                (m.m20 * s3 - m.m21 * s1 + m.m22 * s0) * invDet
+            );
+        }
+
+        /// <summary>
+        ///     Linearly interpolates between two matrices element-wise.
+        /// </summary>
+        /// <param name="a">Starting matrix (t=0).</param>
+        /// <param name="b">Ending matrix (t=1).</param>
+        /// <param name="t">Interpolation parameter, clamped to [0, 1].</param>
+        /// <returns>The interpolated matrix.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static M4 Lerp(in M4 a, in M4 b, double t)
+        {
+            t = Clamp01(t);
+            return a + t * (b - a);
+        }
+
         #endregion
 
         #region Matrix Transformation Methods
@@ -695,6 +881,41 @@ namespace MechJebLib.Primitives
         /// <returns>The transformed vector.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public V4 MultiplyVector(in V4 vector) => this * vector;
+
+        #endregion
+
+        #region Orthonormalization
+
+        /// <summary>
+        ///     Gets an orthonormalized copy of this matrix using the modified Gram-Schmidt process on the columns.
+        /// </summary>
+        /// <remarks>
+        ///     The resulting columns form an orthonormal basis (det = 1 or -1), with the first column parallel to the
+        ///     original first column.
+        /// </remarks>
+        public M4 orthonormalized
+        {
+            get
+            {
+                V4 x = GetColumn(0);
+                V4 y = GetColumn(1);
+                V4 z = GetColumn(2);
+                V4 w = GetColumn(3);
+
+                x = x.normalized;
+
+                y = (y - x * V4.Dot(x, y)).normalized;
+
+                z -= x * V4.Dot(x, z);
+                z = (z - y * V4.Dot(y, z)).normalized;
+
+                w -= x * V4.Dot(x, w);
+                w -= y * V4.Dot(y, w);
+                w = (w - z * V4.Dot(z, w)).normalized;
+
+                return new M4(x, y, z, w);
+            }
+        }
 
         #endregion
 
