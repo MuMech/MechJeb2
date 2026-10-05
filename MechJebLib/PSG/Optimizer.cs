@@ -461,7 +461,7 @@ namespace MechJebLib.PSG
             alglib.minnlcoptguardgradient(_state, Diffstep);
             alglib.minnlcoptguardsmoothness(_state, 1);
 #endif
-            //alglib.trace_file("SQP,PREC.F6", "/tmp/trace.log");
+            //alglib.trace_file("SQP,SQP.PROBINGONFAILURE,PREC.F6", "/tmp/trace.log");
 
             alglib.minnlcoptimize(_state, _constraintHandle, null, null);
             alglib.minnlcresultsbuf(_state, ref x, _rep);
