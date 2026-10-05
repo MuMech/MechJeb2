@@ -29,16 +29,17 @@ namespace MechJebLib.Control
 
         public double Kint => _kint.Interpolate(Grr, Ts, M);
 
-        public M3 L => new M3(
+        // observer gain columns for the position and velocity measurements
+        public V3 Lx => new V3(
             _l00.Interpolate(Grr, Ts, M),
-            _l10.Interpolate(Grr, Ts, M),
-            0,
             _l01.Interpolate(Grr, Ts, M),
+            _l02.Interpolate(Grr, Ts, M)
+        );
+
+        public V3 Lv => new V3(
+            _l10.Interpolate(Grr, Ts, M),
             _l11.Interpolate(Grr, Ts, M),
-            0,
-            _l02.Interpolate(Grr, Ts, M),
-            _l12.Interpolate(Grr, Ts, M),
-            0
+            _l12.Interpolate(Grr, Ts, M)
         );
 
         private double _ei;
@@ -108,20 +109,20 @@ namespace MechJebLib.Control
 
             double e = r - x;
 
-            var ytrue = new V3(x, v, 0);
-
+            // the third state (filtered actuator) starts at rest
             if (!IsFinite(X̂))
-                X̂ = ytrue;
+                X̂ = new V3(x, v, 0);
 
             _ei += e + Kb * _uDiff;
 
             var A = new M3(1.0, Ts, 0, 0, 1.0, Ts / M, 0, 0, 1.0 - Alpha);
             var B = new V3(0, 0, Alpha);
-            var C = new M3(1.0, 0, 0, 0, 1.0, 0, 0, 0, 0);
 
             V3 X̂pred = A * X̂ + B * _uSat;
-            V3 ypred = C * X̂pred;
-            X̂ = X̂pred + L * (ytrue - ypred);
+
+            // only position and velocity are measured
+            V2 innovation = new V2(x, v) - new V2(X̂pred.x, X̂pred.y);
+            X̂ = X̂pred + (Lx * innovation.x + Lv * innovation.y);
 
             double u = -V3.Dot(Kstate, X̂) - Kint * _ei;
             _uSat = Clamp(u, UMin, UMax);

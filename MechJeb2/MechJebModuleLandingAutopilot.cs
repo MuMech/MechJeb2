@@ -1,6 +1,7 @@
 ﻿extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
+using MechJebLib.Primitives;
 using ModuleWheels;
 using MuMech.Landing;
 using UnityEngine;
@@ -301,14 +302,14 @@ namespace MuMech
             // Now solve a 2x2 system of linear equations to determine the linear combination
             // of perturbationDirection01 and normal+ that will give the desired offset in the
             // predicted landing position.
-            var a = new Matrix2X2(
+            var a = new M2(
                 downrangeDelta.sqrMagnitude, Vector3d.Dot(downrangeDelta, deltas[2]),
                 Vector3d.Dot(downrangeDelta, deltas[2]), deltas[2].sqrMagnitude
             );
 
-            var b = new Vector2d(Vector3d.Dot(desiredDelta, downrangeDelta), Vector3d.Dot(desiredDelta, deltas[2]));
+            var b = new V2(Vector3d.Dot(desiredDelta, downrangeDelta), Vector3d.Dot(desiredDelta, deltas[2]));
 
-            Vector2d coeffs = a.Inverse() * b;
+            V2 coeffs = a.inverse * b;
 
             Vector3d courseCorrection = coeffs.x * downrangeDirection + coeffs.y * perturbationDirections[2];
 
