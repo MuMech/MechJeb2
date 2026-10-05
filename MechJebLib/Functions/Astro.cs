@@ -302,7 +302,7 @@ namespace MechJebLib.Functions
         public static V3 VelocityForHeading(V3 r, V3 v, double newHeading)
         {
             V3 venu = ECIToENU(r, v);
-            double hmag = new V3(venu.x, venu.y).magnitude;
+            double hmag = new V2(venu.x, venu.y).magnitude;
             venu[0] = hmag * Sin(newHeading);
             venu[1] = hmag * Cos(newHeading);
             return ENUToECI(r, venu);
@@ -387,7 +387,7 @@ namespace MechJebLib.Functions
         public static V3 VelocityForInclination(V3 r, V3 v, double newInc)
         {
             V3 v0 = ECIToENU(r, v);
-            double horizMag = new V3(v0.x, v0.y).magnitude;
+            double horizMag = new V2(v0.x, v0.y).magnitude;
             V3 vf = ENUHeadingForInclination(newInc, r) * horizMag;
             vf.z = v0.z;
             vf = ENUToECI(r, vf);
@@ -415,8 +415,8 @@ namespace MechJebLib.Functions
         {
             V3 v0 = ECIToENU(r, v);
             double vmag = v0.magnitude;
-            V3 vf = new V3(v0.x, v0.y).normalized * Cos(newFPA) * vmag;
-            vf.z = Sin(newFPA) * vmag;
+            V2 horiz = new V2(v0.x, v0.y).normalized * Cos(newFPA) * vmag;
+            var vf = new V3(horiz.x, horiz.y, Sin(newFPA) * vmag);
             vf = ENUToECI(r, vf);
             return vf;
         }
