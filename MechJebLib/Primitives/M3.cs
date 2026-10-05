@@ -509,16 +509,18 @@ namespace MechJebLib.Primitives
         public bool isSingular => Abs(determinant) < EPS;
 
         /// <summary>
-        ///     Gets the maximum element value in the matrix.
+        ///     Gets the maximum absolute element value in the matrix.
         /// </summary>
         public double max_magnitude =>
-            Max(Max(Max(Max(Max(Max(Max(Max(m00, m10), m20), m01), m11), m21), m02), m12), m22);
+            Max(Max(Max(Max(Max(Max(Max(Max(Abs(m00), Abs(m10)), Abs(m20)), Abs(m01)), Abs(m11)), Abs(m21)), Abs(m02)), Abs(m12)),
+                Abs(m22));
 
         /// <summary>
-        ///     Gets the minimum element value in the matrix.
+        ///     Gets the minimum absolute element value in the matrix.
         /// </summary>
         public double min_magnitude =>
-            Min(Min(Min(Min(Min(Min(Min(Min(m00, m10), m20), m01), m11), m21), m02), m12), m22);
+            Min(Min(Min(Min(Min(Min(Min(Min(Abs(m00), Abs(m10)), Abs(m20)), Abs(m01)), Abs(m11)), Abs(m21)), Abs(m02)), Abs(m12)),
+                Abs(m22));
 
         #endregion
 

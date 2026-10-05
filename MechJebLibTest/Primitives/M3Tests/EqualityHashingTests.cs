@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using MechJebLib.Primitives;
 using Xunit;
+using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.Primitives.M3Tests
 {
@@ -401,6 +402,26 @@ namespace MechJebLibTest.Primitives.M3Tests
 
             m1.GetHashCode().ShouldEqual(m1Copy.GetHashCode());
             Assert.NotEqual(m1.GetHashCode(), m2.GetHashCode());
+        }
+
+        [Fact]
+        private void NearlyEqualTolerance()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            Assert.True(NearlyEqual(m, m * (1 + 1e-10), 1e-9));
+            Assert.False(NearlyEqual(m, m * (1 + 1e-8), 1e-9));
+        }
+
+        [Fact]
+        private void NearlyEqualAllNegativeElements()
+        {
+            // the tolerance scales with the largest absolute element, which used to go negative for all-negative matrices
+            var m = new M3(-1, -2, -3, -4, -5, -6, -7, -8, -9);
+
+            Assert.True(NearlyEqual(m, m * (1 + 1e-10), 1e-9));
+            Assert.False(NearlyEqual(m, m * (1 + 1e-8), 1e-9));
+            m.ShouldEqual(m * (1 + 1e-10), 1e-9);
         }
     }
 }

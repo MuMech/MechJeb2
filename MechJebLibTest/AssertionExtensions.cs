@@ -65,6 +65,19 @@ namespace MechJebLibTest
                 );
         }
 
+        public static void ShouldEqual(this M4 actual, M4 expected, double epsilon = EPS)
+        {
+            if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
+                throw new ArgumentException("Epsilon must be greater than or equal to zero", nameof(epsilon));
+
+            if (!NearlyEqual(actual, expected, epsilon))
+                throw new ApproximateEqualException(
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", expected),
+                    string.Format(CultureInfo.CurrentCulture, "{0:G17}", actual),
+                    epsilon
+                );
+        }
+
         public static void ShouldEqual(this Q3 actual, Q3 expected, double epsilon = EPS)
         {
             if (double.IsNaN(epsilon) || double.IsNegativeInfinity(epsilon) || epsilon < 0.0)
