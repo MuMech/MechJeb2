@@ -334,6 +334,14 @@ namespace MechJebLib.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsFinite(V2 v) => IsFinite(v[0]) && IsFinite(v[1]);
 
+        /// <summary>
+        ///     Helper to check if a vector is finite in all its components (not NaN or Infinity).
+        /// </summary>
+        /// <param name="v">Vector</param>
+        /// <returns>True if all the components are finite</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsFinite(V4 v) => IsFinite(v[0]) && IsFinite(v[1]) && IsFinite(v[2]) && IsFinite(v[3]);
+
         /*
         /// <summary>
         ///     Helper to check if a vector is finite in all its compoenents (not NaN or Ininity).
@@ -455,6 +463,37 @@ namespace MechJebLib.Utils
                 return false;
 
             for (int i = 0; i < 2; i++)
+            {
+                if ((a[i] == 0 || b[i] == 0) && diff[i] > epsilon)
+                    return false;
+                if (diff[i] > epsilon2)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Compares two V4 values with a relative tolerance.
+        /// </summary>
+        /// <param name="a">first vector</param>
+        /// <param name="b">second vector</param>
+        /// <param name="epsilon">relative tolerance (e.g. 1e-15)</param>
+        /// <returns>true if the values are nearly the same</returns>
+        public static bool NearlyEqual(V4 a, V4 b, double epsilon = EPS)
+        {
+            if (a.Equals(b))
+                return true;
+
+            var diff = V4.Abs(a - b);
+
+            double epsilon2 = Max(a.magnitude, b.magnitude) * epsilon;
+
+            // if we have negative or nan values, then if we weren't Equals above, we're different
+            if (!IsFinite(epsilon2))
+                return false;
+
+            for (int i = 0; i < 4; i++)
             {
                 if ((a[i] == 0 || b[i] == 0) && diff[i] > epsilon)
                     return false;

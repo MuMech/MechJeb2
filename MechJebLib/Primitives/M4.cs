@@ -117,6 +117,34 @@ namespace MechJebLib.Primitives
             this.m33 = m33;
         }
 
+        /// <summary>
+        ///     Constructs a matrix from four column vectors.
+        /// </summary>
+        /// <param name="column0">First column vector.</param>
+        /// <param name="column1">Second column vector.</param>
+        /// <param name="column2">Third column vector.</param>
+        /// <param name="column3">Fourth column vector.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public M4(in V4 column0, in V4 column1, in V4 column2, in V4 column3)
+        {
+            m00 = column0.x;
+            m10 = column0.y;
+            m20 = column0.z;
+            m30 = column0.w;
+            m01 = column1.x;
+            m11 = column1.y;
+            m21 = column1.z;
+            m31 = column1.w;
+            m02 = column2.x;
+            m12 = column2.y;
+            m22 = column2.z;
+            m32 = column2.w;
+            m03 = column3.x;
+            m13 = column3.y;
+            m23 = column3.z;
+            m33 = column3.w;
+        }
+
         #endregion
 
         #region Static Constants
@@ -181,6 +209,174 @@ namespace MechJebLib.Primitives
                 }
             }
         }
+
+        #endregion
+
+        #region Row and Column Access
+
+        /// <summary>
+        ///     Gets a column of the matrix as a vector.
+        /// </summary>
+        /// <param name="index">Column index [0..3].</param>
+        /// <returns>The column as a V4 vector.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when index is outside [0..3].</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public V4 GetColumn(int index)
+        {
+            switch (index)
+            {
+                case 0: return new V4(m00, m10, m20, m30);
+                case 1: return new V4(m01, m11, m21, m31);
+                case 2: return new V4(m02, m12, m22, m32);
+                case 3: return new V4(m03, m13, m23, m33);
+                default:
+                    throw new IndexOutOfRangeException("Invalid column index!");
+            }
+        }
+
+        /// <summary>
+        ///     Gets a row of the matrix as a vector.
+        /// </summary>
+        /// <param name="index">Row index [0..3].</param>
+        /// <returns>The row as a V4 vector.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when index is outside [0..3].</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public V4 GetRow(int index)
+        {
+            switch (index)
+            {
+                case 0: return new V4(m00, m01, m02, m03);
+                case 1: return new V4(m10, m11, m12, m13);
+                case 2: return new V4(m20, m21, m22, m23);
+                case 3: return new V4(m30, m31, m32, m33);
+                default:
+                    throw new IndexOutOfRangeException("Invalid row index!");
+            }
+        }
+
+        /// <summary>
+        ///     Returns a new matrix with the specified column replaced.
+        /// </summary>
+        /// <param name="index">Column index [0..3].</param>
+        /// <param name="column">Vector containing the new column values.</param>
+        /// <returns>A new matrix with the column replaced.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when index is outside [0..3].</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public M4 WithColumn(int index, in V4 column)
+        {
+            switch (index)
+            {
+                case 0: return new M4(column, GetColumn(1), GetColumn(2), GetColumn(3));
+                case 1: return new M4(GetColumn(0), column, GetColumn(2), GetColumn(3));
+                case 2: return new M4(GetColumn(0), GetColumn(1), column, GetColumn(3));
+                case 3: return new M4(GetColumn(0), GetColumn(1), GetColumn(2), column);
+                default:
+                    throw new IndexOutOfRangeException("Invalid column index!");
+            }
+        }
+
+        /// <summary>
+        ///     Returns a new matrix with the specified row replaced.
+        /// </summary>
+        /// <param name="index">Row index [0..3].</param>
+        /// <param name="row">Vector containing the new row values.</param>
+        /// <returns>A new matrix with the row replaced.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when index is outside [0..3].</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public M4 WithRow(int index, in V4 row)
+        {
+            switch (index)
+            {
+                case 0:
+                    return new M4(
+                        row.x, row.y, row.z, row.w,
+                        m10, m11, m12, m13,
+                        m20, m21, m22, m23,
+                        m30, m31, m32, m33);
+                case 1:
+                    return new M4(
+                        m00, m01, m02, m03,
+                        row.x, row.y, row.z, row.w,
+                        m20, m21, m22, m23,
+                        m30, m31, m32, m33);
+                case 2:
+                    return new M4(
+                        m00, m01, m02, m03,
+                        m10, m11, m12, m13,
+                        row.x, row.y, row.z, row.w,
+                        m30, m31, m32, m33);
+                case 3:
+                    return new M4(
+                        m00, m01, m02, m03,
+                        m10, m11, m12, m13,
+                        m20, m21, m22, m23,
+                        row.x, row.y, row.z, row.w);
+                default:
+                    throw new IndexOutOfRangeException("Invalid row index!");
+            }
+        }
+
+        /// <summary>
+        ///     Returns a new matrix with two rows swapped.
+        /// </summary>
+        /// <param name="i">First row index [0..3].</param>
+        /// <param name="j">Second row index [0..3].</param>
+        /// <returns>A new matrix with the rows swapped.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public M4 WithSwappedRows(int i, int j)
+        {
+            V4 rowI = GetRow(i);
+            V4 rowJ = GetRow(j);
+            return WithRow(i, rowJ).WithRow(j, rowI);
+        }
+
+        /// <summary>
+        ///     Returns a new matrix with two columns swapped.
+        /// </summary>
+        /// <param name="i">First column index [0..3].</param>
+        /// <param name="j">Second column index [0..3].</param>
+        /// <returns>A new matrix with the columns swapped.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public M4 WithSwappedColumns(int i, int j)
+        {
+            V4 colI = GetColumn(i);
+            V4 colJ = GetColumn(j);
+            return WithColumn(i, colJ).WithColumn(j, colI);
+        }
+
+        #endregion
+
+        #region Diagonal Access
+
+        /// <summary>
+        ///     Gets the diagonal elements as a vector.
+        /// </summary>
+        public V4 diagonal => new V4(m00, m11, m22, m33);
+
+        /// <summary>
+        ///     Returns a new matrix with the diagonal elements replaced.
+        /// </summary>
+        /// <param name="v">Vector containing the diagonal values.</param>
+        /// <returns>A new matrix with the diagonal replaced.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public M4 WithDiagonal(in V4 v) => WithDiagonal(v.x, v.y, v.z, v.w);
+
+        /// <summary>
+        ///     Returns a new matrix with the diagonal elements replaced.
+        /// </summary>
+        /// <param name="x">First diagonal element (m00).</param>
+        /// <param name="y">Second diagonal element (m11).</param>
+        /// <param name="z">Third diagonal element (m22).</param>
+        /// <param name="w">Fourth diagonal element (m33).</param>
+        /// <returns>A new matrix with the diagonal replaced.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public M4 WithDiagonal(double x, double y, double z, double w) =>
+            new M4(
+                x, m01, m02, m03,
+                m10, y, m12, m13,
+                m20, m21, z, m23,
+                m30, m31, m32, w
+            );
 
         #endregion
 
@@ -295,6 +491,48 @@ namespace MechJebLib.Primitives
                 -m.m20, -m.m21, -m.m22, -m.m23,
                 -m.m30, -m.m31, -m.m32, -m.m33
             );
+
+        #endregion
+
+        #region Vector Operators
+
+        /// <summary>
+        ///     Transforms a column vector by a matrix (M * v).
+        /// </summary>
+        /// <param name="lhs">The matrix.</param>
+        /// <param name="vector">The vector to transform.</param>
+        /// <returns>The transformed vector.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static V4 operator *(in M4 lhs, in V4 vector) =>
+            new V4(
+                lhs.m00 * vector.x + lhs.m01 * vector.y + lhs.m02 * vector.z + lhs.m03 * vector.w,
+                lhs.m10 * vector.x + lhs.m11 * vector.y + lhs.m12 * vector.z + lhs.m13 * vector.w,
+                lhs.m20 * vector.x + lhs.m21 * vector.y + lhs.m22 * vector.z + lhs.m23 * vector.w,
+                lhs.m30 * vector.x + lhs.m31 * vector.y + lhs.m32 * vector.z + lhs.m33 * vector.w
+            );
+
+        /// <summary>
+        ///     Multiplies a row vector by a matrix (v^T * M).  Equivalent to M^T * v.
+        /// </summary>
+        /// <param name="vector">The vector.</param>
+        /// <param name="rhs">The matrix.</param>
+        /// <returns>The product v^T * M as a vector.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static V4 operator *(in V4 vector, in M4 rhs) =>
+            new V4(
+                vector.x * rhs.m00 + vector.y * rhs.m10 + vector.z * rhs.m20 + vector.w * rhs.m30,
+                vector.x * rhs.m01 + vector.y * rhs.m11 + vector.z * rhs.m21 + vector.w * rhs.m31,
+                vector.x * rhs.m02 + vector.y * rhs.m12 + vector.z * rhs.m22 + vector.w * rhs.m32,
+                vector.x * rhs.m03 + vector.y * rhs.m13 + vector.z * rhs.m23 + vector.w * rhs.m33
+            );
+
+        /// <summary>
+        ///     Computes the quadratic form v^T * M * v.
+        /// </summary>
+        /// <param name="v">The vector.</param>
+        /// <returns>The scalar v^T * M * v.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public double QuadraticForm(in V4 v) => V4.Dot(v, this * v);
 
         #endregion
 
@@ -448,6 +686,18 @@ namespace MechJebLib.Primitives
 
         #endregion
 
+        #region Matrix Transformation Methods
+
+        /// <summary>
+        ///     Transforms a vector by this matrix (equivalent to M * v).
+        /// </summary>
+        /// <param name="vector">The vector to transform.</param>
+        /// <returns>The transformed vector.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public V4 MultiplyVector(in V4 vector) => this * vector;
+
+        #endregion
+
         #region Matrix Construction (Static Factory Methods)
 
         /// <summary>
@@ -457,6 +707,14 @@ namespace MechJebLib.Primitives
         /// <returns>A diagonal matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static M4 Diagonal(double d) => Diagonal(d, d, d, d);
+
+        /// <summary>
+        ///     Creates a diagonal matrix from a vector.
+        /// </summary>
+        /// <param name="v">Vector containing diagonal values.</param>
+        /// <returns>A diagonal matrix.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static M4 Diagonal(in V4 v) => Diagonal(v.x, v.y, v.z, v.w);
 
         /// <summary>
         ///     Creates a diagonal matrix from four scalar values.
