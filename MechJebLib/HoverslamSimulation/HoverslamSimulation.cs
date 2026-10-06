@@ -40,6 +40,7 @@ namespace MechJebLib.HoverslamSimulation
         {
             _eventFunc = AltitudeResidual;
             _rhs = Rhs;
+            _events = new List<Event> { new Event(BurnResidual) };
         }
 
         private void Reset()
@@ -66,7 +67,7 @@ namespace MechJebLib.HoverslamSimulation
             Rtol = 1e-6,
             Atol = 1e-6,
             Maxiter = 2000,
-            ThrowOnMaxIter = false,
+            ThrowOnMaxIter = true,
             ThrowOnMinStep = false
         };
 
@@ -79,6 +80,14 @@ namespace MechJebLib.HoverslamSimulation
         {
             _phase = phase;
 
+            if (!phase.Coast && VelocityError(x.R, x.V).magnitude <= BURN_END_DV)
+            {
+                // stop because we're already past where the event would fire
+                tf = t0;
+                FinishBurn(ref x, ref tf, phase);
+                return true;
+            }
+
             using var y0 = Vec.Rent(N);
             using var yf = Vec.Rent(N);
 
@@ -90,17 +99,48 @@ namespace MechJebLib.HoverslamSimulation
             x.CopyFrom(yf);
 
             tf = _solver.T;
-            return _solver.Status == AbstractIVP.IVPStatus.EventTerminated;
+
+            if (_solver.Status != AbstractIVP.IVPStatus.EventTerminated)
+                return false;
+
+            FinishBurn(ref x, ref tf, phase);
+            return true;
         }
 
-        private readonly List<Event> _events = new List<Event> { new Event(ZeroVerticalVelocity) };
+        // For "terminal guidance" within the RK integrator we need to stop before the burn direction becomes indeterminate.
+        private const double BURN_END_DV = 1e-3;
 
-        private static double ZeroVerticalVelocity(IList<double> yin, double t, AbstractIVP i)
+        private readonly List<Event> _events;
+
+        private double BurnResidual(IList<double> yin, double t, AbstractIVP i)
         {
             var y = HoverslamLayout.CreateFrom(yin);
 
-            return V3.Dot(y.R, y.V);
+            return VelocityError(y.R, y.V).magnitude - BURN_END_DV;
         }
+
+        // Terminal phase analytical landing.
+        private void FinishBurn(ref HoverslamLayout x, ref double t, Phase phase)
+        {
+            V3 dv = VelocityError(x.R, x.V);
+            double at = phase.VacThrust / x.M;
+            double rate = at + _mu / x.R.sqrMagnitude * V3.Dot(dv.normalized, x.R.normalized); // -d|dv|/dt
+
+            // TWR < 1 while already inside the threshold, leave the residual alone
+            if (rate <= 0)
+                return;
+
+            double dt = dv.magnitude / rate;
+
+            x.R += (x.V - 0.5 * dv) * dt;
+            x.V = V3.Cross(_w, x.R) + x.R.normalized * _vfm;
+            x.M -= phase.Mdot * dt;
+            x.DV += at * dt;
+            t += dt;
+        }
+
+        // surface-relative velocity minus the target final velocity, the burn steers retrograde to this
+        private V3 VelocityError(V3 r, V3 v) => v - V3.Cross(_w, r) - r.normalized * _vfm;
 
         private TrajectoryResult PropagateTrajectory(double t)
         {
@@ -112,9 +152,7 @@ namespace MechJebLib.HoverslamSimulation
             using var coastPhase = Phase.NewCoast(1.0, 1.0, t0, tf, 0, 0);
             PropagatePhase(ref x, t0, ref tf, coastPhase);
 
-            V3 vRel = x.V - V3.Cross(_w, x.R);
-            V3 vf = x.R.normalized * _vfm;
-            V3 uBurn = -(vRel - vf).normalized;
+            V3 uBurn = -VelocityError(x.R, x.V).normalized;
             double af = 0;
 
             for (int p = 0; p < _phases.Count; p++)
@@ -218,9 +256,7 @@ namespace MechJebLib.HoverslamSimulation
             double r = Math.Sqrt(r2);
             double r3 = r2 * r;
 
-            V3 vRel = y.V - V3.Cross(_w, y.R);
-            V3 vf = y.R.normalized * _vfm;
-            V3 u = -(vRel - vf).normalized;
+            V3 u = -VelocityError(y.R, y.V).normalized;
 
             dy.R = y.V;
             dy.V = -_mu * y.R / r3 + at * u;
