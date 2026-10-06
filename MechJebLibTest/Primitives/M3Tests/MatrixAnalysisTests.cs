@@ -88,6 +88,25 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
+        private void IsOrthogonalToleratesRoundingError()
+        {
+            // M * M^T is about 2e-14 away from the identity
+            var m = M3.Rotate(Q3.AngleAxis(1.234, new V3(1, 2, 3).normalized));
+            (m * (1 + 1e-14)).isOrthogonal.ShouldBeTrue();
+            (m * (1 + 1e-9)).isOrthogonal.ShouldBeFalse();
+        }
+
+        [Fact]
+        private void IsOrthogonalProductOfManyRotations()
+        {
+            M3 m = M3.identity;
+            for (int i = 0; i < 1000; i++)
+                m = M3.AngleAxis(0.1 * i, new V3(Sin(i), Cos(i), 1)) * m;
+
+            m.isOrthogonal.ShouldBeTrue();
+        }
+
+        [Fact]
         private void IsOrthogonalPermutationMatrix()
         {
             var m = new M3(0, 1, 0, 0, 0, 1, 1, 0, 0);
@@ -119,7 +138,28 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void IsOrthogonalZeroMatrixFalse() => M3.zero.isOrthogonal.ShouldBeFalse();
 
         [Fact]
+        private void IsOrthogonalNaNFalse()
+        {
+            var m = new M3(double.NaN, 0, 0, 0, 1, 0, 0, 0, 1);
+            m.isOrthogonal.ShouldBeFalse();
+        }
+
+        [Fact]
         private void IsSymmetricIdentity() => M3.identity.isSymmetric.ShouldBeTrue();
+
+        [Fact]
+        private void IsSymmetricNaNFalse()
+        {
+            var m = new M3(double.NaN, 1, 0, 2, 1, 0, 0, 0, 1);
+            m.isSymmetric.ShouldBeFalse();
+        }
+
+        [Fact]
+        private void IsSkewSymmetricNaNFalse()
+        {
+            var m = new M3(double.NaN, 1, 0, 1, 0, 0, 0, 0, 0);
+            m.isSkewSymmetric.ShouldBeFalse();
+        }
 
         [Fact]
         private void IsSymmetricZero() => M3.zero.isSymmetric.ShouldBeTrue();
@@ -229,6 +269,26 @@ namespace MechJebLibTest.Primitives.M3Tests
         {
             var m = M3.Diagonal(1, 0, 3);
             m.isSingular.ShouldBeTrue();
+        }
+
+        [Fact]
+        private void IsSingularIndependentOfScale()
+        {
+            // rank 2 up to rounding, but rounding leaves det = 1.78e-14, and at 1e200 the determinant is Inf - Inf
+            (new M3(1, 2, 3, 4, 5, 6, 7, 8, 9) * 1.1).isSingular.ShouldBeTrue();
+            (new M3(1, 2, 3, 4, 5, 6, 7, 8, 9) * 1e200).isSingular.ShouldBeTrue();
+
+            // perfectly conditioned, with determinants that are tiny, underflow, or overflow
+            M3.Diagonal(1e-6).isSingular.ShouldBeFalse();
+            M3.Diagonal(1e-110).isSingular.ShouldBeFalse();
+            M3.Diagonal(1e110).isSingular.ShouldBeFalse();
+        }
+
+        [Fact]
+        private void IsSingularNearlyDependentRowsFalse()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9 + 1e-10);
+            m.isSingular.ShouldBeFalse();
         }
 
         [Fact]

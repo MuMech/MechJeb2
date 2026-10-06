@@ -518,6 +518,10 @@ namespace MechJebLib.Utils
 
             double epsilon2 = Max(a.max_magnitude, b.max_magnitude) * epsilon;
 
+            // if we have nan or infinite values, then if we weren't Equals above, we're different
+            if (!IsFinite(epsilon2))
+                return false;
+
             for (int i = 0; i < 4; i++)
             {
                 if ((a[i] == 0 || b[i] == 0) && Abs(a[i] - b[i]) > epsilon)
@@ -543,6 +547,10 @@ namespace MechJebLib.Utils
                 return true;
 
             double epsilon2 = Max(a.max_magnitude, b.max_magnitude) * epsilon;
+
+            // if we have nan or infinite values, then if we weren't Equals above, we're different
+            if (!IsFinite(epsilon2))
+                return false;
 
             for (int i = 0; i < 9; i++)
             {
@@ -570,6 +578,10 @@ namespace MechJebLib.Utils
 
             double epsilon2 = Max(a.max_magnitude, b.max_magnitude) * epsilon;
 
+            // if we have nan or infinite values, then if we weren't Equals above, we're different
+            if (!IsFinite(epsilon2))
+                return false;
+
             for (int i = 0; i < 16; i++)
             {
                 if ((a[i] == 0 || b[i] == 0) && Abs(a[i] - b[i]) > epsilon)
@@ -596,6 +608,10 @@ namespace MechJebLib.Utils
 
             double epsilon2 = Max(Max(Max(Abs(a.x), Abs(a.y)), Max(Abs(a.z), Abs(a.w))),
                 Max(Max(Abs(b.x), Abs(b.y)), Max(Abs(b.z), Abs(b.w)))) * epsilon;
+
+            // if we have nan or infinite values, then if we weren't Equals above, we're different
+            if (!IsFinite(epsilon2))
+                return false;
 
             if ((a.x == 0 || b.x == 0) && Abs(a.x - b.x) > epsilon)
                 return false;

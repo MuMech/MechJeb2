@@ -137,10 +137,18 @@ namespace MechJebLib.Primitives
         /// <param name="row">Row index [0..2].</param>
         /// <param name="column">Column index [0..2].</param>
         /// <returns>The element at the specified position.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when row or column is outside [0..2].</exception>
         public double this[int row, int column]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => this[row + column * 3];
+            get
+            {
+                // check each index separately, an out-of-range row could otherwise alias another column
+                if (row < 0 || row > 2 || column < 0 || column > 2)
+                    throw new IndexOutOfRangeException("Invalid matrix index!");
+
+                return this[row + column * 3];
+            }
         }
 
         /// <summary>
@@ -473,7 +481,7 @@ namespace MechJebLib.Primitives
         /// <summary>
         ///     Gets the transpose of the matrix (rows and columns swapped).
         /// </summary>
-        public M3 T() => new M3(m00, m10, m20, m01, m11, m21, m02, m12, m22);
+        public M3 T() => transpose;
 
         /// <summary>
         ///     Gets the inverse of the matrix.
@@ -489,9 +497,10 @@ namespace MechJebLib.Primitives
             m02 == 0.0 && m12 == 0.0 && m22 == 1.0;
 
         /// <summary>
-        ///     Gets whether this matrix is orthogonal (M * M^T ≈ I).
+        ///     Gets whether this matrix is orthogonal (M * M^T ≈ I to within 1e-12, which allows for the rounding error
+        ///     accumulated over long chains of rotations).
         /// </summary>
-        public bool isOrthogonal => NearlyEqual(this * transpose, identity, 1e-15);
+        public bool isOrthogonal => NearlyEqual(this * transpose, identity, 1e-12);
 
         /// <summary>
         ///     Gets whether this matrix is symmetric (M ≈ M^T).
@@ -504,9 +513,33 @@ namespace MechJebLib.Primitives
         public bool isSkewSymmetric => NearlyEqual(this, -transpose);
 
         /// <summary>
-        ///     Gets whether this matrix is singular (determinant ≈ 0).
+        ///     Gets whether this matrix is singular: the determinant is within rounding error of zero relative to the
+        ///     product of the row lengths, which bounds it by Hadamard's inequality.
         /// </summary>
-        public bool isSingular => Abs(determinant) < EPS;
+        public bool isSingular
+        {
+            get
+            {
+                V3 r0 = GetRow(0);
+                V3 r1 = GetRow(1);
+                V3 r2 = GetRow(2);
+
+                double s0 = r0.max_magnitude;
+                double s1 = r1.max_magnitude;
+                double s2 = r2.max_magnitude;
+
+                if (s0 == 0 || s1 == 0 || s2 == 0)
+                    return true;
+
+                // scale each row to a largest element of one so the determinant can't overflow or underflow, the rows
+                // go in as columns, which doesn't change the determinant
+                r0 /= s0;
+                r1 /= s1;
+                r2 /= s2;
+
+                return Abs(new M3(r0, r1, r2).determinant) <= 16 * EPS * r0.magnitude * r1.magnitude * r2.magnitude;
+            }
+        }
 
         /// <summary>
         ///     Gets the maximum absolute element value in the matrix.
@@ -641,11 +674,11 @@ namespace MechJebLib.Primitives
         #region Orthonormalization
 
         /// <summary>
-        ///     Gets an orthonormalized copy of this matrix using Gram-Schmidt process.
+        ///     Gets an orthonormalized copy of this matrix using the modified Gram-Schmidt process on the columns.
         /// </summary>
         /// <remarks>
-        ///     The resulting columns form an orthonormal basis
-        ///     and the matrix represents a pure rotation (det = 1 or -1).
+        ///     The resulting columns form an orthonormal basis (det = 1 or -1), with the first column parallel to the
+        ///     original first column.
         /// </remarks>
         public M3 orthonormalized
         {
@@ -656,8 +689,11 @@ namespace MechJebLib.Primitives
                 V3 z = GetColumn(2);
 
                 x = x.normalized;
+
                 y = (y - x * V3.Dot(x, y)).normalized;
-                z = (z - x * V3.Dot(x, z) - y * V3.Dot(y, z)).normalized;
+
+                z -= x * V3.Dot(x, z);
+                z = (z - y * V3.Dot(y, z)).normalized;
 
                 return new M3(x, y, z);
             }
@@ -750,12 +786,17 @@ namespace MechJebLib.Primitives
         ///     Creates a rotation matrix from an angle and axis using Rodrigues' rotation formula.
         /// </summary>
         /// <param name="angle">Rotation angle in radians.</param>
-        /// <param name="axis">Rotation axis (will be normalized internally).</param>
+        /// <param name="axis">Rotation axis (will be normalized internally, a zero axis gives the identity).</param>
         /// <returns>The rotation matrix.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static M3 AngleAxis(double angle, in V3 axis)
         {
-            V3 a = axis.normalized;
+            V3 a = axis.safeNormalized;
+
+            // no axis to rotate around, which matches M3.Rotate(Q3.AngleAxis(angle, V3.zero))
+            if (a == V3.zero)
+                return identity;
+
             double c = Cos(angle);
             double s = Sin(angle);
             double t = 1.0 - c;
@@ -816,9 +857,11 @@ namespace MechJebLib.Primitives
         {
             get
             {
-                if (trace > 0.0)
+                double tr = trace;
+
+                if (tr > 0.0)
                 {
-                    double s = Sqrt(trace + 1.0);
+                    double s = Sqrt(tr + 1.0);
                     double w = s * 0.5;
                     s = 0.5 / s;
 
@@ -859,7 +902,7 @@ namespace MechJebLib.Primitives
 
         /// <summary>
         ///     Converts this matrix to a rotation quaternion, ensuring proper rotation matrix form.
-        ///     Orthonormalizes the matrix first and ensures det = 1.
+        ///     Orthonormalizes the matrix first and ensures det = 1 by negating the third column of a left-handed basis.
         /// </summary>
         /// <remarks>
         ///     Use this for matrices that may have accumulated numerical error
@@ -870,8 +913,10 @@ namespace MechJebLib.Primitives
             get
             {
                 M3 m = orthonormalized;
+
+                // negating the whole matrix would also flip the first two columns, giving a rotation 180° away
                 if (m.determinant < 0)
-                    m = -m;
+                    m = new M3(m.GetColumn(0), m.GetColumn(1), -m.GetColumn(2));
 
                 return m.quaternion;
             }
@@ -884,26 +929,26 @@ namespace MechJebLib.Primitives
         /// <summary>
         ///     Gets the Euler angles (roll, pitch, yaw) from this rotation matrix.
         ///     Assumes intrinsic ZYX order matching aerospace NED convention.
+        ///     At gimbal lock (pitch ±90°) yaw is reported as zero.
         /// </summary>
         public V3 eulerAngles
         {
             get
             {
-                double pitch = SafeAsin(-m20);
+                // cos(pitch), which is never negative since pitch is in [-90°, 90°]
+                double cp = Sqrt(m00 * m00 + m10 * m10);
 
-                double roll, yaw;
+                // Gimbal lock: only roll - yaw (pitch +90°) or roll + yaw (pitch -90°) is observable
+                double yaw = cp > 4 * EPS ? Atan2(m10, m00) : 0;
+                double pitch = Atan2(-m20, cp);
 
-                if (Abs(m20) < 1.0 - EPS)
-                {
-                    roll = Atan2(m21, m22);
-                    yaw = Atan2(m10, m00);
-                }
-                else
-                {
-                    // Gimbal lock: pitch is ±90°
-                    roll = Atan2(-m12, m11);
-                    yaw = 0;
-                }
+                // Take roll from Rz(yaw)^T * M, whose second row is [0, cos(roll), -sin(roll)], instead of from
+                // m21 and m22, which scale with cos(pitch).  Near gimbal lock yaw is mostly rounding noise, but the
+                // roll computed here absorbs it so the angles still reproduce the matrix (Day, "Extracting Euler
+                // Angles from a Rotation Matrix").
+                double cy = Cos(yaw);
+                double sy = Sin(yaw);
+                double roll = Atan2(sy * m02 - cy * m12, cy * m11 - sy * m01);
 
                 return new V3(roll, pitch, yaw);
             }
@@ -940,7 +985,7 @@ namespace MechJebLib.Primitives
             );
 
         /// <summary>
-        ///     Creates a matrix from a 1D array.
+        ///     Creates a matrix from a 1D array in row-major order.
         /// </summary>
         /// <param name="array">Source 1D array.</param>
         /// <param name="offset">Starting index in the source array.</param>
@@ -974,7 +1019,7 @@ namespace MechJebLib.Primitives
         }
 
         /// <summary>
-        ///     Copies this matrix to a 1D array.
+        ///     Copies this matrix to a 1D array in row-major order.
         /// </summary>
         /// <param name="other">Target 1D array.</param>
         /// <param name="offset">Starting index in the target array.</param>

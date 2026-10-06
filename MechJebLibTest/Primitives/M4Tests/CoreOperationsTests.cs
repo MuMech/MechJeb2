@@ -76,6 +76,10 @@ namespace MechJebLibTest.Primitives.M4Tests
             Assert.Throws<IndexOutOfRangeException>(() => _a[-1]);
             Assert.Throws<IndexOutOfRangeException>(() => _a[16]);
             Assert.Throws<IndexOutOfRangeException>(() => _a[0, 4]);
+
+            // these used to alias other elements through the flattened index
+            Assert.Throws<IndexOutOfRangeException>(() => _a[4, 0]);
+            Assert.Throws<IndexOutOfRangeException>(() => _a[-1, 1]);
         }
 
         [Fact]

@@ -423,5 +423,19 @@ namespace MechJebLibTest.Primitives.M3Tests
             Assert.False(NearlyEqual(m, m * (1 + 1e-8), 1e-9));
             m.ShouldEqual(m * (1 + 1e-10), 1e-9);
         }
+
+        [Fact]
+        private void NearlyEqualNonFinite()
+        {
+            // a NaN or Inf element makes the relative tolerance non-finite, which used to make every element compare equal
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var nan = new M3(double.NaN, 0, 0, 0, 0, 0, 0, 0, 0);
+            var inf = new M3(double.PositiveInfinity, 0, 0, 0, 0, 0, 0, 0, 0);
+
+            Assert.False(NearlyEqual(m, m + nan));
+            Assert.False(NearlyEqual(m + nan, m * 2));
+            Assert.False(NearlyEqual(m + inf, m * 2));
+            Assert.True(NearlyEqual(m + inf, m + inf));
+        }
     }
 }

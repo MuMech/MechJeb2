@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
@@ -48,6 +49,18 @@ namespace MechJebLibTest.Primitives.M3Tests
             one[2, 0].ShouldEqual(7);
             one[2, 1].ShouldEqual(8);
             one[2, 2].ShouldEqual(9);
+        }
+
+        [Fact]
+        private void TwoDimensionalAccessOutOfRange()
+        {
+            var m = new M3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+            // the first three used to alias other elements through the flattened index
+            Assert.Throws<IndexOutOfRangeException>(() => m[3, 0]);
+            Assert.Throws<IndexOutOfRangeException>(() => m[-1, 1]);
+            Assert.Throws<IndexOutOfRangeException>(() => m[4, -1]);
+            Assert.Throws<IndexOutOfRangeException>(() => m[0, 3]);
         }
 
         [Fact]

@@ -5,6 +5,7 @@
 
 using System;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using Xunit;
 using static System.Math;
 
@@ -201,6 +202,20 @@ namespace MechJebLibTest.Primitives.Q3Tests
 
             (q1 == q2).ShouldBeFalse();
             (q1 != q2).ShouldBeTrue();
+        }
+
+        [Fact]
+        private void NearlyEqualNonFinite()
+        {
+            // a NaN or Inf component makes the relative tolerance non-finite, which used to make every component compare equal
+            var q = new Q3(1, 2, 3, 4);
+            var nan = new Q3(double.NaN, 0, 0, 0);
+            var inf = new Q3(double.PositiveInfinity, 0, 0, 0);
+
+            Statics.NearlyEqual(q, q + nan).ShouldBeFalse();
+            Statics.NearlyEqual(q + nan, 2 * q).ShouldBeFalse();
+            Statics.NearlyEqual(q + inf, 2 * q).ShouldBeFalse();
+            Statics.NearlyEqual(q + inf, q + inf).ShouldBeTrue();
         }
 
         [Fact]

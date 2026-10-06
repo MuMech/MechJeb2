@@ -129,6 +129,33 @@ namespace MechJebLibTest.Primitives.M2Tests
         }
 
         [Fact]
+        private void IsOrthogonalToleratesRoundingError()
+        {
+            // M * M^T is about 2e-14 away from the identity
+            (_rotation * (1 + 1e-14)).isOrthogonal.ShouldBeTrue();
+            (_rotation * (1 + 1e-9)).isOrthogonal.ShouldBeFalse();
+        }
+
+        [Fact]
+        private void IsOrthogonalProductOfManyRotations()
+        {
+            M2 m = M2.identity;
+            for (int i = 0; i < 1000; i++)
+                m = M2.Rotate(0.1 * i) * m;
+
+            m.isOrthogonal.ShouldBeTrue();
+        }
+
+        [Fact]
+        private void IsOrthogonalNaNFalse() => M2.Diagonal(double.NaN, 1).isOrthogonal.ShouldBeFalse();
+
+        [Fact]
+        private void IsSymmetricNaNFalse() => new M2(double.NaN, 1, 2, 1).isSymmetric.ShouldBeFalse();
+
+        [Fact]
+        private void IsSkewSymmetricNaNFalse() => new M2(double.NaN, 1, 1, 0).isSkewSymmetric.ShouldBeFalse();
+
+        [Fact]
         private void IsSkewSymmetricTrueCases()
         {
             M2.zero.isSkewSymmetric.ShouldBeTrue();
@@ -169,6 +196,26 @@ namespace MechJebLibTest.Primitives.M2Tests
             M2.identity.isSingular.ShouldBeFalse();
             _a.isSingular.ShouldBeFalse();
             _rotation.isSingular.ShouldBeFalse();
+        }
+
+        [Fact]
+        private void IsSingularIndependentOfScale()
+        {
+            // rank 1 up to rounding, but rounding leaves det = -2.3e-10, and at 1e200 the determinant is Inf - Inf
+            new M2(700.1, 1300.3, 1.9 * 700.1, 1.9 * 1300.3).isSingular.ShouldBeTrue();
+            (_singular * 1e200).isSingular.ShouldBeTrue();
+
+            // perfectly conditioned, with determinants that are tiny, underflow, or overflow
+            M2.Diagonal(1e-9, 1e-9).isSingular.ShouldBeFalse();
+            M2.Diagonal(1e-200, 1e-200).isSingular.ShouldBeFalse();
+            M2.Diagonal(1e200, 1e200).isSingular.ShouldBeFalse();
+        }
+
+        [Fact]
+        private void IsSingularNearlyDependentRowsFalse()
+        {
+            new M2(1, 2, 3, 6).isSingular.ShouldBeTrue();
+            new M2(1, 2, 3, 6 + 1e-10).isSingular.ShouldBeFalse();
         }
     }
 }

@@ -304,5 +304,71 @@ namespace MechJebLibTest.Primitives.M3Tests
 
             m2.ShouldEqual(m, 1e-14);
         }
+
+        private static M3 EulerAnglesFromQuaternions(double roll, double pitch, double yaw)
+        {
+            var qRoll = Q3.AngleAxis(roll, V3.forward);
+            var qPitch = Q3.AngleAxis(pitch, V3.right);
+            var qYaw = Q3.AngleAxis(yaw, V3.down);
+            return M3.Rotate(qYaw * qPitch * qRoll);
+        }
+
+        [Fact]
+        private void ToEulerAnglesGimbalLockWithRoundingNoise()
+        {
+            // the quaternion product leaves m20 a few ulps inside -1, which used to skip the gimbal lock branch and
+            // take roll and yaw from atan2 of rounding noise
+            M3 m = EulerAnglesFromQuaternions(-3, PI / 2, -1);
+
+            V3 euler = m.ToEulerAngles();
+
+            euler.y.ShouldEqual(PI / 2, 1e-14);
+            M3.EulerAngles(euler).ShouldEqual(m, 1e-14);
+        }
+
+        [Fact]
+        private void ToEulerAnglesGimbalLockRoundTripGrid()
+        {
+            foreach (double pitch in new[] { PI / 2, -PI / 2 })
+            for (double roll = -3; roll <= 3; roll += 0.25)
+            for (double yaw = -3; yaw <= 3; yaw += 0.25)
+            {
+                M3 m = EulerAnglesFromQuaternions(roll, pitch, yaw);
+
+                V3 euler = m.ToEulerAngles();
+
+                euler.y.ShouldEqual(pitch, 1e-14);
+                M3.EulerAngles(euler).ShouldEqual(m, 1e-14);
+            }
+        }
+
+        [Fact]
+        private void ToEulerAnglesNearGimbalLockRoundTrip()
+        {
+            foreach (double sign in new[] { 1.0, -1.0 })
+            foreach (double delta in new[] { 1e-4, 1e-6, 1e-8, 1e-10, 1e-12, 1e-14 })
+            {
+                var m = M3.EulerAngles(PI / 6, sign * (PI / 2 - delta), PI / 3);
+
+                V3 euler = m.ToEulerAngles();
+
+                M3.EulerAngles(euler).ShouldEqual(m, 1e-14);
+            }
+        }
+
+        [Fact]
+        private void ToEulerAnglesGimbalLockReportsZeroYaw()
+        {
+            // at pitch +90° only roll - yaw is observable, and at pitch -90° only roll + yaw
+            V3 up = M3.EulerAngles(0.3, PI / 2, 0.5).ToEulerAngles();
+            up.x.ShouldEqual(-0.2, 1e-14);
+            up.y.ShouldEqual(PI / 2, 1e-14);
+            up.z.ShouldBeZero();
+
+            V3 down = M3.EulerAngles(0.3, -PI / 2, 0.5).ToEulerAngles();
+            down.x.ShouldEqual(0.8, 1e-14);
+            down.y.ShouldEqual(-PI / 2, 1e-14);
+            down.z.ShouldBeZero();
+        }
     }
 }

@@ -19,6 +19,22 @@ namespace MechJebLibTest.Primitives.M3Tests
         }
 
         [Fact]
+        private void AngleAxisZeroAxisIsIdentity()
+        {
+            // matches M3.Rotate(Q3.AngleAxis(angle, V3.zero)) instead of returning cos(angle) * I
+            M3.AngleAxis(PI, V3.zero).ShouldEqual(M3.identity);
+            M3.AngleAxis(PI / 2, V3.zero).ShouldEqual(M3.identity);
+            M3.AngleAxis(PI / 2, V3.zero).ShouldEqual(M3.Rotate(Q3.AngleAxis(PI / 2, V3.zero)));
+        }
+
+        [Fact]
+        private void AngleAxisTinyAxis()
+        {
+            // the squared magnitude underflows, but the axis direction is still well defined
+            M3.AngleAxis(PI / 2, new V3(0, 0, 1e-170)).ShouldEqual(M3.AngleAxis(PI / 2, V3.zaxis));
+        }
+
+        [Fact]
         private void AngleAxisAroundX()
         {
             var m = M3.AngleAxis(PI / 2, V3.xaxis);
