@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -45,6 +45,10 @@ namespace MuMech
             _vesselManagerVac.Release();
         }
 
+        // These need to be refactored to utilize 1 thread for both calculations
+        // rather than asking for 2 threads from the pool.
+        // This prevents thread/cache pollution and allows other mods (Principia) to hog the CPU cores
+        // I'm leaving it as is for now to make the PR small.
         private readonly SimVesselManager _vesselManagerAtmo = new SimVesselManager();
         private readonly SimVesselManager _vesselManagerVac = new SimVesselManager();
 

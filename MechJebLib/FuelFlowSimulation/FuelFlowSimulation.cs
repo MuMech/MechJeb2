@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -15,7 +15,10 @@ namespace MechJebLib.FuelFlowSimulation
 {
     public class FuelFlowSimulation : AsyncJob
     {
-        private const int MAXSTEPS = 10_000;
+        // this actually acts as a fail-safe during our wake-up phase
+        // Unfortunately, I can't tell you EXACTLY what it does,
+        // but I haven't found a vessel that hits the conditional outside of wake-up
+        private const int MAXSTEPS = 100;
 
         public readonly List<FuelStats> Segments = new List<FuelStats>();
         private FuelStats _currentSegment;
@@ -130,16 +133,20 @@ namespace MechJebLib.FuelFlowSimulation
 
             UpdateResourceDrainsAndResiduals(vessel);
             int activeEngines = vessel.ActiveEngines.Count;
+            // these logger calls get removed in release builds
+            AsyncDevLogger.Log($"[MechJeb2][FuelFlowSim]: +++++++++ STAGE {vessel.CurrentStage} +++++++");
 
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
                 if (AllowedToStage(vessel))
                     return;
 
-                double dt = MinimumTimeStep();
+                double dt = MaximumTimeStep();
+                AsyncDevLogger.Log($"[MechJeb2][FuelFlowSim]: Couldn't stage. Current step: {steps}, dt: {dt}");
 
                 if (dt >= 0.02 && activeEngines != vessel.ActiveEngines.Count)
                 {
+                    AsyncDevLogger.Log($"[MechJeb2][FuelFlowSim]: Conditional branch hit. Current step: {steps}, dt: {dt}");
                     ClearResiduals();
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);
@@ -382,7 +389,8 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double MinimumTimeStep()
+        // the maximum amount of time that we can drain current resources
+        private double MaximumTimeStep()
         {
             double maxTime = ResourceMaxTime();
 

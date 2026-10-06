@@ -1,10 +1,11 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
 using System;
 using System.Reflection;
+using MechJebLibBindings.Logger;
 using UnityEngine;
 
 namespace MechJebLibBindings
@@ -26,6 +27,8 @@ namespace MechJebLibBindings
             IsLoadedFAR = IsAssemblyLoaded("FerramAerospaceResearch");
             IsLoadedRealismOverhaul = IsAssemblyLoaded("RealismOverhaul");
             IsLoadedRP0 = IsAssemblyLoaded("RP0");
+
+            AsyncDevLoggerHook.EnsureInitialized(); //empty call to ensure static class loads
         }
 
         public static bool IsAssemblyLoaded(string assemblyName)
