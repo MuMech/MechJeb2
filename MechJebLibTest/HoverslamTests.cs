@@ -177,5 +177,39 @@ namespace MechJebLibTest
             hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf) - descentSpeed * hoverslam.Rf.normalized, 1e-6);
             hoverslam.Dv.ShouldEqual(384.68994637708414, 1e-4);
         }
+
+        // just after liftoff (RSS Earth, TWR 1.5 booster under a TWR 0.8 upper stage) rising at 2.4 m/s with the
+        // apoapsis 17 m above the target.  the ignition-at-apoapsis end of the bracket starts the burn at the steering
+        // singularity, which used to stall the integrator and silently stage into the upper stage.
+        [Fact]
+        private void EarthJustAfterLiftoff()
+        {
+            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
+
+            var r0 = new V3(3389860.0273185601, -4449010.3867283156, 3050620.4984540241);
+            var v0 = new V3(325.72327517256559, 245.49004963244238, 1.1570437177537884);
+            double t0 = 672013.328102888;
+            double mu = 398600435436096;
+            var w = new V3(0, 0, 7.2921151467069236E-05);
+            double height = 6371100;
+
+            var manager = new HoverslamSimulation.HoverslamSimulationManager();
+            var hoverslam = new HoverslamSimulation();
+
+            manager.Initial(r0, v0, t0, mu, w)
+               .TargetConditions(height, 0)
+               .AddStage(554824.110033946, 146637.331161474, 8227080.50761488, 311.002968391946, 3, 3)
+               .AddCoast(120917.292904309, 120917.292904309, 0.5625, 1, 1)
+               .AddStage(120917.292904309, 14247.8429972215, 934119.950817851, 348.000880643115, 1, 1)
+               .Reconfigure(hoverslam);
+
+            hoverslam.Run();
+
+            hoverslam.Rf.magnitude.ShouldEqual(height, 1e-6);
+            (hoverslam.IgnitionUT - t0).ShouldEqual(1.34234016085975, 1e-5);
+            (hoverslam.LandingUT - t0).ShouldEqual(3.43880722904578, 1e-5);
+            hoverslam.Vf.ShouldEqual(V3.Cross(w, hoverslam.Rf), 1e-8);
+            hoverslam.Dv.ShouldEqual(31.246491642967, 1e-5);
+        }
     }
 }
