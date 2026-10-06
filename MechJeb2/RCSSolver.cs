@@ -47,22 +47,9 @@ namespace MuMech
         private double[,] _a;
         private double[] _b;
 
-        private double _factorTorque = 1;
-        private double _factorTranslate = 0.005;
-        private double _factorWaste = 1;
-        private double _wasteThreshold = 0.25;
-
         private enum Params { TORQUE_X, TORQUE_Y, TORQUE_Z, TRANS_X, TRANS_Y, TRANS_Z, WASTE, FUDGE }
 
         private readonly int _paramLength = Enum.GetValues(typeof(Params)).Length;
-
-        public void UpdateTuningParameters(RCSSolverTuningParams tuningParams)
-        {
-            _factorTorque = tuningParams.FactorTorque;
-            _factorTranslate = tuningParams.FactorTranslate;
-            _factorWaste = tuningParams.FactorWaste;
-            _wasteThreshold = tuningParams.WasteThreshold;
-        }
 
         private void cost_func(double[] x, ref double func, object obj)
         {
@@ -80,7 +67,7 @@ namespace MuMech
             }
         }
 
-        public double[] Run(IReadOnlyList<Thruster> fullThrusters, Vector3 direction, Vector3 rotation)
+        public double[] Run(IReadOnlyList<Thruster> fullThrusters, Vector3 direction, Vector3 rotation, RCSSolverTuningParams tuning)
         {
             direction = direction.normalized;
 
@@ -146,15 +133,15 @@ namespace MuMech
                 //     2: perfectly opposite direction
                 float waste = 1 - Vector3.Dot(thrustNorm, direction);
 
-                if (waste < _wasteThreshold) waste = 0;
+                if (waste < tuning.WasteThreshold) waste = 0;
 
-                _a[(int)Params.TORQUE_X, tIdx] = torqueErr.x * _factorTorque;
-                _a[(int)Params.TORQUE_Y, tIdx] = torqueErr.y * _factorTorque;
-                _a[(int)Params.TORQUE_Z, tIdx] = torqueErr.z * _factorTorque;
-                _a[(int)Params.TRANS_X, tIdx] = transErr.x * _factorTranslate;
-                _a[(int)Params.TRANS_Y, tIdx] = transErr.y * _factorTranslate;
-                _a[(int)Params.TRANS_Z, tIdx] = transErr.z * _factorTranslate;
-                _a[(int)Params.WASTE, tIdx] = waste * _factorWaste;
+                _a[(int)Params.TORQUE_X, tIdx] = torqueErr.x * tuning.FactorTorque;
+                _a[(int)Params.TORQUE_Y, tIdx] = torqueErr.y * tuning.FactorTorque;
+                _a[(int)Params.TORQUE_Z, tIdx] = torqueErr.z * tuning.FactorTorque;
+                _a[(int)Params.TRANS_X, tIdx] = transErr.x * tuning.FactorTranslate;
+                _a[(int)Params.TRANS_Y, tIdx] = transErr.y * tuning.FactorTranslate;
+                _a[(int)Params.TRANS_Z, tIdx] = transErr.z * tuning.FactorTranslate;
+                _a[(int)Params.WASTE, tIdx] = waste * tuning.FactorWaste;
                 _a[(int)Params.FUDGE, tIdx] = 0.001;
                 x[tIdx] = 1;
                 bndl[tIdx] = 0;
@@ -253,12 +240,25 @@ namespace MuMech
         public override string ToString() => _hash.ToString("x6");
     }
 
-    public class RCSSolverTuningParams
+    // Immutable so that a task on the solver thread can safely keep using the
+    // parameters it was submitted with after they've been replaced.
+    // Note that default(RCSSolverTuningParams) is all zeros; use Default instead.
+    public readonly struct RCSSolverTuningParams
     {
-        public double WasteThreshold = 0;
-        public double FactorTorque = 0;
-        public double FactorTranslate = 0;
-        public double FactorWaste = 0;
+        public static readonly RCSSolverTuningParams Default = new RCSSolverTuningParams(0.25, 1, 0.005, 1);
+
+        public readonly double WasteThreshold;
+        public readonly double FactorTorque;
+        public readonly double FactorTranslate;
+        public readonly double FactorWaste;
+
+        public RCSSolverTuningParams(double wasteThreshold, double factorTorque, double factorTranslate, double factorWaste)
+        {
+            WasteThreshold = wasteThreshold;
+            FactorTorque = factorTorque;
+            FactorTranslate = factorTranslate;
+            FactorWaste = factorWaste;
+        }
     }
 
     public class RCSSolverThread
@@ -293,6 +293,7 @@ namespace MuMech
         // own reference to the snapshot it was submitted with, so the solver
         // thread never reads this field.
         private RCSSolver.Thruster[] _thrusters = Array.Empty<RCSSolver.Thruster>();
+        private RCSSolverTuningParams _tuningParams = RCSSolverTuningParams.Default;
 
         // Incremented whenever cached results are invalidated. Tasks and results
         // are tagged with the generation they were submitted in, so a result that
@@ -301,7 +302,7 @@ namespace MuMech
 
         public void UpdateTuningParameters(RCSSolverTuningParams tuningParams)
         {
-            _solver.UpdateTuningParameters(tuningParams);
+            _tuningParams = tuningParams;
             ClearResults();
         }
 
@@ -350,14 +351,17 @@ namespace MuMech
             public readonly Vector3 Direction;
             public readonly Vector3 Rotation;
             public readonly RCSSolver.Thruster[] Thrusters;
+            public readonly RCSSolverTuningParams TuningParams;
             public readonly int Generation;
 
-            public SolverTask(RCSSolverKey key, Vector3 direction, Vector3 rotation, RCSSolver.Thruster[] thrusters, int generation)
+            public SolverTask(RCSSolverKey key, Vector3 direction, Vector3 rotation, RCSSolver.Thruster[] thrusters,
+                RCSSolverTuningParams tuningParams, int generation)
             {
                 Key = key;
                 Direction = direction;
                 Rotation = rotation;
                 Thrusters = thrusters;
+                TuningParams = tuningParams;
                 Generation = generation;
             }
         }
@@ -433,7 +437,7 @@ namespace MuMech
 
                         _results[sr.Key] = sr.Throttles;
                         _pending.Remove(sr.Key);
-                        if (sr.Key == key)
+                        if (sr.Key.Equals(key))
                         {
                             throttles = sr.Throttles;
                         }
@@ -444,7 +448,7 @@ namespace MuMech
                     // This task was neither calculated nor pending, so we've never
                     // submitted it. Do so!
                     _pending.Add(key);
-                    _tasks.Enqueue(new SolverTask(key, dir, rotation, _thrusters, _generation));
+                    _tasks.Enqueue(new SolverTask(key, dir, rotation, _thrusters, _tuningParams, _generation));
                     _workEvent.Set();
                 }
             }
@@ -467,7 +471,7 @@ namespace MuMech
                         DateTime start = DateTime.Now;
                         _isWorking = true;
 
-                        double[] throttles = _solver.Run(task.Thrusters, task.Direction, task.Rotation);
+                        double[] throttles = _solver.Run(task.Thrusters, task.Direction, task.Rotation, task.TuningParams);
 
                         _isWorking = false;
                         _resultsQueue.Enqueue(new SolverResult(task.Key, throttles, task.Generation));
