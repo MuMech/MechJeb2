@@ -417,38 +417,12 @@ namespace MuMech
         public void UpdateTuningParameters()
         {
             double wasteThreshold = overdrive * overdriveScale;
-            var tuningParams = new RCSSolverTuningParams();
-            tuningParams.WasteThreshold = wasteThreshold;
-            tuningParams.FactorTorque = tuningParamFactorTorque;
-            tuningParams.FactorTranslate = tuningParamFactorTranslate;
-            tuningParams.FactorWaste = tuningParamFactorWaste;
+            var tuningParams = new RCSSolverTuningParams(wasteThreshold, tuningParamFactorTorque, tuningParamFactorTranslate,
+                tuningParamFactorWaste);
             solverThread.UpdateTuningParameters(tuningParams);
         }
 
         public double GetCalculationTime() => solverThread.CalculationTime;
-
-        /*
-        public override void OnUpdate()
-        {
-            // Make thruster exhaust onscreen correspond to actual thrust.
-            if (smartTranslation && throttles != null)
-            {
-                for (int i = 0; i < throttles.Length; i++)
-                {
-                    // 'throttles' and 'thrusters' are guaranteed to be of the
-                    // same length.
-                    float throttle = (float)throttles[i];
-                    var tfx = thrusters[i].partModule.thrusterFX;
-
-                    for (int j = 0; j < tfx.Count; j++)
-                    {
-                        tfx[j].Power *= throttle;
-                    }
-                }
-            }
-            base.OnUpdate();
-        }
-         */
 
         public override void Drive(FlightCtrlState s)
         {
