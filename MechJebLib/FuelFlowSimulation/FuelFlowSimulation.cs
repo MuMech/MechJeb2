@@ -133,8 +133,7 @@ namespace MechJebLib.FuelFlowSimulation
 
             UpdateResourceDrainsAndResiduals(vessel);
             int activeEngines = vessel.ActiveEngines.Count;
-            // these logger calls get removed in release builds
-            AsyncDevLogger.Log($"[MechJeb2][FuelFlowSim]: +++++++++ STAGE {vessel.CurrentStage} +++++++");
+            
 
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
@@ -142,11 +141,9 @@ namespace MechJebLib.FuelFlowSimulation
                     return;
 
                 double dt = MaximumTimeStep();
-                AsyncDevLogger.Log($"[MechJeb2][FuelFlowSim]: Couldn't stage. Current step: {steps}, dt: {dt}");
 
                 if (dt >= 0.02 && activeEngines != vessel.ActiveEngines.Count)
                 {
-                    AsyncDevLogger.Log($"[MechJeb2][FuelFlowSim]: Conditional branch hit. Current step: {steps}, dt: {dt}");
                     ClearResiduals();
                     ComputeRcsMaxValues(vessel);
                     FinishSegment(vessel);

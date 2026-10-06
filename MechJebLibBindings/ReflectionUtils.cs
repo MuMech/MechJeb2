@@ -27,8 +27,6 @@ namespace MechJebLibBindings
             IsLoadedFAR = IsAssemblyLoaded("FerramAerospaceResearch");
             IsLoadedRealismOverhaul = IsAssemblyLoaded("RealismOverhaul");
             IsLoadedRP0 = IsAssemblyLoaded("RP0");
-
-            AsyncDevLoggerHook.EnsureInitialized(); //empty call to ensure static class loads
         }
 
         public static bool IsAssemblyLoaded(string assemblyName)

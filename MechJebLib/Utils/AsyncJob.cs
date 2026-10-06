@@ -45,15 +45,6 @@ namespace MechJebLib.Utils
 
         private readonly Action<object?> _runWrapped;
 
-        // High-precision stopwatch tracking the lifetime of the dispatch sequence
-        private readonly Stopwatch _lifecycleTimer = new Stopwatch();
-
-        private double _startupLatencyMs;
-        private double _executionDurationMs;
-
-        public double StartupLatencyMs => _startupLatencyMs;
-        public double ExecutionDurationMs => _executionDurationMs;
-
 
         protected AsyncJob()
         {
@@ -68,7 +59,6 @@ namespace MechJebLib.Utils
             if (Interlocked.CompareExchange(ref _state, (int)JobState.Running, (int)JobState.Ready) != (int)JobState.Ready)
                 return false;
 
-            _lifecycleTimer.Restart();
             Exception = null;
             _cts = new CancellationTokenSource();
             CancelToken = _cts.Token;
@@ -86,12 +76,6 @@ namespace MechJebLib.Utils
         {
             try
             {
-                _lifecycleTimer.Stop();
-                _startupLatencyMs = _lifecycleTimer.Elapsed.TotalMilliseconds;
-
-                AsyncDevLogger.Log($"[PERFORMANCE] Job {GetType().Name} woke up. Thread Startup Latency: {_startupLatencyMs:F4} ms.");
-                _lifecycleTimer.Restart();
-
                 Run(o);
                 Interlocked.Exchange(ref _state, (int)JobState.Completed);
             }
@@ -103,15 +87,6 @@ namespace MechJebLib.Utils
             {
                 Exception = ex;
                 Interlocked.Exchange(ref _state, (int)JobState.Faulted);
-            }
-            finally
-            {
-                _lifecycleTimer.Stop();
-                _executionDurationMs = _lifecycleTimer.Elapsed.TotalMilliseconds;
-
-                AsyncDevLogger.Log($"[PERFORMANCE] Job {GetType().Name} execution complete. Core Run Time: {_executionDurationMs:F4} ms.");
-                AsyncDevLogger.Log($"[PERFORMANCE] Total Pipeline turnaround: {(_startupLatencyMs + _executionDurationMs):F4} ms.");
-
             }
         }
 
