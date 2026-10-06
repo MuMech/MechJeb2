@@ -74,14 +74,6 @@ namespace MuMech
                 GUILayout.Toggle(LimitToPreventOverheats, CachedLocalizer.Instance.MechJebAscentCheckbox12, s); //"Prevent engine overheats"
         }
 
-        [ToggleInfoItem("#MechJeb_SmoothThrottle", InfoItem.Category.Thrust)] //Smooth throttle
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool SmoothThrottle;
-
-        [UsedImplicitly]
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public double ThrottleSmoothingTime = 1.0;
-
         [UsedImplicitly]
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitToPreventFlameout;
@@ -579,11 +571,6 @@ namespace MuMech
 
             s.mainThrottle = Mathf.Min(s.mainThrottle, ThrottleLimit);
 
-            if (SmoothThrottle)
-            {
-                s.mainThrottle = ApplySmoothThrottle(s.mainThrottle);
-            }
-
             if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
 
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
@@ -642,11 +629,6 @@ namespace MuMech
             if (maxTempRatio < 1 - TEMP_SAFETY_MARGIN) return 1.0F;
             return (1 - maxTempRatio) / TEMP_SAFETY_MARGIN;
         }
-
-        private float ApplySmoothThrottle(float mainThrottle) =>
-            Mathf.Clamp(mainThrottle,
-                (float)(LastThrottle - VesselState.deltaT / ThrottleSmoothingTime),
-                (float)(LastThrottle + VesselState.deltaT / ThrottleSmoothingTime));
 
         private float FlameoutSafetyThrottle()
         {
