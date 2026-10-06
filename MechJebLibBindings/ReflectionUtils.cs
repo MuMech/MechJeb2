@@ -5,7 +5,6 @@
 
 using System;
 using System.Reflection;
-using MechJebLibBindings.Logger;
 using UnityEngine;
 
 namespace MechJebLibBindings
