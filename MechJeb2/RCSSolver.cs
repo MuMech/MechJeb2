@@ -407,22 +407,12 @@ namespace MuMech
                 t.RestoreOriginalForce();
         }
 
-        private static Vector3 WorldToVessel(Vessel vessel, Vector3 pos) =>
-            // Translate to the vessel's reference frame.
-            Quaternion.Inverse(vessel.GetTransform().rotation) * pos;
-
-        private static Vector3 VesselRelativePos(Vector3 com, Vessel vessel, Part p)
-        {
-            if (p.Rigidbody == null) return Vector3.zero;
-
-            // Find our distance from the vessel's center of mass, in world
-            // coordinates.
-            return WorldToVessel(vessel, p.Rigidbody.worldCenterOfMass - com);
-        }
-
         private void CheckVessel(Vessel vessel, VesselState state)
         {
             bool changed = false;
+
+            // Rotates world-frame vectors into the vessel's reference frame.
+            Quaternion worldToVessel = Quaternion.Inverse(vessel.GetTransform().rotation);
 
             if (vessel.parts.Count != _lastPartCount)
             {
@@ -488,9 +478,7 @@ namespace MuMech
                 // Assume MoI magnitude is always >=2.34, since that's all I tested.
                 ComErrorThreshold = (Math.Max(state.MoI.magnitude, 2.34) - 1) / 542;
 
-                Vector3 comState = state.CoM;
-                Vector3 rootPos = state.RootPartPosition;
-                Vector3 com = WorldToVessel(vessel, comState - rootPos);
+                Vector3 com = worldToVessel * (state.CoM - state.RootPartPosition);
                 double thisComErr = (_lastCoM - com).magnitude;
                 MaxComError = Math.Max(MaxComError, thisComErr);
                 _comError.Value = thisComErr;
@@ -524,17 +512,17 @@ namespace MuMech
                     }
                     else if (p.Rigidbody != null && !pm.isJustForShow)
                     {
-                        Vector3 pos = VesselRelativePos(state.CoM, vessel, p);
+                        // The part's offset from the vessel's center of mass.
+                        Vector3 pos = worldToVessel * (p.Rigidbody.worldCenterOfMass - state.CoM);
 
                         // Create a single RCSSolver.Thruster for this part. This
                         // requires some assumptions about how the game's RCS code will
                         // drive the individual thrusters (which we can't control).
 
                         var thrustDirs = new Vector3[pm.thrusterTransforms.Count];
-                        var rotationQuat = Quaternion.Inverse(vessel.GetTransform().rotation);
                         for (int i = 0; i < pm.thrusterTransforms.Count; i++)
                         {
-                            thrustDirs[i] = (rotationQuat * -pm.thrusterTransforms[i].up).normalized;
+                            thrustDirs[i] = (worldToVessel * -pm.thrusterTransforms[i].up).normalized;
                         }
 
                         ts.Add(new RCSSolver.Thruster(pos, thrustDirs, p, pm));
