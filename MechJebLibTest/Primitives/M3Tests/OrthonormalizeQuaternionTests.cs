@@ -432,5 +432,40 @@ namespace MechJebLibTest.Primitives.M3Tests
             V3.Cross(col0, col1).ShouldEqual(col2, 1e-14);
             m.determinant.ShouldEqual(1.0, 1e-14);
         }
+
+        [Fact]
+        private void OrthonormalizeIllConditionedColumns()
+        {
+            // nearly collinear columns: classical Gram-Schmidt leaves these ~1e-4 away from orthogonal
+            const double E = 1e-6;
+            var m = new M3(1 + E, 1, 1,
+                1, 1 + E, 1,
+                1, 1, 1 + E);
+
+            M3 q = m.orthonormalized;
+
+            (q.transpose * q).ShouldEqual(M3.identity, 1e-9);
+        }
+
+        [Fact]
+        private void RotationQuaternionLeftHandedBasisFlipsLastColumn()
+        {
+            // R * diag(1, 1, -1): negating the whole matrix instead would give R * Rz(PI)
+            var original = Q3.AngleAxis(0.789, new V3(3, -2, 1).normalized);
+            var r = M3.Rotate(original);
+            var m = new M3(r.GetColumn(0), r.GetColumn(1), -r.GetColumn(2));
+
+            Q3 q = m.rotation_quaternion;
+
+            M3.Rotate(q).ShouldEqual(r, 1e-14);
+        }
+
+        [Fact]
+        private void RotationQuaternionScaledLeftHandedDiagonal()
+        {
+            Q3 q = M3.Diagonal(2, 3, -4).rotation_quaternion;
+
+            M3.Rotate(q).ShouldEqual(M3.identity, 1e-14);
+        }
     }
 }

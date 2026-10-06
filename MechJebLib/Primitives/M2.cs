@@ -103,10 +103,18 @@ namespace MechJebLib.Primitives
         /// <param name="row">Row index [0..1].</param>
         /// <param name="column">Column index [0..1].</param>
         /// <returns>The element at the specified position.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when row or column is outside [0..1].</exception>
         public double this[int row, int column]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => this[row + column * 2];
+            get
+            {
+                // check each index separately, an out-of-range row could otherwise alias another column
+                if (row < 0 || row > 1 || column < 0 || column > 1)
+                    throw new IndexOutOfRangeException("Invalid matrix index!");
+
+                return this[row + column * 2];
+            }
         }
 
         /// <summary>
@@ -428,9 +436,10 @@ namespace MechJebLib.Primitives
             m01 == 0.0 && m11 == 1.0;
 
         /// <summary>
-        ///     Gets whether this matrix is orthogonal (M * M^T ≈ I).
+        ///     Gets whether this matrix is orthogonal (M * M^T ≈ I to within 1e-12, which allows for the rounding error
+        ///     accumulated over long chains of rotations).
         /// </summary>
-        public bool isOrthogonal => NearlyEqual(this * transpose, identity, 1e-15);
+        public bool isOrthogonal => NearlyEqual(this * transpose, identity, 1e-12);
 
         /// <summary>
         ///     Gets whether this matrix is symmetric (M ≈ M^T).
@@ -443,9 +452,30 @@ namespace MechJebLib.Primitives
         public bool isSkewSymmetric => NearlyEqual(this, -transpose);
 
         /// <summary>
-        ///     Gets whether this matrix is singular (determinant ≈ 0).
+        ///     Gets whether this matrix is singular: the determinant is within rounding error of zero relative to the
+        ///     product of the row lengths, which bounds it by Hadamard's inequality.
         /// </summary>
-        public bool isSingular => Abs(determinant) < EPS;
+        public bool isSingular
+        {
+            get
+            {
+                V2 r0 = GetRow(0);
+                V2 r1 = GetRow(1);
+
+                double s0 = r0.max_magnitude;
+                double s1 = r1.max_magnitude;
+
+                if (s0 == 0 || s1 == 0)
+                    return true;
+
+                // scale each row to a largest element of one so the determinant can't overflow or underflow, the rows
+                // go in as columns, which doesn't change the determinant
+                r0 /= s0;
+                r1 /= s1;
+
+                return Abs(new M2(r0, r1).determinant) <= 16 * EPS * r0.magnitude * r1.magnitude;
+            }
+        }
 
         /// <summary>
         ///     Gets the maximum absolute element value in the matrix.
@@ -562,11 +592,12 @@ namespace MechJebLib.Primitives
         #region Orthonormalization
 
         /// <summary>
-        ///     Gets an orthonormalized copy of this matrix using Gram-Schmidt process.
+        ///     Gets an orthonormalized copy of this matrix using the Gram-Schmidt process on the columns.
         /// </summary>
         /// <remarks>
         ///     The resulting columns form an orthonormal basis (det = 1 or -1), with the first column parallel to the
-        ///     original first column.
+        ///     original first column.  With only two columns the classical and modified Gram-Schmidt processes are
+        ///     identical.
         /// </remarks>
         public M2 orthonormalized
         {

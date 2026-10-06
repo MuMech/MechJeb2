@@ -108,6 +108,19 @@ namespace MechJebLibTest.Primitives.M2Tests
         }
 
         [Fact]
+        private void NearlyEqualNonFiniteTest()
+        {
+            // a NaN or Inf element makes the relative tolerance non-finite, which used to make every element compare equal
+            var nan = new M2(double.NaN, 0, 0, 0);
+            var inf = new M2(double.PositiveInfinity, 0, 0, 0);
+
+            Assert.False(NearlyEqual(_a, _a + nan));
+            Assert.False(NearlyEqual(_a + nan, _a * 2));
+            Assert.False(NearlyEqual(_a + inf, _a * 2));
+            Assert.True(NearlyEqual(_a + inf, _a + inf));
+        }
+
+        [Fact]
         private void ShouldEqualTest()
         {
             _a.ShouldEqual(_a * (1 + 1e-10), 1e-9);

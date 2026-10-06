@@ -169,10 +169,18 @@ namespace MechJebLib.Primitives
         /// <param name="row">Row index [0..3].</param>
         /// <param name="column">Column index [0..3].</param>
         /// <returns>The element at the specified position.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when row or column is outside [0..3].</exception>
         public double this[int row, int column]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => this[row + column * 4];
+            get
+            {
+                // check each index separately, an out-of-range row could otherwise alias another column
+                if (row < 0 || row > 3 || column < 0 || column > 3)
+                    throw new IndexOutOfRangeException("Invalid matrix index!");
+
+                return this[row + column * 4];
+            }
         }
 
         /// <summary>
@@ -704,9 +712,10 @@ namespace MechJebLib.Primitives
         public bool isSymmetric => NearlyEqual(this, transpose);
 
         /// <summary>
-        ///     Gets whether this matrix is orthogonal (M * M^T ≈ I).
+        ///     Gets whether this matrix is orthogonal (M * M^T ≈ I to within 1e-12, which allows for the rounding error
+        ///     accumulated over long chains of rotations).
         /// </summary>
-        public bool isOrthogonal => NearlyEqual(this * transpose, identity, 1e-15);
+        public bool isOrthogonal => NearlyEqual(this * transpose, identity, 1e-12);
 
         /// <summary>
         ///     Gets whether this matrix is skew-symmetric (M ≈ -M^T).
@@ -714,9 +723,37 @@ namespace MechJebLib.Primitives
         public bool isSkewSymmetric => NearlyEqual(this, -transpose);
 
         /// <summary>
-        ///     Gets whether this matrix is singular (determinant ≈ 0).
+        ///     Gets whether this matrix is singular: the determinant is within rounding error of zero relative to the
+        ///     product of the row lengths, which bounds it by Hadamard's inequality.
         /// </summary>
-        public bool isSingular => Abs(determinant) < EPS;
+        public bool isSingular
+        {
+            get
+            {
+                V4 r0 = GetRow(0);
+                V4 r1 = GetRow(1);
+                V4 r2 = GetRow(2);
+                V4 r3 = GetRow(3);
+
+                double s0 = r0.max_magnitude;
+                double s1 = r1.max_magnitude;
+                double s2 = r2.max_magnitude;
+                double s3 = r3.max_magnitude;
+
+                if (s0 == 0 || s1 == 0 || s2 == 0 || s3 == 0)
+                    return true;
+
+                // scale each row to a largest element of one so the determinant can't overflow or underflow, the rows
+                // go in as columns, which doesn't change the determinant
+                r0 /= s0;
+                r1 /= s1;
+                r2 /= s2;
+                r3 /= s3;
+
+                return Abs(new M4(r0, r1, r2, r3).determinant) <=
+                       16 * EPS * r0.magnitude * r1.magnitude * r2.magnitude * r3.magnitude;
+            }
+        }
 
         /// <summary>
         ///     Gets the maximum absolute element value in the matrix.
