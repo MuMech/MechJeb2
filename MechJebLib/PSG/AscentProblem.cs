@@ -289,6 +289,23 @@ namespace MechJebLib.PSG
             return ci;
         }
 
+        // Density relative to the surface. Typical exponential model with a scale height of h0, but changing to a
+        // scale height of roughly rBody under the surface. The transition is c0/c1-smooth for the SQP solver.
+        // This keeps the model from spitting out numerically crazy numbers (~e^(rBody/h0)) under the surface.
+        // FIXME: should probably be combined with a |r| > rBody constraint
+        // FIXME: AscentGuesser should not provide nonsense
+        public static Dual NormalizedDensity(Dual r, double rBody, double h0)
+        {
+            Dual x = (r - rBody) / h0;
+
+            if (x.M >= 0)
+                return Dual.Exp(-x);
+
+            double a = h0 / rBody;
+
+            return Dual.Exp(-a * x - (1 - a) * (Dual.Exp(x) - 1));
+        }
+
         private int DynamicPressureConstraints(double[] f, alglib.sparsematrix j, int ci)
         {
             double rho0InvQAlphaMax = _optimizer.Problem.Rho0InvQAlphaMax;
@@ -346,7 +363,7 @@ namespace MechJebLib.PSG
             {
                 Dual rm = r.magnitude;
                 DualV3 vr = v - DualV3.Cross(w, r);
-                Dual q = 0.5 * rho0InvQAlphaMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
+                Dual q = 0.5 * rho0InvQAlphaMax * NormalizedDensity(rm, rBody, h0) * vr.sqrMagnitude;
                 Dual alpha = DualV3.AngleUnit(vr.normalized, u.forward);
 
                 return q * alpha / FUDGE_FACTOR;
@@ -359,7 +376,7 @@ namespace MechJebLib.PSG
 
                 Dual rm = r.magnitude;
                 DualV3 vr = v - DualV3.Cross(w, r);
-                Dual q = 0.5 * rho0InvQMax * Dual.Exp(-(rm - rBody) / h0) * vr.sqrMagnitude;
+                Dual q = 0.5 * rho0InvQMax * NormalizedDensity(rm, rBody, h0) * vr.sqrMagnitude;
 
                 return q / FUDGE_FACTOR;
             }
@@ -377,8 +394,10 @@ namespace MechJebLib.PSG
             double rho0CdAref = _optimizer.Problem.Rho0CdAref;
             double rBody = _optimizer.Problem.RBody;
             double h0 = _optimizer.Problem.H0;
-            double r0 = _optimizer.Problem.R0.magnitude;
             V3 w = _optimizer.Problem.W;
+
+            // ambient pressure relative to the launch site, assuming pressure scales with density
+            double invDensityR0 = h0 > 0 ? 1.0 / NormalizedDensity(_optimizer.Problem.R0.magnitude, rBody, h0).M : 0;
 
             // dynamical constraints per phase
             for (int n = 0; n < _optimizer.N; n++)
@@ -533,8 +552,8 @@ namespace MechJebLib.PSG
                 Dual r = d.R.magnitude;
                 Dual r3 = d.R.sqrMagnitude * r;
                 DualV3 vr = d.V - DualV3.Cross(w, d.R);
-                var normAtmosphere = Dual.Exp(-(r - rBody) / h0);
-                var normAtmosphere2 = Dual.Exp(-(r - r0) / h0);
+                Dual normAtmosphere = NormalizedDensity(r, rBody, h0);
+                Dual normAtmosphere2 = normAtmosphere * invDensityR0;
                 DualV3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
                 //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
                 Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
