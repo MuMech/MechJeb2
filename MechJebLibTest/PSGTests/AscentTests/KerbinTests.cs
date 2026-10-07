@@ -8,6 +8,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 {
     public class KerbinTests
     {
+        // the MainSailTinCan stages are the stage stats of the stock MechJebLibTest/Craft/Stock/Mainsail Tin Can.craft
         [Fact]
         private void MainSailTinCanVacuum()
         {

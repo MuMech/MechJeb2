@@ -4,6 +4,7 @@
  */
 
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.Interpolants
 {
@@ -46,5 +47,8 @@ namespace MechJebLib.Interpolants
         public override double Evaluate(double x) => Functions.Interpolants.CubicHermiteInterpolant(_t, _y, _dy, _t + _h, _ynew, _dynew, x);
 
         public override void Dispose() => _pool.Release(this);
+
+        public override string ToString() =>
+            Invariant($"[CubicHermiteDoubleNode leftT={LeftT} rightT={RightT} t={_t} h={_h} y={_y} dy={_dy} ynew={_ynew} dynew={_dynew}]");
     }
 }

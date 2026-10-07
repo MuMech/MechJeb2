@@ -137,6 +137,9 @@ namespace MechJebLib.Interpolants
         }
 
         public virtual void Dispose() => Clear(this);
+
+        // dumps the nodes as they were appended, so a test fixture can rebuild the interpolant from it
+        public override string ToString() => string.Join(" ", _nodes);
     }
 
     public abstract class InterpolantNode<Typ> : IDisposable

@@ -24,4 +24,8 @@
         <ProjectReference Include="..\MechJebLib\MechJebLib.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="FuelFlowSimulationTests\Captures\*.out" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
 </Project>

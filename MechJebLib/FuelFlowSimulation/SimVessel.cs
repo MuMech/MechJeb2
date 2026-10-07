@@ -83,6 +83,29 @@ namespace MechJebLib.FuelFlowSimulation
             U = u;
         }
 
+        // Indexes the engines and RCS by the stage they activate in and the stage they are dropped in, this must be
+        // called after the DecouplingAnalyzer has set the DecoupledInStage of the parts.
+        public void UpdateEngineSet()
+        {
+            foreach (SimPart part in Parts)
+            {
+                foreach (SimPartModule m in part.Modules)
+                {
+                    if (m is SimModuleEngines e)
+                    {
+                        EnginesActivatedInStage[part.InverseStage].Add(e);
+                        EnginesDroppedInStage[part.DecoupledInStage].Add(e);
+                    }
+
+                    if (m is SimModuleRCS r)
+                    {
+                        RCSActivatedInStage[part.InverseStage].Add(r);
+                        RCSDroppedInStage[part.DecoupledInStage].Add(r);
+                    }
+                }
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateMass()
         {
