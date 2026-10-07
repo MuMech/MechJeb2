@@ -11,8 +11,8 @@ namespace MechJebLib.Utils
     /// <summary>
     ///     Thread-safe logger with per-thread override capability.
     ///     Use <see cref="GlobalRegister" /> to set a thread-safe logger for all threads.
-    ///     Use <see cref="Register" /> in unit tests to override the logger for specific threads
-    ///     when different threads need different logger callbacks for testing purposes.
+    ///     Use <see cref="Register" /> to override the logger for the current thread, and <see cref="Unregister" />
+    ///     to drop the override.  The unit test framework does this around every test to route output to that test.
     /// </summary>
     public class Logger
     {
@@ -29,6 +29,8 @@ namespace MechJebLib.Utils
         public static void GlobalRegister(Action<object> logger) => _globalLogger = logger;
 
         public static void Register(Action<object> logger) => _instance.Value._logger = logger;
+
+        public static void Unregister() => _instance.Value._logger = null;
 
         public static void Print(string message) => _instance.Value.PrintImpl(message);
     }

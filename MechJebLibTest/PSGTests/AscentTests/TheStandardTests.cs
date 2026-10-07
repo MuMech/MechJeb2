@@ -9,27 +9,17 @@ using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.PSGTests.AscentTests
 {
     public class TheStandardTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public TheStandardTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         // Carnasa's TheStandard rocket (ish).
         // This tests optimality of a burn-optimizedBurn-coast-burn with all stages guided with periapsis attachment
         [Fact]
         public void TheStandardGuidedUpperPeriapsis()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
             var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
@@ -91,8 +81,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         public void TheStandardGuidedUpperFree()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
             var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
@@ -156,8 +144,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         public void TheStandardPeriapsis()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
             var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);
@@ -226,8 +212,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         public void TheStandardPeriapsisUpperStageShutdown()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-521765.111703417, -5568874.59934707, 3050608.87783524);
             var v0 = new V3(406.088016257895, -38.0495807832894, 0.000701038889818476);
             var u0 = new V3(-0.0820737379089317, -0.874094973679233, 0.478771328926086);

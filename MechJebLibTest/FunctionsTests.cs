@@ -8,7 +8,6 @@ using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using Xunit;
-using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -20,13 +19,6 @@ namespace MechJebLibTest.MathsTests
 
         private const double ACC = EPS * 16;
         private const double ACC2 = 1e-7; // due west launches have some mathematical irregularities
-
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public FunctionsTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
 
         [Fact]
         public void HeadingForInclinationTest1()

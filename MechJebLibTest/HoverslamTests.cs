@@ -3,24 +3,14 @@ using MechJebLib.HoverslamSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace MechJebLibTest
 {
     public class HoverslamTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public HoverslamTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         [Fact]
         private void VerticalDropApolloMoon15Km()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double mu = 4.9028e12;
             double rbody = 1737400;
             double t0 = 0;
@@ -47,8 +37,6 @@ namespace MechJebLibTest
         [Fact]
         private void MunLander()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(277180.537135037, 68093.9480158941, -0.0292773955469599);
             var v0 = new V3(-89.2646837517975, 208.578761949662, -0.000384582381211831);
             double t0 = 103226.904130211;
@@ -92,8 +80,6 @@ namespace MechJebLibTest
         [Fact]
         private void MunLanderHyperbolic()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-2118481.777241, -1066356.47144701, -4.04795492273187E-07);
             var v0 = new V3(255.065239081993, 74.1893623591615, 8.88384130349409E-11);
             double t0 = 103527.484130273;
@@ -120,8 +106,6 @@ namespace MechJebLibTest
         [Fact]
         private void MunLanderTwoStage()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(276714.567061612, 53069.6146485938, 0.00770833757526462);
             var v0 = new V3(-116.600502880196, 177.393895536045, 7.72615181983542E-05);
             double t0 = 104033.944130376;
@@ -150,8 +134,6 @@ namespace MechJebLibTest
         [Fact]
         private void MunLanderTwoStageWithCoast()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(277354.901930395, 52073.8040485903, 0.00727448590091598);
             var v0 = new V3(-112.093343687681, 178.249208847387, 7.73831475858213E-05);
             double t0 = 104028.344130375;
@@ -184,8 +166,6 @@ namespace MechJebLibTest
         [Fact]
         private void EarthJustAfterLiftoff()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(3389860.0273185601, -4449010.3867283156, 3050620.4984540241);
             var v0 = new V3(325.72327517256559, 245.49004963244238, 1.1570437177537884);
             double t0 = 672013.328102888;

@@ -9,8 +9,8 @@ using MechJebLib.Functions;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
+using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 using Random = System.Random;
@@ -19,13 +19,6 @@ namespace MechJebLibTest.TwoBodyTests
 {
     public class FarnocchiaTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public FarnocchiaTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         public static IEnumerable<object[]> Seeds()
         {
             for (int i = 0; i <= 500; i++)
@@ -46,7 +39,7 @@ namespace MechJebLibTest.TwoBodyTests
 
             if ((rp - r0).magnitude / r0.magnitude > 1e-8 || (vp - v0).magnitude / v0.magnitude > 1e-8)
             {
-                _testOutputHelper.WriteLine(r0 + " " + v0);
+                Logger.Print(r0 + " " + v0);
             }
 
             rp.ShouldEqual(r0, 1e-8);
@@ -140,7 +133,7 @@ namespace MechJebLibTest.TwoBodyTests
 
             if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
             {
-                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                Logger.Print("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
                     rf2 + " vf2:" +
                     vf2 + "\n");
             }

@@ -13,20 +13,12 @@ using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static System.Math;
 
 namespace MechJebLibTest.LambertTests
 {
     public class RussellTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public RussellTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         public static IEnumerable<object[]> Seeds()
         {
             for (int i = 0; i < 250; i++)
@@ -75,8 +67,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void RandomMultipleRevolution(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double tol = 1e-6;
 
             var random = new Random(seed);
@@ -104,7 +94,7 @@ namespace MechJebLibTest.LambertTests
 
             if (NearSingularity(r0, rfShepperd))
             {
-                _testOutputHelper.WriteLine($"skipping, too close to r1 == r2: {Sqrt(0.5) - Sqrt(r0.magnitude * rfShepperd.magnitude + V3.Dot(r0, rfShepperd)) / (r0.magnitude + rfShepperd.magnitude):E2}");
+                Logger.Print($"skipping, too close to r1 == r2: {Sqrt(0.5) - Sqrt(r0.magnitude * rfShepperd.magnitude + V3.Dot(r0, rfShepperd)) / (r0.magnitude + rfShepperd.magnitude):E2}");
                 Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfShepperd, dt, TransferGeometry.Prograde, h: h));
                 return;
             }
@@ -137,8 +127,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void RandomPositions(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double tol = 1e-6;
 
             var random = new Random(seed);
@@ -157,8 +145,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void RandomPositionsComparedToIzzoAndGooding(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double tol = 1e-6;
 
             var random = new Random(seed);
@@ -198,8 +184,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void RandomMultipleRevolutionBranches(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double tol = 1e-6;
 
             var random = new Random(seed);
@@ -223,8 +207,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void RandomMultipleRevolutionComparedToIzzoAndGooding(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double tol = 1e-6;
 
             var random = new Random(seed);
@@ -253,8 +235,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void RandomProgradeRetrograde(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double tol = 1e-6;
 
             var random = new Random(seed);
@@ -442,8 +422,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void RandomSmallTimeOfFlightComparedToGooding(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double tol = 1e-9;
 
             var random = new Random(seed);
@@ -587,7 +565,7 @@ namespace MechJebLibTest.LambertTests
             var histogram = new SortedDictionary<int, int>();
             foreach (int i in iterations)
                 histogram[i] = histogram.TryGetValue(i, out int c) ? c + 1 : 1;
-            _testOutputHelper.WriteLine(
+            Logger.Print(
                 $"{name}: mean {iterations.Average():F3} max {iterations.Max()} histogram {string.Join(" ", histogram.Select(kv => $"{kv.Key}:{kv.Value}"))}");
         }
 
@@ -620,7 +598,7 @@ namespace MechJebLibTest.LambertTests
                 Assert.True(error < tol, $"tau = {tau:R} tofbyS = {tofbyS:R} nrev = {nrev} k = {k:R} guess = {guess:R} error = {error:E3}");
             }
 
-            _testOutputHelper.WriteLine($"max error {maxError:E3}");
+            Logger.Print($"max error {maxError:E3}");
         }
 
         // the interpolated seed for the Newton iteration for kBottom is accurate relative to the distance of kBottom from
@@ -660,7 +638,7 @@ namespace MechJebLibTest.LambertTests
                 Assert.True(iters <= 2, $"tau = {tau:R} n = {n} kBottom = {kBottom:R} seed = {seed:R} error = {error:E3} iterations = {iters}");
             }
 
-            _testOutputHelper.WriteLine($"max error {maxError:E3}, beyond the table {maxErrorBeyond:E3}");
+            Logger.Print($"max error {maxError:E3}, beyond the table {maxErrorBeyond:E3}");
             LogIterations("kBottom", iterations);
         }
 
@@ -761,8 +739,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void DualMatchesFiniteDifferences(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
@@ -783,8 +759,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void DualMultipleRevolutionMatchesFiniteDifferences(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
@@ -807,8 +781,6 @@ namespace MechJebLibTest.LambertTests
         [Theory, MemberData(nameof(Seeds))]
         private void DualSmallTimeOfFlightMatchesFiniteDifferences(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
