@@ -1,4 +1,5 @@
 extern alias JetBrainsAnnotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using KSP.Localization;
@@ -39,10 +40,41 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble tuningParamFactorWaste = 1;
 
+        // Aux class to save/restore original thrusterPower
+        private class ManagedRCSModule
+        {
+            public readonly ModuleRCS Module;
+            private readonly float originalPower;
+
+            public ManagedRCSModule(ModuleRCS module)
+            {
+                Module = module;
+                originalPower = module.thrusterPower;
+            }
+
+            public void SetThrottle(double throttle) => Module.thrusterPower = (float)throttle;
+
+            public void Restore() => Module.thrusterPower = originalPower;
+        }
+
         // Variables for RCS solving.
         private readonly RCSSolverThread solverThread = new RCSSolverThread();
-        private List<RCSSolver.Thruster> thrusters;
-        private double[] throttles;
+
+        // managedModules[i] and thrusterGeometry[i] describe the same RCS module,
+        // and solver throttles are indexed the same way.
+        private readonly List<ManagedRCSModule> managedModules = new List<ManagedRCSModule>();
+        private RCSSolver.Thruster[] thrusterGeometry = Array.Empty<RCSSolver.Thruster>();
+
+        // Vessel change detection.
+        private int lastPartCount;
+        private readonly List<ModuleRCS> lastDisabled = new List<ModuleRCS>();
+        private Vector3 lastCoM = Vector3.zero;
+
+        // A moving average reduces measurement error due to ship flexing.
+        private readonly MovingAverage comError = new MovingAverage();
+
+        public double ComErrorThreshold { get; private set; }
+        public double MaxComError       { get; private set; }
 
         [EditableInfoItem("#MechJeb_RCSBalancerPrecision", InfoItem.Category.Thrust)] //RCS balancer precision
         public readonly EditableInt calcPrecision = 3;
@@ -59,9 +91,9 @@ namespace MuMech
             GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label4"), solverThread.CacheHits); //"Cache hits"
             GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label5"), solverThread.CacheMisses); //"Cache misses"
 
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"), solverThread.ComError.ToSI() + "m"); //"CoM shift"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"), solverThread.ComErrorThreshold.ToSI() + "m"); //"CoM recalc"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), solverThread.MaxComError.ToSI() + "m"); //"Max CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"), comError.Value.ToSI() + "m"); //"CoM shift"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"), ComErrorThreshold.ToSI() + "m"); //"CoM recalc"
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), MaxComError.ToSI() + "m"); //"Max CoM shift"
 
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label9"), solverThread.StatusString); //"Status"
 
@@ -160,6 +192,13 @@ namespace MuMech
 
         protected override void OnModuleEnabled()
         {
+            // Make sure CheckVessel() doesn't try to reuse throttle info from
+            // when this module was enabled previously, even if the vessel hasn't
+            // changed. Invalidating vessel information on enable lets the UI
+            // toggle act as a reset button.
+            lastPartCount = 0;
+            MaxComError = 0;
+
             UpdateTuningParameters();
             solverThread.Start();
 
@@ -169,24 +208,166 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             solverThread.Stop();
+            ResetThrusterForces();
 
             base.OnModuleDisabled();
         }
 
-        public void ResetThrusterForces() => solverThread.ResetThrusterForces();
+        public void ResetThrusterForces()
+        {
+            foreach (ManagedRCSModule m in managedModules)
+                m.Restore();
+        }
 
-        public void GetThrottles(Vector3 direction, out double[] throttles, out List<RCSSolver.Thruster> thrusters) =>
-            solverThread.GetThrottles(Vessel, VesselState, direction, out throttles, out thrusters);
+        private void CheckVessel()
+        {
+            bool changed = false;
+
+            // Rotates world-frame vectors into the vessel's reference frame.
+            Quaternion worldToVessel = Quaternion.Inverse(Vessel.GetTransform().rotation);
+
+            if (Vessel.parts.Count != lastPartCount)
+            {
+                lastPartCount = Vessel.parts.Count;
+                changed = true;
+            }
+
+            // Make sure all thrusters are still enabled, because if they're not,
+            // our calculations will be wrong.
+            foreach (ManagedRCSModule m in managedModules)
+            {
+                if (!m.Module.isEnabled)
+                {
+                    changed = true;
+                    break;
+                }
+            }
+
+            // Likewise, make sure any previously-disabled RCS modules are still
+            // disabled.
+            foreach (ModuleRCS pm in lastDisabled)
+            {
+                if (pm.isEnabled)
+                {
+                    changed = true;
+                    break;
+                }
+            }
+
+            // See if the CoM has moved too much.
+            Rigidbody rootPartBody = Vessel.rootPart.rb;
+            if (rootPartBody != null)
+            {
+                // But how much is "too much"? Well, it probably has something to do
+                // with the ship's moment of inertia (MoI). Let's say the distance
+                // 'd' that the CoM is allowed to shift without a reset is:
+                //
+                //      d = moi * x + c
+                //
+                // where 'moi' is the magnitude of the ship's moment of inertia and
+                // 'x' and 'c' are tuning parameters to be determined.
+                //
+                // Using a few actual KSP ships, I burned RCS fuel (or moved fuel
+                // from one tank to another) to see how far the CoM could shift
+                // before the rotation error on translation became annoying.
+                // I came up with roughly:
+                //
+                //      d         moi
+                //      0.005    2.34
+                //      0.04    11.90
+                //      0.07    19.96
+                //
+                // I then halved each 'd' value, because we'd like to address this
+                // problem -before- it becomes annoying. Least-squares linear
+                // regression on the (moi, d/2) pairs gives the following (with
+                // adjusted R^2 = 0.999966):
+                //
+                //      moi = 542.268 d + 1.00654
+                //      d = (moi - 1) / 542
+                //
+                // So the numbers below have some basis in reality. =)
+
+                // Assume MoI magnitude is always >=2.34, since that's all I tested.
+                ComErrorThreshold = (Math.Max(VesselState.MoI.magnitude, 2.34) - 1) / 542;
+
+                Vector3 com = worldToVessel * (VesselState.CoM - VesselState.RootPartPosition);
+                double thisComErr = (lastCoM - com).magnitude;
+                MaxComError = Math.Max(MaxComError, thisComErr);
+                comError.Value = thisComErr;
+                if (comError > ComErrorThreshold)
+                {
+                    lastCoM = com;
+                    changed = true;
+                }
+            }
+
+            if (!changed) return;
+
+            // Something about the vessel has changed. We need to reset everything.
+
+            lastDisabled.Clear();
+
+            // Restore the old modules before wrapping them again, since a new
+            // ManagedRCSModule takes the module's current power as its original.
+            ResetThrusterForces();
+            managedModules.Clear();
+
+            // Rebuild the list of thrusters.
+            var geometry = new List<RCSSolver.Thruster>();
+            foreach (Part p in Vessel.parts)
+            {
+                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
+                {
+                    if (!pm.isEnabled)
+                    {
+                        // Keep track of this module so we'll know if it's enabled.
+                        lastDisabled.Add(pm);
+                    }
+                    else if (p.Rigidbody != null && !pm.isJustForShow)
+                    {
+                        // The part's offset from the vessel's center of mass.
+                        Vector3 pos = worldToVessel * (p.Rigidbody.worldCenterOfMass - VesselState.CoM);
+
+                        // Create a single RCSSolver.Thruster for this part. This
+                        // requires some assumptions about how the game's RCS code will
+                        // drive the individual thrusters (which we can't control).
+
+                        var thrustDirs = new Vector3[pm.thrusterTransforms.Count];
+                        for (int i = 0; i < pm.thrusterTransforms.Count; i++)
+                        {
+                            thrustDirs[i] = (worldToVessel * -pm.thrusterTransforms[i].up).normalized;
+                        }
+
+                        managedModules.Add(new ManagedRCSModule(pm));
+                        geometry.Add(new RCSSolver.Thruster(pos, thrustDirs));
+                    }
+                }
+            }
+
+            thrusterGeometry = geometry.ToArray();
+            solverThread.SetThrusters(thrusterGeometry);
+        }
+
+        // The list of throttles is ordered under the assumption that you iterate
+        // over the vessel as follows:
+        //      foreach part in vessel.parts:
+        //          foreach rcsModule in part.Modules.OfType<ModuleRCS>:
+        //              ...
+        // The throttles will be empty if they haven't been calculated yet.
+        public void GetThrottles(Vector3 direction, out double[] throttles, out IReadOnlyList<RCSSolver.Thruster> thrusters)
+        {
+            // Update vessel info if needed.
+            CheckVessel();
+
+            thrusters = thrusterGeometry;
+            throttles = solverThread.GetThrottles(direction);
+        }
 
         // Throttles RCS thrusters to keep a vessel balanced during translation.
         protected void AdjustRCSThrottles(FlightCtrlState s)
         {
-            bool cutThrottles = false;
-
-            if (s.X == 0 && s.Y == 0 && s.Z == 0)
-            {
-                solverThread.ResetThrusterForces();
-            }
+            // Update vessel info if needed.
+            CheckVessel();
 
             // Note that FlightCtrlState doesn't use the same axes as the
             // vehicle's reference frame. FlightCtrlState coordinates are right-
@@ -204,71 +385,44 @@ namespace MuMech
             // each value and also swap the Y and Z values.
             var direction = new Vector3(-s.X, -s.Z, -s.Y);
 
+            // Not translating, so let the game use the thrusters at full power
+            // (e.g. for rotation).
+            if (direction == Vector3.zero)
+            {
+                ResetThrusterForces();
+                return;
+            }
+
             // RCS balancing on rotation isn't supported.
             //Vector3 rotation = new Vector3(s.pitch, s.roll, s.yaw);
 
             RCSSolverKey.SetPrecision(calcPrecision);
-            GetThrottles(direction, out throttles, out thrusters);
+            double[] throttles = solverThread.GetThrottles(direction);
 
             // If the throttles we got were bad (due to the threaded
             // calculation not having completed yet), cut throttles. It's
             // better to not move at all than move in the wrong direction.
-            if (throttles.Length != thrusters.Count)
+            if (throttles.Length != managedModules.Count)
             {
-                throttles = new double[thrusters.Count];
-                cutThrottles = true;
-            }
-
-            if (cutThrottles)
-            {
-                for (int i = 0; i < throttles.Length; i++)
-                {
-                    throttles[i] = 0;
-                }
+                throttles = new double[managedModules.Count];
             }
 
             // Apply the calculated throttles to all RCS parts.
-            for (int i = 0; i < thrusters.Count; i++)
+            for (int i = 0; i < managedModules.Count; i++)
             {
-                thrusters[i].PartModule.thrusterPower = (float)throttles[i];
+                managedModules[i].SetThrottle(throttles[i]);
             }
         }
 
         public void UpdateTuningParameters()
         {
             double wasteThreshold = overdrive * overdriveScale;
-            var tuningParams = new RCSSolverTuningParams();
-            tuningParams.WasteThreshold = wasteThreshold;
-            tuningParams.FactorTorque = tuningParamFactorTorque;
-            tuningParams.FactorTranslate = tuningParamFactorTranslate;
-            tuningParams.FactorWaste = tuningParamFactorWaste;
+            var tuningParams = new RCSSolverTuningParams(wasteThreshold, tuningParamFactorTorque, tuningParamFactorTranslate,
+                tuningParamFactorWaste);
             solverThread.UpdateTuningParameters(tuningParams);
         }
 
         public double GetCalculationTime() => solverThread.CalculationTime;
-
-        /*
-        public override void OnUpdate()
-        {
-            // Make thruster exhaust onscreen correspond to actual thrust.
-            if (smartTranslation && throttles != null)
-            {
-                for (int i = 0; i < throttles.Length; i++)
-                {
-                    // 'throttles' and 'thrusters' are guaranteed to be of the
-                    // same length.
-                    float throttle = (float)throttles[i];
-                    var tfx = thrusters[i].partModule.thrusterFX;
-
-                    for (int j = 0; j < tfx.Count; j++)
-                    {
-                        tfx[j].Power *= throttle;
-                    }
-                }
-            }
-            base.OnUpdate();
-        }
-         */
 
         public override void Drive(FlightCtrlState s)
         {

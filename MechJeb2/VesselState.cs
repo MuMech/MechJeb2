@@ -654,7 +654,7 @@ namespace MuMech
                 foreach (Vector6.Direction dir6 in Vector6.Values)
                 {
                     Vector3d dir = Vector6.Directions[(int)dir6];
-                    rcsbal.GetThrottles(dir, out double[] throttles, out List<RCSSolver.Thruster> thrusters);
+                    rcsbal.GetThrottles(dir, out double[] throttles, out IReadOnlyList<RCSSolver.Thruster> thrusters);
                     if (throttles == null) continue;
 
                     for (int j = 0; j < throttles.Length; j++)
