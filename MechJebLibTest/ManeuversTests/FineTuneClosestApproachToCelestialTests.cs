@@ -6,20 +6,12 @@ using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.ManeuversTests
 {
     public class FineTuneClosestApproachToCelestialTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public FineTuneClosestApproachToCelestialTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         public static IEnumerable<object[]> Seeds()
         {
             for (int i = 0; i <= 25; i++)
@@ -53,8 +45,6 @@ namespace MechJebLibTest.ManeuversTests
 
         private void DoTransfer(double peR, double inc, double perEps = 1e-4, double incEps = 1e-4)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double soi = 66167158.6569544;
             double mu0 = 398600435436096;
             var r0 = new V3(-6419931.35599855, -1598504.22548976, 1968486.96029449);

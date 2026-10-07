@@ -9,8 +9,8 @@ using MechJebLib.Functions;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
+using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 using Random = System.Random;
@@ -19,13 +19,6 @@ namespace MechJebLibTest.TwoBodyTests
 {
     public class ShepperdTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public ShepperdTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         public static IEnumerable<object[]> Seeds()
         {
             for (int i = 0; i <= 500; i++)
@@ -46,7 +39,7 @@ namespace MechJebLibTest.TwoBodyTests
 
             if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
             {
-                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rp + " vf2:" +
+                Logger.Print("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrf2:" + rp + " vf2:" +
                     vp + "\n");
             }
 
@@ -67,7 +60,7 @@ namespace MechJebLibTest.TwoBodyTests
             (V3 rp, V3 vp, M3 _, M3 _, M3 _, M3 _) = Shepperd.Solve2(1.0, -dt, rf, vf);
 
             if (!NearlyEqual(rp, r0, 1e-8) || !NearlyEqual(vp, v0, 1e-8))
-                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrp:" + rp + " vp:" + vp);
+                Logger.Print("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + "\nrf:" + rf + " vf:" + vf + "\nrp:" + rp + " vp:" + vp);
 
             rp.ShouldEqual(r0, 1e-8);
             vp.ShouldEqual(v0, 1e-8);
@@ -138,7 +131,7 @@ namespace MechJebLibTest.TwoBodyTests
 
             if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
             {
-                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                Logger.Print("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
                     rf2 + " vf2:" +
                     vf2 + "\n");
             }
@@ -189,7 +182,7 @@ namespace MechJebLibTest.TwoBodyTests
 
             if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
             {
-                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                Logger.Print("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
                     rf2 + " vf2:" +
                     vf2 + "\n");
             }
@@ -247,7 +240,7 @@ namespace MechJebLibTest.TwoBodyTests
 
             if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
             {
-                _testOutputHelper.WriteLine("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
+                Logger.Print("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
                     rf2 + " vf2:" +
                     vf2 + "\n");
             }
@@ -304,11 +297,11 @@ namespace MechJebLibTest.TwoBodyTests
             if (!NearlyEqual(aRfR0, bRfR0, tol) || !NearlyEqual(aRfV0, bRfV0, tol) ||
                 !NearlyEqual(aVfR0, bVfR0, tol) || !NearlyEqual(aVfV0, bVfV0, tol))
             {
-                _testOutputHelper.WriteLine($"r0:{r0} v0:{v0} dt:{dt}");
-                _testOutputHelper.WriteLine($"stm00 analytic:\n{aRfR0}\nstm00 FD:\n{bRfR0}");
-                _testOutputHelper.WriteLine($"stm01 analytic:\n{aRfV0}\nstm01 FD:\n{bRfV0}");
-                _testOutputHelper.WriteLine($"stm10 analytic:\n{aVfR0}\nstm10 FD:\n{bVfR0}");
-                _testOutputHelper.WriteLine($"stm11 analytic:\n{aVfV0}\nstm11 FD:\n{bVfV0}");
+                Logger.Print($"r0:{r0} v0:{v0} dt:{dt}");
+                Logger.Print($"stm00 analytic:\n{aRfR0}\nstm00 FD:\n{bRfR0}");
+                Logger.Print($"stm01 analytic:\n{aRfV0}\nstm01 FD:\n{bRfV0}");
+                Logger.Print($"stm10 analytic:\n{aVfR0}\nstm10 FD:\n{bVfR0}");
+                Logger.Print($"stm11 analytic:\n{aVfV0}\nstm11 FD:\n{bVfV0}");
             }
 
             aRfR0.ShouldEqual(bRfR0, tol);

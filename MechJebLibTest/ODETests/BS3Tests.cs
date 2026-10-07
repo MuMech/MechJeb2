@@ -11,20 +11,12 @@ using MechJebLib.ODE;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static System.Math;
 
 namespace MechJebLibTest.ODETests
 {
     public class BS3Tests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public BS3Tests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         private class SimpleOscillator
         {
             private readonly double _k;
@@ -54,8 +46,6 @@ namespace MechJebLibTest.ODETests
         [Theory, MemberData(nameof(Seeds))]
         public void RandomSimpleOscillatorTest(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             double k = 2 * random.NextDouble() + 1;
@@ -180,8 +170,6 @@ namespace MechJebLibTest.ODETests
         [Fact]
         public void AltitudeEventTest()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var solver = new BS3 { Rtol = 1e-6, Atol = 1e-6, Maxiter = 2000 };
 
             var r0 = new V3(1, 0, 0);
@@ -227,8 +215,6 @@ namespace MechJebLibTest.ODETests
         [Fact]
         public void MinStepSizeTest()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var solver = new BS3 { Rtol = 1e-5, Atol = 1e-5, Maxiter = 0 };
 
             using var y0 = Vec.Rent(2);

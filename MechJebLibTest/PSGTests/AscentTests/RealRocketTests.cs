@@ -9,7 +9,6 @@ using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -17,17 +16,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
 {
     public class RealRocketTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public RealRocketTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         [Fact]
         public void Delta3GeoSynchronous()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5605222.973039, 0.000000, 3043387.760956);
             var v0 = new V3(0.000000, 408.739353, 0.000000);
             double t0 = 0;
@@ -106,7 +97,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         public void Falcon9ExpendableGeoStationary()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(5605222.973039, 0.000000, 3043387.760956);
             var v0 = new V3(0.000000, 408.739353, 0.000000);
             const double T0 = 0;

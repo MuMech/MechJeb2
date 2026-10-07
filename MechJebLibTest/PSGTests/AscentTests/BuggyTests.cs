@@ -9,7 +9,6 @@ using MechJebLib.Primitives;
 using MechJebLib.PSG;
 using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.PSGTests.AscentTests
@@ -17,20 +16,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
     // test from buggy rockets that people have given me
     public class BuggyTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public BuggyTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         // Very short burn time suborbital rocket that had trouble with a high altitude convergence
         // Tested against N=20, eps=0
         [Fact]
         public void ExtremeSuborbitalCoast()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-4821814.88567718, 2840684.21567451, 3044792.18285841);
             var v0 = new V3(-207.145959092742, -351.61231101642, -6.44113221332937E-06);
             var u0 = new V3(-0.756795136086477, 0.44594494863847, 0.477906107902527);
@@ -74,7 +64,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         public void SubOrbitalThor()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(1470817.12150277, -5396417.72296515, 3050610.07863681);
             var v0 = new V3(393.513790634158, 107.250777770179, 0.00161788515083675);
             var u0 = new V3(0.23076841882078, -0.846631607518583, 0.47954249382019);
@@ -128,8 +117,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         // TODO: synch back up with PVG numbers
         private void BuggyDelta4ExtremelyHeavy()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(5591854.96465599, 126079.439022067, 3050616.55737457);
             var v0 = new V3(-9.1936944030452, 407.764494724287, 0.000353003400966649);
             var u0 = new V3(0.877712545724556, 0.0197197822130759, 0.478781640529633);
@@ -164,7 +151,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         private void BiggerEarlyRocketMaybe()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
             var r0 = new V3(-4230937.57027061, -3658393.88789034, 3050613.04457008);
             var v0 = new V3(266.772640873606, -308.526291373473, 0.00117499917444357);
             var u0 = new V3(-0.664193346276844, -0.574214958863673, 0.478669494390488);
@@ -196,8 +182,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         // TODO: get numbers from PVG
         private void FourStagesNeedsTwo()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             double thrust1 = Astro.ThrustFromMassesIspBurntime(176568.069166482, 33739.9978121645, 294.100105371403, 150.314019929573);
             double thrust2 = Astro.ThrustFromMassesIspBurntime(22640.1444759873, 7657.9646078915, 427.000116464637, 470.292183477623);
             double thrust3 = Astro.ThrustFromMassesIspBurntime(5155.6086446711, 1421.59054825615, 427.000111546093, 234.42243240551);
@@ -234,8 +218,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         private void MakingUpperStageUnguided()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             const double PER = 7571000;
 
             double thrust1 = Astro.ThrustFromMassesIspBurntime(176568.069166482, 33739.9978121645, 294.100108674295, 150.314019929573);
@@ -281,8 +263,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
         [Fact]
         public void Falcon9WithSRBSTest()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-4450586.1613649148, -3387777.1061104261, 3050615.9472641465);
             var v0 = new V3(247.04060855067507, -324.54186700561797, -5.8305065009617646E-07);
             var u0 = new V3(-0.69859864900017787, -0.5316864130313963, 0.47882089018821716);

@@ -6,7 +6,6 @@ using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
 using Xunit;
-using Xunit.Abstractions;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -14,13 +13,6 @@ namespace MechJebLibTest.ManeuversTests
 {
     public class InterplanetaryTransferTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public InterplanetaryTransferTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         public static IEnumerable<object[]> Seeds()
         {
             for (int i = 0; i < 25; i++)
@@ -30,8 +22,6 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void EarthToMercury()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-5393756.1398685, 2579906.9721393, -2964978.45117617);
             var v0 = new V3(-3856.63799573101, -6569.97859538819, 1299.1134217111);
             double mu1 = 398600435436096;
@@ -47,7 +37,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: 0, optguard: true);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             dv.magnitude.ShouldEqual(6255.6098503827661, 1e-4);
 
@@ -72,8 +62,6 @@ namespace MechJebLibTest.ManeuversTests
 
         private void EarthToMercuryFromSeed(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             double mu1 = 398600435436096;
@@ -106,7 +94,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: 0, optguard: false);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
             (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
@@ -123,8 +111,6 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void EarthToCeres()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(6521378.923092721, -144016.87747755065, 1410886.635286456);
             var v0 = new V3(864.52724109710925, 6940.5943694265807, -3287.3841869385583);
             var r1 = new V3(22199151070.873016, 139845008280.15186, -53671512076.940094);
@@ -144,7 +130,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: true);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             dv.magnitude.ShouldEqual(4944.8587050280121, 1e-4);
 
@@ -182,8 +168,6 @@ namespace MechJebLibTest.ManeuversTests
 
         private void EarthToCeresFromSeed(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             var r1 = new V3(22199151070.873016, 139845008280.15186, -53671512076.940094);
@@ -220,7 +204,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: false);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
             (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
@@ -237,8 +221,6 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void EarthToMars()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-4813533.7100184178, 4067332.94001712, 2197061.3473151801);
             var v0 = new V3(-3943.6447628964834, -6096.7177540935272, 2646.3673516840317);
             var r1 = new V3(72259723607.744156, -129249886043.4872, -23994554196.157143);
@@ -258,7 +240,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: true);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
             dv.magnitude.ShouldEqual(3640.1292730002069, 1e-4);
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
@@ -293,8 +275,6 @@ namespace MechJebLibTest.ManeuversTests
 
         private void EarthToMarsFromSeed(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             var r1 = new V3(72259723607.744156, -129249886043.4872, -23994554196.157143);
@@ -331,7 +311,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: false);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
             (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
@@ -348,8 +328,6 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void EarthToAsteroid()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-3613600.2089605439, -5103455.2935977345, 2331613.3986294419);
             var v0 = new V3(5387.6194247482008, -4951.1281054341907, -2487.2177707052929);
             var r1 = new V3(-102996353813.89156, -93428051172.649872, 48712283511.210747);
@@ -366,7 +344,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: peR, optguard: true);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
             dv.magnitude.ShouldEqual(4789.592962160028, 1e-4);
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
@@ -385,8 +363,6 @@ namespace MechJebLibTest.ManeuversTests
 
         private void EarthToAsteroidFromSeed(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             var r1 = new V3(-102996353813.89156, -93428051172.649872, 48712283511.210747);
@@ -420,7 +396,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: peR, optguard: false);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
             (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
@@ -436,8 +412,6 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void EarthToJupiter()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-3912331.3024163404, 4747993.7355074612, 2586640.1496319249);
             var v0 = new V3(-5125.9892585184534, -5380.116158810044, 2122.3228889072616);
             var r1 = new V3(137412324343.95822, -23942591869.675461, -60338571254.994019);
@@ -456,7 +430,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: true);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
             // deep-well case (Jupiter, focusing factor ~10): exercises the analytic-b warm start + Jacobian
             // preconditioner landing the cheap (~6340 m/s, textbook Earth->Jupiter) basin.
             dv.magnitude.ShouldEqual(6339.7019346132129, 1e-4);
@@ -494,8 +468,6 @@ namespace MechJebLibTest.ManeuversTests
 
         private void EarthToJupiterFromSeed(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             var r1 = new V3(137412324343.95822, -23942591869.675461, -60338571254.994019);
@@ -531,7 +503,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: false);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
             (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
@@ -586,8 +558,6 @@ namespace MechJebLibTest.ManeuversTests
         // the parking orbit is fixed (EarthToJupiterHardSeeds seed 1961), and the target periapsis and inclination vary
         private void EarthToJupiterTarget(double peR, double inc)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(51482894.10388647, 41045292.464912385, -100399372.32897358);
             var v0 = new V3(1092.8263078123787, 1091.4884781926173, 962.33550081447856);
             var r1 = new V3(137412324343.95822, -23942591869.675461, -60338571254.994019);
@@ -605,7 +575,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, inc: inc, optguard: false);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out} inc: {Rad2Deg(inc)} targetInc: {Rad2Deg(maneuver.TargetInc)}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out} inc: {Rad2Deg(inc)} targetInc: {Rad2Deg(maneuver.TargetInc)}");
 
             // the inclination may only be clamped away from equatorial
             ((maneuver.TargetInc - PI / 2) * (inc - PI / 2)).ShouldBeGreaterThanOrEqual(0);
@@ -629,8 +599,6 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void EarthToVenus()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var r0 = new V3(-2524692.3521177084, -6010111.3403185587, -1430397.88334662);
             var v0 = new V3(6697.4581339203833, -2033.861683166539, -3276.0604346038458);
             var r1 = new V3(81107302085.431351, -113426897855.24834, -60210730828.347397);
@@ -649,7 +617,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: true);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
             dv.magnitude.ShouldEqual(3449.6799310543329, 1e-4);
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
@@ -669,8 +637,6 @@ namespace MechJebLibTest.ManeuversTests
 
         private void EarthToVenusFromSeed(int seed)
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             var random = new Random(seed);
 
             var r1 = new V3(81107302085.431351, -113426897855.24834, -60210730828.347397);
@@ -706,7 +672,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, optguard: false);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
             (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
@@ -723,8 +689,6 @@ namespace MechJebLibTest.ManeuversTests
         [Fact]
         private void HeliocentricExactHalfRevolution()
         {
-            Logger.Register(o => _testOutputHelper.WriteLine((string)o));
-
             // Fake solar system in canonical units (sun mu = 1, length unit of 1 AU) with coplanar circular source and target
             // orbits at r = 1/2 and r = 2, so the heliocentric scale in Maneuver() is exactly 1.0 and the scaled state is
             // bit-identical to the inputs.  The target is wound back from [-2, 0, 0], so the ZSOI bootstrap Lambert solve from
@@ -757,7 +721,7 @@ namespace MechJebLibTest.ManeuversTests
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: peR, optguard: true);
-            _testOutputHelper.WriteLine($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}");
 
             // the solution for the neighboring arrival times which are not exactly 180 degrees
             dv.magnitude.ShouldEqual(0.262904358179138, 1e-6);
