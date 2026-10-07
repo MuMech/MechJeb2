@@ -11,7 +11,8 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 {
     /// <summary>
     ///     Whole SimVessels, reproducing SimVessel dumps captured in KSP.  These return the vessel in the state the KSP
-    ///     SimVesselManager leaves it in, ready for the FuelFlowSimulation to run.
+    ///     SimVesselManager leaves it in, ready for the FuelFlowSimulation to run.  The captures hold a dump in vacuum
+    ///     followed by a dump in the atmospheric conditions on the launchpad at KSC, which kscPad selects.
     /// </summary>
     public static class SimVesselFixtures
     {
@@ -20,7 +21,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         ///     The Mainsail and the launch clamps are both in stage 0.  This is the stock
         ///     MechJebLibTest/Craft/Stock/Mainsail Tin Can.craft, as captured in Captures/MainsailTinCan.out.
         /// </summary>
-        public static SimVessel MainsailTinCan()
+        public static SimVessel MainsailTinCan(bool kscPad = false)
         {
             SimVessel v = NewVessel(1);
             v.SetInitial(105778.724130731,
@@ -63,13 +64,73 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             Symmetry(clamp1, clamp2);
             Symmetry(panel1, panel2);
 
+            if (kscPad)
+                v.SetConditions(0.915457633121104, 0.987155510143539, 9.52048848036624E-05);
+
             return Finish(v);
         }
 
         /// <summary>
-        ///     The atmospheric conditions on the launchpad at KSC, as captured for the MainsailTinCan.
+        ///     The MainsailTinCan with a second Rockomax64 and Mainsail below it as a lower stage, separated by a decoupler and
+        ///     sitting in two launch clamps on the pad.  The lower Mainsail is in stage 3, the launch clamps in stage 2, the
+        ///     decoupler in stage 1 and the upper Mainsail in stage 0.  This is the stock
+        ///     MechJebLibTest/Craft/Stock/Mainsail Tin Can 2 Stage.craft, as captured in Captures/MainsailTinCan2Stage.out.
         /// </summary>
-        public static void SetKSCPadConditions(SimVessel v) => v.SetConditions(0.915457633121104, 0.987155510143539, 9.52048848036624E-05);
+        public static SimVessel MainsailTinCan2Stage(bool kscPad = false)
+        {
+            SimVessel v = NewVessel(4);
+            v.SetInitial(105794.044130734,
+                new V3(573292.96945599711, -177304.16708120424, -1017.9209188676783),
+                new V3(51.699900549319686, 167.15360977544978, 0.00096893554437770674),
+                new V3(0.95495424609258295, -0.29675148235150173, -0.0010958015918731689));
+
+            var thrustDirection = new V3(0.95435312712642562, -0.29867703966168524, -0.0016915356973186135);
+
+            SimPart probe       = ProbeStackLarge(v, 363062213);
+            SimPart noseCone    = RocketNoseConeV3(v, 680279770);
+            SimPart battery     = BatteryBankLarge(v, 2696621395);
+            SimPart sas         = AsasModule1_2(v, 3652483317);
+            SimPart upperTank   = Rockomax64BW(v, 1086072213);
+            SimPart upperEngine = LiquidEngineMainsailV2(v, 1899096253, 0, thrustDirection);
+            SimPart decoupler   = Decoupler2(v, 3302637856, 1, upperEngine);
+            SimPart lowerTank   = Rockomax64BW(v, 186459485, 1);
+            SimPart lowerEngine = LiquidEngineMainsailV2(v, 296107038, 3, thrustDirection);
+            SimPart clamp1      = LaunchClamp1(v, 3767408006, 2);
+            SimPart clamp2      = LaunchClamp1(v, 3106617278, 2);
+            SimPart panel1      = LargeSolarPanel(v, 1281754298);
+            SimPart panel2      = LargeSolarPanel(v, 3802754131);
+
+            MakeRoot(probe);
+
+            Link(probe, noseCone);
+            Link(probe, battery);
+            Link(battery, sas);
+            Link(sas, upperTank);
+            Link(sas, panel1);
+            Link(sas, panel2);
+            Link(upperTank, upperEngine);
+            Link(upperEngine, decoupler);
+            Link(decoupler, lowerTank);
+            Link(lowerTank, lowerEngine);
+            Link(lowerTank, clamp1);
+            Link(lowerTank, clamp2);
+
+            CrossFeed(panel2, panel1, upperEngine, upperTank, sas, battery, probe, decoupler, noseCone);
+            CrossFeed(lowerEngine, lowerTank, decoupler);
+            // KSP puts the nose cone and the decoupler in the sets of the parts next to them, but gives each a set of its own
+            CrossFeed(noseCone);
+            CrossFeed(decoupler);
+            CrossFeed(clamp1);
+            CrossFeed(clamp2);
+
+            Symmetry(clamp1, clamp2);
+            Symmetry(panel1, panel2);
+
+            if (kscPad)
+                v.SetConditions(0.915582911665934, 0.987390810993559, 1.11535089238807E-05);
+
+            return Finish(v);
+        }
 
         /// <summary>
         ///     Borrows a SimVessel and sets every field that the KSP SimVesselManager would set, since pooled SimVessels
@@ -96,11 +157,13 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return v;
         }
 
-        // KSP appends the vessel name to the name of the root part
-        public static void MakeRoot(SimPart p, string vesselName)
+        // the name of the root part has the vessel name appended in some captures (MainsailTinCan) but not in others
+        // (MainsailTinCan2Stage)
+        public static void MakeRoot(SimPart p, string? vesselName = null)
         {
             p.IsRoot = true;
-            p.Name   = $"{p.Name} ({vesselName})";
+            if (vesselName != null)
+                p.Name = $"{p.Name} ({vesselName})";
         }
 
         // the SimPart.Links are the KSP parent followed by the KSP children, so link the tree from the root downwards

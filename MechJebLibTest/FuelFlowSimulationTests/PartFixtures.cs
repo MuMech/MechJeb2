@@ -49,6 +49,19 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return p;
         }
 
+        // the attachedPart is the part on the decoupler's explosive node, which separates from the decoupler when it fires
+        public static SimPart Decoupler2(SimVessel v, uint persistentId, int inverseStage, SimPart attachedPart)
+        {
+            SimPart p = NewPart(v, "Decoupler.2", persistentId, inverseStage, 0.16f);
+
+            SimModuleDecouple d = AddModule(SimModuleDecouple.Borrow(p));
+            d.IsDecoupled     = false;
+            d.IsOmniDecoupler = false;
+            d.Staged          = true;
+            d.AttachedPart    = attachedPart;
+            return p;
+        }
+
         public static SimPart LaunchClamp1(SimVessel v, uint persistentId, int inverseStage)
         {
             SimPart p = NewPart(v, "launchClamp1", persistentId, inverseStage, 0.1f);
