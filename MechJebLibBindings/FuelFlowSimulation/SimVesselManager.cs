@@ -58,7 +58,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
         public void Update()
         {
             _updater.Update();
-            PrintVessel();
+            // PrintVessel();
         }
 
         public void SetConditions(double atmDensity, double atmPressure, double machNumber) =>
