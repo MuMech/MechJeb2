@@ -44,7 +44,10 @@ namespace MechJebLib.Interpolants
         private double _dynew;
         // ReSharper restore NullableWarningSuppressionIsUsed
 
-        public override double Evaluate(double x) => Functions.Interpolants.CubicHermiteInterpolant(_t, _y, _dy, _t + _h, _ynew, _dynew, x);
+        // a zero-width node would interpolate 0/0, so it degenerates to a constant
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
+        public override double Evaluate(double x) =>
+            _t + _h == _t ? _y : Functions.Interpolants.CubicHermiteInterpolant(_t, _y, _dy, _t + _h, _ynew, _dynew, x);
 
         public override void Dispose() => _pool.Release(this);
 

@@ -49,7 +49,12 @@ namespace MechJebLib.Interpolants
         public override Vec Evaluate(double x)
         {
             var yout = Vec.Rent(_y.Length);
-            yout.CubicHermiteInterpolant(_t, _y, _dy, _t + _h, _ynew, _dynew, x);
+            // a zero-width node (e.g. from a zero-length PSG phase) would interpolate 0/0, so it degenerates to a constant
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (_t + _h == _t)
+                yout.CopyFrom(_y);
+            else
+                yout.CubicHermiteInterpolant(_t, _y, _dy, _t + _h, _ynew, _dynew, x);
             return yout;
         }
 
