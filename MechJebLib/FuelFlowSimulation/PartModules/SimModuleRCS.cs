@@ -190,12 +190,12 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             var sb = new StringBuilder();
             sb.AppendLine(ModuleLine("SimModuleRCS", CommonFieldList()));
             sb.AppendLine(Invariant(
-                $"  G={G} Isp={Isp} Thrust={Thrust} RcsEnabled={RcsEnabled} ISPMult={ISPMult} ThrustPercentage={ThrustPercentage} MaxFuelFlow={MaxFuelFlow} MassFlowRate={MassFlowRate}"));
+                $"  G={G:G17} Isp={Isp:G17} Thrust={Thrust:G17} RcsEnabled={RcsEnabled} ISPMult={ISPMult:G17} ThrustPercentage={ThrustPercentage:G17} MaxFuelFlow={MaxFuelFlow:G17} MassFlowRate={MassFlowRate:G17}"));
             sb.AppendLine(Invariant($"  AtmosphereCurve: {AtmosphereCurve}"));
             sb.Append("  Propellants:");
             foreach (SimPropellant p in Propellants)
                 sb.Append(Invariant(
-                    $" [id={p.id} ignoreForIsp={p.ignoreForIsp} ratio={p.ratio} flowMode={p.FlowMode} density={p.density}]"));
+                    $" [id={p.id} ignoreForIsp={p.ignoreForIsp} ratio={p.ratio:G17} flowMode={p.FlowMode} density={p.density:G17}]"));
             return sb.ToString();
         }
     }

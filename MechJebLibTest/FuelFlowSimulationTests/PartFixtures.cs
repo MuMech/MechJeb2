@@ -49,18 +49,18 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return p;
         }
 
-        // the attachedPart is the part on the decoupler's explosive node, which separates from the decoupler when it fires
-        public static SimPart Decoupler2(SimVessel v, uint persistentId, int inverseStage, SimPart attachedPart)
-        {
-            SimPart p = NewPart(v, "Decoupler.2", persistentId, inverseStage, 0.16f);
+        public static SimPart Decoupler2(SimVessel v, uint persistentId, int inverseStage, SimPart attachedPart) =>
+            NewDecoupler(v, "Decoupler.2", persistentId, inverseStage, 0.16f, attachedPart);
 
-            SimModuleDecouple d = AddModule(SimModuleDecouple.Borrow(p));
-            d.IsDecoupled     = false;
-            d.IsOmniDecoupler = false;
-            d.Staged          = true;
-            d.AttachedPart    = attachedPart;
-            return p;
-        }
+        public static SimPart RadialDecoupler2(SimVessel v, uint persistentId, int inverseStage, SimPart attachedPart) =>
+            NewDecoupler(v, "radialDecoupler2", persistentId, inverseStage, 0.05f, attachedPart);
+
+        // the fuel line only affects the crossfeed sets, which KSP computes and the fixtures copy from the captures
+        public static SimPart FuelLine(SimVessel v, uint persistentId, int inverseStage = -1) =>
+            NewPart(v, "fuelLine", persistentId, inverseStage, 0.05f);
+
+        public static SimPart StrutConnector(SimVessel v, uint persistentId, int inverseStage = -1) =>
+            NewPart(v, "strutConnector", persistentId, inverseStage, 0.05f);
 
         public static SimPart LaunchClamp1(SimVessel v, uint persistentId, int inverseStage)
         {
@@ -78,7 +78,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
             SimModuleEngines e = NewModuleEngines(p);
             e.IsEnabled   = true;
-            e.MaxFuelFlow = 0.4934111f;
+            // KSP derives this from maxThrust and the vacuum isp in single precision, the dump prints it to 7 digits as
+            // 0.4934111 but the 0.4934111f literal is one ulp off, which shows up in the propellant the asparagus staging strands
+            e.MaxFuelFlow = 1500f / (310f * 9.80665f);
             e.MaxThrust   = 1500;
             e.Propellants.Add(new SimPropellant(LIQUID_FUEL, false, 0.9f, SimFlowMode.STACK_PRIORITY_SEARCH, LIQUID_FUEL_DENSITY));
             e.Propellants.Add(new SimPropellant(OXIDIZER, false, 1.1f, SimFlowMode.STACK_PRIORITY_SEARCH, OXIDIZER_DENSITY));
@@ -120,6 +122,23 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             p.DisabledResourcesMass = 0;
             p.EngineResiduals       = 0;
             v.Parts.Add(p);
+            return p;
+        }
+
+        /// <summary>
+        ///     A staged, unfired decoupler.  The attachedPart is the part on the decoupler's explosive node, which separates
+        ///     from the decoupler when it fires.
+        /// </summary>
+        public static SimPart NewDecoupler(SimVessel v, string name, uint persistentId, int inverseStage, double dryMass,
+            SimPart attachedPart)
+        {
+            SimPart p = NewPart(v, name, persistentId, inverseStage, dryMass);
+
+            SimModuleDecouple d = AddModule(SimModuleDecouple.Borrow(p));
+            d.IsDecoupled     = false;
+            d.IsOmniDecoupler = false;
+            d.Staged          = true;
+            d.AttachedPart    = attachedPart;
             return p;
         }
 

@@ -39,6 +39,6 @@ namespace MechJebLib.Interpolants
 
         public override void Dispose() { _pool.Release(this); }
 
-        public override string ToString() => Invariant($"[ConstantDoubleNode leftT={LeftT} rightT={RightT} y={_y}]");
+        public override string ToString() => Invariant($"[ConstantDoubleNode leftT={LeftT:G17} rightT={RightT:G17} y={_y:G17}]");
     }
 }

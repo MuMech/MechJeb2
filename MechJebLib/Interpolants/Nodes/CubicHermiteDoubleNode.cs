@@ -49,6 +49,7 @@ namespace MechJebLib.Interpolants
         public override void Dispose() => _pool.Release(this);
 
         public override string ToString() =>
-            Invariant($"[CubicHermiteDoubleNode leftT={LeftT} rightT={RightT} t={_t} h={_h} y={_y} dy={_dy} ynew={_ynew} dynew={_dynew}]");
+            Invariant(
+                $"[CubicHermiteDoubleNode leftT={LeftT:G17} rightT={RightT:G17} t={_t:G17} h={_h:G17} y={_y:G17} dy={_dy:G17} ynew={_ynew:G17} dynew={_dynew:G17}]");
     }
 }

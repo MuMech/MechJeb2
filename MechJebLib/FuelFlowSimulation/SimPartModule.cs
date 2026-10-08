@@ -28,7 +28,7 @@ namespace MechJebLib.FuelFlowSimulation
         protected static void AddField(List<string> fields, string name, double val, double def)
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (val != def) fields.Add(Invariant($"{name}={val}"));
+            if (val != def) fields.Add(Invariant($"{name}={val:G17}"));
         }
 
         // The fields common to every SimPartModule, for the concrete ToString() dumps to prepend to their own fields.

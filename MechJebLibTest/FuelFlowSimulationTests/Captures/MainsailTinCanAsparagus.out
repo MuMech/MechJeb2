@@ -1,0 +1,582 @@
+[LOG 17:32:52.807] [MechJeb2] SimVessel:
+  CurrentStage=4 HasLaunchClamp=True MainThrottle=1
+  ATMPressure=0 ATMDensity=0 MachNumber=0
+  T=105815.06413073862 R=[574370.49008105334, -173787.77917027441, -1017.9253035871751] V=[50.526540503692551, 167.50774574574771, -0.0015525435741062415] U=[0.95663945646028403, -0.29127067404789669, -0.0016749948263168335]
+  Parts (41):
+    SimPart 'probeStackLarge (Mainsail Tin Can Asparagus)-3081765285':
+      IsRoot=True ResourcePriority=-10 Mass=0.5 DryMass=0.5
+      Links: rocketNoseCone.v3-2058457420 batteryBankLarge-3464832802
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Resources: [id=1566956177 amount=30 maxAmount=30 density=0 free=True residual=0]
+    SimPart 'rocketNoseCone.v3-2058457420':
+      ResourcePriority=-10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: probeStackLarge (Mainsail Tin Can Asparagus)-3081765285
+      CrossFeedPartSet: rocketNoseCone.v3-2058457420
+    SimPart 'batteryBankLarge-3464832802':
+      ResourcePriority=-10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 asasmodule1-2-1568787730
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Resources: [id=1566956177 amount=4000 maxAmount=4000 density=0 free=True residual=0]
+    SimPart 'asasmodule1-2-1568787730':
+      ResourcePriority=-10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: batteryBankLarge-3464832802 largeSolarPanel-986793881 largeSolarPanel-2039583872 Rockomax64.BW-4249717286
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+    SimPart 'largeSolarPanel-986793881':
+      ResourcePriority=-10 Mass=0.30000001192092896 DryMass=0.30000001192092896
+      Links: asasmodule1-2-1568787730
+      SymmetryCounterParts: largeSolarPanel-2039583872
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+    SimPart 'largeSolarPanel-2039583872':
+      ResourcePriority=-10 Mass=0.30000001192092896 DryMass=0.30000001192092896
+      Links: asasmodule1-2-1568787730
+      SymmetryCounterParts: largeSolarPanel-986793881
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+    SimPart 'Rockomax64.BW-4249717286':
+      ResourcePriority=-10 Mass=4.0003351331959003 DryMass=4
+      Links: asasmodule1-2-1568787730 Rockomax64.BW-2897112194 radialDecoupler2-1342711734 radialDecoupler2-338597663 radialDecoupler2-2520312754 radialDecoupler2-853805331
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-2897112194':
+      ResourcePriority=-10 Mass=4.0003351331959003 DryMass=4
+      Links: Rockomax64.BW-4249717286 liquidEngineMainsail.v2-5718290 strutConnector-4035748844 strutConnector-4236372261 strutConnector-664156568 strutConnector-3338245800
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-5718290':
+      InverseStage=3 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-2897112194
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671721860040637, -0.29101534458903305, -0.0016915164887905121]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'strutConnector-4035748844':
+      ResourcePriority=-10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2897112194
+      SymmetryCounterParts: strutConnector-4236372261
+      CrossFeedPartSet: strutConnector-4035748844
+    SimPart 'strutConnector-4236372261':
+      ResourcePriority=-10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2897112194
+      SymmetryCounterParts: strutConnector-4035748844
+      CrossFeedPartSet: strutConnector-4236372261
+    SimPart 'strutConnector-664156568':
+      ResourcePriority=-10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2897112194
+      SymmetryCounterParts: strutConnector-3338245800
+      CrossFeedPartSet: strutConnector-664156568
+    SimPart 'strutConnector-3338245800':
+      ResourcePriority=-10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2897112194
+      SymmetryCounterParts: strutConnector-664156568
+      CrossFeedPartSet: strutConnector-3338245800
+    SimPart 'radialDecoupler2-1342711734':
+      InverseStage=0 DecoupledInStage=0 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-4249717286 Rockomax64.BW-3436666188
+      SymmetryCounterParts: radialDecoupler2-338597663
+      CrossFeedPartSet: radialDecoupler2-1342711734
+      Modules (1):
+        SimModuleDecouple: Staged=True AttachedPart=Rockomax64.BW-4249717286
+    SimPart 'Rockomax64.BW-3436666188':
+      InverseStage=0 DecoupledInStage=0 Mass=4 DryMass=4
+      Links: radialDecoupler2-1342711734 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 launchClamp1-1834761637
+      SymmetryCounterParts: Rockomax64.BW-2903300948
+      CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-1491235714':
+      InverseStage=0 DecoupledInStage=0 Mass=4 DryMass=4
+      Links: Rockomax64.BW-3436666188 liquidEngineMainsail.v2-1387000143 fuelLine-2825487276
+      SymmetryCounterParts: Rockomax64.BW-2835658593
+      CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-1387000143':
+      InverseStage=3 DecoupledInStage=0 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-1491235714
+      SymmetryCounterParts: liquidEngineMainsail.v2-904352827
+      CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671721860040637, -0.29101534458903305, -0.0016915164887905121]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'fuelLine-2825487276':
+      InverseStage=0 DecoupledInStage=0 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-1491235714
+      SymmetryCounterParts: fuelLine-2565553530
+      CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+    SimPart 'rocketNoseCone.v3-2107898442':
+      InverseStage=0 DecoupledInStage=0 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: Rockomax64.BW-3436666188
+      SymmetryCounterParts: rocketNoseCone.v3-1781570610
+      CrossFeedPartSet: rocketNoseCone.v3-2107898442
+    SimPart 'launchClamp1-1834761637':
+      InverseStage=2 DecoupledInStage=2 IsLaunchClamp=True ResourcePriority=20 DryMass=0.10000000149011612
+      Links: Rockomax64.BW-3436666188
+      SymmetryCounterParts: launchClamp1-2147514922
+      CrossFeedPartSet: launchClamp1-1834761637
+      Modules (1):
+        SimLaunchClamp:
+    SimPart 'radialDecoupler2-338597663':
+      InverseStage=0 DecoupledInStage=0 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-4249717286 Rockomax64.BW-2903300948
+      SymmetryCounterParts: radialDecoupler2-1342711734
+      CrossFeedPartSet: radialDecoupler2-338597663
+      Modules (1):
+        SimModuleDecouple: Staged=True AttachedPart=Rockomax64.BW-4249717286
+    SimPart 'Rockomax64.BW-2903300948':
+      InverseStage=0 DecoupledInStage=0 Mass=4 DryMass=4
+      Links: radialDecoupler2-338597663 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 launchClamp1-2147514922
+      SymmetryCounterParts: Rockomax64.BW-3436666188
+      CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-2835658593':
+      InverseStage=0 DecoupledInStage=0 Mass=4 DryMass=4
+      Links: Rockomax64.BW-2903300948 liquidEngineMainsail.v2-904352827 fuelLine-2565553530
+      SymmetryCounterParts: Rockomax64.BW-1491235714
+      CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-904352827':
+      InverseStage=3 DecoupledInStage=0 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-2835658593
+      SymmetryCounterParts: liquidEngineMainsail.v2-1387000143
+      CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671727538909312, -0.29101532648492462, -0.0016915581654757261]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'fuelLine-2565553530':
+      InverseStage=0 DecoupledInStage=0 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2835658593
+      SymmetryCounterParts: fuelLine-2825487276
+      CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+    SimPart 'rocketNoseCone.v3-1781570610':
+      InverseStage=0 DecoupledInStage=0 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: Rockomax64.BW-2903300948
+      SymmetryCounterParts: rocketNoseCone.v3-2107898442
+      CrossFeedPartSet: rocketNoseCone.v3-1781570610
+    SimPart 'launchClamp1-2147514922':
+      InverseStage=2 DecoupledInStage=2 IsLaunchClamp=True ResourcePriority=20 DryMass=0.10000000149011612
+      Links: Rockomax64.BW-2903300948
+      SymmetryCounterParts: launchClamp1-1834761637
+      CrossFeedPartSet: launchClamp1-2147514922
+      Modules (1):
+        SimLaunchClamp:
+    SimPart 'radialDecoupler2-2520312754':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-4249717286 Rockomax64.BW-1315697509
+      SymmetryCounterParts: radialDecoupler2-853805331
+      CrossFeedPartSet: radialDecoupler2-2520312754
+      Modules (1):
+        SimModuleDecouple: Staged=True AttachedPart=Rockomax64.BW-4249717286
+    SimPart 'Rockomax64.BW-1315697509':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=4 DryMass=4
+      Links: radialDecoupler2-2520312754 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 launchClamp1-2660487534
+      SymmetryCounterParts: Rockomax64.BW-655026546
+      CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-3207382999':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=4 DryMass=4
+      Links: Rockomax64.BW-1315697509 liquidEngineMainsail.v2-4182532358 fuelLine-1428295298
+      SymmetryCounterParts: Rockomax64.BW-3074366510
+      CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-4182532358':
+      InverseStage=3 DecoupledInStage=1 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-3207382999
+      SymmetryCounterParts: liquidEngineMainsail.v2-2186939596
+      CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671731407367133, -0.29101525159212938, -0.0016914904117584229]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'fuelLine-1428295298':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-3207382999
+      SymmetryCounterParts: fuelLine-3687288196
+      CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+    SimPart 'rocketNoseCone.v3-3121470973':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: Rockomax64.BW-1315697509
+      SymmetryCounterParts: rocketNoseCone.v3-2745859995
+      CrossFeedPartSet: rocketNoseCone.v3-3121470973
+    SimPart 'launchClamp1-2660487534':
+      InverseStage=2 DecoupledInStage=2 IsLaunchClamp=True ResourcePriority=20 DryMass=0.10000000149011612
+      Links: Rockomax64.BW-1315697509
+      SymmetryCounterParts: launchClamp1-1622391962
+      CrossFeedPartSet: launchClamp1-2660487534
+      Modules (1):
+        SimLaunchClamp:
+    SimPart 'radialDecoupler2-853805331':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-4249717286 Rockomax64.BW-655026546
+      SymmetryCounterParts: radialDecoupler2-2520312754
+      CrossFeedPartSet: radialDecoupler2-853805331
+      Modules (1):
+        SimModuleDecouple: Staged=True AttachedPart=Rockomax64.BW-4249717286
+    SimPart 'Rockomax64.BW-655026546':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=4 DryMass=4
+      Links: radialDecoupler2-853805331 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 launchClamp1-1622391962
+      SymmetryCounterParts: Rockomax64.BW-1315697509
+      CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-3074366510':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=4 DryMass=4
+      Links: Rockomax64.BW-655026546 liquidEngineMainsail.v2-2186939596 fuelLine-3687288196
+      SymmetryCounterParts: Rockomax64.BW-3207382999
+      CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-2186939596':
+      InverseStage=3 DecoupledInStage=1 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-3074366510
+      SymmetryCounterParts: liquidEngineMainsail.v2-4182532358
+      CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671729349320156, -0.29101538327361126, -0.0016914308071136475]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'fuelLine-3687288196':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-3074366510
+      SymmetryCounterParts: fuelLine-1428295298
+      CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+    SimPart 'rocketNoseCone.v3-2745859995':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: Rockomax64.BW-655026546
+      SymmetryCounterParts: rocketNoseCone.v3-3121470973
+      CrossFeedPartSet: rocketNoseCone.v3-2745859995
+    SimPart 'launchClamp1-1622391962':
+      InverseStage=2 DecoupledInStage=2 IsLaunchClamp=True ResourcePriority=20 DryMass=0.10000000149011612
+      Links: Rockomax64.BW-655026546
+      SymmetryCounterParts: launchClamp1-2660487534
+      CrossFeedPartSet: launchClamp1-1622391962
+      Modules (1):
+        SimLaunchClamp:
+[LOG 17:32:52.915] [MechJeb2] SimVessel:
+  CurrentStage=4 HasLaunchClamp=True MainThrottle=1
+  ATMPressure=0.98713962263014587 ATMDensity=0.91531713469371678 MachNumber=0.00044246903148607955
+  T=105815.06413073862 R=[574370.49008105334, -173787.77917027441, -1017.9253035871751] V=[50.526540503692551, 167.50774574574771, -0.0015525435741062415] U=[0.95663945646028403, -0.29127067404789669, -0.0016749948263168335]
+  Parts (41):
+    SimPart 'probeStackLarge (Mainsail Tin Can Asparagus)-3081765285':
+      IsRoot=True ResourcePriority=-10 Mass=0.5 DryMass=0.5
+      Links: rocketNoseCone.v3-2058457420 batteryBankLarge-3464832802
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Resources: [id=1566956177 amount=30 maxAmount=30 density=0 free=True residual=0]
+    SimPart 'rocketNoseCone.v3-2058457420':
+      ResourcePriority=-10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: probeStackLarge (Mainsail Tin Can Asparagus)-3081765285
+      CrossFeedPartSet: rocketNoseCone.v3-2058457420
+    SimPart 'batteryBankLarge-3464832802':
+      ResourcePriority=-10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 asasmodule1-2-1568787730
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Resources: [id=1566956177 amount=4000 maxAmount=4000 density=0 free=True residual=0]
+    SimPart 'asasmodule1-2-1568787730':
+      ResourcePriority=-10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: batteryBankLarge-3464832802 largeSolarPanel-986793881 largeSolarPanel-2039583872 Rockomax64.BW-4249717286
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+    SimPart 'largeSolarPanel-986793881':
+      ResourcePriority=-10 Mass=0.30000001192092896 DryMass=0.30000001192092896
+      Links: asasmodule1-2-1568787730
+      SymmetryCounterParts: largeSolarPanel-2039583872
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+    SimPart 'largeSolarPanel-2039583872':
+      ResourcePriority=-10 Mass=0.30000001192092896 DryMass=0.30000001192092896
+      Links: asasmodule1-2-1568787730
+      SymmetryCounterParts: largeSolarPanel-986793881
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+    SimPart 'Rockomax64.BW-4249717286':
+      ResourcePriority=-10 Mass=4.0003351331959003 DryMass=4
+      Links: asasmodule1-2-1568787730 Rockomax64.BW-2897112194 radialDecoupler2-1342711734 radialDecoupler2-338597663 radialDecoupler2-2520312754 radialDecoupler2-853805331
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-2897112194':
+      ResourcePriority=-10 Mass=4.0003351331959003 DryMass=4
+      Links: Rockomax64.BW-4249717286 liquidEngineMainsail.v2-5718290 strutConnector-4035748844 strutConnector-4236372261 strutConnector-664156568 strutConnector-3338245800
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-5718290':
+      InverseStage=3 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-2897112194
+      CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671721860040637, -0.29101534458903305, -0.0016915164887905121]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'strutConnector-4035748844':
+      ResourcePriority=-10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2897112194
+      SymmetryCounterParts: strutConnector-4236372261
+      CrossFeedPartSet: strutConnector-4035748844
+    SimPart 'strutConnector-4236372261':
+      ResourcePriority=-10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2897112194
+      SymmetryCounterParts: strutConnector-4035748844
+      CrossFeedPartSet: strutConnector-4236372261
+    SimPart 'strutConnector-664156568':
+      ResourcePriority=-10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2897112194
+      SymmetryCounterParts: strutConnector-3338245800
+      CrossFeedPartSet: strutConnector-664156568
+    SimPart 'strutConnector-3338245800':
+      ResourcePriority=-10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2897112194
+      SymmetryCounterParts: strutConnector-664156568
+      CrossFeedPartSet: strutConnector-3338245800
+    SimPart 'radialDecoupler2-1342711734':
+      InverseStage=0 DecoupledInStage=0 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-4249717286 Rockomax64.BW-3436666188
+      SymmetryCounterParts: radialDecoupler2-338597663
+      CrossFeedPartSet: radialDecoupler2-1342711734
+      Modules (1):
+        SimModuleDecouple: Staged=True AttachedPart=Rockomax64.BW-4249717286
+    SimPart 'Rockomax64.BW-3436666188':
+      InverseStage=0 DecoupledInStage=0 Mass=4 DryMass=4
+      Links: radialDecoupler2-1342711734 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 launchClamp1-1834761637
+      SymmetryCounterParts: Rockomax64.BW-2903300948
+      CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-1491235714':
+      InverseStage=0 DecoupledInStage=0 Mass=4 DryMass=4
+      Links: Rockomax64.BW-3436666188 liquidEngineMainsail.v2-1387000143 fuelLine-2825487276
+      SymmetryCounterParts: Rockomax64.BW-2835658593
+      CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-1387000143':
+      InverseStage=3 DecoupledInStage=0 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-1491235714
+      SymmetryCounterParts: liquidEngineMainsail.v2-904352827
+      CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671721860040637, -0.29101534458903305, -0.0016915164887905121]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'fuelLine-2825487276':
+      InverseStage=0 DecoupledInStage=0 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-1491235714
+      SymmetryCounterParts: fuelLine-2565553530
+      CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+    SimPart 'rocketNoseCone.v3-2107898442':
+      InverseStage=0 DecoupledInStage=0 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: Rockomax64.BW-3436666188
+      SymmetryCounterParts: rocketNoseCone.v3-1781570610
+      CrossFeedPartSet: rocketNoseCone.v3-2107898442
+    SimPart 'launchClamp1-1834761637':
+      InverseStage=2 DecoupledInStage=2 IsLaunchClamp=True ResourcePriority=20 DryMass=0.10000000149011612
+      Links: Rockomax64.BW-3436666188
+      SymmetryCounterParts: launchClamp1-2147514922
+      CrossFeedPartSet: launchClamp1-1834761637
+      Modules (1):
+        SimLaunchClamp:
+    SimPart 'radialDecoupler2-338597663':
+      InverseStage=0 DecoupledInStage=0 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-4249717286 Rockomax64.BW-2903300948
+      SymmetryCounterParts: radialDecoupler2-1342711734
+      CrossFeedPartSet: radialDecoupler2-338597663
+      Modules (1):
+        SimModuleDecouple: Staged=True AttachedPart=Rockomax64.BW-4249717286
+    SimPart 'Rockomax64.BW-2903300948':
+      InverseStage=0 DecoupledInStage=0 Mass=4 DryMass=4
+      Links: radialDecoupler2-338597663 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 launchClamp1-2147514922
+      SymmetryCounterParts: Rockomax64.BW-3436666188
+      CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-2835658593':
+      InverseStage=0 DecoupledInStage=0 Mass=4 DryMass=4
+      Links: Rockomax64.BW-2903300948 liquidEngineMainsail.v2-904352827 fuelLine-2565553530
+      SymmetryCounterParts: Rockomax64.BW-1491235714
+      CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-904352827':
+      InverseStage=3 DecoupledInStage=0 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-2835658593
+      SymmetryCounterParts: liquidEngineMainsail.v2-1387000143
+      CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671727538909312, -0.29101532648492462, -0.0016915581654757261]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'fuelLine-2565553530':
+      InverseStage=0 DecoupledInStage=0 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-2835658593
+      SymmetryCounterParts: fuelLine-2825487276
+      CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+    SimPart 'rocketNoseCone.v3-1781570610':
+      InverseStage=0 DecoupledInStage=0 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: Rockomax64.BW-2903300948
+      SymmetryCounterParts: rocketNoseCone.v3-2107898442
+      CrossFeedPartSet: rocketNoseCone.v3-1781570610
+    SimPart 'launchClamp1-2147514922':
+      InverseStage=2 DecoupledInStage=2 IsLaunchClamp=True ResourcePriority=20 DryMass=0.10000000149011612
+      Links: Rockomax64.BW-2903300948
+      SymmetryCounterParts: launchClamp1-1834761637
+      CrossFeedPartSet: launchClamp1-2147514922
+      Modules (1):
+        SimLaunchClamp:
+    SimPart 'radialDecoupler2-2520312754':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-4249717286 Rockomax64.BW-1315697509
+      SymmetryCounterParts: radialDecoupler2-853805331
+      CrossFeedPartSet: radialDecoupler2-2520312754
+      Modules (1):
+        SimModuleDecouple: Staged=True AttachedPart=Rockomax64.BW-4249717286
+    SimPart 'Rockomax64.BW-1315697509':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=4 DryMass=4
+      Links: radialDecoupler2-2520312754 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 launchClamp1-2660487534
+      SymmetryCounterParts: Rockomax64.BW-655026546
+      CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-3207382999':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=4 DryMass=4
+      Links: Rockomax64.BW-1315697509 liquidEngineMainsail.v2-4182532358 fuelLine-1428295298
+      SymmetryCounterParts: Rockomax64.BW-3074366510
+      CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-4182532358':
+      InverseStage=3 DecoupledInStage=1 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-3207382999
+      SymmetryCounterParts: liquidEngineMainsail.v2-2186939596
+      CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671731407367133, -0.29101525159212938, -0.0016914904117584229]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'fuelLine-1428295298':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-3207382999
+      SymmetryCounterParts: fuelLine-3687288196
+      CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
+    SimPart 'rocketNoseCone.v3-3121470973':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: Rockomax64.BW-1315697509
+      SymmetryCounterParts: rocketNoseCone.v3-2745859995
+      CrossFeedPartSet: rocketNoseCone.v3-3121470973
+    SimPart 'launchClamp1-2660487534':
+      InverseStage=2 DecoupledInStage=2 IsLaunchClamp=True ResourcePriority=20 DryMass=0.10000000149011612
+      Links: Rockomax64.BW-1315697509
+      SymmetryCounterParts: launchClamp1-1622391962
+      CrossFeedPartSet: launchClamp1-2660487534
+      Modules (1):
+        SimLaunchClamp:
+    SimPart 'radialDecoupler2-853805331':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-4249717286 Rockomax64.BW-655026546
+      SymmetryCounterParts: radialDecoupler2-2520312754
+      CrossFeedPartSet: radialDecoupler2-853805331
+      Modules (1):
+        SimModuleDecouple: Staged=True AttachedPart=Rockomax64.BW-4249717286
+    SimPart 'Rockomax64.BW-655026546':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=4 DryMass=4
+      Links: radialDecoupler2-853805331 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 launchClamp1-1622391962
+      SymmetryCounterParts: Rockomax64.BW-1315697509
+      CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'Rockomax64.BW-3074366510':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=4 DryMass=4
+      Links: Rockomax64.BW-655026546 liquidEngineMainsail.v2-2186939596 fuelLine-3687288196
+      SymmetryCounterParts: Rockomax64.BW-3207382999
+      CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Resources: [id=-1483389306 amount=2880 maxAmount=2880 density=0.004999999888241291 free=False residual=0] [id=-1154601244 amount=3520 maxAmount=3520 density=0.004999999888241291 free=False residual=0]
+    SimPart 'liquidEngineMainsail.v2-2186939596':
+      InverseStage=3 DecoupledInStage=1 IsEngine=True ResourcePriority=30 Mass=6 DryMass=6
+      Links: Rockomax64.BW-3074366510
+      SymmetryCounterParts: liquidEngineMainsail.v2-4182532358
+      CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+      Modules (1):
+        SimModuleEngines: IsEnabled=True
+          IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
+          MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
+          ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
+          Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
+          AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
+          ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          ThrustTransformMultipliers: 1
+          ThrustDirectionVectors: [0.95671729349320156, -0.29101538327361126, -0.0016914308071136475]
+          Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
+    SimPart 'fuelLine-3687288196':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.05000000074505806 DryMass=0.05000000074505806
+      Links: Rockomax64.BW-3074366510
+      SymmetryCounterParts: fuelLine-1428295298
+      CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
+    SimPart 'rocketNoseCone.v3-2745859995':
+      InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.20000000298023224 DryMass=0.20000000298023224
+      Links: Rockomax64.BW-655026546
+      SymmetryCounterParts: rocketNoseCone.v3-3121470973
+      CrossFeedPartSet: rocketNoseCone.v3-2745859995
+    SimPart 'launchClamp1-1622391962':
+      InverseStage=2 DecoupledInStage=2 IsLaunchClamp=True ResourcePriority=20 DryMass=0.10000000149011612
+      Links: Rockomax64.BW-655026546
+      SymmetryCounterParts: launchClamp1-2660487534
+      CrossFeedPartSet: launchClamp1-1622391962
+      Modules (1):
+        SimLaunchClamp:
