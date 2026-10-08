@@ -28,6 +28,10 @@ namespace MechJebLib.FuelFlowSimulation
             // form an algorithm to pick which side of which decoupler was considered the "root".
             SimPart rootPart = FindRootPart(v.Parts);
 
+            // int.MinValue marks parts which the recursion has not visited yet
+            foreach (SimPart p in v.Parts)
+                p.DecoupledInStage = int.MinValue;
+
             CalculateDecoupledInStageRecursively(v, rootPart, null, -1);
         }
 

@@ -4,6 +4,7 @@
  */
 
 using MechJebLib.Utils;
+using static System.FormattableString;
 
 namespace MechJebLib.Interpolants
 {
@@ -37,5 +38,7 @@ namespace MechJebLib.Interpolants
         public override double Evaluate(double t) => _y;
 
         public override void Dispose() { _pool.Release(this); }
+
+        public override string ToString() => Invariant($"[ConstantDoubleNode leftT={LeftT:G17} rightT={RightT:G17} y={_y:G17}]");
     }
 }

@@ -145,7 +145,7 @@ jobs:
           dotnet test MechJebLibTest/MechJebLibTest.csproj
           --configuration Release
           --no-build
-          --filter "FullyQualifiedName!~MainSailTinCan"
+          --filter "FullyQualifiedName!~PSGTests.AscentTests.KerbinTests.MainSailTinCan"
 
       - name: Package
         run: |

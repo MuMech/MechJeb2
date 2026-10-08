@@ -83,6 +83,29 @@ namespace MechJebLib.FuelFlowSimulation
             U = u;
         }
 
+        // Indexes the engines and RCS by the stage they activate in and the stage they are dropped in, this must be
+        // called after the DecouplingAnalyzer has set the DecoupledInStage of the parts.
+        public void UpdateEngineSet()
+        {
+            foreach (SimPart part in Parts)
+            {
+                foreach (SimPartModule m in part.Modules)
+                {
+                    if (m is SimModuleEngines e)
+                    {
+                        EnginesActivatedInStage[part.InverseStage].Add(e);
+                        EnginesDroppedInStage[part.DecoupledInStage].Add(e);
+                    }
+
+                    if (m is SimModuleRCS r)
+                    {
+                        RCSActivatedInStage[part.InverseStage].Add(r);
+                        RCSDroppedInStage[part.DecoupledInStage].Add(r);
+                    }
+                }
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateMass()
         {
@@ -295,9 +318,10 @@ namespace MechJebLib.FuelFlowSimulation
         {
             var sb = new StringBuilder();
             sb.AppendLine("SimVessel:");
-            sb.AppendLine(Invariant($"  CurrentStage={CurrentStage} HasLaunchClamp={HasLaunchClamp} MainThrottle={MainThrottle}"));
-            sb.AppendLine(Invariant($"  ATMPressure={ATMPressure} ATMDensity={ATMDensity} MachNumber={MachNumber}"));
-            sb.AppendLine(Invariant($"  T={T} R={R} V={V} U={U}"));
+            // the doubles are G17 (and floats G9) throughout the dumps so the values round-trip into test fixtures
+            sb.AppendLine(Invariant($"  CurrentStage={CurrentStage} HasLaunchClamp={HasLaunchClamp} MainThrottle={MainThrottle:G17}"));
+            sb.AppendLine(Invariant($"  ATMPressure={ATMPressure:G17} ATMDensity={ATMDensity:G17} MachNumber={MachNumber:G17}"));
+            sb.AppendLine(Invariant($"  T={T:G17} R={R} V={V} U={U}"));
             sb.AppendLine(Invariant($"  Parts ({Parts.Count}):"));
             foreach (SimPart part in Parts)
                 sb.AppendLine(part.ToString().Indent(4));

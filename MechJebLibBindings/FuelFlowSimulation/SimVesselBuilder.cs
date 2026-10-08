@@ -68,20 +68,6 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 _manager = manager;
             }
 
-            internal void UpdateEngineSet()
-            {
-                foreach (SimPart part in _vessel.Parts)
-                {
-                    foreach (SimPartModule m in part.Modules)
-                    {
-                        if (m is SimModuleEngines e)
-                            _vessel.EnginesDroppedInStage[part.DecoupledInStage].Add(e);
-                        if (m is SimModuleRCS r)
-                            _vessel.RCSDroppedInStage[part.DecoupledInStage].Add(r);
-                    }
-                }
-            }
-
             internal void UpdateLinks()
             {
                 foreach (Part kspPart in _kspVessel.Parts)
@@ -158,7 +144,6 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 part.IsRoot = kspPart.parent is null;
                 part.ModulesStagedMass = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.STAGED);
                 part.ModulesUnstagedMass = GetModuleMass(kspPart, kspPart.prefabMass, ModifierStagingSituation.UNSTAGED);
-                part.DecoupledInStage = int.MinValue;
 
                 HandleCrewMass(part, kspPart);
 
@@ -266,8 +251,6 @@ namespace MechJebLibBindings.FuelFlowSimulation
                     engine.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
                         PartResourceLibrary.Instance.GetDefinition(p.id).density));
 
-                _vessel.EnginesActivatedInStage[kspEngine.part.inverseStage].Add(engine);
-
                 part.IsThrottleLocked = kspEngine.throttleLocked;
                 part.IsEngine = true;
 
@@ -305,8 +288,6 @@ namespace MechJebLibBindings.FuelFlowSimulation
                 foreach (Propellant p in kspModuleRCS.propellants)
                     rcs.Propellants.Add(new SimPropellant(p.id, p.ignoreForIsp, p.ratio, (SimFlowMode)p.GetFlowMode(),
                         PartResourceLibrary.Instance.GetDefinition(p.id).density));
-
-                _vessel.RCSActivatedInStage[kspModuleRCS.part.inverseStage].Add(rcs);
 
                 return rcs;
             }

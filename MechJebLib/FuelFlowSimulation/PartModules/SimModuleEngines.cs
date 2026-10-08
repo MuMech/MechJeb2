@@ -397,14 +397,15 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             sb.AppendLine(ModuleLine("SimModuleEngines", CommonFieldList()));
             sb.AppendLine(Invariant(
                 $"  IsOperational={IsOperational} IsEnabled={IsEnabled} IsUnrestartableDeadEngine={IsUnrestartableDeadEngine} NoPropellants={NoPropellants}"));
-            sb.AppendLine(Invariant($"  MaxFuelFlow={MaxFuelFlow} MinFuelFlow={MinFuelFlow} MaxThrust={MaxThrust} MinThrust={MinThrust} G={G}"));
+            // the floats are G9 and the doubles G17 so the values round-trip into test fixtures
+            sb.AppendLine(Invariant($"  MaxFuelFlow={MaxFuelFlow:G9} MinFuelFlow={MinFuelFlow:G9} MaxThrust={MaxThrust:G9} MinThrust={MinThrust:G9} G={G:G9}"));
             sb.AppendLine(Invariant(
-                $"  ThrottleLocked={ThrottleLocked} ThrottleLimiter={ThrottleLimiter} MultIsp={MultIsp} MultFlow={MultFlow} FlowMultiplier={FlowMultiplier}"));
-            sb.AppendLine(Invariant($"  Clamp={Clamp} FlowMultCap={FlowMultCap} FlowMultCapSharpness={FlowMultCapSharpness}"));
+                $"  ThrottleLocked={ThrottleLocked} ThrottleLimiter={ThrottleLimiter:G9} MultIsp={MultIsp:G9} MultFlow={MultFlow:G17} FlowMultiplier={FlowMultiplier:G17}"));
+            sb.AppendLine(Invariant($"  Clamp={Clamp:G9} FlowMultCap={FlowMultCap:G9} FlowMultCapSharpness={FlowMultCapSharpness:G9}"));
             sb.AppendLine(Invariant(
                 $"  AtmChangeFlow={AtmChangeFlow} UseAtmCurve={UseAtmCurve} UseAtmCurveIsp={UseAtmCurveIsp} UseThrottleIspCurve={UseThrottleIspCurve} UseThrustCurve={UseThrustCurve} UseVelCurve={UseVelCurve} UseVelCurveIsp={UseVelCurveIsp}"));
             sb.AppendLine(Invariant(
-                $"  ModuleResiduals={ModuleResiduals} ModuleSpoolupTime={ModuleSpoolupTime} AutoCutoff={AutoCutoff} IsModuleEnginesRf={IsModuleEnginesRf} Ullage={Ullage}"));
+                $"  ModuleResiduals={ModuleResiduals:G17} ModuleSpoolupTime={ModuleSpoolupTime:G17} AutoCutoff={AutoCutoff} IsModuleEnginesRf={IsModuleEnginesRf} Ullage={Ullage}"));
 
             void AppendCurve(string name, DoubleInterpolant curve)
             {
@@ -424,7 +425,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
             sb.Append("  ThrustTransformMultipliers:");
             foreach (double m in ThrustTransformMultipliers)
-                sb.Append(Invariant($" {m}"));
+                sb.Append(Invariant($" {m:G17}"));
             sb.AppendLine();
 
             sb.Append("  ThrustDirectionVectors:");
@@ -435,7 +436,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             sb.Append("  Propellants:");
             foreach (SimPropellant p in Propellants)
                 sb.Append(Invariant(
-                    $" [id={p.id} ignoreForIsp={p.ignoreForIsp} ratio={p.ratio} flowMode={p.FlowMode} density={p.density}]"));
+                    $" [id={p.id} ignoreForIsp={p.ignoreForIsp} ratio={p.ratio:G17} flowMode={p.FlowMode} density={p.density:G17}]"));
             return sb.ToString();
         }
     }
