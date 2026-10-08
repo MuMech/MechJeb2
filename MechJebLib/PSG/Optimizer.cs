@@ -515,6 +515,10 @@ namespace MechJebLib.PSG
             catch (OperationCanceledException)
             {
             }
+            catch (alglib.alglibexception) when (TimeoutToken.IsCancellationRequested)
+            {
+                // ALGLIB rewraps the OperationCanceledException thrown from our callback as a "non-ALGLIB exception"
+            }
             catch (alglib.alglibexception e)
             {
                 // alglibexception never passes its message to the base constructor, so Message is useless

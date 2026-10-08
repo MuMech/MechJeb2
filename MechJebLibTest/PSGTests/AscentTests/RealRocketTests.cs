@@ -194,5 +194,64 @@ namespace MechJebLibTest.PSGTests.AscentTests
             // (e.g. 0.088 vs 6.271 rad), so it can't be tolerance-checked here. See SCvx TODO above.
             // nuf.ShouldEqual(Deg2Rad(5.0640956966565094), 1e-2);
         }
+
+        // An in-game RO Falcon 9 to GTO with a coast during the upper stage (burn/coast/burn with mass continuity)
+        // and a Kepler3 target (free LAN and argp), taken from the AscentBuilder debug log.
+        // With argp free the coast collapses to zero and the split between the two burns becomes a null direction, so
+        // the SQP crawls: PHASE 1 runs to Maxits (~113 s in Release) and PHASE 6 takes ~118 s, right at the 120 s timeout,
+        // and Debug builds time out. Setting argp (Kepler5) with a ~1300 s max coast converges in ~80 s.
+        [Fact(Skip = "free-argp coast-during is degenerate, the SQP crawls to the optimizer timeout")]
+        public void Falcon9ToGeoSynchronous()
+        {
+            var r0 = new V3(3325422.7282581064, -4497376.8210520744, 3050620.0222054715);
+            var v0 = new V3(327.95389603474052, 242.49365454876852, -5.9322331954145923E-07);
+            var u0 = new V3(0.52189787527420084, -0.70594155964731686, 0.47882068157196045);
+            const double T0 = 671815.788102704;
+            const double MU = 398600435436096;
+            const double R_BODY = 6371000;
+            const double PER_T = 6551000;
+            const double APR_T = 42157000;
+            const double INC_T = 0.499303792410538;
+
+            const double FIRST_STAGE_M0 = 557281.970160182;
+            const double FIRST_STAGE_MF = 146457.332957014;
+            const double FIRST_THRUST = 8227079.36469365;
+            const double FIRST_ISP = 311.002015512881;
+            const double FIRST_BT = (FIRST_STAGE_M0 - FIRST_STAGE_MF) / (FIRST_THRUST / (FIRST_ISP * G0));
+
+            Ascent ascent = Ascent.Builder()
+               .Initial(r0, v0, u0, T0, MU, R_BODY)
+               .SetTarget(PER_T, APR_T, PER_T, INC_T, 3.7873644768277, 3.14159265358979, 0, false, false, false)
+               .AerodynamicConstants(0.5, 10.7, 1.2494765593625, 2000, 0, 7566.61914736748, new V3(0, 0, 7.2921151467069236E-05))
+               .AddStage(FIRST_STAGE_M0, FIRST_STAGE_MF, FIRST_THRUST, FIRST_ISP, 3, 3, allowShutdown: false,
+                    ispCurrent: 288.80801494309, minThrottle: 0.361002936935094)
+               .AddStage(120917.292904749, 14247.8429972215, 934119.886237161, 348.000851803864, 1, 1,
+                    ispCurrent: 228.646930097207, minThrottle: 0.385389461457581)
+               .AddCoast(120917.292904749, 14247.8429972215, 0, 300, 1, 1, massContinuity: true)
+               .AddStage(120917.292904749, 14247.8429972215, 934119.886237161, 348.000851803864, 1, 1, massContinuity: true,
+                    ispCurrent: 228.646930097207, minThrottle: 0.385389461457581)
+               .Build();
+
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+
+            psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.R(T0).ShouldEqual(r0, 1e-9);
+            solution.V(T0).ShouldEqual(v0, 1e-9);
+            solution.M(T0).ShouldEqual(FIRST_STAGE_M0, 1e-9);
+
+            solution.Tgo(T0, 0).ShouldEqual(FIRST_BT, 1e-3);
+
+            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+
+            (double smaf, double eccf, double incf, _, _, _, _) = Astro.KeplerianFromStateVectors(MU, rf, vf);
+
+            Astro.PeriapsisFromKeplerian(smaf, eccf).ShouldEqual(PER_T, 1e-5);
+            Astro.ApoapsisFromKeplerian(smaf, eccf).ShouldEqual(APR_T, 1e-5);
+            incf.ShouldEqual(INC_T, 1e-5);
+        }
     }
 }
