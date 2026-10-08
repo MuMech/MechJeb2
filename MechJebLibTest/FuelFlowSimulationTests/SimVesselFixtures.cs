@@ -7,6 +7,7 @@ using System.Linq;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using static MechJebLibTest.FuelFlowSimulationTests.PartFixtures;
+using static MechJebLibTest.FuelFlowSimulationTests.RP1PartFixtures;
 
 namespace MechJebLibTest.FuelFlowSimulationTests
 {
@@ -291,6 +292,124 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         }
 
         private static SimPart[] Concat(params SimPart[][] sets) => sets.SelectMany(s => s).ToArray();
+
+        /// <summary>
+        ///     An RP-1 Falcon 9 Block 5 with a lead ballast payload under a procedural fairing, sitting in eight launch clamps on
+        ///     the pad.  The nine Merlin 1Ds are in stage 4 and the launch clamps in stage 3.  Stage 2 drops the first stage at
+        ///     the interstage and lights the Merlin 1D Vacuum, whose ullage is settled by four cold gas RCS thrusters.  Stage 1
+        ///     jettisons the payload fairing and stage 0 separates the payload.  This is
+        ///     MechJebLibTest/Craft/RP-1/My Falcon 9 Block 5.craft, as captured in Captures/MyFalcon9Block5.out.
+        /// </summary>
+        public static SimVessel MyFalcon9Block5(bool kscPad = false)
+        {
+            SimVessel v = NewVessel(5);
+            v.SetInitial(671824.00810271199,
+                new V3(3328117.6811200185, -4495382.4039072869, 3050619.8108357675),
+                new V3(327.80846173363119, 242.69017320559482, -1.1649856299288815E-07),
+                new V3(0.52232058711411489, -0.70562870200873251, 0.47882080078125));
+
+            SimPart payload     = ROTServiceModule(v, 716676487, -0.91552984714508057, 659.92299999999966);
+            SimPart avionics2   = ProceduralAvionics(v, 3578329919, -1, -0.70491535891778767, 111778, 150);
+            SimPart fairingBase = KzResizableFairingBase(v, 711105664, 0, 0.53969687223434448, avionics2);
+            SimPart tank2       = ROTGenericTankSeparate(v, 2593943298, 0, 1.9433658123016357, 38750.520237705852, 61199.234562294143);
+            SimPart mvac = ROEMerlin1DV(v, 248665222, 2,
+                new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522));
+            SimPart interstage = KzFlatAdapter(v, 4238809487, 2, 0.42880785465240479, mvac);
+            SimPart avionics1  = ProceduralAvionics(v, 1573872723, 2, -0.36856828560121357, 268317, 600);
+            SimPart tank1 = ROTGenericTankSeparate(v, 1975695187, 2, 11.127128601074219, 149242.99723951373, 235701.53739390321);
+            SimPart thrustPlate = KzThrustPlate(v, 3628547826, 2, 0.74751102924346924);
+
+            SimPart[] merlins =
+            {
+                ROEMerlin1D(v, 3766919695, 4, new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522)),
+                ROEMerlin1D(v, 1520557324, 4, new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522)),
+                ROEMerlin1D(v, 2691955204, 4, new V3(0.52153769716744469, -0.70620778159085063, 0.47882071137428284)),
+                ROEMerlin1D(v, 75275086, 4, new V3(0.52153757701778169, -0.70620769345164847, 0.47882065176963806)),
+                ROEMerlin1D(v, 4036330361, 4, new V3(0.5215374568681187, -0.7062076053124462, 0.47882062196731567)),
+                ROEMerlin1D(v, 3933714968, 4, new V3(0.52153730304121071, -0.70620771423636086, 0.47882068157196045)),
+                ROEMerlin1D(v, 2052249669, 4, new V3(0.52153741712213852, -0.70620767964739362, 0.47882068157196045)),
+                ROEMerlin1D(v, 4132307635, 4, new V3(0.52153757701778169, -0.70620769345164847, 0.47882065176963806)),
+                ROEMerlin1D(v, 957131212, 4, new V3(0.52153736008167462, -0.70620769694187724, 0.47882059216499329))
+            };
+
+            SimPart[] clamps =
+            {
+                RP1LaunchClamp1(v, 1950391702, 3), RP1LaunchClamp1(v, 536336776, 3), RP1LaunchClamp1(v, 3329569423, 3),
+                RP1LaunchClamp1(v, 3966630377, 3), RP1LaunchClamp1(v, 3977908051, 3), RP1LaunchClamp1(v, 219405182, 3),
+                RP1LaunchClamp1(v, 3483319384, 3), RP1LaunchClamp1(v, 26648143, 3)
+            };
+
+            SimPart[] interstageFairing =
+            {
+                KzProcFairingSide1(v, 1110556197, 2, 0.44426935911178589), KzProcFairingSide1(v, 84964491, 2, 0.44426935911178589),
+                KzProcFairingSide1(v, 3892549061, 2, 0.44426935911178589), KzProcFairingSide1(v, 613648638, 2, 0.44426935911178589)
+            };
+
+            SimPart[] nitrogenTanks =
+            {
+                RORFTankIntegral(v, 1519049209, 0, -0.99626743793487549, 44323.939999999995),
+                RORFTankIntegral(v, 1893542743, 0, -0.99626743793487549, 44323.939999999995),
+                RORFTankIntegral(v, 1556299446, 0, -0.98235255479812622, 44323.939999999995),
+                RORFTankIntegral(v, 2210098343, 0, -0.99626743793487549, 44323.939999999995)
+            };
+
+            SimPart[] rcs =
+            {
+                TE219F9CGT(v, 1552971870, 2), TE219F9CGT(v, 3144618445, 2), TE219F9CGT(v, 2229477872, 2), TE219F9CGT(v, 2659758618, 2)
+            };
+
+            SimPart[] payloadFairing =
+            {
+                KzProcFairingSide1(v, 288594212, 1, 0.82329875230789185), KzProcFairingSide1(v, 3427567844, 1, 0.82329875230789185)
+            };
+
+            MakeRoot(payload, "My Falcon 9 Block 5");
+
+            Link(payload, avionics2);
+            Link(avionics2, fairingBase);
+            Link(fairingBase, tank2);
+            Link(tank2, mvac);
+            Link(mvac, interstage);
+            Link(interstage, avionics1);
+            Link(avionics1, tank1);
+            Link(tank1, thrustPlate);
+            foreach (SimPart p in merlins)
+                Link(thrustPlate, p);
+            foreach (SimPart p in clamps)
+                Link(tank1, p);
+            foreach (SimPart p in interstageFairing)
+                Link(interstage, p);
+            foreach (SimPart p in nitrogenTanks)
+                Link(tank2, p);
+            foreach (SimPart p in rcs)
+                Link(tank2, p);
+            foreach (SimPart p in payloadFairing)
+                Link(fairingBase, p);
+
+            CrossFeedSet(new[] { avionics2, payload, fairingBase }, payload, avionics2);
+            CrossFeedSet(Concat(rcs.Reverse().ToArray(), nitrogenTanks.Reverse().ToArray(), new[] { mvac, tank2, interstage, fairingBase }),
+                Concat(new[] { tank2, mvac }, nitrogenTanks, rcs));
+            CrossFeedSet(new[] { thrustPlate, tank1, avionics1, interstage }, avionics1, tank1, thrustPlate);
+            // each Merlin's set has the parts it is fed through, but not the other Merlins
+            foreach (SimPart p in merlins)
+                CrossFeedSet(new[] { p, thrustPlate, tank1, avionics1, interstage }, p);
+            // the decouplers, launch clamps and fairings each have a set of their own
+            foreach (SimPart p in Concat(new[] { fairingBase, interstage }, clamps, interstageFairing, payloadFairing))
+                CrossFeed(p);
+
+            // the center Merlin has no symmetry counterparts, the other eight are in a ring around it
+            Symmetry(merlins.Skip(1).ToArray());
+            Symmetry(clamps);
+            Symmetry(interstageFairing);
+            Symmetry(nitrogenTanks);
+            Symmetry(rcs);
+            Symmetry(payloadFairing);
+
+            if (kscPad)
+                v.SetConditions(0.95937552309112017, 0.98644521069944324, 1.5314373912311351E-09);
+
+            return Finish(v);
+        }
 
         /// <summary>
         ///     Borrows a SimVessel and sets every field that the KSP SimVesselManager would set, since pooled SimVessels
