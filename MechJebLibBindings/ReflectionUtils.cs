@@ -30,14 +30,14 @@ namespace MechJebLibBindings
 
         public static bool IsAssemblyLoaded(string assemblyName)
         {
-            foreach (AssemblyLoader.LoadedAssembly assembly in AssemblyLoader.loadedAssemblies)
+            foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
             {
                 try
                 {
-                    if (assembly.assembly.GetName().Name == assemblyName)
+                    if (loaded.assembly.GetName().Name == assemblyName)
                         return true;
                 }
-                catch (InvalidOperationException)
+                catch (Exception)
                 {
                     // ignore busted assemblies
                 }
@@ -51,8 +51,17 @@ namespace MechJebLibBindings
             string assemblyName = "";
 
             foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
-                if (loaded.assembly.GetName().Name == assemblyString)
-                    assemblyName = loaded.assembly.FullName;
+            {
+                try
+                {
+                    if (loaded.assembly.GetName().Name == assemblyString)
+                        assemblyName = loaded.assembly.FullName;
+                }
+                catch (Exception)
+                {
+                    // ignore busted assemblies
+                }
+            }
 
             if (assemblyName == "")
                 Debug.Log("[MechJeb] ReflectionUtils: could not find assembly " + assemblyString);
@@ -71,7 +80,16 @@ namespace MechJebLibBindings
 
             public ClassContext Class(string className)
             {
-                var type = Type.GetType(className + ", " + _assemblyName);
+                Type? type = null;
+
+                try
+                {
+                    type = Type.GetType(className + ", " + _assemblyName);
+                }
+                catch (Exception e)
+                {
+                    Debug.Log($"[MechJeb] ReflectionUtils: exception looking up type {className}, {_assemblyName}: {e.Message}");
+                }
 
                 if (type == null)
                     Debug.Log("[MechJeb] ReflectionUtils: could not find type  " + className + ", " + _assemblyName);
@@ -98,8 +116,15 @@ namespace MechJebLibBindings
             {
                 MethodInfo? method = null;
 
-                if (_type != null)
-                    method = args == null ? _type.GetMethod(methodName, flags) : _type.GetMethod(methodName, flags, null, args, null);
+                try
+                {
+                    if (_type != null)
+                        method = args == null ? _type.GetMethod(methodName, flags) : _type.GetMethod(methodName, flags, null, args, null);
+                }
+                catch (Exception e)
+                {
+                    Debug.Log($"[MechJeb] ReflectionUtils: exception looking up method {methodName} in {_className}, {_assemblyName}: {e.Message}");
+                }
 
                 if (method == null)
                     Debug.Log($"[MechJeb] ReflectionUtils: could not find method {methodName} in {_className}, {_assemblyName}");
@@ -110,8 +135,16 @@ namespace MechJebLibBindings
             public FieldContext Field(string fieldName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
             {
                 FieldInfo? field = null;
-                if (_type != null)
-                    field = _type.GetField(fieldName, flags);
+
+                try
+                {
+                    if (_type != null)
+                        field = _type.GetField(fieldName, flags);
+                }
+                catch (Exception e)
+                {
+                    Debug.Log($"[MechJeb] ReflectionUtils: exception looking up field {fieldName} in {_className}, {_assemblyName}: {e.Message}");
+                }
 
                 if (field == null)
                     Debug.Log($"[MechJeb] ReflectionUtils: could not find field {fieldName} in {_className}, {_assemblyName}");
@@ -170,7 +203,7 @@ namespace MechJebLibBindings
                     {
                         _delegate = (T)Delegate.CreateDelegate(typeof(T), method);
                     }
-                    catch (ArgumentException)
+                    catch (Exception)
                     {
                         // _delegate is null
                     }
