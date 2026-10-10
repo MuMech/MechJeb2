@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -63,8 +63,8 @@ namespace MechJebLib.Utils
             _task = Task.Factory.StartNew(
                 _runWrapped,
                 o,
-                _cts.Token,
-                TaskCreationOptions.DenyChildAttach | TaskCreationOptions.LongRunning,
+                _cts.Token,                         // LongRunning can be re-enabled when provisions are made to keep the thread alive
+                TaskCreationOptions.DenyChildAttach, // | TaskCreationOptions.LongRunning,
                 TaskScheduler.Default
             );
             return true;
