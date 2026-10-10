@@ -22,7 +22,7 @@ namespace MechJebLibBindings
         {
             IsLoadedProceduralFairing = IsAssemblyLoaded("ProceduralFairings");
             IsLoadedRealFuels = IsAssemblyLoaded("RealFuels");
-            IsLoadedPrincipia = IsAssemblyLoaded("principia.ksp_plugin_adapter");
+            IsLoadedPrincipia = IsAssemblyLoaded("ksp_plugin_adapter");
             IsLoadedFAR = IsAssemblyLoaded("FerramAerospaceResearch");
             IsLoadedRealismOverhaul = IsAssemblyLoaded("RealismOverhaul");
             IsLoadedRP0 = IsAssemblyLoaded("RP0");
@@ -31,17 +31,8 @@ namespace MechJebLibBindings
         public static bool IsAssemblyLoaded(string assemblyName)
         {
             foreach (AssemblyLoader.LoadedAssembly loaded in AssemblyLoader.loadedAssemblies)
-            {
-                try
-                {
-                    if (loaded.assembly.GetName().Name == assemblyName)
-                        return true;
-                }
-                catch (Exception)
-                {
-                    // ignore busted assemblies
-                }
-            }
+                if (string.Equals(loaded.name, assemblyName, StringComparison.OrdinalIgnoreCase))
+                    return true;
 
             return false;
         }
@@ -54,7 +45,7 @@ namespace MechJebLibBindings
             {
                 try
                 {
-                    if (loaded.assembly.GetName().Name == assemblyString)
+                    if (string.Equals(loaded.name, assemblyString, StringComparison.OrdinalIgnoreCase))
                         assemblyName = loaded.assembly.FullName;
                 }
                 catch (Exception)
