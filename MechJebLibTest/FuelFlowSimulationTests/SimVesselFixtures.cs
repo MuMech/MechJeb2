@@ -278,15 +278,168 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return Finish(v);
         }
 
+        /// <summary>
+        ///     MainsailTinCanAsparagus with the fuel lines removed and crossfeed enabled on the radial decouplers, so the core,
+        ///     the decouplers and every booster share one crossfeed set and each booster's Mainsail can draw on the tanks
+        ///     inboard of it after its own tanks are empty.  This is built by hand from the captured asparagus rather than
+        ///     captured itself.
+        /// </summary>
+        public static SimVessel MainsailTinCanCrossfeedAsparagus()
+        {
+            SimVessel v = NewVessel(4);
+            v.SetInitial(105815.06413073862,
+                new V3(574370.49008105334, -173787.77917027441, -1017.9253035871751),
+                new V3(50.526540503692551, 167.50774574574771, -0.0015525435741062415),
+                new V3(0.95663945646028403, -0.29127067404789669, -0.0016749948263168335));
+
+            var dir = new V3(0.95671721860040637, -0.29101534458903305, -0.0016915164887905121);
+
+            SimPart probe      = ProbeStackLarge(v, 3081765285);
+            SimPart noseCone   = RocketNoseConeV3(v, 2058457420);
+            SimPart battery    = BatteryBankLarge(v, 3464832802);
+            SimPart sas        = AsasModule1_2(v, 1568787730);
+            SimPart panel1     = LargeSolarPanel(v, 986793881);
+            SimPart panel2     = LargeSolarPanel(v, 2039583872);
+            SimPart coreTank1  = Rockomax64BW(v, 4249717286);
+            SimPart coreTank2  = Rockomax64BW(v, 2897112194);
+            SimPart coreEngine = LiquidEngineMainsailV2(v, 5718290, 3, dir);
+            SimPart strut1     = StrutConnector(v, 4035748844);
+            SimPart strut2     = StrutConnector(v, 4236372261);
+            SimPart strut3     = StrutConnector(v, 664156568);
+            SimPart strut4     = StrutConnector(v, 3338245800);
+
+            SimPart inADecoupler = RadialDecoupler2(v, 1342711734, 0, coreTank1);
+            SimPart inATank1     = Rockomax64BW(v, 3436666188, 0);
+            SimPart inATank2     = Rockomax64BW(v, 1491235714, 0);
+            SimPart inAEngine    = LiquidEngineMainsailV2(v, 1387000143, 3, dir);
+            SimPart inANoseCone  = RocketNoseConeV3(v, 2107898442, 0);
+            SimPart inAClamp     = LaunchClamp1(v, 1834761637, 2);
+
+            SimPart inBDecoupler = RadialDecoupler2(v, 338597663, 0, coreTank1);
+            SimPart inBTank1     = Rockomax64BW(v, 2903300948, 0);
+            SimPart inBTank2     = Rockomax64BW(v, 2835658593, 0);
+            SimPart inBEngine    = LiquidEngineMainsailV2(v, 904352827, 3, dir);
+            SimPart inBNoseCone  = RocketNoseConeV3(v, 1781570610, 0);
+            SimPart inBClamp     = LaunchClamp1(v, 2147514922, 2);
+
+            SimPart outADecoupler = RadialDecoupler2(v, 2520312754, 1, coreTank1);
+            SimPart outATank1     = Rockomax64BW(v, 1315697509, 1);
+            SimPart outATank2     = Rockomax64BW(v, 3207382999, 1);
+            SimPart outAEngine    = LiquidEngineMainsailV2(v, 4182532358, 3, dir);
+            SimPart outANoseCone  = RocketNoseConeV3(v, 3121470973, 1);
+            SimPart outAClamp     = LaunchClamp1(v, 2660487534, 2);
+
+            SimPart outBDecoupler = RadialDecoupler2(v, 853805331, 1, coreTank1);
+            SimPart outBTank1     = Rockomax64BW(v, 655026546, 1);
+            SimPart outBTank2     = Rockomax64BW(v, 3074366510, 1);
+            SimPart outBEngine    = LiquidEngineMainsailV2(v, 2186939596, 3, dir);
+            SimPart outBNoseCone  = RocketNoseConeV3(v, 2745859995, 1);
+            SimPart outBClamp     = LaunchClamp1(v, 1622391962, 2);
+
+            MakeRoot(probe, "Mainsail Tin Can Crossfeed Asparagus");
+
+            Link(probe, noseCone);
+            Link(probe, battery);
+            Link(battery, sas);
+            Link(sas, panel1);
+            Link(sas, panel2);
+            Link(sas, coreTank1);
+            Link(coreTank1, coreTank2);
+            Link(coreTank2, coreEngine);
+            Link(coreTank2, strut1);
+            Link(coreTank2, strut2);
+            Link(coreTank2, strut3);
+            Link(coreTank2, strut4);
+            LinkBooster(coreTank1, inADecoupler, inATank1, inATank2, inAEngine, null, inANoseCone, inAClamp);
+            LinkBooster(coreTank1, inBDecoupler, inBTank1, inBTank2, inBEngine, null, inBNoseCone, inBClamp);
+            LinkBooster(coreTank1, outADecoupler, outATank1, outATank2, outAEngine, null, outANoseCone, outAClamp);
+            LinkBooster(coreTank1, outBDecoupler, outBTank1, outBTank2, outBEngine, null, outBNoseCone, outBClamp);
+
+            SimPart[] all =
+            {
+                panel2, panel1, coreEngine, coreTank2, coreTank1, sas, battery, probe, noseCone,
+                inADecoupler, inATank1, inATank2, inAEngine, inANoseCone,
+                inBDecoupler, inBTank1, inBTank2, inBEngine, inBNoseCone,
+                outADecoupler, outATank1, outATank2, outAEngine, outANoseCone,
+                outBDecoupler, outBTank1, outBTank2, outBEngine, outBNoseCone
+            };
+            CrossFeedSet(all, all);
+
+            // the struts and launch clamps each have a set of their own
+            foreach (SimPart p in new[] { strut1, strut2, strut3, strut4, inAClamp, inBClamp, outAClamp, outBClamp })
+                CrossFeed(p);
+
+            Symmetry(panel1, panel2);
+            Symmetry(strut1, strut2);
+            Symmetry(strut3, strut4);
+            Symmetry(inADecoupler, inBDecoupler);
+            Symmetry(inATank1, inBTank1);
+            Symmetry(inATank2, inBTank2);
+            Symmetry(inAEngine, inBEngine);
+            Symmetry(inANoseCone, inBNoseCone);
+            Symmetry(inAClamp, inBClamp);
+            Symmetry(outADecoupler, outBDecoupler);
+            Symmetry(outATank1, outBTank1);
+            Symmetry(outATank2, outBTank2);
+            Symmetry(outAEngine, outBEngine);
+            Symmetry(outANoseCone, outBNoseCone);
+            Symmetry(outAClamp, outBClamp);
+
+            return Finish(v);
+        }
+
+        /// <summary>
+        ///     A probe core on two Rockomax64 tanks and a Mainsail, with two more Mainsails on crossfeeding radial decouplers
+        ///     and no tanks of their own (like the Atlas booster engines).  All three Mainsails are in stage 1 and the
+        ///     radial decouplers in stage 0.  This is built by hand rather than captured.
+        /// </summary>
+        public static SimVessel MainsailTinCanEnginePods()
+        {
+            SimVessel v = NewVessel(2);
+            v.SetInitial(105865.0041307488,
+                new V3(576839.96092781203, -165406.15003102238, -1017.9253790531925),
+                new V3(48.231074597909611, 168.18874204753263, -1.392905019470582E-05),
+                new V3(0.9610545499785107, -0.27635343056128087, -0.0017315298318862915));
+
+            var dir = new V3(0.95751801278484683, -0.28836976344549975, -0.0016915356973186135);
+
+            SimPart probe      = ProbeStackLarge(v, 1001);
+            SimPart coreTank1  = Rockomax64BW(v, 1002);
+            SimPart coreTank2  = Rockomax64BW(v, 1003);
+            SimPart coreEngine = LiquidEngineMainsailV2(v, 1004, 1, dir);
+            SimPart decouplerA = RadialDecoupler2(v, 1005, 0, coreTank1);
+            SimPart engineA    = LiquidEngineMainsailV2(v, 1006, 1, dir);
+            SimPart decouplerB = RadialDecoupler2(v, 1007, 0, coreTank1);
+            SimPart engineB    = LiquidEngineMainsailV2(v, 1008, 1, dir);
+
+            MakeRoot(probe);
+
+            Link(probe, coreTank1);
+            Link(coreTank1, coreTank2);
+            Link(coreTank2, coreEngine);
+            Link(coreTank1, decouplerA);
+            Link(decouplerA, engineA);
+            Link(coreTank1, decouplerB);
+            Link(decouplerB, engineB);
+
+            CrossFeed(coreEngine, coreTank2, coreTank1, probe, decouplerA, engineA, decouplerB, engineB);
+
+            Symmetry(decouplerA, decouplerB);
+            Symmetry(engineA, engineB);
+
+            return Finish(v);
+        }
+
         // links a radial booster below the core part its decoupler is attached to, in the order KSP lists the booster's parts
-        private static void LinkBooster(SimPart core, SimPart decoupler, SimPart tank1, SimPart tank2, SimPart engine, SimPart fuelLine,
+        private static void LinkBooster(SimPart core, SimPart decoupler, SimPart tank1, SimPart tank2, SimPart engine, SimPart? fuelLine,
             SimPart noseCone, SimPart clamp)
         {
             Link(core, decoupler);
             Link(decoupler, tank1);
             Link(tank1, tank2);
             Link(tank2, engine);
-            Link(tank2, fuelLine);
+            if (fuelLine != null)
+                Link(tank2, fuelLine);
             Link(tank1, noseCone);
             Link(tank1, clamp);
         }
