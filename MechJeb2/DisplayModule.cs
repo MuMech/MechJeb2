@@ -8,8 +8,8 @@ namespace MuMech
 {
     public class DisplayModule : ComputerModule
     {
-        // this means Hidden in the drop-down menu because the tech isn't unlocked.
-        public bool Hidden;
+        // false for sub-windows which are opened from another window instead of from the menu / toolbar
+        public virtual bool ShowInMenu => true;
 
         public Rect WindowPos
         {
@@ -209,9 +209,10 @@ namespace MuMech
 
             if (global != null)
             {
-                if (HighLogic.LoadedSceneIsEditor)
+                // the global settings are shared across saves, so a TechLocked window must not record itself as closed
+                if (HighLogic.LoadedSceneIsEditor && !TechLocked)
                     EnabledEditor = Enabled;
-                if (HighLogic.LoadedSceneIsFlight)
+                if (HighLogic.LoadedSceneIsFlight && !TechLocked)
                     EnabledFlight = Enabled;
 
                 global.AddValue("enabledEditor", EnabledEditor);
@@ -285,25 +286,6 @@ namespace MuMech
             }
 
             return active;
-        }
-
-        public override void UnlockCheck()
-        {
-            if (UnlockChecked) return;
-
-            bool prevEn = Enabled;
-            Enabled = true;
-            base.UnlockCheck();
-            if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())
-            {
-                Hidden = !Enabled;
-                if (Hidden)
-                {
-                    prevEn = false;
-                }
-            }
-
-            Enabled = prevEn;
         }
 
         public virtual string GetName() => "Display Module";

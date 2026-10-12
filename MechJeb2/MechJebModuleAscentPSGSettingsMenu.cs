@@ -8,10 +8,9 @@ namespace MuMech
 {
     public class MechJebModuleAscentPSGSettingsMenu : DisplayModule
     {
-        public MechJebModuleAscentPSGSettingsMenu(MechJebCore core) : base(core)
-        {
-            Hidden = true;
-        }
+        public MechJebModuleAscentPSGSettingsMenu(MechJebCore core) : base(core) { }
+
+        public override bool ShowInMenu => false;
 
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
 

@@ -9,10 +9,9 @@ namespace MuMech
     public class MechJebModuleAscentClassicPathMenu : DisplayModule
     {
         public MechJebModuleAscentClassicPathMenu(MechJebCore core)
-            : base(core)
-        {
-            Hidden = true;
-        }
+            : base(core) { }
+
+        public override bool ShowInMenu => false;
 
         private MechJebModuleAscentSettings _ascentSettings;
         private MechJebModuleAscentClassicAutopilot _path;

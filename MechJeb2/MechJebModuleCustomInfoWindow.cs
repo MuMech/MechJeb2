@@ -119,14 +119,11 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            if (!IsOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.YellowOnHover))
+            if (!IsOverlay && Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } editor &&
+                GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.YellowOnHover))
             {
-                MechJebModuleCustomWindowEditor editor = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-                if (editor != null)
-                {
-                    editor.Enabled = true;
-                    editor.editedWindow = this;
-                }
+                editor.Enabled = true;
+                editor.editedWindow = this;
             }
 
             if (!IsOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.YellowOnHover))
