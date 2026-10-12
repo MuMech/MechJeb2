@@ -87,29 +87,31 @@ namespace MuMech
         }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public bool IsOverlayConfig;
+        // ReSharper disable once InconsistentNaming
+        public bool isOverlay;
 
         public bool IsOverlay
         {
-            get => IsOverlayConfig;
+            get => isOverlay;
             set
             {
-                if (IsOverlayConfig == value) return;
-                IsOverlayConfig = value;
+                if (isOverlay == value) return;
+                isOverlay = value;
                 Dirty = true;
             }
         }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public bool LockedConfig;
+        // ReSharper disable once InconsistentNaming
+        public bool windowLocked;
 
-        public bool Locked
+        public bool WindowLocked
         {
-            get => LockedConfig;
+            get => windowLocked;
             set
             {
-                if (LockedConfig == value) return;
-                LockedConfig = value;
+                if (windowLocked == value) return;
+                windowLocked = value;
                 Dirty = true;
             }
         }
@@ -135,7 +137,7 @@ namespace MuMech
 
         protected void WindowGUI(int windowID, bool draggable)
         {
-            if (!IsOverlayConfig && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
+            if (!isOverlay && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
             {
                 Enabled = false;
             }
@@ -145,8 +147,8 @@ namespace MuMech
             //                locked = !locked;
             //            }
 
-            bool allowDrag = !LockedConfig;
-            if (!LockedConfig && !IsOverlayConfig && Core.Settings.UseTitlebarDragging)
+            bool allowDrag = !windowLocked;
+            if (!windowLocked && !isOverlay && Core.Settings.UseTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.Scale;
                 float y = Mouse.screenPos.y / GuiUtils.Scale;
@@ -175,7 +177,7 @@ namespace MuMech
             // Cache the array to not create one each frame
             _windowOptions ??= WindowOptions();
 
-            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, IsOverlayConfig ? "" : GetName(), _windowOptions);
+            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), _windowOptions);
             GuiUtils.ShowTooltip(_id);
 
             //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping

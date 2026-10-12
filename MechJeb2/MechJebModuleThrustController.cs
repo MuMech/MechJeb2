@@ -251,7 +251,7 @@ namespace MuMech
             // auto-RCS-ullaging run every tick as an always-on safety service, even when no autopilot
             // is driving the throttle (e.g. the player is flying manually). Active throttle control is
             // gated separately on there being a *second* user (see Users.Count > 1 in Drive()). If the
-            // R&D tech is missing (unlockTechs in the part cfgs) the module is Locked and stays disabled.
+            // R&D tech is missing (unlockTechs in the part cfgs) the module is TechLocked and stays disabled.
             Users.Add(this);
 
             base.OnStart(state);
