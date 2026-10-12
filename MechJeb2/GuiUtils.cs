@@ -21,7 +21,12 @@ namespace MuMech
     //(multiplier * parsed value). If the parsing fails, the parsed flag is set to false and
     //the stored value is unchanged. There are implicit conversions between EditableDouble and
     //double so that if you are not doing text input you can treat an EditableDouble like a double.
-    public class EditableDoubleMult : IEditable
+    //
+    //ValConfig (the multiplied value) is the source of truth. TextConfig is persisted as well, but after
+    //loading it is regenerated from ValConfig if it doesn't parse back to the same value, so changing the
+    //multiplier (or display format) of an existing field is safe without migrating old saves. Changing the
+    //units of the stored value itself is not, and needs a new config key.
+    public class EditableDoubleMult : IEditable, IPersistenceLoad
     {
         [UsedImplicitly, Persistent]
         public double ValConfig;
@@ -50,9 +55,17 @@ namespace MuMech
             {
                 TextConfig = value;
                 TextConfig = Regex.Replace(TextConfig, @"[^\d+-.]", ""); //throw away junk characters
-                Parsed = double.TryParse(TextConfig, out double parsedValue);
-                if (Parsed) ValConfig = parsedValue * _multiplier;
+                Parsed = TryParseText(TextConfig, out double parsedValue);
+                if (Parsed) ValConfig = parsedValue;
             }
+        }
+
+        // parses display text into the stored (multiplied) value
+        protected virtual bool TryParseText(string text, out double val)
+        {
+            bool parsed = double.TryParse(text, out val);
+            val *= _multiplier;
+            return parsed;
         }
 
         public EditableDoubleMult() : this(0) { }
@@ -62,6 +75,14 @@ namespace MuMech
             Val = val;
             _multiplier = multiplier;
             TextConfig = (val / multiplier).ToString();
+        }
+
+        // called by ConfigNode.LoadObjectFromConfig after loading, the persisted text may be stale if the multiplier changed
+        public void PersistenceLoad()
+        {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (!TryParseText(TextConfig, out double val) || val != ValConfig)
+                Val = ValConfig;
         }
 
         public static implicit operator double(EditableDoubleMult x) => x.Val;
@@ -107,20 +128,13 @@ namespace MuMech
             {
                 TextConfig = value;
                 TextConfig = Regex.Replace(TextConfig, @"[^\d+-.ydhms ,]", ""); //throw away junk characters
-
-                Parsed = double.TryParse(TextConfig, out double parsedValue);
-                switch (Parsed)
-                {
-                    case true:
-                        ValConfig = parsedValue;
-                        break;
-                    case false:
-                        Parsed = GuiUtils.TryParseDHMS(TextConfig, out parsedValue);
-                        if (Parsed) ValConfig = parsedValue;
-                        break;
-                }
+                Parsed = TryParseText(TextConfig, out double parsedValue);
+                if (Parsed) ValConfig = parsedValue;
             }
         }
+
+        protected override bool TryParseText(string text, out double val) =>
+            double.TryParse(text, out val) || GuiUtils.TryParseDHMS(text, out val);
 
         public static implicit operator EditableTime(double x) => new EditableTime(x);
 
