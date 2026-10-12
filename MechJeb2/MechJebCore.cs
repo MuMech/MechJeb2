@@ -883,6 +883,10 @@ namespace MuMech
                     RemoveComputerModule(win);
                 }
 
+                ConfigNode partLocal = _partSettings != null && _partSettings.HasNode("MechJebLocalSettings")
+                    ? _partSettings.GetNode("MechJebLocalSettings")
+                    : null;
+
                 foreach (ComputerModule module in GetComputerModules<ComputerModule>())
                 {
                     try
@@ -892,6 +896,15 @@ namespace MuMech
                         ConfigNode moduleType = type.HasNode(moduleTypeName) ? type.GetNode(moduleTypeName) : null;
                         ConfigNode moduleGlobal = global.HasNode(moduleTypeName) ? global.GetNode(moduleTypeName) : null;
                         module.OnLoad(moduleLocal, moduleType, moduleGlobal);
+
+                        // R&D gating always comes from the part cfg (and its MM patches), not the saved vessel/craft, so
+                        // gating changes (new gates, MechJebUnlocked) also apply to existing saves
+                        if (_partSettings != null)
+                        {
+                            ConfigNode partModuleLocal = partLocal != null && partLocal.HasNode(moduleTypeName) ? partLocal.GetNode(moduleTypeName) : null;
+                            module.unlockParts = partModuleLocal?.GetValue("unlockParts") ?? "";
+                            module.unlockTechs = partModuleLocal?.GetValue("unlockTechs") ?? "";
+                        }
                     }
                     catch (Exception e)
                     {

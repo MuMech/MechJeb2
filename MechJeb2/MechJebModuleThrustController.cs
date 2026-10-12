@@ -250,7 +250,8 @@ namespace MuMech
             // Permanent self-pin: keep this module always Enabled so its throttle limiters and
             // auto-RCS-ullaging run every tick as an always-on safety service, even when no autopilot
             // is driving the throttle (e.g. the player is flying manually). Active throttle control is
-            // gated separately on there being a *second* user (see Users.Count > 1 in Drive()).
+            // gated separately on there being a *second* user (see Users.Count > 1 in Drive()). If the
+            // R&D tech is missing (unlockTechs in the part cfgs) the module is Locked and stays disabled.
             Users.Add(this);
 
             base.OnStart(state);
@@ -349,9 +350,6 @@ namespace MuMech
             {
                 _userCommandingRotationSmoothed--;
             }
-
-            // These are tech-gates (is the window in the drop down?), not normal UI visibility of the window
-            if (Core.GetComputerModule<MechJebModuleThrustWindow>().Hidden && Core.GetComputerModule<MechJebModuleAscentMenu>().Hidden) { return; }
 
             if (Tmode != TMode.OFF && VesselState.ThrustAvailable > 0)
             {
@@ -583,6 +581,9 @@ namespace MuMech
         // limits before the next differential-throttle solve sees the new topology.
         public override void OnVesselWasModified(Vessel v) => DisableDifferentialThrottle();
 
+        // OnFixedUpdate stops running once we are disabled (e.g. tech-locked), so restore the limits now.
+        protected override void OnModuleDisabled() => DisableDifferentialThrottle();
+
         public override void OnDestroy()
         {
             DisableDifferentialThrottle();
@@ -795,11 +796,6 @@ namespace MuMech
 
         public override void OnUpdate()
         {
-            if (Core.GetComputerModule<MechJebModuleThrustWindow>().Hidden && Core.GetComputerModule<MechJebModuleAscentMenu>().Hidden)
-            {
-                return;
-            }
-
             if (_tmodeChanged)
             {
                 if (TransKillH && Tmode == TMode.OFF)
