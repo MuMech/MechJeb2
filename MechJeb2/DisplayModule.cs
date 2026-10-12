@@ -8,8 +8,8 @@ namespace MuMech
 {
     public class DisplayModule : ComputerModule
     {
-        // this means Hidden in the drop-down menu because the tech isn't unlocked.
-        public bool Hidden;
+        // false for sub-windows which are opened from another window instead of from the menu / toolbar
+        public virtual bool ShowInMenu => true;
 
         public Rect WindowPos
         {
@@ -87,29 +87,31 @@ namespace MuMech
         }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public bool IsOverlayConfig;
+        // ReSharper disable once InconsistentNaming
+        public bool isOverlay;
 
         public bool IsOverlay
         {
-            get => IsOverlayConfig;
+            get => isOverlay;
             set
             {
-                if (IsOverlayConfig == value) return;
-                IsOverlayConfig = value;
+                if (isOverlay == value) return;
+                isOverlay = value;
                 Dirty = true;
             }
         }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public bool LockedConfig;
+        // ReSharper disable once InconsistentNaming
+        public bool windowLocked;
 
-        public bool Locked
+        public bool WindowLocked
         {
-            get => LockedConfig;
+            get => windowLocked;
             set
             {
-                if (LockedConfig == value) return;
-                LockedConfig = value;
+                if (windowLocked == value) return;
+                windowLocked = value;
                 Dirty = true;
             }
         }
@@ -135,7 +137,7 @@ namespace MuMech
 
         protected void WindowGUI(int windowID, bool draggable)
         {
-            if (!IsOverlayConfig && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
+            if (!isOverlay && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
             {
                 Enabled = false;
             }
@@ -145,8 +147,8 @@ namespace MuMech
             //                locked = !locked;
             //            }
 
-            bool allowDrag = !LockedConfig;
-            if (!LockedConfig && !IsOverlayConfig && Core.Settings.UseTitlebarDragging)
+            bool allowDrag = !windowLocked;
+            if (!windowLocked && !isOverlay && Core.Settings.UseTitlebarDragging)
             {
                 float x = Mouse.screenPos.x / GuiUtils.Scale;
                 float y = Mouse.screenPos.y / GuiUtils.Scale;
@@ -175,7 +177,7 @@ namespace MuMech
             // Cache the array to not create one each frame
             _windowOptions ??= WindowOptions();
 
-            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, IsOverlayConfig ? "" : GetName(), _windowOptions);
+            WindowPos = GUILayout.Window(_id, WindowPos, ProfiledWindowGUI, isOverlay ? "" : GetName(), _windowOptions);
             GuiUtils.ShowTooltip(_id);
 
             //                var windows = core.GetComputerModules<DisplayModule>(); // on ice until there's a way to find which window is active, unless you like dragging other windows by snapping
@@ -207,9 +209,10 @@ namespace MuMech
 
             if (global != null)
             {
-                if (HighLogic.LoadedSceneIsEditor)
+                // the global settings are shared across saves, so a TechLocked window must not record itself as closed
+                if (HighLogic.LoadedSceneIsEditor && !TechLocked)
                     EnabledEditor = Enabled;
-                if (HighLogic.LoadedSceneIsFlight)
+                if (HighLogic.LoadedSceneIsFlight && !TechLocked)
                     EnabledFlight = Enabled;
 
                 global.AddValue("enabledEditor", EnabledEditor);
@@ -283,25 +286,6 @@ namespace MuMech
             }
 
             return active;
-        }
-
-        public override void UnlockCheck()
-        {
-            if (UnlockChecked) return;
-
-            bool prevEn = Enabled;
-            Enabled = true;
-            base.UnlockCheck();
-            if (unlockParts.Trim().Length > 0 || unlockTechs.Trim().Length > 0 || !IsSpaceCenterUpgradeUnlocked())
-            {
-                Hidden = !Enabled;
-                if (Hidden)
-                {
-                    prevEn = false;
-                }
-            }
-
-            Enabled = prevEn;
         }
 
         public virtual string GetName() => "Display Module";

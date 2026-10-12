@@ -119,14 +119,11 @@ namespace MuMech
 
             GUILayout.EndVertical();
 
-            if (!IsOverlay && GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.YellowOnHover))
+            if (!IsOverlay && Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } editor &&
+                GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.YellowOnHover))
             {
-                MechJebModuleCustomWindowEditor editor = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-                if (editor != null)
-                {
-                    editor.Enabled = true;
-                    editor.editedWindow = this;
-                }
+                editor.Enabled = true;
+                editor.editedWindow = this;
             }
 
             if (!IsOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.YellowOnHover))
@@ -297,6 +294,13 @@ namespace MuMech
                 var window = new MechJebModuleCustomInfoWindow(Core);
 
                 ConfigNode.LoadObjectFromConfig(window, windowNode);
+
+                // migrate the pre-rename keys, the old keys are dropped on the next save
+                // [ this should get deleted sometime after the 2.16 dev branch is released ]
+                if (windowNode.HasValue("IsOverlayConfig") && bool.TryParse(windowNode.GetValue("IsOverlayConfig"), out bool loadedOverlay))
+                    window.isOverlay = loadedOverlay;
+                if (windowNode.HasValue("LockedConfig") && bool.TryParse(windowNode.GetValue("LockedConfig"), out bool loadedLocked))
+                    window.windowLocked = loadedLocked;
 
                 window.UpdateRefreshRate();
 
@@ -576,7 +580,7 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 editedWindow.IsOverlay = GUILayout.Toggle(editedWindow.IsOverlay, Localizer.Format("#MechJeb_WindowEd_checkbox3")); //Overlay
-                editedWindow.Locked = GUILayout.Toggle(editedWindow.Locked, Localizer.Format("#MechJeb_WindowEd_checkbox4")); //Locked
+                editedWindow.WindowLocked = GUILayout.Toggle(editedWindow.WindowLocked, Localizer.Format("#MechJeb_WindowEd_checkbox4")); //Locked
                 editedWindow.IsCompact = GUILayout.Toggle(editedWindow.IsCompact, Localizer.Format("#MechJeb_WindowEd_checkbox5")); //Compact
                 GUILayout.EndHorizontal();
 

@@ -17,7 +17,6 @@ namespace MuMech
         {
             Priority = -1000;
             Enabled = true;
-            Hidden = true;
             ShowInFlight = true;
             ShowInEditor = true;
 
@@ -27,6 +26,8 @@ namespace MuMech
             if (featureButtons == null)
                 featureButtons = new Dictionary<Action, Button>();
         }
+
+        public override bool ShowInMenu => false;
 
         public enum WindowStat
         {
@@ -207,14 +208,14 @@ namespace MuMech
 
             List<DisplayModule> displayModules = Core.GetDisplayModules(DisplayOrder.instance);
             int i = 0;
-            int step = Mathf.CeilToInt((float)(displayModules.Count(d => !d.Hidden && d.ShowInCurrentScene) + 1) / columns);
+            int step = Mathf.CeilToInt((float)(displayModules.Count(d => d.ShowInMenu && !d.TechLocked && d.ShowInCurrentScene) + 1) / columns);
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
 
             foreach (DisplayModule module in displayModules)
             {
-                if (!module.Hidden && module.ShowInCurrentScene)
+                if (module.ShowInMenu && !module.TechLocked && module.ShowInCurrentScene)
                 {
                     if (i == step)
                     {
@@ -275,7 +276,7 @@ namespace MuMech
 
             SetupMainToolbarButton();
 
-            foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => !m.Hidden))
+            foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => m.ShowInMenu && !m.TechLocked))
             {
                 Button button;
                 if (!toolbarButtons.ContainsKey(module))
@@ -336,7 +337,7 @@ namespace MuMech
             if (featureButtons.Count == 0)
             {
                 MechJebModuleManeuverPlanner maneuverPlannerModule = Core.GetComputerModule<MechJebModuleManeuverPlanner>();
-                if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.Hidden)
+                if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.TechLocked)
                 {
                     CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", b =>
                     {

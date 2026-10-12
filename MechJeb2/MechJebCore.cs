@@ -167,7 +167,7 @@ namespace MuMech
 
             MechJebModuleSmartASS masterSmartASS = masterMechJeb.GetComputerModule<MechJebModuleSmartASS>();
 
-            if (masterSmartASS is { Hidden: false })
+            if (masterSmartASS is { TechLocked: false })
             {
                 masterSmartASS.mode = MechJebModuleSmartASS.Mode.ORBITAL;
                 masterSmartASS.target = smartassTarget;
@@ -191,7 +191,7 @@ namespace MuMech
 
             MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
-            if (moduleTranslatron is { Hidden: false })
+            if (moduleTranslatron is { TechLocked: false })
                 moduleTranslatron.PanicSwitch();
         }
 
@@ -219,7 +219,7 @@ namespace MuMech
             {
                 MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
-                if (moduleTranslatron is { Hidden: false })
+                if (moduleTranslatron is { TechLocked: false })
                 {
                     Thrust.TransKillH = !Thrust.TransKillH;
                 }
@@ -265,7 +265,7 @@ namespace MuMech
 
             MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
-            if (moduleTranslatron is { Hidden: false })
+            if (moduleTranslatron is { TechLocked: false })
             {
                 if (Thrust.Users.Count > 1 && !Thrust.Users.Contains(moduleTranslatron))
                     return;
@@ -290,7 +290,7 @@ namespace MuMech
 
             MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
-            if (moduleTranslatron is { Hidden: false })
+            if (moduleTranslatron is { TechLocked: false })
                 Thrust.TransSpdAct = (relative ? Thrust.TransSpdAct : 0) + speed;
             else
                 Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");

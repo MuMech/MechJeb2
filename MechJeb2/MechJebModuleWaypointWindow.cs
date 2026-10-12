@@ -316,10 +316,11 @@ namespace MuMech
 
         public MechJebModuleWaypointWindow(MechJebCore core) : base(core) { }
 
+        public override bool ShowInMenu => false;
+
         public override void OnStart(PartModule.StartState state)
         {
-            Hidden = true;
-            _ap = Core.GetComputerModule<MechJebModuleRoverController>();
+            _ap =Core.GetComputerModule<MechJebModuleRoverController>();
             if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
                 _renderer = MechJebRouteRenderer.AttachToMapView(Core);
@@ -1163,15 +1164,11 @@ namespace MuMech
 
         public MechJebModuleWaypointHelpWindow(MechJebCore core) : base(core) { }
 
+        public override bool ShowInMenu => false;
+
         public override string GetName() => Localizer.Format("#MechJeb_Waypointhelper_title"); // "Waypoint Help"
 
         public override string IconName() => "Waypoint Help";
-
-        public override void OnStart(PartModule.StartState state)
-        {
-            Hidden = true;
-            base.OnStart(state);
-        }
 
         protected override void WindowGUI(int windowID)
         {
