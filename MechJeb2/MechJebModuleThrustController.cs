@@ -764,7 +764,7 @@ namespace MuMech
         private bool ElectricEngineRunning()
         {
             IEnumerable<Part> activeEngines = Vessel.parts.Where(p => p.inverseStage >= Vessel.currentStage && p.IsEngine() && !p.IsSepratron());
-            IEnumerable<ModuleEngines> engineModules = activeEngines.Select(p => p.Modules.OfType<ModuleEngines>().First(e => e.isEnabled));
+            IEnumerable<ModuleEngines> engineModules = activeEngines.SelectMany(p => p.Modules.OfType<ModuleEngines>().Where(e => e.isEnabled));
 
             return engineModules.SelectMany(eng => eng.propellants).Any(p => p.id == PartResourceLibrary.ElectricityHashcode);
         }
