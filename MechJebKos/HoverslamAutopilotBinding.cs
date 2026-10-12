@@ -24,7 +24,7 @@ namespace MuMech.MechJebKos
             AddSuffix("ENABLED", new SetSuffix<BooleanValue>(() => Module.Enabled, value => Module.Enabled = value,
                 "Engage the hoverslam autopilot. May be enabled before a solution exists; it starts flying once one appears."));
             AddSuffix("STATE", new Suffix<StringValue>(() => Module.HoverslamState,
-                "Autopilot state: Disabled, Init, Align, Coast, Burn, Vertical, or Finished."));
+                "Autopilot state: Locked, Disabled, Init, Align, Coast, Burn, Vertical, or Finished. Locked means the required R&D tech or tracking station upgrade is missing."));
             AddSuffix("IGNITIONLEAD", new SetSuffix<ScalarValue>(() => Module.IgnitionLead.Val, value => Module.IgnitionLead.Val = value,
                 "Seconds before the computed ignition time to start the burn."));
             AddSuffix("TOUCHDOWNSPEED", new SetSuffix<ScalarValue>(() => Module.TouchdownSpeed.Val, value => Module.TouchdownSpeed.Val = value,

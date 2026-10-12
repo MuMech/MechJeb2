@@ -32,7 +32,10 @@ namespace MuMech
         public bool HoldUpright;
 
         [ValueInfoItem("#MechJeb_HoverslamState", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamState_tooltip")] //Hoverslam state
-        public string HoverslamState => !Enabled ? "Disabled" : _state.ToString();
+        public string HoverslamState => Locked ? "Locked" : !Enabled ? "Disabled" : _state.ToString();
+
+        // tech-gated (unlockTechs in the part cfgs) and gated on the tracking station the same as MechJebModuleLandingGuidance
+        protected override bool IsSpaceCenterUpgradeUnlocked() => Vessel.patchedConicsUnlocked();
 
         private const double DEFAULT_MIN_ON_TIME = 0.50;
 
