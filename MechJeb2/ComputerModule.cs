@@ -35,6 +35,9 @@ namespace MuMech
 
         public bool UnlockChecked;
 
+        // set by UnlockCheck when the R&D tech / parts / space center upgrades are missing, a locked module cannot be enabled
+        public bool Locked { get; private set; }
+
         public int CompareTo(ComputerModule other) => other == null ? 1 : Priority.CompareTo(other.Priority);
 
         private bool _enabled;
@@ -45,6 +48,7 @@ namespace MuMech
             set
             {
                 if (value == _enabled) return;
+                if (value && Locked) return;
 
                 Dirty = true;
                 _enabled = value;
@@ -238,6 +242,7 @@ namespace MuMech
             if (!unlock)
             {
                 Enabled = false;
+                Locked = true;
                 Core.someModuleAreLocked = true;
             }
         }
