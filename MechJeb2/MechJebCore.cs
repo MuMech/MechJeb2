@@ -808,6 +808,12 @@ namespace MuMech
                     _partSettings = _savedConfig[part.name];
                 }
 
+                // Part prefabs only need the stash above.  Instances are cloned without the prefab's computer
+                // modules and rebuild them in their own OnLoad/OnStart, so booting a whole MechJeb on every
+                // prefab during part compilation is wasted work that would be retained for the whole session.
+                if (HighLogic.LoadedScene == GameScenes.LOADING)
+                    return;
+
                 LoadComputerModules();
 
                 var global = new ConfigNode("MechJebGlobalSettings");
