@@ -33,8 +33,10 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMinAltitude = new EditableDoubleMult(50000, 1000);
 
+        // fraction of available thrust required before launch clamps are released.  Stored as a fraction (0.99 == 99%);
+        // the UI text box edits it as a percentage.
         [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableDouble ClampAutoStageThrustPct = 0.99;
+        public readonly EditableDoubleMult ClampAutoStageThrustPct = new EditableDoubleMult(0.99, 0.01);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMaxAerothermalFlux = new EditableDoubleMult(1135);
@@ -239,12 +241,11 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)] //Clamp Autostage Thrust
         private void ClampAutostageThrust()
         {
-            double prev = Core.Staging.ClampAutoStageThrustPct;
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel44, Core.Staging.ClampAutoStageThrustPct, "%",
-                50); //"Clamp AutoStage Thrust "
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel44, ClampAutoStageThrustPct, "%", 50); //"Clamp AutoStage Thrust "
+            double clamped = UtilMath.Clamp(ClampAutoStageThrustPct, 0, 1);
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (prev != Core.Staging.ClampAutoStageThrustPct)
-                Core.Staging.ClampAutoStageThrustPct.Val = UtilMath.Clamp(Core.Staging.ClampAutoStageThrustPct, 0, 100);
+            if (clamped != ClampAutoStageThrustPct)
+                ClampAutoStageThrustPct.Val = clamped;
         }
 
         //internal state:
