@@ -383,10 +383,11 @@ namespace MuMech
 
                 act = new Vector3d(s.pitch, s.roll, s.yaw);
 
-                // Feed the control torque to the differential throttle
+                // Feed the control torque to the differential throttle.  The halving must match the diff throttle torque that
+                // OnFixedUpdate() adds to the torque the controllers normalize act against.
                 if (Core.Thrust.DifferentialThrottleSuccess == MechJebModuleThrustController.DifferentialThrottleStatus.SUCCESS)
                     Core.Thrust.DifferentialThrottleDemandedTorque =
-                        -Vector3d.Scale(act, VesselState.TorqueDifferentialThrottle * Vessel.ctrlState.mainThrottle);
+                        -Vector3d.Scale(act, VesselState.TorqueDifferentialThrottle * Vessel.ctrlState.mainThrottle / 2.0);
             }
         }
 
