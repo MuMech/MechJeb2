@@ -87,6 +87,14 @@ namespace MuMech
          //Vertical phase altitude
         public readonly EditableDouble VerticalAltitude = new EditableDouble(100);
 
+        // TODO: push throttle limiters into simulation:  minthrottle, maxthrottle, maxaccel
+        // TODO: disable maxQ throttle limiter -- you want more throttle to reduce dynamic pressure on landing (sse issue #706)
+        //       (might be a fix in the thrustcontroller to not limit due to maxQ if we're burning to slow down, not speed up)
+        // TODO: look at the way diff throttle leaks into vacstats through thrustPercentage in SimVesselUpdater?  that seems kind of awful
+        //       (diff throttle should really just be handled by the user by increasing margins)
+        // TODO: should consider turning off the autostage limit for this autopilot, or having private values
+        //       (requires a big rethink of how staging and throttle settings interact with autopilots)
+        // TODO: hotstaging lead time integration?  (does hotstaging make any sense for landing?)
         // TODO: VerticalAuthority needs better integration with the prediction.
         // TODO: what does VerticalAuthority mean?  for stock it is just halfway between hover and max.  for a unthrottleable
         //       engine it should just be the same to give 50% duty cycle.  for a throttleable engine, it should probably be
