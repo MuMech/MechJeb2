@@ -28,6 +28,10 @@ namespace MechJebLib.PSG
                 cons += proxy.NumConstraints;
             }
 
+            for (int p = 0; p < phases.Count; p++)
+                if (phases.IsDuringCoast(p))
+                    cons += 1; // coast vanishing constraint
+
             cons += terminal.NumConstraints; // terminal constraints
 
             cons += 0;

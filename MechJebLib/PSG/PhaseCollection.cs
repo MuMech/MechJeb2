@@ -22,6 +22,10 @@ namespace MechJebLib.PSG
             return dup;
         }
 
+        // the coast in a burn-coast-burn (coast-during) sequence
+        public bool IsDuringCoast(int p) =>
+            p > 0 && this[p].Coast && this[p].MassContinuity && !this[p - 1].Coast && this[p - 1].AllowShutdown;
+
         public void SetControlContinuity()
         {
             this[0].ControlContinuity = false;

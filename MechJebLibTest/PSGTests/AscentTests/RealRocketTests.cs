@@ -16,6 +16,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
 {
     public class RealRocketTests
     {
+        // This is the classic test from Betts.
         [Fact]
         public void Delta3GeoSynchronous()
         {
@@ -72,12 +73,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Tgo(solution.T0, 0).ShouldEqual(75.200000, 1e-3);
             solution.Tgo(solution.T0, 1).ShouldEqual(75.200000, 1e-3);
             solution.Tgo(solution.T0, 2).ShouldEqual(110.600000, 1e-3);
-            //solution.Tgo(solution.T0, 3).ShouldEqual(663.139, 1e-3);
+            solution.Tgo(solution.T0, 3).ShouldEqual(663.139, 1e-3);
 
-            // soft optimizer output: the total time-to-go converges to slightly different values across
-            // runtimes/platforms (the tight orbital-target asserts below still pin the actual solution).
-            solution.Tgo(0).ShouldEqual(924.139, 5e-2);
-            //solution.Vgo(0).ShouldEqual(8518.1366714811684, 1e-3);
+            solution.Tgo(0).ShouldEqual(924.139, 1e-3);
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
             //solution.U(0).normalized.ShouldEqual(new V3(0.69734975209707417, 0.6074944955387559, 0.38033374967291772), 1e-2);
@@ -195,12 +193,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             // nuf.ShouldEqual(Deg2Rad(5.0640956966565094), 1e-2);
         }
 
-        // An in-game RO Falcon 9 to GTO with a coast during the upper stage (burn/coast/burn with mass continuity)
-        // and a Kepler3 target (free LAN and argp), taken from the AscentBuilder debug log.
-        // With argp free the coast collapses to zero and the split between the two burns becomes a null direction, so
-        // the SQP crawls: PHASE 1 runs to Maxits (~113 s in Release) and PHASE 6 takes ~118 s, right at the 120 s timeout,
-        // and Debug builds time out. Setting argp (Kepler5) with a ~1300 s max coast converges in ~80 s.
-        [Fact(Skip = "free-argp coast-during is degenerate, the SQP crawls to the optimizer timeout")]
+        /* Disabled until I have time to work on fixing the AscentGuesser better
+        // This is the same Falcon9ExpendableGeoStationary, but without plane control.  It takes longer than
+        // expected because of a bad initial guess which collapses the coast to zero, before expanding it again.
+        // Having Epsf tuned too low in the solver will blow this up.
+        // FIXME: the SFB zero coast constraint makes solve times worse here, but that is considered an AscentGuesser bug.
+        [Fact]
         public void Falcon9ToGeoSynchronous()
         {
             var r0 = new V3(3325422.7282581064, -4497376.8210520744, 3050620.0222054715);
@@ -244,6 +242,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.M(T0).ShouldEqual(FIRST_STAGE_M0, 1e-9);
 
             solution.Tgo(T0, 0).ShouldEqual(FIRST_BT, 1e-3);
+            // this winds up testing the maximum coast length
+            solution.Tgo(T0, 2).ShouldEqual(300, 5e-2);
+            (solution.Tgo(T0, 1) + solution.Tgo(T0, 3)).ShouldEqual(435.89, 5e-2);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -253,5 +254,6 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Astro.ApoapsisFromKeplerian(smaf, eccf).ShouldEqual(APR_T, 1e-5);
             incf.ShouldEqual(INC_T, 1e-5);
         }
+        */
     }
 }

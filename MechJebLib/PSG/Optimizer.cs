@@ -39,10 +39,12 @@ namespace MechJebLib.PSG
         public int    N                   { get; set; } = 7;
         public int    Maxits              { get; set; } = 4000;
         public double SQPTrustRegionLimit { get; set; } = 1e-6;
-        public double Epsf                { get; set; } = 0;
+        public double Epsf                { get; set; } = 1e-9;
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
         public int    OptimizerTimeout    { get; set; } = 120_000; // milliseconds
+        public double ZeroCoastTime  { get; set; } = 1; // seconds, minimum coast of a burn-coast-burn with a nonzero first burn
+        public double ZeroCoastMu    { get; set; } = 1e-6;
 
         public Optimizer(Problem problem, PhaseCollection phases, ITerminal terminal, ObjectiveType objective)
         {
@@ -438,6 +440,16 @@ namespace MechJebLib.PSG
                         _nu[ci++] = 1.0;
                     }
                 }
+            }
+
+            // zero coast inequality constraints
+            for (int p = 0; p < Phases.Count; p++)
+            {
+                if (!Phases.IsDuringCoast(p))
+                    continue;
+
+                _nl[ci] = 0;
+                _nu[ci++] = double.PositiveInfinity;
             }
 
             alglib.sparsecreatecrsempty(_vars.TotalVariables, out alglib.sparsematrix j2);

@@ -60,6 +60,8 @@ namespace MechJebLib.PSG
 
             ci = ThrustMagnitudeConstraints(f, j, ci);
 
+            ci = ZeroCoastConstraint(f, j, ci);
+
             ci = ControlNormConstraints(f, j, ci);
 
             for (int p = 0; p < _optimizer.Phases.Count; p++)
@@ -117,6 +119,49 @@ namespace MechJebLib.PSG
 
                     ci = ApplyScalarConstraint(f, j, ci, x => x[0], new[] { thisPhase.T[k] }, new[] { thisPhase.T.Idx(k) });
                 }
+            }
+
+            return ci;
+        }
+
+        // This is another smoothed Fischer-Burmeister complementarity constraint to drive the first burn in a burn-coast-burn
+        // to zero as the coast length goes to zero.  When the coast is zero the problem is degenerate and without a gradient
+        // to follow the optimizer can stall.
+        // FIXME: it seems that some problems which do have a coast solution can take longer to solve with these constraints
+        // active--which is likely a bug in the AscentGuesser where the guess is so bad they shrink the coast to zero and
+        // bounce around until it expands again, and these constraints become pure additional cost.
+        private int ZeroCoastConstraint(double[] f, alglib.sparsematrix j, int ci)
+        {
+            for (int p = 0; p < _optimizer.Phases.Count; p++)
+            {
+                if (!_optimizer.Phases.IsDuringCoast(p))
+                    continue;
+
+                if (_firstPass) ConstraintNames[ci] = $"Zero coast constraint for phase {p}";
+
+                double eps = Min(_optimizer.ZeroCoastTime / _optimizer.Problem.Scale.TimeScale, 0.5 * _optimizer.Phases[p].MaxT);
+
+                if (eps <= 0)
+                {
+                    f[ci++] = 0;
+                    alglib.sparseappendemptyrow(j);
+                    continue;
+                }
+
+                PhaseProxy burnPhase = _vars[p - 1];
+                PhaseProxy coastPhase = _vars[p];
+                double btRef = _optimizer.Phases[p - 1].Bt;
+
+                // fraction of the stage burned before the coast
+                double a = burnPhase.Bt() / btRef;
+                // positive when the coast is shorter than the minimum coast
+                double b = 1.0 - coastPhase.Bt() / eps;
+                double sqrtU = Sqrt(a * a + b * b + 2 * _optimizer.ZeroCoastMu);
+
+                f[ci++] = sqrtU - (a + b);
+                alglib.sparseappendemptyrow(j);
+                alglib.sparseappendelement(j, burnPhase.BtIdx(), (a / sqrtU - 1) / btRef);
+                alglib.sparseappendelement(j, coastPhase.BtIdx(), (1 - b / sqrtU) / eps);
             }
 
             return ci;
