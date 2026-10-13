@@ -168,10 +168,6 @@ namespace MuMech.MechJebKos
                 "Forward acceleration applied last frame in m/s^2."));
             AddSuffix("LIMITEDMAXTHRUSTACCELERATION", new Suffix<ScalarValue>(() => _vesselState.LimitedMaxThrustAcceleration,
                 "Forward acceleration at the current fixed throttle limit in m/s^2."));
-            AddSuffix("THROTTLELIMIT", new Suffix<ScalarValue>(() => _vesselState.ThrottleLimit,
-                "Current throttle limit (0-1), including transient limits."));
-            AddSuffix("THROTTLEFIXEDLIMIT", new Suffix<ScalarValue>(() => _vesselState.ThrottleFixedLimit,
-                "Current non-transient throttle limit (0-1)."));
             AddSuffix("LOWESTULLAGE", new Suffix<ScalarValue>(() => _vesselState.LowestUllage,
                 "Lowest propellant ullage stability across engines (1.0 = stable; always 1.0 without RealFuels)."));
 
