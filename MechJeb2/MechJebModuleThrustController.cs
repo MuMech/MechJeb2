@@ -182,7 +182,7 @@ namespace MuMech
             GUIStyle s = GuiUtils.Skin.label;
             if (Limiter == LimitMode.ELECTRIC)
             {
-                s = VesselState.ThrottleLimit < 0.001 ? GuiUtils.RedLabel : GuiUtils.YellowLabel;
+                s = ThrottleLimit < 0.001 ? GuiUtils.RedLabel : GuiUtils.YellowLabel;
             }
             else if (ElectricEngineRunning()) s = GuiUtils.GreenLabel;
 
@@ -302,11 +302,11 @@ namespace MuMech
 
         /* the current throttle limit, this may include transient condition such as limiting to zero due to unstable propellants in RF */
         [UsedImplicitly]
-        public float ThrottleLimit { get; set; }
+        public float ThrottleLimit { get; set; } = 1;
 
         /* the fixed throttle limit (i.e. user limited in the GUI), does not include transient conditions as limiting to zero due to unstable propellants in RF */
         [UsedImplicitly]
-        public float ThrottleFixedLimit { get; set; }
+        public float ThrottleFixedLimit { get; set; } = 1;
 
         /* This is an API for limits which are "temporary" or "conditional" (things like ullage status which will change very soon).
            This will often be temporarily zero, which means the computed accelleration of the ship will be zero, which would cause
@@ -540,9 +540,6 @@ namespace MuMech
             /* the purpose of the "fixed" limit is for external consumers like the node executor to consume */
             if (double.IsNaN(ThrottleFixedLimit)) ThrottleFixedLimit = 1.0F;
             ThrottleFixedLimit = Mathf.Clamp01(ThrottleFixedLimit);
-
-            VesselState.ThrottleLimit = ThrottleLimit;
-            VesselState.ThrottleFixedLimit = ThrottleFixedLimit;
 
             if (s.mainThrottle < ThrottleLimit) Limiter = LimitMode.NONE;
 

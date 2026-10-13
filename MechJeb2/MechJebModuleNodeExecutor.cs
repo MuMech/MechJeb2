@@ -521,7 +521,7 @@ namespace MuMech
                 // TODO: Be smarter about throttle limits on future stages.
                 if (mjPhase == stats.VacStats.Count - 1)
                 {
-                    stageAvgAccel *= VesselState.ThrottleFixedLimit;
+                    stageAvgAccel *= Core.Thrust.ThrottleFixedLimit;
                 }
 
                 halfBurnTime += Min(halfDvLeft, stageBurnDv) / stageAvgAccel;

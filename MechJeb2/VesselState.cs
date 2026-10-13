@@ -298,12 +298,6 @@ namespace MuMech
 
         public Vector3d SurfaceVelocity;
 
-        /* the fixed throttle limit (i.e. user limited in the GUI), does not include transient conditions as limiting to zero due to unstable propellants in RF */
-        public float ThrottleFixedLimit = 1;
-
-        /* the current throttle limit, this may include transient condition such as limiting to zero due to unstable propellants in RF */
-        public float ThrottleLimit = 1;
-
         // Forward direction of thrust (CoT-CoM).normalized
         // FIXME: this is Vector3d.zero if throttle is zero!
         public Vector3d ThrustForward;
@@ -427,7 +421,15 @@ namespace MuMech
         public double MaxThrustAcceleration        => ThrustAvailable / Mass;
         public double MinThrustAcceleration        => ThrustMinimum / Mass;
         public double CurrentThrustAcceleration    => ThrustCurrent / Mass;
-        public double LimitedMaxThrustAcceleration => MaxThrustAcceleration * ThrottleFixedLimit + MinThrustAcceleration * (1 - ThrottleFixedLimit);
+
+        public double LimitedMaxThrustAcceleration
+        {
+            get
+            {
+                float limit = _core.Thrust.ThrottleFixedLimit;
+                return MaxThrustAcceleration * limit + MinThrustAcceleration * (1 - limit);
+            }
+        }
 
         [ValueInfoItem("#MechJeb_Altitude_bottom", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6,
             units = "m")] //Altitude (bottom)
