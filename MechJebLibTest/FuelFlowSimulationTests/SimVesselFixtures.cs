@@ -80,6 +80,77 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         }
 
         /// <summary>
+        ///     The MainsailTinCan with a full Rockomax64 drop tank on a radial decoupler on the side of the upper tank, with
+        ///     crossFeed selecting whether crossfeed is enabled on the decoupler.  The Mainsail and the launch clamps are in
+        ///     stage 1 and the decoupler in stage 0.  This mutation of the MainsailTinCan has not been captured in KSP, so the
+        ///     drop tank and its decoupler have made up persistentIds.  Without crossfeed they have the crossfeed sets of the
+        ///     boosters in Captures/MainsailTinCanAsparagus.out, less the fuel line, and with crossfeed they join the core's
+        ///     set.
+        /// </summary>
+        public static SimVessel MainsailTinCanDropTank(bool kscPad = false, bool crossFeed = false)
+        {
+            SimVessel v = NewVessel(2);
+            v.SetInitial(105865.0041307488,
+                new V3(576839.96092781203, -165406.15003102238, -1017.9253790531925),
+                new V3(48.231074597909611, 168.18874204753263, -1.392905019470582E-05),
+                new V3(0.9610545499785107, -0.27635343056128087, -0.0017315298318862915));
+
+            SimPart probe    = ProbeStackLarge(v, 2919945081);
+            SimPart noseCone = RocketNoseConeV3(v, 2612439557);
+            SimPart battery  = BatteryBankLarge(v, 1169654648);
+            SimPart sas      = AsasModule1_2(v, 2588065212);
+            SimPart tank1    = Rockomax64BW(v, 706255026);
+            SimPart tank2    = Rockomax64BW(v, 4252378878);
+            SimPart engine = LiquidEngineMainsailV2(v, 477612636, 1,
+                new V3(0.95751801278484683, -0.28836976344549975, -0.0016915356973186135));
+            SimPart clamp1        = LaunchClamp1(v, 2115970530, 1);
+            SimPart clamp2        = LaunchClamp1(v, 2632810960, 1);
+            SimPart panel1        = LargeSolarPanel(v, 1331256762);
+            SimPart panel2        = LargeSolarPanel(v, 3249199616);
+            SimPart dropDecoupler = RadialDecoupler2(v, 1000000001, 0, tank1);
+            SimPart dropTank      = Rockomax64BW(v, 1000000002, 0);
+
+            MakeRoot(probe);
+
+            Link(probe, noseCone);
+            Link(probe, battery);
+            Link(battery, sas);
+            Link(sas, tank1);
+            Link(sas, panel1);
+            Link(sas, panel2);
+            Link(tank1, tank2);
+            Link(tank1, dropDecoupler);
+            Link(dropDecoupler, dropTank);
+            Link(tank2, engine);
+            Link(tank2, clamp1);
+            Link(tank2, clamp2);
+
+            if (crossFeed)
+            {
+                CrossFeed(panel2, panel1, engine, tank2, tank1, sas, battery, probe, dropDecoupler, dropTank, noseCone);
+            }
+            else
+            {
+                CrossFeed(panel2, panel1, engine, tank2, tank1, sas, battery, probe, noseCone);
+                // without crossfeed the radial decoupler is in no set but its own, so the drop tank only feeds itself
+                CrossFeed(dropDecoupler);
+                CrossFeed(dropTank);
+            }
+
+            CrossFeed(noseCone);
+            CrossFeed(clamp1);
+            CrossFeed(clamp2);
+
+            Symmetry(clamp1, clamp2);
+            Symmetry(panel1, panel2);
+
+            if (kscPad)
+                v.SetConditions(0.9151522794796263, 0.98715392892182707, 1.0179783179606657E-05);
+
+            return Finish(v);
+        }
+
+        /// <summary>
         ///     The MainsailTinCan with a second Rockomax64 and Mainsail below it as a lower stage, separated by a decoupler and
         ///     sitting in two launch clamps on the pad.  The lower Mainsail is in stage 3, the launch clamps in stage 2, the
         ///     decoupler in stage 1 and the upper Mainsail in stage 0.  This is the stock

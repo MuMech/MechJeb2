@@ -53,6 +53,51 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertMassesMatchCapture(v, "MainsailTinCan.out", kscPad);
         }
 
+        // the Mainsail lights as the launch clamps are released, but the drop tank is outside its crossfeed set, so the vessel
+        // stages before the lit engine burns anything to drop the full tank as dead mass, then the Mainsail burns the core's tanks
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void MainsailTinCanDropTank(bool kscPad)
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCanDropTank(kscPad);
+            double isp = kscPad ? MainsailIsp(v.ATMPressure) : MAINSAIL_VACUUM_ISP;
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(3, segments.Count);
+            AssertNoBurn(segments[2], 2, 115.75, 0);
+            AssertNoBurn(segments[1], 1, 115.75, 0, MAINSAIL_MAX_FUEL_FLOW * isp * G0 * dirMagnitude);
+            // the radial decoupler and the drop tank, still full
+            AssertMainsailBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, isp, dirMagnitude, 36.05);
+        }
+
+        // with crossfeed enabled on the decoupler the Mainsail can reach the drop tank, which has the higher resource priority,
+        // so the Mainsail drains the drop tank before the core's tanks.  the vessel stages once the drop tank is empty and
+        // the Mainsail burns the core's tanks.
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void MainsailTinCanDropTankCrossFeed(bool kscPad)
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCanDropTank(kscPad, true);
+            double isp = kscPad ? MainsailIsp(v.ATMPressure) : MAINSAIL_VACUUM_ISP;
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(3, segments.Count);
+            AssertNoBurn(segments[2], 2, 115.75, 0);
+
+            // when the drop tank's oxidizer runs out the Mainsail takes its stranded liquid fuel in 1 ms steps, the
+            // simulation's minimum, while drawing oxidizer from the core's tanks, as with the asparagus boosters.
+            const double TOLERANCE = 1e-4;
+            AssertMainsailBurn(segments[1], 1, 115.75, ROCKOMAX64_PROPELLANT, isp, dirMagnitude, tolerance: TOLERANCE);
+            // the radial decoupler and the empty drop tank
+            AssertMainsailBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, isp, dirMagnitude, 4.05, tolerance: TOLERANCE);
+        }
+
         // the lower Mainsail lights while the launch clamps hold the vessel and burns the lower tank, then the decoupler
         // drops the lower stage and the upper Mainsail burns the upper tank
         [Theory]
