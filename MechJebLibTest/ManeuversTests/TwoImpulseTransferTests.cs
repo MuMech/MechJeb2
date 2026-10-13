@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
@@ -17,50 +18,51 @@ namespace MechJebLibTest.ManeuversTests
 {
     public class TwoImpulseTransferTests
     {
-        [Fact]
-        private void HohmannTest()
+        public static IEnumerable<object[]> Seeds()
         {
-            const int NTRIALS = 50;
+            for (int i = 0; i < 50; i++)
+                yield return new object[] { i };
+        }
 
-            var random = new Random();
+        [Theory, MemberData(nameof(Seeds))]
+        private void HohmannTest(int seed)
+        {
+            var random = new Random(seed);
 
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                // construct some random circular coplanar hohmann transfers
-                double mu = random.NextDouble() * 10 + 1;
+            // construct some random circular coplanar hohmann transfers
+            double mu = random.NextDouble() * 10 + 1;
 
-                // construct a random circular orbit
-                var r1 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v1 = new V3(random.NextDouble() - 0.5, random.NextDouble() - 0.5, random.NextDouble() - 0.5);
-                v1 = (v1 - V3.Dot(r1.normalized, v1) * r1.normalized).normalized * Astro.CircularVelocity(mu, r1.magnitude);
+            // construct a random circular orbit
+            var r1 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v1 = new V3(random.NextDouble() - 0.5, random.NextDouble() - 0.5, random.NextDouble() - 0.5);
+            v1 = (v1 - V3.Dot(r1.normalized, v1) * r1.normalized).normalized * Astro.CircularVelocity(mu, r1.magnitude);
 
-                // construct another random circular coplanar orbit
-                var h1 = V3.Cross(r1, v1);
-                var r2 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                r2 -= V3.Dot(h1.normalized, r2) * h1.normalized;
-                V3 v2 = V3.Cross(h1, r2).normalized * Astro.CircularVelocity(mu, r2.magnitude);
+            // construct another random circular coplanar orbit
+            var h1 = V3.Cross(r1, v1);
+            var r2 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            r2 -= V3.Dot(h1.normalized, r2) * h1.normalized;
+            V3 v2 = V3.Cross(h1, r2).normalized * Astro.CircularVelocity(mu, r2.magnitude);
 
-                // this algorithm has issues with very large (normalized) synodic periods
-                var scale = Scale.Create(mu, Sqrt(r1.magnitude * r2.magnitude));
-                double synodicPeriod = Astro.SynodicPeriod(mu, r1, v1, r2, v2) / scale.TimeScale;
-                if (synodicPeriod > 1000)
-                    continue;
+            // this algorithm has issues with very large (normalized) synodic periods
+            var scale = Scale.Create(mu, Sqrt(r1.magnitude * r2.magnitude));
+            double synodicPeriod = Astro.SynodicPeriod(mu, r1, v1, r2, v2) / scale.TimeScale;
+            if (synodicPeriod > 1000)
+                return;
 
-                (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2);
+            (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2);
 
-                (double dv1Hoh, double dv2Hoh, double ttHoh, double _) = Astro.HohmannTransferParameters(mu, r1, r2);
+            (double dv1Hoh, double dv2Hoh, double ttHoh, double _) = Astro.HohmannTransferParameters(mu, r1, r2);
 
-                dv1.magnitude.ShouldEqual(Abs(dv1Hoh), 1e-6);
-                dv2.magnitude.ShouldEqual(Abs(dv2Hoh), 1e-6);
-                (dt2 - dt1).ShouldEqual(ttHoh, 1e-3);
+            dv1.magnitude.ShouldEqual(Abs(dv1Hoh), 1e-6);
+            dv2.magnitude.ShouldEqual(Abs(dv2Hoh), 1e-6);
+            (dt2 - dt1).ShouldEqual(ttHoh, 1e-3);
 
-                (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
-                (V3 rburn2, V3 vburn2) = Shepperd.Solve(mu, dt2 - dt1, rburn1, vburn1 + dv1);
-                (V3 rf, V3 vf) = Shepperd.Solve(mu, dt2, r2, v2);
+            (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
+            (V3 rburn2, V3 vburn2) = Shepperd.Solve(mu, dt2 - dt1, rburn1, vburn1 + dv1);
+            (V3 rf, V3 vf) = Shepperd.Solve(mu, dt2, r2, v2);
 
-                rf.ShouldEqual(rburn2, 1e-6);
-                vf.ShouldEqual(vburn2 + dv2, 1e-6);
-            }
+            rf.ShouldEqual(rburn2, 1e-6);
+            vf.ShouldEqual(vburn2 + dv2, 1e-6);
         }
 
         [Fact]

@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using Xunit;
@@ -14,87 +15,78 @@ namespace MechJebLibTest.ManeuversTests
 {
     public class Simple
     {
-        [Fact]
-        public void DeltaVToCircularizeTest()
+        public static IEnumerable<object[]> Seeds()
         {
-            const int NTRIALS = 50;
-
-            var random = new Random();
-
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-
-                double rscale = random.NextDouble() * 1.5e8 + 1;
-                double vscale = random.NextDouble() * 3e4 + 1;
-                r *= rscale;
-                v *= vscale;
-                double mu = rscale * vscale * vscale;
-
-                V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToCircularize(mu, r, v);
-
-                Astro.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-14);
-                Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
-                Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
-            }
+            for (int i = 0; i < 50; i++)
+                yield return new object[] { i };
         }
 
-        [Fact]
-        public void DeltaVToEllipticizeTest()
+        [Theory, MemberData(nameof(Seeds))]
+        public void DeltaVToCircularizeTest(int seed)
         {
-            const int NTRIALS = 50;
+            var random = new Random(seed);
 
-            var random = new Random();
+            var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
 
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                double newPeR = random.NextDouble() * r.magnitude;
-                double newApR = random.NextDouble() * 1e9 + r.magnitude;
+            double rscale = random.NextDouble() * 1.5e8 + 1;
+            double vscale = random.NextDouble() * 3e4 + 1;
+            r *= rscale;
+            v *= vscale;
+            double mu = rscale * vscale * vscale;
 
-                double rscale = random.NextDouble() * 1.5e8 + 1;
-                double vscale = random.NextDouble() * 3e4 + 1;
-                r *= rscale;
-                v *= vscale;
-                newPeR *= rscale;
-                newApR *= rscale;
-                double mu = rscale * vscale * vscale;
+            V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToCircularize(mu, r, v);
 
-                V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToEllipticize(mu, r, v, newPeR, newApR);
-
-                Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-4);
-                Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-4);
-            }
+            Astro.EccFromStateVectors(mu, r, v + dv).ShouldEqual(0, 1e-14);
+            Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
+            Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
         }
 
-        [Fact]
-        public void DeltaVToChangeInclinationTest()
+        [Theory, MemberData(nameof(Seeds))]
+        public void DeltaVToEllipticizeTest(int seed)
         {
-            const int NTRIALS = 50;
+            var random = new Random(seed);
 
-            var random = new Random();
+            var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double newPeR = random.NextDouble() * r.magnitude;
+            double newApR = random.NextDouble() * 1e9 + r.magnitude;
 
-            for (int i = 0; i < NTRIALS; i++)
-            {
-                var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
-                var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            double rscale = random.NextDouble() * 1.5e8 + 1;
+            double vscale = random.NextDouble() * 3e4 + 1;
+            r *= rscale;
+            v *= vscale;
+            newPeR *= rscale;
+            newApR *= rscale;
+            double mu = rscale * vscale * vscale;
 
-                double rscale = random.NextDouble() * 1.5e8 + 1;
-                double vscale = random.NextDouble() * 3e4 + 1;
-                r *= rscale;
-                v *= vscale;
+            V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToEllipticize(mu, r, v, newPeR, newApR);
 
-                double plusOrMinusOne = random.Next(0, 2) * 2 - 1;
-                double lat = Astro.LatitudeFromBCI(r);
-                double newInc = Abs(lat) + random.NextDouble() * (PI - 2 * Abs(lat));
-                newInc *= plusOrMinusOne;
+            Astro.PeriapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newPeR, 1e-4);
+            Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-4);
+        }
 
-                V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToChangeInclination(r, v, newInc);
+        [Theory, MemberData(nameof(Seeds))]
+        public void DeltaVToChangeInclinationTest(int seed)
+        {
+            var random = new Random(seed);
 
-                Astro.IncFromStateVectors(r, v + dv).ShouldEqual(Abs(newInc), 1e-4);
-            }
+            var r = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var v = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+
+            double rscale = random.NextDouble() * 1.5e8 + 1;
+            double vscale = random.NextDouble() * 3e4 + 1;
+            r *= rscale;
+            v *= vscale;
+
+            double plusOrMinusOne = random.Next(0, 2) * 2 - 1;
+            double lat = Astro.LatitudeFromBCI(r);
+            double newInc = Abs(lat) + random.NextDouble() * (PI - 2 * Abs(lat));
+            newInc *= plusOrMinusOne;
+
+            V3 dv = MechJebLib.Maneuvers.Simple.DeltaVToChangeInclination(r, v, newInc);
+
+            Astro.IncFromStateVectors(r, v + dv).ShouldEqual(Abs(newInc), 1e-4);
         }
 
         [Fact]
