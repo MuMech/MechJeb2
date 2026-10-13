@@ -86,6 +86,8 @@ namespace MuMech
         private readonly List<ModuleEngines> _allModuleEngines = new List<ModuleEngines>(16);
         private readonly List<PartModule> _allDecouplers = new List<PartModule>(16);
         private readonly List<int> _burnedResources = new List<int>(16);
+        private readonly List<Part> _partsDroppedInNextStage = new List<Part>(64);
+        private bool _partsDroppedInNextStageStale = true;
         private readonly Dictionary<int, bool> _inverseStageHasEngines = new Dictionary<int, bool>(16);
         private readonly Dictionary<int, bool> _inverseStageFiresDecouplerCache = new Dictionary<int, bool>(16);
         private readonly Dictionary<int, bool> _inverseStageReleasesClampsCache = new Dictionary<int, bool>(16);
@@ -300,6 +302,7 @@ namespace MuMech
             UpdateActiveModuleEngines(_allModuleEngines);
             UpdateBurnedResources();
             _shouldDropSolids = null; // invalidate the cache; _droppingSolids recomputes lazily if needed this update
+            _partsDroppedInNextStageStale = true;
 
             // don't decouple active or idle engines or tanks
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(Vessel.currentStage - 1, _burnedResources, _activeModuleEngines) &&
@@ -527,13 +530,96 @@ namespace MuMech
                 Part p = engine.part;
                 // a flamed out engine cannot burn anything, so it must not keep tanks alive: an LFO booster that has run its
                 // oxidizer dry still has leftover LF, and a burned out SRB is still isEnabled
-                if (p.inverseStage >= Vessel.currentStage && !p.IsDecoupledInStage(Vessel.currentStage - 1) && engine.isEnabled &&
-                    !engine.getFlameoutState)
-                    _activeModuleEngines.Add(engine);
+                if (p.inverseStage < Vessel.currentStage || !engine.isEnabled || engine.getFlameoutState)
+                    continue;
+
+                // an engine which is being dropped only keeps tanks alive while it is running, since a running engine with
+                // drop tanks is held by those tanks rather than by itself (see EnginesHaveDropTanks)
+                if (p.IsDecoupledInStage(Vessel.currentStage - 1) && (!engine.EngineHasFuel() || engine.IsUnrestartableDeadEngine()))
+                    continue;
+
+                _activeModuleEngines.Add(engine);
             }
         }
 
-        // Find resources burned by engines that will remain after staging (so we wait until tanks are empty before releasing drop tanks)
+        // the parts the decouplers of the next stage drop, lazily collected once per fixed update
+        private List<Part> PartsDroppedInNextStage()
+        {
+            if (!_partsDroppedInNextStageStale)
+                return _partsDroppedInNextStage;
+
+            _partsDroppedInNextStage.Clear();
+            foreach (PartModule pm in _allDecouplers)
+                if (pm.part.inverseStage == Vessel.currentStage - 1 && pm.IsUnfiredDecoupler(out Part decoupledPart))
+                    AddPartAndDescendants(decoupledPart, _partsDroppedInNextStage);
+
+            _partsDroppedInNextStageStale = false;
+            return _partsDroppedInNextStage;
+        }
+
+        private static void AddPartAndDescendants(Part p, List<Part> parts)
+        {
+            if (p is null)
+                return;
+
+            parts.Add(p);
+
+            for (int i = 0; i < p.children.Count; i++)
+                AddPartAndDescendants(p.children[i], parts);
+        }
+
+        // a running engine with drop tanks does not hold the stage itself, its drop tanks do (it keeps them alive in
+        // _activeModuleEngines) until they are empty.  so a booster which crossfeeds from the core after its own tanks run dry
+        // is still dropped, while engines with no tanks of their own (like the Atlas booster engines) are held until they
+        // burn out.
+        private bool EnginesHaveDropTanks(Part p)
+        {
+            bool found = false;
+
+            foreach (ModuleEngines engine in _activeModuleEngines)
+            {
+                if (engine.part != p)
+                    continue;
+                if (!EngineHasDropTanks(engine))
+                    return false;
+                found = true;
+            }
+
+            return found;
+        }
+
+        // true if the engine can draw on a tank which is dropped along with it in the next stage, whether or not that tank is
+        // empty yet.  this uses the capacity, so that the engine still has its drop tanks after it has drained them.
+        private bool EngineHasDropTanks(ModuleEngines engine)
+        {
+            List<Part> dropped = PartsDroppedInNextStage();
+
+            foreach (Propellant propellant in engine.propellants)
+            {
+                if (propellant.id == PartResourceLibrary.ElectricityHashcode)
+                    continue;
+
+                bool noFlow = propellant.GetFlowMode() == ResourceFlowMode.NO_FLOW;
+
+                for (int i = 0; i < dropped.Count; i++)
+                {
+                    Part t = dropped[i];
+
+                    if (!t.Resources.Contains(propellant.id))
+                        continue;
+                    if (t.Resources.Get(propellant.id).maxAmount <= t.resourceRequestRemainingThreshold)
+                        continue;
+
+                    if (noFlow ? engine.part == t : engine.part.crossfeedPartSet.ContainsPart(t))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Find resources burned by the active engines, which includes running engines with drop tanks that are being dropped
+        // themselves (so we wait until tanks are empty before releasing drop tanks)
         private void UpdateBurnedResources()
         {
             _burnedResources.Clear();
@@ -603,7 +689,8 @@ namespace MuMech
 
             if (!p.IsSepratron() && !IsBurnedOutSrbDecoupledInNextStage(p))
             {
-                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel() && !p.IsUnrestartableDeadEngine())
+                if ((p.State == PartStates.ACTIVE || p.State == PartStates.IDLE) && p.EngineHasFuel() && !p.IsUnrestartableDeadEngine() &&
+                    !EnginesHaveDropTanks(p))
                 {
                     return true; // TODO: properly check if ModuleEngines is active
                 }

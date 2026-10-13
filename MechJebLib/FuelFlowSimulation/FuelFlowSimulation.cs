@@ -493,8 +493,9 @@ namespace MechJebLib.FuelFlowSimulation
                 if (e.Part.IsSepratron)
                     continue;
 
-                // never stage an active engine
-                if (e.Part.DecoupledInStage >= vessel.CurrentStage - 1)
+                // never stage an active engine, unless it has drop tanks, in which case it is held by those tanks below and is
+                // dropped once they are empty even though it is still running (crossfeeding from the tanks which stay)
+                if (e.Part.DecoupledInStage >= vessel.CurrentStage - 1 && !e.HasDropTanks(vessel.CurrentStage - 1))
                     return false;
 
                 // never drop fuel that could be used

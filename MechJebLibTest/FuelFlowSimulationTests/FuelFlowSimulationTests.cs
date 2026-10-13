@@ -152,6 +152,47 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertMassesMatchCapture(v, "MainsailTinCanAsparagus.out", kscPad);
         }
 
+        // the same staging as the fuel line asparagus: every engine drains the outer boosters first, but their Mainsails are
+        // still running on the tanks inboard of them when their own tanks run dry.  having drop tanks, they are held only by
+        // those tanks, so the boosters are dropped as soon as they are empty rather than riding along until the core is dry.
+        [Fact]
+        public void MainsailTinCanCrossfeedAsparagus()
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCanCrossfeedAsparagus();
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(5, segments.Count);
+            AssertNoBurn(segments[4], 4, 392.9, 0);
+            AssertNoBurn(segments[3], 3, 392.9, 0, 5 * MAINSAIL_MAX_FUEL_FLOW * MAINSAIL_VACUUM_ISP * G0 * dirMagnitude);
+
+            const double TOLERANCE = 1e-4;
+            AssertMainsailBurn(segments[2], 2, 392.9, 4 * ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude, engines: 5,
+                tolerance: TOLERANCE);
+            // each booster drops its decoupler, nose cone, empty tanks and its still running Mainsail
+            AssertMainsailBurn(segments[1], 1, 236.4, 4 * ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude, 28.5, 3, TOLERANCE);
+            AssertMainsailBurn(segments[0], 0, 79.9, 2 * ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude, 28.5,
+                tolerance: TOLERANCE);
+        }
+
+        // the Mainsails on the radial decouplers have no drop tanks, they burn the core's tanks, so they are held until they
+        // flame out with the core Mainsail when the core is dry.
+        [Fact]
+        public void MainsailTinCanEnginePods()
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCanEnginePods();
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(3, segments.Count);
+            AssertNoBurn(segments[2], 2, 90.6, 0);
+            AssertMainsailBurn(segments[1], 1, 90.6, 2 * ROCKOMAX64_PROPELLANT, MAINSAIL_VACUUM_ISP, dirMagnitude, engines: 3);
+            // the two decouplers and the burned out pod Mainsails
+            AssertNoBurn(segments[0], 0, 14.5, 12.1);
+        }
+
         // the nine Merlins light while the launch clamps hold the vessel and burn the first stage down to its RealFuels
         // residuals, about 4076 m/s in vacuum.  dropping the first stage lights the Merlin Vacuum, the payload fairing is
         // jettisoned before it burns anything, and it burns the upper stage down to its residuals, about 7298 m/s in vacuum.

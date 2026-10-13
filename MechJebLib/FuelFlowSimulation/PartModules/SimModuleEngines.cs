@@ -209,6 +209,51 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool PartHasCapacityFor(SimPart p, int resourceId) =>
+            p.TryGetResource(resourceId, out SimResource resource) && resource.MaxAmount > p.ResourceRequestRemainingThreshold;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool PartsDroppedInStageHaveCapacityFor(IList<SimPart> parts, int resourceId, int stageNum)
+        {
+            for (int i = 0; i < parts.Count; i++)
+                if (parts[i].DecoupledInStage == stageNum && PartHasCapacityFor(parts[i], resourceId))
+                    return true;
+            return false;
+        }
+
+        // true if the engine can draw on a tank which is dropped along with it in stageNum, whether or not that tank is empty yet.
+        // this uses the capacity, so that the engine still has its drop tanks after it has drained them.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasDropTanks(int stageNum)
+        {
+            SimVessel vessel = Part.Vessel;
+
+            foreach (int resourceId in ResourceConsumptions.Keys)
+                switch (PropellantFlowModes[resourceId])
+                {
+                    case SimFlowMode.NO_FLOW:
+                        if (Part.DecoupledInStage == stageNum && PartHasCapacityFor(Part, resourceId))
+                            return true;
+                        break;
+                    case SimFlowMode.ALL_VESSEL:
+                    case SimFlowMode.ALL_VESSEL_BALANCE:
+                    case SimFlowMode.STAGE_PRIORITY_FLOW:
+                    case SimFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
+                        if (PartsDroppedInStageHaveCapacityFor(vessel.PartsRemainingInStage[vessel.CurrentStage], resourceId, stageNum))
+                            return true;
+                        break;
+                    case SimFlowMode.STAGE_STACK_FLOW:
+                    case SimFlowMode.STAGE_STACK_FLOW_BALANCE:
+                    case SimFlowMode.STACK_PRIORITY_SEARCH:
+                        if (PartsDroppedInStageHaveCapacityFor(Part.CrossFeedPartSet, resourceId, stageNum))
+                            return true;
+                        break;
+                }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool WouldDropAccessibleFuelTank(int stageNum)
         {
             SimVessel vessel = Part.Vessel;
