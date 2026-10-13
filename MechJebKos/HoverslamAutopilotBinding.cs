@@ -33,6 +33,8 @@ namespace MuMech.MechJebKos
                 "Automatically time-warp to the ignition time."));
             AddSuffix("HOLDUPRIGHT", new SetSuffix<BooleanValue>(() => Module.HoldUpright, value => Module.HoldUpright = value,
                 "Hold the vessel upright (via SmartASS) after touchdown."));
+            AddSuffix("AUTOSTAGE", new SetSuffix<BooleanValue>(() => Module.Autostage, value => Module.Autostage = value,
+                "Engage autostaging when the autopilot is engaged, and release it when the autopilot disengages. Read at engage time."));
             AddSuffix("PWMPULSEWIDTH", new SetSuffix<ScalarValue>(() => Module.PWMPulseWidth.Val, value => Module.PWMPulseWidth.Val = value,
                 "Minimum PWM on-time in seconds for throttle pulsing during final descent."));
         }
