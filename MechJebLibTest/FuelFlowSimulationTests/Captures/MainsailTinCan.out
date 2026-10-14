@@ -43,7 +43,7 @@
           Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
           AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
           ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
-          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=310 c1=-25 c2=5.3124370574951172 c3=-5.3124370574951172] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 invH=0.125 c0=285 c1=-242.49949645996094 c2=-84.999014160013758 c3=42.499510620022193] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
           ThrustTransformMultipliers: 1
           ThrustDirectionVectors: [0.95751801278484683, -0.28836976344549975, -0.0016915356973186135]
           Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
@@ -116,7 +116,7 @@
           Clamp=9.99999975E-06 FlowMultCap=3.40282347E+38 FlowMultCapSharpness=2
           AtmChangeFlow=False UseAtmCurve=False UseAtmCurveIsp=False UseThrottleIspCurve=False UseThrustCurve=False UseVelCurve=False UseVelCurveIsp=False
           ModuleResiduals=0 ModuleSpoolupTime=0 AutoCutoff=False IsModuleEnginesRf=False Ullage=False
-          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 h=1 y=310 dy=-25 ynew=285 dynew=-30.312437057495117] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 h=8 y=285 dy=-30.312437057495117 ynew=0.0010000000474974513 dynew=-35.624874114990234] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
+          AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=310] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=310 c1=-25 c2=5.3124370574951172 c3=-5.3124370574951172] [CubicHermiteDoubleNode leftT=1 rightT=9 t=1 invH=0.125 c0=285 c1=-242.49949645996094 c2=-84.999014160013758 c3=42.499510620022193] [ConstantDoubleNode leftT=9 rightT=9 y=0.0010000000474974513]
           ThrustTransformMultipliers: 1
           ThrustDirectionVectors: [0.95751801278484683, -0.28836976344549975, -0.0016915356973186135]
           Propellants: [id=-1483389306 ignoreForIsp=False ratio=0.89999997615814209 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291] [id=-1154601244 ignoreForIsp=False ratio=1.1000000238418579 flowMode=STACK_PRIORITY_SEARCH density=0.004999999888241291]
