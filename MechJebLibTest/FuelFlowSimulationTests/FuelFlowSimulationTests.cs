@@ -53,6 +53,36 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AssertMassesMatchCapture(v, "MainsailTinCan.out", kscPad);
         }
 
+        // sample [0,1] atm in 0.1 atm steps, then [2,10] in 1 atm steps
+        // the value of 10 walks off the end of the stock FloatCurve interpolant (ends at 9)
+        public static IEnumerable<object[]> AtmosphericPressures()
+        {
+            for (int i = 0; i <= 10; i++)
+                yield return new object[] { i / 10.0 };
+            for (int i = 2; i <= 10; i++)
+                yield return new object[] { (double)i };
+        }
+
+        // sweeps the pressure across the Mainsail's atmosphereCurve: inside its cubic segments between the keys at 0, 1 and
+        // 9 atm, and past the 9 atm key, where a FloatCurve clamps to the last key.  the Mainsail's fuel flow does not depend
+        // on the atmosphere, so only the isp, thrust and delta-v change.
+        [Theory]
+        [MemberData(nameof(AtmosphericPressures))]
+        public void MainsailTinCanAtmosphericPressure(double atmPressure)
+        {
+            SimVessel v = SimVesselFixtures.MainsailTinCan();
+            // the Mainsail uses neither the density nor the mach number
+            v.SetConditions(0, atmPressure, 0);
+            double isp = MainsailIsp(atmPressure);
+            double dirMagnitude = ThrustDirectionMagnitude(v);
+
+            List<FuelStats> segments = Run(v);
+
+            Assert.Equal(2, segments.Count);
+            AssertNoBurn(segments[1], 1, 79.7, 0);
+            AssertMainsailBurn(segments[0], 0, 79.7, 2 * ROCKOMAX64_PROPELLANT, isp, dirMagnitude);
+        }
+
         // the Mainsail lights as the launch clamps are released, but the drop tank is outside its crossfeed set, so the vessel
         // stages before the lit engine burns anything to drop the full tank as dead mass, then the Mainsail burns the core's tanks
         [Theory]
@@ -352,13 +382,28 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             return ((SimModuleEngines)engine.Modules[0]).ThrustDirectionVectors[0].magnitude;
         }
 
-        // the Mainsail atmosphereCurve between its 0 atm and 1 atm keys, worked out independently of the DoubleInterpolant
+        // This should replicate the MainsailISP FloatCurve both within its range and outside of it.
+        // The constant value below and above the range should duplicate actual in-game behavior.
         private static double MainsailIsp(double p)
         {
-            double p2 = p * p;
-            double p3 = p2 * p;
+            if (p <= 0)
+                return 310f;
+            if (p <= 1)
+                return Hermite(p, 0, 1, 310f, -25f, 285f, -30.3124370574951f);
+            if (p <= 9)
+                return Hermite(p, 1, 9, 285f, -30.3124370574951f, 0.001f, -35.6248741149902f);
+            return 0.001f;
+        }
 
-            return (2 * p3 - 3 * p2 + 1) * 310 + (p3 - 2 * p2 + p) * -25 + (-2 * p3 + 3 * p2) * 285 + (p3 - p2) * -30.3124370574951f;
+        // the cubic Hermite between keys (t0, y0) and (t1, y1) with slopes m0 and m1, in the Hermite basis
+        private static double Hermite(double t, double t0, double t1, double y0, double m0, double y1, double m1)
+        {
+            double h = t1 - t0;
+            double s = (t - t0) / h;
+            double s2 = s * s;
+            double s3 = s2 * s;
+
+            return (2 * s3 - 3 * s2 + 1) * y0 + (s3 - 2 * s2 + s) * h * m0 + (-2 * s3 + 3 * s2) * y1 + (s3 - s2) * h * m1;
         }
     }
 }
