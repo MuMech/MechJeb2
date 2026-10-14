@@ -8,6 +8,8 @@ using MechJebLib.Utils;
 
 namespace MechJebLib.Interpolants
 {
+    // the cubic Hermite interpolant over [t, t + h], stored in power-basis form in s = (x - t) / h:
+    //   p(s) = c0 + c1·s + c2·s² + c3·s³
     internal class CubicHermiteVecNode : InterpolantNode<Vec>
     {
         private static readonly ObjectPool<CubicHermiteVecNode> _pool = new ObjectPool<CubicHermiteVecNode>(New, Clear);
@@ -16,11 +18,23 @@ namespace MechJebLib.Interpolants
         {
             CubicHermiteVecNode node = _pool.Borrow();
             node._t = t;
-            node._h = h;
-            node._y = y.Dup();
-            node._dy = dy.Dup();
-            node._ynew = ynew.Dup();
-            node._dynew = dynew.Dup();
+            node._c0 = y.Dup();
+
+            // a zero-width node (e.g. from a zero-length PSG phase) would interpolate 0/0, so it degenerates to a constant
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (t + h == t)
+            {
+                node._invH = 0;
+                node._c1 = Vec.Rent(y.Length, true);
+                node._c2 = Vec.Rent(y.Length, true);
+                node._c3 = Vec.Rent(y.Length, true);
+                return node;
+            }
+
+            node._invH = 1.0 / h;
+            node._c1 = dy.Dup().Scal(h);                                            // h·dy
+            node._c2 = ynew.Dup().Sub(y).Scal(3).Axpy(-2 * h, dy).Axpy(-h, dynew); // 3(ynew - y) - h(2·dy + dynew)
+            node._c3 = y.Dup().Sub(ynew).Scal(2).Axpy(h, dy).Axpy(h, dynew);       // 2(y - ynew) + h(dy + dynew)
             return node;
         }
 
@@ -32,38 +46,35 @@ namespace MechJebLib.Interpolants
         {
             o.LeftT = o.RightT = 0;
             // ReSharper disable once NullableWarningSuppressionIsUsed
-            o._y = o._dy = o._ynew = o._dynew = null!;
+            o._c0 = o._c1 = o._c2 = o._c3 = null!;
             o._t = 0;
-            o._h = 0;
+            o._invH = 0;
         }
 
         // ReSharper disable NullableWarningSuppressionIsUsed
         private double _t;
-        private double _h;
-        private Vec _y = null!;
-        private Vec _dy = null!;
-        private Vec _ynew = null!;
-        private Vec _dynew = null!;
+        private double _invH;
+        private Vec _c0 = null!;
+        private Vec _c1 = null!;
+        private Vec _c2 = null!;
+        private Vec _c3 = null!;
         // ReSharper restore NullableWarningSuppressionIsUsed
 
         public override Vec Evaluate(double x)
         {
-            var yout = Vec.Rent(_y.Length);
-            // a zero-width node (e.g. from a zero-length PSG phase) would interpolate 0/0, so it degenerates to a constant
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (_t + _h == _t)
-                yout.CopyFrom(_y);
-            else
-                yout.CubicHermiteInterpolant(_t, _y, _dy, _t + _h, _ynew, _dynew, x);
+            var yout = Vec.Rent(_c0.Length);
+            double s = (x - _t) * _invH;
+            for (int i = 0; i < yout.Length; i++)
+                yout[i] = _c0[i] + s * (_c1[i] + s * (_c2[i] + s * _c3[i]));
             return yout;
         }
 
         public override void Dispose()
         {
-            _y.Dispose();
-            _dy.Dispose();
-            _ynew.Dispose();
-            _dynew.Dispose();
+            _c0.Dispose();
+            _c1.Dispose();
+            _c2.Dispose();
+            _c3.Dispose();
             _pool.Release(this);
         }
     }

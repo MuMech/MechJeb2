@@ -202,6 +202,11 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public static void AppendConstant(DoubleInterpolant curve, double leftT, double rightT, double y) =>
             curve.Append(ConstantDoubleNode.Rent(y), leftT, rightT);
 
+        public static void AppendCubicPolynomial(DoubleInterpolant curve, double leftT, double rightT, double t, double invH, double c0,
+            double c1, double c2, double c3) =>
+            curve.Append(CubicHermiteDoubleNode.RentPolynomial(t, invH, c0, c1, c2, c3), leftT, rightT);
+
+        // this builds a cubic node from FloatCurve keyframe data, for hand-written fixtures
         public static void AppendCubicHermite(DoubleInterpolant curve, double leftT, double rightT, double t, double h, double y, double dy,
             double ynew, double dynew) =>
             curve.Append(CubicHermiteDoubleNode.Rent(t, h, y, dy, ynew, dynew), leftT, rightT);
