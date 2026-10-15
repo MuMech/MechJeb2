@@ -25,10 +25,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         private static readonly Q3 _q = new Q3(0.5, -1, 2, 3);
 
         [Fact]
-        private void MatrixTimesQuaternionTest()
-        {
-            (_a * _q).ShouldEqual(new Q3(16.5, 34.5, 52.5, 70.5));
-        }
+        private void MatrixTimesQuaternionTest() => (_a * _q).ShouldEqual(new Q3(16.5, 34.5, 52.5, 70.5));
 
         [Fact]
         private void MatrixTimesBasisQuaternionTest()

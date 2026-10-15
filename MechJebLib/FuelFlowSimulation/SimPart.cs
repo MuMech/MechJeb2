@@ -8,7 +8,6 @@ using System.Text;
 using MechJebLib.Utils;
 using static System.Math;
 using static System.FormattableString;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation
 {
@@ -34,7 +33,7 @@ namespace MechJebLib.FuelFlowSimulation
         public string Ident => Invariant($"{Name}-{PersistentId}");
 
         public bool ActivatesEvenIfDisconnected = true;
-        public bool IsThrottleLocked = false;
+        public bool IsThrottleLocked;
         public int ResourcePriority = 0;
         public double ResourceRequestRemainingThreshold = 1E-12;
         public bool IsEnabled = false;
@@ -48,8 +47,8 @@ namespace MechJebLib.FuelFlowSimulation
         public double EngineResiduals = 0;
 
         public bool IsRoot = false;
-        public bool IsLaunchClamp = false;
-        public bool IsEngine = false;
+        public bool IsLaunchClamp;
+        public bool IsEngine;
         public bool IsSepratron => IsEngine && IsThrottleLocked && ActivatesEvenIfDisconnected && InverseStage == DecoupledInStage;
 
         private SimPart()

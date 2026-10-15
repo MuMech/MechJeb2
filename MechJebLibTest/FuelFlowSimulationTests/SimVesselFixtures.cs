@@ -31,12 +31,12 @@ namespace MechJebLibTest.FuelFlowSimulationTests
                 new V3(48.231074597909611, 168.18874204753263, -1.392905019470582E-05),
                 new V3(0.9610545499785107, -0.27635343056128087, -0.0017315298318862915));
 
-            SimPart probe    = ProbeStackLarge(v, 2919945081);
+            SimPart probe = ProbeStackLarge(v, 2919945081);
             SimPart noseCone = RocketNoseConeV3(v, 2612439557);
-            SimPart battery  = BatteryBankLarge(v, 1169654648);
-            SimPart sas      = AsasModule1_2(v, 2588065212);
-            SimPart tank1    = Rockomax64BW(v, 706255026);
-            SimPart tank2    = Rockomax64BW(v, 4252378878);
+            SimPart battery = BatteryBankLarge(v, 1169654648);
+            SimPart sas = AsasModule1_2(v, 2588065212);
+            SimPart tank1 = Rockomax64BW(v, 706255026);
+            SimPart tank2 = Rockomax64BW(v, 4252378878);
             SimPart engine = LiquidEngineMainsailV2(v, 477612636, 0,
                 new V3(0.95751801278484683, -0.28836976344549975, -0.0016915356973186135));
             SimPart clamp1 = LaunchClamp1(v, 2115970530, 0);
@@ -95,20 +95,20 @@ namespace MechJebLibTest.FuelFlowSimulationTests
                 new V3(48.231074597909611, 168.18874204753263, -1.392905019470582E-05),
                 new V3(0.9610545499785107, -0.27635343056128087, -0.0017315298318862915));
 
-            SimPart probe    = ProbeStackLarge(v, 2919945081);
+            SimPart probe = ProbeStackLarge(v, 2919945081);
             SimPart noseCone = RocketNoseConeV3(v, 2612439557);
-            SimPart battery  = BatteryBankLarge(v, 1169654648);
-            SimPart sas      = AsasModule1_2(v, 2588065212);
-            SimPart tank1    = Rockomax64BW(v, 706255026);
-            SimPart tank2    = Rockomax64BW(v, 4252378878);
+            SimPart battery = BatteryBankLarge(v, 1169654648);
+            SimPart sas = AsasModule1_2(v, 2588065212);
+            SimPart tank1 = Rockomax64BW(v, 706255026);
+            SimPart tank2 = Rockomax64BW(v, 4252378878);
             SimPart engine = LiquidEngineMainsailV2(v, 477612636, 1,
                 new V3(0.95751801278484683, -0.28836976344549975, -0.0016915356973186135));
-            SimPart clamp1        = LaunchClamp1(v, 2115970530, 1);
-            SimPart clamp2        = LaunchClamp1(v, 2632810960, 1);
-            SimPart panel1        = LargeSolarPanel(v, 1331256762);
-            SimPart panel2        = LargeSolarPanel(v, 3249199616);
+            SimPart clamp1 = LaunchClamp1(v, 2115970530, 1);
+            SimPart clamp2 = LaunchClamp1(v, 2632810960, 1);
+            SimPart panel1 = LargeSolarPanel(v, 1331256762);
+            SimPart panel2 = LargeSolarPanel(v, 3249199616);
             SimPart dropDecoupler = RadialDecoupler2(v, 1000000001, 0, tank1);
-            SimPart dropTank      = Rockomax64BW(v, 1000000002, 0);
+            SimPart dropTank = Rockomax64BW(v, 1000000002, 0);
 
             MakeRoot(probe);
 
@@ -166,19 +166,19 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
             var thrustDirection = new V3(0.98481306835897642, -0.17361188227317309, -0.0016915356973186135);
 
-            SimPart probe       = ProbeStackLarge(v, 363062213);
-            SimPart noseCone    = RocketNoseConeV3(v, 680279770);
-            SimPart battery     = BatteryBankLarge(v, 2696621395);
-            SimPart sas         = AsasModule1_2(v, 3652483317);
-            SimPart upperTank   = Rockomax64BW(v, 1086072213);
+            SimPart probe = ProbeStackLarge(v, 363062213);
+            SimPart noseCone = RocketNoseConeV3(v, 680279770);
+            SimPart battery = BatteryBankLarge(v, 2696621395);
+            SimPart sas = AsasModule1_2(v, 3652483317);
+            SimPart upperTank = Rockomax64BW(v, 1086072213);
             SimPart upperEngine = LiquidEngineMainsailV2(v, 1899096253, 0, thrustDirection);
-            SimPart decoupler   = Decoupler2(v, 3302637856, 1, upperEngine);
-            SimPart lowerTank   = Rockomax64BW(v, 186459485, 1);
+            SimPart decoupler = Decoupler2(v, 3302637856, 1, upperEngine);
+            SimPart lowerTank = Rockomax64BW(v, 186459485, 1);
             SimPart lowerEngine = LiquidEngineMainsailV2(v, 296107038, 3, thrustDirection);
-            SimPart clamp1      = LaunchClamp1(v, 3767408006, 2);
-            SimPart clamp2      = LaunchClamp1(v, 3106617278, 2);
-            SimPart panel1      = LargeSolarPanel(v, 1281754298);
-            SimPart panel2      = LargeSolarPanel(v, 3802754131);
+            SimPart clamp1 = LaunchClamp1(v, 3767408006, 2);
+            SimPart clamp2 = LaunchClamp1(v, 3106617278, 2);
+            SimPart panel1 = LargeSolarPanel(v, 1281754298);
+            SimPart panel2 = LargeSolarPanel(v, 3802754131);
 
             MakeRoot(probe);
 
@@ -234,14 +234,14 @@ namespace MechJebLibTest.FuelFlowSimulationTests
                 new V3(50.526540503692551, 167.50774574574771, -0.0015525435741062415),
                 new V3(0.95663945646028403, -0.29127067404789669, -0.0016749948263168335));
 
-            SimPart probe      = ProbeStackLarge(v, 3081765285);
-            SimPart noseCone   = RocketNoseConeV3(v, 2058457420);
-            SimPart battery    = BatteryBankLarge(v, 3464832802);
-            SimPart sas        = AsasModule1_2(v, 1568787730);
-            SimPart panel1     = LargeSolarPanel(v, 986793881);
-            SimPart panel2     = LargeSolarPanel(v, 2039583872);
-            SimPart coreTank1  = Rockomax64BW(v, 4249717286);
-            SimPart coreTank2  = Rockomax64BW(v, 2897112194);
+            SimPart probe = ProbeStackLarge(v, 3081765285);
+            SimPart noseCone = RocketNoseConeV3(v, 2058457420);
+            SimPart battery = BatteryBankLarge(v, 3464832802);
+            SimPart sas = AsasModule1_2(v, 1568787730);
+            SimPart panel1 = LargeSolarPanel(v, 986793881);
+            SimPart panel2 = LargeSolarPanel(v, 2039583872);
+            SimPart coreTank1 = Rockomax64BW(v, 4249717286);
+            SimPart coreTank2 = Rockomax64BW(v, 2897112194);
             SimPart coreEngine = LiquidEngineMainsailV2(v, 5718290, 3,
                 new V3(0.95671721860040637, -0.29101534458903305, -0.0016915164887905121));
             SimPart strut1 = StrutConnector(v, 4035748844);
@@ -250,40 +250,40 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             SimPart strut4 = StrutConnector(v, 3338245800);
 
             SimPart inADecoupler = RadialDecoupler2(v, 1342711734, 0, coreTank1);
-            SimPart inATank1     = Rockomax64BW(v, 3436666188, 0);
-            SimPart inATank2     = Rockomax64BW(v, 1491235714, 0);
+            SimPart inATank1 = Rockomax64BW(v, 3436666188, 0);
+            SimPart inATank2 = Rockomax64BW(v, 1491235714, 0);
             SimPart inAEngine = LiquidEngineMainsailV2(v, 1387000143, 3,
                 new V3(0.95671721860040637, -0.29101534458903305, -0.0016915164887905121));
             SimPart inAFuelLine = FuelLine(v, 2825487276, 0);
             SimPart inANoseCone = RocketNoseConeV3(v, 2107898442, 0);
-            SimPart inAClamp    = LaunchClamp1(v, 1834761637, 2);
+            SimPart inAClamp = LaunchClamp1(v, 1834761637, 2);
 
             SimPart inBDecoupler = RadialDecoupler2(v, 338597663, 0, coreTank1);
-            SimPart inBTank1     = Rockomax64BW(v, 2903300948, 0);
-            SimPart inBTank2     = Rockomax64BW(v, 2835658593, 0);
+            SimPart inBTank1 = Rockomax64BW(v, 2903300948, 0);
+            SimPart inBTank2 = Rockomax64BW(v, 2835658593, 0);
             SimPart inBEngine = LiquidEngineMainsailV2(v, 904352827, 3,
                 new V3(0.95671727538909312, -0.29101532648492462, -0.0016915581654757261));
             SimPart inBFuelLine = FuelLine(v, 2565553530, 0);
             SimPart inBNoseCone = RocketNoseConeV3(v, 1781570610, 0);
-            SimPart inBClamp    = LaunchClamp1(v, 2147514922, 2);
+            SimPart inBClamp = LaunchClamp1(v, 2147514922, 2);
 
             SimPart outADecoupler = RadialDecoupler2(v, 2520312754, 1, coreTank1);
-            SimPart outATank1     = Rockomax64BW(v, 1315697509, 1);
-            SimPart outATank2     = Rockomax64BW(v, 3207382999, 1);
+            SimPart outATank1 = Rockomax64BW(v, 1315697509, 1);
+            SimPart outATank2 = Rockomax64BW(v, 3207382999, 1);
             SimPart outAEngine = LiquidEngineMainsailV2(v, 4182532358, 3,
                 new V3(0.95671731407367133, -0.29101525159212938, -0.0016914904117584229));
             SimPart outAFuelLine = FuelLine(v, 1428295298, 1);
             SimPart outANoseCone = RocketNoseConeV3(v, 3121470973, 1);
-            SimPart outAClamp    = LaunchClamp1(v, 2660487534, 2);
+            SimPart outAClamp = LaunchClamp1(v, 2660487534, 2);
 
             SimPart outBDecoupler = RadialDecoupler2(v, 853805331, 1, coreTank1);
-            SimPart outBTank1     = Rockomax64BW(v, 655026546, 1);
-            SimPart outBTank2     = Rockomax64BW(v, 3074366510, 1);
+            SimPart outBTank1 = Rockomax64BW(v, 655026546, 1);
+            SimPart outBTank2 = Rockomax64BW(v, 3074366510, 1);
             SimPart outBEngine = LiquidEngineMainsailV2(v, 2186939596, 3,
                 new V3(0.95671729349320156, -0.29101538327361126, -0.0016914308071136475));
             SimPart outBFuelLine = FuelLine(v, 3687288196, 1);
             SimPart outBNoseCone = RocketNoseConeV3(v, 2745859995, 1);
-            SimPart outBClamp    = LaunchClamp1(v, 1622391962, 2);
+            SimPart outBClamp = LaunchClamp1(v, 1622391962, 2);
 
             MakeRoot(probe, "Mainsail Tin Can Asparagus");
 
@@ -305,8 +305,8 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             LinkBooster(coreTank1, outBDecoupler, outBTank1, outBTank2, outBEngine, outBFuelLine, outBNoseCone, outBClamp);
 
             // the fuel lines make each set reach the booster outboard of it, so the core's set reaches every booster
-            SimPart[] inA  = { inAFuelLine, inAEngine, inATank1, inATank2, inANoseCone };
-            SimPart[] inB  = { inBFuelLine, inBEngine, inBTank1, inBTank2, inBNoseCone };
+            SimPart[] inA = { inAFuelLine, inAEngine, inATank1, inATank2, inANoseCone };
+            SimPart[] inB = { inBFuelLine, inBEngine, inBTank1, inBTank2, inBNoseCone };
             SimPart[] outA = { outAFuelLine, outAEngine, outATank1, outATank2, outANoseCone };
             SimPart[] outB = { outBFuelLine, outBEngine, outBTank1, outBTank2, outBNoseCone };
 
@@ -318,11 +318,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             CrossFeedSet(outB, outBTank1, outBTank2, outBEngine, outBFuelLine);
 
             // the nose cones, struts, decouplers and launch clamps each have a set of their own
-            foreach (SimPart p in new[]
-                     {
-                         noseCone, strut1, strut2, strut3, strut4, inADecoupler, inANoseCone, inAClamp, inBDecoupler, inBNoseCone, inBClamp,
-                         outADecoupler, outANoseCone, outAClamp, outBDecoupler, outBNoseCone, outBClamp
-                     })
+            foreach (SimPart p in new[] { noseCone, strut1, strut2, strut3, strut4, inADecoupler, inANoseCone, inAClamp, inBDecoupler, inBNoseCone, inBClamp, outADecoupler, outANoseCone, outAClamp, outBDecoupler, outBNoseCone, outBClamp })
                 CrossFeed(p);
 
             Symmetry(panel1, panel2);
@@ -365,47 +361,47 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
             var dir = new V3(0.95671721860040637, -0.29101534458903305, -0.0016915164887905121);
 
-            SimPart probe      = ProbeStackLarge(v, 3081765285);
-            SimPart noseCone   = RocketNoseConeV3(v, 2058457420);
-            SimPart battery    = BatteryBankLarge(v, 3464832802);
-            SimPart sas        = AsasModule1_2(v, 1568787730);
-            SimPart panel1     = LargeSolarPanel(v, 986793881);
-            SimPart panel2     = LargeSolarPanel(v, 2039583872);
-            SimPart coreTank1  = Rockomax64BW(v, 4249717286);
-            SimPart coreTank2  = Rockomax64BW(v, 2897112194);
+            SimPart probe = ProbeStackLarge(v, 3081765285);
+            SimPart noseCone = RocketNoseConeV3(v, 2058457420);
+            SimPart battery = BatteryBankLarge(v, 3464832802);
+            SimPart sas = AsasModule1_2(v, 1568787730);
+            SimPart panel1 = LargeSolarPanel(v, 986793881);
+            SimPart panel2 = LargeSolarPanel(v, 2039583872);
+            SimPart coreTank1 = Rockomax64BW(v, 4249717286);
+            SimPart coreTank2 = Rockomax64BW(v, 2897112194);
             SimPart coreEngine = LiquidEngineMainsailV2(v, 5718290, 3, dir);
-            SimPart strut1     = StrutConnector(v, 4035748844);
-            SimPart strut2     = StrutConnector(v, 4236372261);
-            SimPart strut3     = StrutConnector(v, 664156568);
-            SimPart strut4     = StrutConnector(v, 3338245800);
+            SimPart strut1 = StrutConnector(v, 4035748844);
+            SimPart strut2 = StrutConnector(v, 4236372261);
+            SimPart strut3 = StrutConnector(v, 664156568);
+            SimPart strut4 = StrutConnector(v, 3338245800);
 
             SimPart inADecoupler = RadialDecoupler2(v, 1342711734, 0, coreTank1);
-            SimPart inATank1     = Rockomax64BW(v, 3436666188, 0);
-            SimPart inATank2     = Rockomax64BW(v, 1491235714, 0);
-            SimPart inAEngine    = LiquidEngineMainsailV2(v, 1387000143, 3, dir);
-            SimPart inANoseCone  = RocketNoseConeV3(v, 2107898442, 0);
-            SimPart inAClamp     = LaunchClamp1(v, 1834761637, 2);
+            SimPart inATank1 = Rockomax64BW(v, 3436666188, 0);
+            SimPart inATank2 = Rockomax64BW(v, 1491235714, 0);
+            SimPart inAEngine = LiquidEngineMainsailV2(v, 1387000143, 3, dir);
+            SimPart inANoseCone = RocketNoseConeV3(v, 2107898442, 0);
+            SimPart inAClamp = LaunchClamp1(v, 1834761637, 2);
 
             SimPart inBDecoupler = RadialDecoupler2(v, 338597663, 0, coreTank1);
-            SimPart inBTank1     = Rockomax64BW(v, 2903300948, 0);
-            SimPart inBTank2     = Rockomax64BW(v, 2835658593, 0);
-            SimPart inBEngine    = LiquidEngineMainsailV2(v, 904352827, 3, dir);
-            SimPart inBNoseCone  = RocketNoseConeV3(v, 1781570610, 0);
-            SimPart inBClamp     = LaunchClamp1(v, 2147514922, 2);
+            SimPart inBTank1 = Rockomax64BW(v, 2903300948, 0);
+            SimPart inBTank2 = Rockomax64BW(v, 2835658593, 0);
+            SimPart inBEngine = LiquidEngineMainsailV2(v, 904352827, 3, dir);
+            SimPart inBNoseCone = RocketNoseConeV3(v, 1781570610, 0);
+            SimPart inBClamp = LaunchClamp1(v, 2147514922, 2);
 
             SimPart outADecoupler = RadialDecoupler2(v, 2520312754, 1, coreTank1);
-            SimPart outATank1     = Rockomax64BW(v, 1315697509, 1);
-            SimPart outATank2     = Rockomax64BW(v, 3207382999, 1);
-            SimPart outAEngine    = LiquidEngineMainsailV2(v, 4182532358, 3, dir);
-            SimPart outANoseCone  = RocketNoseConeV3(v, 3121470973, 1);
-            SimPart outAClamp     = LaunchClamp1(v, 2660487534, 2);
+            SimPart outATank1 = Rockomax64BW(v, 1315697509, 1);
+            SimPart outATank2 = Rockomax64BW(v, 3207382999, 1);
+            SimPart outAEngine = LiquidEngineMainsailV2(v, 4182532358, 3, dir);
+            SimPart outANoseCone = RocketNoseConeV3(v, 3121470973, 1);
+            SimPart outAClamp = LaunchClamp1(v, 2660487534, 2);
 
             SimPart outBDecoupler = RadialDecoupler2(v, 853805331, 1, coreTank1);
-            SimPart outBTank1     = Rockomax64BW(v, 655026546, 1);
-            SimPart outBTank2     = Rockomax64BW(v, 3074366510, 1);
-            SimPart outBEngine    = LiquidEngineMainsailV2(v, 2186939596, 3, dir);
-            SimPart outBNoseCone  = RocketNoseConeV3(v, 2745859995, 1);
-            SimPart outBClamp     = LaunchClamp1(v, 1622391962, 2);
+            SimPart outBTank1 = Rockomax64BW(v, 655026546, 1);
+            SimPart outBTank2 = Rockomax64BW(v, 3074366510, 1);
+            SimPart outBEngine = LiquidEngineMainsailV2(v, 2186939596, 3, dir);
+            SimPart outBNoseCone = RocketNoseConeV3(v, 2745859995, 1);
+            SimPart outBClamp = LaunchClamp1(v, 1622391962, 2);
 
             MakeRoot(probe, "Mainsail Tin Can Crossfeed Asparagus");
 
@@ -426,14 +422,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             LinkBooster(coreTank1, outADecoupler, outATank1, outATank2, outAEngine, null, outANoseCone, outAClamp);
             LinkBooster(coreTank1, outBDecoupler, outBTank1, outBTank2, outBEngine, null, outBNoseCone, outBClamp);
 
-            SimPart[] all =
-            {
-                panel2, panel1, coreEngine, coreTank2, coreTank1, sas, battery, probe, noseCone,
-                inADecoupler, inATank1, inATank2, inAEngine, inANoseCone,
-                inBDecoupler, inBTank1, inBTank2, inBEngine, inBNoseCone,
-                outADecoupler, outATank1, outATank2, outAEngine, outANoseCone,
-                outBDecoupler, outBTank1, outBTank2, outBEngine, outBNoseCone
-            };
+            SimPart[] all = { panel2, panel1, coreEngine, coreTank2, coreTank1, sas, battery, probe, noseCone, inADecoupler, inATank1, inATank2, inAEngine, inANoseCone, inBDecoupler, inBTank1, inBTank2, inBEngine, inBNoseCone, outADecoupler, outATank1, outATank2, outAEngine, outANoseCone, outBDecoupler, outBTank1, outBTank2, outBEngine, outBNoseCone };
             CrossFeedSet(all, all);
 
             // the struts and launch clamps each have a set of their own
@@ -474,14 +463,14 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
             var dir = new V3(0.95751801278484683, -0.28836976344549975, -0.0016915356973186135);
 
-            SimPart probe      = ProbeStackLarge(v, 1001);
-            SimPart coreTank1  = Rockomax64BW(v, 1002);
-            SimPart coreTank2  = Rockomax64BW(v, 1003);
+            SimPart probe = ProbeStackLarge(v, 1001);
+            SimPart coreTank1 = Rockomax64BW(v, 1002);
+            SimPart coreTank2 = Rockomax64BW(v, 1003);
             SimPart coreEngine = LiquidEngineMainsailV2(v, 1004, 1, dir);
             SimPart decouplerA = RadialDecoupler2(v, 1005, 0, coreTank1);
-            SimPart engineA    = LiquidEngineMainsailV2(v, 1006, 1, dir);
+            SimPart engineA = LiquidEngineMainsailV2(v, 1006, 1, dir);
             SimPart decouplerB = RadialDecoupler2(v, 1007, 0, coreTank1);
-            SimPart engineB    = LiquidEngineMainsailV2(v, 1008, 1, dir);
+            SimPart engineB = LiquidEngineMainsailV2(v, 1008, 1, dir);
 
             MakeRoot(probe);
 
@@ -532,60 +521,28 @@ namespace MechJebLibTest.FuelFlowSimulationTests
                 new V3(327.80846173363119, 242.69017320559482, -1.1649856299288815E-07),
                 new V3(0.52232058711411489, -0.70562870200873251, 0.47882080078125));
 
-            SimPart payload     = ROTServiceModule(v, 716676487, -0.91552984714508057, 659.92299999999966);
-            SimPart avionics2   = ProceduralAvionics(v, 3578329919, -1, -0.70491535891778767, 111778, 150);
+            SimPart payload = ROTServiceModule(v, 716676487, -0.91552984714508057, 659.92299999999966);
+            SimPart avionics2 = ProceduralAvionics(v, 3578329919, -1, -0.70491535891778767, 111778, 150);
             SimPart fairingBase = KzResizableFairingBase(v, 711105664, 0, 0.53969687223434448, avionics2);
-            SimPart tank2       = ROTGenericTankSeparate(v, 2593943298, 0, 1.9433658123016357, 38750.520237705852, 61199.234562294143);
+            SimPart tank2 = ROTGenericTankSeparate(v, 2593943298, 0, 1.9433658123016357, 38750.520237705852, 61199.234562294143);
             SimPart mvac = ROEMerlin1DV(v, 248665222, 2,
                 new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522));
             SimPart interstage = KzFlatAdapter(v, 4238809487, 2, 0.42880785465240479, mvac);
-            SimPart avionics1  = ProceduralAvionics(v, 1573872723, 2, -0.36856828560121357, 268317, 600);
+            SimPart avionics1 = ProceduralAvionics(v, 1573872723, 2, -0.36856828560121357, 268317, 600);
             SimPart tank1 = ROTGenericTankSeparate(v, 1975695187, 2, 11.127128601074219, 149242.99723951373, 235701.53739390321);
             SimPart thrustPlate = KzThrustPlate(v, 3628547826, 2, 0.74751102924346924);
 
-            SimPart[] merlins =
-            {
-                ROEMerlin1D(v, 3766919695, 4, new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522)),
-                ROEMerlin1D(v, 1520557324, 4, new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522)),
-                ROEMerlin1D(v, 2691955204, 4, new V3(0.52153769716744469, -0.70620778159085063, 0.47882071137428284)),
-                ROEMerlin1D(v, 75275086, 4, new V3(0.52153757701778169, -0.70620769345164847, 0.47882065176963806)),
-                ROEMerlin1D(v, 4036330361, 4, new V3(0.5215374568681187, -0.7062076053124462, 0.47882062196731567)),
-                ROEMerlin1D(v, 3933714968, 4, new V3(0.52153730304121071, -0.70620771423636086, 0.47882068157196045)),
-                ROEMerlin1D(v, 2052249669, 4, new V3(0.52153741712213852, -0.70620767964739362, 0.47882068157196045)),
-                ROEMerlin1D(v, 4132307635, 4, new V3(0.52153757701778169, -0.70620769345164847, 0.47882065176963806)),
-                ROEMerlin1D(v, 957131212, 4, new V3(0.52153736008167462, -0.70620769694187724, 0.47882059216499329))
-            };
+            SimPart[] merlins = { ROEMerlin1D(v, 3766919695, 4, new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522)), ROEMerlin1D(v, 1520557324, 4, new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522)), ROEMerlin1D(v, 2691955204, 4, new V3(0.52153769716744469, -0.70620778159085063, 0.47882071137428284)), ROEMerlin1D(v, 75275086, 4, new V3(0.52153757701778169, -0.70620769345164847, 0.47882065176963806)), ROEMerlin1D(v, 4036330361, 4, new V3(0.5215374568681187, -0.7062076053124462, 0.47882062196731567)), ROEMerlin1D(v, 3933714968, 4, new V3(0.52153730304121071, -0.70620771423636086, 0.47882068157196045)), ROEMerlin1D(v, 2052249669, 4, new V3(0.52153741712213852, -0.70620767964739362, 0.47882068157196045)), ROEMerlin1D(v, 4132307635, 4, new V3(0.52153757701778169, -0.70620769345164847, 0.47882065176963806)), ROEMerlin1D(v, 957131212, 4, new V3(0.52153736008167462, -0.70620769694187724, 0.47882059216499329)) };
 
-            SimPart[] clamps =
-            {
-                RP1LaunchClamp1(v, 1950391702, 3), RP1LaunchClamp1(v, 536336776, 3), RP1LaunchClamp1(v, 3329569423, 3),
-                RP1LaunchClamp1(v, 3966630377, 3), RP1LaunchClamp1(v, 3977908051, 3), RP1LaunchClamp1(v, 219405182, 3),
-                RP1LaunchClamp1(v, 3483319384, 3), RP1LaunchClamp1(v, 26648143, 3)
-            };
+            SimPart[] clamps = { RP1LaunchClamp1(v, 1950391702, 3), RP1LaunchClamp1(v, 536336776, 3), RP1LaunchClamp1(v, 3329569423, 3), RP1LaunchClamp1(v, 3966630377, 3), RP1LaunchClamp1(v, 3977908051, 3), RP1LaunchClamp1(v, 219405182, 3), RP1LaunchClamp1(v, 3483319384, 3), RP1LaunchClamp1(v, 26648143, 3) };
 
-            SimPart[] interstageFairing =
-            {
-                KzProcFairingSide1(v, 1110556197, 2, 0.44426935911178589), KzProcFairingSide1(v, 84964491, 2, 0.44426935911178589),
-                KzProcFairingSide1(v, 3892549061, 2, 0.44426935911178589), KzProcFairingSide1(v, 613648638, 2, 0.44426935911178589)
-            };
+            SimPart[] interstageFairing = { KzProcFairingSide1(v, 1110556197, 2, 0.44426935911178589), KzProcFairingSide1(v, 84964491, 2, 0.44426935911178589), KzProcFairingSide1(v, 3892549061, 2, 0.44426935911178589), KzProcFairingSide1(v, 613648638, 2, 0.44426935911178589) };
 
-            SimPart[] nitrogenTanks =
-            {
-                RORFTankIntegral(v, 1519049209, 0, -0.99626743793487549, 44323.939999999995),
-                RORFTankIntegral(v, 1893542743, 0, -0.99626743793487549, 44323.939999999995),
-                RORFTankIntegral(v, 1556299446, 0, -0.98235255479812622, 44323.939999999995),
-                RORFTankIntegral(v, 2210098343, 0, -0.99626743793487549, 44323.939999999995)
-            };
+            SimPart[] nitrogenTanks = { RORFTankIntegral(v, 1519049209, 0, -0.99626743793487549, 44323.939999999995), RORFTankIntegral(v, 1893542743, 0, -0.99626743793487549, 44323.939999999995), RORFTankIntegral(v, 1556299446, 0, -0.98235255479812622, 44323.939999999995), RORFTankIntegral(v, 2210098343, 0, -0.99626743793487549, 44323.939999999995) };
 
-            SimPart[] rcs =
-            {
-                TE219F9CGT(v, 1552971870, 2), TE219F9CGT(v, 3144618445, 2), TE219F9CGT(v, 2229477872, 2), TE219F9CGT(v, 2659758618, 2)
-            };
+            SimPart[] rcs = { TE219F9CGT(v, 1552971870, 2), TE219F9CGT(v, 3144618445, 2), TE219F9CGT(v, 2229477872, 2), TE219F9CGT(v, 2659758618, 2) };
 
-            SimPart[] payloadFairing =
-            {
-                KzProcFairingSide1(v, 288594212, 1, 0.82329875230789185), KzProcFairingSide1(v, 3427567844, 1, 0.82329875230789185)
-            };
+            SimPart[] payloadFairing = { KzProcFairingSide1(v, 288594212, 1, 0.82329875230789185), KzProcFairingSide1(v, 3427567844, 1, 0.82329875230789185) };
 
             MakeRoot(payload, "My Falcon 9 Block 5");
 
@@ -641,9 +598,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         /// </summary>
         public static SimVessel NewVessel(int currentStage)
         {
-            SimVessel v = SimVessel.Borrow();
+            var v = SimVessel.Borrow();
             v.HasLaunchClamp = false;
-            v.MainThrottle   = 1.0;
+            v.MainThrottle = 1.0;
             v.SetCurrentStage(currentStage);
             v.SetConditions(0, 0, 0);
             v.SetInitial(0, V3.zero, V3.zero, V3.zero);

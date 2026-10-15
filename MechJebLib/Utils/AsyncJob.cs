@@ -35,7 +35,7 @@ namespace MechJebLib.Utils
         private CancellationTokenSource? _cts;
         private int _state = (int)JobState.Ready;
 
-        public JobState State     => (JobState)Volatile.Read(ref _state);
+        public JobState   State     => (JobState)Volatile.Read(ref _state);
         public Exception? Exception { get; private set; }
 
         protected CancellationToken CancelToken { get; private set; }

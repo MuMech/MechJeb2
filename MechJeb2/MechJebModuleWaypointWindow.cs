@@ -320,7 +320,7 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            _ap =Core.GetComputerModule<MechJebModuleRoverController>();
+            _ap = Core.GetComputerModule<MechJebModuleRoverController>();
             if (HighLogic.LoadedSceneIsFlight && Vessel.isActiveVessel)
             {
                 _renderer = MechJebRouteRenderer.AttachToMapView(Core);

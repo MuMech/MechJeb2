@@ -11,34 +11,19 @@ namespace MechJebLibTest.Primitives.V2Tests
     public class OperatorTests
     {
         [Fact]
-        private void Addition()
-        {
-            (new V2(1, 2) + new V2(3, -5)).ShouldEqual(new V2(4, -3));
-        }
+        private void Addition() => (new V2(1, 2) + new V2(3, -5)).ShouldEqual(new V2(4, -3));
 
         [Fact]
-        private void Subtraction()
-        {
-            (new V2(1, 2) - new V2(3, -5)).ShouldEqual(new V2(-2, 7));
-        }
+        private void Subtraction() => (new V2(1, 2) - new V2(3, -5)).ShouldEqual(new V2(-2, 7));
 
         [Fact]
-        private void ComponentwiseMultiplication()
-        {
-            (new V2(2, 3) * new V2(4, -5)).ShouldEqual(new V2(8, -15));
-        }
+        private void ComponentwiseMultiplication() => (new V2(2, 3) * new V2(4, -5)).ShouldEqual(new V2(8, -15));
 
         [Fact]
-        private void ComponentwiseDivision()
-        {
-            (new V2(8, -15) / new V2(4, -5)).ShouldEqual(new V2(2, 3));
-        }
+        private void ComponentwiseDivision() => (new V2(8, -15) / new V2(4, -5)).ShouldEqual(new V2(2, 3));
 
         [Fact]
-        private void UnaryNegation()
-        {
-            (-new V2(1, -2)).ShouldEqual(new V2(-1, 2));
-        }
+        private void UnaryNegation() => (-new V2(1, -2)).ShouldEqual(new V2(-1, 2));
 
         [Fact]
         private void ScalarMultiplicationBothSides()
@@ -50,16 +35,10 @@ namespace MechJebLibTest.Primitives.V2Tests
         }
 
         [Fact]
-        private void ScalarDivision()
-        {
-            (new V2(3, -4) / 2).ShouldEqual(new V2(1.5, -2));
-        }
+        private void ScalarDivision() => (new V2(3, -4) / 2).ShouldEqual(new V2(1.5, -2));
 
         [Fact]
-        private void ScalarDividedByVector()
-        {
-            (12 / new V2(3, -4)).ShouldEqual(new V2(4, -3));
-        }
+        private void ScalarDividedByVector() => (12 / new V2(3, -4)).ShouldEqual(new V2(4, -3));
 
         [Fact]
         private void DivisionByZeroGivesInfinity()

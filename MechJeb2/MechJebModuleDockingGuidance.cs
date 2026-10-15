@@ -177,12 +177,12 @@ namespace MuMech
                 return;
             }
 
-            List<ModuleDockingNode> targetPorts = targetVessel.GetModules<ModuleDockingNode>()
-                .Where(port => IsAvailableTargetPort(port) && port.GetTransform() != null &&
+            var targetPorts = targetVessel.GetModules<ModuleDockingNode>()
+               .Where(port => IsAvailableTargetPort(port) && port.GetTransform() != null &&
                     ArePortsCompatible(referencePort, port))
-                .ToList();
+               .ToList();
 
-            ModuleDockingNode currentPort = Core.Target.Target as ModuleDockingNode;
+            var currentPort = Core.Target.Target as ModuleDockingNode;
             if (currentPort != null && targetPorts.Contains(currentPort))
                 selectedTargetPort = currentPort;
             else if (selectedTargetPort != null && !targetPorts.Contains(selectedTargetPort))

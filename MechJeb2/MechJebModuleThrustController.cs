@@ -953,7 +953,7 @@ namespace MuMech
 
         private void DisableDifferentialThrottle()
         {
-            foreach (var entry in _thrustLimitsBeforeDifferentialThrottle)
+            foreach (KeyValuePair<ModuleEngines, float> entry in _thrustLimitsBeforeDifferentialThrottle)
             {
                 if (entry.Key != null)
                     entry.Key.thrustPercentage = entry.Value;

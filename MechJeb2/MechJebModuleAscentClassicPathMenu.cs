@@ -9,7 +9,9 @@ namespace MuMech
     public class MechJebModuleAscentClassicPathMenu : DisplayModule
     {
         public MechJebModuleAscentClassicPathMenu(MechJebCore core)
-            : base(core) { }
+            : base(core)
+        {
+        }
 
         public override bool ShowInMenu => false;
 

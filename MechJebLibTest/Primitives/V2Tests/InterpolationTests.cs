@@ -43,10 +43,7 @@ namespace MechJebLibTest.Primitives.V2Tests
         }
 
         [Fact]
-        private void SlerpMidpointOfUnitVectors()
-        {
-            V2.Slerp(V2.xaxis, V2.yaxis, 0.5).ShouldEqual(new V2(Sqrt(0.5), Sqrt(0.5)));
-        }
+        private void SlerpMidpointOfUnitVectors() => V2.Slerp(V2.xaxis, V2.yaxis, 0.5).ShouldEqual(new V2(Sqrt(0.5), Sqrt(0.5)));
 
         [Fact]
         private void SlerpConstantAngularRate()
@@ -76,7 +73,7 @@ namespace MechJebLibTest.Primitives.V2Tests
             var a = new V2(2, 0);
             var b = new V2(0, 4);
 
-            V2 mid = V2.Slerp(a, b, 0.5);
+            var mid = V2.Slerp(a, b, 0.5);
 
             mid.magnitude.ShouldEqual(3, 1e-14);
             V2.Angle(a, mid).ShouldEqual(PI / 4, 1e-14);
@@ -88,7 +85,7 @@ namespace MechJebLibTest.Primitives.V2Tests
             V2 a = V2.xaxis;
             var b = new V2(Cos(1e-9), Sin(1e-9));
 
-            V2 mid = V2.Slerp(a, b, 0.5);
+            var mid = V2.Slerp(a, b, 0.5);
 
             mid.magnitude.ShouldEqual(1, 1e-14);
             (V2.SignedAngle(a, mid) / 0.5e-9).ShouldEqual(1.0, 1e-6);

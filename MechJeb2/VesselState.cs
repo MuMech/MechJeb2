@@ -126,12 +126,14 @@ namespace MuMech
         public double CelestialLongitude;
 
         public Vector3d CoL;
+
         // Sum of the per-part scalar lift weights used to form the CoL centroid (not a vector magnitude).
         public double CoLWeightSum;
 
         public Vector3d CoM;
 
         public Vector3d CoT;
+
         // Sum of the per-thrust-transform scalar thrust weights used to form the CoT centroid
         // (equals total scalar thrust, i.e. before directional cancellation -- not the net thrust magnitude).
         public double CoTWeightSum;
@@ -418,9 +420,9 @@ namespace MuMech
         public double ThrustCurrent   => Vector3d.Dot(ThrustVectorLastFrame, Forward);
 
         // Acceleration in the forward direction, for when dividing by mass is too complicated.
-        public double MaxThrustAcceleration        => ThrustAvailable / Mass;
-        public double MinThrustAcceleration        => ThrustMinimum / Mass;
-        public double CurrentThrustAcceleration    => ThrustCurrent / Mass;
+        public double MaxThrustAcceleration     => ThrustAvailable / Mass;
+        public double MinThrustAcceleration     => ThrustMinimum / Mass;
+        public double CurrentThrustAcceleration => ThrustCurrent / Mass;
 
         public double LimitedMaxThrustAcceleration
         {
@@ -1405,7 +1407,7 @@ namespace MuMech
                     double tCurrentThrust = eCurrentThrust * thrustTransformMultiplier;
                     double tMaxThrust = eMaxThrust * thrustTransformMultiplier;
 
-                    ThrustCurrent += tCurrentThrust  * thrustDirectionVector;
+                    ThrustCurrent += tCurrentThrust * thrustDirectionVector;
                     ThrustMax += tMaxThrust * thrustDirectionVector;
                     ThrustMin += eMinThrust * thrustDirectionVector * thrustTransformMultiplier;
 

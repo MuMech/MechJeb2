@@ -38,7 +38,11 @@ namespace MuMech.MechJebKos
 
             AddSuffix("WARP", new NoArgsVoidSuffix(() => Module.StartWarp(),
                 "Resolve the current TARGET and begin warping toward it."));
-            AddSuffix("WARPTO", new OneArgsSuffix<StringValue>(target => { Module.warpTarget = StringToTarget(target); Module.StartWarp(); },
+            AddSuffix("WARPTO", new OneArgsSuffix<StringValue>(target =>
+                {
+                    Module.warpTarget = StringToTarget(target);
+                    Module.StartWarp();
+                },
                 "Set TARGET to the given event and begin warping toward it in one call."));
             AddSuffix("ABORT", new NoArgsVoidSuffix(() => Module.AbortWarp(),
                 "Stop warping and drop back to 1x warp."));

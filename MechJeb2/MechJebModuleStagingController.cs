@@ -291,12 +291,9 @@ namespace MuMech
                 if (HasFairing(Vessel.currentStage - 1) && !WaitingForFairing())
                 {
                     Stage();
-                    return;
                 }
-                else
-                {
-                    return;
-                }
+
+                return;
             }
 
             UpdateActiveModuleEngines(_allModuleEngines);

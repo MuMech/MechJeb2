@@ -22,7 +22,7 @@ namespace MechJebLibTest.Primitives.M2Tests
         [Fact]
         private void RotateIsProperOrthogonal()
         {
-            M2 r = M2.Rotate(1.234);
+            var r = M2.Rotate(1.234);
 
             r.isOrthogonal.ShouldBeTrue();
             r.determinant.ShouldEqual(1, 1e-15);
@@ -63,7 +63,7 @@ namespace MechJebLibTest.Primitives.M2Tests
         [Fact]
         private void RotateInverseIsTransposeAndNegativeAngle()
         {
-            M2 r = M2.Rotate(1.234);
+            var r = M2.Rotate(1.234);
 
             r.transpose.ShouldEqual(M2.Rotate(-1.234));
             r.inverse.ShouldEqual(M2.Rotate(-1.234), 1e-15);
@@ -79,10 +79,7 @@ namespace MechJebLibTest.Primitives.M2Tests
         }
 
         [Fact]
-        private void AngleOfScaledRotation()
-        {
-            (M2.Rotate(-2.5) * 7).angle.ShouldEqual(-2.5, 1e-15);
-        }
+        private void AngleOfScaledRotation() => (M2.Rotate(-2.5) * 7).angle.ShouldEqual(-2.5, 1e-15);
 
         [Fact]
         private void SkewKnownValues()
@@ -97,7 +94,7 @@ namespace MechJebLibTest.Primitives.M2Tests
             var v = new V2(3, -4);
             double omega = -1.7;
 
-            V3 cross = V3.Cross(new V3(0, 0, omega), new V3(v.x, v.y, 0));
+            var cross = V3.Cross(new V3(0, 0, omega), new V3(v.x, v.y, 0));
 
             (M2.Skew(omega) * v).ShouldEqual(new V2(cross.x, cross.y));
         }
@@ -143,10 +140,7 @@ namespace MechJebLibTest.Primitives.M2Tests
         }
 
         [Fact]
-        private void OrthonormalizePreservesFirstColumnDirection()
-        {
-            _a.orthonormalized.GetColumn(0).ShouldEqual(_a.GetColumn(0).normalized);
-        }
+        private void OrthonormalizePreservesFirstColumnDirection() => _a.orthonormalized.GetColumn(0).ShouldEqual(_a.GetColumn(0).normalized);
 
         [Fact]
         private void OrthonormalizeIsQOfQRDecomposition()

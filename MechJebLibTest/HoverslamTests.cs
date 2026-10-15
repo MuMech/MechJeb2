@@ -6,7 +6,6 @@
 using System;
 using MechJebLib.HoverslamSimulation;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
 using Xunit;
 
 namespace MechJebLibTest

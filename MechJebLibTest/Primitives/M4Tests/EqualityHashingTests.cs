@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
@@ -33,7 +34,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         [Fact]
         private void EqualityOperatorTest()
         {
-            M4 copy = M4.CopyFrom(RowMajor(_a), 0);
+            var copy = M4.CopyFrom(RowMajor(_a), 0);
 
             Assert.True(_a == copy);
             Assert.False(_a != copy);
@@ -48,7 +49,7 @@ namespace MechJebLibTest.Primitives.M4Tests
             {
                 double[] array = RowMajor(_a);
                 array[k] += 1;
-                M4 other = M4.CopyFrom(array, 0);
+                var other = M4.CopyFrom(array, 0);
 
                 Assert.False(_a == other);
                 Assert.True(_a != other);
@@ -60,7 +61,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         private void NaNEqualityTest()
         {
             M4 m = M4.identity + new M4(0, 0, 0, 0, 0, 0, double.NaN, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-            M4 copy = M4.CopyFrom(RowMajor(m), 0);
+            var copy = M4.CopyFrom(RowMajor(m), 0);
 
             // strict operators follow IEEE-754
             Assert.False(m == copy);
@@ -78,14 +79,14 @@ namespace MechJebLibTest.Primitives.M4Tests
             Assert.True(_a.Equals((object)_a));
             Assert.False(_a.Equals((object)_b));
             Assert.False(_a.Equals(null));
-            Assert.False(M4.identity.Equals((object)M3.identity));
+            Assert.False(M4.identity.Equals(M3.identity));
             Assert.False(_a.Equals("not a matrix"));
         }
 
         [Fact]
         private void HashCodeTest()
         {
-            M4 copy = M4.CopyFrom(RowMajor(_a), 0);
+            var copy = M4.CopyFrom(RowMajor(_a), 0);
 
             Assert.Equal(_a.GetHashCode(), copy.GetHashCode());
             Assert.NotEqual(_a.GetHashCode(), _b.GetHashCode());
@@ -106,7 +107,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         private void NearlyEqualZeroElementTest()
         {
             // zero elements use epsilon as an absolute tolerance
-            M4 small = new M4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-12);
+            var small = new M4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-12);
             Assert.True(NearlyEqual(M4.identity, M4.identity + small, 1e-9));
             Assert.False(NearlyEqual(M4.zero, small * 1e6, 1e-9));
         }
@@ -115,8 +116,8 @@ namespace MechJebLibTest.Primitives.M4Tests
         private void NearlyEqualNonFiniteTest()
         {
             // a NaN or Inf element makes the relative tolerance non-finite, which used to make every element compare equal
-            M4 nan = new M4(double.NaN, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-            M4 inf = new M4(double.PositiveInfinity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            var nan = new M4(double.NaN, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            var inf = new M4(double.PositiveInfinity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
             Assert.False(NearlyEqual(_a, _a + nan));
             Assert.False(NearlyEqual(_a + nan, _a * 2));
@@ -128,7 +129,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         private void ShouldEqualTest()
         {
             _a.ShouldEqual(_a * (1 + 1e-10), 1e-9);
-            Assert.ThrowsAny<System.Exception>(() => _a.ShouldEqual(_b));
+            Assert.ThrowsAny<Exception>(() => _a.ShouldEqual(_b));
         }
     }
 }

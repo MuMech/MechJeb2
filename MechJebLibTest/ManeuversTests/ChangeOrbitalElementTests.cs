@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
-using MechJebLib.Utils;
 using Xunit;
 
 namespace MechJebLibTest.ManeuversTests
@@ -21,7 +20,8 @@ namespace MechJebLibTest.ManeuversTests
                 yield return new object[] { i };
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void ChangeOrbitalElementTest(int seed)
         {
             var random = new Random(seed);

@@ -43,10 +43,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         private void OrthonormalizeArbitraryMatrix() => ShouldBeOrthonormal(_b.orthonormalized);
 
         [Fact]
-        private void OrthonormalizePreservesFirstColumnDirection()
-        {
-            _b.orthonormalized.GetColumn(0).ShouldEqual(_b.GetColumn(0).normalized);
-        }
+        private void OrthonormalizePreservesFirstColumnDirection() => _b.orthonormalized.GetColumn(0).ShouldEqual(_b.GetColumn(0).normalized);
 
         [Fact]
         private void OrthonormalizeIsQOfQRDecomposition()

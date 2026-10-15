@@ -11,7 +11,6 @@ using MechJebLib.FuelFlowSimulation.PartModules;
 using MechJebLib.Primitives;
 using MechJebLib.Utils;
 using static System.FormattableString;
-using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.FuelFlowSimulation
 {

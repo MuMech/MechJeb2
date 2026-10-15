@@ -371,7 +371,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
                 Assert.Equal(q * V3.forward, q.forward);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomForwardMatchesRotateForward(int seed)
         {
             var rng = new Random(seed);
@@ -382,7 +383,8 @@ namespace MechJebLibTest.Primitives.Q3Tests
             Assert.Equal(q * V3.forward, q.forward);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void MatrixMatchesM3Rotate(int seed)
         {
             var rng = new Random(seed);

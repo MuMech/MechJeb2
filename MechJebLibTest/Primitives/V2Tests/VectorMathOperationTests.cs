@@ -93,10 +93,7 @@ namespace MechJebLibTest.Primitives.V2Tests
         }
 
         [Fact]
-        private void ProjectOntoDiagonal()
-        {
-            V2.Project(new V2(2, 0), new V2(1, 1)).ShouldEqual(new V2(1, 1));
-        }
+        private void ProjectOntoDiagonal() => V2.Project(new V2(2, 0), new V2(1, 1)).ShouldEqual(new V2(1, 1));
 
         [Fact]
         private void ProjectZeroCases()
@@ -110,11 +107,11 @@ namespace MechJebLibTest.Primitives.V2Tests
         private void ProjectHugeAndTinyMagnitudes()
         {
             // compare by ratio since the magnitude in NearlyEqual over/underflows at these scales
-            V2 huge = V2.Project(new V2(3e300, 4e300), new V2(1e300, 0));
+            var huge = V2.Project(new V2(3e300, 4e300), new V2(1e300, 0));
             (huge.x / 3e300).ShouldEqual(1.0, 1e-15);
             huge.y.ShouldEqual(0);
 
-            V2 tiny = V2.Project(new V2(3e-300, 4e-300), new V2(0, 1e-300));
+            var tiny = V2.Project(new V2(3e-300, 4e-300), new V2(0, 1e-300));
             tiny.x.ShouldEqual(0);
             (tiny.y / 4e-300).ShouldEqual(1.0, 1e-15);
         }
@@ -145,10 +142,7 @@ namespace MechJebLibTest.Primitives.V2Tests
         }
 
         [Fact]
-        private void AngleSmallAnglesAreAccurate()
-        {
-            (V2.Angle(V2.xaxis, new V2(1, 1e-10)) / 1e-10).ShouldEqual(1.0, 1e-15);
-        }
+        private void AngleSmallAnglesAreAccurate() => (V2.Angle(V2.xaxis, new V2(1, 1e-10)) / 1e-10).ShouldEqual(1.0, 1e-15);
 
         [Fact]
         private void SignedAngleCounterClockwiseIsPositive()
@@ -169,10 +163,7 @@ namespace MechJebLibTest.Primitives.V2Tests
         }
 
         [Fact]
-        private void SignedAngleAntiparallel()
-        {
-            Abs(V2.SignedAngle(V2.xaxis, -V2.xaxis)).ShouldEqual(PI);
-        }
+        private void SignedAngleAntiparallel() => Abs(V2.SignedAngle(V2.xaxis, -V2.xaxis)).ShouldEqual(PI);
 
         [Fact]
         private void SignedAngleWithZeroVectorIsZero()
@@ -219,10 +210,7 @@ namespace MechJebLibTest.Primitives.V2Tests
         }
 
         [Fact]
-        private void OrthonormalOfZeroIsZero()
-        {
-            V2.zero.orthonormal.ShouldEqual(V2.zero);
-        }
+        private void OrthonormalOfZeroIsZero() => V2.zero.orthonormal.ShouldEqual(V2.zero);
 
         [Fact]
         private void OrthoNormalize()

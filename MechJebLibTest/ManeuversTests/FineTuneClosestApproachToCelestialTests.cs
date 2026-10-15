@@ -9,7 +9,6 @@ using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
-using MechJebLib.Utils;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 
@@ -23,7 +22,8 @@ namespace MechJebLibTest.ManeuversTests
                 yield return new object[] { i };
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         public void RandomLunarTransfers(int seed)
         {
             var rng = new Random(seed);

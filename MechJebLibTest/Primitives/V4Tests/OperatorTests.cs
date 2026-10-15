@@ -11,34 +11,19 @@ namespace MechJebLibTest.Primitives.V4Tests
     public class OperatorTests
     {
         [Fact]
-        private void Addition()
-        {
-            (new V4(1, 2, 3, 4) + new V4(3, -5, 0.5, -4)).ShouldEqual(new V4(4, -3, 3.5, 0));
-        }
+        private void Addition() => (new V4(1, 2, 3, 4) + new V4(3, -5, 0.5, -4)).ShouldEqual(new V4(4, -3, 3.5, 0));
 
         [Fact]
-        private void Subtraction()
-        {
-            (new V4(1, 2, 3, 4) - new V4(3, -5, 0.5, -4)).ShouldEqual(new V4(-2, 7, 2.5, 8));
-        }
+        private void Subtraction() => (new V4(1, 2, 3, 4) - new V4(3, -5, 0.5, -4)).ShouldEqual(new V4(-2, 7, 2.5, 8));
 
         [Fact]
-        private void ComponentwiseMultiplication()
-        {
-            (new V4(2, 3, -1, 0.5) * new V4(4, -5, 6, 8)).ShouldEqual(new V4(8, -15, -6, 4));
-        }
+        private void ComponentwiseMultiplication() => (new V4(2, 3, -1, 0.5) * new V4(4, -5, 6, 8)).ShouldEqual(new V4(8, -15, -6, 4));
 
         [Fact]
-        private void ComponentwiseDivision()
-        {
-            (new V4(8, -15, -6, 4) / new V4(4, -5, 6, 8)).ShouldEqual(new V4(2, 3, -1, 0.5));
-        }
+        private void ComponentwiseDivision() => (new V4(8, -15, -6, 4) / new V4(4, -5, 6, 8)).ShouldEqual(new V4(2, 3, -1, 0.5));
 
         [Fact]
-        private void UnaryNegation()
-        {
-            (-new V4(1, -2, 3, -4)).ShouldEqual(new V4(-1, 2, -3, 4));
-        }
+        private void UnaryNegation() => (-new V4(1, -2, 3, -4)).ShouldEqual(new V4(-1, 2, -3, 4));
 
         [Fact]
         private void ScalarMultiplicationBothSides()
@@ -50,16 +35,10 @@ namespace MechJebLibTest.Primitives.V4Tests
         }
 
         [Fact]
-        private void ScalarDivision()
-        {
-            (new V4(3, -4, 6, 0.5) / 2).ShouldEqual(new V4(1.5, -2, 3, 0.25));
-        }
+        private void ScalarDivision() => (new V4(3, -4, 6, 0.5) / 2).ShouldEqual(new V4(1.5, -2, 3, 0.25));
 
         [Fact]
-        private void ScalarDividedByVector()
-        {
-            (12 / new V4(3, -4, 6, 0.5)).ShouldEqual(new V4(4, -3, 2, 24));
-        }
+        private void ScalarDividedByVector() => (12 / new V4(3, -4, 6, 0.5)).ShouldEqual(new V4(4, -3, 2, 24));
 
         [Fact]
         private void DivisionByZeroGivesInfinity()

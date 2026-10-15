@@ -84,15 +84,15 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             AddResource(p, NITROGEN, 200000, 200000, NITROGEN_DENSITY);
 
             SimModuleRCS r = AddModule(SimModuleRCS.Borrow(p));
-            r.IsEnabled        = true;
-            r.RcsEnabled       = false;
-            r.G                = 9.80665;
-            r.ISPMult          = 1;
+            r.IsEnabled = true;
+            r.RcsEnabled = false;
+            r.G = 9.80665;
+            r.ISPMult = 1;
             r.ThrustPercentage = 100;
-            r.MaxFuelFlow      = 0.010197162129779282;
+            r.MaxFuelFlow = 0.010197162129779282;
             // the SimVesselUpdater copies these from the ModuleRCS, and SimModuleRCS.Update() recomputes them
-            r.Isp          = 100;
-            r.Thrust       = 10;
+            r.Isp = 100;
+            r.Thrust = 10;
             r.MassFlowRate = 0.010197162129779282;
             AppendConstant(r.AtmosphereCurve, 1, 1, 100);
             AppendCubicHermite(r.AtmosphereCurve, 1, 5, 1, 4, 100, -24.999750137329102, 0.0010000000474974513, -24.999750137329102);
@@ -117,21 +117,21 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             const double RESIDUALS = 0.0094669296351484397;
 
             SimPart p = NewPart(v, name, persistentId, inverseStage, dryMass);
-            p.IsEngine        = true;
+            p.IsEngine = true;
             p.EngineResiduals = RESIDUALS;
             AddResource(p, TEATEB, 4, 4, TEATEB_DENSITY);
 
             SimModuleEngines e = NewModuleEngines(p);
-            e.IsEnabled         = true;
-            e.MaxFuelFlow       = maxFuelFlow;
-            e.MinFuelFlow       = minFuelFlow;
-            e.MaxThrust         = maxThrust;
-            e.MinThrust         = minThrust;
-            e.ModuleResiduals   = RESIDUALS;
+            e.IsEnabled = true;
+            e.MaxFuelFlow = maxFuelFlow;
+            e.MinFuelFlow = minFuelFlow;
+            e.MaxThrust = maxThrust;
+            e.MinThrust = minThrust;
+            e.ModuleResiduals = RESIDUALS;
             e.ModuleSpoolupTime = spoolupTime;
-            e.AutoCutoff        = true;
+            e.AutoCutoff = true;
             e.IsModuleEnginesRf = true;
-            e.Ullage            = true;
+            e.Ullage = true;
             AppendConstant(e.AtmosphereCurve, 0, 0, vacuumIsp);
             AppendCubicHermite(e.AtmosphereCurve, 0, 1, 0, 1, vacuumIsp, seaLevelIsp - vacuumIsp, seaLevelIsp, seaLevelIsp - vacuumIsp);
             AppendConstant(e.AtmosphereCurve, 1, 1, seaLevelIsp);
@@ -150,7 +150,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
         private static SimPart WithModulesMass(SimPart p, double modulesMass)
         {
-            p.ModulesStagedMass   = modulesMass;
+            p.ModulesStagedMass = modulesMass;
             p.ModulesUnstagedMass = modulesMass;
             return p;
         }

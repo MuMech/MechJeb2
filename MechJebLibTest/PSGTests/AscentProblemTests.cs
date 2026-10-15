@@ -14,15 +14,15 @@ namespace MechJebLibTest.PSGTests
     {
         // normalized Earth with the RSS scale height
         private const double R_BODY = 1.0;
-        private const double H0     = 7566.61914736748 / 6371000;
+        private const double H0 = 7566.61914736748 / 6371000;
 
         [Fact]
         public void NormalizedDensityIsExponentialAboveGround()
         {
             foreach (double x in new[] { 0, 1e-6, 0.5, 1, 10, 100 })
             {
-                double r   = R_BODY + x * H0;
-                Dual   rho = AscentProblem.NormalizedDensity(new Dual(r, 1), R_BODY, H0);
+                double r = R_BODY + x * H0;
+                Dual rho = AscentProblem.NormalizedDensity(new Dual(r, 1), R_BODY, H0);
 
                 // identical to the plain exponential atmosphere
                 rho.M.ShouldEqual(Math.Exp(-(r - R_BODY) / H0), 0);

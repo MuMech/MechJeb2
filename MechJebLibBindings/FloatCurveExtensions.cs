@@ -34,6 +34,7 @@ namespace MechJebLibBindings
                 lastTime = frame.time;
                 lastOutTangent = frame.outTangent;
             }
+
             if (IsFinite(lastValue))
                 h.Append(ConstantDoubleNode.Rent(lastValue), lastTime, lastTime);
         }

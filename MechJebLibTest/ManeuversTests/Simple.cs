@@ -21,7 +21,8 @@ namespace MechJebLibTest.ManeuversTests
                 yield return new object[] { i };
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         public void DeltaVToCircularizeTest(int seed)
         {
             var random = new Random(seed);
@@ -42,7 +43,8 @@ namespace MechJebLibTest.ManeuversTests
             Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(r.magnitude, 1e-7);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         public void DeltaVToEllipticizeTest(int seed)
         {
             var random = new Random(seed);
@@ -66,7 +68,8 @@ namespace MechJebLibTest.ManeuversTests
             Astro.ApoapsisFromStateVectors(mu, r, v + dv).ShouldEqual(newApR, 1e-4);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         public void DeltaVToChangeInclinationTest(int seed)
         {
             var random = new Random(seed);

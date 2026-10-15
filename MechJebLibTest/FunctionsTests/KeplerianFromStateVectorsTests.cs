@@ -20,7 +20,8 @@ namespace MechJebLibTest.FunctionsTests
                 yield return new object[] { i };
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         public void RandomOrbitalElementsForwardAndBack(int seed)
         {
             var rng = new Random(seed);

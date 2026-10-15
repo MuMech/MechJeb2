@@ -25,7 +25,8 @@ namespace MechJebLibTest.TwoBodyTests
                 yield return new object[] { i };
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         public void RandomForwardAndBack(int seed)
         {
             var rng = new Random(seed);
@@ -91,7 +92,8 @@ namespace MechJebLibTest.TwoBodyTests
             }
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         public void RandomComparedToDP5(int seed)
         {
             var solver = new DP5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };

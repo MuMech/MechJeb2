@@ -688,7 +688,7 @@ namespace MechJebLib.Utils
             sb.Append($"{row:0000}: ");
             int last = user.Count - 1;
 
-            bool failed =  false;
+            bool failed = false;
 
             for (int i = 0; i <= last; i++)
             {
@@ -708,8 +708,8 @@ namespace MechJebLib.Utils
                     sb.Append("❌"); // mistake
                     failed = true;
                 }
-
             }
+
             sb.Append("\n");
 
             return failed;
@@ -739,7 +739,7 @@ namespace MechJebLib.Utils
 
             if (ascentProblemConstraintNames != null)
             {
-                foreach (var idx in failedConstraints)
+                foreach (int idx in failedConstraints)
                     sb.AppendLine(ascentProblemConstraintNames[idx]);
             }
 
@@ -843,7 +843,8 @@ namespace MechJebLib.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Print(string message) => Logger.Print(message);
 
-        [Conditional("DEBUG"), MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Conditional("DEBUG")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void DebugPrint(string message) => Logger.Print(message);
 
         public static void CopyFrom(this double[] dest, double[] source)
