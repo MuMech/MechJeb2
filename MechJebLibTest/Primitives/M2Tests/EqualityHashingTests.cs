@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System;
 using MechJebLib.Primitives;
 using Xunit;
 using static MechJebLib.Utils.Statics;
@@ -29,7 +30,7 @@ namespace MechJebLibTest.Primitives.M2Tests
         [Fact]
         private void EqualityOperatorTest()
         {
-            M2 copy = M2.CopyFrom(RowMajor(_a), 0);
+            var copy = M2.CopyFrom(RowMajor(_a), 0);
 
             Assert.True(_a == copy);
             Assert.False(_a != copy);
@@ -44,7 +45,7 @@ namespace MechJebLibTest.Primitives.M2Tests
             {
                 double[] array = RowMajor(_a);
                 array[k] += 1;
-                M2 other = M2.CopyFrom(array, 0);
+                var other = M2.CopyFrom(array, 0);
 
                 Assert.False(_a == other);
                 Assert.True(_a != other);
@@ -56,7 +57,7 @@ namespace MechJebLibTest.Primitives.M2Tests
         private void NaNEqualityTest()
         {
             M2 m = M2.identity + new M2(0, double.NaN, 0, 0);
-            M2 copy = M2.CopyFrom(RowMajor(m), 0);
+            var copy = M2.CopyFrom(RowMajor(m), 0);
 
             // strict operators follow IEEE-754
             Assert.False(m == copy);
@@ -74,14 +75,14 @@ namespace MechJebLibTest.Primitives.M2Tests
             Assert.True(_a.Equals((object)_a));
             Assert.False(_a.Equals((object)_b));
             Assert.False(_a.Equals(null));
-            Assert.False(M2.identity.Equals((object)M3.identity));
+            Assert.False(M2.identity.Equals(M3.identity));
             Assert.False(_a.Equals("not a matrix"));
         }
 
         [Fact]
         private void HashCodeTest()
         {
-            M2 copy = M2.CopyFrom(RowMajor(_a), 0);
+            var copy = M2.CopyFrom(RowMajor(_a), 0);
 
             Assert.Equal(_a.GetHashCode(), copy.GetHashCode());
             Assert.NotEqual(_a.GetHashCode(), _b.GetHashCode());
@@ -124,7 +125,7 @@ namespace MechJebLibTest.Primitives.M2Tests
         private void ShouldEqualTest()
         {
             _a.ShouldEqual(_a * (1 + 1e-10), 1e-9);
-            Assert.ThrowsAny<System.Exception>(() => _a.ShouldEqual(_b));
+            Assert.ThrowsAny<Exception>(() => _a.ShouldEqual(_b));
         }
     }
 }

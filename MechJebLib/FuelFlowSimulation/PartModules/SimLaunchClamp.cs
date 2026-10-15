@@ -4,7 +4,6 @@
  */
 
 using MechJebLib.Utils;
-using static System.FormattableString;
 
 namespace MechJebLib.FuelFlowSimulation.PartModules
 {

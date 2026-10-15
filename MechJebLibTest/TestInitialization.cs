@@ -39,7 +39,9 @@ namespace MechJebLibTest
     {
         public LoggingExecutor(AssemblyName assemblyName, ISourceInformationProvider sourceInformationProvider,
             IMessageSink diagnosticMessageSink)
-            : base(assemblyName, sourceInformationProvider, diagnosticMessageSink) { }
+            : base(assemblyName, sourceInformationProvider, diagnosticMessageSink)
+        {
+        }
 
         protected override async void RunTestCases(IEnumerable<IXunitTestCase> testCases, IMessageSink executionMessageSink,
             ITestFrameworkExecutionOptions executionOptions)
@@ -54,7 +56,9 @@ namespace MechJebLibTest
     {
         public LoggingAssemblyRunner(ITestAssembly testAssembly, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink,
             IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions)
-            : base(testAssembly, testCases, diagnosticMessageSink, executionMessageSink, executionOptions) { }
+            : base(testAssembly, testCases, diagnosticMessageSink, executionMessageSink, executionOptions)
+        {
+        }
 
         protected override Task<RunSummary> RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection,
             IEnumerable<IXunitTestCase> testCases, CancellationTokenSource cancellationTokenSource) =>
@@ -67,7 +71,9 @@ namespace MechJebLibTest
         public LoggingCollectionRunner(ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases,
             IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator,
             CancellationTokenSource cancellationTokenSource)
-            : base(testCollection, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource) { }
+            : base(testCollection, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource)
+        {
+        }
 
         protected override Task<RunSummary> RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo @class,
             IEnumerable<IXunitTestCase> testCases) =>
@@ -81,7 +87,9 @@ namespace MechJebLibTest
             IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator,
             CancellationTokenSource cancellationTokenSource, IDictionary<Type, object> collectionFixtureMappings)
             : base(testClass, @class, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource,
-                collectionFixtureMappings) { }
+                collectionFixtureMappings)
+        {
+        }
 
         protected override Task<RunSummary> RunTestMethodAsync(ITestMethod testMethod, IReflectionMethodInfo method,
             IEnumerable<IXunitTestCase> testCases, object[] constructorArguments) =>
@@ -92,7 +100,7 @@ namespace MechJebLibTest
     internal class LoggingMethodRunner : XunitTestMethodRunner
     {
         private readonly IMessageSink _diagnosticMessageSink;
-        private readonly object[]     _constructorArguments;
+        private readonly object[] _constructorArguments;
 
         public LoggingMethodRunner(ITestMethod testMethod, IReflectionTypeInfo @class, IReflectionMethodInfo method,
             IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ExceptionAggregator aggregator,
@@ -101,7 +109,7 @@ namespace MechJebLibTest
                 constructorArguments)
         {
             _diagnosticMessageSink = diagnosticMessageSink;
-            _constructorArguments  = constructorArguments;
+            _constructorArguments = constructorArguments;
         }
 
         // this mirrors XunitTestCase.RunAsync and XunitTheoryTestCase.RunAsync, other test case types (skipped data rows,
@@ -126,7 +134,9 @@ namespace MechJebLibTest
             object[] testMethodArguments, IMessageBus messageBus, ExceptionAggregator aggregator,
             CancellationTokenSource cancellationTokenSource)
             : base(testCase, displayName, skipReason, constructorArguments, testMethodArguments, messageBus, aggregator,
-                cancellationTokenSource) { }
+                cancellationTokenSource)
+        {
+        }
 
         protected override XunitTestRunner CreateTestRunner(ITest test, IMessageBus messageBus, Type testClass, object[] constructorArguments,
             MethodInfo testMethod, object[] testMethodArguments, string skipReason, IReadOnlyList<BeforeAfterTestAttribute> beforeAfterAttributes,
@@ -141,7 +151,9 @@ namespace MechJebLibTest
             IMessageSink diagnosticMessageSink, IMessageBus messageBus, ExceptionAggregator aggregator,
             CancellationTokenSource cancellationTokenSource)
             : base(testCase, displayName, skipReason, constructorArguments, diagnosticMessageSink, messageBus, aggregator,
-                cancellationTokenSource) { }
+                cancellationTokenSource)
+        {
+        }
 
         protected override XunitTestRunner CreateTestRunner(ITest test, IMessageBus messageBus, Type testClass, object[] constructorArguments,
             MethodInfo testMethod, object[] testMethodArguments, string skipReason, IReadOnlyList<BeforeAfterTestAttribute> beforeAfterAttributes,
@@ -162,7 +174,9 @@ namespace MechJebLibTest
             object[] testMethodArguments, string skipReason, IReadOnlyList<BeforeAfterTestAttribute> beforeAfterAttributes,
             ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
             : base(test, messageBus, testClass, constructorArguments, testMethod, testMethodArguments, skipReason, beforeAfterAttributes,
-                aggregator, cancellationTokenSource) { }
+                aggregator, cancellationTokenSource)
+        {
+        }
 
         protected override async Task<Tuple<decimal, string>> InvokeTestAsync(ExceptionAggregator aggregator)
         {

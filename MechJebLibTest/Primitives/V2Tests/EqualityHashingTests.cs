@@ -115,7 +115,7 @@ namespace MechJebLibTest.Primitives.V2Tests
         {
             double[] array = { 10, 20, 30, 40 };
 
-            V2 v = V2.CopyFromIndices(array, (3, 0));
+            var v = V2.CopyFromIndices(array, (3, 0));
 
             v.ShouldEqual(new V2(40, 10));
 

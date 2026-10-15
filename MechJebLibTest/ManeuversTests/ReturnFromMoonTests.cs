@@ -24,7 +24,8 @@ namespace MechJebLibTest.ManeuversTests
                 yield return new object[] { i };
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void NextManeuverToReturnFromMoonRandomTest(int seed)
         {
             // this forces JIT compilation(?) of the SQL solver which takes ~250ms

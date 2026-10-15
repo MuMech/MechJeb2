@@ -7,7 +7,6 @@ using System;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
-using MechJebLib.Utils;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 

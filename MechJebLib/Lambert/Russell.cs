@@ -75,22 +75,22 @@ namespace MechJebLib.Lambert
     public static class Russell
     {
         // Precision thresholds (ivLamThresh_*)
-        private const double ZERO_BAND      = 0.02;   // ivLamThresh_zeroBand
-        private const double PARABOLA_BAND  = 0.02;   // ivLamThresh_parabolaBand
-        private const double BIG_K          = 1000.0; // ivLamThresh_bigKiterate
-        private const double LITTLE_P       = 0.1;    // ivLamThresh_littlePiterate
-        private const double HUGE_TOF       = 1e4;    // ivLamThresh_TofByShugeBoundary
-        private const double ALT_TAU_THRESH = 1e-2;   // ivLamThresh_alternateTau
-        private const double K_CLOSE_MSQRT2 = 1e-2;   // ivLamThresh_kClosetoMsqrt2
+        private const double ZERO_BAND = 0.02; // ivLamThresh_zeroBand
+        private const double PARABOLA_BAND = 0.02; // ivLamThresh_parabolaBand
+        private const double BIG_K = 1000.0; // ivLamThresh_bigKiterate
+        private const double LITTLE_P = 0.1; // ivLamThresh_littlePiterate
+        private const double HUGE_TOF = 1e4; // ivLamThresh_TofByShugeBoundary
+        private const double ALT_TAU_THRESH = 1e-2; // ivLamThresh_alternateTau
+        private const double K_CLOSE_MSQRT2 = 1e-2; // ivLamThresh_kClosetoMsqrt2
 
         // Solver safeguards (ivLamSafegrd_*)
-        private const double SERIES_CONVERGE    = 1.01;       // ivLamSafegrd_seriesConvergeThresh
-        private const double SERIES_TAMP        = 0.75;       // ivLamSafegrd_seriesConvergeTamp
-        private const double SERIES_TAMP_THRESH = 2e-7;       // ivLamSafegrd_seriesConvergeTampThresh
-        private const double BOTTOM_BUMP        = 2e-4 * 0.5; // ivLamSafegrd_maxkStepMrev * ivLamSafegrd_botBumpMult
-        private const double K_BUMP_INIT        = 7e-7;       // ivLamSafegrd_kBumpInit
-        private const double K_BUMP_WEIGHT      = 0.925;      // ivLamSafegrd_kBumpWeightVio
-        private const double K_MARGIN           = 50.0 * EPS; // ivLamSafegrd_kmarginEpsMult
+        private const double SERIES_CONVERGE = 1.01; // ivLamSafegrd_seriesConvergeThresh
+        private const double SERIES_TAMP = 0.75; // ivLamSafegrd_seriesConvergeTamp
+        private const double SERIES_TAMP_THRESH = 2e-7; // ivLamSafegrd_seriesConvergeTampThresh
+        private const double BOTTOM_BUMP = 2e-4 * 0.5; // ivLamSafegrd_maxkStepMrev * ivLamSafegrd_botBumpMult
+        private const double K_BUMP_INIT = 7e-7; // ivLamSafegrd_kBumpInit
+        private const double K_BUMP_WEIGHT = 0.925; // ivLamSafegrd_kBumpWeightVio
+        private const double K_MARGIN = 50.0 * EPS; // ivLamSafegrd_kmarginEpsMult
 
         // relative TOF residual which is considered roundoff (not from ivLam)
         private const double TOF_ROUNDOFF = 8.0 * EPS;
@@ -99,7 +99,7 @@ namespace MechJebLib.Lambert
         private const double K_BOTTOM_STEP_TOL = 1e-10;
 
         // Domain limits (Russell 2022, Algorithms 1 and 3)
-        private const double TAU_MARGIN      = 1e-7; // minimum distance of |tau| from sqrt(2)/2, which is the r1 == r2 singularity
+        private const double TAU_MARGIN = 1e-7; // minimum distance of |tau| from sqrt(2)/2, which is the r1 == r2 singularity
         private const double MIN_TOF_OVER_TP = 1e-3; // minimum zero-rev time of flight as a fraction of the parabolic time of flight
 
         // sqrt of the smallest normal double
@@ -263,7 +263,7 @@ namespace MechJebLib.Lambert
             V3 t1Hat = V3.zero;
             if (h != null && onePctheta < ALT_TAU_THRESH && (sthetar1r2 < halfRevAngle * r2Norm || abstau < SQRT_TINY))
             {
-                bool counterclockwise = longWay == (V3.Dot(r1xr2, h.Value) < 0);
+                bool counterclockwise = longWay == V3.Dot(r1xr2, h.Value) < 0;
                 t1Hat = V3.Cross(counterclockwise ? h.Value : -h.Value, r1Hat).safeNormalized;
                 halfRev = t1Hat != V3.zero;
             }
@@ -787,7 +787,7 @@ namespace MechJebLib.Lambert
                 // TOF/S curve at the last evaluation.
                 if (F2 > 0.0 && Abs(kNext - kBottom) <= K_BOTTOM_STEP_TOL * Max(1.0, Abs(kBottom)))
                 {
-                    kBottom      = Clamp(kNext, lo, hi);
+                    kBottom = Clamp(kNext, lo, hi);
                     tofbySBottom = F0 - 0.5 * F1 * F1 / F2;
                     break;
                 }
@@ -796,7 +796,7 @@ namespace MechJebLib.Lambert
                     kNext = 0.5 * (lo + hi);
 
                 double dk = kNext - kBottom;
-                kBottom      = kNext;
+                kBottom = kNext;
                 tofbySBottom = F0;
 
                 // the bracket has collapsed

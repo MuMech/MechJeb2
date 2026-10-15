@@ -9,7 +9,6 @@ using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
-using MechJebLib.Utils;
 using Xunit;
 
 namespace MechJebLibTest.LambertTests
@@ -22,7 +21,8 @@ namespace MechJebLibTest.LambertTests
                 yield return new object[] { i };
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomMultipleRevolution(int seed)
         {
             double tol = 1e-6;
@@ -81,7 +81,8 @@ namespace MechJebLibTest.LambertTests
             }
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomPositions(int seed)
         {
             double tol = 1e-6;

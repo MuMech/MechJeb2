@@ -61,7 +61,8 @@ namespace MechJebLibTest.Primitives
             d.D.ShouldEqual(_da - _db);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void ForwardMatchesRotateForward(int seed)
         {
             var rng = new Random(seed);

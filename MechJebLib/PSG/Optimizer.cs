@@ -43,8 +43,8 @@ namespace MechJebLib.PSG
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
         public int    OptimizerTimeout    { get; set; } = 120_000; // milliseconds
-        public double ZeroCoastTime  { get; set; } = 1; // seconds, minimum coast of a burn-coast-burn with a nonzero first burn
-        public double ZeroCoastMu    { get; set; } = 1e-6;
+        public double ZeroCoastTime       { get; set; } = 1; // seconds, minimum coast of a burn-coast-burn with a nonzero first burn
+        public double ZeroCoastMu         { get; set; } = 1e-6;
 
         public Optimizer(Problem problem, PhaseCollection phases, ITerminal terminal, ObjectiveType objective)
         {

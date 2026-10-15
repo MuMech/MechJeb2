@@ -69,10 +69,7 @@ namespace MechJebLibTest.Primitives.M2Tests
         }
 
         [Fact]
-        private void ColumnConstructorTest()
-        {
-            new M2(new V2(1, 3), new V2(2, 4)).ShouldEqual(_a);
-        }
+        private void ColumnConstructorTest() => new M2(new V2(1, 3), new V2(2, 4)).ShouldEqual(_a);
 
         [Fact]
         private void GetColumnAndRowTest()
@@ -257,7 +254,15 @@ namespace MechJebLibTest.Primitives.M2Tests
         [Fact]
         private void CopyTo1DTest()
         {
-            var list = new List<double> { 0, 0, 0, 0, 0, 0 };
+            var list = new List<double>
+            {
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            };
 
             _a.CopyTo(list, 1);
 
@@ -272,15 +277,9 @@ namespace MechJebLibTest.Primitives.M2Tests
         }
 
         [Fact]
-        private void ToStringTest1()
-        {
-            Assert.Equal("[1, 2\n3, 4]\n", _a.ToString());
-        }
+        private void ToStringTest1() => Assert.Equal("[1, 2\n3, 4]\n", _a.ToString());
 
         [Fact]
-        private void ToStringTest2()
-        {
-            Assert.Equal("[0.33, 0.67\n1.00, 1.33]\n", (_a / 3).ToString("F2"));
-        }
+        private void ToStringTest2() => Assert.Equal("[0.33, 0.67\n1.00, 1.33]\n", (_a / 3).ToString("F2"));
     }
 }

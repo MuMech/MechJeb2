@@ -330,16 +330,16 @@ namespace MechJebLibTest.Primitives.M3Tests
         private void ToEulerAnglesGimbalLockRoundTripGrid()
         {
             foreach (double pitch in new[] { PI / 2, -PI / 2 })
-            for (double roll = -3; roll <= 3; roll += 0.25)
-            for (double yaw = -3; yaw <= 3; yaw += 0.25)
-            {
-                M3 m = EulerAnglesFromQuaternions(roll, pitch, yaw);
+                for (double roll = -3; roll <= 3; roll += 0.25)
+                for (double yaw = -3; yaw <= 3; yaw += 0.25)
+                {
+                    M3 m = EulerAnglesFromQuaternions(roll, pitch, yaw);
 
-                V3 euler = m.ToEulerAngles();
+                    V3 euler = m.ToEulerAngles();
 
-                euler.y.ShouldEqual(pitch, 1e-14);
-                M3.EulerAngles(euler).ShouldEqual(m, 1e-14);
-            }
+                    euler.y.ShouldEqual(pitch, 1e-14);
+                    M3.EulerAngles(euler).ShouldEqual(m, 1e-14);
+                }
         }
 
         [Fact]

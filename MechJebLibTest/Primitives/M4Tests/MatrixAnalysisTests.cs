@@ -73,10 +73,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         }
 
         [Fact]
-        private void DeterminantRankDeficientIsZero()
-        {
-            _a.determinant.ShouldEqual(0);
-        }
+        private void DeterminantRankDeficientIsZero() => _a.determinant.ShouldEqual(0);
 
         [Fact]
         private void DeterminantOfOrthogonalMatrices()
@@ -124,28 +121,16 @@ namespace MechJebLibTest.Primitives.M4Tests
         }
 
         [Fact]
-        private void InverseStaticMethod()
-        {
-            M4.Inverse(_b).ShouldEqual(_b.inverse);
-        }
+        private void InverseStaticMethod() => M4.Inverse(_b).ShouldEqual(_b.inverse);
 
         [Fact]
-        private void InverseOfInverse()
-        {
-            _b.inverse.inverse.ShouldEqual(_b, 1e-14);
-        }
+        private void InverseOfInverse() => _b.inverse.inverse.ShouldEqual(_b, 1e-14);
 
         [Fact]
-        private void InverseDeterminantIsReciprocal()
-        {
-            _b.inverse.determinant.ShouldEqual(1.0 / _b.determinant, 1e-14);
-        }
+        private void InverseDeterminantIsReciprocal() => _b.inverse.determinant.ShouldEqual(1.0 / _b.determinant, 1e-14);
 
         [Fact]
-        private void InverseOfDiagonal()
-        {
-            M4.Diagonal(2, 4, -0.5, 8).inverse.ShouldEqual(M4.Diagonal(0.5, 0.25, -2, 0.125));
-        }
+        private void InverseOfDiagonal() => M4.Diagonal(2, 4, -0.5, 8).inverse.ShouldEqual(M4.Diagonal(0.5, 0.25, -2, 0.125));
 
         [Fact]
         private void InverseOfOrthogonalIsTranspose()
@@ -155,10 +140,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         }
 
         [Fact]
-        private void InverseOfProduct()
-        {
-            (_b * _c).inverse.ShouldEqual(_c.inverse * _b.inverse, 1e-14);
-        }
+        private void InverseOfProduct() => (_b * _c).inverse.ShouldEqual(_c.inverse * _b.inverse, 1e-14);
 
         [Fact]
         private void IsOrthogonalTrueCases()

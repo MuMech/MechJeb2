@@ -6,7 +6,6 @@
 using System;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
-using MechJebLib.Utils;
 using Xunit;
 
 namespace MechJebLibTest.PSGTests.AscentTests

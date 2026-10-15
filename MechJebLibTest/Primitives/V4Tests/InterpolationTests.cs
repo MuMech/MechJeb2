@@ -42,10 +42,7 @@ namespace MechJebLibTest.Primitives.V4Tests
         }
 
         [Fact]
-        private void SlerpMidpointOfUnitVectors()
-        {
-            V4.Slerp(V4.xaxis, V4.waxis, 0.5).ShouldEqual(new V4(Sqrt(0.5), 0, 0, Sqrt(0.5)));
-        }
+        private void SlerpMidpointOfUnitVectors() => V4.Slerp(V4.xaxis, V4.waxis, 0.5).ShouldEqual(new V4(Sqrt(0.5), 0, 0, Sqrt(0.5)));
 
         [Fact]
         private void SlerpConstantAngularRate()
@@ -69,7 +66,7 @@ namespace MechJebLibTest.Primitives.V4Tests
 
             for (int i = 0; i <= 10; i++)
             {
-                V4 r = V4.Slerp(a, b, i / 10.0);
+                var r = V4.Slerp(a, b, i / 10.0);
                 (V4.Angle(a, r) + V4.Angle(r, b)).ShouldEqual(total, 1e-14);
             }
         }
@@ -80,7 +77,7 @@ namespace MechJebLibTest.Primitives.V4Tests
             var a = new V4(2, 0, 0, 0);
             var b = new V4(0, 4, 0, 0);
 
-            V4 mid = V4.Slerp(a, b, 0.5);
+            var mid = V4.Slerp(a, b, 0.5);
 
             mid.magnitude.ShouldEqual(3, 1e-14);
             V4.Angle(a, mid).ShouldEqual(PI / 4, 1e-14);
@@ -92,7 +89,7 @@ namespace MechJebLibTest.Primitives.V4Tests
             V4 a = V4.xaxis;
             var b = new V4(Cos(1e-9), 0, Sin(1e-9), 0);
 
-            V4 mid = V4.Slerp(a, b, 0.5);
+            var mid = V4.Slerp(a, b, 0.5);
 
             mid.magnitude.ShouldEqual(1, 1e-14);
             (V4.Angle(a, mid) / 0.5e-9).ShouldEqual(1.0, 1e-6);

@@ -751,7 +751,7 @@ namespace MechJebLib.Primitives
                 r3 /= s3;
 
                 return Abs(new M4(r0, r1, r2, r3).determinant) <=
-                       16 * EPS * r0.magnitude * r1.magnitude * r2.magnitude * r3.magnitude;
+                    16 * EPS * r0.magnitude * r1.magnitude * r2.magnitude * r3.magnitude;
             }
         }
 

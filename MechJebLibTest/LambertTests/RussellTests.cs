@@ -64,7 +64,8 @@ namespace MechJebLibTest.LambertTests
             vfShepperd.ShouldEqual(vf, tol);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomMultipleRevolution(int seed)
         {
             double tol = 1e-6;
@@ -90,7 +91,7 @@ namespace MechJebLibTest.LambertTests
             (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, v0);
 
             // the arc that goes the same way around as v0
-            V3 h = V3.Cross(r0, v0);
+            var h = V3.Cross(r0, v0);
 
             if (NearSingularity(r0, rfShepperd))
             {
@@ -124,7 +125,8 @@ namespace MechJebLibTest.LambertTests
             }
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomPositions(int seed)
         {
             double tol = 1e-6;
@@ -135,14 +137,15 @@ namespace MechJebLibTest.LambertTests
             var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
             double dt = random.NextDouble() * 6 + 0.05;
 
-            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.ShortWay);
+            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt);
             CheckTransfer(r0, rf, dt, viShort, vfShort, tol);
 
             (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay);
             CheckTransfer(r0, rf, dt, viLong, vfLong, tol);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomPositionsComparedToIzzoAndGooding(int seed)
         {
             double tol = 1e-6;
@@ -181,7 +184,8 @@ namespace MechJebLibTest.LambertTests
         }
 
         // both multi-rev branches are solutions, and n > 0 is the long-period branch
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomMultipleRevolutionBranches(int seed)
         {
             double tol = 1e-6;
@@ -204,7 +208,8 @@ namespace MechJebLibTest.LambertTests
         }
 
         // the sign of nrev selects the same branch as the nrev argument of Izzo and Gooding
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomMultipleRevolutionComparedToIzzoAndGooding(int seed)
         {
             double tol = 1e-6;
@@ -232,7 +237,8 @@ namespace MechJebLibTest.LambertTests
         }
 
         // prograde and retrograde pick the short way or long way, depending on which way around h the transfer goes
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomProgradeRetrograde(int seed)
         {
             double tol = 1e-6;
@@ -254,7 +260,7 @@ namespace MechJebLibTest.LambertTests
 
             bool shortWayIsPrograde = V3.Dot(V3.Cross(r0, rf), h) >= 0;
 
-            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.ShortWay);
+            (V3 viShort, V3 vfShort) = Russell.Solve(1.0, r0, rf, dt);
             (V3 viLong, V3 vfLong) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay);
 
             (V3 viPro, V3 vfPro) = Russell.Solve(1.0, r0, rf, dt, TransferGeometry.Prograde, h: h);
@@ -411,7 +417,7 @@ namespace MechJebLibTest.LambertTests
             var r0 = new V3(1, 0, 0);
             var rf = new V3(0, 1, 0);
 
-            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 2e-3, TransferGeometry.ShortWay);
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 2e-3);
             CheckTransfer(r0, rf, 2e-3, vi, vf, 1e-6);
 
             (_, double p) = VercosineKP(r0, rf, vi, 1);
@@ -419,7 +425,8 @@ namespace MechJebLibTest.LambertTests
         }
 
         // down to the minimum time of flight of 1e-3 times the parabolic time of flight
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void RandomSmallTimeOfFlightComparedToGooding(int seed)
         {
             double tol = 1e-9;
@@ -708,15 +715,15 @@ namespace MechJebLibTest.LambertTests
 
             // too close to the r1 == r2 singularity
             var rf = new V3(Cos(1e-4), Sin(1e-4), 0);
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 1.0, TransferGeometry.ShortWay));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 1.0));
             Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.LongWay));
             Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.ShortWay, 1));
 
             // zero-rev time of flight too small
             rf = new V3(0, 1, 0);
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1), TransferGeometry.ShortWay));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1)));
             Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, -1), TransferGeometry.LongWay));
-            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, 1), TransferGeometry.ShortWay);
+            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, 1));
             Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, -1), TransferGeometry.LongWay);
         }
 
@@ -736,7 +743,8 @@ namespace MechJebLibTest.LambertTests
             ((vfPlus - vfMinus) / (2 * h) / scale).ShouldEqual(vf.D / scale, tol);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void DualMatchesFiniteDifferences(int seed)
         {
             var random = new Random(seed);
@@ -756,7 +764,8 @@ namespace MechJebLibTest.LambertTests
             CheckDualAgainstFiniteDifferences(r0, rf, dt, Geometry(direction), 0, dr0, drf, ddt, 1e-5);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void DualMultipleRevolutionMatchesFiniteDifferences(int seed)
         {
             var random = new Random(seed);
@@ -778,7 +787,8 @@ namespace MechJebLibTest.LambertTests
         }
 
         // fast hyperbolas, which use the series in 1/k (long way) or iterate on p (short way)
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void DualSmallTimeOfFlightMatchesFiniteDifferences(int seed)
         {
             var random = new Random(seed);

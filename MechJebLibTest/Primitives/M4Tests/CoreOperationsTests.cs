@@ -121,10 +121,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         }
 
         [Fact]
-        private void MatrixMultiplicationNonCommutativeTest()
-        {
-            Assert.True(_a * _b != _b * _a);
-        }
+        private void MatrixMultiplicationNonCommutativeTest() => Assert.True(_a * _b != _b * _a);
 
         [Fact]
         private void MatrixMultiplicationAssociativeTest()
@@ -198,10 +195,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         }
 
         [Fact]
-        private void TransposeOfProductTest()
-        {
-            Assert.True((_a * _b).transpose == _b.transpose * _a.transpose);
-        }
+        private void TransposeOfProductTest() => Assert.True((_a * _b).transpose == _b.transpose * _a.transpose);
 
         [Fact]
         private void TraceTest()
@@ -272,7 +266,7 @@ namespace MechJebLibTest.Primitives.M4Tests
         [Fact]
         private void DiagonalComponentsTest()
         {
-            M4 m = M4.Diagonal(1, 2, 3, 4);
+            var m = M4.Diagonal(1, 2, 3, 4);
 
             for (int i = 0; i < 4; i++)
             for (int j = 0; j < 4; j++)

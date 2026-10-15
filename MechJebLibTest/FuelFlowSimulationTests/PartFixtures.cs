@@ -77,11 +77,11 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             p.IsEngine = true;
 
             SimModuleEngines e = NewModuleEngines(p);
-            e.IsEnabled   = true;
+            e.IsEnabled = true;
             // KSP derives this from maxThrust and the vacuum isp in single precision, the dump prints it to 7 digits as
             // 0.4934111 but the 0.4934111f literal is one ulp off, which shows up in the propellant the asparagus staging strands
             e.MaxFuelFlow = 1500f / (310f * 9.80665f);
-            e.MaxThrust   = 1500;
+            e.MaxThrust = 1500;
             e.Propellants.Add(new SimPropellant(LIQUID_FUEL, false, 0.9f, SimFlowMode.STACK_PRIORITY_SEARCH, LIQUID_FUEL_DENSITY));
             e.Propellants.Add(new SimPropellant(OXIDIZER, false, 1.1f, SimFlowMode.STACK_PRIORITY_SEARCH, OXIDIZER_DENSITY));
             e.ThrustTransformMultipliers.Add(1);
@@ -101,26 +101,26 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public static SimPart NewPart(SimVessel v, string name, uint persistentId, int inverseStage, double dryMass)
         {
             var p = SimPart.Borrow(v, name);
-            p.PersistentId                      = persistentId;
-            p.InverseStage                      = inverseStage;
-            p.DecoupledInStage                  = -1;
-            p.StagingOn                         = true;
-            p.ActivatesEvenIfDisconnected       = true;
-            p.IsThrottleLocked                  = false;
-            p.IsEnabled                         = false;
-            p.IsRoot                            = false;
-            p.IsLaunchClamp                     = false;
-            p.IsEngine                          = false;
+            p.PersistentId = persistentId;
+            p.InverseStage = inverseStage;
+            p.DecoupledInStage = -1;
+            p.StagingOn = true;
+            p.ActivatesEvenIfDisconnected = true;
+            p.IsThrottleLocked = false;
+            p.IsEnabled = false;
+            p.IsRoot = false;
+            p.IsLaunchClamp = false;
+            p.IsEngine = false;
             p.ResourceRequestRemainingThreshold = 1e-12;
             // every captured part has this priority, it is KSP's default of ten times the part's inverseStage
-            p.ResourcePriority      = 10 * inverseStage;
-            p.Mass                  = dryMass; // the KSP Part.mass that the builder copies is the dry mass
-            p.DryMass               = dryMass;
-            p.CrewMass              = 0;
-            p.ModulesStagedMass     = 0;
-            p.ModulesUnstagedMass   = 0;
+            p.ResourcePriority = 10 * inverseStage;
+            p.Mass = dryMass; // the KSP Part.mass that the builder copies is the dry mass
+            p.DryMass = dryMass;
+            p.CrewMass = 0;
+            p.ModulesStagedMass = 0;
+            p.ModulesUnstagedMass = 0;
             p.DisabledResourcesMass = 0;
-            p.EngineResiduals       = 0;
+            p.EngineResiduals = 0;
             v.Parts.Add(p);
             return p;
         }
@@ -135,10 +135,10 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             SimPart p = NewPart(v, name, persistentId, inverseStage, dryMass);
 
             SimModuleDecouple d = AddModule(SimModuleDecouple.Borrow(p));
-            d.IsDecoupled     = false;
+            d.IsDecoupled = false;
             d.IsOmniDecoupler = false;
-            d.Staged          = true;
-            d.AttachedPart    = attachedPart;
+            d.Staged = true;
+            d.AttachedPart = attachedPart;
             return p;
         }
 
@@ -147,9 +147,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         /// </summary>
         public static T AddModule<T>(T m) where T : SimPartModule
         {
-            m.IsEnabled       = false;
+            m.IsEnabled = false;
             m.ModuleIsEnabled = true;
-            m.StagingEnabled  = true;
+            m.StagingEnabled = true;
             m.Part.Modules.Add(m);
             return m;
         }
@@ -162,39 +162,39 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public static SimModuleEngines NewModuleEngines(SimPart p)
         {
             SimModuleEngines e = AddModule(SimModuleEngines.Borrow(p));
-            e.IsOperational             = false;
+            e.IsOperational = false;
             e.IsUnrestartableDeadEngine = false;
-            e.NoPropellants             = false;
-            e.MaxFuelFlow               = 0;
-            e.MinFuelFlow               = 0;
-            e.MaxThrust                 = 0;
-            e.MinThrust                 = 0;
-            e.G                         = 9.80665f;
-            e.ThrottleLocked            = false;
-            e.ThrottleLimiter           = 100;
-            e.MultIsp                   = 1;
-            e.MultFlow                  = 1;
-            e.FlowMultiplier            = 1;
-            e.Clamp                     = 1e-5f;
-            e.FlowMultCap               = float.MaxValue;
-            e.FlowMultCapSharpness      = 2;
-            e.AtmChangeFlow             = false;
-            e.UseAtmCurve               = false;
-            e.UseAtmCurveIsp            = false;
-            e.UseThrottleIspCurve       = false;
-            e.UseThrustCurve            = false;
-            e.UseVelCurve               = false;
-            e.UseVelCurveIsp            = false;
-            e.ModuleResiduals           = 0;
-            e.ModuleSpoolupTime         = 0;
-            e.AutoCutoff                = false;
-            e.IsModuleEnginesRf         = false;
-            e.Ullage                    = false;
-            e.ThrustCurrent             = V3.zero;
-            e.ThrustMax                 = V3.zero;
-            e.ThrustMin                 = V3.zero;
-            e.MassFlowRate              = 0;
-            e.ISP                       = 0;
+            e.NoPropellants = false;
+            e.MaxFuelFlow = 0;
+            e.MinFuelFlow = 0;
+            e.MaxThrust = 0;
+            e.MinThrust = 0;
+            e.G = 9.80665f;
+            e.ThrottleLocked = false;
+            e.ThrottleLimiter = 100;
+            e.MultIsp = 1;
+            e.MultFlow = 1;
+            e.FlowMultiplier = 1;
+            e.Clamp = 1e-5f;
+            e.FlowMultCap = float.MaxValue;
+            e.FlowMultCapSharpness = 2;
+            e.AtmChangeFlow = false;
+            e.UseAtmCurve = false;
+            e.UseAtmCurveIsp = false;
+            e.UseThrottleIspCurve = false;
+            e.UseThrustCurve = false;
+            e.UseVelCurve = false;
+            e.UseVelCurveIsp = false;
+            e.ModuleResiduals = 0;
+            e.ModuleSpoolupTime = 0;
+            e.AutoCutoff = false;
+            e.IsModuleEnginesRf = false;
+            e.Ullage = false;
+            e.ThrustCurrent = V3.zero;
+            e.ThrustMax = V3.zero;
+            e.ThrustMin = V3.zero;
+            e.MassFlowRate = 0;
+            e.ISP = 0;
             return e;
         }
 

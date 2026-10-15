@@ -81,7 +81,15 @@ namespace MechJebLibTest.Primitives.V4Tests
         private void CopyToAndFromList()
         {
             var v = new V4(3, -4, 5, -6);
-            var list = new List<double> { 0, 0, 0, 0, 0, 0 };
+            var list = new List<double>
+            {
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            };
 
             v.CopyTo(list, 1);
 
@@ -119,7 +127,7 @@ namespace MechJebLibTest.Primitives.V4Tests
         {
             double[] array = { 10, 20, 30, 40, 50 };
 
-            V4 v = V4.CopyFromIndices(array, (4, 0, 2, 1));
+            var v = V4.CopyFromIndices(array, (4, 0, 2, 1));
 
             v.ShouldEqual(new V4(50, 10, 30, 20));
 

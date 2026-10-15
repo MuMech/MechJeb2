@@ -41,7 +41,11 @@ namespace MuMech.MechJebKos
         protected override void InitializeSuffixes()
         {
             // --- engage / status ---
-            AddSuffix("ENABLED", new SetSuffix<BooleanValue>(() => Module.Enabled, value => { if (value) Engage(); else Disengage(); },
+            AddSuffix("ENABLED", new SetSuffix<BooleanValue>(() => Module.Enabled, value =>
+                {
+                    if (value) Engage();
+                    else Disengage();
+                },
                 "Whether this ascent autopilot is engaged. Setting true flips MechJeb to this ascent type and engages it."));
             AddSuffix("ENGAGE", new NoArgsVoidSuffix(Engage,
                 "Flip MechJeb to this ascent type and engage the autopilot immediately."));

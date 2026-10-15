@@ -37,9 +37,9 @@ namespace MuMech
 
         private EditableDouble _periapsisHeight = new EditableDouble(0);
 
-        private EditableDouble _targetInclination = new EditableDouble(90);
+        private readonly EditableDouble _targetInclination = new EditableDouble(90);
 
-        private bool _targetInclinationFlag = false;
+        private bool _targetInclinationFlag;
 
         private const double MIN_SAMPLING_STEP = 12 * 3600;
 
@@ -385,7 +385,7 @@ namespace MuMech
 
             double inc = _targetInclinationFlag ? _targetInclination.Val : double.NaN;
 
-            return OrbitalManeuverCalculator.OptimizeEjectionToTarget(o, target, targetPeR, epoch, arrivalDt, arrivalDtLower, arrivalDtUpper, inc: inc);
+            return OrbitalManeuverCalculator.OptimizeEjectionToTarget(o, target, targetPeR, epoch, arrivalDt, arrivalDtLower, arrivalDtUpper, inc);
         }
     }
 }

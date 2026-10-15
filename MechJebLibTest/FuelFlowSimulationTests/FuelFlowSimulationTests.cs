@@ -16,7 +16,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
     public class FuelFlowSimulationTests
     {
         private const double MAINSAIL_MAX_FUEL_FLOW = 1500f / (310f * 9.80665f);
-        private const double MAINSAIL_VACUUM_ISP    = 310;
+        private const double MAINSAIL_VACUUM_ISP = 310;
 
         // the mass of the liquid fuel and oxidizer in a full Rockomax64
         private const double ROCKOMAX64_PROPELLANT = 32;

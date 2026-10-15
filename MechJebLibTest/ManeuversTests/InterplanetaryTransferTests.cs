@@ -58,7 +58,8 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void EarthToMercuryRandom(int seed) => EarthToMercuryFromSeed(seed);
 
         [Theory]
@@ -151,7 +152,8 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void EarthToCeresRandom(int seed) => EarthToCeresFromSeed(seed);
 
         [Theory]
@@ -165,10 +167,10 @@ namespace MechJebLibTest.ManeuversTests
         [InlineData(1967)]
         [InlineData(225)]
         [InlineData(2381)]
-        //[InlineData(475)] // the first optimizer pass lands in a bad basin.
         [InlineData(637)]
         [InlineData(725)]
         [InlineData(999)]
+        //[InlineData(475)] // the first optimizer pass lands in a bad basin.
         private void EarthToCeresHardSeeds(int seed) => EarthToCeresFromSeed(seed);
 
         private void EarthToCeresFromSeed(int seed)
@@ -260,13 +262,13 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void EarthToMarsRandom(int seed) => EarthToMarsFromSeed(seed);
 
         [Theory]
         [InlineData(2243)]
         [InlineData(505)]
-        //[InlineData(1009)] // the parking orbit is at about half the SOI radius with a 38-day period. The initial guess already has roughly 43 km/s at the SOI exit, and the first pass ends infeasible
         [InlineData(1059)]
         [InlineData(113)]
         [InlineData(1135)]
@@ -276,6 +278,7 @@ namespace MechJebLibTest.ManeuversTests
         [InlineData(525)]
         [InlineData(890)]
         [InlineData(92)]
+        //[InlineData(1009)] // the parking orbit is at about half the SOI radius with a 38-day period. The initial guess already has roughly 43 km/s at the SOI exit, and the first pass ends infeasible
         private void EarthToMarsHardSeeds(int seed) => EarthToMarsFromSeed(seed);
 
         private void EarthToMarsFromSeed(int seed)
@@ -363,7 +366,8 @@ namespace MechJebLibTest.ManeuversTests
             r2soi2.ShouldEqual(rsoi2helio, 1e-6);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void EarthToAsteroidRandom(int seed) => EarthToAsteroidFromSeed(seed);
 
         private void EarthToAsteroidFromSeed(int seed)
@@ -452,7 +456,8 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void EarthToJupiterRandom(int seed) => EarthToJupiterFromSeed(seed);
 
         [Theory]
@@ -522,22 +527,32 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void EarthToJupiterTargetRandom(int seed) => EarthToJupiterTargetFromSeed(seed);
 
         // These all target an inclination below the declination of the arrival v-infinity (about 5-8 degrees here, and the
         // plane of the arrival hyperbola has to contain v-infinity).  Before the inclination was clamped the optimizer bent
         // the heliocentric arc to rotate v-infinity, and crawled until it hit the iteration limit unconverged.
         [Theory]
-        [InlineData(45)]  // inc 3.81, peR 4.1 Rj
-        [InlineData(62)]  // inc 1.67, peR 2.0 Rj
-        [InlineData(154)] // inc 0.68, peR 3.0 Rj
-        [InlineData(621)] // inc 5.45, peR 2.5 Rj
-        [InlineData(914)] // inc 0.35, peR 3.8 Rj
-        [InlineData(171)] // inc 178.54, peR 1.4 Rj
-        [InlineData(280)] // inc 175.42, peR 1.0 Rj
-        [InlineData(413)] // inc 179.86, peR 18.9 Rj
-        [InlineData(597)] // inc 177.88, peR 40.5 Rj
+        [InlineData(45)]
+        [InlineData(62)]
+        [InlineData(154)]
+        [InlineData(621)]
+        [InlineData(914)]
+        [InlineData(171)]
+        [InlineData(280)]
+        [InlineData(413)]
+        [InlineData(597)]
+        // inc 3.81, peR 4.1 Rj
+        // inc 1.67, peR 2.0 Rj
+        // inc 0.68, peR 3.0 Rj
+        // inc 5.45, peR 2.5 Rj
+        // inc 0.35, peR 3.8 Rj
+        // inc 178.54, peR 1.4 Rj
+        // inc 175.42, peR 1.0 Rj
+        // inc 179.86, peR 18.9 Rj
+        // inc 177.88, peR 40.5 Rj
         private void EarthToJupiterTargetHardSeeds(int seed) => EarthToJupiterTargetFromSeed(seed);
 
         // equatorial at a low periapsis is out of reach, so these are clamped
@@ -579,7 +594,7 @@ namespace MechJebLibTest.ManeuversTests
             double arrivalDTupper = double.PositiveInfinity;
 
             var maneuver = new InterplanetaryTransfer();
-            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, inc: inc, optguard: false);
+            (V3 dv, double dt1out, double dt2out, double dt3out) = maneuver.Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, arrivalDTlower, arrivalDTupper, peR, inc, optguard: false);
             Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out} inc: {Rad2Deg(inc)} targetInc: {Rad2Deg(maneuver.TargetInc)}");
 
             // the inclination may only be clamped away from equatorial
@@ -637,7 +652,8 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
-        [Theory, MemberData(nameof(Seeds))]
+        [Theory]
+        [MemberData(nameof(Seeds))]
         private void EarthToVenusRandom(int seed) => EarthToVenusFromSeed(seed);
 
         private void EarthToVenusFromSeed(int seed)
@@ -701,7 +717,7 @@ namespace MechJebLibTest.ManeuversTests
             const double MU_SUN = 1.3271244004193939E+20;
             const double AU = 149597870700;
 
-            double mu1 = 398600435436096 / MU_SUN;    // earth
+            double mu1 = 398600435436096 / MU_SUN; // earth
             double mu2 = 42828373620699.094 / MU_SUN; // mars
             double mu3 = 1.0;
             double soi1 = 0.5 * Pow(mu1, 0.4);

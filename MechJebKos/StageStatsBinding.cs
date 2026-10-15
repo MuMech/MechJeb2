@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using kOS.Safe.Encapsulation;
 using kOS.Safe.Encapsulation.Suffixes;
 using kOS.Safe.Exceptions;
@@ -120,7 +121,7 @@ namespace MuMech.MechJebKos
             return new SimSnapshot(m.AtmoR.V3ToWorldRotated(), m.AtmoV.V3ToWorldRotated(), m.AtmoU.V3ToWorldRotated(), m.AtmoT);
         }
 
-        private static FuelStats IndexOrThrow(System.Collections.Generic.List<FuelStats> list, int stage, string label)
+        private static FuelStats IndexOrThrow(List<FuelStats> list, int stage, string label)
         {
             if (stage < 0 || stage >= list.Count)
                 throw new KOSException($"StageStats {label} index {stage} out of range (count={list.Count}).");

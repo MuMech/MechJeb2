@@ -315,9 +315,9 @@ namespace MechJebLib.PSG
             int Length { get; }
             Q3 this[int index] { get; set; }
             (int, int, int, int) Idx(int index);
-            void            WrapVars(double[] vars);
-            Q3              First    { get; set; }
-            Q3              Last     { get; set; }
+            void                 WrapVars(double[] vars);
+            Q3                   First    { get; set; }
+            Q3                   Last     { get; set; }
             (int, int, int, int) FirstIdx { get; }
             (int, int, int, int) LastIdx  { get; }
         }
@@ -431,8 +431,8 @@ namespace MechJebLib.PSG
                 }
             }
 
-            public (int, int, int, int) FirstIdx => (_xOffset, _yOffset, _zOffset,  _wOffset);
-            public (int, int, int, int) LastIdx  => (_xOffset + Length - 1, _yOffset + Length - 1, _zOffset + Length - 1,  _wOffset + Length - 1);
+            public (int, int, int, int) FirstIdx => (_xOffset, _yOffset, _zOffset, _wOffset);
+            public (int, int, int, int) LastIdx  => (_xOffset + Length - 1, _yOffset + Length - 1, _zOffset + Length - 1, _wOffset + Length - 1);
 
             public ControlQ3ArrayProxy(int k, int xOffset, int yOffset, int zOffset, int wOffset)
             {
@@ -458,7 +458,7 @@ namespace MechJebLib.PSG
                     index = MangleIndex(index);
                     if (index < 0 || index >= Length)
                         throw new Exception("out of bounds access in proxy");
-                    return new Q3(_vars[_xOffset + index], _vars[_yOffset + index], _vars[_zOffset + index],_vars[_wOffset + index]);
+                    return new Q3(_vars[_xOffset + index], _vars[_yOffset + index], _vars[_zOffset + index], _vars[_wOffset + index]);
                 }
                 set
                 {
@@ -477,7 +477,7 @@ namespace MechJebLib.PSG
                 index = MangleIndex(index);
                 if (index < 0 || index >= Length)
                     throw new Exception("out of bounds access in proxy");
-                return (_xOffset + index, _yOffset + index, _zOffset + index,  _wOffset + index);
+                return (_xOffset + index, _yOffset + index, _zOffset + index, _wOffset + index);
             }
 
             public void WrapVars(double[] vars) => _vars = vars;
@@ -549,7 +549,7 @@ namespace MechJebLib.PSG
                 UY = new ControlArrayProxy(k2, idx + k2);
                 UZ = new ControlArrayProxy(k2, idx + 2 * k2);
                 UW = new ControlArrayProxy(k2, idx + 3 * k2);
-                U = new ControlQ3ArrayProxy(k2, idx, idx + k2, idx + 2 * k2,  idx + 3 * k2);
+                U = new ControlQ3ArrayProxy(k2, idx, idx + k2, idx + 2 * k2, idx + 3 * k2);
                 T = new ControlArrayProxy(k2, idx + 4 * k2);
                 idx += 5 * k2;
             }
@@ -565,6 +565,7 @@ namespace MechJebLib.PSG
                 NumConstraints += phase.Unguided ? 1 : k2; // unit quaternion constraint
                 NumConstraints += phase.Unguided ? 1 : k2; // thrust magnitude constraint
             }
+
             if (!phase.Coast)
                 NumConstraints += k - 1; // dynamical constraints for m
             if (p > 0)

@@ -224,7 +224,7 @@ namespace MuMech
             bool changed = false;
 
             // Rotates world-frame vectors into the vessel's reference frame.
-            Quaternion worldToVessel = Quaternion.Inverse(Vessel.GetTransform().rotation);
+            var worldToVessel = Quaternion.Inverse(Vessel.GetTransform().rotation);
 
             if (Vessel.parts.Count != lastPartCount)
             {

@@ -39,17 +39,17 @@ namespace MechJebLib.Lambert
         internal const double C5 = 0.06340542125108602;
 
         // Algorithm 2: |y| = 0 when Gamma = 1e-7 N and |y| = 1 when Gamma ~ 6e5 N
-        internal const double C1    = 0.03398904681649696;
-        internal const double C2    = 0.5478387076731984;
+        internal const double C1 = 0.03398904681649696;
+        internal const double C2 = 0.5478387076731984;
         internal const double EPS_A = 1e-16;
 
         // Algorithm 3: y = 0 when the time of flight is 1e-3 times the parabolic time of flight
-        internal const double C6                  = -6.907755278982137; // ln(1e-3)
-        internal const double BETA_KINK           = -11.8286415451763;  // x = -0.75
+        internal const double C6 = -6.907755278982137; // ln(1e-3)
+        internal const double BETA_KINK = -11.8286415451763; // x = -0.75
         internal const double GAMMA_MAX_SLOPE_POS = 9.0 / 16.0;
         internal const double GAMMA_MAX_SLOPE_NEG = 1.183567863353605;
         internal const double GAMMA_MAX_INTERCEPT = 15.0;
-        internal const double GAMMA_MAX_FLAT      = 1.0;
+        internal const double GAMMA_MAX_FLAT = 1.0;
 
         // multi-rev guesses for N > N_MAX use the N_MAX boundary
         internal const int N_MAX = 3000;
@@ -246,17 +246,17 @@ namespace MechJebLib.Lambert
         /// </summary>
         internal sealed class Table
         {
-            public readonly int      Dims;
-            public readonly int      Order;
-            public readonly byte[]   Pattern;
+            public readonly int Dims;
+            public readonly int Order;
+            public readonly byte[] Pattern;
             public readonly double[] Lo;
             public readonly double[] Hi;
-            public readonly int[]    Tree;
+            public readonly int[] Tree;
             public readonly double[] Coefs;
-            public readonly int      CoefsPerBin;
+            public readonly int CoefsPerBin;
 
             // the number of splits along each dimension, and the scale from the domain to the cells of the finest grid
-            private readonly int[]    _splits;
+            private readonly int[] _splits;
             private readonly double[] _scale;
 
             // for each level, the bit of the cell index along its dimension which selects the lower or upper half
@@ -264,18 +264,18 @@ namespace MechJebLib.Lambert
 
             // for each dimension (major) and depth, the shift from the cell index to the index of the bin along that
             // dimension, and the width of the bins
-            private readonly int[]    _binShift;
+            private readonly int[] _binShift;
             private readonly double[] _width;
 
             public Table(int dims, int order, byte[] pattern, double[] lo, double[] hi, int[] tree, double[] coefs)
             {
-                Dims    = dims;
-                Order   = order;
+                Dims = dims;
+                Order = order;
                 Pattern = pattern;
-                Lo      = lo;
-                Hi      = hi;
-                Tree    = tree;
-                Coefs   = coefs;
+                Lo = lo;
+                Hi = hi;
+                Tree = tree;
+                Coefs = coefs;
 
                 CoefsPerBin = dims == 2 ? (order + 1) * (order + 2) / 2 : (order + 1) * (order + 2) * (order + 3) / 6;
 
@@ -288,17 +288,17 @@ namespace MechJebLib.Lambert
                     _scale[d] = (1 << _splits[d]) / (hi[d] - lo[d]);
 
                 int levels = pattern.Length + 1;
-                _shift    = new int[pattern.Length];
+                _shift = new int[pattern.Length];
                 _binShift = new int[dims * levels];
-                _width    = new double[dims * levels];
+                _width = new double[dims * levels];
 
-                var used = new int[dims];
+                int[] used = new int[dims];
                 for (int depth = 0; depth < levels; depth++)
                 {
                     for (int d = 0; d < dims; d++)
                     {
                         _binShift[d * levels + depth] = _splits[d] - used[d];
-                        _width[d * levels + depth]    = (hi[d] - lo[d]) / (1 << used[d]);
+                        _width[d * levels + depth] = (hi[d] - lo[d]) / (1 << used[d]);
                     }
 
                     if (depth < pattern.Length)

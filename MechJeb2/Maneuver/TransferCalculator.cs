@@ -2,8 +2,6 @@
 
 extern alias JetBrainsAnnotations;
 using System;
-using System.IO;
-using System.Reflection;
 using System.Threading;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;

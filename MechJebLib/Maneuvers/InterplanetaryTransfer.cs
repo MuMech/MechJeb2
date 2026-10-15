@@ -7,7 +7,6 @@ using System;
 using System.Linq;
 using MechJebLib.Functions;
 using MechJebLib.Lambert;
-using MechJebLib.Maths;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
 using MechJebLib.Utils;
@@ -187,7 +186,7 @@ namespace MechJebLib.Maneuvers
             // solve the heliocentric trajectory from soi1 to soi2 as two equal-time legs through a free midpoint, so that
             // neither leg sits on the 180 degree lambert singularity when the overall transfer angle is near 180 degrees
             // (this uses prograde sense from the rsoi1helio x vsoi1helio plane, which avoids lambert discontinuities)
-            V3 hHelio = V3.Cross(rsoi1helio.M, vsoi1helio.M);
+            var hHelio = V3.Cross(rsoi1helio.M, vsoi1helio.M);
             (DualV3 vi2, DualV3 vf2) = Russell.Solve(1.0, rsoi1helio, rmidHelio, 0.5 * heliocoast, TransferGeometry.Prograde, h: hHelio);
             (DualV3 vi3, DualV3 vf3) = Russell.Solve(1.0, rmidHelio, rsoi2helio, 0.5 * heliocoast, TransferGeometry.Prograde, h: hHelio);
 
@@ -503,7 +502,7 @@ namespace MechJebLib.Maneuvers
             V3 ecc = Astro.EccVecFromStateVectors(mu, r, v);
             double e = ecc.magnitude;
             V3 p = ecc / e;
-            V3 q = V3.Cross(V3.Cross(r, v).normalized, p);
+            var q = V3.Cross(V3.Cross(r, v).normalized, p);
             return (p + Sqrt(e * e - 1) * q) / e;
         }
 

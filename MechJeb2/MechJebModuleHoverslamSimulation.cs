@@ -72,19 +72,19 @@ namespace MuMech
         public double TerrainAltitude;
 
         [ToggleInfoItem("#MechJeb_HoverslamMapLandingPrediction", InfoItem.Category.Hoverslam, tooltip = "#MechJeb_HoverslamMapLandingPrediction_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
-         //Map landing prediction
+        //Map landing prediction
         public bool MapLandingPrediction = true;
 
         [EditableInfoItem("#MechJeb_HoverslamSimRecalcInterval", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamSimRecalcInterval_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
-         //Simulation recalc interval
+        //Simulation recalc interval
         public readonly EditableDouble SimRecalcInterval = new EditableDouble(1.0);
 
         [EditableInfoItem("#MechJeb_HoverslamVerticalAuthority", InfoItem.Category.Hoverslam, width = 50, rightLabel = "%", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAuthority_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
-         //Vertical phase authority
+        //Vertical phase authority
         public readonly EditableDoubleMult VerticalAuthority = new EditableDoubleMult(0.5, 0.01);
 
         [EditableInfoItem("#MechJeb_HoverslamVerticalAltitude", InfoItem.Category.Hoverslam, width = 50, rightLabel = "m", expandWidth = true, tooltip = "#MechJeb_HoverslamVerticalAltitude_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))]
-         //Vertical phase altitude
+        //Vertical phase altitude
         public readonly EditableDouble VerticalAltitude = new EditableDouble(100);
 
         // TODO: push throttle limiters into simulation:  minthrottle, maxthrottle, maxaccel
@@ -290,7 +290,7 @@ namespace MuMech
                         stagingDelay += nextDelay * (deltaStage - 1);
                     }
 
-                    _manager.AddCoast(fuelStats.StartMass * 1000, fuelStats.StartMass * 1000,  stagingDelay, fuelStats.KSPStage, mjPhase);
+                    _manager.AddCoast(fuelStats.StartMass * 1000, fuelStats.StartMass * 1000, stagingDelay, fuelStats.KSPStage, mjPhase);
                 }
 
                 _manager.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.Thrust * 1000, fuelStats.Isp,

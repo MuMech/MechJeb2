@@ -15,29 +15,29 @@ namespace MuMech
 
         public struct graphState
         {
-            public double   minimum;
-            public double   maximum;
+            public double minimum;
+            public double maximum;
             public string[] labels;
             public double[] labelsPos;
-            public int      labelsActive;
+            public int labelsActive;
         }
 
         // One row per graph the user can tick, in on-screen order. NewRow breaks the checkbox row.
         private readonly struct GraphInfo
         {
             public readonly RecordType Type;
-            public readonly Color      Color;
-            public readonly string     Label;      // checkbox label (localization tag, or a literal)
-            public readonly string     ScaleLabel; // label in the scale picker
-            public readonly bool       NewRow;
+            public readonly Color Color;
+            public readonly string Label; // checkbox label (localization tag, or a literal)
+            public readonly string ScaleLabel; // label in the scale picker
+            public readonly bool NewRow;
 
             public GraphInfo(RecordType type, Color color, string label, string scaleLabel, bool newRow = false)
             {
-                Type       = type;
-                Color      = color;
-                Label      = label;
+                Type = type;
+                Color = color;
+                Label = label;
                 ScaleLabel = scaleLabel;
-                NewRow     = newRow;
+                NewRow = newRow;
             }
         }
 
@@ -45,21 +45,21 @@ namespace MuMech
         // Maybe some of them could be lightened up, but many of the lighter variants are already in this list.
         private static readonly GraphInfo[] graphInfos =
         {
-            new GraphInfo(RecordType.ALTITUDE_ASL,     XKCDColors.White,      "#MechJeb_Flightrecord_checkbox4", "#MechJeb_Flightrecord_checkbox18"),                // Altitude / ASL
-            new GraphInfo(RecordType.ALTITUDE_TRUE,    XKCDColors.Grey,       "#MechJeb_Flightrecord_checkbox5", "#MechJeb_Flightrecord_checkbox19"),                // True Altitude / AGL
-            new GraphInfo(RecordType.ACCELERATION,     XKCDColors.LightRed,   "#MechJeb_Flightrecord_checkbox6", "#MechJeb_Flightrecord_checkbox20"),                // Acceleration / Acc
-            new GraphInfo(RecordType.SPEED_SURFACE,    XKCDColors.Yellow,     "#MechJeb_Flightrecord_checkbox7", "#MechJeb_Flightrecord_checkbox21"),                // Surface speed / SrfVel
-            new GraphInfo(RecordType.SPEED_ORBITAL,    XKCDColors.Apricot,    "#MechJeb_Flightrecord_checkbox8", "#MechJeb_Flightrecord_checkbox22"),                // Orbital speed / ObtVel
-            new GraphInfo(RecordType.MASS,             XKCDColors.Pink,       "#MechJeb_Flightrecord_checkbox9", "#MechJeb_Flightrecord_checkbox23"),                // Mass
-            new GraphInfo(RecordType.Q,                XKCDColors.Cyan,       "#MechJeb_Flightrecord_checkbox10", "#MechJeb_Flightrecord_checkbox24", newRow: true), // Q
-            new GraphInfo(RecordType.AO_A,             XKCDColors.Lavender,   "#MechJeb_Flightrecord_checkbox11", "#MechJeb_Flightrecord_checkbox25"),               // AoA
-            new GraphInfo(RecordType.AO_S,             XKCDColors.Lime,       "#MechJeb_Flightrecord_checkbox12", "#MechJeb_Flightrecord_checkbox26"),               // AoS
-            new GraphInfo(RecordType.AO_D,             XKCDColors.Orange,     "#MechJeb_Flightrecord_checkbox13", "#MechJeb_Flightrecord_checkbox27"),               // AoD
-            new GraphInfo(RecordType.PITCH,            XKCDColors.Mint,       "#MechJeb_Flightrecord_checkbox14", "#MechJeb_Flightrecord_checkbox28"),               // Pitch
-            new GraphInfo(RecordType.DELTA_V_EXPENDED, XKCDColors.Beige,      "ΔV",                              "ΔV"),                                              // ΔV
-            new GraphInfo(RecordType.GRAVITY_LOSSES,   XKCDColors.Green,      "#MechJeb_Flightrecord_checkbox15", "#MechJeb_Flightrecord_checkbox29"),               // Gravity Loss
-            new GraphInfo(RecordType.DRAG_LOSSES,      XKCDColors.LightBrown, "#MechJeb_Flightrecord_checkbox16", "#MechJeb_Flightrecord_checkbox30"),               // Drag Loss
-            new GraphInfo(RecordType.STEERING_LOSSES,  XKCDColors.Cerise,     "#MechJeb_Flightrecord_checkbox17", "#MechJeb_Flightrecord_checkbox31"),               // Steering Loss
+            new GraphInfo(RecordType.ALTITUDE_ASL, XKCDColors.White, "#MechJeb_Flightrecord_checkbox4", "#MechJeb_Flightrecord_checkbox18"), // Altitude / ASL
+            new GraphInfo(RecordType.ALTITUDE_TRUE, XKCDColors.Grey, "#MechJeb_Flightrecord_checkbox5", "#MechJeb_Flightrecord_checkbox19"), // True Altitude / AGL
+            new GraphInfo(RecordType.ACCELERATION, XKCDColors.LightRed, "#MechJeb_Flightrecord_checkbox6", "#MechJeb_Flightrecord_checkbox20"), // Acceleration / Acc
+            new GraphInfo(RecordType.SPEED_SURFACE, XKCDColors.Yellow, "#MechJeb_Flightrecord_checkbox7", "#MechJeb_Flightrecord_checkbox21"), // Surface speed / SrfVel
+            new GraphInfo(RecordType.SPEED_ORBITAL, XKCDColors.Apricot, "#MechJeb_Flightrecord_checkbox8", "#MechJeb_Flightrecord_checkbox22"), // Orbital speed / ObtVel
+            new GraphInfo(RecordType.MASS, XKCDColors.Pink, "#MechJeb_Flightrecord_checkbox9", "#MechJeb_Flightrecord_checkbox23"), // Mass
+            new GraphInfo(RecordType.Q, XKCDColors.Cyan, "#MechJeb_Flightrecord_checkbox10", "#MechJeb_Flightrecord_checkbox24", true), // Q
+            new GraphInfo(RecordType.AO_A, XKCDColors.Lavender, "#MechJeb_Flightrecord_checkbox11", "#MechJeb_Flightrecord_checkbox25"), // AoA
+            new GraphInfo(RecordType.AO_S, XKCDColors.Lime, "#MechJeb_Flightrecord_checkbox12", "#MechJeb_Flightrecord_checkbox26"), // AoS
+            new GraphInfo(RecordType.AO_D, XKCDColors.Orange, "#MechJeb_Flightrecord_checkbox13", "#MechJeb_Flightrecord_checkbox27"), // AoD
+            new GraphInfo(RecordType.PITCH, XKCDColors.Mint, "#MechJeb_Flightrecord_checkbox14", "#MechJeb_Flightrecord_checkbox28"), // Pitch
+            new GraphInfo(RecordType.DELTA_V_EXPENDED, XKCDColors.Beige, "ΔV", "ΔV"), // ΔV
+            new GraphInfo(RecordType.GRAVITY_LOSSES, XKCDColors.Green, "#MechJeb_Flightrecord_checkbox15", "#MechJeb_Flightrecord_checkbox29"), // Gravity Loss
+            new GraphInfo(RecordType.DRAG_LOSSES, XKCDColors.LightBrown, "#MechJeb_Flightrecord_checkbox16", "#MechJeb_Flightrecord_checkbox30"), // Drag Loss
+            new GraphInfo(RecordType.STEERING_LOSSES, XKCDColors.Cerise, "#MechJeb_Flightrecord_checkbox17", "#MechJeb_Flightrecord_checkbox31") // Steering Loss
         };
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -119,7 +119,7 @@ namespace MuMech
         {
             Priority = 2000;
             graphStates = new graphState[typeCount];
-            displayed   = new bool[typeCount];
+            displayed = new bool[typeCount];
         }
 
         public override void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)

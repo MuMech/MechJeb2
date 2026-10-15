@@ -72,7 +72,7 @@ namespace MechJebLibTest.Primitives.V4Tests
             var v = new V4(1, 2, 3, 4);
             var n = new V4(0, 1, 0, 1);
 
-            V4 onPlane = V4.ProjectOnPlane(v, n);
+            var onPlane = V4.ProjectOnPlane(v, n);
 
             onPlane.ShouldEqual(new V4(1, -1, 3, 1));
             V4.Dot(onPlane, n).ShouldEqual(0);
@@ -85,7 +85,7 @@ namespace MechJebLibTest.Primitives.V4Tests
             V4 q = new V4(1, 2, 3, 4).normalized;
             var g = new V4(-0.5, 1, 0.25, 2);
 
-            V4 tangent = V4.ProjectOnPlane(g, q);
+            var tangent = V4.ProjectOnPlane(g, q);
 
             V4.Dot(tangent, q).ShouldEqual(0, 1e-15);
         }
@@ -104,15 +104,15 @@ namespace MechJebLibTest.Primitives.V4Tests
         private void ProjectHugeAndTinyMagnitudes()
         {
             // compare by ratio since the magnitude in NearlyEqual over/underflows at these scales
-            V4 huge = V4.Project(new V4(3e300, 4e300, 0, 0), new V4(1e300, 0, 0, 0));
+            var huge = V4.Project(new V4(3e300, 4e300, 0, 0), new V4(1e300, 0, 0, 0));
             (huge.x / 3e300).ShouldEqual(1.0, 1e-15);
             huge.y.ShouldEqual(0);
 
-            V4 tiny = V4.Project(new V4(0, 0, 3e-300, 4e-300), new V4(0, 0, 0, 1e-300));
+            var tiny = V4.Project(new V4(0, 0, 3e-300, 4e-300), new V4(0, 0, 0, 1e-300));
             tiny.z.ShouldEqual(0);
             (tiny.w / 4e-300).ShouldEqual(1.0, 1e-15);
 
-            V4 hugeOnPlane = V4.ProjectOnPlane(new V4(3e300, 4e300, 0, 0), new V4(1e300, 0, 0, 0));
+            var hugeOnPlane = V4.ProjectOnPlane(new V4(3e300, 4e300, 0, 0), new V4(1e300, 0, 0, 0));
             (Abs(hugeOnPlane.x) / 3e300).ShouldBeLessThan(1e-15);
             (hugeOnPlane.y / 4e300).ShouldEqual(1.0, 1e-15);
         }
@@ -146,10 +146,7 @@ namespace MechJebLibTest.Primitives.V4Tests
         }
 
         [Fact]
-        private void AngleNearlyParallelIsAccurate()
-        {
-            (V4.Angle(V4.xaxis, new V4(1, 0, 0, 1e-10)) / 1e-10).ShouldEqual(1.0, 1e-15);
-        }
+        private void AngleNearlyParallelIsAccurate() => (V4.Angle(V4.xaxis, new V4(1, 0, 0, 1e-10)) / 1e-10).ShouldEqual(1.0, 1e-15);
 
         [Fact]
         private void AngleNearlyAntiparallelIsAccurate()
@@ -207,10 +204,7 @@ namespace MechJebLibTest.Primitives.V4Tests
         }
 
         [Fact]
-        private void OrthonormalOfZeroIsZero()
-        {
-            V4.zero.orthonormal.ShouldEqual(V4.zero);
-        }
+        private void OrthonormalOfZeroIsZero() => V4.zero.orthonormal.ShouldEqual(V4.zero);
 
         [Fact]
         private void OrthoNormalize()
