@@ -26,8 +26,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
             private static readonly FieldContext _rfSpoolUpTime = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("effectiveSpoolUpTime");
             private static readonly FieldContext _rfAutoCutoff = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("autoCutoff");
             private static readonly FieldContext _rfUllage = Assembly("RealFuels").Class("RealFuels.ModuleEnginesRF").Field("ullage");
-            private static readonly FieldContext _rp0ControllableMass = Assembly("RP0").Class("RP0.ProceduralAvionics.ModuleProceduralAvionics").Field("controllableMass");
-            private static readonly FieldContext _rp0MassLimit = Assembly("RP0").Class("RP0.ModuleAvionics").Field("massLimit");
+            private static readonly FieldContext _rp0ControllableMass = Assembly("RP-0").Class("RP0.ProceduralAvionics.ModuleProceduralAvionics").Field("controllableMass");
+            private static readonly FieldContext _rp0MassLimit = Assembly("RP-0").Class("RP0.ModuleAvionics").Field("massLimit");
 
             private static readonly bool _isRealFuelsLoadedCorrectly;
             private static readonly bool _isRP0LoadedCorrectly;
