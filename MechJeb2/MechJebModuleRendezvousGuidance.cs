@@ -46,7 +46,7 @@ namespace MuMech
                 GuiUtils.TimeToDHMS(closestApproachTime - VesselState.Time)); //"Time until closest approach"
             GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label8"),
                 Orbit.Separation(Core.Target.TargetOrbit, closestApproachTime).ToSI() + "m"); //"Separation at closest approach"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label9"),
+            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RZplan_label10"),
                 OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, closestApproachTime, Core.Target.TargetOrbit).magnitude.ToSI() + "m/s"); //"Relative speed at closest approach"
 
 
