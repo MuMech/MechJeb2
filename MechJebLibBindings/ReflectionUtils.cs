@@ -25,7 +25,7 @@ namespace MechJebLibBindings
             IsLoadedPrincipia = IsAssemblyLoaded("ksp_plugin_adapter");
             IsLoadedFAR = IsAssemblyLoaded("FerramAerospaceResearch");
             IsLoadedRealismOverhaul = IsAssemblyLoaded("RealismOverhaul");
-            IsLoadedRP0 = IsAssemblyLoaded("RP0");
+            IsLoadedRP0 = IsAssemblyLoaded("RP-0");
         }
 
         public static bool IsAssemblyLoaded(string assemblyName)
