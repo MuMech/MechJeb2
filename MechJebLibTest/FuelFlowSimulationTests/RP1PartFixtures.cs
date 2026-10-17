@@ -15,7 +15,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
     ///     RP-1 (RealismOverhaul, RealFuels, ProceduralParts and ProceduralFairings) parts as SimParts, with the values taken
     ///     from SimVessel dumps captured in KSP.  The procedural parts get their mass from the IPartMassModifier modules of
     ///     their configuration, so the module mass and resource amounts are parameters along with the values which depend on
-    ///     the vessel.
+    ///     the vessel.  The modules have the Index of the module in the KSP part's module list.
     /// </summary>
     public static class RP1PartFixtures
     {
@@ -31,7 +31,9 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         {
             SimPart p = NewProceduralPart(v, "proceduralAvionics", persistentId, inverseStage, 1, modulesMass);
             AddElectricCharge(p, electricCharge, electricCharge);
-            AddModule(SimModuleAvionics.Borrow(p)).ControllableMass = controllableMass;
+            SimModuleAvionics a = AddModule(SimModuleAvionics.Borrow(p));
+            a.Index = 23;
+            a.ControllableMass = controllableMass;
             return p;
         }
 
@@ -53,10 +55,10 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
         public static SimPart KzResizableFairingBase(SimVessel v, uint persistentId, int inverseStage, double modulesMass,
             SimPart attachedPart) =>
-            WithModulesMass(NewDecoupler(v, "KzResizableFairingBase", persistentId, inverseStage, 0, attachedPart), modulesMass);
+            WithModulesMass(NewDecoupler(v, "KzResizableFairingBase", persistentId, inverseStage, 0, attachedPart, 2), modulesMass);
 
         public static SimPart KzFlatAdapter(SimVessel v, uint persistentId, int inverseStage, double modulesMass, SimPart attachedPart) =>
-            WithModulesMass(NewDecoupler(v, "KzFlatAdapter", persistentId, inverseStage, 0, attachedPart), modulesMass);
+            WithModulesMass(NewDecoupler(v, "KzFlatAdapter", persistentId, inverseStage, 0, attachedPart, 2), modulesMass);
 
         public static SimPart KzThrustPlate(SimVessel v, uint persistentId, int inverseStage, double modulesMass) =>
             NewProceduralPart(v, "KzThrustPlate", persistentId, inverseStage, 0, modulesMass);
@@ -64,14 +66,16 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public static SimPart KzProcFairingSide1(SimVessel v, uint persistentId, int inverseStage, double modulesMass)
         {
             SimPart p = NewProceduralPart(v, "KzProcFairingSide1", persistentId, inverseStage, 0, modulesMass);
-            AddModule(SimProceduralFairingDecoupler.Borrow(p)).IsDecoupled = false;
+            SimProceduralFairingDecoupler d = AddModule(SimProceduralFairingDecoupler.Borrow(p));
+            d.Index = 1;
+            d.IsDecoupled = false;
             return p;
         }
 
         // the RP-1 launch clamp carries the free resources that its pumps supply to the vessel on the pad
         public static SimPart RP1LaunchClamp1(SimVessel v, uint persistentId, int inverseStage)
         {
-            SimPart p = LaunchClamp1(v, persistentId, inverseStage);
+            SimPart p = LaunchClamp1(v, persistentId, inverseStage, 1);
             AddResource(p, CLAMP_PUMP, 10, 10, 0);
             AddResource(p, AIR_PUMP, 5, 5, 0);
             return p;
@@ -85,6 +89,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
             SimModuleRCS r = AddModule(SimModuleRCS.Borrow(p));
             r.IsEnabled = true;
+            r.Index = 0;
             r.RcsEnabled = false;
             r.G = 9.80665;
             r.ISPMult = 1;
@@ -123,6 +128,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
             SimModuleEngines e = NewModuleEngines(p);
             e.IsEnabled = true;
+            e.Index = 1;
             e.MaxFuelFlow = maxFuelFlow;
             e.MinFuelFlow = minFuelFlow;
             e.MaxThrust = maxThrust;

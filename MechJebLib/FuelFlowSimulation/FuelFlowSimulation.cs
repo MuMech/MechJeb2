@@ -18,7 +18,9 @@ namespace MechJebLib.FuelFlowSimulation
         private const int MAXSTEPS = 10_000;
 
         public readonly List<FuelStats> Segments = new List<FuelStats>();
-        private FuelStats _currentSegment;
+
+        // ReSharper disable once NullableWarningSuppressionIsUsed
+        private FuelStats _currentSegment = null!;
         private double _time;
         public bool DVLinearThrust = true; // include cos losses
         private readonly HashSet<SimPart> _partsWithResourceDrains = new HashSet<SimPart>();
@@ -41,18 +43,44 @@ namespace MechJebLib.FuelFlowSimulation
 
             vessel.ActivateEnginesAndRCS();
 
-            while (vessel.CurrentStage >= 0) // FIXME: should stop mutating vessel.CurrentStage
+            try
             {
-                SimulateStage(vessel);
-                ClearResiduals();
-                ComputeRcsMaxValues(vessel);
-                FinishSegment(vessel);
-                vessel.Stage();
+                while (vessel.CurrentStage >= 0) // FIXME: should stop mutating vessel.CurrentStage
+                {
+                    SimulateStage(vessel);
+                    ClearResiduals();
+                    ComputeRcsMaxValues(vessel);
+                    FinishSegment(vessel);
+                    vessel.Stage();
+                }
+
+                Segments.Reverse();
+            }
+            finally
+            {
+                ClearDrains();
+            }
+        }
+
+        // Don't hold onto SimParts between runs: the vessel may be disposed and its parts borrowed by another job's vessel,
+        // and when the vessel is reused the stale drains would be added onto by the next run.
+        private void ClearDrains()
+        {
+            foreach (SimPart part in _partsWithResourceDrains)
+            {
+                part.ClearResourceDrains();
+                part.ClearResiduals();
             }
 
-            Segments.Reverse();
+            foreach (SimPart part in _partsWithRCSDrains)
+                part.ClearRCSDrains();
 
             _partsWithResourceDrains.Clear();
+            _partsWithRCSDrains.Clear();
+            _partsWithRCSDrains2.Clear();
+
+            // ReSharper disable once NullableWarningSuppressionIsUsed
+            _currentSegment = null!;
         }
 
         private void SimulateRCS(SimVessel vessel, bool max)
@@ -477,6 +505,11 @@ namespace MechJebLib.FuelFlowSimulation
                 SpoolUpTime = vessel.SpoolupCurrent,
                 StagedMass = stagedMass
             };
+
+            foreach (SimModuleEngines e in vessel.ActiveEngines)
+                _currentSegment.AddEngineSignature(e.Signature());
+
+            _currentSegment.SortEngineSignatures();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -154,11 +154,14 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
             private void BuildModules(SimPart part, Part kspPart)
             {
-                foreach (PartModule kspModule in kspPart.Modules)
+                for (int i = 0; i < kspPart.Modules.Count; i++)
                 {
+                    PartModule kspModule = kspPart.Modules[i];
+
                     if (!TryBuildModule(part, kspModule, out SimPartModule? m))
                         continue;
 
+                    m.Index = i;
                     part.Modules.Add(m);
                     _inversePartModuleMapping.Add(m, kspModule);
                 }

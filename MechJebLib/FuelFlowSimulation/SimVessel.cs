@@ -159,12 +159,13 @@ namespace MechJebLib.FuelFlowSimulation
 
                     e.UpdateEngineStatus();
 
-                    if (!e.IsOperational)
-                        continue;
-
                     ActiveEngines.Add(e);
                 }
             }
+
+            // UpdateEngineStatus() can shut down an engine and, with AutoCutoff, its symmetry counterparts which may already
+            // be in the list, so filter once every status is updated
+            ActiveEngines.RemoveAll(e => !e.IsOperational);
 
             ComputeThrustAndSpoolup();
         }
@@ -223,9 +224,6 @@ namespace MechJebLib.FuelFlowSimulation
             {
                 SimModuleEngines e = ActiveEngines[i];
 
-                if (!e.IsOperational)
-                    continue;
-
                 SpoolupCurrent += e.ThrustCurrent.magnitude * e.ModuleSpoolupTime;
 
                 e.Update();
@@ -238,7 +236,7 @@ namespace MechJebLib.FuelFlowSimulation
             ThrustMagnitude = ThrustCurrent.magnitude;
             ThrustMinMagnitude = ThrustMin.magnitude;
             ThrustMaxMagnitude = ThrustMax.magnitude;
-            SpoolupCurrent /= ThrustCurrent.magnitude;
+            SpoolupCurrent = ThrustMagnitude > 0 ? SpoolupCurrent / ThrustMagnitude : 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -279,6 +277,7 @@ namespace MechJebLib.FuelFlowSimulation
             v.RCSActivatedInStage.Clear();
             v.RCSDroppedInStage.Clear();
             v.ActiveEngines.Clear();
+            v.ActiveRcs.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

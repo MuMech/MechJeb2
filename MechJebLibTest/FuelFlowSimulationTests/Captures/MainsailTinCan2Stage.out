@@ -31,7 +31,7 @@
       Links: Rockomax64.BW-1086072213 Decoupler.2-3302637856
       CrossFeedPartSet: largeSolarPanel-3802754131 largeSolarPanel-1281754298 liquidEngineMainsail.v2-1899096253 Rockomax64.BW-1086072213 asasmodule1-2-3652483317 batteryBankLarge-2696621395 probeStackLarge-363062213 Decoupler.2-3302637856 rocketNoseCone.v3-680279770
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -58,7 +58,7 @@
       Links: Rockomax64.BW-186459485
       CrossFeedPartSet: liquidEngineMainsail.v2-296107038 Rockomax64.BW-186459485 Decoupler.2-3302637856
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -126,7 +126,7 @@
       Links: Rockomax64.BW-1086072213 Decoupler.2-3302637856
       CrossFeedPartSet: largeSolarPanel-3802754131 largeSolarPanel-1281754298 liquidEngineMainsail.v2-1899096253 Rockomax64.BW-1086072213 asasmodule1-2-3652483317 batteryBankLarge-2696621395 probeStackLarge-363062213 Decoupler.2-3302637856 rocketNoseCone.v3-680279770
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -153,7 +153,7 @@
       Links: Rockomax64.BW-186459485
       CrossFeedPartSet: liquidEngineMainsail.v2-296107038 Rockomax64.BW-186459485 Decoupler.2-3302637856
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1

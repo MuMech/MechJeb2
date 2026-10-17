@@ -516,35 +516,35 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public static SimVessel MyFalcon9Block5(bool kscPad = false)
         {
             SimVessel v = NewVessel(5);
-            v.SetInitial(671824.00810271199,
-                new V3(3328117.6811200185, -4495382.4039072869, 3050619.8108357675),
-                new V3(327.80846173363119, 242.69017320559482, -1.1649856299288815E-07),
-                new V3(0.52232058711411489, -0.70562870200873251, 0.47882080078125));
+            v.SetInitial(671841.96810272872,
+                new V3(3334003.12497136, -4491019.6219513649, 3050619.5686581936),
+                new V3(327.49032101890714, 243.11934828979491, -9.0183722763191425E-07),
+                new V3(0.5232447436987494, -0.70494390282563169, 0.47882062196731567));
 
-            SimPart payload = ROTServiceModule(v, 716676487, -0.91552984714508057, 659.92299999999966);
-            SimPart avionics2 = ProceduralAvionics(v, 3578329919, -1, -0.70491535891778767, 111778, 150);
-            SimPart fairingBase = KzResizableFairingBase(v, 711105664, 0, 0.53969687223434448, avionics2);
-            SimPart tank2 = ROTGenericTankSeparate(v, 2593943298, 0, 1.9433658123016357, 38750.520237705852, 61199.234562294143);
-            SimPart mvac = ROEMerlin1DV(v, 248665222, 2,
-                new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522));
-            SimPart interstage = KzFlatAdapter(v, 4238809487, 2, 0.42880785465240479, mvac);
-            SimPart avionics1 = ProceduralAvionics(v, 1573872723, 2, -0.36856828560121357, 268317, 600);
-            SimPart tank1 = ROTGenericTankSeparate(v, 1975695187, 2, 11.127128601074219, 149242.99723951373, 235701.53739390321);
-            SimPart thrustPlate = KzThrustPlate(v, 3628547826, 2, 0.74751102924346924);
+            SimPart payload = ROTServiceModule(v, 562668470, -0.91552984714508057, 659.92299999999966);
+            SimPart avionics2 = ProceduralAvionics(v, 1687291787, -1, -0.70491535891778767, 111778, 150);
+            SimPart fairingBase = KzResizableFairingBase(v, 2031760497, 0, 0.53969687223434448, avionics2);
+            SimPart tank2 = ROTGenericTankSeparate(v, 1343824797, 0, 1.9433658123016357, 38750.520237705852, 61199.234562294143);
+            SimPart mvac = ROEMerlin1DV(v, 224852890, 2,
+                new V3(0.52287338134023087, -0.70521938236984572, 0.47882038354873657));
+            SimPart interstage = KzFlatAdapter(v, 1240192668, 2, 0.42880785465240479, mvac);
+            SimPart avionics1 = ProceduralAvionics(v, 1810037683, 2, -0.36856828560121357, 268317, 600);
+            SimPart tank1 = ROTGenericTankSeparate(v, 2918110231, 2, 11.127128601074219, 149242.99723951373, 235701.53739390321);
+            SimPart thrustPlate = KzThrustPlate(v, 4276926307, 2, 0.74751102924346924);
 
-            SimPart[] merlins = { ROEMerlin1D(v, 3766919695, 4, new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522)), ROEMerlin1D(v, 1520557324, 4, new V3(0.52153756579203336, -0.70620775913935407, 0.47882074117660522)), ROEMerlin1D(v, 2691955204, 4, new V3(0.52153769716744469, -0.70620778159085063, 0.47882071137428284)), ROEMerlin1D(v, 75275086, 4, new V3(0.52153757701778169, -0.70620769345164847, 0.47882065176963806)), ROEMerlin1D(v, 4036330361, 4, new V3(0.5215374568681187, -0.7062076053124462, 0.47882062196731567)), ROEMerlin1D(v, 3933714968, 4, new V3(0.52153730304121071, -0.70620771423636086, 0.47882068157196045)), ROEMerlin1D(v, 2052249669, 4, new V3(0.52153741712213852, -0.70620767964739362, 0.47882068157196045)), ROEMerlin1D(v, 4132307635, 4, new V3(0.52153757701778169, -0.70620769345164847, 0.47882065176963806)), ROEMerlin1D(v, 957131212, 4, new V3(0.52153736008167462, -0.70620769694187724, 0.47882059216499329)) };
+            SimPart[] merlins = { ROEMerlin1D(v, 3837920056, 4, new V3(0.52287338134023087, -0.70521938236984572, 0.47882038354873657)), ROEMerlin1D(v, 1139067418, 4, new V3(0.52287338134023087, -0.70521938236984572, 0.47882038354873657)), ROEMerlin1D(v, 3369598044, 4, new V3(0.52287342724710839, -0.70521943067564963, 0.47882041335105896)), ROEMerlin1D(v, 2666058081, 4, new V3(0.52287353016138005, -0.70521946157827342, 0.47882041335105896)), ROEMerlin1D(v, 3698343881, 4, new V3(0.522873192914868, -0.70521937757199238, 0.47882023453712463)), ROEMerlin1D(v, 2658974596, 4, new V3(0.52287340984392805, -0.70521937366825549, 0.47882038354873657)), ROEMerlin1D(v, 1863242498, 4, new V3(0.52287339874341121, -0.70521943937723985, 0.47882044315338135)), ROEMerlin1D(v, 1418509379, 4, new V3(0.52287353016138005, -0.70521946157827342, 0.47882044315338135)), ROEMerlin1D(v, 986934495, 4, new V3(0.52287335283653391, -0.70521939107143583, 0.4788203239440918)) };
 
-            SimPart[] clamps = { RP1LaunchClamp1(v, 1950391702, 3), RP1LaunchClamp1(v, 536336776, 3), RP1LaunchClamp1(v, 3329569423, 3), RP1LaunchClamp1(v, 3966630377, 3), RP1LaunchClamp1(v, 3977908051, 3), RP1LaunchClamp1(v, 219405182, 3), RP1LaunchClamp1(v, 3483319384, 3), RP1LaunchClamp1(v, 26648143, 3) };
+            SimPart[] clamps = { RP1LaunchClamp1(v, 2504620222, 3), RP1LaunchClamp1(v, 1870162124, 3), RP1LaunchClamp1(v, 2330994830, 3), RP1LaunchClamp1(v, 847652046, 3), RP1LaunchClamp1(v, 4097541353, 3), RP1LaunchClamp1(v, 736481228, 3), RP1LaunchClamp1(v, 3681969535, 3), RP1LaunchClamp1(v, 4161704963, 3) };
 
-            SimPart[] interstageFairing = { KzProcFairingSide1(v, 1110556197, 2, 0.44426935911178589), KzProcFairingSide1(v, 84964491, 2, 0.44426935911178589), KzProcFairingSide1(v, 3892549061, 2, 0.44426935911178589), KzProcFairingSide1(v, 613648638, 2, 0.44426935911178589) };
+            SimPart[] interstageFairing = { KzProcFairingSide1(v, 2752218355, 2, 0.44426935911178589), KzProcFairingSide1(v, 2261372643, 2, 0.44426935911178589), KzProcFairingSide1(v, 2135704149, 2, 0.44426935911178589), KzProcFairingSide1(v, 59679522, 2, 0.44426935911178589) };
 
-            SimPart[] nitrogenTanks = { RORFTankIntegral(v, 1519049209, 0, -0.99626743793487549, 44323.939999999995), RORFTankIntegral(v, 1893542743, 0, -0.99626743793487549, 44323.939999999995), RORFTankIntegral(v, 1556299446, 0, -0.98235255479812622, 44323.939999999995), RORFTankIntegral(v, 2210098343, 0, -0.99626743793487549, 44323.939999999995) };
+            SimPart[] nitrogenTanks = { RORFTankIntegral(v, 1381716828, 0, -0.99626743793487549, 44323.939999999995), RORFTankIntegral(v, 415050972, 0, -0.99626743793487549, 44323.939999999995), RORFTankIntegral(v, 1949594566, 0, -0.98235255479812622, 44323.939999999995), RORFTankIntegral(v, 1416727206, 0, -0.99626743793487549, 44323.939999999995) };
 
-            SimPart[] rcs = { TE219F9CGT(v, 1552971870, 2), TE219F9CGT(v, 3144618445, 2), TE219F9CGT(v, 2229477872, 2), TE219F9CGT(v, 2659758618, 2) };
+            SimPart[] rcs = { TE219F9CGT(v, 1374471535, 2), TE219F9CGT(v, 388307089, 2), TE219F9CGT(v, 3104723213, 2), TE219F9CGT(v, 2108784256, 2) };
 
-            SimPart[] payloadFairing = { KzProcFairingSide1(v, 288594212, 1, 0.82329875230789185), KzProcFairingSide1(v, 3427567844, 1, 0.82329875230789185) };
+            SimPart[] payloadFairing = { KzProcFairingSide1(v, 997883857, 1, 0.82329875230789185), KzProcFairingSide1(v, 3167263097, 1, 0.82329875230789185) };
 
-            MakeRoot(payload, "My Falcon 9 Block 5");
+            MakeRoot(payload);
 
             Link(payload, avionics2);
             Link(avionics2, fairingBase);
@@ -587,7 +587,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             Symmetry(payloadFairing);
 
             if (kscPad)
-                v.SetConditions(0.95937552309112017, 0.98644521069944324, 1.5314373912311351E-09);
+                v.SetConditions(0.95934332780160259, 0.9864236759662981, 3.4102277931687742E-09);
 
             return Finish(v);
         }
@@ -647,14 +647,15 @@ namespace MechJebLibTest.FuelFlowSimulationTests
             }
         }
 
+        // KSP lists each part's counterparts going around the ring from the part after it
         public static void Symmetry(params SimPart[] parts)
         {
-            foreach (SimPart p in parts)
+            for (int i = 0; i < parts.Length; i++)
             {
+                SimPart p = parts[i];
                 p.SymmetryCounterParts.Clear();
-                foreach (SimPart q in parts)
-                    if (q != p)
-                        p.SymmetryCounterParts.Add(q);
+                for (int j = 1; j < parts.Length; j++)
+                    p.SymmetryCounterParts.Add(parts[(i + j) % parts.Length]);
             }
         }
     }

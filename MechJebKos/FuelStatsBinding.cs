@@ -15,7 +15,7 @@ namespace MuMech.MechJebKos
     // The per-stage, per-condition (vacuum or atmospheric) fuel-flow stats for one simulated stage,
     // reached via ADDONS:MECHJEB:STAGESTATS:STAGEDELTAV[i]:VAC / :ATMO.
     //
-    // FuelStats is a value type recomputed by the background simulation; the snapshot delegate is
+    // FuelStats is a class recomputed by the background simulation; the snapshot delegate is
     // re-invoked on every suffix read so the values stay live (and re-validate the stage index).
     // The conditions delegate carries the R/V/U/T the simulation that produced these stats was run
     // under (the vacuum or atmospheric snapshot, matching this object's branch of the pair).
