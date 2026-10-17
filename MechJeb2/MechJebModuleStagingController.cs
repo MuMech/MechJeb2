@@ -301,6 +301,12 @@ namespace MuMech
             _shouldDropSolids = null; // invalidate the cache; _droppingSolids recomputes lazily if needed this update
             _partsDroppedInNextStageStale = true;
 
+            if (Vessel.currentStage == _stats.HalfStageIndex && Vessel.totalMass <= _stats.HalfStageEndMass)
+            {
+                Stage();
+                return;
+            }
+
             // don't decouple active or idle engines or tanks
             if (InverseStageDecouplesActiveOrIdleEngineOrTank(Vessel.currentStage - 1, _burnedResources, _activeModuleEngines) &&
                 !InverseStageReleasesClamps(Vessel.currentStage - 1))

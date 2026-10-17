@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -47,6 +47,9 @@ namespace MechJebLib.FuelFlowSimulation
         public double MachNumber;
         public double T;
         public V3 R, V, U;
+
+        public int HalfStageIndex = -1;
+        public double HalfStageEndMass = 0;
 
         // CurrentStage gets scribbled over by the FuelFlowSimulation, SetCurrentStage() is intended to be used in
         // the VesselBuilder and DecouplingAnalyzer to figure out the right value, ResetCurrentStage() is called by
@@ -102,6 +105,15 @@ namespace MechJebLib.FuelFlowSimulation
                         RCSDroppedInStage[part.DecoupledInStage].Add(r);
                     }
                 }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetupStageAndAHalf(double endMass)
+        {
+            if (HalfStageIndex != -1)
+            {
+                HalfStageEndMass = endMass;
             }
         }
 

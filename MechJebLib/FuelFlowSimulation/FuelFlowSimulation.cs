@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Lamont Granquist, Sebastien Gaggini and the MechJeb contributors
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
@@ -25,6 +25,7 @@ namespace MechJebLib.FuelFlowSimulation
         private readonly HashSet<SimPart> _partsWithRCSDrains = new HashSet<SimPart>();
         private readonly HashSet<SimPart> _partsWithRCSDrains2 = new HashSet<SimPart>();
         private bool _allocatedFirstSegment;
+        private bool _halfStageIsDetected;
 
         public override void Run(object? o = null)
         {
@@ -34,6 +35,7 @@ namespace MechJebLib.FuelFlowSimulation
             if (!(o is SimVessel vessel))
                 throw new ArgumentException("o is not a SimVessel", nameof(o));
 
+            _halfStageIsDetected = false;
             _allocatedFirstSegment = false;
             _time = 0;
             Segments.Clear();
@@ -53,6 +55,9 @@ namespace MechJebLib.FuelFlowSimulation
             Segments.Reverse();
 
             _partsWithResourceDrains.Clear();
+
+            if (!_halfStageIsDetected)
+                vessel.HalfStageIndex = -1;
         }
 
         private void SimulateRCS(SimVessel vessel, bool max)
@@ -131,12 +136,39 @@ namespace MechJebLib.FuelFlowSimulation
             UpdateResourceDrainsAndResiduals(vessel);
             int activeEngines = vessel.ActiveEngines.Count;
 
+            if (!_halfStageIsDetected //is anyone insane enough to build a rocket with multiple half-stages? You never know
+                && vessel.ActiveEngines.Count > 0
+                && _partsWithResourceDrains.Count > 0)
+            {
+                int earliestDroppedEgineInStage = 0, earliestDroppedTankInStage = 0;
+                for (int i = 0; i < vessel.ActiveEngines.Count; i++)
+                {
+                    earliestDroppedEgineInStage = Max(earliestDroppedEgineInStage, vessel.ActiveEngines[i].Part.DecoupledInStage);
+                }
+
+                foreach (var tank in _partsWithResourceDrains)
+                {
+                    earliestDroppedTankInStage = Max(earliestDroppedTankInStage, tank.DecoupledInStage);
+                }
+
+                if (earliestDroppedEgineInStage > earliestDroppedTankInStage)
+                {
+                    _halfStageIsDetected = true;
+                    vessel.HalfStageIndex = earliestDroppedEgineInStage + 1;
+                }
+            }
+
             for (int steps = MAXSTEPS; steps > 0; steps--)
             {
                 if (AllowedToStage(vessel))
                     return;
 
                 double dt = MinimumTimeStep();
+                if (_currentSegment.KSPStage == vessel.HalfStageIndex)
+                {
+                    double massFlow = ResourceMaxMassFlow(vessel);
+                    dt = Min(dt, (vessel.Mass - vessel.HalfStageEndMass) / massFlow);
+                }
 
                 if (dt >= 0.02 && activeEngines != vessel.ActiveEngines.Count)
                 {
@@ -401,6 +433,17 @@ namespace MechJebLib.FuelFlowSimulation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private double ResourceMaxMassFlow(SimVessel vessel)
+        {
+            double massFlow = 0;
+
+            foreach (SimModuleEngines engine in vessel.ActiveEngines)
+                massFlow += engine.MassFlowRate;
+
+            return massFlow;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinishRcsSegment(bool max, double deltaTime, double startMass, double endMass, double rcsThrust)
         {
             double rcsDeltaV = rcsThrust * deltaTime / (startMass - endMass) * Log(startMass / endMass);
@@ -484,6 +527,9 @@ namespace MechJebLib.FuelFlowSimulation
         {
             // always stage if all the engines are burned out
             if (vessel.ActiveEngines.Count == 0)
+                return true;
+
+            if (vessel.CurrentStage == vessel.HalfStageIndex && vessel.Mass - vessel.HalfStageEndMass < 1e-6)
                 return true;
 
             for (int i = 0; i < vessel.ActiveEngines.Count; i++)
