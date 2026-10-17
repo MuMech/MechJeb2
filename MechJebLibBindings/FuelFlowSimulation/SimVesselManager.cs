@@ -81,8 +81,11 @@ namespace MechJebLibBindings.FuelFlowSimulation
 
         public void Release()
         {
+            FuelFlowSimulation.CancelAndReset();
             Clear();
             _vessel.Dispose();
+            _vessel = SimVessel.Borrow();
+            _kspVessel = null!;
         }
     }
 }

@@ -60,10 +60,12 @@ namespace MechJebLib.Utils
             Exception = null;
             _cts = new CancellationTokenSource();
             CancelToken = _cts.Token;
+            // the task must not take the token, or a cancel before it starts would skip RunWrapped and leave the state in
+            // Running forever.  Run sees the cancel through the CancelToken instead.
             _task = Task.Factory.StartNew(
                 _runWrapped,
                 o,
-                _cts.Token,
+                CancellationToken.None,
                 TaskCreationOptions.DenyChildAttach | TaskCreationOptions.LongRunning,
                 TaskScheduler.Default
             );
@@ -102,6 +104,22 @@ namespace MechJebLib.Utils
         }
 
         public void Cancel() => _cts?.Cancel();
+
+        /// <summary>
+        ///     Cancels the job, blocks until it has stopped and marks it ready, discarding any result.  This only stops the
+        ///     job early if Run checks the CancelToken, otherwise it waits for Run to finish.
+        /// </summary>
+        public void CancelAndReset()
+        {
+            if (_task != null)
+            {
+                _cts?.Cancel();
+                // RunWrapped catches everything, so this does not throw
+                _task.Wait();
+            }
+
+            Interlocked.Exchange(ref _state, (int)JobState.Ready);
+        }
 
         public void CancelAfter(TimeSpan timeout) => _cts?.CancelAfter(timeout);
     }
