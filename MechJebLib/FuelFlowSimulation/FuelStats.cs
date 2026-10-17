@@ -3,9 +3,12 @@
  * SPDX-License-Identifier: LicenseRef-PD-hp OR Unlicense OR CC0-1.0 OR 0BSD OR MIT-0 OR MIT OR LGPL-2.1+
  */
 
+using System.Collections.Generic;
+
 namespace MechJebLib.FuelFlowSimulation
 {
-    public struct FuelStats
+    // FIXME: should get objectpooled at some point
+    public class FuelStats
     {
         public double DeltaTime;
         public double DeltaV;
@@ -30,6 +33,9 @@ namespace MechJebLib.FuelFlowSimulation
         public double RcsUllageTime;
         public double ControllableMass;
 
+        private readonly List<EngineSignature> _engineSignatures = new List<EngineSignature>();
+        public IReadOnlyList<EngineSignature> EngineSignatures => _engineSignatures;
+
         public double MaxAccel     => EndMass > 0 ? Thrust / EndMass : 0;
         public double ResourceMass => StartMass - EndMass;
 
@@ -39,6 +45,10 @@ namespace MechJebLib.FuelFlowSimulation
         public double StartTWR(double geeASL) => StartMass > 0 ? Thrust / (9.80665 * geeASL * StartMass) : 0;
 
         public double MaxTWR(double geeASL) => MaxAccel / (9.80665 * geeASL);
+
+        public void AddEngineSignature(EngineSignature engineSignature) => _engineSignatures.Add(engineSignature);
+
+        public void SortEngineSignatures() => _engineSignatures.Sort();
 
         public override string ToString() =>
             $"KSP Stage: {KSPStage.ToString()} Thrust: {Thrust.ToString()} Time: {DeltaTime.ToString()} StartMass: {StartMass.ToString()} EndMass: {EndMass.ToString()} DeltaV: {DeltaV.ToString()} ISP: {Isp.ToString()}";

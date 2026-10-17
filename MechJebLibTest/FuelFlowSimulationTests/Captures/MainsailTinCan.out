@@ -36,7 +36,7 @@
       Links: Rockomax64.BW-4252378878
       CrossFeedPartSet: largeSolarPanel-3249199616 largeSolarPanel-1331256762 liquidEngineMainsail.v2-477612636 Rockomax64.BW-4252378878 Rockomax64.BW-706255026 asasmodule1-2-2588065212 batteryBankLarge-1169654648 probeStackLarge-2919945081 rocketNoseCone.v3-2612439557
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -109,7 +109,7 @@
       Links: Rockomax64.BW-4252378878
       CrossFeedPartSet: largeSolarPanel-3249199616 largeSolarPanel-1331256762 liquidEngineMainsail.v2-477612636 Rockomax64.BW-4252378878 Rockomax64.BW-706255026 asasmodule1-2-2588065212 batteryBankLarge-1169654648 probeStackLarge-2919945081 rocketNoseCone.v3-2612439557
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1

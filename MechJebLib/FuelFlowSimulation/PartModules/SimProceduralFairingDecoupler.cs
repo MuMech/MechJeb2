@@ -10,7 +10,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 {
     public class SimProceduralFairingDecoupler : SimPartModule
     {
-        private static readonly ObjectPool<SimProceduralFairingDecoupler> _pool = new ObjectPool<SimProceduralFairingDecoupler>(New, Clear);
+        private static readonly ObjectPool<SimProceduralFairingDecoupler> _pool = new ObjectPool<SimProceduralFairingDecoupler>(New, m => m.Clear());
 
         public bool IsDecoupled = false;
 
@@ -24,10 +24,6 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
         }
 
         private static SimProceduralFairingDecoupler New() => new SimProceduralFairingDecoupler();
-
-        private static void Clear(SimProceduralFairingDecoupler m)
-        {
-        }
 
         public override string ToString()
         {

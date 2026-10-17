@@ -62,12 +62,12 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         public static SimPart StrutConnector(SimVessel v, uint persistentId, int inverseStage = -1) =>
             NewPart(v, "strutConnector", persistentId, inverseStage, 0.05f);
 
-        public static SimPart LaunchClamp1(SimVessel v, uint persistentId, int inverseStage)
+        public static SimPart LaunchClamp1(SimVessel v, uint persistentId, int inverseStage, int moduleIndex = -1)
         {
             SimPart p = NewPart(v, "launchClamp1", persistentId, inverseStage, 0.1f);
             p.IsLaunchClamp = true;
             v.HasLaunchClamp = true;
-            AddModule(SimLaunchClamp.Borrow(p));
+            AddModule(SimLaunchClamp.Borrow(p)).Index = moduleIndex;
             return p;
         }
 
@@ -78,6 +78,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
 
             SimModuleEngines e = NewModuleEngines(p);
             e.IsEnabled = true;
+            e.Index = 1;
             // KSP derives this from maxThrust and the vacuum isp in single precision, the dump prints it to 7 digits as
             // 0.4934111 but the 0.4934111f literal is one ulp off, which shows up in the propellant the asparagus staging strands
             e.MaxFuelFlow = 1500f / (310f * 9.80665f);
@@ -130,11 +131,12 @@ namespace MechJebLibTest.FuelFlowSimulationTests
         ///     from the decoupler when it fires.
         /// </summary>
         public static SimPart NewDecoupler(SimVessel v, string name, uint persistentId, int inverseStage, double dryMass,
-            SimPart attachedPart)
+            SimPart attachedPart, int moduleIndex = -1)
         {
             SimPart p = NewPart(v, name, persistentId, inverseStage, dryMass);
 
             SimModuleDecouple d = AddModule(SimModuleDecouple.Borrow(p));
+            d.Index = moduleIndex;
             d.IsDecoupled = false;
             d.IsOmniDecoupler = false;
             d.Staged = true;

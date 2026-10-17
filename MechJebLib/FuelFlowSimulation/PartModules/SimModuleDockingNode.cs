@@ -11,7 +11,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 {
     public class SimModuleDockingNode : SimPartModule
     {
-        private static readonly ObjectPool<SimModuleDockingNode> _pool = new ObjectPool<SimModuleDockingNode>(New, Clear);
+        private static readonly ObjectPool<SimModuleDockingNode> _pool = new ObjectPool<SimModuleDockingNode>(New, m => m.Clear());
 
         public bool Staged = false;
         public SimPart? AttachedPart;
@@ -25,9 +25,13 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             return decoupler;
         }
 
-        private static SimModuleDockingNode New() => new SimModuleDockingNode();
+        protected override void Clear()
+        {
+            base.Clear();
+            AttachedPart = null;
+        }
 
-        private static void Clear(SimModuleDockingNode m) => m.AttachedPart = null;
+        private static SimModuleDockingNode New() => new SimModuleDockingNode();
 
         public override string ToString()
         {

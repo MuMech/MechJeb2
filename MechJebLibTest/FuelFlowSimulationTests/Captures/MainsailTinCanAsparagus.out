@@ -46,7 +46,7 @@
       Links: Rockomax64.BW-2897112194
       CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -102,7 +102,7 @@
       SymmetryCounterParts: liquidEngineMainsail.v2-904352827
       CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -155,7 +155,7 @@
       SymmetryCounterParts: liquidEngineMainsail.v2-1387000143
       CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -208,7 +208,7 @@
       SymmetryCounterParts: liquidEngineMainsail.v2-2186939596
       CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -261,7 +261,7 @@
       SymmetryCounterParts: liquidEngineMainsail.v2-4182532358
       CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -337,7 +337,7 @@
       Links: Rockomax64.BW-2897112194
       CrossFeedPartSet: largeSolarPanel-2039583872 largeSolarPanel-986793881 liquidEngineMainsail.v2-5718290 Rockomax64.BW-2897112194 Rockomax64.BW-4249717286 asasmodule1-2-1568787730 batteryBankLarge-3464832802 probeStackLarge (Mainsail Tin Can Asparagus)-3081765285 fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973 fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995 rocketNoseCone.v3-2058457420
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -393,7 +393,7 @@
       SymmetryCounterParts: liquidEngineMainsail.v2-904352827
       CrossFeedPartSet: fuelLine-2825487276 liquidEngineMainsail.v2-1387000143 Rockomax64.BW-3436666188 Rockomax64.BW-1491235714 rocketNoseCone.v3-2107898442 fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -446,7 +446,7 @@
       SymmetryCounterParts: liquidEngineMainsail.v2-1387000143
       CrossFeedPartSet: fuelLine-2565553530 liquidEngineMainsail.v2-904352827 Rockomax64.BW-2903300948 Rockomax64.BW-2835658593 rocketNoseCone.v3-1781570610 fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -499,7 +499,7 @@
       SymmetryCounterParts: liquidEngineMainsail.v2-2186939596
       CrossFeedPartSet: fuelLine-1428295298 liquidEngineMainsail.v2-4182532358 Rockomax64.BW-1315697509 Rockomax64.BW-3207382999 rocketNoseCone.v3-3121470973
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -552,7 +552,7 @@
       SymmetryCounterParts: liquidEngineMainsail.v2-4182532358
       CrossFeedPartSet: fuelLine-3687288196 liquidEngineMainsail.v2-2186939596 Rockomax64.BW-655026546 Rockomax64.BW-3074366510 rocketNoseCone.v3-2745859995
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.493411064 MinFuelFlow=0 MaxThrust=1500 MinThrust=0 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1

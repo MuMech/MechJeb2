@@ -29,7 +29,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
     public class SimModuleEngines : SimPartModule
     {
-        private static readonly ObjectPool<SimModuleEngines> _pool = new ObjectPool<SimModuleEngines>(New, Clear);
+        private static readonly ObjectPool<SimModuleEngines> _pool = new ObjectPool<SimModuleEngines>(New, m => m.Clear());
 
         public readonly List<SimPropellant> Propellants = new List<SimPropellant>();
         public readonly Dictionary<int, SimFlowMode> PropellantFlowModes = new Dictionary<int, SimFlowMode>();
@@ -175,25 +175,28 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
             return engine;
         }
 
+        protected override void Clear()
+        {
+            base.Clear();
+            AutoCutoff = false;
+            Ullage = false;
+            ThrustDirectionVectors.Clear();
+            PropellantFlowModes.Clear();
+            ResourceConsumptions.Clear();
+            Propellants.Clear();
+            ThrustTransformMultipliers.Clear();
+            ThrustCurve.Clear();
+            ThrottleIspCurve.Clear();
+            ThrottleIspCurveAtmStrength.Clear();
+            VelCurve.Clear();
+            VelCurveIsp.Clear();
+            ATMCurve.Clear();
+            ATMCurveIsp.Clear();
+            AtmosphereCurve.Clear();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static SimModuleEngines New() => new SimModuleEngines();
-
-        private static void Clear(SimModuleEngines m)
-        {
-            m.ThrustDirectionVectors.Clear();
-            m.PropellantFlowModes.Clear();
-            m.ResourceConsumptions.Clear();
-            m.Propellants.Clear();
-            m.ThrustTransformMultipliers.Clear();
-            m.ThrustCurve.Clear();
-            m.ThrottleIspCurve.Clear();
-            m.ThrottleIspCurveAtmStrength.Clear();
-            m.VelCurve.Clear();
-            m.VelCurveIsp.Clear();
-            m.ATMCurve.Clear();
-            m.ATMCurveIsp.Clear();
-            m.AtmosphereCurve.Clear();
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool DrawingFuelFromPartDroppedInStage(SimPart p, int resourceId, int stageNum) =>
@@ -435,6 +438,10 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
                     ResourceConsumptions.Add(p.id, propVolumeRate);
             }
         }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EngineSignature Signature() => new EngineSignature(Part.PersistentId, Index);
 
         public override string ToString()
         {

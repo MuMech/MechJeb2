@@ -1,38 +1,38 @@
-[LOG 20:48:11.350] [MechJeb2] SimVessel:
+[LOG 08:25:27.186] [MechJeb2] SimVessel:
   CurrentStage=5 HasLaunchClamp=True MainThrottle=1
-  ATMPressure=0.98644521069944324 ATMDensity=0.95937552309112017 MachNumber=1.5314373912311351E-09
-  T=671824.00810271199 R=[3328117.6811200185, -4495382.4039072869, 3050619.8108357675] V=[327.80846173363119, 242.69017320559482, -1.1649856299288815E-07] U=[0.52232058711411489, -0.70562870200873251, 0.47882080078125]
+  ATMPressure=0.9864236759662981 ATMDensity=0.95934332780160259 MachNumber=3.4102277931687742E-09
+  T=671841.96810272872 R=[3334003.12497136, -4491019.6219513649, 3050619.5686581936] V=[327.49032101890714, 243.11934828979491, -9.0183722763191425E-07] U=[0.5232447436987494, -0.70494390282563169, 0.47882062196731567]
   Parts (40):
-    SimPart 'ROT-ServiceModule (My Falcon 9 Block 5)-716676487':
+    SimPart 'ROT-ServiceModule-562668470':
       IsRoot=True ResourcePriority=-10 Mass=7.5679967982098422 DryMass=1 ModulesStagedMass=-0.91552984714508057 ModulesUnstagedMass=-0.91552984714508057
-      Links: proceduralAvionics-3578329919
-      CrossFeedPartSet: proceduralAvionics-3578329919 ROT-ServiceModule (My Falcon 9 Block 5)-716676487 KzResizableFairingBase-711105664
+      Links: proceduralAvionics-1687291787
+      CrossFeedPartSet: proceduralAvionics-1687291787 ROT-ServiceModule-562668470 KzResizableFairingBase-2031760497
       Resources: [id=42120693 amount=659.92299999999966 maxAmount=659.92299999999966 density=0.011339999735355377 free=False residual=0]
-    SimPart 'proceduralAvionics-3578329919':
+    SimPart 'proceduralAvionics-1687291787':
       ResourcePriority=-10 Mass=0.29508464108221233 DryMass=1 ModulesStagedMass=-0.70491535891778767 ModulesUnstagedMass=-0.70491535891778767
-      Links: ROT-ServiceModule (My Falcon 9 Block 5)-716676487 KzResizableFairingBase-711105664
-      CrossFeedPartSet: proceduralAvionics-3578329919 ROT-ServiceModule (My Falcon 9 Block 5)-716676487 KzResizableFairingBase-711105664
+      Links: ROT-ServiceModule-562668470 KzResizableFairingBase-2031760497
+      CrossFeedPartSet: proceduralAvionics-1687291787 ROT-ServiceModule-562668470 KzResizableFairingBase-2031760497
       Resources: [id=1566956177 amount=111778 maxAmount=111778 density=0 free=True residual=0]
       Modules (1):
-        SimModuleAvionics: ControllableMass=150
-    SimPart 'KzResizableFairingBase-711105664':
+        SimModuleAvionics: Index=23 ControllableMass=150
+    SimPart 'KzResizableFairingBase-2031760497':
       InverseStage=0 DecoupledInStage=0 Mass=0.53969687223434448 ModulesStagedMass=0.53969687223434448 ModulesUnstagedMass=0.53969687223434448
-      Links: proceduralAvionics-3578329919 ROT-GenericTank-Separate-2593943298 KzProcFairingSide1-288594212 KzProcFairingSide1-3427567844
-      CrossFeedPartSet: KzResizableFairingBase-711105664
+      Links: proceduralAvionics-1687291787 ROT-GenericTank-Separate-1343824797 KzProcFairingSide1-997883857 KzProcFairingSide1-3167263097
+      CrossFeedPartSet: KzResizableFairingBase-2031760497
       Modules (1):
-        SimModuleDecouple: Staged=True AttachedPart=proceduralAvionics-3578329919
-    SimPart 'ROT-GenericTank-Separate-2593943298':
+        SimModuleDecouple: Index=2 Staged=True AttachedPart=proceduralAvionics-1687291787
+    SimPart 'ROT-GenericTank-Separate-1343824797':
       InverseStage=0 DecoupledInStage=0 Mass=3.9628493678810477 DryMass=1 ModulesStagedMass=1.9433658123016357 ModulesUnstagedMass=1.9433658123016357
-      Links: KzResizableFairingBase-711105664 ROE-Merlin1DV-248665222 RO-RFTank-Integral-1519049209 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-2210098343 TE2.19.F9.CGT-1552971870 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-2659758618
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: KzResizableFairingBase-2031760497 ROE-Merlin1DV-224852890 RO-RFTank-Integral-1381716828 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-1416727206 TE2.19.F9.CGT-1374471535 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-2108784256
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=1704334082 amount=38750.520237705852 maxAmount=38750.520237705852 density=0.00082700001075863838 free=False residual=0] [id=321082453 amount=61199.234562294143 maxAmount=61199.234562294143 density=0.0012359999818727374 free=False residual=0]
-    SimPart 'ROE-Merlin1DV-248665222':
+    SimPart 'ROE-Merlin1DV-224852890':
       InverseStage=2 DecoupledInStage=0 IsEngine=True ResourcePriority=20 Mass=0.49277323530986905 DryMass=0.48997199535369873 EngineResiduals=0.0094669296351484397
-      Links: ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.273717612 MinFuelFlow=0.105487883 MaxThrust=934.119995 MinThrust=360 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -41,37 +41,37 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.6730942726135254 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=348] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=348 c1=-121 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=227]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153756579203336, -0.70620775913935407, 0.47882074117660522]
+          ThrustDirectionVectors: [0.52287338134023087, -0.70521938236984572, 0.47882038354873657]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'KzFlatAdapter-4238809487':
+    SimPart 'KzFlatAdapter-1240192668':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.42880785465240479 ModulesStagedMass=0.42880785465240479 ModulesUnstagedMass=0.42880785465240479
-      Links: ROE-Merlin1DV-248665222 proceduralAvionics-1573872723 KzProcFairingSide1-1110556197 KzProcFairingSide1-84964491 KzProcFairingSide1-3892549061 KzProcFairingSide1-613648638
-      CrossFeedPartSet: KzFlatAdapter-4238809487
+      Links: ROE-Merlin1DV-224852890 proceduralAvionics-1810037683 KzProcFairingSide1-2752218355 KzProcFairingSide1-2261372643 KzProcFairingSide1-2135704149 KzProcFairingSide1-59679522
+      CrossFeedPartSet: KzFlatAdapter-1240192668
       Modules (1):
-        SimModuleDecouple: Staged=True AttachedPart=ROE-Merlin1DV-248665222
-    SimPart 'proceduralAvionics-1573872723':
+        SimModuleDecouple: Index=2 Staged=True AttachedPart=ROE-Merlin1DV-224852890
+    SimPart 'proceduralAvionics-1810037683':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.63143171439878643 DryMass=1 ModulesStagedMass=-0.36856828560121357 ModulesUnstagedMass=-0.36856828560121357
-      Links: KzFlatAdapter-4238809487 ROT-GenericTank-Separate-1975695187
-      CrossFeedPartSet: KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzFlatAdapter-1240192668 ROT-GenericTank-Separate-2918110231
+      CrossFeedPartSet: KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=1566956177 amount=268317 maxAmount=268317 density=0 free=True residual=0]
       Modules (1):
-        SimModuleAvionics: ControllableMass=600
-    SimPart 'ROT-GenericTank-Separate-1975695187':
+        SimModuleAvionics: Index=23 ControllableMass=600
+    SimPart 'ROT-GenericTank-Separate-2918110231':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=16.05354766687605 DryMass=1 ModulesStagedMass=11.127128601074219 ModulesUnstagedMass=11.127128601074219
-      Links: proceduralAvionics-1573872723 KzThrustPlate-3628547826 launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: proceduralAvionics-1810037683 KzThrustPlate-4276926307 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963
+      CrossFeedPartSet: KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=1704334082 amount=149242.99723951373 maxAmount=149242.99723951373 density=0.00082700001075863838 free=False residual=0] [id=321082453 amount=235701.53739390321 maxAmount=235701.53739390321 density=0.0012359999818727374 free=False residual=0]
-    SimPart 'KzThrustPlate-3628547826':
+    SimPart 'KzThrustPlate-4276926307':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.74751102924346924 ModulesStagedMass=0.74751102924346924 ModulesUnstagedMass=0.74751102924346924
-      Links: ROT-GenericTank-Separate-1975695187 ROE-Merlin1D-3766919695 ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
-    SimPart 'ROE-Merlin1D-3766919695':
+      Links: ROT-GenericTank-Separate-2918110231 ROE-Merlin1D-3837920056 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495
+      CrossFeedPartSet: KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
+    SimPart 'ROE-Merlin1D-3837920056':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      CrossFeedPartSet: ROE-Merlin1D-3766919695 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      CrossFeedPartSet: ROE-Merlin1D-3837920056 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -80,16 +80,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153756579203336, -0.70620775913935407, 0.47882074117660522]
+          ThrustDirectionVectors: [0.52287338134023087, -0.70521938236984572, 0.47882038354873657]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-1520557324':
+    SimPart 'ROE-Merlin1D-1139067418':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-1520557324 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495
+      CrossFeedPartSet: ROE-Merlin1D-1139067418 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -98,16 +98,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153756579203336, -0.70620775913935407, 0.47882074117660522]
+          ThrustDirectionVectors: [0.52287338134023087, -0.70521938236984572, 0.47882038354873657]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-2691955204':
+    SimPart 'ROE-Merlin1D-3369598044':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-2691955204 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418
+      CrossFeedPartSet: ROE-Merlin1D-3369598044 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -116,16 +116,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153769716744469, -0.70620778159085063, 0.47882071137428284]
+          ThrustDirectionVectors: [0.52287342724710839, -0.70521943067564963, 0.47882041335105896]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-75275086':
+    SimPart 'ROE-Merlin1D-2666058081':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-75275086 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044
+      CrossFeedPartSet: ROE-Merlin1D-2666058081 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -134,16 +134,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153757701778169, -0.70620769345164847, 0.47882065176963806]
+          ThrustDirectionVectors: [0.52287353016138005, -0.70521946157827342, 0.47882041335105896]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-4036330361':
+    SimPart 'ROE-Merlin1D-3698343881':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-4036330361 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081
+      CrossFeedPartSet: ROE-Merlin1D-3698343881 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -152,16 +152,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.5215374568681187, -0.7062076053124462, 0.47882062196731567]
+          ThrustDirectionVectors: [0.522873192914868, -0.70521937757199238, 0.47882023453712463]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-3933714968':
+    SimPart 'ROE-Merlin1D-2658974596':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-3933714968 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881
+      CrossFeedPartSet: ROE-Merlin1D-2658974596 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -170,16 +170,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153730304121071, -0.70620771423636086, 0.47882068157196045]
+          ThrustDirectionVectors: [0.52287340984392805, -0.70521937366825549, 0.47882038354873657]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-2052249669':
+    SimPart 'ROE-Merlin1D-1863242498':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-2052249669 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596
+      CrossFeedPartSet: ROE-Merlin1D-1863242498 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -188,16 +188,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153741712213852, -0.70620767964739362, 0.47882068157196045]
+          ThrustDirectionVectors: [0.52287339874341121, -0.70521943937723985, 0.47882044315338135]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-4132307635':
+    SimPart 'ROE-Merlin1D-1418509379':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-4132307635 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498
+      CrossFeedPartSet: ROE-Merlin1D-1418509379 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -206,16 +206,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153757701778169, -0.70620769345164847, 0.47882065176963806]
+          ThrustDirectionVectors: [0.52287353016138005, -0.70521946157827342, 0.47882044315338135]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-957131212':
+    SimPart 'ROE-Merlin1D-986934495':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635
-      CrossFeedPartSet: ROE-Merlin1D-957131212 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379
+      CrossFeedPartSet: ROE-Merlin1D-986934495 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -224,217 +224,217 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153736008167462, -0.70620769694187724, 0.47882059216499329]
+          ThrustDirectionVectors: [0.52287335283653391, -0.70521939107143583, 0.4788203239440918]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'launchClamp1-1950391702':
+    SimPart 'launchClamp1-2504620222':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-1950391702
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963
+      CrossFeedPartSet: launchClamp1-2504620222
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-536336776':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-1870162124':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-536336776
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222
+      CrossFeedPartSet: launchClamp1-1870162124
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-3329569423':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-2330994830':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-3329569423
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124
+      CrossFeedPartSet: launchClamp1-2330994830
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-3966630377':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-847652046':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-3966630377
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830
+      CrossFeedPartSet: launchClamp1-847652046
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-3977908051':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-4097541353':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-3977908051
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046
+      CrossFeedPartSet: launchClamp1-4097541353
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-219405182':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-736481228':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-219405182
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353
+      CrossFeedPartSet: launchClamp1-736481228
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-3483319384':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-3681969535':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-3483319384
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228
+      CrossFeedPartSet: launchClamp1-3681969535
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-26648143':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-4161704963':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384
-      CrossFeedPartSet: launchClamp1-26648143
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535
+      CrossFeedPartSet: launchClamp1-4161704963
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'KzProcFairingSide1-1110556197':
+        SimLaunchClamp: Index=1
+    SimPart 'KzProcFairingSide1-2752218355':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.44426935911178589 ModulesStagedMass=0.44426935911178589 ModulesUnstagedMass=0.44426935911178589
-      Links: KzFlatAdapter-4238809487
-      SymmetryCounterParts: KzProcFairingSide1-84964491 KzProcFairingSide1-3892549061 KzProcFairingSide1-613648638
-      CrossFeedPartSet: KzProcFairingSide1-1110556197
+      Links: KzFlatAdapter-1240192668
+      SymmetryCounterParts: KzProcFairingSide1-2261372643 KzProcFairingSide1-2135704149 KzProcFairingSide1-59679522
+      CrossFeedPartSet: KzProcFairingSide1-2752218355
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'KzProcFairingSide1-84964491':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-2261372643':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.44426935911178589 ModulesStagedMass=0.44426935911178589 ModulesUnstagedMass=0.44426935911178589
-      Links: KzFlatAdapter-4238809487
-      SymmetryCounterParts: KzProcFairingSide1-1110556197 KzProcFairingSide1-3892549061 KzProcFairingSide1-613648638
-      CrossFeedPartSet: KzProcFairingSide1-84964491
+      Links: KzFlatAdapter-1240192668
+      SymmetryCounterParts: KzProcFairingSide1-2135704149 KzProcFairingSide1-59679522 KzProcFairingSide1-2752218355
+      CrossFeedPartSet: KzProcFairingSide1-2261372643
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'KzProcFairingSide1-3892549061':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-2135704149':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.44426935911178589 ModulesStagedMass=0.44426935911178589 ModulesUnstagedMass=0.44426935911178589
-      Links: KzFlatAdapter-4238809487
-      SymmetryCounterParts: KzProcFairingSide1-1110556197 KzProcFairingSide1-84964491 KzProcFairingSide1-613648638
-      CrossFeedPartSet: KzProcFairingSide1-3892549061
+      Links: KzFlatAdapter-1240192668
+      SymmetryCounterParts: KzProcFairingSide1-59679522 KzProcFairingSide1-2752218355 KzProcFairingSide1-2261372643
+      CrossFeedPartSet: KzProcFairingSide1-2135704149
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'KzProcFairingSide1-613648638':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-59679522':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.44426935911178589 ModulesStagedMass=0.44426935911178589 ModulesUnstagedMass=0.44426935911178589
-      Links: KzFlatAdapter-4238809487
-      SymmetryCounterParts: KzProcFairingSide1-1110556197 KzProcFairingSide1-84964491 KzProcFairingSide1-3892549061
-      CrossFeedPartSet: KzProcFairingSide1-613648638
+      Links: KzFlatAdapter-1240192668
+      SymmetryCounterParts: KzProcFairingSide1-2752218355 KzProcFairingSide1-2261372643 KzProcFairingSide1-2135704149
+      CrossFeedPartSet: KzProcFairingSide1-59679522
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'RO-RFTank-Integral-1519049209':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'RO-RFTank-Integral-1381716828':
       InverseStage=0 DecoupledInStage=0 Mass=0.059181809136734952 DryMass=1 ModulesStagedMass=-0.99626743793487549 ModulesUnstagedMass=-0.99626743793487549
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-2210098343
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: RO-RFTank-Integral-415050972 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-1416727206
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=44323.939999999995 maxAmount=44323.939999999995 density=1.2509999578469433E-06 free=False residual=0]
-    SimPart 'RO-RFTank-Integral-1893542743':
+    SimPart 'RO-RFTank-Integral-415050972':
       InverseStage=0 DecoupledInStage=0 Mass=0.059181809136734952 DryMass=1 ModulesStagedMass=-0.99626743793487549 ModulesUnstagedMass=-0.99626743793487549
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: RO-RFTank-Integral-1519049209 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-2210098343
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: RO-RFTank-Integral-1949594566 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1381716828
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=44323.939999999995 maxAmount=44323.939999999995 density=1.2509999578469433E-06 free=False residual=0]
-    SimPart 'RO-RFTank-Integral-1556299446':
+    SimPart 'RO-RFTank-Integral-1949594566':
       InverseStage=0 DecoupledInStage=0 Mass=0.073096692273484226 DryMass=1 ModulesStagedMass=-0.98235255479812622 ModulesUnstagedMass=-0.98235255479812622
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: RO-RFTank-Integral-1519049209 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-2210098343
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1381716828 RO-RFTank-Integral-415050972
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=44323.939999999995 maxAmount=44323.939999999995 density=1.2509999578469433E-06 free=False residual=0]
-    SimPart 'RO-RFTank-Integral-2210098343':
+    SimPart 'RO-RFTank-Integral-1416727206':
       InverseStage=0 DecoupledInStage=0 Mass=0.059181809136734952 DryMass=1 ModulesStagedMass=-0.99626743793487549 ModulesUnstagedMass=-0.99626743793487549
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: RO-RFTank-Integral-1519049209 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1556299446
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: RO-RFTank-Integral-1381716828 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1949594566
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=44323.939999999995 maxAmount=44323.939999999995 density=1.2509999578469433E-06 free=False residual=0]
-    SimPart 'TE2.19.F9.CGT-1552971870':
+    SimPart 'TE2.19.F9.CGT-1374471535':
       InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.28469999070512131 DryMass=0.034499999135732651
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-2659758618
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-2108784256
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=200000 maxAmount=200000 density=1.2509999578469433E-06 free=False residual=0]
       Modules (1):
-        SimModuleRCS: IsEnabled=True
+        SimModuleRCS: IsEnabled=True Index=0
           G=9.8066499999999994 Isp=100 Thrust=10 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=0.010197162129779282 MassFlowRate=0.010197162129779282
           AtmosphereCurve: [ConstantDoubleNode leftT=1 rightT=1 y=100] [CubicHermiteDoubleNode leftT=1 rightT=5 t=1 invH=0.25 c0=100 c1=-99.999000549316406 c2=1.6480917111039162E-06 c3=-1.0987278074026108E-06] [ConstantDoubleNode leftT=5 rightT=5 y=0.0010000000474974513]
           Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
-    SimPart 'TE2.19.F9.CGT-3144618445':
+    SimPart 'TE2.19.F9.CGT-388307089':
       InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.28469999070512131 DryMass=0.034499999135732651
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: TE2.19.F9.CGT-1552971870 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-2659758618
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-1374471535
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=200000 maxAmount=200000 density=1.2509999578469433E-06 free=False residual=0]
       Modules (1):
-        SimModuleRCS: IsEnabled=True
+        SimModuleRCS: IsEnabled=True Index=0
           G=9.8066499999999994 Isp=100 Thrust=10 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=0.010197162129779282 MassFlowRate=0.010197162129779282
           AtmosphereCurve: [ConstantDoubleNode leftT=1 rightT=1 y=100] [CubicHermiteDoubleNode leftT=1 rightT=5 t=1 invH=0.25 c0=100 c1=-99.999000549316406 c2=1.6480917111039162E-06 c3=-1.0987278074026108E-06] [ConstantDoubleNode leftT=5 rightT=5 y=0.0010000000474974513]
           Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
-    SimPart 'TE2.19.F9.CGT-2229477872':
+    SimPart 'TE2.19.F9.CGT-3104723213':
       InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.28469999070512131 DryMass=0.034499999135732651
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: TE2.19.F9.CGT-1552971870 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-2659758618
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-1374471535 TE2.19.F9.CGT-388307089
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=200000 maxAmount=200000 density=1.2509999578469433E-06 free=False residual=0]
       Modules (1):
-        SimModuleRCS: IsEnabled=True
+        SimModuleRCS: IsEnabled=True Index=0
           G=9.8066499999999994 Isp=100 Thrust=10 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=0.010197162129779282 MassFlowRate=0.010197162129779282
           AtmosphereCurve: [ConstantDoubleNode leftT=1 rightT=1 y=100] [CubicHermiteDoubleNode leftT=1 rightT=5 t=1 invH=0.25 c0=100 c1=-99.999000549316406 c2=1.6480917111039162E-06 c3=-1.0987278074026108E-06] [ConstantDoubleNode leftT=5 rightT=5 y=0.0010000000474974513]
           Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
-    SimPart 'TE2.19.F9.CGT-2659758618':
+    SimPart 'TE2.19.F9.CGT-2108784256':
       InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.28469999070512131 DryMass=0.034499999135732651
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: TE2.19.F9.CGT-1552971870 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-2229477872
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: TE2.19.F9.CGT-1374471535 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-3104723213
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=200000 maxAmount=200000 density=1.2509999578469433E-06 free=False residual=0]
       Modules (1):
-        SimModuleRCS: IsEnabled=True
+        SimModuleRCS: IsEnabled=True Index=0
           G=9.8066499999999994 Isp=100 Thrust=10 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=0.010197162129779282 MassFlowRate=0.010197162129779282
           AtmosphereCurve: [ConstantDoubleNode leftT=1 rightT=1 y=100] [CubicHermiteDoubleNode leftT=1 rightT=5 t=1 invH=0.25 c0=100 c1=-99.999000549316406 c2=1.6480917111039162E-06 c3=-1.0987278074026108E-06] [ConstantDoubleNode leftT=5 rightT=5 y=0.0010000000474974513]
           Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
-    SimPart 'KzProcFairingSide1-288594212':
+    SimPart 'KzProcFairingSide1-997883857':
       InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.82329875230789185 ModulesStagedMass=0.82329875230789185 ModulesUnstagedMass=0.82329875230789185
-      Links: KzResizableFairingBase-711105664
-      SymmetryCounterParts: KzProcFairingSide1-3427567844
-      CrossFeedPartSet: KzProcFairingSide1-288594212
+      Links: KzResizableFairingBase-2031760497
+      SymmetryCounterParts: KzProcFairingSide1-3167263097
+      CrossFeedPartSet: KzProcFairingSide1-997883857
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'KzProcFairingSide1-3427567844':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-3167263097':
       InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.82329875230789185 ModulesStagedMass=0.82329875230789185 ModulesUnstagedMass=0.82329875230789185
-      Links: KzResizableFairingBase-711105664
-      SymmetryCounterParts: KzProcFairingSide1-288594212
-      CrossFeedPartSet: KzProcFairingSide1-3427567844
+      Links: KzResizableFairingBase-2031760497
+      SymmetryCounterParts: KzProcFairingSide1-997883857
+      CrossFeedPartSet: KzProcFairingSide1-3167263097
       Modules (1):
-        SimProceduralFairingDecoupler:
-[LOG 20:48:11.353] [MechJeb2] SimVessel:
+        SimProceduralFairingDecoupler: Index=1
+[LOG 08:25:27.188] [MechJeb2] SimVessel:
   CurrentStage=5 HasLaunchClamp=True MainThrottle=1
   ATMPressure=0 ATMDensity=0 MachNumber=0
-  T=671824.00810271199 R=[3328117.6811200185, -4495382.4039072869, 3050619.8108357675] V=[327.80846173363119, 242.69017320559482, -1.1649856299288815E-07] U=[0.52232058711411489, -0.70562870200873251, 0.47882080078125]
+  T=671841.96810272872 R=[3334003.12497136, -4491019.6219513649, 3050619.5686581936] V=[327.49032101890714, 243.11934828979491, -9.0183722763191425E-07] U=[0.5232447436987494, -0.70494390282563169, 0.47882062196731567]
   Parts (40):
-    SimPart 'ROT-ServiceModule (My Falcon 9 Block 5)-716676487':
+    SimPart 'ROT-ServiceModule-562668470':
       IsRoot=True ResourcePriority=-10 Mass=7.5679967982098422 DryMass=1 ModulesStagedMass=-0.91552984714508057 ModulesUnstagedMass=-0.91552984714508057
-      Links: proceduralAvionics-3578329919
-      CrossFeedPartSet: proceduralAvionics-3578329919 ROT-ServiceModule (My Falcon 9 Block 5)-716676487 KzResizableFairingBase-711105664
+      Links: proceduralAvionics-1687291787
+      CrossFeedPartSet: proceduralAvionics-1687291787 ROT-ServiceModule-562668470 KzResizableFairingBase-2031760497
       Resources: [id=42120693 amount=659.92299999999966 maxAmount=659.92299999999966 density=0.011339999735355377 free=False residual=0]
-    SimPart 'proceduralAvionics-3578329919':
+    SimPart 'proceduralAvionics-1687291787':
       ResourcePriority=-10 Mass=0.29508464108221233 DryMass=1 ModulesStagedMass=-0.70491535891778767 ModulesUnstagedMass=-0.70491535891778767
-      Links: ROT-ServiceModule (My Falcon 9 Block 5)-716676487 KzResizableFairingBase-711105664
-      CrossFeedPartSet: proceduralAvionics-3578329919 ROT-ServiceModule (My Falcon 9 Block 5)-716676487 KzResizableFairingBase-711105664
+      Links: ROT-ServiceModule-562668470 KzResizableFairingBase-2031760497
+      CrossFeedPartSet: proceduralAvionics-1687291787 ROT-ServiceModule-562668470 KzResizableFairingBase-2031760497
       Resources: [id=1566956177 amount=111778 maxAmount=111778 density=0 free=True residual=0]
       Modules (1):
-        SimModuleAvionics: ControllableMass=150
-    SimPart 'KzResizableFairingBase-711105664':
+        SimModuleAvionics: Index=23 ControllableMass=150
+    SimPart 'KzResizableFairingBase-2031760497':
       InverseStage=0 DecoupledInStage=0 Mass=0.53969687223434448 ModulesStagedMass=0.53969687223434448 ModulesUnstagedMass=0.53969687223434448
-      Links: proceduralAvionics-3578329919 ROT-GenericTank-Separate-2593943298 KzProcFairingSide1-288594212 KzProcFairingSide1-3427567844
-      CrossFeedPartSet: KzResizableFairingBase-711105664
+      Links: proceduralAvionics-1687291787 ROT-GenericTank-Separate-1343824797 KzProcFairingSide1-997883857 KzProcFairingSide1-3167263097
+      CrossFeedPartSet: KzResizableFairingBase-2031760497
       Modules (1):
-        SimModuleDecouple: Staged=True AttachedPart=proceduralAvionics-3578329919
-    SimPart 'ROT-GenericTank-Separate-2593943298':
+        SimModuleDecouple: Index=2 Staged=True AttachedPart=proceduralAvionics-1687291787
+    SimPart 'ROT-GenericTank-Separate-1343824797':
       InverseStage=0 DecoupledInStage=0 Mass=3.9628493678810477 DryMass=1 ModulesStagedMass=1.9433658123016357 ModulesUnstagedMass=1.9433658123016357
-      Links: KzResizableFairingBase-711105664 ROE-Merlin1DV-248665222 RO-RFTank-Integral-1519049209 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-2210098343 TE2.19.F9.CGT-1552971870 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-2659758618
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: KzResizableFairingBase-2031760497 ROE-Merlin1DV-224852890 RO-RFTank-Integral-1381716828 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-1416727206 TE2.19.F9.CGT-1374471535 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-2108784256
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=1704334082 amount=38750.520237705852 maxAmount=38750.520237705852 density=0.00082700001075863838 free=False residual=0] [id=321082453 amount=61199.234562294143 maxAmount=61199.234562294143 density=0.0012359999818727374 free=False residual=0]
-    SimPart 'ROE-Merlin1DV-248665222':
+    SimPart 'ROE-Merlin1DV-224852890':
       InverseStage=2 DecoupledInStage=0 IsEngine=True ResourcePriority=20 Mass=0.49277323530986905 DryMass=0.48997199535369873 EngineResiduals=0.0094669296351484397
-      Links: ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.273717612 MinFuelFlow=0.105487883 MaxThrust=934.119995 MinThrust=360 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -443,37 +443,37 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.6730942726135254 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=348] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=348 c1=-121 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=227]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153756579203336, -0.70620775913935407, 0.47882074117660522]
+          ThrustDirectionVectors: [0.52287338134023087, -0.70521938236984572, 0.47882038354873657]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'KzFlatAdapter-4238809487':
+    SimPart 'KzFlatAdapter-1240192668':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.42880785465240479 ModulesStagedMass=0.42880785465240479 ModulesUnstagedMass=0.42880785465240479
-      Links: ROE-Merlin1DV-248665222 proceduralAvionics-1573872723 KzProcFairingSide1-1110556197 KzProcFairingSide1-84964491 KzProcFairingSide1-3892549061 KzProcFairingSide1-613648638
-      CrossFeedPartSet: KzFlatAdapter-4238809487
+      Links: ROE-Merlin1DV-224852890 proceduralAvionics-1810037683 KzProcFairingSide1-2752218355 KzProcFairingSide1-2261372643 KzProcFairingSide1-2135704149 KzProcFairingSide1-59679522
+      CrossFeedPartSet: KzFlatAdapter-1240192668
       Modules (1):
-        SimModuleDecouple: Staged=True AttachedPart=ROE-Merlin1DV-248665222
-    SimPart 'proceduralAvionics-1573872723':
+        SimModuleDecouple: Index=2 Staged=True AttachedPart=ROE-Merlin1DV-224852890
+    SimPart 'proceduralAvionics-1810037683':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.63143171439878643 DryMass=1 ModulesStagedMass=-0.36856828560121357 ModulesUnstagedMass=-0.36856828560121357
-      Links: KzFlatAdapter-4238809487 ROT-GenericTank-Separate-1975695187
-      CrossFeedPartSet: KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzFlatAdapter-1240192668 ROT-GenericTank-Separate-2918110231
+      CrossFeedPartSet: KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=1566956177 amount=268317 maxAmount=268317 density=0 free=True residual=0]
       Modules (1):
-        SimModuleAvionics: ControllableMass=600
-    SimPart 'ROT-GenericTank-Separate-1975695187':
+        SimModuleAvionics: Index=23 ControllableMass=600
+    SimPart 'ROT-GenericTank-Separate-2918110231':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=16.05354766687605 DryMass=1 ModulesStagedMass=11.127128601074219 ModulesUnstagedMass=11.127128601074219
-      Links: proceduralAvionics-1573872723 KzThrustPlate-3628547826 launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: proceduralAvionics-1810037683 KzThrustPlate-4276926307 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963
+      CrossFeedPartSet: KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=1704334082 amount=149242.99723951373 maxAmount=149242.99723951373 density=0.00082700001075863838 free=False residual=0] [id=321082453 amount=235701.53739390321 maxAmount=235701.53739390321 density=0.0012359999818727374 free=False residual=0]
-    SimPart 'KzThrustPlate-3628547826':
+    SimPart 'KzThrustPlate-4276926307':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.74751102924346924 ModulesStagedMass=0.74751102924346924 ModulesUnstagedMass=0.74751102924346924
-      Links: ROT-GenericTank-Separate-1975695187 ROE-Merlin1D-3766919695 ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
-    SimPart 'ROE-Merlin1D-3766919695':
+      Links: ROT-GenericTank-Separate-2918110231 ROE-Merlin1D-3837920056 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495
+      CrossFeedPartSet: KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
+    SimPart 'ROE-Merlin1D-3837920056':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      CrossFeedPartSet: ROE-Merlin1D-3766919695 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      CrossFeedPartSet: ROE-Merlin1D-3837920056 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -482,16 +482,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153756579203336, -0.70620775913935407, 0.47882074117660522]
+          ThrustDirectionVectors: [0.52287338134023087, -0.70521938236984572, 0.47882038354873657]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-1520557324':
+    SimPart 'ROE-Merlin1D-1139067418':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-1520557324 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495
+      CrossFeedPartSet: ROE-Merlin1D-1139067418 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -500,16 +500,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153756579203336, -0.70620775913935407, 0.47882074117660522]
+          ThrustDirectionVectors: [0.52287338134023087, -0.70521938236984572, 0.47882038354873657]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-2691955204':
+    SimPart 'ROE-Merlin1D-3369598044':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-2691955204 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418
+      CrossFeedPartSet: ROE-Merlin1D-3369598044 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -518,16 +518,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153769716744469, -0.70620778159085063, 0.47882071137428284]
+          ThrustDirectionVectors: [0.52287342724710839, -0.70521943067564963, 0.47882041335105896]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-75275086':
+    SimPart 'ROE-Merlin1D-2666058081':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-75275086 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044
+      CrossFeedPartSet: ROE-Merlin1D-2666058081 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -536,16 +536,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153757701778169, -0.70620769345164847, 0.47882065176963806]
+          ThrustDirectionVectors: [0.52287353016138005, -0.70521946157827342, 0.47882041335105896]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-4036330361':
+    SimPart 'ROE-Merlin1D-3698343881':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-4036330361 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081
+      CrossFeedPartSet: ROE-Merlin1D-3698343881 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -554,16 +554,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.5215374568681187, -0.7062076053124462, 0.47882062196731567]
+          ThrustDirectionVectors: [0.522873192914868, -0.70521937757199238, 0.47882023453712463]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-3933714968':
+    SimPart 'ROE-Merlin1D-2658974596':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-3933714968 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881
+      CrossFeedPartSet: ROE-Merlin1D-2658974596 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -572,16 +572,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153730304121071, -0.70620771423636086, 0.47882068157196045]
+          ThrustDirectionVectors: [0.52287340984392805, -0.70521937366825549, 0.47882038354873657]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-2052249669':
+    SimPart 'ROE-Merlin1D-1863242498':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-4132307635 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-2052249669 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-1418509379 ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596
+      CrossFeedPartSet: ROE-Merlin1D-1863242498 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -590,16 +590,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153741712213852, -0.70620767964739362, 0.47882068157196045]
+          ThrustDirectionVectors: [0.52287339874341121, -0.70521943937723985, 0.47882044315338135]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-4132307635':
+    SimPart 'ROE-Merlin1D-1418509379':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-957131212
-      CrossFeedPartSet: ROE-Merlin1D-4132307635 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-986934495 ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498
+      CrossFeedPartSet: ROE-Merlin1D-1418509379 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -608,16 +608,16 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153757701778169, -0.70620769345164847, 0.47882065176963806]
+          ThrustDirectionVectors: [0.52287353016138005, -0.70521946157827342, 0.47882044315338135]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'ROE-Merlin1D-957131212':
+    SimPart 'ROE-Merlin1D-986934495':
       InverseStage=4 DecoupledInStage=2 IsEngine=True ResourcePriority=40 Mass=0.47278520511463284 DryMass=0.46998396515846252 EngineResiduals=0.0094669296351484397
-      Links: KzThrustPlate-3628547826
-      SymmetryCounterParts: ROE-Merlin1D-1520557324 ROE-Merlin1D-2691955204 ROE-Merlin1D-75275086 ROE-Merlin1D-4036330361 ROE-Merlin1D-3933714968 ROE-Merlin1D-2052249669 ROE-Merlin1D-4132307635
-      CrossFeedPartSet: ROE-Merlin1D-957131212 KzThrustPlate-3628547826 ROT-GenericTank-Separate-1975695187 proceduralAvionics-1573872723 KzFlatAdapter-4238809487
+      Links: KzThrustPlate-4276926307
+      SymmetryCounterParts: ROE-Merlin1D-1139067418 ROE-Merlin1D-3369598044 ROE-Merlin1D-2666058081 ROE-Merlin1D-3698343881 ROE-Merlin1D-2658974596 ROE-Merlin1D-1863242498 ROE-Merlin1D-1418509379
+      CrossFeedPartSet: ROE-Merlin1D-986934495 KzThrustPlate-4276926307 ROT-GenericTank-Separate-2918110231 proceduralAvionics-1810037683 KzFlatAdapter-1240192668
       Resources: [id=118851235 amount=4 maxAmount=4 density=0.00070030998904258013 free=False residual=0]
       Modules (1):
-        SimModuleEngines: IsEnabled=True
+        SimModuleEngines: IsEnabled=True Index=1
           IsOperational=False IsEnabled=True IsUnrestartableDeadEngine=False NoPropellants=False
           MaxFuelFlow=0.29972443 MinFuelFlow=0.108201399 MaxThrust=914.119995 MinThrust=330 G=9.80665016
           ThrottleLocked=False ThrottleLimiter=100 MultIsp=1 MultFlow=1 FlowMultiplier=1
@@ -626,179 +626,179 @@
           ModuleResiduals=0.0094669296351484397 ModuleSpoolupTime=2.651231050491333 AutoCutoff=True IsModuleEnginesRf=True Ullage=True
           AtmosphereCurve: [ConstantDoubleNode leftT=0 rightT=0 y=311] [CubicHermiteDoubleNode leftT=0 rightT=1 t=0 invH=1 c0=311 c1=-22.5 c2=0 c3=0] [ConstantDoubleNode leftT=1 rightT=1 y=288.5]
           ThrustTransformMultipliers: 1
-          ThrustDirectionVectors: [0.52153736008167462, -0.70620769694187724, 0.47882059216499329]
+          ThrustDirectionVectors: [0.52287335283653391, -0.70521939107143583, 0.4788203239440918]
           Propellants: [id=1704334082 ignoreForIsp=False ratio=0.38769999146461487 flowMode=STACK_PRIORITY_SEARCH density=0.00082700001075863838] [id=321082453 ignoreForIsp=False ratio=0.61229997873306274 flowMode=STACK_PRIORITY_SEARCH density=0.0012359999818727374]
-    SimPart 'launchClamp1-1950391702':
+    SimPart 'launchClamp1-2504620222':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-1950391702
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963
+      CrossFeedPartSet: launchClamp1-2504620222
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-536336776':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-1870162124':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-536336776
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222
+      CrossFeedPartSet: launchClamp1-1870162124
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-3329569423':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-2330994830':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-3329569423
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124
+      CrossFeedPartSet: launchClamp1-2330994830
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-3966630377':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-847652046':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-3966630377
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830
+      CrossFeedPartSet: launchClamp1-847652046
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-3977908051':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-4097541353':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-219405182 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-3977908051
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-736481228 launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046
+      CrossFeedPartSet: launchClamp1-4097541353
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-219405182':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-736481228':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-3483319384 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-219405182
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-3681969535 launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353
+      CrossFeedPartSet: launchClamp1-736481228
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-3483319384':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-3681969535':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-26648143
-      CrossFeedPartSet: launchClamp1-3483319384
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-4161704963 launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228
+      CrossFeedPartSet: launchClamp1-3681969535
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'launchClamp1-26648143':
+        SimLaunchClamp: Index=1
+    SimPart 'launchClamp1-4161704963':
       InverseStage=3 DecoupledInStage=3 IsLaunchClamp=True ResourcePriority=30 DryMass=0.10000000149011612
-      Links: ROT-GenericTank-Separate-1975695187
-      SymmetryCounterParts: launchClamp1-1950391702 launchClamp1-536336776 launchClamp1-3329569423 launchClamp1-3966630377 launchClamp1-3977908051 launchClamp1-219405182 launchClamp1-3483319384
-      CrossFeedPartSet: launchClamp1-26648143
+      Links: ROT-GenericTank-Separate-2918110231
+      SymmetryCounterParts: launchClamp1-2504620222 launchClamp1-1870162124 launchClamp1-2330994830 launchClamp1-847652046 launchClamp1-4097541353 launchClamp1-736481228 launchClamp1-3681969535
+      CrossFeedPartSet: launchClamp1-4161704963
       Resources: [id=-1519161728 amount=10 maxAmount=10 density=0 free=True residual=0] [id=852002701 amount=5 maxAmount=5 density=0 free=True residual=0]
       Modules (1):
-        SimLaunchClamp:
-    SimPart 'KzProcFairingSide1-1110556197':
+        SimLaunchClamp: Index=1
+    SimPart 'KzProcFairingSide1-2752218355':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.44426935911178589 ModulesStagedMass=0.44426935911178589 ModulesUnstagedMass=0.44426935911178589
-      Links: KzFlatAdapter-4238809487
-      SymmetryCounterParts: KzProcFairingSide1-84964491 KzProcFairingSide1-3892549061 KzProcFairingSide1-613648638
-      CrossFeedPartSet: KzProcFairingSide1-1110556197
+      Links: KzFlatAdapter-1240192668
+      SymmetryCounterParts: KzProcFairingSide1-2261372643 KzProcFairingSide1-2135704149 KzProcFairingSide1-59679522
+      CrossFeedPartSet: KzProcFairingSide1-2752218355
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'KzProcFairingSide1-84964491':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-2261372643':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.44426935911178589 ModulesStagedMass=0.44426935911178589 ModulesUnstagedMass=0.44426935911178589
-      Links: KzFlatAdapter-4238809487
-      SymmetryCounterParts: KzProcFairingSide1-1110556197 KzProcFairingSide1-3892549061 KzProcFairingSide1-613648638
-      CrossFeedPartSet: KzProcFairingSide1-84964491
+      Links: KzFlatAdapter-1240192668
+      SymmetryCounterParts: KzProcFairingSide1-2135704149 KzProcFairingSide1-59679522 KzProcFairingSide1-2752218355
+      CrossFeedPartSet: KzProcFairingSide1-2261372643
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'KzProcFairingSide1-3892549061':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-2135704149':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.44426935911178589 ModulesStagedMass=0.44426935911178589 ModulesUnstagedMass=0.44426935911178589
-      Links: KzFlatAdapter-4238809487
-      SymmetryCounterParts: KzProcFairingSide1-1110556197 KzProcFairingSide1-84964491 KzProcFairingSide1-613648638
-      CrossFeedPartSet: KzProcFairingSide1-3892549061
+      Links: KzFlatAdapter-1240192668
+      SymmetryCounterParts: KzProcFairingSide1-59679522 KzProcFairingSide1-2752218355 KzProcFairingSide1-2261372643
+      CrossFeedPartSet: KzProcFairingSide1-2135704149
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'KzProcFairingSide1-613648638':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-59679522':
       InverseStage=2 DecoupledInStage=2 ResourcePriority=20 Mass=0.44426935911178589 ModulesStagedMass=0.44426935911178589 ModulesUnstagedMass=0.44426935911178589
-      Links: KzFlatAdapter-4238809487
-      SymmetryCounterParts: KzProcFairingSide1-1110556197 KzProcFairingSide1-84964491 KzProcFairingSide1-3892549061
-      CrossFeedPartSet: KzProcFairingSide1-613648638
+      Links: KzFlatAdapter-1240192668
+      SymmetryCounterParts: KzProcFairingSide1-2752218355 KzProcFairingSide1-2261372643 KzProcFairingSide1-2135704149
+      CrossFeedPartSet: KzProcFairingSide1-59679522
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'RO-RFTank-Integral-1519049209':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'RO-RFTank-Integral-1381716828':
       InverseStage=0 DecoupledInStage=0 Mass=0.059181809136734952 DryMass=1 ModulesStagedMass=-0.99626743793487549 ModulesUnstagedMass=-0.99626743793487549
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-2210098343
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: RO-RFTank-Integral-415050972 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-1416727206
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=44323.939999999995 maxAmount=44323.939999999995 density=1.2509999578469433E-06 free=False residual=0]
-    SimPart 'RO-RFTank-Integral-1893542743':
+    SimPart 'RO-RFTank-Integral-415050972':
       InverseStage=0 DecoupledInStage=0 Mass=0.059181809136734952 DryMass=1 ModulesStagedMass=-0.99626743793487549 ModulesUnstagedMass=-0.99626743793487549
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: RO-RFTank-Integral-1519049209 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-2210098343
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: RO-RFTank-Integral-1949594566 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1381716828
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=44323.939999999995 maxAmount=44323.939999999995 density=1.2509999578469433E-06 free=False residual=0]
-    SimPart 'RO-RFTank-Integral-1556299446':
+    SimPart 'RO-RFTank-Integral-1949594566':
       InverseStage=0 DecoupledInStage=0 Mass=0.073096692273484226 DryMass=1 ModulesStagedMass=-0.98235255479812622 ModulesUnstagedMass=-0.98235255479812622
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: RO-RFTank-Integral-1519049209 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-2210098343
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1381716828 RO-RFTank-Integral-415050972
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=44323.939999999995 maxAmount=44323.939999999995 density=1.2509999578469433E-06 free=False residual=0]
-    SimPart 'RO-RFTank-Integral-2210098343':
+    SimPart 'RO-RFTank-Integral-1416727206':
       InverseStage=0 DecoupledInStage=0 Mass=0.059181809136734952 DryMass=1 ModulesStagedMass=-0.99626743793487549 ModulesUnstagedMass=-0.99626743793487549
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: RO-RFTank-Integral-1519049209 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1556299446
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: RO-RFTank-Integral-1381716828 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1949594566
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=44323.939999999995 maxAmount=44323.939999999995 density=1.2509999578469433E-06 free=False residual=0]
-    SimPart 'TE2.19.F9.CGT-1552971870':
+    SimPart 'TE2.19.F9.CGT-1374471535':
       InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.28469999070512131 DryMass=0.034499999135732651
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-2659758618
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-2108784256
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=200000 maxAmount=200000 density=1.2509999578469433E-06 free=False residual=0]
       Modules (1):
-        SimModuleRCS: IsEnabled=True
+        SimModuleRCS: IsEnabled=True Index=0
           G=9.8066499999999994 Isp=100 Thrust=10 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=0.010197162129779282 MassFlowRate=0.010197162129779282
           AtmosphereCurve: [ConstantDoubleNode leftT=1 rightT=1 y=100] [CubicHermiteDoubleNode leftT=1 rightT=5 t=1 invH=0.25 c0=100 c1=-99.999000549316406 c2=1.6480917111039162E-06 c3=-1.0987278074026108E-06] [ConstantDoubleNode leftT=5 rightT=5 y=0.0010000000474974513]
           Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
-    SimPart 'TE2.19.F9.CGT-3144618445':
+    SimPart 'TE2.19.F9.CGT-388307089':
       InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.28469999070512131 DryMass=0.034499999135732651
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: TE2.19.F9.CGT-1552971870 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-2659758618
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-1374471535
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=200000 maxAmount=200000 density=1.2509999578469433E-06 free=False residual=0]
       Modules (1):
-        SimModuleRCS: IsEnabled=True
+        SimModuleRCS: IsEnabled=True Index=0
           G=9.8066499999999994 Isp=100 Thrust=10 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=0.010197162129779282 MassFlowRate=0.010197162129779282
           AtmosphereCurve: [ConstantDoubleNode leftT=1 rightT=1 y=100] [CubicHermiteDoubleNode leftT=1 rightT=5 t=1 invH=0.25 c0=100 c1=-99.999000549316406 c2=1.6480917111039162E-06 c3=-1.0987278074026108E-06] [ConstantDoubleNode leftT=5 rightT=5 y=0.0010000000474974513]
           Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
-    SimPart 'TE2.19.F9.CGT-2229477872':
+    SimPart 'TE2.19.F9.CGT-3104723213':
       InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.28469999070512131 DryMass=0.034499999135732651
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: TE2.19.F9.CGT-1552971870 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-2659758618
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-1374471535 TE2.19.F9.CGT-388307089
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=200000 maxAmount=200000 density=1.2509999578469433E-06 free=False residual=0]
       Modules (1):
-        SimModuleRCS: IsEnabled=True
+        SimModuleRCS: IsEnabled=True Index=0
           G=9.8066499999999994 Isp=100 Thrust=10 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=0.010197162129779282 MassFlowRate=0.010197162129779282
           AtmosphereCurve: [ConstantDoubleNode leftT=1 rightT=1 y=100] [CubicHermiteDoubleNode leftT=1 rightT=5 t=1 invH=0.25 c0=100 c1=-99.999000549316406 c2=1.6480917111039162E-06 c3=-1.0987278074026108E-06] [ConstantDoubleNode leftT=5 rightT=5 y=0.0010000000474974513]
           Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
-    SimPart 'TE2.19.F9.CGT-2659758618':
+    SimPart 'TE2.19.F9.CGT-2108784256':
       InverseStage=2 DecoupledInStage=0 ResourcePriority=20 Mass=0.28469999070512131 DryMass=0.034499999135732651
-      Links: ROT-GenericTank-Separate-2593943298
-      SymmetryCounterParts: TE2.19.F9.CGT-1552971870 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-2229477872
-      CrossFeedPartSet: TE2.19.F9.CGT-2659758618 TE2.19.F9.CGT-2229477872 TE2.19.F9.CGT-3144618445 TE2.19.F9.CGT-1552971870 RO-RFTank-Integral-2210098343 RO-RFTank-Integral-1556299446 RO-RFTank-Integral-1893542743 RO-RFTank-Integral-1519049209 ROE-Merlin1DV-248665222 ROT-GenericTank-Separate-2593943298 KzFlatAdapter-4238809487 KzResizableFairingBase-711105664
+      Links: ROT-GenericTank-Separate-1343824797
+      SymmetryCounterParts: TE2.19.F9.CGT-1374471535 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-3104723213
+      CrossFeedPartSet: TE2.19.F9.CGT-2108784256 TE2.19.F9.CGT-3104723213 TE2.19.F9.CGT-388307089 TE2.19.F9.CGT-1374471535 RO-RFTank-Integral-1416727206 RO-RFTank-Integral-1949594566 RO-RFTank-Integral-415050972 RO-RFTank-Integral-1381716828 ROE-Merlin1DV-224852890 ROT-GenericTank-Separate-1343824797 KzFlatAdapter-1240192668 KzResizableFairingBase-2031760497
       Resources: [id=254642152 amount=200000 maxAmount=200000 density=1.2509999578469433E-06 free=False residual=0]
       Modules (1):
-        SimModuleRCS: IsEnabled=True
+        SimModuleRCS: IsEnabled=True Index=0
           G=9.8066499999999994 Isp=100 Thrust=10 RcsEnabled=False ISPMult=1 ThrustPercentage=100 MaxFuelFlow=0.010197162129779282 MassFlowRate=0.010197162129779282
           AtmosphereCurve: [ConstantDoubleNode leftT=1 rightT=1 y=100] [CubicHermiteDoubleNode leftT=1 rightT=5 t=1 invH=0.25 c0=100 c1=-99.999000549316406 c2=1.6480917111039162E-06 c3=-1.0987278074026108E-06] [ConstantDoubleNode leftT=5 rightT=5 y=0.0010000000474974513]
           Propellants: [id=254642152 ignoreForIsp=False ratio=1 flowMode=STACK_PRIORITY_SEARCH density=1.2509999578469433E-06]
-    SimPart 'KzProcFairingSide1-288594212':
+    SimPart 'KzProcFairingSide1-997883857':
       InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.82329875230789185 ModulesStagedMass=0.82329875230789185 ModulesUnstagedMass=0.82329875230789185
-      Links: KzResizableFairingBase-711105664
-      SymmetryCounterParts: KzProcFairingSide1-3427567844
-      CrossFeedPartSet: KzProcFairingSide1-288594212
+      Links: KzResizableFairingBase-2031760497
+      SymmetryCounterParts: KzProcFairingSide1-3167263097
+      CrossFeedPartSet: KzProcFairingSide1-997883857
       Modules (1):
-        SimProceduralFairingDecoupler:
-    SimPart 'KzProcFairingSide1-3427567844':
+        SimProceduralFairingDecoupler: Index=1
+    SimPart 'KzProcFairingSide1-3167263097':
       InverseStage=1 DecoupledInStage=1 ResourcePriority=10 Mass=0.82329875230789185 ModulesStagedMass=0.82329875230789185 ModulesUnstagedMass=0.82329875230789185
-      Links: KzResizableFairingBase-711105664
-      SymmetryCounterParts: KzProcFairingSide1-288594212
-      CrossFeedPartSet: KzProcFairingSide1-3427567844
+      Links: KzResizableFairingBase-2031760497
+      SymmetryCounterParts: KzProcFairingSide1-997883857
+      CrossFeedPartSet: KzProcFairingSide1-3167263097
       Modules (1):
-        SimProceduralFairingDecoupler:
+        SimProceduralFairingDecoupler: Index=1

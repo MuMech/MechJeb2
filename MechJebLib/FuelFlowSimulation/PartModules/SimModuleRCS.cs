@@ -14,7 +14,7 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 {
     public class SimModuleRCS : SimPartModule
     {
-        private static readonly ObjectPool<SimModuleRCS> _pool = new ObjectPool<SimModuleRCS>(New, Clear);
+        private static readonly ObjectPool<SimModuleRCS> _pool = new ObjectPool<SimModuleRCS>(New, m => m.Clear());
         public readonly List<SimPropellant> Propellants = new List<SimPropellant>();
         public readonly Dictionary<int, SimFlowMode> PropellantFlowModes = new Dictionary<int, SimFlowMode>();
         public readonly Dictionary<int, double> ResourceConsumptions = new Dictionary<int, double>();
@@ -123,12 +123,13 @@ namespace MechJebLib.FuelFlowSimulation.PartModules
 
         public void Activate() => RcsEnabled = true;
 
-        private static void Clear(SimModuleRCS m)
+        protected override void Clear()
         {
-            m.Propellants.Clear();
-            m.PropellantFlowModes.Clear();
-            m.ResourceConsumptions.Clear();
-            m.AtmosphereCurve.Clear();
+            base.Clear();
+            Propellants.Clear();
+            PropellantFlowModes.Clear();
+            ResourceConsumptions.Clear();
+            AtmosphereCurve.Clear();
         }
 
         // FIXME: direct copypasta from SimModuleEngines
