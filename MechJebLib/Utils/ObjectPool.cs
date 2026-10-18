@@ -4,8 +4,8 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace MechJebLib.Utils
@@ -23,8 +23,8 @@ namespace MechJebLib.Utils
         private readonly Func<T> _create;
         private readonly Action<T> _reset;
 
-        private readonly ConcurrentBag<T> _globalPool = new ConcurrentBag<T>();
-        private readonly ThreadLocal<Stack<T>> _localPool = new ThreadLocal<Stack<T>>(() => new Stack<T>());
+        private readonly Store _global = new Store();
+        private readonly ThreadLocal<Store> _local = new ThreadLocal<Store>(() => new Store());
 
         public ObjectPool(Func<T> create, Action<T> reset)
         {
@@ -34,14 +34,16 @@ namespace MechJebLib.Utils
 
         public T Borrow()
         {
-            if (UseGlobal)
+            Store store = UseGlobal ? _global : _local.Value;
+
+            lock (store)
             {
-                if (_globalPool.TryTake(out T item)) return item;
-            }
-            else
-            {
-                Stack<T> stack = _localPool.Value;
-                if (stack.Count > 0) return stack.Pop();
+                if (store.Items.Count > 0)
+                {
+                    T item = store.Items.Pop();
+                    store.Members.Remove(item);
+                    return item;
+                }
             }
 
             return _create();
@@ -49,11 +51,36 @@ namespace MechJebLib.Utils
 
         public void Release(T item)
         {
+            Store store = UseGlobal ? _global : _local.Value;
+
+            // catch double-release bugs and throw
+            lock (store)
+            {
+                if (!store.Members.Add(item))
+                    throw new InvalidOperationException($"{typeof(T).Name} released to ObjectPool twice");
+            }
+
+            // resets dispose children into other pools, so run them outside the lock to avoid nesting pool locks.
             _reset(item);
-            if (UseGlobal)
-                _globalPool.Add(item);
-            else
-                _localPool.Value.Push(item);
+
+            lock (store)
+                store.Items.Push(item);
+        }
+
+        // Items is always a subset of Members, an item is added to Members before its reset and only pushed after.
+        private sealed class Store
+        {
+            public readonly Stack<T> Items = new Stack<T>();
+            public readonly HashSet<T> Members = new HashSet<T>(ReferenceComparer.Instance);
+        }
+
+        private sealed class ReferenceComparer : IEqualityComparer<T>
+        {
+            public static readonly ReferenceComparer Instance = new ReferenceComparer();
+
+            public bool Equals(T x, T y) => ReferenceEquals(x, y);
+
+            public int GetHashCode(T obj) => RuntimeHelpers.GetHashCode(obj);
         }
     }
 }
