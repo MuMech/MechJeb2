@@ -411,6 +411,10 @@ namespace MuMech
             if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
             _controlledVessel = null;
 
+            // OnStart re-adds these, and the new modules re-add their draw callbacks
+            RemoveGameEvents();
+            _postDrawQueue.Clear();
+
             //Start fresh
             OnLoad(null);
             OnStart(HighLogic.LoadedSceneIsEditor ? StartState.Editor : StartState.Flying);
@@ -995,11 +999,7 @@ namespace MuMech
                 OnSave(null);
             }
 
-            GameEvents.onShowUI.Remove(OnShowGUI);
-            GameEvents.onHideUI.Remove(OnHideGUI);
-            GameEvents.onVesselChange.Remove(UnlockControl);
-            GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
-            GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
+            RemoveGameEvents();
 
             if (_weLockedInputs)
             {
@@ -1025,6 +1025,15 @@ namespace MuMech
             }
 
             _controlledVessel = null;
+        }
+
+        private void RemoveGameEvents()
+        {
+            GameEvents.onShowUI.Remove(OnShowGUI);
+            GameEvents.onHideUI.Remove(OnHideGUI);
+            GameEvents.onVesselChange.Remove(UnlockControl);
+            GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+            GameEvents.onVesselStandardModification.Remove(OnVesselStandardModification);
         }
 
         private void OnFlyByWire(FlightCtrlState s)
