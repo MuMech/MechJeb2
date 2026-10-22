@@ -47,6 +47,8 @@ namespace MuMech
             GameEvents.onLaunch.Add(OnLaunch);
         }
 
+        public override void OnDestroy() => GameEvents.onLaunch.Remove(OnLaunch);
+
         private void FixupLaunchStart()
         {
             // continuously update the launchStarted time if we're sitting on the ground on the water anywhere (once we are not, then we've launched)
