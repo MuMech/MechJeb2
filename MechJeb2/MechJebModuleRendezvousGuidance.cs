@@ -11,6 +11,7 @@ namespace MuMech
         public MechJebModuleRendezvousGuidance(MechJebCore core) : base(core) { }
 
         private readonly EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
+        private readonly EditableDoubleMult interceptDistance = new EditableDoubleMult(200);
 
         protected override void WindowGUI(int windowID)
         {
@@ -115,6 +116,15 @@ namespace MuMech
                 Vessel.RemoveAllManeuverNodes();
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);
             }
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_buttonCourseCorrect"))) //"Fine tune closest approach"
+            {
+                // TODO call the course correction maneuver
+            }
+            interceptDistance.Text = GUILayout.TextField(interceptDistance.Text, GuiUtils.LayoutWidth(70));
+            GUILayout.Label("m", GuiUtils.LayoutNoExpandWidth);
+            GUILayout.EndHorizontal();
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_RZplan_button4"))) //"Match velocities at closest approach"
             {
