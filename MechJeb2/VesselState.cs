@@ -478,6 +478,9 @@ namespace MuMech
 
             UpdateBasicInfo();
 
+            // done here rather than in a module's OnFixedUpdate() so it is current before both the OnFixedUpdate() and Drive() paths
+            _core.InfoItems.FixupLaunchTime();
+
             UpdateRCSThrustAndTorque();
 
             EngineWrappers.Clear();

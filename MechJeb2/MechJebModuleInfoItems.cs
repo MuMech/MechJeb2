@@ -19,6 +19,38 @@ namespace MuMech
     {
         public MechJebModuleInfoItems(MechJebCore core) : base(core) { }
 
+        // useful to track time since launch event (works around bugs with physics starting early and vessel.launchTime being wildly off)
+        [Persistent(pass = (int)Pass.LOCAL)]
+        public double LaunchTime = -1;
+
+        // various events can cause LaunchTime to be before or after vessel.launchTime, but the most recent one is so far always the most accurate
+        // (physics wobbles can start vessel.launchTime (KSP's zero MET) early, while staging can cause LaunchTime to happen early)
+        // this will only be valid AFTER launching
+        [ValueInfoItem("Mission Elapsed Time", InfoItem.Category.Recorder, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]
+        public double MET => VesselState.Time - Math.Max(LaunchTime, Vessel.launchTime);
+
+        public override void OnStart(PartModule.StartState state) => GameEvents.onLaunch.Add(OnLaunch);
+
+        public override void OnDestroy() => GameEvents.onLaunch.Remove(OnLaunch);
+
+        private void OnLaunch(EventReport report)
+        {
+            // onLaunch carries no vessel and is only fired for the active vessel
+            if (Vessel != FlightGlobals.ActiveVessel) return;
+
+            LaunchTime = VesselState.Time;
+            Debug.Log("[MechJebModuleInfoItems] LaunchTime = " + LaunchTime);
+        }
+
+        // called from VesselState.Update() so that it is current for both the OnFixedUpdate() and Drive() paths
+        public void FixupLaunchTime()
+        {
+            // continuously update the LaunchTime if we're sitting on the ground on the water anywhere (once we are not, then we've launched)
+            if (Vessel.situation == Vessel.Situations.LANDED || Vessel.situation == Vessel.Situations.PRELAUNCH ||
+                Vessel.situation == Vessel.Situations.SPLASHED)
+                LaunchTime = VesselState.Time;
+        }
+
         //Provides a unified interface for getting the parts list in the editor or in flight:
         private List<Part> parts =>
             HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts :
