@@ -35,6 +35,8 @@ namespace MuMech
         public  double     LastZnorm;
         private double     _lastTime;
 
+        public bool NoOptimizedStageFound;
+
         public MechJebModulePVGGlueBall(MechJebCore core) : base(core) { }
 
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
@@ -251,6 +253,16 @@ namespace MuMech
             }
 
             ascentBuilder.FixedBurnTime(!optimizedStageFound); // FIXME: can ascentbuilder just figure this out?
+
+            if (_ascentSettings.OptimizeStageFlag && !optimizedStageFound
+                && Vessel.currentStage >= _ascentSettings.OptimizeStage)
+            {
+                // We should have encountered the optimized stage; the user probably specified an incorrect
+                // Early Shutoff stage (after the Last stage, or a stage without any burn time).
+                NoOptimizedStageFound = true;
+            } else {
+                NoOptimizedStageFound = false;
+            }
 
             _ascent = ascentBuilder.Build();
 
