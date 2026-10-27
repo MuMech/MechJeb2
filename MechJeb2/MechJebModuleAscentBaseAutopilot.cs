@@ -19,11 +19,6 @@ namespace MuMech
 
         public double CurrentMaxAoA;
 
-        // useful to track time since launch event (works around bugs with physics starting early and vessel.launchTime being wildly off)
-        // FIXME?: any time we lift off from a rock this should probably be set to that time?
-        private double _launchStarted;
-        public double LaunchLongitude;
-
         public double TMinus => _launchTime - VesselState.Time;
 
         //internal state:
@@ -32,38 +27,6 @@ namespace MuMech
         private AscentMode _mode;
         private bool _placedCircularizeNode;
         private double _lastTMinus = 999;
-
-        // wiring for launchStarted
-        private void OnLaunch(EventReport report)
-        {
-            _launchStarted = VesselState.Time;
-            Debug.Log("[MechJebModuleAscentAutopilot] LaunchStarted = " + _launchStarted);
-        }
-
-        // wiring for launchStarted
-        public override void OnStart(PartModule.StartState state)
-        {
-            _launchStarted = -1;
-            GameEvents.onLaunch.Add(OnLaunch);
-        }
-
-        public override void OnDestroy() => GameEvents.onLaunch.Remove(OnLaunch);
-
-        private void FixupLaunchStart()
-        {
-            // continuously update the launchStarted time if we're sitting on the ground on the water anywhere (once we are not, then we've launched)
-            if (Vessel.situation == Vessel.Situations.LANDED || Vessel.situation == Vessel.Situations.PRELAUNCH ||
-                Vessel.situation == Vessel.Situations.SPLASHED)
-            {
-                _launchStarted = VesselState.Time;
-                LaunchLongitude = VesselState.CelestialLongitude;
-            }
-        }
-
-        // various events can cause launchStarted to be before or after vessel.launchTime, but the most recent one is so far always the most accurate
-        // (physics wobbles can start vessel.launchTime (KSP's zero MET) early, while staging before engaging the autopilot can cause launchStarted to happen early)
-        // this will only be valid AFTER launching
-        protected double MET => VesselState.Time - (_launchStarted > Vessel.launchTime ? _launchStarted : Vessel.launchTime);
 
         protected override void OnModuleEnabled()
         {
@@ -109,7 +72,6 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            FixupLaunchStart();
             if (TimedLaunch)
             {
                 if (TMinus < 3 * VesselState.DeltaT || (TMinus > 10.0 && _lastTMinus < 1.0))
