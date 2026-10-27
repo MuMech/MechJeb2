@@ -64,8 +64,6 @@ namespace MuMech
                         sl); //Dynamic Pressure Fadeout
                     GUILayout.EndHorizontal();
                 }
-
-                _ascentSettings.LimitQaEnabled = false; // this is only for PSG
             }
 
             if (_ascentSettings.AscentType == AscentType.CLASSIC)

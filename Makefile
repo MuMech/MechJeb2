@@ -84,6 +84,7 @@ build/MechJebLibBindings.dll: ${MECHJABLIBIBINDINGSFILES} build/MechJebLib.dll
 		/reference:"${MANAGED}/System.Core.dll" \
 		/reference:"${MANAGED}/System.dll" \
 		/reference:"${MANAGED}/UnityEngine.CoreModule.dll" \
+		/reference:"${MANAGED}/UnityEngine.IMGUIModule.dll" \
 		/reference:"build/MechJebLib.dll" \
 		/recurse:"MechJebLibBindings/*.cs" \
 		-out:$@

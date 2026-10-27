@@ -33,7 +33,7 @@ namespace MechJebLib.FuelFlowSimulation
         public double RcsUllageTime;
         public double ControllableMass;
 
-        private readonly List<EngineSignature> _engineSignatures = new List<EngineSignature>();
+        private List<EngineSignature> _engineSignatures = new List<EngineSignature>();
         public IReadOnlyList<EngineSignature> EngineSignatures => _engineSignatures;
 
         public double MaxAccel     => EndMass > 0 ? Thrust / EndMass : 0;
@@ -52,5 +52,12 @@ namespace MechJebLib.FuelFlowSimulation
 
         public override string ToString() =>
             $"KSP Stage: {KSPStage.ToString()} Thrust: {Thrust.ToString()} Time: {DeltaTime.ToString()} StartMass: {StartMass.ToString()} EndMass: {EndMass.ToString()} DeltaV: {DeltaV.ToString()} ISP: {Isp.ToString()}";
+
+        public FuelStats DeepCopy()
+        {
+            var fuelStats = (FuelStats)MemberwiseClone();
+            fuelStats._engineSignatures = new List<EngineSignature>(_engineSignatures);
+            return fuelStats;
+        }
     }
 }

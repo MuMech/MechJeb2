@@ -33,7 +33,7 @@ namespace MuMech
         private bool _ready;
 
         public MechJebModuleGuidanceController Guidance;
-        public MechJebModulePSGGlueBall Glueball;
+        public MechJebModulePSGSimulation PSGSimulation;
         public MechJebModuleAttitudeController Attitude;
         public MechJebModuleStagingController Staging;
         public MechJebModuleThrustController Thrust;
@@ -56,7 +56,8 @@ namespace MuMech
 
         public readonly VesselState VesselState;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb"), UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb")]
+        [UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")]
         //DisabledEnabled
         public bool running = true;
 
@@ -774,7 +775,7 @@ namespace MuMech
             Landing = GetComputerModule<MechJebModuleLandingAutopilot>();
             Settings = GetComputerModule<MechJebModuleSettings>();
             Guidance = GetComputerModule<MechJebModuleGuidanceController>();
-            Glueball = GetComputerModule<MechJebModulePSGGlueBall>();
+            PSGSimulation = GetComputerModule<MechJebModulePSGSimulation>();
             StageStats = GetComputerModule<MechJebModuleStageStats>();
             AscentSettings = GetComputerModule<MechJebModuleAscentSettings>();
             Spinup = GetComputerModule<MechJebModuleSpinupController>();

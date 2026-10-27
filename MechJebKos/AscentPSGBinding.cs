@@ -30,43 +30,51 @@ namespace MuMech.MechJebKos
 
         protected override AscentType TargetType => AscentType.PSG;
 
+        protected override EditableDouble InclinationSetting => Core.PSGSimulation.Inc;
+
         protected override void InitializeTypeSuffixes()
         {
             // --- target orbit (PSG) ---
-            AddSuffix("DESIREDAPOAPSIS", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredApoapsis.Val,
-                value => AscentSettings.DesiredApoapsis.Val = value, "Target apoapsis altitude in meters."));
-            AddSuffix("ATTACHALT", new SetSuffix<BooleanValue>(() => AscentSettings.AttachAltFlag,
-                value => AscentSettings.AttachAltFlag = value, "Attach the guidance solution at a specified altitude."));
-            AddSuffix("ATTACHALTITUDE", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredAttachAlt.Val,
-                value => AscentSettings.DesiredAttachAlt.Val = value, "Altitude (m) at which to attach the guidance solution (optimized stages)."));
-            AddSuffix("ATTACHALTITUDEFIXED", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredAttachAltFixed.Val,
-                value => AscentSettings.DesiredAttachAltFixed.Val = value, "Altitude (m) at which to attach the guidance solution (fixed stages)."));
-            AddSuffix("FPA", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredFPA.Val * RAD2DEG,
-                value => AscentSettings.DesiredFPA.Val = value * DEG2RAD, "Target flight path angle at attach altitude in degrees."));
-            AddSuffix("ARGP", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredArgP.Val * RAD2DEG,
-                value => AscentSettings.DesiredArgP.Val = value * DEG2RAD, "Target argument of periapsis in degrees."));
-            AddSuffix("ARGPFLAG", new SetSuffix<BooleanValue>(() => AscentSettings.DesiredArgPFlag,
-                value => AscentSettings.DesiredArgPFlag = value, "Target a specific argument of periapsis."));
-            AddSuffix("OPTIMIZESTAGE", new SetSuffix<BooleanValue>(() => AscentSettings.OptimizeStageFlag,
-                value => AscentSettings.OptimizeStageFlag = value, "Let PSG optimize the final stage burn (vs. fixed attach altitude)."));
+            AddSuffix("PERIAPSISALTITUDE", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.PeriapsisAltitude.Val,
+                value => Core.PSGSimulation.PeriapsisAltitude.Val = value, "Target periapsis altitude in meters."));
+            AddSuffix("APOAPSISALTITUDE", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.ApoapsisAltitude.Val,
+                value => Core.PSGSimulation.ApoapsisAltitude.Val = value, "Target apoapsis altitude in meters."));
+            AddSuffix("BURNOUTALTITUDEFLAG", new SetSuffix<BooleanValue>(() => Core.PSGSimulation.BurnoutAltitudeFlag,
+                value => Core.PSGSimulation.BurnoutAltitudeFlag = value,
+                "Attach the guidance solution at BURNOUTALTITUDE (implied when every stage has a fixed burn time)."));
+            AddSuffix("BURNOUTALTITUDE", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.BurnoutAltitude.Val,
+                value => Core.PSGSimulation.BurnoutAltitude.Val = value,
+                "Altitude (m) at which to attach the guidance solution. Always used (as the burnout altitude) when every stage has a fixed burn time; otherwise only used when BURNOUTALTITUDEFLAG is true."));
+            AddSuffix("FPA", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.FPA.Val * RAD2DEG,
+                value => Core.PSGSimulation.FPA.Val = value * DEG2RAD, "Target flight path angle at attach altitude in degrees."));
+            AddSuffix("INC", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.Inc.Val,
+                value => Core.PSGSimulation.Inc.Val = value, "Target orbital inclination in degrees."));
+            AddSuffix("LAN", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.LAN.Val,
+                value => Core.PSGSimulation.LAN.Val = value, "Target longitude of the ascending node in degrees."));
+            AddSuffix("ARGP", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.ArgP.Val * RAD2DEG,
+                value => Core.PSGSimulation.ArgP.Val = value * DEG2RAD, "Target argument of periapsis in degrees."));
+            AddSuffix("ARGPFLAG", new SetSuffix<BooleanValue>(() => Core.PSGSimulation.ArgPFlag,
+                value => Core.PSGSimulation.ArgPFlag = value, "Target a specific argument of periapsis."));
 
             // --- guidance tuning ---
             AddSuffix("PITCHSTARTHEIGHT", new SetSuffix<ScalarValue>(() => AscentSettings.PitchStartHeight.Val,
                 value => AscentSettings.PitchStartHeight.Val = value, "Height (m) at which the initial pitch-over starts."));
             AddSuffix("PITCHRATE", new SetSuffix<ScalarValue>(() => AscentSettings.PitchRate.Val,
                 value => AscentSettings.PitchRate.Val = value, "Initial pitch-over rate in degrees/second."));
-            AddSuffix("CD", new SetSuffix<ScalarValue>(() => AscentSettings.Cd.Val,
-                value => AscentSettings.Cd.Val = value, "Drag coefficient used by the guidance model."));
-            AddSuffix("AREF", new SetSuffix<ScalarValue>(() => AscentSettings.Aref.Val,
-                value => AscentSettings.Aref.Val = value, "Reference area (m^2) used by the guidance model (0 = auto)."));
+            AddSuffix("CD", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.Cd.Val,
+                value => Core.PSGSimulation.Cd.Val = value, "Drag coefficient used by the guidance model."));
+            AddSuffix("AREF", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.Aref.Val,
+                value => Core.PSGSimulation.Aref.Val = value, "Reference area (m^2) used by the guidance model (0 = auto)."));
+            AddSuffix("LIMITQA", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.LimitQa.Val,
+                value => Core.PSGSimulation.LimitQa.Val = value, "Q-alpha (dynamic-pressure x AoA) limit for the ascent."));
 
             // --- coast ---
-            AddSuffix("MINDELTAV", new SetSuffix<ScalarValue>(() => AscentSettings.MinDeltaV.Val,
-                value => AscentSettings.MinDeltaV.Val = value, "Minimum stage delta-V (m/s) before PSG will coast."));
-            AddSuffix("MAXCOAST", new SetSuffix<ScalarValue>(() => AscentSettings.MaxCoast.Val,
-                value => AscentSettings.MaxCoast.Val = value, "Maximum coast duration in seconds."));
-            AddSuffix("MINCOAST", new SetSuffix<ScalarValue>(() => AscentSettings.MinCoast.Val,
-                value => AscentSettings.MinCoast.Val = value, "Minimum coast duration in seconds."));
+            AddSuffix("MINDELTAV", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.MinDeltaV.Val,
+                value => Core.PSGSimulation.MinDeltaV.Val = value, "Minimum stage delta-V (m/s) before PSG will coast."));
+            AddSuffix("MAXCOAST", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.MaxCoast.Val,
+                value => Core.PSGSimulation.MaxCoast.Val = value, "Maximum coast duration in seconds."));
+            AddSuffix("MINCOAST", new SetSuffix<ScalarValue>(() => Core.PSGSimulation.MinCoast.Val,
+                value => Core.PSGSimulation.MinCoast.Val = value, "Minimum coast duration in seconds."));
             AddSuffix("COASTSTAGE", new SetSuffix<ScalarValue>(() => AscentSettings.CoastStageInternal.Val,
                 value => AscentSettings.CoastStageInternal.Val = (int)value, "KSP stage index at which to insert the coast."));
             AddSuffix("COASTSTAGEFLAG", new SetSuffix<BooleanValue>(() => AscentSettings.CoastStageFlag,
@@ -104,11 +112,11 @@ namespace MuMech.MechJebKos
                 "Guidance-commanded heading in degrees."));
             AddSuffix("PITCH", new Suffix<ScalarValue>(() => Core.Guidance.Pitch,
                 "Guidance-commanded pitch in degrees."));
-            AddSuffix("INFEASIBILITY", new Suffix<ScalarValue>(() => Core.Glueball.LastInfeasibility,
+            AddSuffix("INFEASIBILITY", new Suffix<ScalarValue>(() => Core.PSGSimulation.LastInfeasibility,
                 "Infeasibility (constraint residual norm) of the last optimizer run; near zero is converged."));
-            AddSuffix("STALENESS", new Suffix<ScalarValue>(() => Core.Glueball.Staleness,
+            AddSuffix("STALENESS", new Suffix<ScalarValue>(() => Core.PSGSimulation.Staleness,
                 "Age in seconds of the most recent optimizer solution."));
-            AddSuffix("SUCCESSFULCONVERGES", new Suffix<ScalarValue>(() => Core.Glueball.SuccessfulConverges,
+            AddSuffix("SUCCESSFULCONVERGES", new Suffix<ScalarValue>(() => Core.PSGSimulation.SuccessfulConverges,
                 "Count of successful optimizer convergences since the autopilot was engaged."));
         }
 
@@ -116,15 +124,15 @@ namespace MuMech.MechJebKos
         {
             Engage();
             AscentSettings.LaunchingToLan = true;
-            AscentSettings.DesiredLan.Val = degrees;
+            Core.PSGSimulation.LAN.Val = degrees;
 
             VesselState vs = Core.VesselState;
             double time = Astro.TimeToPlane(
                 Core.vessel.mainBody.rotationPeriod,
                 vs.Latitude,
                 vs.CelestialLongitude,
-                AscentSettings.DesiredLan,
-                AscentSettings.DesiredInclination);
+                Core.PSGSimulation.LAN,
+                InclinationSetting);
 
             double launchUT = vs.Time + time;
             Module.StartCountdown(launchUT);
@@ -146,7 +154,7 @@ namespace MuMech.MechJebKos
                 vs.Latitude,
                 vs.CelestialLongitude,
                 targetOrbit.LAN - AscentSettings.LaunchLANDifference,
-                AscentSettings.DesiredInclination);
+                InclinationSetting);
 
             double launchUT = vs.Time + time;
             Module.StartCountdown(launchUT);
