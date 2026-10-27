@@ -76,6 +76,9 @@ namespace MuMech
         public string MechJebAscentAttachAlt, MechJebAscentWarnAttachAltHigh, MechJebAscentWarnAttachAltLow;
 
         [NonSerialized]
+        public string MechJebAscentWarnIncorrectEarlyShutoff;
+
+        [NonSerialized]
         public string MechJebAscentLaunchToTargetLan,
             MechJebAscentLaunchToLan,
             MechJebAscentLaunchingToTargetLAN,
@@ -256,6 +259,7 @@ namespace MuMech
             MechJebAscentAttachAlt            = Localizer.Format("#MechJeb_Ascent_attachAlt");
             MechJebAscentWarnAttachAltHigh    = Localizer.Format("#MechJeb_Ascent_warnAttachAltHigh");
             MechJebAscentWarnAttachAltLow     = Localizer.Format("#MechJeb_Ascent_warnAttachAltLow");
+            MechJebAscentWarnIncorrectEarlyShutoff = Localizer.Format("#MechJeb_Ascent_warnIncorrectEarlyShutoff");
             MechJebAscentLaunchToTargetLan    = Localizer.Format("#MechJeb_Ascent_LaunchToTargetLan");
             MechJebAscentLaunchToLan          = Localizer.Format("#MechJeb_Ascent_LaunchToLan");
             MechJebAscentLaunchingToTargetLAN = Localizer.Format("#MechJeb_Ascent_LaunchingToTargetLAN");

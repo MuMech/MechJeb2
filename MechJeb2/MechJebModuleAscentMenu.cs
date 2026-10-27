@@ -221,6 +221,12 @@ namespace MuMech
                 {
                     GUILayout.Label(label30, GuiUtils.RedLabel); //LAST FAILURE:
                 }
+                if (Core.Glueball.NoOptimizedStageFound)
+                {
+
+                    // Optimized stage not found; check your Early Shutoff stage in the PVG Settings menu
+                    GUILayout.Label(CachedLocalizer.Instance.MechJebAscentWarnIncorrectEarlyShutoff, GuiUtils.YellowLabel);
+                }
 
                 Profiler.EndSample();
                 GUILayout.EndVertical();
