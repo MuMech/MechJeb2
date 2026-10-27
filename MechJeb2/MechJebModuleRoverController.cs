@@ -122,6 +122,13 @@ namespace MuMech
             base.OnStart(state);
         }
 
+        public override void OnDestroy()
+        {
+            GameEvents.onVesselWasModified.Remove(OnVesselModified);
+
+            base.OnDestroy();
+        }
+
         public void OnVesselModified(Vessel v)
         {
             // TODO : need to look into the new ModuleWheelSteering ModuleWheelMotor ModuleWheelBrakes ModuleWheelBase ModuleWheelSuspension and see what they could bring

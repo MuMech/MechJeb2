@@ -74,17 +74,21 @@ namespace MuMech
             {
                 Core.AddToPostDrawQueue(DrawBoundingBox);
 
-                // Turn off docking AP on successful docking (in case other checks for successful docking fail)
-                GameEvents.onPartCouple.Add(ev =>
+                GameEvents.onPartCouple.Add(OnPartCouple);
+            }
+        }
+
+        public override void OnDestroy() => GameEvents.onPartCouple.Remove(OnPartCouple);
+
+        // Turn off docking AP on successful docking (in case other checks for successful docking fail)
+        private void OnPartCouple(GameEvents.FromToAction<Part, Part> ev)
+        {
+            if (dockingStep != DockingStep.OFF)
+            {
+                if (ev.from.vessel == Vessel || ev.to.vessel == Vessel)
                 {
-                    if (dockingStep != DockingStep.OFF)
-                    {
-                        if (ev.from.vessel == Vessel || ev.to.vessel == Vessel)
-                        {
-                            EndDocking();
-                        }
-                    }
-                });
+                    EndDocking();
+                }
             }
         }
 
