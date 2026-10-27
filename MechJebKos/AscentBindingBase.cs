@@ -25,6 +25,9 @@ namespace MuMech.MechJebKos
 
         protected abstract AscentType TargetType { get; }
 
+        // The inclination this ascent type flies; LaunchIntoPlane() writes the signed result of MinimumTimeToPlane() here.
+        protected abstract EditableDouble InclinationSetting { get; }
+
         protected MechJebModuleAscentSettings AscentSettings => Core.AscentSettings;
 
         // Set the ascent type first (this disables the other autopilot via AscentSettings'
@@ -55,12 +58,6 @@ namespace MuMech.MechJebKos
                 "Current ascent autopilot status text."));
 
             // --- target orbit ---
-            AddSuffix("DESIREDALTITUDE", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredOrbitAltitude.Val,
-                value => AscentSettings.DesiredOrbitAltitude.Val = value, "Target orbit altitude (periapsis) in meters."));
-            AddSuffix("INCLINATION", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredInclination.Val,
-                value => AscentSettings.DesiredInclination.Val = value, "Target orbital inclination in degrees."));
-            AddSuffix("LAN", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredLan.Val,
-                value => AscentSettings.DesiredLan.Val = value, "Target longitude of the ascending node in degrees."));
             AddSuffix("RELATIVELAN", new SetSuffix<BooleanValue>(() => AscentSettings.RelativeLAN,
                 value => AscentSettings.RelativeLAN = value, "Interpret LAN relative to the launch site."));
 
@@ -73,8 +70,6 @@ namespace MuMech.MechJebKos
                 value => AscentSettings.AutoDeploySolarPanels = value, "Automatically deploy solar panels after leaving the atmosphere."));
             AddSuffix("AUTODEPLOYANTENNAS", new SetSuffix<BooleanValue>(() => AscentSettings.AutoDeployAntennas,
                 value => AscentSettings.AutoDeployAntennas = value, "Automatically deploy antennas after leaving the atmosphere."));
-            AddSuffix("SKIPCIRCULARIZATION", new SetSuffix<BooleanValue>(() => AscentSettings.SkipCircularization,
-                value => AscentSettings.SkipCircularization = value, "Skip the circularization burn at apoapsis."));
 
             // --- roll profile ---
             AddSuffix("FORCEROLL", new SetSuffix<BooleanValue>(() => AscentSettings.ForceRoll,
@@ -85,18 +80,6 @@ namespace MuMech.MechJebKos
                 value => AscentSettings.TurnRoll.Val = value, "Roll angle during the gravity turn in degrees."));
             AddSuffix("ROLLALTITUDE", new SetSuffix<ScalarValue>(() => AscentSettings.RollAltitude.Val,
                 value => AscentSettings.RollAltitude.Val = value, "Altitude (m) at which the roll program begins."));
-
-            // --- AoA limiters ---
-            AddSuffix("LIMITAOA", new SetSuffix<BooleanValue>(() => AscentSettings.LimitAoA,
-                value => AscentSettings.LimitAoA = value, "Enable the classic angle-of-attack limiter."));
-            AddSuffix("MAXAOA", new SetSuffix<ScalarValue>(() => AscentSettings.MaxAoA.Val,
-                value => AscentSettings.MaxAoA.Val = value, "Maximum angle of attack in degrees (classic limiter)."));
-            AddSuffix("AOALIMITFADEOUTPRESSURE", new SetSuffix<ScalarValue>(() => AscentSettings.AOALimitFadeoutPressure.Val,
-                value => AscentSettings.AOALimitFadeoutPressure.Val = value, "Dynamic pressure (Pa) at which the classic AoA limit fades out."));
-            AddSuffix("LIMITQA", new SetSuffix<ScalarValue>(() => AscentSettings.LimitQa.Val,
-                value => AscentSettings.LimitQa.Val = value, "Q-alpha (dynamic-pressure x AoA) limit for the ascent."));
-            AddSuffix("LIMITQAENABLED", new SetSuffix<BooleanValue>(() => AscentSettings.LimitQaEnabled,
-                value => AscentSettings.LimitQaEnabled = value, "Enable the q-alpha limiter."));
 
             // --- timed launch ---
             AddSuffix("WARPCOUNTDOWN", new SetSuffix<ScalarValue>(() => AscentSettings.WarpCountDown.Val,
@@ -130,7 +113,7 @@ namespace MuMech.MechJebKos
                 targetOrbit.LAN - AscentSettings.LaunchLANDifference,
                 targetOrbit.inclination);
 
-            AscentSettings.DesiredInclination.Val = inclination;
+            InclinationSetting.Val = inclination;
             double launchUT = vs.Time + time;
             Module.StartCountdown(launchUT);
             return launchUT;

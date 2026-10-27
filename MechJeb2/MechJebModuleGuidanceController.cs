@@ -328,6 +328,10 @@ namespace MuMech
             }
             else
             {
+                // FIXME: edge trigger this instead of beating on it constantly
+                if (hasCoasted)
+                    Core.PSGSimulation.MarkCoastDone();
+
                 ThrottleOn();
 
                 Status = PSGStatus.BURNING;

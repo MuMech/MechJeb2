@@ -1,8 +1,9 @@
 extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation;
+using MechJebLib.PSG;
+using MechJebLibBindings.PSG;
 using UnityEngine;
-using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -41,46 +42,22 @@ namespace MuMech
         protected override void WindowGUI(int windowID)
         {
             SetupButtonStyles();
-
-            int topstage = -1;
-
             List<FuelStats> vacStats = Core.StageStats.VacStats;
 
-            if (vacStats.Count > 0 && _ascentSettings.LastStage <= vacStats[vacStats.Count - 1].KSPStage)
+            if (vacStats.Count > 0)
             {
-                GUILayout.BeginVertical(GUI.skin.box);
+                // FIXME: the LogicalPlan updates continuously which can flip the OptimizedStagesFlag which can flip the target conditions that
+                // the PSGSimulation uses.
+                // BUG: this is the only place the logicalplan is created, and this is inaccessible from kOS so this has to get fixed
+                Core.PSGSimulation.LogicalPlan = new PersistedLogicalPlan(LogicalPlan.GenerateLogicalPlan(Core.StageStats.VacStats, _ascentSettings.UnguidedStages, _ascentSettings.FixedStages, _ascentSettings.LastStage, Core.PSGSimulation.MinDeltaV, _ascentSettings.CoastStage, _ascentSettings.CoastLocation));
 
-                _ascentSettings.LastStage.Val = Clamp(_ascentSettings.LastStage.Val, 0, vacStats[vacStats.Count - 1].KSPStage);
+                Core.PSGSimulation.RequestFlightPlanUpdate();
 
-                _ascentSettings.OptimizeStageFlag = false;
-
-                foreach (FuelStats stats in Core.StageStats.VacStats)
-                {
-                    if (stats.KSPStage < _ascentSettings.LastStage)
-                        continue;
-
-                    if (stats.DeltaV < _ascentSettings.MinDeltaV.Val)
-                        continue;
-
-                    if (topstage < 0)
-                        topstage = stats.KSPStage;
-
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label($"{stats.KSPStage,3} {stats.DeltaV:##,###0} m/s");
-                    if (_ascentSettings.UnguidedStages.Contains(stats.KSPStage))
-                        GUILayout.Label(" (unguided)");
-                    if (_ascentSettings.FixedStages.Contains(stats.KSPStage))
-                        GUILayout.Label(" (fixed)");
-                    else
-                        _ascentSettings.OptimizeStageFlag = true;
-                    GUILayout.EndHorizontal();
-                }
-
-                GUILayout.EndVertical();
+                Core.PSGSimulation.FlightPlan?.DrawStageGUI();
             }
 
             GUILayout.BeginVertical(GUI.skin.box);
-            GuiUtils.SimpleTextBox("Min ΔV: ", _ascentSettings.MinDeltaV, "m/s", 30);
+            GuiUtils.SimpleTextBox("Min ΔV: ", Core.PSGSimulation.MinDeltaV, "m/s", 30);
             GuiUtils.SimpleTextBox("Last Stage: ", _ascentSettings.LastStage);
             GuiUtils.ToggledTextBox(ref _ascentSettings.FixedStagesFlag, "Fixed Burn Stages: ", _ascentSettings.FixedStagesInternal);
             GuiUtils.ToggledTextBox(ref _ascentSettings.UnguidedStagesFlag, "Unguided Stages: ", _ascentSettings.UnguidedStagesInternal);
@@ -98,8 +75,8 @@ namespace MuMech
                 _ascentSettings.CoastLocation = 1;
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox("Min Coast:", _ascentSettings.MinCoast, "s", 40);
-            GuiUtils.SimpleTextBox("Max Coast:", _ascentSettings.MaxCoast, "s", 40);
+            GuiUtils.SimpleTextBox("Min Coast:", Core.PSGSimulation.MinCoast, "s", 40);
+            GuiUtils.SimpleTextBox("Max Coast:", Core.PSGSimulation.MaxCoast, "s", 40);
             GUILayout.EndHorizontal();
             GuiUtils.SimpleTextBox("Ullage lead time: ", Core.Guidance.UllageLeadTime, "s", 60);
             GUILayout.EndVertical();
@@ -114,8 +91,8 @@ namespace MuMech
 
             GUILayout.BeginVertical(GUI.skin.box);
             GUILayout.BeginHorizontal();
-            GuiUtils.SimpleTextBox("Cd:", _ascentSettings.Cd, "", 40);
-            GuiUtils.SimpleTextBox("Aref:", _ascentSettings.Aref, "m²", 40);
+            GuiUtils.SimpleTextBox("Cd:", Core.PSGSimulation.Cd, "", 40);
+            GuiUtils.SimpleTextBox("Aref:", Core.PSGSimulation.Aref, "m²", 40);
             GUILayout.EndHorizontal();
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel13, _ascentSettings.PitchStartHeight, "m",
                 40); //Booster Pitch start:
@@ -123,10 +100,10 @@ namespace MuMech
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(GUI.skin.box);
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel17, _ascentSettings.LimitQa, "Pa-rad"); //Qα limit
-            if (_ascentSettings.LimitQa < 1000 || _ascentSettings.LimitQa > 4000)
+            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel17, Core.PSGSimulation.LimitQa, "Pa-rad"); //Qα limit
+            if (Core.PSGSimulation.LimitQa < 1000 || Core.PSGSimulation.LimitQa > 4000)
             {
-                if (_ascentSettings.LimitQa < 0 || _ascentSettings.LimitQa > 10000)
+                if (Core.PSGSimulation.LimitQa < 0 || Core.PSGSimulation.LimitQa > 10000)
                     GUILayout.Label("Qα limit has been clamped to between 0 and 10000 Pa-rad", GuiUtils.RedLabel);
                 else
                     GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel20,

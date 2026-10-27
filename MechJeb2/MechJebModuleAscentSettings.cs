@@ -15,7 +15,8 @@ namespace MuMech
         {
         }
 
-        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
+        [UsedImplicitly]
+        [Persistent(pass = (int)Pass.GLOBAL)]
         public bool ForceResetROSettings = true;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -25,33 +26,13 @@ namespace MuMech
         public readonly EditableDouble PitchRate = new EditableDouble(PITCH_RATE_DEFAULT);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult DesiredApoapsis = new EditableDoubleMult(0, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult DesiredAttachAlt = new EditableDoubleMult(DESIRED_ATTACH_ALT_DEFAULT, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult DesiredAttachAltFixed = new EditableDoubleMult(DESIRED_ATTACH_ALT_DEFAULT, 1000);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult DesiredFPA = new EditableDoubleMult(DESIRED_FPA_DEFAULT, Math.PI / 180);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool AttachAltFlag = ATTACH_ALT_FLAG_DEFAULT;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDoubleMult DesiredArgP = new EditableDoubleMult(DESIRED_ARGP_DEFAULT, Math.PI / 180);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool DesiredArgPFlag = DESIRED_ARGP_FLAG_DEFAULT;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult TurnStartAltitude = new EditableDoubleMult(500, 1000);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult TurnStartVelocity = new EditableDoubleMult(50);
 
-        [UsedImplicitly, Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        [UsedImplicitly]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public int AscentTypeInteger;
 
         public AscentType AscentType
@@ -71,9 +52,6 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble DesiredInclination = new EditableDouble(0.0);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble DesiredLan = new EditableDouble(0.0);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool RelativeLAN = false;
@@ -105,7 +83,8 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble RollAltitude = new EditableDouble(50);
 
-        [UsedImplicitly, Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        [UsedImplicitly]
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool _autostage = true;
 
         public bool Autostage
@@ -139,12 +118,6 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool LimitingAoA = false;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble LimitQa = new EditableDouble(LIMIT_QA_DEFAULT);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public bool LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
@@ -190,25 +163,8 @@ namespace MuMech
          * PSG Staging values
          */
 
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble MinDeltaV = MIN_DELTAV_DEFAULT;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble MaxCoast = MAX_COAST_DEFAULT;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble MinCoast = MIN_COAST_DEFAULT;
-
         [Persistent(pass = (int)Pass.TYPE)]
         public int CoastLocation = -1;
-
-        // deliberately not in the UI or in global, edit the ship file with an editor
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableDouble PreStageTime = PRE_STAGE_TIME_DEFAULT;
-
-        // deliberately not in the UI or in global, edit the ship file with an editor
-        [Persistent(pass = (int)Pass.TYPE)]
-        public readonly EditableDouble OptimizerPauseTime = OPTIMIZER_PAUSE_TIME_DEFAULT;
 
         [Persistent(pass = (int)Pass.TYPE)]
         public readonly EditableInt LastStage = -1;
@@ -253,13 +209,7 @@ namespace MuMech
 
         public List<int> FixedStages => FixedStagesFlag ? FixedStagesInternal.Val : _emptyList;
 
-        public bool OptimizeStageFlag;
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble Cd = new EditableDouble(0.5);
-
-        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble Aref = new EditableDouble(0.0);
+        public bool OptimizeStageFlag => !Core.PSGSimulation.LogicalPlan?.AllFixedBurnTimes() ?? true;
 
         /*
          * some non-persisted values
@@ -310,20 +260,7 @@ namespace MuMech
         {
             PitchStartHeight.Val = PITCH_START_HEIGHT_DEFAULT;
             PitchRate.Val = PITCH_RATE_DEFAULT;
-            DesiredAttachAlt.Val = DESIRED_ATTACH_ALT_DEFAULT;
-            DesiredAttachAltFixed.Val = DESIRED_ATTACH_ALT_DEFAULT;
-            DesiredFPA.Val = DESIRED_FPA_DEFAULT;
-            AttachAltFlag = ATTACH_ALT_FLAG_DEFAULT;
-            DesiredArgP.Val = DESIRED_ARGP_DEFAULT;
-            DesiredArgPFlag = DESIRED_ARGP_FLAG_DEFAULT;
-            LimitQa.Val = LIMIT_QA_DEFAULT;
-            LimitQaEnabled = LIMIT_QA_ENABLED_DEFAULT;
-            MinDeltaV.Val = MIN_DELTAV_DEFAULT;
-            MaxCoast.Val = MAX_COAST_DEFAULT;
-            MinCoast.Val = MIN_COAST_DEFAULT;
             LaunchLANDifference.Val = LAUNCH_LAN_DIFFERENCE;
-            PreStageTime.Val = PRE_STAGE_TIME_DEFAULT;
-            OptimizerPauseTime.Val = OPTIMIZER_PAUSE_TIME_DEFAULT;
 
             SpinupStageFlag = false;
             SpinupStageInternal.Val = -1;
@@ -333,7 +270,6 @@ namespace MuMech
             FixedStagesFlag = false;
 
             DesiredOrbitAltitude.Val = 145000;
-            DesiredAttachAlt.Val = 145000;
 
             Core.Guidance.UllageLeadTime.Val = 20;
 
@@ -388,19 +324,7 @@ namespace MuMech
         }
 
         private const double LAUNCH_LAN_DIFFERENCE = 0;
-        private const double MIN_COAST_DEFAULT = 0;
-        private const double MAX_COAST_DEFAULT = 450;
-        private const double MIN_DELTAV_DEFAULT = 40;
-        private const double DESIRED_ATTACH_ALT_DEFAULT = 110000;
         private const double PITCH_START_HEIGHT_DEFAULT = 100;
         private const double PITCH_RATE_DEFAULT = 5.0;
-        private const bool ATTACH_ALT_FLAG_DEFAULT = false;
-        private const double DESIRED_ARGP_DEFAULT = 0;
-        private const bool DESIRED_ARGP_FLAG_DEFAULT = false;
-        private const double DESIRED_FPA_DEFAULT = 0;
-        private const double LIMIT_QA_DEFAULT = 2000;
-        private const bool LIMIT_QA_ENABLED_DEFAULT = true;
-        private const double PRE_STAGE_TIME_DEFAULT = 10;
-        private const double OPTIMIZER_PAUSE_TIME_DEFAULT = 5;
     }
 }

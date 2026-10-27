@@ -107,9 +107,6 @@ namespace MuMech
 
         public override void OnFixedUpdate()
         {
-            if (AscentSettings.AscentType == AscentType.PSG)
-                Core.StageStats.RequestUpdate();
-
             FixupLaunchStart();
             if (TimedLaunch)
             {
@@ -343,7 +340,8 @@ namespace MuMech
         {
             desiredThrustVector = desiredThrustVector.normalized;
 
-            if (AscentSettings.LimitQaEnabled) /* AoA limiter for PSG */
+            // FIXME: extract the PSG Autopilot from this whole mess.
+            if (Core.PSGSimulation.Enabled) /* AoA limiter for PSG */
                 desiredThrustVector = ApplyQAlphaAoALimiter(desiredThrustVector);
             else if (AscentSettings.LimitAoA) /* old style AoA limiter */
                 desiredThrustVector = ApplyStockAOALimiter(desiredThrustVector);
@@ -374,7 +372,7 @@ namespace MuMech
 
         private Vector3d ApplyQAlphaAoALimiter(Vector3d desiredThrustVector)
         {
-            double lim = Clamp(AscentSettings.LimitQa, 0, 10000);
+            double lim = Clamp(Core.PSGSimulation.LimitQa, 0, 10000);
             AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
             if (AscentSettings.LimitingAoA)
             {

@@ -22,6 +22,11 @@
             <SpecificVersion>False</SpecificVersion>
             <Private>False</Private>
         </Reference>
+        <Reference Include="UnityEngine.IMGUIModule">
+            <HintPath>$(KspData)/Managed/UnityEngine.IMGUIModule.dll</HintPath>
+            <SpecificVersion>False</SpecificVersion>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="UnityEngine.UI">
             <HintPath>$(KspData)/Managed/UnityEngine.UI.dll</HintPath>
             <SpecificVersion>False</SpecificVersion>

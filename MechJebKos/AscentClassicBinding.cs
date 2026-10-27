@@ -21,8 +21,15 @@ namespace MuMech.MechJebKos
 
         protected override AscentType TargetType => AscentType.CLASSIC;
 
+        protected override EditableDouble InclinationSetting => AscentSettings.DesiredInclination;
+
         protected override void InitializeTypeSuffixes()
         {
+            AddSuffix("DESIREDALTITUDE", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredOrbitAltitude.Val,
+                value => AscentSettings.DesiredOrbitAltitude.Val = value, "Target orbit altitude (periapsis) in meters."));
+            AddSuffix("INCLINATION", new SetSuffix<ScalarValue>(() => AscentSettings.DesiredInclination.Val,
+                value => AscentSettings.DesiredInclination.Val = value, "Target orbital inclination in degrees."));
+
             AddSuffix("AUTOPATH", new SetSuffix<BooleanValue>(() => AscentSettings.AutoPath,
                 value => AscentSettings.AutoPath = value, "Automatically compute the gravity-turn path from the parameters below."));
 
@@ -46,6 +53,16 @@ namespace MuMech.MechJebKos
                 value => AscentSettings.CorrectiveSteering = value, "Enable corrective steering toward the target orbit."));
             AddSuffix("CORRECTIVESTEERINGGAIN", new SetSuffix<ScalarValue>(() => AscentSettings.CorrectiveSteeringGain.Val,
                 value => AscentSettings.CorrectiveSteeringGain.Val = value, "Corrective steering gain."));
+
+            AddSuffix("SKIPCIRCULARIZATION", new SetSuffix<BooleanValue>(() => AscentSettings.SkipCircularization,
+                value => AscentSettings.SkipCircularization = value, "Skip the circularization burn at apoapsis."));
+
+            AddSuffix("LIMITAOA", new SetSuffix<BooleanValue>(() => AscentSettings.LimitAoA,
+                value => AscentSettings.LimitAoA = value, "Enable the classic angle-of-attack limiter."));
+            AddSuffix("MAXAOA", new SetSuffix<ScalarValue>(() => AscentSettings.MaxAoA.Val,
+                value => AscentSettings.MaxAoA.Val = value, "Maximum angle of attack in degrees (classic limiter)."));
+            AddSuffix("AOALIMITFADEOUTPRESSURE", new SetSuffix<ScalarValue>(() => AscentSettings.AOALimitFadeoutPressure.Val,
+                value => AscentSettings.AOALimitFadeoutPressure.Val = value, "Dynamic pressure (Pa) at which the classic AoA limit fades out."));
         }
     }
 }
