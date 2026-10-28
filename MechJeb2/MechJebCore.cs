@@ -52,10 +52,9 @@ namespace MuMech
         public MechJebModuleSpinupController Spinup;
         public MechJebModuleHoverslamSimulation Hoverslam;
         public MechJebModuleSmartASS SmartASS;
-        public MechJebModuleInfoItems InfoItems;
         public MechJebModuleAscentBaseAutopilot Ascent => AscentSettings.AscentAutopilot;
 
-        public readonly VesselState VesselState;
+        public VesselState VesselState;
 
         [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "MechJeb")]
         [UI_Toggle(disabledText = "#MechJeb_Disabled", enabledText = "#MechJeb_Enabled")]
@@ -304,11 +303,6 @@ namespace MuMech
         private static Vessel _lastFocus;
 
         public bool someModuleAreLocked; // True if any module was locked by the R&D system
-
-        public MechJebCore()
-        {
-            VesselState = new VesselState(this);
-        }
 
         //Returns whether the vessel we've registered OnFlyByWire with is the correct one.
         //If it isn't the correct one, fixes it before returning false
@@ -762,6 +756,7 @@ namespace MuMech
                 Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules: " + e);
             }
 
+            VesselState = GetComputerModule<VesselState>();
             Attitude = GetComputerModule<MechJebModuleAttitudeController>();
             Staging = GetComputerModule<MechJebModuleStagingController>();
             Thrust = GetComputerModule<MechJebModuleThrustController>();
@@ -782,7 +777,6 @@ namespace MuMech
             Spinup = GetComputerModule<MechJebModuleSpinupController>();
             Hoverslam = GetComputerModule<MechJebModuleHoverslamSimulation>();
             SmartASS = GetComputerModule<MechJebModuleSmartASS>();
-            InfoItems = GetComputerModule<MechJebModuleInfoItems>();
         }
 
         public override void OnLoad(ConfigNode sfsNode)

@@ -206,7 +206,7 @@ namespace MuMech
         {
             double r = GetGroundRadius();
 
-            if (VesselState.MainBody is null || !Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
+            if (!Vessel.VesselOffGround() || Orbit.PeA > 0 || Orbit.ApR < r + VerticalAltitude)
             {
                 Reset();
                 return;

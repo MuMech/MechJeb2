@@ -138,7 +138,7 @@ namespace MuMech
                     try
                     {
                         targetUT = Vessel.orbit.NextTimeOfRadius(VesselState.Time,
-                            VesselState.MainBody.Radius + VesselState.MainBody.RealMaxAtmosphereAltitude());
+                            MainBody.Radius + MainBody.RealMaxAtmosphereAltitude());
                     }
                     catch
                     {
