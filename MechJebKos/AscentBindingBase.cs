@@ -101,6 +101,8 @@ namespace MuMech.MechJebKos
             Orbit targetOrbit = Core.Target.TargetOrbit;
             if (!Core.Target.NormalTargetExists || targetOrbit == null || targetOrbit.referenceBody != Core.vessel.mainBody)
                 throw new KOSException("Launch into plane requires a target in the same sphere of influence.");
+            if (!Core.vessel.LandedOrSplashed)
+                throw new KOSException("Launch into plane requires the vessel to be landed.");
 
             Engage();
             AscentSettings.LaunchingToPlane = true;

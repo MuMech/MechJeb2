@@ -94,11 +94,6 @@ namespace MuMech
                 _ascentSettings.SkipCircularization =
                     GUILayout.Toggle(_ascentSettings.SkipCircularization, CachedLocalizer.Instance.MechJebAscentCheckbox9); //Skip Circularization
             }
-            else
-            {
-                // skipCircularization is always true for Optimizer
-                _ascentSettings.SkipCircularization = true;
-            }
 
             GUILayout.EndHorizontal();
 
