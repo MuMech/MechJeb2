@@ -54,7 +54,8 @@ namespace MuMech
 
         private readonly EngineInfo _einfo = new EngineInfo();
 
-        private readonly Dictionary<ModuleEngines, ModuleGimbal?> _engines = new Dictionary<ModuleEngines, ModuleGimbal?>();
+        private readonly List<ModuleEngines> _engines = new List<ModuleEngines>();
+        private readonly List<ModuleGimbal> _gimbals = new List<ModuleGimbal>();
         private readonly IntakeInfo _iinfo = new IntakeInfo();
         public readonly List<EngineWrapper> EngineWrappers = new List<EngineWrapper>();
 
@@ -898,6 +899,7 @@ namespace MuMech
                 }
 
                 _engines.Clear();
+                _gimbals.Clear();
 
                 foreach (PartModule pm in p.Modules)
                 {
@@ -925,8 +927,8 @@ namespace MuMech
                         {
                             case ModuleEngines engine:
                                 {
-                                    if (!_engines.ContainsKey(engine))
-                                        _engines.Add(engine, null);
+                                    if (!_engines.Contains(engine))
+                                        _engines.Add(engine);
                                     break;
                                 }
                             case ModuleResourceIntake intake:
@@ -977,17 +979,9 @@ namespace MuMech
                                 }
                             case ModuleGimbal gimbal:
                                 {
-                                    if (gimbal.engineMultsList == null)
-                                        gimbal.CreateEngineList();
-
-                                    // ReSharper disable once NullableWarningSuppressionIsUsed
-                                    foreach (List<KeyValuePair<ModuleEngines, float>> engs in gimbal.engineMultsList!)
-                                    {
-                                        foreach (KeyValuePair<ModuleEngines, float> t in engs)
-                                        {
-                                            _engines[t.Key] = gimbal;
-                                        }
-                                    }
+                                    // A part can have several gimbals moving the thrust transforms of one engine, e.g. a
+                                    // main gimbal and roll verniers, so all of them are reset for the CoT calculation.
+                                    _gimbals.Add(gimbal);
 
                                     gimbal.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
@@ -1026,10 +1020,10 @@ namespace MuMech
                         vspme(pm);
                 }
 
-                foreach (KeyValuePair<ModuleEngines, ModuleGimbal?> engine in _engines)
+                foreach (ModuleEngines engine in _engines)
                 {
-                    einfo.AddNewEngine(engine.Key, engine.Value, EngineWrappers, ref CoT, ref DoT, ref CoTWeightSum);
-                    einfo.CheckUllageStatus(engine.Key);
+                    einfo.AddNewEngine(engine, _gimbals, EngineWrappers, ref CoT, ref DoT, ref CoTWeightSum);
+                    einfo.CheckUllageStatus(engine);
                 }
 
                 PureDragVector += partPureDrag;
@@ -1281,7 +1275,7 @@ namespace MuMech
         // variables later.
         public class EngineInfo
         {
-            private readonly Queue _rotSave = new Queue();
+            private readonly List<KeyValuePair<Transform, Quaternion>> _rotSave = new List<KeyValuePair<Transform, Quaternion>>();
 
             public readonly Dictionary<int, FuelRequirement> ResourceRequired = new Dictionary<int, FuelRequirement>();
 
@@ -1354,7 +1348,7 @@ namespace MuMech
                     LowestUllage = propellantStability;
             }
 
-            public void AddNewEngine(ModuleEngines e, ModuleGimbal? gimbal, List<EngineWrapper> enginesWrappers, ref Vector3d cot, ref Vector3d dot,
+            public void AddNewEngine(ModuleEngines e, List<ModuleGimbal> gimbals, List<EngineWrapper> enginesWrappers, ref Vector3d cot, ref Vector3d dot,
                 ref double coTWeightSum)
             {
                 // FIXME: shouldn't we gather statistics on unignited engines???
@@ -1412,13 +1406,15 @@ namespace MuMech
                 }
 
                 // Reset gimbals to default rotation
-                if (gimbal != null && !gimbal.gimbalLock)
+                foreach (ModuleGimbal gimbal in gimbals)
                 {
-                    _rotSave.Clear();
+                    if (gimbal.gimbalLock)
+                        continue;
+
                     for (int i = 0; i < gimbal.gimbalTransforms.Count; i++)
                     {
                         Transform gimbalTransform = gimbal.gimbalTransforms[i];
-                        _rotSave.Enqueue(gimbalTransform.localRotation);
+                        _rotSave.Add(new KeyValuePair<Transform, Quaternion>(gimbalTransform, gimbalTransform.localRotation));
                         gimbalTransform.localRotation = gimbal.initRots[i];
                     }
                 }
@@ -1464,12 +1460,10 @@ namespace MuMech
 
                 enginesWrappers.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
 
-                // Restore gimbals rotation
-                if (gimbal != null && !gimbal.gimbalLock)
-                {
-                    foreach (Transform t in gimbal.gimbalTransforms)
-                        t.localRotation = (Quaternion)_rotSave.Dequeue();
-                }
+                // Restore gimbals rotation, in reverse in case two gimbals share a transform
+                for (int i = _rotSave.Count - 1; i >= 0; i--)
+                    _rotSave[i].Key.localRotation = _rotSave[i].Value;
+                _rotSave.Clear();
 
                 if (e.useEngineResponseTime)
                 {
