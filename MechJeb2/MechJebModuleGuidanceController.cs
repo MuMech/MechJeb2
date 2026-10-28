@@ -325,6 +325,12 @@ namespace MuMech
                     RCSOn();
 
                 ThrustOff();
+
+                // We have to cut throttle precisely when a coast is planned in order to not overshoot.  If we have a relightable
+                // engine at that point we need to jettison it manually and auto-staging will not do that.  The gate here obviously
+                // should not do a jettison for coast-after/during because the stages should match, this affects coast-before/dedicated.
+                if (Vessel.currentStage > coastStage)
+                    Core.Staging.Stage();
             }
             else
             {

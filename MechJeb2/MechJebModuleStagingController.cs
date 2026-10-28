@@ -275,13 +275,9 @@ namespace MuMech
                 RegenerateCaches();
             }
 
-            // if autostage enabled, and if we've already staged at least once, and if there are stages left,
-            // and if we are allowed to continue staging, and if we didn't just fire the previous stage
-            if (_waitingForFirstStaging || Vessel.currentStage <= 0 || Vessel.currentStage <= AutostageLimit ||
-                VesselState.Time - _lastStageTime < AutostagePostDelay)
-            {
+            // enforce hard limits on staging.
+            if (_waitingForFirstStaging || Vessel.currentStage <= 0 || Vessel.currentStage <= AutostageLimit)
                 return;
-            }
 
             // this is for PSG preventing staging doing coasts, possibly it should be more specific of an API
             // (e.g. bool PSGIsCoasting) since it is getting tightly coupled.
@@ -388,12 +384,12 @@ namespace MuMech
             return false;
         }
 
-        // bypasses staging delays and immediately stages bypassing autostagePreDelay
+        // bypasses staging delays and other checks and immediately stages
         public void ImmediateStage()
         {
             if (InverseStageFiresDecoupler(Vessel.currentStage - 1))
             {
-                //if we decouple things, delay the next stage a bit to avoid exploding the debris
+                // track the last stage time for the post delay
                 _lastStageTime = VesselState.Time;
             }
 
@@ -431,8 +427,12 @@ namespace MuMech
 
         public void Stage()
         {
-            //When we find that we're allowed to stage, start a countdown (with a
-            //length given by autostagePreDelay) and only stage once that countdown finishes,
+            // do not stage if:  1. we have no more stages or 2. we've hit the user configured limit or 3. we're still in the post delay
+            // (this deliberately duplicates checks from OnFixedUpdate() for other callers)
+            if (Vessel.currentStage <= 0 || Vessel.currentStage <= AutostageLimit || VesselState.Time - _lastStageTime < AutostagePostDelay)
+                return;
+
+            // enforce the predelay
             if (!_countingDown)
             {
                 _countingDown = true;
@@ -440,9 +440,7 @@ namespace MuMech
             }
 
             if (VesselState.Time - _stageCountdownStart >= AutostagePreDelay)
-            {
                 ImmediateStage();
-            }
         }
 
         //determine whether it's safe to activate inverseStage

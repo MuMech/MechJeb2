@@ -50,7 +50,7 @@ namespace MuMech.MechJebKos
             AddSuffix("AUTOSTAGEONCE", new NoArgsVoidSuffix(() => Module.AutostageOnce(this),
                 "Autostage the next stage only."));
             AddSuffix("STAGE", new NoArgsVoidSuffix(() => Module.Stage(),
-                "Stage, respecting the pre-delay countdown."));
+                "Stage, respecting the pre-delay and post-delay countdowns and internal (PSG) limits."));
             AddSuffix("IMMEDIATESTAGE", new NoArgsVoidSuffix(() => Module.ImmediateStage(),
                 "Stage immediately, bypassing the pre-delay."));
         }
