@@ -11,6 +11,12 @@ namespace MuMech
 
         public static string GetCfgPath(string file) => Path.Combine(_cfgPath, file);
 
+        // Same sanitizer KSP uses for .craft filenames.  Unlike Path.GetInvalidFileNameChars() it doesn't vary by platform, so names
+        // saved on Linux/macOS can't produce files that break Windows/Proton.
+        public static string SanitizeFileName(string name) => KSPUtil.SanitizeString(name, '_', true);
+
+        public static string GetTypeCfgPath(string vesselName) => GetCfgPath("mechjeb_settings_type_" + SanitizeFileName(vesselName) + ".cfg");
+
         // Duplicates the KSP.IO.File.Exist style API where it creates the directory if it doesn't exist
         public static bool FileExistsCreateDirectory(string path)
         {
