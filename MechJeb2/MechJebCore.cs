@@ -836,19 +836,16 @@ namespace MuMech
                 }
 
                 var type = new ConfigNode("MechJebTypeSettings");
-                string vesselName =
-                    vessel != null
-                        ? string.Join("_", vessel.vesselName.Split(Path.GetInvalidFileNameChars()))
-                        : ""; // Strip illegal char from the filename
-                if (vessel != null && MuUtils.FileExistsCreateDirectory(MuUtils.GetCfgPath("mechjeb_settings_type_" + vesselName + ".cfg")))
+                string typePath = vessel != null ? MuUtils.GetTypeCfgPath(vessel.vesselName) : null;
+                if (typePath != null && MuUtils.FileExistsCreateDirectory(typePath))
                 {
                     try
                     {
-                        type = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_settings_type_" + vesselName + ".cfg"));
+                        type = ConfigNode.Load(typePath);
                     }
                     catch (Exception e)
                     {
-                        Debug.LogError("MechJebCore.OnLoad caught an exception trying to load mechjeb_settings_type_" + vesselName + ".cfg: " + e);
+                        Debug.LogError("MechJebCore.OnLoad caught an exception trying to load " + typePath + ": " + e);
                     }
                 }
 
@@ -1012,8 +1009,7 @@ namespace MuMech
                 Profiler.BeginSample("MechJebCore.OnSave.type");
                 if (type != null && vessel != null)
                 {
-                    string vesselName = string.Join("_", vessel.vesselName.Split(Path.GetInvalidFileNameChars())); // Strip illegal char from the filename
-                    type.Save(MuUtils.GetCfgPath("mechjeb_settings_type_" + vesselName + ".cfg"));
+                    type.Save(MuUtils.GetTypeCfgPath(vessel.vesselName));
                 }
 
                 Profiler.EndSample();

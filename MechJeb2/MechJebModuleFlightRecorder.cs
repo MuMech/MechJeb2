@@ -339,7 +339,7 @@ namespace MuMech
             if (!Directory.Exists(exportPath))
                 Directory.CreateDirectory(exportPath);
 
-            string vesselName = Vessel != null ? string.Join("_", Vessel.vesselName.Split(Path.GetInvalidFileNameChars())) : "";
+            string vesselName = Vessel != null ? MuUtils.SanitizeFileName(Vessel.vesselName) : "";
 
             string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 
