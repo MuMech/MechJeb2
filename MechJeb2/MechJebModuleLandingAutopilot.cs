@@ -346,7 +346,7 @@ namespace MuMech
 
         private void DeployParachutes()
         {
-            if (!(VesselState.MainBody.atmosphere && DeployChutes)) return;
+            if (!(MainBody.atmosphere && DeployChutes)) return;
 
             for (int i = 0; i < VesselState.Parachutes.Count; i++)
             {
@@ -369,7 +369,7 @@ namespace MuMech
         // This methods works out if there are any parachutes that are capable of being deployed
         public bool ParachutesDeployable()
         {
-            if (!VesselState.MainBody.atmosphere) return false;
+            if (!MainBody.atmosphere) return false;
             if (!DeployChutes) return false;
 
             for (int i = 0; i < VesselState.Parachutes.Count; i++)
@@ -481,7 +481,7 @@ namespace MuMech
         private double ParachuteAddedDragCoef()
         {
             double addedDragCoef = 0;
-            if (!VesselState.MainBody.atmosphere || !DeployChutes) return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
+            if (!MainBody.atmosphere || !DeployChutes) return addedDragCoef * PhysicsGlobals.DragCubeMultiplier;
 
             for (int i = 0; i < VesselState.Parachutes.Count; i++)
             {

@@ -110,7 +110,7 @@ namespace MuMech
             if (VesselState.AltitudeBottom > AscentSettings.PitchStartHeight)
             {
                 _mode = AscentMode.PITCHPROGRAM;
-                _pitchStartTime = Core.InfoItems.MET;
+                _pitchStartTime = VesselState.MET;
                 return;
             }
 
@@ -120,7 +120,7 @@ namespace MuMech
 
         private void DrivePitchProgram()
         {
-            double dt = Core.InfoItems.MET - _pitchStartTime;
+            double dt = VesselState.MET - _pitchStartTime;
             double theta = dt * AscentSettings.PitchRate;
             double pitch = 90 - theta;
 

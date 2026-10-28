@@ -260,8 +260,6 @@ namespace MuMech
             var sw = new Stopwatch();
             sw.Start();
 
-            RegisterInfoItems(VesselState);
-
             foreach (ComputerModule m in Core.GetComputerModules<ComputerModule>())
                 RegisterInfoItems(m);
 

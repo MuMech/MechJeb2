@@ -12,7 +12,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    public class VesselState
+    public class VesselState : ComputerModule
     {
         // Callbacks for external module
         public delegate void VesselStatePartExtension(Part p);
@@ -88,8 +88,6 @@ namespace MuMech
         //FARCalculateVesselAeroForces(vessel,out farForce,out farTorque,surfaceVelocity,altitudeASL);
         private Vector3 _lastFarForce;
         private Vector3d _lastSurfaceVelocity;
-
-        private Vessel _vessel => _core.vessel;
 
         [ValueInfoItem("#MechJeb_Altitude_ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Altitude (ASL)
         public double AltitudeASL;
@@ -198,8 +196,6 @@ namespace MuMech
 
         [ValueInfoItem("#MechJeb_Mach", InfoItem.Category.Vessel, format = "F2")] //Mach
         public double Mach;
-
-        public CelestialBody? MainBody;
 
         public double Mass;
 
@@ -331,12 +327,16 @@ namespace MuMech
         public Vector3d Up;
 
         public Vector3d VelocityMainBodySurface;
-        private readonly MechJebCore _core;
 
+        // useful to track time since launch event (works around bugs with physics starting early and vessel.launchTime being wildly off)
+        [Persistent(pass = (int)Pass.LOCAL)]
+        public double LaunchTime = -1;
 
         public VesselState(MechJebCore core)
+            : base(core)
         {
-            _core = core;
+            Priority = -10000;
+            Enabled  = true;
         }
 
         static VesselState()
@@ -428,7 +428,7 @@ namespace MuMech
         {
             get
             {
-                float limit = _core.Thrust.ThrottleFixedLimit;
+                float limit = Core.Thrust.ThrottleFixedLimit;
                 return MaxThrustAcceleration * limit + MinThrustAcceleration * (1 - limit);
             }
         }
@@ -448,12 +448,31 @@ namespace MuMech
             }
         }
 
+        // various events can cause LaunchTime to be before or after vessel.launchTime, but the most recent one is so far always the most accurate
+        // (physics wobbles can start vessel.launchTime (KSP's zero MET) early, while staging can cause LaunchTime to happen early)
+        // this will only be valid AFTER launching
+        [ValueInfoItem("Mission Elapsed Time", InfoItem.Category.Recorder, format = ValueInfoItem.TIME, timeDecimalPlaces = 1)]
+        public double MET => Time - Math.Max(LaunchTime, Vessel.launchTime);
+
         [GeneralInfoItem("#MechJeb_DebugString", InfoItem.Category.Misc, showInEditor = true)] //Debug String
         public void DebugString()
         {
             GUILayout.BeginVertical();
             GUILayout.Label(Message);
             GUILayout.EndVertical();
+        }
+
+        public override void OnStart(PartModule.StartState state) => GameEvents.onLaunch.Add(OnLaunch);
+
+        public override void OnDestroy() => GameEvents.onLaunch.Remove(OnLaunch);
+
+        private void OnLaunch(EventReport report)
+        {
+            // onLaunch carries no vessel and is only fired for the active vessel
+            if (Vessel != FlightGlobals.ActiveVessel) return;
+
+            LaunchTime = Time;
+            Debug.Log("[VesselState] LaunchTime = " + LaunchTime);
         }
 
         //public static bool SupportsGimbalExtension<T>() where T : PartModule
@@ -471,21 +490,20 @@ namespace MuMech
             if (Time == Planetarium.GetUniversalTime())
                 return true;
 
-            if (_vessel.rootPart.rb == null)
+            if (Vessel.rootPart.rb == null)
                 return false; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
 
             UpdateVelocityAndCoM();
 
             UpdateBasicInfo();
 
-            // done here rather than in a module's OnFixedUpdate() so it is current before both the OnFixedUpdate() and Drive() paths
-            _core.InfoItems.FixupLaunchTime();
+            FixupLaunchTime();
 
             UpdateRCSThrustAndTorque();
 
             EngineWrappers.Clear();
 
-            _einfo.Update(CoM, _vessel);
+            _einfo.Update(CoM, Vessel);
             _iinfo.Update();
             AnalyzeParts(_einfo, _iinfo);
 
@@ -504,10 +522,10 @@ namespace MuMech
 
         private void UpdateVelocityAndCoM()
         {
-            Mass = _vessel.totalMass;
-            CoM = _vessel.CoMD;
-            OrbitalVelocity = _vessel.obt_velocity;
-            OrbitalPosition = CoM - _vessel.mainBody.position;
+            Mass = Vessel.totalMass;
+            CoM = Vessel.CoMD;
+            OrbitalVelocity = Vessel.obt_velocity;
+            OrbitalPosition = CoM - Vessel.mainBody.position;
         }
 
         // Calculate a bunch of simple quantities each frame.
@@ -519,31 +537,31 @@ namespace MuMech
             //CoM = °;
             Up = OrbitalPosition.normalized;
 
-            Rigidbody rigidBody = _vessel.rootPart.rb;
+            Rigidbody rigidBody = Vessel.rootPart.rb;
             if (rigidBody != null) RootPartPosition = rigidBody.position;
 
-            North = _vessel.north;
-            East = _vessel.east;
-            Forward = _vessel.GetTransform().up;
+            North = Vessel.north;
+            East = Vessel.east;
+            Forward = Vessel.GetTransform().up;
             RotationSurface = Quaternion.LookRotation(North, Up);
             RotationVesselSurface =
-                Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(_vessel.GetTransform().rotation) * RotationSurface);
+                Quaternion.Inverse(Quaternion.Euler(90, 0, 0) * Quaternion.Inverse(Vessel.GetTransform().rotation) * RotationSurface);
 
-            SurfaceVelocity = OrbitalVelocity - _vessel.mainBody.getRFrmVel(CoM);
+            SurfaceVelocity = OrbitalVelocity - Vessel.mainBody.getRFrmVel(CoM);
 
             VelocityMainBodySurface = RotationSurface * SurfaceVelocity;
 
             HorizontalOrbit = Vector3d.Exclude(Up, OrbitalVelocity).normalized;
             HorizontalSurface = Vector3d.Exclude(Up, SurfaceVelocity).normalized;
 
-            AngularVelocity = _vessel.angularVelocity;
+            AngularVelocity = Vessel.angularVelocity;
 
             RadialPlusSurface = Vector3d.Exclude(SurfaceVelocity, Up).normalized;
             RadialPlus = Vector3d.Exclude(OrbitalVelocity, Up).normalized;
             NormalPlusSurface = -Vector3d.Cross(RadialPlusSurface, SurfaceVelocity.normalized);
             NormalPlus = -Vector3d.Cross(RadialPlus, OrbitalVelocity.normalized);
 
-            Mach = _vessel.mach;
+            Mach = Vessel.mach;
 
             GravityForce = FlightGlobals.getGeeForceAtPosition(CoM); // TODO vessel.gravityForPos or vessel.gravityTrue
             LocalGravity = GravityForce.magnitude;
@@ -556,20 +574,20 @@ namespace MuMech
             SpeedOrbitalHorizontal = (OrbitalVelocity - SpeedVertical * Up).magnitude;
 
             // Angle of Attack, angle between surface velocity and the ship-nose vector (KSP "up" vector) in the plane that has no ship-right/left in it
-            var srfProj = Vector3.ProjectOnPlane(SurfaceVelocity.normalized, _vessel.ReferenceTransform.right);
-            double tmpAoA = UtilMath.Rad2Deg * Math.Atan2(Vector3.Dot(srfProj.normalized, _vessel.ReferenceTransform.forward),
-                Vector3.Dot(srfProj.normalized, _vessel.ReferenceTransform.up));
+            var srfProj = Vector3.ProjectOnPlane(SurfaceVelocity.normalized, Vessel.ReferenceTransform.right);
+            double tmpAoA = UtilMath.Rad2Deg * Math.Atan2(Vector3.Dot(srfProj.normalized, Vessel.ReferenceTransform.forward),
+                Vector3.Dot(srfProj.normalized, Vessel.ReferenceTransform.up));
             AoA = double.IsNaN(tmpAoA) || SpeedSurface < 0.01 ? 0 : tmpAoA;
 
             // Angle of Sideslip, angle between surface velocity and the ship-nose vector (KSP "up" vector) in the plane that has no ship-top/bottom in it (KSP "forward"/"back")
-            srfProj = Vector3.ProjectOnPlane(SurfaceVelocity.normalized, _vessel.ReferenceTransform.forward);
-            double tmpAoS = UtilMath.Rad2Deg * Math.Atan2(Vector3.Dot(srfProj.normalized, _vessel.ReferenceTransform.right),
-                Vector3.Dot(srfProj.normalized, _vessel.ReferenceTransform.up));
+            srfProj = Vector3.ProjectOnPlane(SurfaceVelocity.normalized, Vessel.ReferenceTransform.forward);
+            double tmpAoS = UtilMath.Rad2Deg * Math.Atan2(Vector3.Dot(srfProj.normalized, Vessel.ReferenceTransform.right),
+                Vector3.Dot(srfProj.normalized, Vessel.ReferenceTransform.up));
             AoS = double.IsNaN(tmpAoS) || SpeedSurface < 0.01 ? 0 : tmpAoS;
 
             // Displacement Angle, angle between surface velocity and the ship-nose vector (KSP "up" vector) -- ignores roll of the craft (0 to 180 degrees)
             double tempAoD = UtilMath.Rad2Deg *
-                Math.Acos(Clamp(Vector3.Dot(_vessel.ReferenceTransform.up, SurfaceVelocity.normalized), -1, 1));
+                Math.Acos(Clamp(Vector3.Dot(Vessel.ReferenceTransform.up, SurfaceVelocity.normalized), -1, 1));
             AoD = double.IsNaN(tempAoD) || SpeedSurface < 0.01 ? 0 : tempAoD;
 
             // Fix Unity Left-Handed NEU eulerAngles to Right-Handed NED
@@ -577,16 +595,16 @@ namespace MuMech
             Pitch = Clamp180(-RotationVesselSurface.eulerAngles.x);
             Roll = Clamp180(-RotationVesselSurface.eulerAngles.z);
 
-            AltitudeASL = _vessel.mainBody.GetAltitude(CoM);
+            AltitudeASL = Vessel.mainBody.GetAltitude(CoM);
 
-            SurfaceAltitudeASL = _vessel.mainBody.pqsController != null ? _vessel.pqsAltitude : 0d;
-            if (_vessel.mainBody.ocean && SurfaceAltitudeASL < 0) SurfaceAltitudeASL = 0;
+            SurfaceAltitudeASL = Vessel.mainBody.pqsController != null ? Vessel.pqsAltitude : 0d;
+            if (Vessel.mainBody.ocean && SurfaceAltitudeASL < 0) SurfaceAltitudeASL = 0;
             AltitudeTrue = AltitudeASL - SurfaceAltitudeASL;
 
             // altitudeBottom will be recomputed if someone requests it.
             _altitudeBottomIsCurrent = false;
 
-            double atmosphericPressure = FlightGlobals.getStaticPressure(AltitudeASL, _vessel.mainBody);
+            double atmosphericPressure = FlightGlobals.getStaticPressure(AltitudeASL, Vessel.mainBody);
             //if (atmosphericPressure < vessel.mainBody.atmosphereMultiplier * 1e-6) atmosphericPressure = 0;
             double temperature = FlightGlobals.getExternalTemperature(AltitudeASL);
             AtmosphericDensity = FlightGlobals.getAtmDensity(atmosphericPressure, temperature);
@@ -599,29 +617,29 @@ namespace MuMech
             FreeMolecularAerothermalFlux = 0.5 * AtmosphericDensity * SpeedSurface * SpeedSurface * SpeedSurface;
 
 
-            SpeedOfSound = _vessel.speedOfSound;
+            SpeedOfSound = Vessel.speedOfSound;
 
-            OrbitApA = _vessel.orbit.ApA;
-            OrbitPeA = _vessel.orbit.PeA;
-            OrbitPeriod = _vessel.orbit.period;
-            OrbitTimeToAp = _vessel.orbit.timeToAp;
-            OrbitTimeToPe = _vessel.orbit.timeToPe;
+            OrbitApA = Vessel.orbit.ApA;
+            OrbitPeA = Vessel.orbit.PeA;
+            OrbitPeriod = Vessel.orbit.period;
+            OrbitTimeToAp = Vessel.orbit.timeToAp;
+            OrbitTimeToPe = Vessel.orbit.timeToPe;
 
-            OrbitLAN = _vessel.orbit.LAN;
+            OrbitLAN = Vessel.orbit.LAN;
 
-            OrbitArgumentOfPeriapsis = _vessel.orbit.argumentOfPeriapsis;
-            OrbitInclination = _vessel.orbit.inclination;
-            OrbitEccentricity = _vessel.orbit.eccentricity;
-            OrbitSemiMajorAxis = _vessel.orbit.semiMajorAxis;
+            OrbitArgumentOfPeriapsis = Vessel.orbit.argumentOfPeriapsis;
+            OrbitInclination = Vessel.orbit.inclination;
+            OrbitEccentricity = Vessel.orbit.eccentricity;
+            OrbitSemiMajorAxis = Vessel.orbit.semiMajorAxis;
             CelestialLongitude = Planetarium.right.AngleInPlane(-Planetarium.up, OrbitalPosition);
-            Latitude = _vessel.mainBody.GetLatitude(CoM);
-            Longitude = Clamp180(_vessel.mainBody.GetLongitude(CoM));
+            Latitude = Vessel.mainBody.GetLatitude(CoM);
+            Longitude = Clamp180(Vessel.mainBody.GetLongitude(CoM));
 
-            if (_vessel.mainBody != Planetarium.fetch.Sun)
+            if (Vessel.mainBody != Planetarium.fetch.Sun)
             {
-                Vector3d prograde = _vessel.mainBody.orbit.getOrbitalVelocityAtUT(Time).xzy;
-                Vector3d normal = _vessel.mainBody.orbit.GetOrbitNormal().xzy;
-                AngleToPrograde = Clamp360((_vessel.orbit.inclination > 90 || _vessel.orbit.inclination < -90 ? 1 : -1) *
+                Vector3d prograde = Vessel.mainBody.orbit.getOrbitalVelocityAtUT(Time).xzy;
+                Vector3d normal = Vessel.mainBody.orbit.GetOrbitNormal().xzy;
+                AngleToPrograde = Clamp360((Vessel.orbit.inclination > 90 || Vessel.orbit.inclination < -90 ? 1 : -1) *
                     OrbitalPosition.AngleInPlane(normal, prograde));
             }
             else
@@ -629,19 +647,25 @@ namespace MuMech
                 AngleToPrograde = 0;
             }
 
-            MainBody = _vessel.mainBody;
-
             Radius = OrbitalPosition.magnitude;
+        }
+
+        private void FixupLaunchTime()
+        {
+            // continuously update the LaunchTime if we're sitting on the ground on the water anywhere (once we are not, then we've launched)
+            if (Vessel.situation == Vessel.Situations.LANDED || Vessel.situation == Vessel.Situations.PRELAUNCH ||
+                Vessel.situation == Vessel.Situations.SPLASHED)
+                LaunchTime = Time;
         }
 
         private double GetDynamicPressure()
         {
             if (ReflectionUtils.IsLoadedFAR)
             {
-                return FARVesselDynPres.Call(_vessel) * 1000;
+                return FARVesselDynPres.Call(Vessel) * 1000;
             }
 
-            return _vessel.dynamicPressurekPa * 1000;
+            return Vessel.dynamicPressurekPa * 1000;
         }
 
         private void UpdateRCSThrustAndTorque()
@@ -651,10 +675,10 @@ namespace MuMech
 
             //torqueRcs.Reset();
 
-            if (!_vessel.ActionGroups[KSPActionGroup.RCS])
+            if (!Vessel.ActionGroups[KSPActionGroup.RCS])
                 return;
 
-            MechJebModuleRCSBalancer rcsbal = _vessel.GetMasterMechJeb().Rcsbal;
+            MechJebModuleRCSBalancer rcsbal = Vessel.GetMasterMechJeb().Rcsbal;
             if (rcsbal.Enabled)
             {
                 Vector3d rot = Vector3d.zero;
@@ -670,15 +694,15 @@ namespace MuMech
 
                         Vector3d force = thrusters[j].GetThrust(dir, rot);
                         RCSThrustAvailable.Add(
-                            _vessel.GetTransform().InverseTransformDirection(dir * Vector3d.Dot(force * throttles[j], dir)));
+                            Vessel.GetTransform().InverseTransformDirection(dir * Vector3d.Dot(force * throttles[j], dir)));
                         // Are we missing an rcsTorqueAvailable calculation here?
                     }
                 }
             }
 
-            Vector3d movingCoM = _vessel.CurrentCoM;
+            Vector3d movingCoM = Vessel.CurrentCoM;
 
-            foreach (Part p in _vessel.parts)
+            foreach (Part p in Vessel.parts)
             {
                 foreach (PartModule m in p.Modules)
                 {
@@ -739,14 +763,14 @@ namespace MuMech
                         // This is a cheap hack to get rcsTorque with the RCS balancer active.
                         if (!rcsbal.Enabled)
                         {
-                            RCSThrustAvailable.Add(Vector3.Scale(_vessel.GetTransform().InverseTransformDirection(thrusterThrust),
+                            RCSThrustAvailable.Add(Vector3.Scale(Vessel.GetTransform().InverseTransformDirection(thrusterThrust),
                                 translationControl));
                         }
 
                         Vector3d thrusterTorque = Vector3.Cross(thrusterPosition, thrusterThrust);
 
                         // Convert in vessel local coordinate
-                        RCSTorqueAvailable.Add(Vector3.Scale(_vessel.GetTransform().InverseTransformDirection(thrusterTorque), attitudeControl));
+                        RCSTorqueAvailable.Add(Vector3.Scale(Vessel.GetTransform().InverseTransformDirection(thrusterTorque), attitudeControl));
                     }
                 }
             }
@@ -828,8 +852,8 @@ namespace MuMech
 
             if (ReflectionUtils.IsLoadedFAR)
             {
-                DragCoefficient = FARVesselDragCoeff.Call(_vessel);
-                AreaDrag = FARVesselRefArea.Call(_vessel) * DragCoefficient * PhysicsGlobals.DragMultiplier;
+                DragCoefficient = FARVesselDragCoeff.Call(Vessel);
+                AreaDrag = FARVesselRefArea.Call(Vessel) * DragCoefficient * PhysicsGlobals.DragMultiplier;
             }
             else
             {
@@ -845,7 +869,7 @@ namespace MuMech
             CoTWeightSum = 0;
             ThrustForward = Vector3d.zero;
 
-            foreach (Part p in _vessel.parts)
+            foreach (Part p in Vessel.parts)
             {
                 Vector3d partPureLift = Vector3.zero;
                 Vector3d partPureDrag = -p.dragVectorDir * p.dragScalar;
@@ -1079,11 +1103,11 @@ namespace MuMech
             if (CoLWeightSum > 0)
                 CoL /= CoLWeightSum;
 
-            Vector3d liftDir = -Vector3d.Cross(_vessel.transform.right, -SurfaceVelocity.normalized);
+            Vector3d liftDir = -Vector3d.Cross(Vessel.transform.right, -SurfaceVelocity.normalized);
 
-            if (ReflectionUtils.IsLoadedFAR && !_vessel.packed && SurfaceVelocity != Vector3d.zero)
+            if (ReflectionUtils.IsLoadedFAR && !Vessel.packed && SurfaceVelocity != Vector3d.zero)
             {
-                CalculateVesselAeroForcesWithCache(_vessel, out Vector3 farForce, SurfaceVelocity, AltitudeASL);
+                CalculateVesselAeroForcesWithCache(Vessel, out Vector3 farForce, SurfaceVelocity, AltitudeASL);
 
                 Vector3d farDragVector = Vector3d.Dot(farForce, -SurfaceVelocity.normalized) * -SurfaceVelocity.normalized;
                 DragForce = farDragVector.magnitude;
@@ -1176,7 +1200,7 @@ namespace MuMech
                     req.RequiredLastFrame,
                     req.RequiredAtMaxThrottle,
                     iinfo.GetIntakes(id),
-                    _vessel);
+                    Vessel);
             }
 
             int intakeAirId = PartResourceLibrary.Instance.GetDefinition("IntakeAir").id;
@@ -1196,7 +1220,7 @@ namespace MuMech
         // Decide whether to control the RCS thrusters from the main throttle
         private void ToggleRCSThrust()
         {
-            if (ThrustVectorMaxThrottle.magnitude == 0 && _vessel.ActionGroups[KSPActionGroup.RCS])
+            if (ThrustVectorMaxThrottle.magnitude == 0 && Vessel.ActionGroups[KSPActionGroup.RCS])
             {
                 RCSThrust = true;
                 ThrustVectorMaxThrottle += Forward * RCSThrustAvailable.Down;
@@ -1209,20 +1233,20 @@ namespace MuMech
 
         private void UpdateMoIAndAngularMom()
         {
-            MoI = _vessel.MOI;
-            AngularMomentum = _vessel.angularMomentum;
+            MoI = Vessel.MOI;
+            AngularMomentum = Vessel.angularMomentum;
         }
 
         [ValueInfoItem("#MechJeb_TerminalVelocity", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s")] //Terminal velocity
         public double TerminalVelocity()
         {
             if (ReflectionUtils.IsLoadedFAR)
-                return FARVesselTermVelEst.Call(_vessel);
+                return FARVesselTermVelEst.Call(Vessel);
 
-            if (MainBody == null || AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
+            if (AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
                 return double.PositiveInfinity;
 
-            return Math.Sqrt(2000 * Mass * LocalGravity / (AreaDrag * _vessel.atmDensity));
+            return Math.Sqrt(2000 * Mass * LocalGravity / (AreaDrag * Vessel.atmDensity));
         }
 
         public double ThrustAccel(double throttle) => (1.0 - throttle) * MinThrustAcceleration + throttle * MaxThrustAcceleration;
@@ -1232,9 +1256,9 @@ namespace MuMech
 
         private double ComputeVesselBottomAltitude()
         {
-            if (_vessel == null || _vessel.rootPart.rb == null) return 0;
+            if (Vessel == null || Vessel.rootPart.rb == null) return 0;
             double ret = AltitudeTrue;
-            foreach (Part p in _vessel.parts)
+            foreach (Part p in Vessel.parts)
             {
                 if (p.collider == null) continue;
 
@@ -1244,7 +1268,7 @@ namespace MuMech
                 Bounds bounds = p.collider.bounds;
                 Vector3 extents = bounds.extents;
                 float partRadius = Mathf.Max(extents[0], Mathf.Max(extents[1], extents[2]));
-                double partAltitudeBottom = _vessel.mainBody.GetAltitude(bounds.center) - partRadius - SurfaceAltitudeASL;
+                double partAltitudeBottom = Vessel.mainBody.GetAltitude(bounds.center) - partRadius - SurfaceAltitudeASL;
                 partAltitudeBottom = Math.Max(0, partAltitudeBottom);
                 if (partAltitudeBottom < ret)
                     ret = partAltitudeBottom;
