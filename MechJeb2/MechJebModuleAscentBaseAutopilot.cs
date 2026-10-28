@@ -22,17 +22,14 @@ namespace MuMech
         public double TMinus => _launchTime - VesselState.Time;
 
         //internal state:
-        private enum AscentMode { PRELAUNCH, ASCEND, CIRCULARIZE }
+        private enum AscentMode { PRELAUNCH, ASCEND }
 
         private AscentMode _mode;
-        private bool _placedCircularizeNode;
         private double _lastTMinus = 999;
 
         protected override void OnModuleEnabled()
         {
             _mode = AscentMode.PRELAUNCH;
-
-            _placedCircularizeNode = false;
 
             Core.Attitude.Users.Add(this);
             Core.Thrust.Users.Add(this);
@@ -48,8 +45,6 @@ namespace MuMech
                 Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
             Core.Staging.Users.Remove(this);
-
-            if (_placedCircularizeNode) Core.Node.Abort();
 
             Status = Localizer.Format("#MechJeb_Ascent_status2"); //"Off"
         }
@@ -102,10 +97,6 @@ namespace MuMech
 
                 case AscentMode.ASCEND:
                     DriveAscent();
-                    break;
-
-                case AscentMode.CIRCULARIZE:
-                    DriveCircularizationBurn();
                     break;
             }
         }
@@ -189,100 +180,13 @@ namespace MuMech
             }
             else
             {
-                if (GameSettings.VERBOSE_DEBUG_LOG) { Debug.Log("Ascend -> Circularize"); }
+                if (GameSettings.VERBOSE_DEBUG_LOG) { Debug.Log("Ascend -> Done"); }
 
-                _mode = AscentMode.CIRCULARIZE;
-            }
-        }
-
-        private void DriveCircularizationBurn()
-        {
-            if (!Vessel.patchedConicsUnlocked() || AscentSettings.SkipCircularization)
-            {
                 Users.Clear();
-                return;
             }
-
-            DriveDeployableComponents();
-
-            if (_placedCircularizeNode)
-            {
-                if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
-                {
-                    //finished circularize
-                    Users.Clear();
-                    return;
-                }
-            }
-            else
-            {
-                //place circularization node
-                Vessel.RemoveAllManeuverNodes();
-                double ut = Orbit.NextApoapsisTime(VesselState.Time);
-                //During the circularization burn, try to correct any inclination errors because it's better to combine the two burns.
-                //  For example, if you're about to do a 1500 m/s circularization burn, if you combine a 200 m/s inclination correction
-                //  into it, you actually only spend 1513 m/s to execute combined manuver.  Mechjeb should also do correction burns before
-                //  this if possible, and this can't correct all errors... but it's better then nothing.
-                //   (A better version of this should try to match inclination & LAN if target is specified)
-                // FIXME? this inclination correction is unlikely to be at tha AN/DN and will throw the LAN off with anything other than high
-                // TWR launches from equatorial launch sites -- should probably be made optional (or clip it if the correction is too large).
-                Vector3d inclinationCorrection =
-                    OrbitalManeuverCalculator.DeltaVToChangeInclination(Orbit, ut, AscentSettings.DesiredInclination);
-                // Circularize on the perturbed orbit rather than fixing the SMA to the desired altitude.  This
-                // avoids errors that creep in when the orbit at this point is inaccurate while still circularizing.
-                Vector3d circularizeCorrection =
-                    OrbitalManeuverCalculator.DeltaVToCircularize(Orbit.PerturbedOrbit(ut, inclinationCorrection), ut);
-                Vector3d dV = inclinationCorrection + circularizeCorrection;
-                Vessel.PlaceManeuverNode(Orbit, dV, ut);
-                _placedCircularizeNode = true;
-
-                Core.Node.ExecuteOneNode(this);
-            }
-
-            Status = Localizer.Format(
-                Core.Node.State == MechJebModuleNodeExecutor.States.BURN ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8");
         }
 
         protected abstract bool DriveAscent2();
-
-        //data used by ThrottleToRaiseApoapsis
-        private float _raiseApoapsisLastThrottle;
-        private double _raiseApoapsisLastApR;
-        private double _raiseApoapsisLastUT;
-        private readonly MovingAverage _raiseApoapsisRatePerThrottle = new MovingAverage(3);
-
-        //gives a throttle setting that reduces as we approach the desired apoapsis
-        //so that we can precisely match the desired apoapsis instead of overshooting it
-        protected float ThrottleToRaiseApoapsis(double currentApR, double finalApR)
-        {
-            float desiredThrottle;
-
-            if (currentApR > finalApR + 5.0)
-            {
-                desiredThrottle = 0.0F; //done, throttle down
-            }
-            else if (_raiseApoapsisLastUT > VesselState.Time - 1)
-            {
-                //reduce throttle as apoapsis nears target
-                double instantRatePerThrottle =
-                    (Orbit.ApR - _raiseApoapsisLastApR) / ((VesselState.Time - _raiseApoapsisLastUT) * _raiseApoapsisLastThrottle);
-                instantRatePerThrottle = Math.Max(1.0, instantRatePerThrottle); //avoid problems from negative rates
-                _raiseApoapsisRatePerThrottle.Value = instantRatePerThrottle;
-                double desiredApRate = (finalApR - currentApR) / 1.0;
-                desiredThrottle = Mathf.Clamp((float)(desiredApRate / _raiseApoapsisRatePerThrottle), 0.05F, 1.0F);
-            }
-            else
-            {
-                desiredThrottle = 1.0F; //no recent data point; just use max thrust.
-            }
-
-            //record data for next frame
-            _raiseApoapsisLastThrottle = desiredThrottle;
-            _raiseApoapsisLastApR = Orbit.ApR;
-            _raiseApoapsisLastUT = VesselState.Time;
-
-            return desiredThrottle;
-        }
 
         protected double SrfvelPitch() => 90.0 - Vector3d.Angle(VesselState.SurfaceVelocity, VesselState.Up);
 
@@ -302,13 +206,7 @@ namespace MuMech
         // provides AoA limiting and roll control
         protected void AttitudeTo(Vector3d desiredThrustVector)
         {
-            desiredThrustVector = desiredThrustVector.normalized;
-
-            // FIXME: extract the PSG Autopilot from this whole mess.
-            if (Core.PSGSimulation.Enabled) /* AoA limiter for PSG */
-                desiredThrustVector = ApplyQAlphaAoALimiter(desiredThrustVector);
-            else if (AscentSettings.LimitAoA) /* old style AoA limiter */
-                desiredThrustVector = ApplyStockAOALimiter(desiredThrustVector);
+            desiredThrustVector = ApplyAoALimiter(desiredThrustVector.normalized);
 
             // calculate pitch and heading after applying AoA limiter
             double pitch = 90 - Vector3d.Angle(desiredThrustVector, VesselState.Up);
@@ -334,29 +232,6 @@ namespace MuMech
             Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && AscentSettings.ForceRoll && VesselState.AltitudeBottom > AscentSettings.RollAltitude);
         }
 
-        private Vector3d ApplyQAlphaAoALimiter(Vector3d desiredThrustVector)
-        {
-            double lim = Clamp(Core.PSGSimulation.LimitQa, 0, 10000);
-            AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
-            if (AscentSettings.LimitingAoA)
-            {
-                CurrentMaxAoA = lim / VesselState.DynamicPressure * UtilMath.Rad2Deg;
-                desiredThrustVector = MathExtensions.RotateTowards(VesselState.SurfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
-            }
-
-            return desiredThrustVector;
-        }
-
-        private Vector3d ApplyStockAOALimiter(Vector3d desiredThrustVector)
-        {
-            double fade = VesselState.DynamicPressure < AscentSettings.AOALimitFadeoutPressure ? AscentSettings.AOALimitFadeoutPressure / VesselState.DynamicPressure : 1;
-            CurrentMaxAoA = Math.Min(fade * AscentSettings.MaxAoA, 180d);
-            AscentSettings.LimitingAoA = Vessel.altitude < MainBody.atmosphereDepth && Vector3d.Angle(VesselState.SurfaceVelocity, desiredThrustVector) > CurrentMaxAoA;
-
-            if (AscentSettings.LimitingAoA)
-                desiredThrustVector = MathExtensions.RotateTowards(VesselState.SurfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * Mathf.Deg2Rad), 1).normalized;
-
-            return desiredThrustVector;
-        }
+        protected abstract Vector3d ApplyAoALimiter(Vector3d desiredThrustVector);
     }
 }

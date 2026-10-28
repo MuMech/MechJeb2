@@ -122,6 +122,9 @@ namespace MuMech.MechJebKos
 
         private ScalarValue LaunchToLan(ScalarValue degrees)
         {
+            if (!Core.vessel.LandedOrSplashed)
+                throw new KOSException("Launch to LAN requires the vessel to be landed.");
+
             Engage();
             AscentSettings.LaunchingToLan = true;
             Core.PSGSimulation.LAN.Val = degrees;
@@ -144,6 +147,8 @@ namespace MuMech.MechJebKos
             Orbit targetOrbit = Core.Target.TargetOrbit;
             if (!Core.Target.NormalTargetExists || targetOrbit == null || targetOrbit.referenceBody != Core.vessel.mainBody)
                 throw new KOSException("Launch to target LAN requires a target in the same sphere of influence.");
+            if (!Core.vessel.LandedOrSplashed)
+                throw new KOSException("Launch to target LAN requires the vessel to be landed.");
 
             Engage();
             AscentSettings.LaunchingToMatchLan = true;

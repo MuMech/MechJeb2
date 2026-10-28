@@ -2,6 +2,7 @@ extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 /*
  * Optimized launches for RSS/RO
@@ -165,6 +166,19 @@ namespace MuMech
                 Status = $"Stable Guidance: {ang:F}° deviation";
                 AttitudeTo(Core.Guidance.Inertial);
             }
+        }
+
+        protected override Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
+        {
+            double lim = Clamp(Core.PSGSimulation.LimitQa, 0, 10000);
+            AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
+            if (AscentSettings.LimitingAoA)
+            {
+                CurrentMaxAoA = lim / VesselState.DynamicPressure * UtilMath.Rad2Deg;
+                desiredThrustVector = MathExtensions.RotateTowards(VesselState.SurfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
+            }
+
+            return desiredThrustVector;
         }
     }
 }
