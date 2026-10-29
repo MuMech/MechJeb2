@@ -1,8 +1,6 @@
-﻿using System;
-using KSP.Localization;
+﻿using KSP.Localization;
 using KSP.UI.Screens;
 using UnityEngine;
-using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -191,37 +189,5 @@ namespace MuMech
         protected double SrfvelPitch() => 90.0 - Vector3d.Angle(VesselState.SurfaceVelocity, VesselState.Up);
 
         protected double SrfvelHeading() => VesselState.HeadingFromDirection(VesselState.SurfaceVelocity.ProjectOnPlane(VesselState.Up));
-
-        protected void AttitudeTo(double desiredPitch, double desiredHeading)
-        {
-            Vector3d desiredHeadingVector = Math.Sin(desiredHeading * UtilMath.Deg2Rad) * VesselState.East +
-                Math.Cos(desiredHeading * UtilMath.Deg2Rad) * VesselState.North;
-
-            Vector3d desiredThrustVector = Math.Cos(desiredPitch * UtilMath.Deg2Rad) * desiredHeadingVector
-                + Math.Sin(desiredPitch * UtilMath.Deg2Rad) * VesselState.Up;
-
-            AttitudeTo(desiredThrustVector);
-        }
-
-        // provides AoA limiting and roll control
-        protected void AttitudeTo(Vector3d desiredThrustVector)
-        {
-            desiredThrustVector = ApplyAoALimiter(desiredThrustVector.normalized);
-
-            // calculate pitch and heading after applying AoA limiter
-            double pitch = 90 - Vector3d.Angle(desiredThrustVector, VesselState.Up);
-            double hdg = Clamp360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(desiredThrustVector, VesselState.East),
-                Vector3d.Dot(desiredThrustVector, VesselState.North)));
-
-            if (AscentSettings.ForceRoll)
-                Core.Attitude.AttitudeTo(hdg, pitch, AscentSettings.TurnRoll, this, fixCOT: true);
-            else
-                Core.Attitude.AttitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
-
-            Core.Attitude.SetActuationControl();
-            Core.Attitude.SetAxisControl(true, true, AscentSettings.ForceRoll);
-        }
-
-        protected abstract Vector3d ApplyAoALimiter(Vector3d desiredThrustVector);
     }
 }

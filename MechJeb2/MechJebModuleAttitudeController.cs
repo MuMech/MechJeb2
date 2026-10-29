@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using MuMech.AttitudeControllers;
 using UnityEngine;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -283,6 +284,38 @@ namespace MuMech
 
             SetActuationControl(liftedOff, liftedOff, liftedOff);
             SetAxisControl(liftedOff, liftedOff, liftedOff && forceRoll);
+        }
+
+        // pitch/heading variant of LimitedAttitudeTo
+        public void LimitedAttitudeTo(double heading, double pitch, bool forceRoll, double roll, Func<Vector3d, Vector3d> aoaLimiter,
+            object controller)
+        {
+            Vector3d headingVector = Math.Sin(heading * UtilMath.Deg2Rad) * VesselState.East +
+                Math.Cos(heading * UtilMath.Deg2Rad) * VesselState.North;
+
+            Vector3d direction = Math.Cos(pitch * UtilMath.Deg2Rad) * headingVector
+                + Math.Sin(pitch * UtilMath.Deg2Rad) * VesselState.Up;
+
+            LimitedAttitudeTo(direction, forceRoll, roll, aoaLimiter, controller);
+        }
+
+        // applies the AoA limiter to the direction, then holds the given roll if forceRoll is set
+        public void LimitedAttitudeTo(Vector3d direction, bool forceRoll, double roll, Func<Vector3d, Vector3d> aoaLimiter, object controller)
+        {
+            direction = aoaLimiter(direction.normalized);
+
+            // calculate pitch and heading after applying AoA limiter
+            double pitch = 90 - Vector3d.Angle(direction, VesselState.Up);
+            double heading = Clamp360(UtilMath.Rad2Deg * Math.Atan2(Vector3d.Dot(direction, VesselState.East),
+                Vector3d.Dot(direction, VesselState.North)));
+
+            if (forceRoll)
+                AttitudeTo(heading, pitch, roll, controller, fixCOT: true);
+            else
+                AttitudeTo(direction, AttitudeReference.INERTIAL_COT, controller);
+
+            SetActuationControl();
+            SetAxisControl(true, true, forceRoll);
         }
 
         public void AttitudeDeactivate()
