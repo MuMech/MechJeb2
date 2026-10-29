@@ -56,23 +56,7 @@ namespace MuMech
             _operationId = GuiUtils.ComboBox.Box(_operationId, _operationNames, this);
 
             // Compute orbit and universal time parameters for next maneuver
-            double UT = VesselState.Time;
-            Orbit o = Orbit;
-            if (anyNodeExists)
-            {
-                if (_createNode)
-                {
-                    ManeuverNode last = maneuverNodes.Last();
-                    UT = last.UT;
-                    o = last.nextPatch;
-                }
-                else if (maneuverNodes.Count > 1)
-                {
-                    ManeuverNode last = maneuverNodes[maneuverNodes.Count - 1];
-                    UT = last.UT;
-                    o = last.nextPatch;
-                }
-            }
+            GetOrbitAndUT(out Orbit o, out double UT);
 
             try
             {
@@ -100,21 +84,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (makingNode)
-            {
-                List<ManeuverParameters> nodeList = _operation[_operationId].MakeNodes(o, UT, Core.Target);
-                if (nodeList != null)
-                {
-                    if (!_createNode)
-                        maneuverNodes.Last().RemoveSelf();
-                    for (int i = 0; i < nodeList.Count; i++)
-                    {
-                        Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
-                    }
-                }
-
-                if (executingNode && Core.Node != null)
-                    Core.Node.ExecuteOneNode(this);
-            }
+                CreateNodes(executingNode, o, UT);
 
             if (_operation[_operationId].GetErrorMessage().Length > 0)
             {
@@ -178,6 +148,92 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID, _operation[_operationId].Draggable);
+        }
+
+        // ---- shared with the new UI (MechJeb2.UI.ManeuverPlannerView) ----
+
+        internal Operation[] Operations => _operation;
+        internal string[] OperationNames => _operationNames;
+
+        internal int OperationId
+        {
+            get => _operationId = Mathf.Clamp(_operationId, 0, _operation.Length - 1);
+            set => _operationId = Mathf.Clamp(value, 0, _operation.Length - 1);
+        }
+
+        internal Operation CurrentOperation => _operation[OperationId];
+
+        internal bool CreateNodeMode
+        {
+            get => _createNode;
+            set => _createNode = value;
+        }
+
+        private MechJebModuleLandingPredictions _predictor;
+
+        // Vessel.patchedConicSolver.maneuverNodes without the aerobrake node, without allocating (a view calls this every frame)
+        private List<ManeuverNode> RawNodes => Vessel != null && Vessel.patchedConicSolver != null ? Vessel.patchedConicSolver.maneuverNodes : null;
+
+        private ManeuverNode AerobrakeNode
+        {
+            get
+            {
+                _predictor ??= Core.GetComputerModule<MechJebModuleLandingPredictions>();
+                return _predictor?.aerobrakeNode;
+            }
+        }
+
+        internal int PlannerNodeCount()
+        {
+            List<ManeuverNode> nodes = RawNodes;
+            if (nodes == null) return 0;
+            ManeuverNode skip = AerobrakeNode;
+            int n = 0;
+            for (int i = 0; i < nodes.Count; i++)
+                if (nodes[i] != skip) n++;
+            return n;
+        }
+
+        internal ManeuverNode LastPlannerNode()
+        {
+            List<ManeuverNode> nodes = RawNodes;
+            if (nodes == null) return null;
+            ManeuverNode skip = AerobrakeNode;
+            for (int i = nodes.Count - 1; i >= 0; i--)
+                if (nodes[i] != skip) return nodes[i];
+            return null;
+        }
+
+        /// <summary>The orbit and universal time the next maneuver is computed from (after the last node when there is one).</summary>
+        internal void GetOrbitAndUT(out Orbit o, out double ut)
+        {
+            ut = VesselState.Time;
+            o = Orbit;
+            int count = PlannerNodeCount();
+            if (count > 0 && (_createNode || count > 1))
+            {
+                ManeuverNode last = LastPlannerNode();
+                ut = last.UT;
+                o = last.nextPatch;
+            }
+        }
+
+        /// <summary>The Create node / Create and execute buttons.</summary>
+        internal void CreateNodes(bool execute, Orbit o, double ut)
+        {
+            List<ManeuverParameters> nodeList = CurrentOperation.MakeNodes(o, ut, Core.Target);
+            if (nodeList != null)
+            {
+                if (!_createNode)
+                    LastPlannerNode().RemoveSelf();
+                for (int i = 0; i < nodeList.Count; i++)
+                {
+                    Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
+                }
+            }
+
+            if (execute && Core.Node != null)
+                Core.Node.ExecuteOneNode(this);
         }
 
         public List<ManeuverNode> GetManeuverNodes()

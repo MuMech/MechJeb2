@@ -10,7 +10,7 @@ namespace MuMech
 {
     public class MechJebModuleFlightRecorderGraph : DisplayModule
     {
-        private const int ScaleTicks = 11;
+        internal const int ScaleTicks = 11;
         private const string DISPLAYED_GRAPHS_NODE = "displayedGraphs";
 
         public struct graphState
@@ -23,7 +23,7 @@ namespace MuMech
         }
 
         // One row per graph the user can tick, in on-screen order. NewRow breaks the checkbox row.
-        private readonly struct GraphInfo
+        internal readonly struct GraphInfo
         {
             public readonly RecordType Type;
             public readonly Color Color;
@@ -43,7 +43,7 @@ namespace MuMech
 
         // Blue, Navy, Teal, Magenta, Purple all have poor contrast on black or against other colors here
         // Maybe some of them could be lightened up, but many of the lighter variants are already in this list.
-        private static readonly GraphInfo[] graphInfos =
+        internal static readonly GraphInfo[] graphInfos =
         {
             new GraphInfo(RecordType.ALTITUDE_ASL, XKCDColors.White, "#MechJeb_Flightrecord_checkbox4", "#MechJeb_Flightrecord_checkbox18"), // Altitude / ASL
             new GraphInfo(RecordType.ALTITUDE_TRUE, XKCDColors.Grey, "#MechJeb_Flightrecord_checkbox5", "#MechJeb_Flightrecord_checkbox19"), // True Altitude / AGL
@@ -91,28 +91,28 @@ namespace MuMech
 
         public bool ascentPath = false;
 
-        private static Texture2D backgroundTexture;
+        internal static Texture2D backgroundTexture;
         private CelestialBody oldMainBody;
-        private static readonly int typeCount = Enum.GetValues(typeof(RecordType)).Length;
+        internal static readonly int typeCount = Enum.GetValues(typeof(RecordType)).Length;
 
-        private readonly graphState[] graphStates;
+        internal readonly graphState[] graphStates;
 
         // Which graphs the user has ticked, indexed by (int)RecordType. Persisted by name; see OnSave/OnLoad.
-        private readonly bool[] displayed;
+        internal readonly bool[] displayed;
 
-        private double lastMaximumAltitude;
+        internal double lastMaximumAltitude;
         private readonly double precision = 0.2;
 
-        private int width = 512;
-        private int height = 256;
+        internal int width = 512;
+        internal int height = 256;
 
-        private bool paused;
+        internal bool paused;
 
         private float hPos;
 
         private bool follow = true;
 
-        private MechJebModuleFlightRecorder recorder;
+        internal MechJebModuleFlightRecorder recorder;
 
         public MechJebModuleFlightRecorderGraph(MechJebCore core)
             : base(core)
@@ -172,21 +172,7 @@ namespace MuMech
         {
             //DefaultAscentPath path = (DefaultAscentPath)core.GetComputerModule<MechJebModuleAscentAutopilot>().ascentPath;
 
-            if (oldMainBody != MainBody || lastMaximumAltitude != graphStates[(int)RecordType.ALTITUDE_ASL].maximum ||
-                height != backgroundTexture.height)
-            {
-                UpdateScale();
-                lastMaximumAltitude = graphStates[(int)RecordType.ALTITUDE_ASL].maximum;
-
-                if (backgroundTexture == null || height != backgroundTexture.height)
-                {
-                    Object.Destroy(backgroundTexture);
-                    backgroundTexture = new Texture2D(1, height);
-                }
-
-                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, Vessel.mainBody, lastMaximumAltitude, realAtmo);
-                oldMainBody = MainBody;
-            }
+            UpdateBackground();
 
             GUILayout.BeginVertical();
 
@@ -241,16 +227,7 @@ namespace MuMech
                     timeScale--;
             }
 
-            float maxX = (float)(downrange
-                ? recorder.Maximums[(int)RecordType.DOWN_RANGE]
-                : recorder.Maximums[(int)RecordType.TIME_SINCE_MARK]);
-
-            double maxXScaled = (downrange ? maxX : maxX / precision) / width;
-            double autoScaleX = Math.Max(Math.Ceiling(Math.Log(maxXScaled, 2)), 0);
-            double manualScaleX = downrange ? downrangeScale : timeScale;
-            double activeScaleX = autoScale ? autoScaleX : manualScaleX;
-
-            double scaleX = downrange ? Math.Pow(2, activeScaleX) : precision * Math.Pow(2, activeScaleX);
+            double scaleX = CurrentScaleX(out float maxX);
 
             GUILayout.Label(downrange ? scaleX.ToSI(2) + "m/px" : GuiUtils.TimeToDHMS(scaleX, 1) + "/px", GuiUtils.LayoutNoExpandWidth);
 
@@ -288,17 +265,14 @@ namespace MuMech
                 vSize++;
             }
 
-            timeScale = Mathf.Clamp(timeScale, 0, 20);
-            downrangeScale = Mathf.Clamp(downrangeScale, 0, 20);
-            hSize = Mathf.Clamp(hSize, 1, 20);
-            vSize = Mathf.Clamp(vSize, 1, 10);
+            ClampSizes();
 
             bool oldRealAtmo = realAtmo;
 
             realAtmo = GUILayout.Toggle(realAtmo, Localizer.Format("#MechJeb_Flightrecord_checkbox2"), GuiUtils.LayoutNoExpandWidth); //Real Atmo
 
             if (oldRealAtmo != realAtmo)
-                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, Vessel.mainBody, lastMaximumAltitude, realAtmo);
+                RefreshAtmoTexture();
 
             //GUILayout.Label("", GuiUtils.LayoutExpandWidth);
             GUILayout.FlexibleSpace();
@@ -418,13 +392,66 @@ namespace MuMech
                 //if (ascentPath)
                 //    MechJebModuleAscentPathEditor.DrawnPath(r, (float)hScale, (float)graphStates[(int)recordType.AltitudeASL].scale, path, Color.gray);
 
-                width = 128 * hSize;
-                height = 128 * vSize;
+                ApplySizes();
             }
 
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+        }
+
+        // ---- shared by the IMGUI window and the new UI ----
+
+        // keeps the atmosphere background texture (and the scales it depends on) up to date
+        internal void UpdateBackground()
+        {
+            if (oldMainBody != MainBody || lastMaximumAltitude != graphStates[(int)RecordType.ALTITUDE_ASL].maximum ||
+                height != backgroundTexture.height)
+            {
+                UpdateScale();
+                lastMaximumAltitude = graphStates[(int)RecordType.ALTITUDE_ASL].maximum;
+
+                if (backgroundTexture == null || height != backgroundTexture.height)
+                {
+                    Object.Destroy(backgroundTexture);
+                    backgroundTexture = new Texture2D(1, height);
+                }
+
+                MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, Vessel.mainBody, lastMaximumAltitude, realAtmo);
+                oldMainBody = MainBody;
+            }
+        }
+
+        internal void RefreshAtmoTexture() =>
+            MechJebModuleAscentClassicPathMenu.UpdateAtmoTexture(backgroundTexture, Vessel.mainBody, lastMaximumAltitude, realAtmo);
+
+        internal void ClampSizes()
+        {
+            timeScale = Mathf.Clamp(timeScale, 0, 20);
+            downrangeScale = Mathf.Clamp(downrangeScale, 0, 20);
+            hSize = Mathf.Clamp(hSize, 1, 20);
+            vSize = Mathf.Clamp(vSize, 1, 10);
+        }
+
+        internal void ApplySizes()
+        {
+            width = 128 * hSize;
+            height = 128 * vSize;
+        }
+
+        // x units (m or s) per pixel, and the largest x recorded since the mark
+        internal double CurrentScaleX(out float maxX)
+        {
+            maxX = (float)(downrange
+                ? recorder.Maximums[(int)RecordType.DOWN_RANGE]
+                : recorder.Maximums[(int)RecordType.TIME_SINCE_MARK]);
+
+            double maxXScaled = (downrange ? maxX : maxX / precision) / width;
+            double autoScaleX = Math.Max(Math.Ceiling(Math.Log(maxXScaled, 2)), 0);
+            double manualScaleX = downrange ? downrangeScale : timeScale;
+            double activeScaleX = autoScale ? autoScaleX : manualScaleX;
+
+            return downrange ? Math.Pow(2, activeScaleX) : precision * Math.Pow(2, activeScaleX);
         }
 
         private void DrawScaleLabels(Rect r)
@@ -523,7 +550,7 @@ namespace MuMech
             }
         }
 
-        private void UpdateScale()
+        internal void UpdateScale()
         {
             if (recorder.HistoryIdx == 0)
                 ResetScale();
@@ -579,7 +606,7 @@ namespace MuMech
             }
         }
 
-        private void ResetScale()
+        internal void ResetScale()
         {
             // Avoid min = max and set sane minimums
             graphStates[(int)RecordType.ALTITUDE_ASL].minimum = 0;

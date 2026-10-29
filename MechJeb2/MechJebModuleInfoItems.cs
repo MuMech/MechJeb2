@@ -757,12 +757,10 @@ namespace MuMech
 
         // Leave this stub here until I figure out how to properly target in the new class
         [GeneralInfoItem("#MechJeb_StageStatsAll", InfoItem.Category.Vessel, showInEditor = true)] //Stage stats (all)
-        public void AllStageStats()
-        {
-            if (stageStatsHelper == null)
-                stageStatsHelper = new MechJebStageStatsHelper(this);
-            stageStatsHelper.AllStageStats();
-        }
+        public void AllStageStats() => StageStatsHelper.AllStageStats();
+
+        /// <summary>The stage stats state shared by the IMGUI item and MechJeb2.UI's table.</summary>
+        internal MechJebStageStatsHelper StageStatsHelper => stageStatsHelper ??= new MechJebStageStatsHelper(this);
 
         public void UpdateItems() => stageStatsHelper?.UpdateStageStats();
 
@@ -1044,14 +1042,38 @@ namespace MuMech
         public void LatLonClipbardCopy()
         {
             if (GUILayout.Button(Localizer.Format("#MechJeb_InfoItems_CopytoClipboard"))) //"Copy Lat/Lon/Alt to Clipboard"
+                CopyLatLonAltToClipboard();
+        }
+
+        // shared by the IMGUI item and the new UI
+        internal void CopyLatLonAltToClipboard()
+        {
+            var te = new TextEditor();
+            string result = "latitude =  " + VesselState.Latitude.ToString("F6") + "\nlongitude = " + VesselState.Longitude.ToString("F6") +
+                "\naltitude = " + Vessel.altitude.ToString("F2") + "\n";
+            te.text = result;
+            te.SelectAll();
+            te.Copy();
+        }
+
+        // "Name<Generic,Args>" of a pool's type, shared by the IMGUI item and the new UI
+        internal static string PoolName(Type type)
+        {
+            //string name = type.ToString();
+            if (typeof(IDisposable).IsAssignableFrom(type))
+                type = type.GetGenericArguments()[0];
+            StringBuilder name = StringBuilderCache.Acquire();
+            name.Append(type.Name);
+            Type[] generics = type.GetGenericArguments();
+            for (int i = 0; i < generics.Length; i++)
             {
-                var te = new TextEditor();
-                string result = "latitude =  " + VesselState.Latitude.ToString("F6") + "\nlongitude = " + VesselState.Longitude.ToString("F6") +
-                    "\naltitude = " + Vessel.altitude.ToString("F2") + "\n";
-                te.text = result;
-                te.SelectAll();
-                te.Copy();
+                if (i == 0) name.Append("<");
+                if (i > 0) name.Append(",");
+                name.Append(type.GetGenericArguments()[i].Name);
+                if (i == generics.Length - 1) name.Append(">");
             }
+
+            return name.ToStringAndRelease();
         }
 
         [GeneralInfoItem("#MechJeb_PoolsStatus", InfoItem.Category.Misc, showInEditor = true)] //Pools Status
@@ -1060,22 +1082,7 @@ namespace MuMech
             GUILayout.BeginVertical();
             foreach (KeyValuePair<Type, PoolsStatus> pair in PoolsStatus.poolsInfo)
             {
-                Type type = pair.Key;
-                //string name = type.ToString();
-                if (typeof(IDisposable).IsAssignableFrom(type))
-                    type = type.GetGenericArguments()[0];
-                StringBuilder name = StringBuilderCache.Acquire();
-                name.Append(type.Name);
-                Type[] generics = type.GetGenericArguments();
-                for (int i = 0; i < generics.Length; i++)
-                {
-                    if (i == 0) name.Append("<");
-                    if (i > 0) name.Append(",");
-                    name.Append(type.GetGenericArguments()[i].Name);
-                    if (i == generics.Length - 1) name.Append(">");
-                }
-
-                GuiUtils.SimpleLabel(name.ToStringAndRelease(), pair.Value.allocated + "/" + pair.Value.maxSize);
+                GuiUtils.SimpleLabel(PoolName(pair.Key), pair.Value.allocated + "/" + pair.Value.maxSize);
             }
 
             GUILayout.EndHorizontal();

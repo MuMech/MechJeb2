@@ -24,6 +24,9 @@ namespace MuMech
         }
 
         protected AbortStage abort = AbortStage.OFF;
+
+        // for the new UI: true while the panic switch is engaged
+        internal bool Aborting => abort != AbortStage.OFF;
         protected double burnUpTime;
 
         protected bool autoMode;

@@ -135,8 +135,23 @@ namespace MuMech
 
         protected virtual GUILayoutOption[] WindowOptions() => Array.Empty<GUILayoutOption>();
 
+        private bool _contentsOnly;
+
+        /// <summary>
+        /// Draw only the window's GUILayout contents (no close button, no drag), for hosting this IMGUI body
+        /// inside another UI's window. Call from an OnGUI, inside a GUILayout area.
+        /// </summary>
+        public void DrawContentsImgui()
+        {
+            _contentsOnly = true;
+            try { WindowGUI(_id); }
+            finally { _contentsOnly = false; }
+        }
+
         protected void WindowGUI(int windowID, bool draggable)
         {
+            if (_contentsOnly) return;
+
             if (!isOverlay && GUI.Button(new Rect(WindowPos.width - 18, 2, 16, 16), ""))
             {
                 Enabled = false;

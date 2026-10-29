@@ -57,6 +57,19 @@ namespace MuMech
 
         private const int PORKCHOP_HEIGHT = 200;
 
+        // ---- state of the new UI (MechJeb2.UI), which drives this operation through ViewUpdate instead of DoParametersGUI ----
+
+        internal const int PLOT_WIDTH = 276;
+        internal const int PLOT_HEIGHT = PORKCHOP_HEIGHT;
+
+        private bool _native;
+        private bool _nativeChanged; // what GUI.changed is to DoParametersGUI
+        private bool _nativePlotReady;
+        private int[]? _nativeSelected;
+        private Texture2D? _nativeTexture;
+
+        private int[]? SelectedPoint => _native ? _nativeSelected : _plot?.SelectedPoint;
+
         private static GUIStyle? _progressStyle;
 
         private string? CheckPreconditions(Orbit o, MechJebModuleTargetController target)
@@ -115,6 +128,8 @@ namespace MuMech
             if (_worker != null)
                 _worker.Stop = true;
             _plot = null;
+            _nativePlotReady = false;
+            _nativeSelected = null;
 
             switch (_selectionMode)
             {
@@ -278,14 +293,7 @@ namespace MuMech
             {
                 if (_plot != null)
                 {
-                    int bestDuration = 0;
-                    for (int i = 1; i < _worker.Computed.GetLength(1); i++)
-                    {
-                        if (_worker.Computed[0, bestDuration] > _worker.Computed[0, i])
-                            bestDuration = i;
-                    }
-
-                    _plot.SelectedPoint = new[] { 0, bestDuration };
+                    _plot.SelectedPoint = new[] { 0, AsapDuration(_worker) };
                     GUI.changed = false;
                 }
             }
@@ -298,8 +306,21 @@ namespace MuMech
             _lastTargetCelestial = targetCelestial;
         }
 
+        private static int AsapDuration(TransferCalculator worker)
+        {
+            int bestDuration = 0;
+            for (int i = 1; i < worker.Computed.GetLength(1); i++)
+            {
+                if (worker.Computed[0, bestDuration] > worker.Computed[0, i])
+                    bestDuration = i;
+            }
+
+            return bestDuration;
+        }
+
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
+            _native = false;
             _draggable = true;
             if (_worker != null && !target.NormalTargetExists && Event.current.type == EventType.Layout)
             {
@@ -331,10 +352,171 @@ namespace MuMech
                 ComputeStuff(o, universalTime, target);
         }
 
+        // ---- the new UI ----
+
+        /// <summary>DoParametersGUI without the drawing, run every frame while this operation is selected.</summary>
+        internal override void ViewUpdate(Orbit o, double universalTime, MechJebModuleTargetController target)
+        {
+            _native = true;
+            _draggable = true;
+            _windowWidth = PLOT_WIDTH;
+            if (_worker != null && !target.NormalTargetExists)
+            {
+                _worker.Stop = true;
+                _worker = null;
+                _plot = null;
+                _nativePlotReady = false;
+                _nativeSelected = null;
+            }
+
+            if (_selectionMode == Mode.PORKCHOP && _worker != null)
+            {
+                if (_worker.Finished && !_nativePlotReady && _worker.Computed.GetLength(1) == PORKCHOP_HEIGHT && _worker.Computed.GetLength(0) == PLOT_WIDTH)
+                {
+                    Porkchop.RefreshTexture(_worker.Computed, NativeTexture);
+                    _nativePlotReady = true;
+                    _nativeSelected = new[] { _worker.BestDate, _worker.BestDuration };
+                }
+
+                var targetCelestial = target.Target as CelestialBody;
+
+                // fixup the default value of the periapsis if the target changes
+                if (targetCelestial != null && _lastTargetCelestial != targetCelestial)
+                    _periapsisHeight = targetCelestial.atmosphere ? targetCelestial.atmosphereDepth / 1000 + 10 : 100;
+
+                _lastTargetCelestial = targetCelestial;
+            }
+
+            if (_worker == null || _worker.DestinationOrbit != target.TargetOrbit || _worker.OriginOrbit != o)
+                ComputeTimes(o, target.TargetOrbit, universalTime);
+
+            if (_nativeChanged || _worker == null || _worker.DestinationOrbit != target.TargetOrbit || _worker.OriginOrbit != o)
+                ComputeStuff(o, universalTime, target);
+            _nativeChanged = false;
+        }
+
+        internal static string[] ModeNames => _modeNames;
+
+        internal int ModeIndex
+        {
+            get => (int)_selectionMode;
+            set
+            {
+                if ((int)_selectionMode == value) return;
+                _selectionMode = (Mode)value;
+                _nativeChanged = true;
+            }
+        }
+
+        internal bool IsPorkchopMode => _selectionMode == Mode.PORKCHOP;
+        internal bool HasWorker => _worker != null;
+        internal bool IsComputing => _worker is { Finished: false };
+        internal bool PlotReady => _nativePlotReady;
+        internal Texture2D NativeTexture => _nativeTexture ??= new Texture2D(PLOT_WIDTH, PLOT_HEIGHT, TextureFormat.RGB24, false);
+
+        internal int[]? NativeSelected
+        {
+            get => _nativeSelected;
+            set => _nativeSelected = value;
+        }
+
+        internal bool IncludeCaptureBurn
+        {
+            get => _includeCaptureBurn;
+            set
+            {
+                if (_includeCaptureBurn == value) return;
+                _includeCaptureBurn = value;
+                _nativeChanged = true;
+            }
+        }
+
+        internal EditableDouble PeriapsisHeight => _periapsisHeight;
+        internal EditableDouble TargetInclination => _targetInclination;
+
+        internal bool TargetInclinationFlag
+        {
+            get => _targetInclinationFlag;
+            set => _targetInclinationFlag = value;
+        }
+
+        /// <summary>An edit that changes what has to be computed (the GUI.changed of DoParametersGUI).</summary>
+        internal void MarkChanged() => _nativeChanged = true;
+
+        /// <summary>The "reset" button: back to the default departure and transfer time windows.</summary>
+        internal void ResetTimes(Orbit o, MechJebModuleTargetController target, double universalTime)
+        {
+            ComputeTimes(o, target.TargetOrbit, universalTime);
+            _nativeChanged = true;
+        }
+
+        internal void SelectLowestDv()
+        {
+            if (_nativePlotReady && _worker != null)
+                _nativeSelected = new[] { _worker.BestDate, _worker.BestDuration };
+        }
+
+        internal void SelectAsap()
+        {
+            if (_nativePlotReady && _worker != null)
+                _nativeSelected = new[] { 0, AsapDuration(_worker) };
+        }
+
+        /// <summary>Zoom to a box dragged on the plot, in texture pixels.</summary>
+        internal void ViewZoom(int x0, int x1, int y0, int y1, double universalTime)
+        {
+            TransferCalculator? w = _worker;
+            if (w == null) return;
+            int width = w.Computed.GetLength(0);
+            int height = w.Computed.GetLength(1);
+            double X(int index) => w.MinDepartureTime + index * (w.MaxDepartureTime - w.MinDepartureTime) / width;
+            double Y(int index) => w.MinTransferTime + index * (w.MaxTransferTime - w.MinTransferTime) / height;
+            _minDepartureTime = Math.Max(X(x0), universalTime);
+            _maxDepartureTime = X(x1);
+            _minTransferTime = Math.Max(Y(y0), 3600);
+            _maxTransferTime = Y(y1);
+            _nativeChanged = true;
+        }
+
+        private int _computingShown = -1;
+        private string _computingText = "";
+
+        /// <summary>"Computing: 42%", rebuilt only when the percentage changes.</summary>
+        internal string ComputingText()
+        {
+            int progress = _worker?.Progress ?? 0;
+            if (progress != _computingShown)
+            {
+                _computingShown = progress;
+                _computingText = Localizer.Format("#MechJeb_adv_computing") + progress + "%";
+            }
+
+            return _computingText;
+        }
+
+        /// <summary>The ΔV, departure and duration texts of a plot point (allocates; call when the point or the time changed).</summary>
+        internal void Readout(int[]? point, out string dv, out string departure, out string duration)
+        {
+            dv = departure = duration = " - ";
+            TransferCalculator? w = _worker;
+            if (w == null || !_nativePlotReady || point == null) return;
+            if (point[0] < 0 || point[1] < 0 || point[0] >= w.Computed.GetLength(0) || point[1] >= w.Computed.GetLength(1)) return;
+
+            double p = w.Computed[point[0], point[1]];
+            if (p > 0)
+            {
+                dv = p.ToSI() + "m/s";
+                departure = w.DateFromIndex(point[0]) < Planetarium.GetUniversalTime()
+                    ? Localizer.Format("#MechJeb_adv_label1") //any time now
+                    : GuiUtils.TimeToDHMS(w.DateFromIndex(point[0]) - Planetarium.GetUniversalTime());
+                duration = GuiUtils.TimeToDHMS(w.DurationFromIndex(point[1]));
+            }
+        }
+
         private (double epoch, double arrivalDt, double arrivalDtLower, double arrivalDtUpper) ResolveTimes(TransferCalculator w)
         {
-            int dateIndex = _plot?.SelectedPoint?[0] ?? w.BestDate;
-            int durationIndex = _plot?.SelectedPoint?[1] ?? w.BestDuration;
+            int dateIndex = SelectedPoint?[0] ?? w.BestDate;
+            int durationIndex = SelectedPoint?[1] ?? w.BestDuration;
             double epoch = w.DateFromIndex(dateIndex);
             double arrivalDt = w.DurationFromIndex(durationIndex);
 
@@ -377,7 +559,7 @@ namespace MuMech
 
             double targetPeR = (_lastTargetCelestial?.Radius ?? 0) + _periapsisHeight * 1000;
 
-            if (_selectionMode == Mode.PORKCHOP && _plot?.SelectedPoint == null)
+            if (_selectionMode == Mode.PORKCHOP && SelectedPoint == null)
                 throw new OperationException(Localizer.Format("#MechJeb_adv_Exception4")); //Invalid point selected.
 
             // FIXME: we can now better expose user-tweakable brackets around arrivalDt

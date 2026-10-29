@@ -39,9 +39,10 @@ namespace MuMech
             }
         }
 
-        protected override void WindowGUI(int windowID)
+        // Rebuilds the logical plan and requests a flight plan update; true when there are stages to show.
+        // Shared with the new UI, which calls it every frame the window is shown.
+        internal bool UpdateLogicalPlan()
         {
-            SetupButtonStyles();
             List<FuelStats> vacStats = Core.StageStats.VacStats;
 
             if (vacStats.Count > 0)
@@ -52,9 +53,19 @@ namespace MuMech
                 Core.PSGSimulation.LogicalPlan = new PersistedLogicalPlan(LogicalPlan.GenerateLogicalPlan(Core.StageStats.VacStats, _ascentSettings.UnguidedStages, _ascentSettings.FixedStages, _ascentSettings.LastStage, Core.PSGSimulation.MinDeltaV, _ascentSettings.CoastStage, _ascentSettings.CoastLocation));
 
                 Core.PSGSimulation.RequestFlightPlanUpdate();
-
-                Core.PSGSimulation.FlightPlan?.DrawStageGUI();
             }
+
+            return vacStats.Count > 0;
+        }
+
+        internal void DrawFlightPlanStages() => Core.PSGSimulation.FlightPlan?.DrawStageGUI();
+
+        protected override void WindowGUI(int windowID)
+        {
+            SetupButtonStyles();
+
+            if (UpdateLogicalPlan())
+                DrawFlightPlanStages();
 
             GUILayout.BeginVertical(GUI.skin.box);
             GuiUtils.SimpleTextBox("Min ΔV: ", Core.PSGSimulation.MinDeltaV, "m/s", 30);

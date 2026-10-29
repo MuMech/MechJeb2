@@ -1164,7 +1164,7 @@ namespace MuMech
                     Profiler.BeginSample(module.ProfilerName);
                     try
                     {
-                        if (module.Enabled) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
+                        if (module.Enabled && !MechJebUiHost.Owns(module)) module.DrawGUI(HighLogic.LoadedSceneIsEditor);
                     }
                     catch (Exception e)
                     {
@@ -1194,7 +1194,7 @@ namespace MuMech
         //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
         private void PreventClickthrough()
         {
-            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this);
+            bool mouseOverWindow = GuiUtils.MouseIsOverWindow(this) || MechJebUiHost.MouseOverHostWindow();
             switch (_weLockedInputs)
             {
                 case false when mouseOverWindow && !Input.GetMouseButton(1):

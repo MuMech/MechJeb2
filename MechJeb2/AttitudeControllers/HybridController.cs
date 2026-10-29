@@ -29,21 +29,21 @@ namespace MuMech.AttitudeControllers
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool UseInertia = true;
 
-        private Vector3d _actuation = Vector3d.zero;
-        private Vector3d _targetTorque = Vector3d.zero;
-        private Vector3d _omega = Vector3d.zero;
+        internal Vector3d _actuation = Vector3d.zero;
+        internal Vector3d _targetTorque = Vector3d.zero;
+        internal Vector3d _omega = Vector3d.zero;
 
         /* error */
         private double _phiTotal;
 
         /* error in pitch, roll, yaw */
-        private Vector3d _phiVector = Vector3d.zero;
-        private Vector3d _targetOmega = Vector3d.zero;
+        internal Vector3d _phiVector = Vector3d.zero;
+        internal Vector3d _targetOmega = Vector3d.zero;
 
         /* max angular rotation */
-        private Vector3d _maxOmega = Vector3d.zero;
+        internal Vector3d _maxOmega = Vector3d.zero;
 
-        private Vector3d _controlTorque => Ac.torque;
+        internal Vector3d _controlTorque => Ac.torque;
 
         public HybridController(MechJebModuleAttitudeController controller) : base(controller)
         {

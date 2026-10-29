@@ -117,7 +117,7 @@ namespace MuMech
         private Quaternion targetAttitude = Quaternion.identity;
         private AttitudeReference targetReference = AttitudeReference.ORBIT;
 
-        private static readonly double LARGE_INCREMENT = 10.0;
+        internal static readonly double LARGE_INCREMENT = 10.0;
 
         // Current attitude/direction (for smooth interpolation)
         private Vector3d curDirection = Vector3d.zero;
@@ -181,7 +181,6 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            bool hasSmoothControl = false; // Local variable for current frame
             if (btNormal == null)
             {
                 btNormal = new GUIStyle(GUI.skin.button);
@@ -202,15 +201,8 @@ namespace MuMech
             }
 
             // If any other module use the attitude controler then let them do it
-            if (Core.Attitude.Enabled && Core.Attitude.Users.Count(u => !Equals(u)) > 0)
+            if (OtherUsersControlAttitude())
             {
-                if (autoDisableSmartASS)
-                {
-                    target = Target.OFF;
-                    if (Core.Attitude.Users.Contains(this))
-                        Core.Attitude.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
-                }
-
                 GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button57"), btAuto, GuiUtils.LayoutExpandWidth); //"AUTO"
             }
             else
@@ -397,7 +389,7 @@ namespace MuMech
 
                             GUILayout.EndHorizontal();
 
-                            DisplaySmoothControlUI(ref hasSmoothControl);
+                            DisplaySmoothControlUI();
 
                             if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58")))
                             {
@@ -409,8 +401,6 @@ namespace MuMech
                             {
                                 Engage(false);
                             }
-
-                            Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         }
                         else if (target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE)
                         {
@@ -539,7 +529,7 @@ namespace MuMech
 
                             GUILayout.EndHorizontal();
 
-                            DisplaySmoothControlUI(ref hasSmoothControl);
+                            DisplaySmoothControlUI();
 
                             if (GUILayout.Button(Localizer.Format("#MechJeb_SmartASS_button58"))) //"EXECUTE"
                             {
@@ -550,9 +540,6 @@ namespace MuMech
                             {
                                 Engage(false);
                             }
-
-
-                            Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
                         }
 
                         break;
@@ -598,11 +585,8 @@ namespace MuMech
                         break;
                 }
 
-                // Disable smooth control for modes that don't have it
-                if (!hasSmoothControl)
-                {
-                    smoothControl = false;
-                }
+                // axis control in the surface modes, smooth control off in the others (shared with the new UI)
+                ApplyPerFrameState();
 
                 GUILayout.EndVertical();
             }
@@ -610,10 +594,55 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        private void DisplaySmoothControlUI(ref bool hasSmoothControl)
+        /// <summary>
+        /// True while another module drives the attitude controller (SmartASS then shows only "AUTO").
+        /// Switches SmartASS off when autoDisableSmartASS is set. Called every frame by both the IMGUI and the KodeKit window.
+        /// </summary>
+        internal bool OtherUsersControlAttitude()
+        {
+            if (!Core.Attitude.Enabled)
+                return false;
+
+            bool other = false;
+            foreach (var u in Core.Attitude.Users)
+            {
+                if (!Equals(u))
+                {
+                    other = true;
+                    break;
+                }
+            }
+
+            if (!other)
+                return false;
+
+            if (autoDisableSmartASS)
+            {
+                target = Target.OFF;
+                if (Core.Attitude.Users.Contains(this))
+                    Core.Attitude.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+            }
+
+            return true;
+        }
+
+        /// <summary>The surface heading/pitch/roll or surface velocity rows (with the smooth control row) are shown.</summary>
+        internal bool ShowsSurfaceAngles =>
+            mode == Mode.SURFACE && (target == Target.SURFACE || target == Target.SURFACE_PROGRADE || target == Target.SURFACE_RETROGRADE);
+
+        /// <summary>The per-frame side effects WindowGUI has outside the "other users" case, for the KodeKit window.</summary>
+        internal void ApplyPerFrameState()
+        {
+            // Disable smooth control for modes that don't have it
+            if (!ShowsSurfaceAngles)
+                smoothControl = false;
+            else
+                Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
+        }
+
+        private void DisplaySmoothControlUI()
         {
             GUILayout.BeginHorizontal();
-            hasSmoothControl = true;
             smoothControl = GUILayout.Toggle(smoothControl, "Smooth Control:", GuiUtils.LayoutNoExpandWidth);
             GuiUtils.SimpleTextBox("", degreesPerSecond, "°/s", 40);
             GUILayout.EndHorizontal();

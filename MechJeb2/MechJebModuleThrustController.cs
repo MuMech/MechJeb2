@@ -759,12 +759,32 @@ namespace MuMech
             }
         }
 
-        private bool ElectricEngineRunning()
+        // also read every frame by the new UI (the "engine running" green of the electric limit), so no LINQ and no allocations
+        internal bool ElectricEngineRunning()
         {
-            IEnumerable<Part> activeEngines = Vessel.parts.Where(p => p.inverseStage >= Vessel.currentStage && p.IsEngine() && !p.IsSepratron());
-            IEnumerable<ModuleEngines> engineModules = activeEngines.SelectMany(p => p.Modules.OfType<ModuleEngines>().Where(e => e.isEnabled));
+            Vessel vessel = Vessel;
+            if (vessel == null) return false;
 
-            return engineModules.SelectMany(eng => eng.propellants).Any(p => p.id == PartResourceLibrary.ElectricityHashcode);
+            List<Part> parts = vessel.parts;
+            int electricity = PartResourceLibrary.ElectricityHashcode;
+            for (int i = 0; i < parts.Count; i++)
+            {
+                Part p = parts[i];
+                if (p.inverseStage < vessel.currentStage || !p.IsEngine() || p.IsSepratron()) continue;
+
+                PartModuleList modules = p.Modules;
+                for (int j = 0; j < modules.Count; j++)
+                {
+                    if (!(modules[j] is ModuleEngines eng) || !eng.isEnabled) continue;
+
+                    List<Propellant> propellants = eng.propellants;
+                    for (int k = 0; k < propellants.Count; k++)
+                        if (propellants[k].id == electricity)
+                            return true;
+                }
+            }
+
+            return false;
         }
 
         private float ElectricThrottleLimit()
@@ -951,7 +971,7 @@ namespace MuMech
             return DifferentialThrottleStatus.SUCCESS;
         }
 
-        private void DisableDifferentialThrottle()
+        internal void DisableDifferentialThrottle() // internal: also called by the uGUI Utilities view (MechJeb2.UI)
         {
             foreach (KeyValuePair<ModuleEngines, float> entry in _thrustLimitsBeforeDifferentialThrottle)
             {

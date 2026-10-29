@@ -40,8 +40,8 @@ namespace MuMech.AttitudeControllers
         private const double SMOOTH_TORQUE_DEFAULT = 0.10;
         private const double SOFTEN_DEFAULT = 0.5;
 
-        private readonly PIDLoop2[] _velPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
-        private readonly PIDLoop2[] _posPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
+        internal readonly PIDLoop2[] _velPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
+        internal readonly PIDLoop2[] _posPID = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
         private readonly DirectionTracker _directionTracker = new DirectionTracker();
 
         [UsedImplicitly, Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -114,24 +114,24 @@ namespace MuMech.AttitudeControllers
         [UsedImplicitly, Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble Soften = new EditableDouble(SOFTEN_DEFAULT);
 
-        private Vector3d _actuation = Vector3d.zero;
+        internal Vector3d _actuation = Vector3d.zero;
 
         /* error in pitch, roll, yaw */
-        private Vector3d _error = Vector3d.zero;
-        private Vector3d _current = Vector3d.zero;
-        private Vector3d _desired = Vector3d.zero;
+        internal Vector3d _error = Vector3d.zero;
+        internal Vector3d _current = Vector3d.zero;
+        internal Vector3d _desired = Vector3d.zero;
 
         /* error */
         private double _distance;
 
         /* max angular acceleration */
-        private Vector3d _maxAlpha = Vector3d.zero;
+        internal Vector3d _maxAlpha = Vector3d.zero;
 
         /* max angular rotation */
-        private Vector3d _targetOmega = Vector3d.zero;
-        private Vector3d _targetAlpha = Vector3d.zero;
-        private Vector3d _targetTorque = Vector3d.zero;
-        private Vector3d _controlTorque = Vector3d.zero;
+        internal Vector3d _targetOmega = Vector3d.zero;
+        internal Vector3d _targetAlpha = Vector3d.zero;
+        internal Vector3d _targetTorque = Vector3d.zero;
+        internal Vector3d _controlTorque = Vector3d.zero;
 
         [UsedImplicitly, Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble SmoothTorque = new EditableDouble(SMOOTH_TORQUE_DEFAULT);
@@ -155,9 +155,9 @@ namespace MuMech.AttitudeControllers
         {
         }
 
-        private Vessel _vessel => Ac.Vessel;
+        internal Vessel _vessel => Ac.Vessel;
 
-        private void Defaults()
+        internal void Defaults()
         {
             // Position PID defaults
             PosKp.Val = POS_KP_DEFAULT;
@@ -342,6 +342,13 @@ namespace MuMech.AttitudeControllers
             _directionTracker.Reset(i);
         }
 
+        // Minimum Flip Time needs Maximum Stopping Time
+        internal void FixFlipTime()
+        {
+            if (!UseStoppingTime)
+                UseFlipTime = false;
+        }
+
         public override void GUI()
         {
             GUILayout.BeginHorizontal();
@@ -355,8 +362,7 @@ namespace MuMech.AttitudeControllers
             MinFlipTime.Text = GUILayout.TextField(MinFlipTime.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
             GUILayout.EndHorizontal();
 
-            if (!UseStoppingTime)
-                UseFlipTime = false;
+            FixFlipTime();
 
             GUILayout.BeginHorizontal();
             UseControlRange = GUILayout.Toggle(UseControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"),

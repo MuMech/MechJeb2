@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using KSP.Localization;
 using UnityEngine;
@@ -36,26 +37,57 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool ShowAdvancedWindowSettings;
 
+        public enum UiBackendType { Imgui, Kode }
+
+        /// <summary>Which UI draws the windows a MechJebUiHost can draw. IMGUI draws everything else.</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int UiBackend = (int)UiBackendType.Imgui;
+
+        public UiBackendType Backend => (UiBackendType)UiBackend;
+
+        /// <summary>Opacity of the new UI's window backgrounds (0.3 to 1). IMGUI windows ignore it.</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public float UiOpacity = 0.85f;
+
+        /// <summary>Raised after skin, scale, backend or menu settings change, so another UI can follow them.</summary>
+        public static event Action<MechJebModuleSettings> Changed;
+
+        /// <summary>Push the settings to GuiUtils and notify listeners (used by kOS and by this window).</summary>
+        public void ApplySettings(bool loadSkin = false)
+        {
+            GuiUtils.SetGUIScale(UIScale.Val);
+            if (loadSkin) GuiUtils.LoadSkin((GuiUtils.SkinType)SkinId);
+            GuiUtils.DontUseDropDownMenu = DontUseDropDownMenu;
+            GuiUtils.ShowAdvancedWindowSettings = ShowAdvancedWindowSettings;
+            Changed?.Invoke(this);
+        }
+
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
+            ApplySettings();
+        }
 
-            GuiUtils.SetGUIScale(UIScale.Val);
-            GuiUtils.DontUseDropDownMenu = DontUseDropDownMenu;
+        /// <summary>Delete the global and vessel-type settings and reload every module (this module included).</summary>
+        public void RestoreFactoryDefaults()
+        {
+            File.Delete(MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
+            if (Vessel != null && Vessel.vesselName != null)
+                File.Delete(MuUtils.GetTypeCfgPath(Vessel.vesselName));
+            Core.ReloadAllComputerModules();
+            GuiUtils.SetGUIScale(1);
         }
 
         protected override void WindowGUI(int windowID)
         {
+            int oldSkin = SkinId, oldBackend = UiBackend;
+            double oldScale = UIScale.Val;
+            bool oldDropDown = DontUseDropDownMenu, oldAdvanced = ShowAdvancedWindowSettings;
+
             GUILayout.BeginVertical();
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_Settings_button1"))) //"\nRestore factory default settings\n"
-            {
-                File.Delete(MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
-                if (Vessel != null && Vessel.vesselName != null)
-                    File.Delete(MuUtils.GetTypeCfgPath(Vessel.vesselName));
-                Core.ReloadAllComputerModules();
-                GuiUtils.SetGUIScale(1);
-            }
+                RestoreFactoryDefaults();
 
             GUILayout.Label(Localizer.Format("#MechJeb_Settings_label1", (GuiUtils.SkinType)SkinId)); //"Current skin: <<1>>"
             if (GuiUtils.Skin == null || SkinId != 1)
@@ -115,7 +147,35 @@ namespace MuMech
             Core.Warp.activateSASOnWarp =
                 GUILayout.Toggle(Core.Warp.activateSASOnWarp, Localizer.Format("#MechJeb_Settings_checkbox2")); //"Activate SAS on Warp"
 
+            // only offered when a second UI is installed
+            if (MechJebUiHost.Current != null)
+            {
+                bool kode = GUILayout.Toggle(Backend == UiBackendType.Kode, "Use the new UI for ported windows (experimental)");
+                UiBackend = (int)(kode ? UiBackendType.Kode : UiBackendType.Imgui);
+                if (kode)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("New UI opacity", GuiUtils.LayoutNoExpandWidth);
+                    float opacity = GUILayout.HorizontalSlider(UiOpacity, 0.3f, 1f, GuiUtils.LayoutExpandWidth);
+                    GUILayout.EndHorizontal();
+                    // ReSharper disable once CompareOfFloatsByEqualityOperator
+                    if (opacity != UiOpacity)
+                    {
+                        UiOpacity = opacity;
+                        Dirty = true;
+                        Changed?.Invoke(this);
+                    }
+                }
+            }
+
             GUILayout.EndVertical();
+
+            if (oldSkin != SkinId || oldBackend != UiBackend || oldScale != UIScale.Val || oldDropDown != DontUseDropDownMenu ||
+                oldAdvanced != ShowAdvancedWindowSettings)
+            {
+                Dirty = true;
+                Changed?.Invoke(this);
+            }
 
             base.WindowGUI(windowID);
         }

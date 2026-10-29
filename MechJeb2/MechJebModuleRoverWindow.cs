@@ -26,9 +26,7 @@ namespace MuMech
 
             if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.YellowOnHover))
             {
-                MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
-                help.SelTopic = ((IList)help.Topics).IndexOf("Controller");
-                help.Enabled = help.SelTopic > -1 || help.Enabled;
+                OpenHelp();
             }
 
             ed.registry.Find(i => i.id == "Toggle:RoverController.ControlHeading").DrawItem();
@@ -79,25 +77,14 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (Core.Target != null && Core.Target.Target != null)
             {
-                Vessel vssl = Core.Target.Target.GetVessel();
-
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button1"))) // "To Target"
                 {
-                    Core.GetComputerModule<MechJebModuleWaypointWindow>().SelIndex = -1;
-                    autopilot.WaypointIndex = 0;
-                    autopilot.Waypoints.Clear();
-                    if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
-                    else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
-
-                    autopilot.ControlHeading = autopilot.ControlSpeed = true;
-                    Vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
-                    autopilot.LoopWaypoints = alt;
+                    ToTarget(alt);
                 }
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button2"))) // "Add Target"
                 {
-                    if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
-                    else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
+                    AddTarget();
                 }
             }
 
@@ -110,29 +97,18 @@ namespace MuMech
                 {
                     if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button3")))
                     {
-                        // "Drive"
-                        autopilot.WaypointIndex = Mathf.Max(0, alt ? 0 : autopilot.WaypointIndex);
-                        autopilot.ControlHeading = autopilot.ControlSpeed = true;
-                        // autopilot.LoopWaypoints = alt;
+                        Drive(alt); // "Drive"
                     }
                 }
                 else if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button4")))
                 {
-                    // "Stop"
-                    // autopilot.WaypointIndex = -1; // more annoying than helpful
-                    autopilot.ControlHeading = autopilot.ControlSpeed = autopilot.LoopWaypoints = false;
+                    Stop(); // "Stop"
                 }
             }
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_Rover_button5")))
             {
-                // "Waypoints"
-                MechJebModuleWaypointWindow waypoints = Core.GetComputerModule<MechJebModuleWaypointWindow>();
-                waypoints.Enabled = !waypoints.Enabled;
-                if (waypoints.Enabled)
-                {
-                    waypoints.Mode = MechJebModuleWaypointWindow.WaypointMode.ROVER;
-                }
+                ToggleWaypointWindow(); // "Waypoints"
             }
 
             GUILayout.EndHorizontal();
@@ -140,6 +116,65 @@ namespace MuMech
             GUILayout.EndVertical();
 
             base.WindowGUI(windowID);
+        }
+
+        // ---- actions shared by the IMGUI window above and the uGUI view (MechJeb2.UI) ----
+
+        /// <summary>The "?" title button.</summary>
+        internal void OpenHelp()
+        {
+            MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
+            help.SelTopic = ((IList)help.Topics).IndexOf("Rover Controller"); // the topic's name (was "Controller": -1, and the help window threw)
+            help.Enabled = help.SelTopic > -1 || help.Enabled;
+        }
+
+        /// <summary>"To Target": drive to the target, alone; Alt keeps following it.</summary>
+        internal void ToTarget(bool alt)
+        {
+            if (Core.Target == null || Core.Target.Target == null) return;
+            Vessel vssl = Core.Target.Target.GetVessel();
+            Core.GetComputerModule<MechJebModuleWaypointWindow>().SelIndex = -1;
+            autopilot.WaypointIndex = 0;
+            autopilot.Waypoints.Clear();
+            if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
+            else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
+
+            autopilot.ControlHeading = autopilot.ControlSpeed = true;
+            Vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes, false);
+            autopilot.LoopWaypoints = alt;
+        }
+
+        /// <summary>"Add Target": append the target to the route.</summary>
+        internal void AddTarget()
+        {
+            if (Core.Target == null || Core.Target.Target == null) return;
+            Vessel vssl = Core.Target.Target.GetVessel();
+            if (vssl != null) { autopilot.Waypoints.Add(new MechJebWaypoint(vssl, 25f)); }
+            else { autopilot.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition())); }
+        }
+
+        /// <summary>"Drive"; Alt starts from the first waypoint.</summary>
+        internal void Drive(bool alt)
+        {
+            autopilot.WaypointIndex = Mathf.Max(0, alt ? 0 : autopilot.WaypointIndex);
+            autopilot.ControlHeading = autopilot.ControlSpeed = true;
+            // autopilot.LoopWaypoints = alt;
+        }
+
+        /// <summary>"Stop"</summary>
+        internal void Stop() =>
+            // autopilot.WaypointIndex = -1; // more annoying than helpful
+            autopilot.ControlHeading = autopilot.ControlSpeed = autopilot.LoopWaypoints = false;
+
+        /// <summary>"Waypoints": show or hide the waypoint window (in rover mode).</summary>
+        internal void ToggleWaypointWindow()
+        {
+            MechJebModuleWaypointWindow waypoints = Core.GetComputerModule<MechJebModuleWaypointWindow>();
+            waypoints.Enabled = !waypoints.Enabled;
+            if (waypoints.Enabled)
+            {
+                waypoints.Mode = MechJebModuleWaypointWindow.WaypointMode.ROVER;
+            }
         }
 
         public override void OnUpdate()

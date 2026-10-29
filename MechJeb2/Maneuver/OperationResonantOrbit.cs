@@ -18,7 +18,7 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt ResonanceDenominator = 3;
 
-        private readonly TimeSelector _timeSelector =
+        internal readonly TimeSelector _timeSelector =
             new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)

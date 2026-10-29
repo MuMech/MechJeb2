@@ -76,6 +76,10 @@ namespace MuMech
         public double ComErrorThreshold { get; private set; }
         public double MaxComError       { get; private set; }
 
+        // read by the new UI's version of the RCS balancer info item
+        internal RCSSolverThread SolverThread => solverThread;
+        internal double ComError => comError.Value;
+
         [EditableInfoItem("#MechJeb_RCSBalancerPrecision", InfoItem.Category.Thrust)] //RCS balancer precision
         public readonly EditableInt calcPrecision = 3;
 

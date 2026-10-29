@@ -214,7 +214,7 @@ namespace MuMech
     {
         public readonly List<InfoItem> registry = new List<InfoItem>();
         public MechJebModuleCustomInfoWindow editedWindow;
-        private int selectedItemIndex = -1;
+        internal int selectedItemIndex = -1;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public InfoItem.Category itemCategory = InfoItem.Category.Orbit;
@@ -229,11 +229,11 @@ namespace MuMech
         // regenerate the default windows after every module has finished loading.
         public bool RegenerateDefaultWindows { get; private set; }
 
-        private static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
-        private int presetIndex;
+        internal static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
+        internal int presetIndex;
 
-        private bool editingBackground;
-        private bool editingText;
+        internal bool editingBackground;
+        internal bool editingText;
 
         private readonly Stopwatch _valueInfoItemStopwatch = new Stopwatch();
         private readonly Stopwatch _actionInfoItemStopwatch = new Stopwatch();
@@ -468,7 +468,7 @@ namespace MuMech
             Profiler.EndSample();
         }
 
-        private void AddNewWindow()
+        internal void AddNewWindow()
         {
             editedWindow = new MechJebModuleCustomInfoWindow(Core);
             if (HighLogic.LoadedSceneIsEditor) editedWindow.ShowInEditor = true;
@@ -478,13 +478,53 @@ namespace MuMech
             editedWindow.Dirty = true;
         }
 
-        private void RemoveCurrentWindow()
+        internal void RemoveCurrentWindow()
         {
             if (editedWindow == null) return;
 
             Core.RemoveComputerModule(editedWindow);
             editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
         }
+
+        // ---- editing actions, shared by WindowGUI and MechJeb2.UI's editor ----
+
+        internal void RemoveSelectedItem()
+        {
+            if (editedWindow == null || selectedItemIndex < 0 || selectedItemIndex >= editedWindow.items.Count) return;
+            editedWindow.items.RemoveAt(selectedItemIndex);
+        }
+
+        /// <summary>Move the selected item up (-1) or down (+1) in the edited window.</summary>
+        internal void MoveSelectedItem(int direction)
+        {
+            if (editedWindow == null || selectedItemIndex < 0 || selectedItemIndex >= editedWindow.items.Count) return;
+            int to = selectedItemIndex + direction;
+            if (to < 0 || to >= editedWindow.items.Count) return;
+            InfoItem item = editedWindow.items[selectedItemIndex];
+            editedWindow.items.RemoveAt(selectedItemIndex);
+            editedWindow.items.Insert(to, item);
+            selectedItemIndex = to;
+        }
+
+        internal void SetBackgroundColor(Color c)
+        {
+            if (editedWindow == null || editedWindow.backgroundColor == c) return;
+            editedWindow.Init();
+            editedWindow.backgroundColor = c;
+            editedWindow.background.SetPixel(0, 0, c);
+            editedWindow.background.Apply();
+            editedWindow.Dirty = true;
+        }
+
+        internal void SetTextColor(Color c)
+        {
+            if (editedWindow == null || editedWindow.text == c) return;
+            editedWindow.text = c;
+            editedWindow.Dirty = true;
+        }
+
+        /// <summary>The registry items of the selected category, sorted as the editor lists them.</summary>
+        internal IEnumerable<InfoItem> ItemsOfCategory() => registry.Where(it => it.category == itemCategory).OrderBy(it => it.description);
 
         public override void DrawGUI(bool inEditor)
         {
@@ -498,15 +538,7 @@ namespace MuMech
                 {
                     editedWindow.Init();
 
-                    Color newColor = ColorPickerRGB.DrawGUI((int)WindowPos.xMax + 5, (int)WindowPos.yMin, editedWindow.backgroundColor);
-
-                    if (editedWindow.backgroundColor != newColor)
-                    {
-                        editedWindow.backgroundColor = newColor;
-                        editedWindow.background.SetPixel(0, 0, editedWindow.backgroundColor);
-                        editedWindow.background.Apply();
-                        editedWindow.Dirty = true;
-                    }
+                    SetBackgroundColor(ColorPickerRGB.DrawGUI((int)WindowPos.xMax + 5, (int)WindowPos.yMin, editedWindow.backgroundColor));
                 }
             }
 
@@ -514,12 +546,7 @@ namespace MuMech
             {
                 if (editedWindow != null)
                 {
-                    Color newColor = ColorPickerRGB.DrawGUI((int)WindowPos.xMax + 5, (int)WindowPos.yMin, editedWindow.text);
-                    if (editedWindow.text != newColor)
-                    {
-                        editedWindow.text = newColor;
-                        editedWindow.Dirty = true;
-                    }
+                    SetTextColor(ColorPickerRGB.DrawGUI((int)WindowPos.xMax + 5, (int)WindowPos.yMin, editedWindow.text));
                 }
             }
 
@@ -617,28 +644,12 @@ namespace MuMech
                 if (!(selectedItemIndex >= 0 && selectedItemIndex < editedWindow.items.Count)) selectedItemIndex = -1;
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button3")) && selectedItemIndex != -1)
-                    editedWindow.items.RemoveAt(selectedItemIndex); //Remove
+                    RemoveSelectedItem(); //Remove
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button4")) && selectedItemIndex != -1) //"Move up"
-                {
-                    if (selectedItemIndex > 0)
-                    {
-                        InfoItem item = editedWindow.items[selectedItemIndex];
-                        editedWindow.items.RemoveAt(selectedItemIndex);
-                        editedWindow.items.Insert(selectedItemIndex - 1, item);
-                        selectedItemIndex -= 1;
-                    }
-                }
+                    MoveSelectedItem(-1);
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button5")) && selectedItemIndex != -1) //Move down
-                {
-                    if (selectedItemIndex < editedWindow.items.Count)
-                    {
-                        InfoItem item = editedWindow.items[selectedItemIndex];
-                        editedWindow.items.RemoveAt(selectedItemIndex);
-                        editedWindow.items.Insert(selectedItemIndex + 1, item);
-                        selectedItemIndex += 1;
-                    }
-                }
+                    MoveSelectedItem(1); // checks the bounds: the inline version threw on the last item
 
                 GUILayout.EndHorizontal();
 
@@ -797,6 +808,26 @@ namespace MuMech
         private readonly GUILayoutOption[] _widthOption;
         private readonly GUIContent _labelContent;
 
+        // read access for another UI (MechJeb2.UI formats the value itself, without strings)
+        public object Target => _obj;
+        public MemberInfo Member { get; }
+        public string Units => units;
+        public string Format => format;
+        public int SiSigFigs => siSigFigs;
+        public int SiMaxPrecision => siMaxPrecision;
+        public int TimeDecimalPlaces => timeDecimalPlaces;
+        public float Width => width;
+
+        /// <summary>The value as DrawItem shows it (refreshed like DrawItem does).</summary>
+        public string StringValue
+        {
+            get
+            {
+                if (!externalRefresh) UpdateItemCache();
+                return stringValue;
+            }
+        }
+
         public ValueInfoItem(object obj, MemberInfo member, ValueInfoItemAttribute attribute)
             : base(attribute)
         {
@@ -814,6 +845,7 @@ namespace MuMech
             _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             _obj = obj;
+            Member = member;
 
             if (!_getterCache.ContainsKey(member))
                 _getterCache.Add(member, CompileAccessor(obj, member));
@@ -948,6 +980,8 @@ namespace MuMech
             Profiler.EndSample();
         }
 
+        public void Invoke() => action();
+
         public override void DrawItem()
         {
             if (GUILayout.Button(_labelContent)) action();
@@ -975,19 +1009,28 @@ namespace MuMech
             Profiler.EndSample();
         }
 
+        public bool Value
+        {
+            get
+            {
+                if (member is FieldInfo) return (bool)((FieldInfo)member).GetValue(obj);
+                if (member is PropertyInfo) return (bool)((PropertyInfo)member).GetValue(obj, new object[] { });
+                return false;
+            }
+            set
+            {
+                if (member is FieldInfo) ((FieldInfo)member).SetValue(obj, value);
+                else if (member is PropertyInfo) ((PropertyInfo)member).SetValue(obj, value, new object[] { });
+            }
+        }
+
         public override void DrawItem()
         {
-            bool currentValue = false;
-            if (member is FieldInfo) currentValue = (bool)((FieldInfo)member).GetValue(obj);
-            else if (member is PropertyInfo) currentValue = (bool)((PropertyInfo)member).GetValue(obj, new object[] { });
+            bool currentValue = Value;
 
             bool newValue = GUILayout.Toggle(currentValue, _labelContent);
 
-            if (newValue != currentValue)
-            {
-                if (member is FieldInfo) ((FieldInfo)member).SetValue(obj, newValue);
-                else if (member is PropertyInfo) ((PropertyInfo)member).SetValue(obj, newValue, new object[] { });
-            }
+            if (newValue != currentValue) Value = newValue;
         }
     }
 
@@ -1009,6 +1052,9 @@ namespace MuMech
             Profiler.EndSample();
         }
 
+        /// <summary>The module the item's method belongs to (for another UI's native version of the item).</summary>
+        public object Target => obj;
+
         public override void DrawItem() => draw();
 
         public override void UpdateItem()
@@ -1024,6 +1070,7 @@ namespace MuMech
         public readonly float width;
         public readonly bool expandWidth;
         private readonly IEditable val;
+        public IEditable Editable => val;
         private readonly GUIContent _labelContent;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)

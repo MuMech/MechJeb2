@@ -183,9 +183,9 @@ namespace MuMech
 
         protected override void OnModuleDisabled() => AutostagingOnce = false;
 
-        private readonly string _sFairingMinDynamicPressure = $"  {CachedLocalizer.Instance.MechJebAscentLabel39} <";
-        private readonly string _sFairingMinAltitude = $"  {CachedLocalizer.Instance.MechJebAscentLabel40} >";
-        private readonly string _sFairingMaxAerothermalFlux = $"  {CachedLocalizer.Instance.MechJebAscentLabel41} <";
+        internal readonly string _sFairingMinDynamicPressure = $"  {CachedLocalizer.Instance.MechJebAscentLabel39} <";
+        internal readonly string _sFairingMinAltitude = $"  {CachedLocalizer.Instance.MechJebAscentLabel40} >";
+        internal readonly string _sFairingMaxAerothermalFlux = $"  {CachedLocalizer.Instance.MechJebAscentLabel41} <";
 
         private readonly string _sHotstaging =
             $"{CachedLocalizer.Instance.MechJebAscentHotStaging} {CachedLocalizer.Instance.MechJebAscentLeadTime}";
@@ -193,7 +193,7 @@ namespace MuMech
         private readonly string _sDropSolids =
             $"{CachedLocalizer.Instance.MechJebAscentDropSolids} {CachedLocalizer.Instance.MechJebAscentLeadTime}";
 
-        private readonly string _sLeadTime = $"{CachedLocalizer.Instance.MechJebAscentLeadTime}: ";
+        internal readonly string _sLeadTime = $"{CachedLocalizer.Instance.MechJebAscentLeadTime}: ";
 
         [GeneralInfoItem("#MechJeb_AutostagingSettings", InfoItem.Category.Misc)] //Autostaging settings
         public void AutostageSettingsInfoItem()
@@ -244,6 +244,12 @@ namespace MuMech
         private void ClampAutostageThrust()
         {
             GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel44, ClampAutoStageThrustPct, "%", 50); //"Clamp AutoStage Thrust "
+            ClampAutostageThrustValue();
+        }
+
+        /// <summary>Keep ClampAutoStageThrustPct in [0, 1] (done after each edit, by both UIs).</summary>
+        internal void ClampAutostageThrustValue()
+        {
             double clamped = UtilMath.Clamp(ClampAutoStageThrustPct, 0, 1);
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (clamped != ClampAutoStageThrustPct)

@@ -35,7 +35,16 @@ namespace MuMech
 
         private static readonly TimeReference[] _timeReferences = { TimeReference.COMPUTED, TimeReference.PERIAPSIS, TimeReference.APOAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE, TimeReference.EQ_DESCENDING, TimeReference.EQ_ASCENDING, TimeReference.REL_NEAREST_AD, TimeReference.REL_ASCENDING, TimeReference.REL_DESCENDING, TimeReference.CLOSEST_APPROACH };
 
-        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+        internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+
+        // the "Create arrival node" option is only offered for these combinations
+        internal bool PlanCaptureAvailable(bool isCelestialTarget) => Capture && (!isCelestialTarget || MatchOrbit || LagTime.Val != 0);
+
+        internal override void ViewUpdate(Orbit o, double universalTime, MechJebModuleTargetController target)
+        {
+            if (!PlanCaptureAvailable(target.Target is CelestialBody))
+                PlanCapture = false;
+        }
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
@@ -67,7 +76,7 @@ namespace MuMech
 
             // optionally create a maneuver node for the arrival burn
             // (not offered for a direct transfer to a celestial without match orbit or arrival delay)
-            if (Capture && (!isCelestialTarget || MatchOrbit || LagTime.Val != 0))
+            if (PlanCaptureAvailable(isCelestialTarget))
                 PlanCapture = GUILayout.Toggle(PlanCapture, Localizer.Format("#MechJeb_Hohm_createArrivalNode")); //Create arrival node
             else
                 PlanCapture = false;

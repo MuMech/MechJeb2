@@ -124,7 +124,7 @@ namespace MuMech
 
         public bool firstDraw = true;
 
-        private bool movingButton;
+        internal bool movingButton;
 
         [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc), Persistent(pass = (int)Pass.GLOBAL)]
         public readonly bool hideButton; //Hide Menu Button
@@ -138,24 +138,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(windowSide.ToString()))
             {
-                switch (windowSide)
-                {
-                    case WindowSide.LEFT:
-                        windowSide = WindowSide.RIGHT;
-                        break;
-                    case WindowSide.RIGHT:
-                        windowSide = WindowSide.TOP;
-                        break;
-                    case WindowSide.TOP:
-                        windowSide = WindowSide.BOTTOM;
-                        break;
-                    case WindowSide.BOTTOM:
-                        windowSide = WindowSide.LEFT;
-                        break;
-                    default:
-                        windowSide = WindowSide.RIGHT;
-                        break;
-                }
+                CycleSide();
             }
 
             if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
@@ -174,6 +157,37 @@ namespace MuMech
 
             if (columns < 1)
                 columns = 1;
+        }
+
+        // shared by the IMGUI MenuPosition item and the new UI
+        internal void CycleSide()
+        {
+            switch (windowSide)
+            {
+                case WindowSide.LEFT:
+                    windowSide = WindowSide.RIGHT;
+                    break;
+                case WindowSide.RIGHT:
+                    windowSide = WindowSide.TOP;
+                    break;
+                case WindowSide.TOP:
+                    windowSide = WindowSide.BOTTOM;
+                    break;
+                case WindowSide.BOTTOM:
+                    windowSide = WindowSide.LEFT;
+                    break;
+                default:
+                    windowSide = WindowSide.RIGHT;
+                    break;
+            }
+        }
+
+        // the new UI reports the size of its panel in IMGUI units, which displayedPos and buttonPos use
+        internal void SetMeasuredSize(float width, float height)
+        {
+            Rect pos = WindowPos;
+            if (pos.width != width || pos.height != height)
+                WindowPos = new Rect(pos.x, pos.y, width, height);
         }
 
         // If the Toolbar is loaded and we don't want to display the big menu button
@@ -516,7 +530,8 @@ namespace MuMech
             }
         }
 
-        public override void DrawGUI(bool inEditor)
+        // the slide animation; shared by the IMGUI DrawGUI and the new UI
+        internal void AdvanceAnimation()
         {
             switch (windowStat)
             {
@@ -539,6 +554,11 @@ namespace MuMech
 
                     break;
             }
+        }
+
+        public override void DrawGUI(bool inEditor)
+        {
+            AdvanceAnimation();
 
             GUI.depth = -100;
             GUI.SetNextControlName("MechJebOpen");

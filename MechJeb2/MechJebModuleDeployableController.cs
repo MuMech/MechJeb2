@@ -119,6 +119,21 @@ namespace MuMech
             Extended = extendedThisPass;
         }
 
+        /// <summary>The toggle button's text ("Toggle ... (currently extended)").</summary>
+        internal string CurrentButtonText => ButtonText;
+
+        /// <summary>The toggle button's action: extend or retract all, unless parts are still moving.</summary>
+        internal void ToggleDeploy()
+        {
+            if (ExtendingOrRetracting())
+                return;
+
+            if (!Extended)
+                ExtendAll();
+            else
+                RetractAll();
+        }
+
         protected bool ExtendingOrRetracting()
         {
             foreach (ModuleDeployablePart mdp in CachedPartModules)
@@ -142,6 +157,9 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
+            // OnFixedUpdate only sets the text when the state changes; parts that start retracted never change it,
+            // which left the button empty. Start from the state Extended has now.
+            ButtonText = GetButtonText(Extended ? DeployablePartState.EXTENDED : DeployablePartState.RETRACTED);
             if (HighLogic.LoadedSceneIsFlight)
                 DiscoverDeployablePartModules();
         }

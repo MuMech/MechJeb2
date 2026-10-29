@@ -18,7 +18,7 @@ namespace MuMech
         // KSP changes a docking-port target back to its parent vessel while the
         // target is farther than the part-target range.  Keep the user's port
         // choice locally so that cycling does not jump back to the first port.
-        private ModuleDockingNode selectedTargetPort;
+        internal ModuleDockingNode selectedTargetPort;
         private Vessel selectedTargetVessel;
 
         public override void OnStart(PartModule.StartState state) => autopilot = Core.GetComputerModule<MechJebModuleDockingAutopilot>();
@@ -49,16 +49,7 @@ namespace MuMech
                     GuiUtils.YellowLabel); //Warning: target is not a docking port. Right click the target docking port and select "Set as target"
             }
 
-            bool onAxisNodeExists = false;
-            foreach (ITargetable node in Vessel.GetTargetables()
-                        .Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
-            {
-                if (Vector3d.Angle(node.GetTransform().forward, Vessel.ReferenceTransform.up) < 2)
-                {
-                    onAxisNodeExists = true;
-                    break;
-                }
-            }
+            bool onAxisNodeExists = OnAxisNodeExists();
 
             if (!onAxisNodeExists)
             {
@@ -89,15 +80,7 @@ namespace MuMech
                 GUILayout.Toggle(autopilot.drawBoundingBox, Localizer.Format("#MechJeb_Docking_checkbox5")); //"Draw Bounding Box"
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_Docking_button"))) //"Dump Bounding Box Info"
-            {
-                Vessel.GetBoundingBox(true);
-
-                if (Core.Target.Target != null)
-                {
-                    Vessel targetVessel = Core.Target.Target.GetVessel();
-                    targetVessel.GetBoundingBox(true);
-                }
-            }
+                DumpBoundingBoxInfo();
 
 
             GUILayout.Label(Localizer.Format("#MechJeb_Docking_label7", autopilot.safeDistance.ToString("F2")),
@@ -150,14 +133,46 @@ namespace MuMech
             base.WindowGUI(windowID);
         }
 
-        private void DrawTargetPortSelector()
+        internal enum PortSelectorState { Hidden, Unavailable, Ready }
+
+        // Model of the target port selector, filled by UpdateTargetPortSelector (shared by IMGUI and the new UI).
+        internal readonly List<ModuleDockingNode> targetPorts = new List<ModuleDockingNode>();
+        internal int currentPortIndex = -1;
+        internal string targetPortLabel = "";
+
+        internal bool OnAxisNodeExists()
         {
+            foreach (ITargetable node in Vessel.GetTargetables()
+                        .Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
+            {
+                if (Vector3d.Angle(node.GetTransform().forward, Vessel.ReferenceTransform.up) < 2)
+                    return true;
+            }
+
+            return false;
+        }
+
+        internal void DumpBoundingBoxInfo()
+        {
+            Vessel.GetBoundingBox(true);
+
+            if (Core.Target.Target != null)
+            {
+                Vessel targetVessel = Core.Target.Target.GetVessel();
+                targetVessel.GetBoundingBox(true);
+            }
+        }
+
+        internal PortSelectorState UpdateTargetPortSelector()
+        {
+            targetPorts.Clear();
+            currentPortIndex = -1;
             Vessel targetVessel = GetTargetVessel();
             if (targetVessel == null || targetVessel == Vessel)
             {
                 selectedTargetPort = null;
                 selectedTargetVessel = null;
-                return;
+                return PortSelectorState.Hidden;
             }
 
             if (selectedTargetVessel != targetVessel)
@@ -166,21 +181,15 @@ namespace MuMech
                 selectedTargetVessel = targetVessel;
             }
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPort"), GuiUtils.LayoutNoExpandWidth);
-
             ModuleDockingNode referencePort = GetReferenceDockingPort();
             if (!targetVessel.loaded || targetVessel.packed)
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPortUnavailable"), GuiUtils.ArrowSelectorStyeGuiStyleExpand);
-                GUILayout.EndHorizontal();
-                return;
-            }
+                return PortSelectorState.Unavailable;
 
-            var targetPorts = targetVessel.GetModules<ModuleDockingNode>()
-               .Where(port => IsAvailableTargetPort(port) && port.GetTransform() != null &&
-                    ArePortsCompatible(referencePort, port))
-               .ToList();
+            foreach (ModuleDockingNode port in targetVessel.GetModules<ModuleDockingNode>())
+            {
+                if (IsAvailableTargetPort(port) && port.GetTransform() != null && ArePortsCompatible(referencePort, port))
+                    targetPorts.Add(port);
+            }
 
             var currentPort = Core.Target.Target as ModuleDockingNode;
             if (currentPort != null && targetPorts.Contains(currentPort))
@@ -191,29 +200,47 @@ namespace MuMech
             if (currentPort == null || !targetPorts.Contains(currentPort))
                 currentPort = selectedTargetPort;
 
-            int currentIndex = targetPorts.IndexOf(currentPort);
-            string portLabel;
-            if (currentIndex >= 0)
+            currentPortIndex = targetPorts.IndexOf(currentPort);
+            if (currentPortIndex >= 0)
             {
-                portLabel = Localizer.Format("#MechJeb_Docking_targetPortSelected", GetPortName(currentPort), currentIndex + 1,
+                targetPortLabel = Localizer.Format("#MechJeb_Docking_targetPortSelected", GetPortName(currentPort), currentPortIndex + 1,
                     targetPorts.Count);
             }
             else if (targetPorts.Count > 0)
             {
-                portLabel = Localizer.Format("#MechJeb_Docking_targetPortSelect", targetPorts.Count);
+                targetPortLabel = Localizer.Format("#MechJeb_Docking_targetPortSelect", targetPorts.Count);
             }
             else
             {
-                portLabel = Localizer.Format("#MechJeb_Docking_targetPortNone");
+                targetPortLabel = Localizer.Format("#MechJeb_Docking_targetPortNone");
+            }
+
+            return PortSelectorState.Ready;
+        }
+
+        private void DrawTargetPortSelector()
+        {
+            PortSelectorState state = UpdateTargetPortSelector();
+            if (state == PortSelectorState.Hidden)
+                return;
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPort"), GuiUtils.LayoutNoExpandWidth);
+
+            if (state == PortSelectorState.Unavailable)
+            {
+                GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPortUnavailable"), GuiUtils.ArrowSelectorStyeGuiStyleExpand);
+                GUILayout.EndHorizontal();
+                return;
             }
 
             bool guiEnabled = GUI.enabled;
             GUI.enabled = guiEnabled && targetPorts.Count > 0 && !autopilot.Enabled;
             if (GUILayout.Button("<", GUILayout.ExpandWidth(false)))
-                SelectTargetPort(targetPorts, currentIndex, -1);
-            GUILayout.Label(portLabel, GuiUtils.ArrowSelectorStyeGuiStyleExpand);
+                SelectTargetPort(targetPorts, currentPortIndex, -1);
+            GUILayout.Label(targetPortLabel, GuiUtils.ArrowSelectorStyeGuiStyleExpand);
             if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
-                SelectTargetPort(targetPorts, currentIndex, 1);
+                SelectTargetPort(targetPorts, currentPortIndex, 1);
             GUI.enabled = guiEnabled;
             GUILayout.EndHorizontal();
         }
@@ -283,7 +310,7 @@ namespace MuMech
             return sourceNodeTypes.Intersect(targetNodeTypes).Any();
         }
 
-        private void SelectTargetPort(IReadOnlyList<ModuleDockingNode> targetPorts, int currentIndex, int direction)
+        internal void SelectTargetPort(IReadOnlyList<ModuleDockingNode> targetPorts, int currentIndex, int direction)
         {
             int nextIndex = currentIndex < 0
                 ? direction > 0 ? 0 : targetPorts.Count - 1
