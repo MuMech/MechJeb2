@@ -90,7 +90,7 @@ namespace KodeKit
     /// because KodeUI has none of them. Every widget follows Theme.Current and re-localizes on a
     /// language switch; text starting with '#' is a localization key.
     /// </summary>
-    public class KodeWindow
+    public partial class KodeWindow
     {
         public Window Root;
         readonly List<Action> syncs = new List<Action>();
@@ -145,10 +145,28 @@ namespace KodeKit
             BodyDrag.Target = Behaviour;
             BodyDrag.Enabled = () => !TitleBarOnly();
             UIText titleText = Label(titleRow, title, true);
-            titleText.tmpText.alignment = TextAlignmentOptions.Center;
+            // the modern layout puts the title on the left, where the eye starts, and draws the title-bar buttons as icons
+            titleText.tmpText.alignment = ModernLayout ? TextAlignmentOptions.Left : TextAlignmentOptions.Center;
             titleText.tmpText.raycastTarget = true; // so the title bar catches drags
-            SquareButton(Button(titleRow, "x", () => (OnClose ?? (() => Root.gameObject.SetActive(false)))()), true);
+            TitleText = titleText;
+            Action close = () => (OnClose ?? (() => Root.gameObject.SetActive(false)))();
+            if (ModernLayout)
+            {
+                CloseButton = IconButton(titleRow, Sprites.Cross, close);
+                FlatIcon(CloseButton, true);
+            }
+            else
+            {
+                CloseButton = Button(titleRow, "x", close);
+                SquareButton(CloseButton, true);
+            }
         }
+
+        /// <summary>The title label (a window can show something other than its module's name, e.g. the menu's version).</summary>
+        public UIText TitleText { get; }
+
+        /// <summary>The title bar's close button.</summary>
+        public UIButton CloseButton { get; }
 
         /// <summary>
         /// A small square title-bar button: an outlined frame instead of a full button; the close button turns red on hover.
@@ -634,6 +652,38 @@ namespace KodeKit
         /// IMGUI's big state buttons: a GUIStyle with padding 8 on every side (SmartASS, SmartRcs, Translatron), so the
         /// button is the text's height plus 16.
         /// </summary>
+        /// <summary>A button showing only a sprite (e.g. <see cref="Sprites.Arrow"/>), sized like a one-character button.</summary>
+        public static UIButton IconButton(UIObject parent, Sprite icon, Action onClick)
+        {
+            UIButton b = Button(parent, "", onClick);
+            b.GetComponentInChildren<TMP_Text>().gameObject.SetActive(false);
+            AddIcon(b, icon, false);
+            return b;
+        }
+
+        /// <summary>
+        /// A sprite inside a button, before or after its label, tinted with the button's text colour and as high as a
+        /// capital letter (themes re-apply both).
+        /// </summary>
+        public static Image AddIcon(UIButton b, Sprite icon, bool before)
+        {
+            var go = new GameObject("Icon", typeof(RectTransform), typeof(Image), typeof(LayoutElement)) { layer = b.gameObject.layer };
+            go.transform.SetParent(b.transform, false);
+            if (before) go.transform.SetSiblingIndex(0);
+            var img = go.GetComponent<Image>();
+            img.sprite = icon;
+            img.raycastTarget = false;
+            img.preserveAspect = true;
+            var le = go.GetComponent<LayoutElement>();
+            Styled(go, th =>
+            {
+                float size = Mathf.Round(th.FontSize * 0.8f);
+                le.minWidth = le.preferredWidth = le.minHeight = le.preferredHeight = size;
+                img.color = th.Button.TextColor;
+            });
+            return img;
+        }
+
         public static UIButton Padded(UIButton b, int padding = 8)
         {
             b.Padding(padding, padding, padding, padding);

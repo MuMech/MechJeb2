@@ -54,6 +54,12 @@ namespace MuMech.UI
 
         protected override void BuildContents(KodeWindow w)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                BuildModern(w);
+                return;
+            }
+
             UIObject r = w.Root;
 
             // no node
@@ -136,6 +142,115 @@ namespace MuMech.UI
                 ed.UpdateNodeFromFields();
             });
             KodeWindow.Label(row, "m/s");
+        }
+
+        // ---- modern layout: a node dropdown, steppers in a property grid with one step choice, grouped sections ----
+
+        string[] nodeEntries = new string[0];
+
+        string[] NodeEntries()
+        {
+            int n = Count;
+            if (nodeEntries.Length == n) return nodeEntries;
+            nodeEntries = new string[n];
+            for (int i = 0; i < n; i++) nodeEntries[i] = NodeLabel(i);
+            return nodeEntries;
+        }
+
+        static readonly string[] stepLabels = { "0.01", "0.1", "1", "10", "100" };
+        static readonly double[] stepValues = { 0.01, 0.1, 1, 10, 100 };
+
+        int StepIndex()
+        {
+            for (int i = 0; i < stepValues.Length; i++)
+                if (System.Math.Abs(ed.progradeDelta.Val - stepValues[i]) < 1e-9) return i;
+            return -1;
+        }
+
+        void BuildModern(KodeWindow w)
+        {
+            UIObject r = w.Root;
+
+            Layout none = KodeWindow.Panel(r);
+            KodeWindow.Label(none, "#MechJeb_NodeEd_Label1"); //"No maneuver nodes to edit."
+            ModernRelativity(w, none);
+            w.Visible(none.gameObject, () => Count == 0);
+
+            Layout edit = KodeWindow.Panel(r);
+            w.Visible(edit.gameObject, () => Count > 0);
+
+            Layout selector = KodeWindow.Row(edit);
+            new ComboBox(w, selector, () => NodeIndex, i => ed.SelectNode(Nodes[i]), NodeEntries);
+            UIButton merge = KodeWindow.Button(selector, "#MechJeb_NodeEd_button1", () => ed.MergeNext(NodeIndex)); //"Merge next node"
+            w.Visible(merge.gameObject, () => Count > 1 && NodeIndex < Count - 1);
+            w.Visible(selector.gameObject, () => Count > 1);
+
+            KodeWindow.Header(edit, "#MechJeb_NewUI_Burn"); //Burn
+            KodeWindow.PropertyGrid grid = w.Properties(edit);
+            grid.FlexibleColumn = 0; // label, stepper, unit: the labels take the room, the steppers line up
+            StepperRow(w, grid, "#MechJeb_NodeEd_Label2", () => ed.prograde, v => ed.prograde = v, () => ed.progradeDelta); //"Prograde:"
+            StepperRow(w, grid, "#MechJeb_NodeEd_Label3", () => ed.radialPlus, v => ed.radialPlus = v, () => ed.radialPlusDelta); //"Radial+:"
+            StepperRow(w, grid, "#MechJeb_NodeEd_Label4", () => ed.normalPlus, v => ed.normalPlus = v, () => ed.normalPlusDelta); //"Normal+:"
+
+            // one step for the three axes, chosen once
+            Layout steps = KodeWindow.Row(edit);
+            KodeWindow.Label(steps, "#MechJeb_NewUI_Step"); //Step
+            w.Segmented(steps, stepLabels, StepIndex, i => ed.progradeDelta = ed.radialPlusDelta = ed.normalPlusDelta = stepValues[i], ChoiceStyle.Joined);
+            KodeWindow.Label(steps, "m/s");
+            KodeWindow.Button(edit, "#MechJeb_NodeEd_button2", ed.UpdateNodeFromFields, ButtonRole.Normal, true); //"Update"
+
+            KodeWindow.Header(edit, "#MechJeb_NewUI_Time"); //Time
+            Layout shift = KodeWindow.Row(edit);
+            KodeWindow.Label(shift, "#MechJeb_NodeEd_Label6", true); //"Shift time"
+            KodeWindow.Button(shift, "-o", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT - ed.node.patch.period));
+            // the field is the shift; − and + move the node by it
+            w.Stepper(shift, () => ed.timeOffset.Text, s => ed.timeOffset.Text = s, d => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT + d),
+                () => ed.timeOffset, 90);
+            KodeWindow.Button(shift, "+o", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT + ed.node.patch.period));
+
+            Layout snap = KodeWindow.Row(edit);
+            KodeWindow.Button(snap, "#MechJeb_NodeEd_button3", ed.SnapNode); //"Snap node to"
+            new ComboBox(w, snap, () => (int)ed.snap, i => ed.snap = (MechJebModuleNodeEditor.Snap)i, () => ed.snapStrings);
+
+            KodeWindow.Header(edit, "#MechJeb_NewUI_Display"); //Display
+            ModernRelativity(w, edit);
+
+            MechJebCore core = ed.Core;
+            bool HasNode() => core.Node != null;
+            KodeWindow.Header(edit, "#MechJeb_NewUI_Execute"); //Execute
+            UIButton execOne = KodeWindow.Button(edit, "#MechJeb_NodeEd_button4", () => core.Node.ExecuteOneNode(ed), ButtonRole.Primary, true); //"Execute next node"
+            w.Visible(execOne.gameObject, () => HasNode() && !core.Node.Enabled);
+            UIButton execAll = KodeWindow.Button(edit, "#MechJeb_NodeEd_button5", () => core.Node.ExecuteAllNodes(ed), ButtonRole.Normal, true); //"Execute all nodes"
+            w.Visible(execAll.gameObject, () => HasNode() && !core.Node.Enabled && Count > 1);
+            UIButton abort = KodeWindow.Button(edit, "#MechJeb_NodeEd_button6", () => core.Node.Abort(), ButtonRole.Danger, true); //"Abort node execution"
+            w.Visible(abort.gameObject, () => HasNode() && core.Node.Enabled);
+            UnityEngine.UI.Toggle autowarp = w.SwitchRow(edit, "#MechJeb_NodeEd_checkbox1", () => core.Node.Autowarp, v => core.Node.Autowarp = v); //"Auto-warp"
+            w.Visible(autowarp.transform.parent.gameObject, HasNode);
+        }
+
+        /// <summary>label [−][value][+] m/s, the step being the axis's delta; − and + repeat while held.</summary>
+        void StepperRow(KodeWindow w, KodeWindow.PropertyGrid grid, string label, System.Func<EditableDouble> value,
+            System.Action<EditableDouble> setValue, System.Func<EditableDouble> delta)
+        {
+            Layout row = grid.Row();
+            KodeWindow.Label(row, label);
+            w.Stepper(row, () => value().Text, s => value().Text = s, d =>
+            {
+                setValue(value() + d);
+                ed.UpdateNodeFromFields();
+            }, () => delta(), 70, () => value().IsParsed, true);
+            KodeWindow.Label(row, "m/s");
+        }
+
+        void ModernRelativity(KodeWindow w, UIObject parent)
+        {
+            Layout row = KodeWindow.Row(parent);
+            KodeWindow.Label(row, "#MechJeb_NodeEd_Label8"); //"Conics mode:"
+            w.Segmented(row, relativityModeStrings, () => (int)ed.Vessel.patchedConicRenderer.relativityMode,
+                i => ed.Vessel.patchedConicRenderer.relativityMode = (PatchRendering.RelativityMode)i);
+            UIText mode = w.BoundLabel(parent, ModeLabel, true); //"Current mode: <<1>>"
+            mode.tmpText.color = Theme.Current.Dim;
+            w.Behaviour.AddRestyle(() => mode.tmpText.color = Theme.Current.Dim);
         }
 
         void RelativityModeSelect(KodeWindow w, UIObject parent)

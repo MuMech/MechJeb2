@@ -68,12 +68,27 @@ namespace KodeKit
             ((TextMeshProUGUI)input.placeholder).text = "";
             TMP_Text[] texts = f.GetComponentsInChildren<TextMeshProUGUI>(true);
             bool shownValid = true;
+            // the field only grows, like the value cells: a value that doesn't fit widens it once (IMGUI's field shows
+            // "0.562" in 35 px; this one, with its rounded inner margins, would cut the last digit)
+            float fieldWidth = width;
+            void Fit(string value)
+            {
+                if (string.IsNullOrEmpty(value)) return;
+                float wanted = TextMeasure.Measure(value, Theme.Current).x + 10; // the text area's 4 px margins, and 2 to spare
+                // numbers need a few pixels more at most; free text (names) scrolls inside the field instead of widening the window
+                wanted = Mathf.Min(wanted, width * 1.6f);
+                if (wanted <= fieldWidth) return;
+                fieldWidth = wanted;
+                f.PreferredSize(fieldWidth, Theme.Current.RowHeight);
+            }
             KodeWindow.Styled(f.gameObject, th =>
             {
                 th.Field.ApplySelectable(input, bg);
                 foreach (var t in texts) th.ApplyText(t, th.Field.TextColor);
                 if (!shownValid) input.textComponent.color = th.Bad;
+                fieldWidth = width; // a theme change measures again, in the new font size
                 f.PreferredSize(width, th.RowHeight);
+                Fit(input.text);
             });
 
             var keyLock = f.gameObject.AddComponent<FieldKeyboardLock>();
@@ -83,8 +98,10 @@ namespace KodeKit
 
             bool pushing = false;
             input.text = get();
+            Fit(input.text);
             input.onValueChanged.AddListener(s =>
             {
+                Fit(s);
                 if (pushing) return;
                 set(s);
                 string normalised = get();

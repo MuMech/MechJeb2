@@ -276,7 +276,11 @@ namespace KodeKit
         /// <summary>Give each plot its own nested Canvas.</summary>
         public static bool NestedCanvas;
 
-        public LineGraph(KodeWindow w, UIObject parent, float width, float height, int labelCount = 5)
+        readonly RectTransform frame;
+
+        /// <param name="scrollbarParent">Where the scrollbar row goes (null: under the plot, indented past the Y labels).
+        /// The Flight Recorder passes its window, so the scrollbar spans it as in IMGUI.</param>
+        public LineGraph(KodeWindow w, UIObject parent, float width, float height, int labelCount = 5, UIObject scrollbarParent = null)
         {
             Layout area = KodeWindow.Row(parent);
             // Y labels column, fixed width, absolute positions
@@ -289,6 +293,13 @@ namespace KodeKit
             }
             Plot.gameObject.AddComponent<RectMask2D>();
             Graphs.Background(Plot, new Color(0.15f, 0.25f, 0.45f), new Color(0.02f, 0.02f, 0.08f));
+            // GUILayout.Box's border around the plot, kept above the series (AddSeries moves it back on top)
+            var outline = Graphs.Fill<Image>(Plot, "Frame");
+            outline.sprite = Sprites.Outline;
+            outline.type = Image.Type.Sliced;
+            outline.color = new Color(0.30f, 0.32f, 0.35f, 1f);
+            outline.raycastTarget = false;
+            frame = outline.rectTransform;
 
             Stages = Graphs.Fill<LineSeriesGraphic>(Plot, "Stages");
             Stages.VerticalMarkers = true;
@@ -311,8 +322,8 @@ namespace KodeKit
                 yChars[i] = new CharText(t.tmpText);
             }
 
-            Layout bottom = KodeWindow.Row(parent);
-            KodeWindow.Space(bottom, 74);
+            Layout bottom = KodeWindow.Row(scrollbarParent ?? parent);
+            if (scrollbarParent == null) KodeWindow.Space(bottom, 74);
             Scroll = Graphs.HorizontalScrollbar(bottom);
             Scroll.onValueChanged.AddListener(v =>
             {
@@ -320,7 +331,10 @@ namespace KodeKit
                 ViewMin = v * range;
                 Follow = v > 0.999f;
             });
-            w.Toggle(bottom, "", () => Follow, v => Follow = v);
+            // the follow toggle has no text: keep it to its box, so the scrollbar gets all the spare width
+            Toggle follow = w.Toggle(bottom, "", () => Follow, v => Follow = v);
+            var followCell = follow.transform.parent.GetComponent<LayoutElement>() ?? follow.transform.parent.gameObject.AddComponent<LayoutElement>();
+            followCell.flexibleWidth = 0;
             w.AddSync(Tick);
         }
 
@@ -331,6 +345,7 @@ namespace KodeKit
             g.color = color;
             g.raycastTarget = false;
             Series.Add(g);
+            frame.SetAsLastSibling();
             return g;
         }
 

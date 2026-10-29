@@ -24,6 +24,12 @@ namespace MuMech.UI
 
         protected override void BuildContents(KodeWindow w)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                BuildModern(w);
+                return;
+            }
+
             UIObject r = w.Root;
 
             GeneralItemBuilders.Build(w, r, "General:ThrustController.LimitToMaxDynamicPressureInfoItem", Thrust);
@@ -72,6 +78,78 @@ namespace MuMech.UI
 
             UIText status = w.BoundLabel(r, () => Core.Staging.AutostageStatus(), true);
             w.Visible(status.transform.parent.gameObject, () => Core.Staging.Enabled);
+        }
+
+        // modern layout: the same options in property grids (switches on the left, fields dimmed when off), under headers
+        void BuildModern(KodeWindow w)
+        {
+            UIObject r = w.Root;
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
+            ModernRows.ThrustLimits(w, r, Thrust, null, false);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Jets"); //Jet engines
+            KodeWindow.PropertyGrid jets = w.Properties(r);
+            ModernRows.Switch(jets, "#MechJeb_Ascent_checkbox13", () => Thrust.LimitToPreventFlameout, v => Thrust.LimitToPreventFlameout = v,
+                tone: () => Thrust.Limiter == LimitMode.FLAMEOUT ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal); //"Prevent jet flameout"
+            ModernRows.Switch(jets, "#MechJeb_Utilities_checkbox3", () => Thrust.ManageIntakes, v => Thrust.ManageIntakes = v);
+            ModernRows.Field(jets, "#MechJeb_Utilities_label2", Thrust.FlameoutSafetyPct, "%", 50);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Other"); //Other
+            KodeWindow.PropertyGrid other = w.Properties(r);
+            ModernRows.Switch(other, "#MechJeb_Ascent_checkbox19", () => Thrust.DifferentialThrottle, v =>
+            {
+                bool old = Thrust.DifferentialThrottle;
+                Thrust.DifferentialThrottle = v;
+                if (old && !v) Thrust.DisableDifferentialThrottle();
+            }, tone: () => Thrust.DifferentialThrottle && window.Vessel.LiftedOff()
+                ? Thrust.DifferentialThrottleSuccess == DifferentialThrottleStatus.SUCCESS ? KodeWindow.Tone.Good : KodeWindow.Tone.Warn
+                : KodeWindow.Tone.Normal); //"Differential throttle"
+            Layout diffBar = w.StatusBar(r, () => KodeWindow.Tone.Warn);
+            UIText diffStatus = w.BoundLabel(diffBar, DifferentialStatusText, true);
+            diffStatus.tmpText.enableWordWrapping = true;
+            w.Visible(diffBar.gameObject,
+                () => Thrust.DifferentialThrottle && window.Vessel.LiftedOff() && Thrust.DifferentialThrottleSuccess != DifferentialThrottleStatus.SUCCESS);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Deployment"); //Deployment
+            DeployRow(w, r, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
+            DeployRow(w, r, Core.AntennaControl, "#MechJeb_Autodeployantennas"); //"Auto-deploy antennas"
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Autostage"); //Autostage
+            Layout auto = KodeWindow.Row(r);
+            UnityEngine.UI.Toggle autostage = w.SwitchRow(auto, "#MechJeb_Utilities_checkbox1", () => Core.Staging.Users.Contains(window), v =>
+            {
+                if (v) Core.Staging.Users.Add(window);
+                else Core.Staging.Users.Remove(window);
+                window.autostageSavedState = v;
+            }); //"Autostage"
+            // the IMGUI item stored the state on every draw
+            w.AddSync(() => window.autostageSavedState = Core.Staging.Users.Contains(window));
+            UIButton once = KodeWindow.Button(auto, "#MechJeb_Utilities_button1", () => Core.Staging.AutostageOnce(window)); //"Autostage once"
+            w.Visible(once.gameObject, () => !Core.Staging.Enabled);
+
+            Layout settings = KodeWindow.Panel(r);
+            ModernRows.AutostageSettings(w, settings, Core.Staging);
+            w.Visible(settings.gameObject, () => Core.Staging.Enabled);
+
+            Layout statusBar = w.StatusBar(r, () => KodeWindow.Tone.Normal);
+            w.BoundLabel(statusBar, () => Core.Staging.AutostageStatus(), true);
+            w.Visible(statusBar.gameObject, () => Core.Staging.Enabled);
+        }
+
+        /// <summary>[switch] Auto-deploy ..., and the "Toggle ... (currently ...)" button under it (beside it, the window would double in width).</summary>
+        static void DeployRow(KodeWindow w, UIObject parent, MechJebModuleDeployableController c, string autoKey)
+        {
+            w.SwitchRow(parent, autoKey, () => c.AutoDeploy, v => c.AutoDeploy = v);
+            UIButton b = KodeWindow.Button(parent, c.CurrentButtonText ?? " ", c.ToggleDeploy, true);
+            string shown = c.CurrentButtonText;
+            w.AddSync(() =>
+            {
+                string s = c.CurrentButtonText;
+                if ((object)s == shown) return; // the controller swaps between cached strings
+                shown = s;
+                b.Text(s ?? " ");
+            });
         }
 
         string DifferentialStatusText()

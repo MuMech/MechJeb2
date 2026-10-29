@@ -90,11 +90,27 @@ namespace KodeKit
                 int n = this.entries().Length;
                 if (n > 0) this.set((Mathf.Clamp(this.get(), 0, n - 1) - 1 + n) % n);
             });
-            w.BoundLabel(arrows, () =>
+            UIText current = w.BoundLabel(arrows, () =>
             {
                 string[] e = this.entries();
                 return e.Length == 0 ? " " : e[Mathf.Clamp(this.get(), 0, e.Length - 1)];
-            }, true).tmpText.alignment = TextAlignmentOptions.Center;
+            }, true);
+            current.tmpText.alignment = TextAlignmentOptions.Center;
+            if (!flexible)
+            {
+                // a flexible label in a row that doesn't stretch gets no width at all: size it for the widest entry
+                GameObject cell = KodeWindow.IsolateLayout ? current.transform.parent.gameObject : current.gameObject;
+                var le = cell.GetComponent<UnityEngine.UI.LayoutElement>() ?? cell.AddComponent<UnityEngine.UI.LayoutElement>();
+                void FitWidest()
+                {
+                    float widest = 0;
+                    foreach (string e in this.entries())
+                        widest = Mathf.Max(widest, TextMeasure.Measure(e ?? "", Theme.Current).x);
+                    le.minWidth = le.preferredWidth = widest + 8;
+                }
+                FitWidest();
+                w.Behaviour.AddRestyle(FitWidest);
+            }
             KodeWindow.Button(arrows, ">", () =>
             {
                 int n = this.entries().Length;
@@ -110,6 +126,12 @@ namespace KodeKit
                 arrows.gameObject.SetActive(a);
             });
         }
+
+        /// <summary>
+        /// The group of each entry (null: none). The popup lists consecutive entries of a group under its header, so a
+        /// long list (the planner's operations) reads as a few short ones.
+        /// </summary>
+        public Func<int, string> Group;
 
         /// <summary>When set and true, combos show as [&lt;] entry [&gt;] arrow selectors instead (checked every frame).</summary>
         public static Func<bool> UseArrowSelector;
@@ -164,11 +186,16 @@ namespace KodeKit
             panel.gameObject.AddComponent<WindowBehaviour>(); // click-through lock while hovered
 
             string[] e = entries();
+            string lastGroup = null;
             for (int i = 0; i < e.Length; i++)
             {
+                string g = Group?.Invoke(i);
+                if (g != null && g != lastGroup) KodeWindow.Header(panel, g, true);
+                lastGroup = g;
                 int k = i;
                 UIButton b = KodeWindow.Button(panel, e[i], () => Select(k), true);
                 b.GetComponentInChildren<TMP_Text>().alignment = TextAlignmentOptions.Left;
+                if (Group != null) b.Padding(14, 6, 1, 1);
             }
             panel.gameObject.AddComponent<LayoutElement>().minWidth = ((RectTransform)Button.transform).rect.width;
 

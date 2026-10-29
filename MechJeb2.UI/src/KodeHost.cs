@@ -154,10 +154,40 @@ namespace MuMech.UI
             foreach (KodeView v in views.Values) v.ApplyScale();
         }
 
-        /// <summary>MechJeb skin → KodeKit theme. KSP stock look for DEFAULT and MECH_JEB1 until a MechJeb theme exists.</summary>
+        string layoutKey;
+
+        /// <summary>
+        /// The new UI's layout settings → KodeKit's switches. Views read them when they build, so a change rebuilds every
+        /// view (the next Update builds the open ones again).
+        /// </summary>
+        void ApplyLayout()
+        {
+            KodeWindow.ModernLayout = settings.UiModernLayout;
+            KodeWindow.ShowHeaders = settings.UiSectionHeaders;
+            string key = KodeWindow.ModernLayout + "|" + KodeWindow.ShowHeaders;
+            if (layoutKey != null && key != layoutKey) DestroyViews();
+            layoutKey = key;
+        }
+
+        /// <summary>
+        /// MechJeb skin → KodeKit theme: KSP's stock sprites at MechJeb's text size (MechJeb's DEFAULT and MECH_JEB1), tighter
+        /// for COMPACT, then the new UI's own skin on top (Classic+, Flat, Glass).
+        /// </summary>
         void ApplyTheme()
         {
             if (settings == null) return;
+            ApplyLayout();
+            Theme t = ThemeFor((MechJebModuleSettings.UiSkinType)settings.UiSkin, (GuiUtils.SkinType)settings.SkinId == GuiUtils.SkinType.COMPACT,
+                settings.UiOpacity);
+            string key = t.Name + "|" + Mathf.Clamp(settings.UiOpacity, 0.3f, 1f).ToString("F2");
+            if (key == themeKey) return;
+            themeKey = key;
+            Theme.Set(t);
+        }
+
+        /// <summary>The theme of a new UI skin, at MechJeb's COMPACT or normal spacing and a window opacity (also for tests).</summary>
+        public static Theme ThemeFor(MechJebModuleSettings.UiSkinType skin, bool compact, float opacity)
+        {
             Theme t = Theme.KspStock();
             // MechJeb's skins are Unity's built-in IMGUI skin: near-white Arial 13 px. LiberationSans is metric-compatible
             // with Arial (same advance widths), so at 13 px the text has the same size as MechJeb's IMGUI text.
@@ -171,13 +201,15 @@ namespace MuMech.UI
             t.Toggle = new ElementStyle { Normal = Sprites.CheckBox, Highlight = Sprites.CheckBoxHover, Active = Sprites.CheckBoxHover };
             t.Check = new ElementStyle { Normal = Sprites.Tick, Tint = new Color(0.55f, 1f, 0.55f) };
             // darker windows than KSP's grey sprite, at the user's opacity (Settings → "New UI opacity")
-            float opacity = Mathf.Clamp(settings.UiOpacity, 0.3f, 1f);
+            opacity = Mathf.Clamp(opacity, 0.3f, 1f);
             t.Window.Tint = new Color(0.5f, 0.5f, 0.5f, opacity);
-            if ((GuiUtils.SkinType)settings.SkinId == GuiUtils.SkinType.COMPACT) t = Theme.Compact(t);
-            string key = t.Name + "|" + opacity.ToString("F2");
-            if (key == themeKey) return;
-            themeKey = key;
-            Theme.Set(t);
+            if (skin == MechJebModuleSettings.UiSkinType.ClassicPlus) t = Theme.ClassicPlus(t);
+            else if (skin == MechJebModuleSettings.UiSkinType.Flat) t = Theme.Flat(t);
+            else if (skin == MechJebModuleSettings.UiSkinType.Glass) t = Theme.Glass(t);
+            // the drawn skins carry their colour in their sprites: the opacity goes in the tint's alpha only
+            if (skin == MechJebModuleSettings.UiSkinType.Flat || skin == MechJebModuleSettings.UiSkinType.Glass)
+                t.Window.Tint = new Color(1, 1, 1, opacity);
+            return compact ? Theme.Compact(t) : t;
         }
 
         string themeKey;

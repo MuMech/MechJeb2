@@ -66,9 +66,9 @@ namespace MuMech.UI
             Layout lead = KodeWindow.Row(r);
             KodeWindow.Label(lead, "#MechJeb_WarpHelper_label5"); //"Lead time: "
             EditFields.Field(w, lead, () => helper.leadTime.Text, s => helper.leadTime.Text = s, 100, () => helper.leadTime.IsParsed);
-            UIButton abort = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button1", helper.AbortWarp); //"Abort"
+            UIButton abort = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button1", helper.AbortWarp, KodeWindow.ModernLayout ? ButtonRole.Danger : ButtonRole.Normal); //"Abort"
             w.Visible(abort.gameObject, () => helper.warping);
-            UIButton warp = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button2", helper.StartWarp); //"Warp"
+            UIButton warp = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button2", helper.StartWarp, KodeWindow.ModernLayout ? ButtonRole.Primary : ButtonRole.Normal); //"Warp"
             w.Visible(warp.gameObject, () => !helper.warping);
 
             // useQuickWarpInfoItem()

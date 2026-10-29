@@ -76,6 +76,78 @@ namespace MuMech.UI
         }
 
         internal const string VectorTemplate = "|9999.999| [-9999.999, -9999.999, -9999.999 ]";
+
+        /// <summary>
+        /// The modern layout's vector read-outs: label | X | Y | Z (| |v|) in one table for consecutive rows, instead of
+        /// "[ x, y, z ]" strings, so the axes line up and differences between them stand out.
+        /// </summary>
+        internal sealed class VectorGrid
+        {
+            readonly KodeWindow w;
+            public readonly UIObject Parent;
+            KodeWindow.PropertyGrid grid;
+
+            readonly bool magnitudeColumn;
+
+            /// <param name="magnitudeColumn">a |v| column even when the first row has no magnitude</param>
+            public VectorGrid(KodeWindow w, UIObject parent, bool magnitudeColumn = false)
+            {
+                this.w = w;
+                Parent = parent;
+                this.magnitudeColumn = magnitudeColumn;
+            }
+
+            static UIText Cell(UIObject row, string text, bool dim)
+            {
+                UIText t = KodeWindow.LiveLabel(row, text, false);
+                t.tmpText.alignment = TMPro.TextAlignmentOptions.Right;
+                t.Text(dim ? text : "");
+                if (dim) KodeWindow.Styled(t.gameObject, th => t.tmpText.color = th.Dim);
+                return t;
+            }
+
+            /// <summary>A row; its numbers are refilled every frame while <paramref name="active"/> holds.</summary>
+            public void Row(string label, Func<bool> active, Func<Vector3d> get, bool sci, bool magnitude)
+            {
+                // a new table when something else was added after the last one
+                if (grid == null || grid.Table.transform.GetSiblingIndex() != Parent.transform.childCount - 1)
+                {
+                    grid = w.Properties(Parent);
+                    grid.FlexibleColumn = 0;
+                    Layout head = grid.Row();
+                    KodeWindow.Label(head, "");
+                    // the columns take the width of the numbers below
+                    foreach (string axis in new[] { "X", "Y", "Z" }) Cell(head, axis, true);
+                    if (magnitude || magnitudeColumn) Cell(head, "|v|", true);
+                }
+
+                Layout row = grid.Row();
+                KodeWindow.Label(row, label);
+                string t = sci ? "-9.99E+07" : "-9999.999";
+                var x = new CharText(Cell(row, t, false).tmpText);
+                var y = new CharText(Cell(row, t, false).tmpText);
+                var z = new CharText(Cell(row, t, false).tmpText);
+                CharText m = magnitude ? new CharText(Cell(row, "9999.999", false).tmpText) : null;
+                w.AddSync(() =>
+                {
+                    if (!active()) return;
+                    Vector3d v = get();
+                    Fill(x, v.x, sci);
+                    Fill(y, v.y, sci);
+                    Fill(z, v.z, sci);
+                    if (m == null) return;
+                    m.Clear().Append(v.magnitude, 3).Commit();
+                });
+            }
+
+            static void Fill(CharText t, double v, bool sci)
+            {
+                t.Clear();
+                if (sci) PaddedSci(t, v);
+                else Padded(t, v, 3);
+                t.Commit();
+            }
+        }
         const string PlainTemplate = "[-9999.999, -9999.999, -9999.999 ]";
         const string SciTemplate = "[-9.99E+07, -9.99E+07, -9.99E+07 ]";
 
@@ -125,16 +197,21 @@ namespace MuMech.UI
                 if (c != null) action(c);
             });
 
-            public Toggle Tog(UIObject parent, string text, Func<T, bool> get, Action<T, bool> set) =>
-                w.Toggle(parent, text, () =>
+            // a switch in the modern layout, a checkbox in IMGUI's
+            public Toggle Tog(UIObject parent, string text, Func<T, bool> get, Action<T, bool> set)
+            {
+                bool Get()
                 {
                     T c = C;
                     return c != null && get(c);
-                }, v =>
+                }
+                void Set(bool v)
                 {
                     T c = C;
                     if (c != null) set(c, v);
-                });
+                }
+                return KodeWindow.ModernLayout ? w.SwitchRow(parent, text, Get, Set) : w.Toggle(parent, text, Get, Set);
+            }
 
             public void Tog(string text, Func<T, bool> get, Action<T, bool> set) => Tog(Parent, text, get, set);
 
@@ -172,9 +249,25 @@ namespace MuMech.UI
             }
 
             /// <summary>label (flexible) + a live vector, committed only while this controller is the active one.</summary>
+            VectorGrid vectors;
+
             public void Vec(string label, Func<T, Vector3d> get, Action<CharText, Vector3d> format = null, string template = null,
                 UIObject parent = null)
             {
+                // modern layout: the plain, scientific and magnitude vectors as X, Y, Z columns
+                bool plain = format == null || format == Plain, sci = format == PlainSci, magnitude = format == WithMagnitude;
+                if (KodeWindow.ModernLayout && (plain || sci || magnitude))
+                {
+                    UIObject into = parent ?? Parent;
+                    if (vectors == null || vectors.Parent != into) vectors = new VectorGrid(w, into);
+                    vectors.Row(label, () => C != null, () =>
+                    {
+                        T c = C;
+                        return c == null ? Vector3d.zero : get(c);
+                    }, sci, magnitude);
+                    return;
+                }
+
                 Layout row = Row(parent);
                 KodeWindow.Label(row, label, true);
                 Value(row, get, format, template);

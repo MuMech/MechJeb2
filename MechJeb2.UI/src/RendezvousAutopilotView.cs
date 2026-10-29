@@ -52,9 +52,9 @@ namespace MuMech.UI
             // "Rendezvous target": name on the right
             GuidanceUi.Pair(w, main, "#MechJeb_RZauto_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(Core.Target.Name), () => Mode() == 2);
 
-            UIButton engage = KodeWindow.Button(main, "#MechJeb_RZauto_button1", () => Autopilot.Users.Add(window)); //"Engage autopilot"
+            UIButton engage = KodeWindow.Button(main, "#MechJeb_RZauto_button1", () => Autopilot.Users.Add(window), KodeWindow.ModernLayout ? ButtonRole.Primary : ButtonRole.Normal); //"Engage autopilot"
             w.Visible(engage.gameObject, () => Autopilot != null && !Autopilot.Enabled);
-            UIButton disengage = KodeWindow.Button(main, "#MechJeb_RZauto_button2", () => Autopilot.Users.Remove(window)); //"Disengage autopilot"
+            UIButton disengage = KodeWindow.Button(main, "#MechJeb_RZauto_button2", () => Autopilot.Users.Remove(window), KodeWindow.ModernLayout ? ButtonRole.Danger : ButtonRole.Normal); //"Disengage autopilot"
             w.Visible(disengage.gameObject, () => Autopilot != null && Autopilot.Enabled);
 
             ValueRow(w, main, "#MechJeb_RZauto_label4", () => Autopilot?.desiredDistance, "m"); //"Desired final distance:"

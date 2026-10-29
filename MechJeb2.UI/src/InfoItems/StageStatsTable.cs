@@ -41,6 +41,44 @@ namespace MuMech.UI
             this.w = w;
             h = helper;
 
+            if (KodeWindow.ModernLayout) ModernToolbar(parent);
+            else ClassicToolbar(parent);
+
+            grid = KodeWindow.Row(parent);
+            grid.Spacing(0);
+            foreach (StageData d in MechJebStageStatsHelper.Columns)
+                columns.Add(BuildColumn(d));
+
+            Refresh();
+        }
+
+        // modern layout: the on/off options as chips that show their state, the display set as one choice
+        void ModernToolbar(UIObject parent)
+        {
+            KodeWindow.Header(parent, "#MechJeb_InfoItems_label1"); //"Stage stats"
+            Layout chips = KodeWindow.FlowWrap(parent, 4);
+            Chip(chips, "s", () => h.TimeSeconds, h.ToggleTimeSeconds);
+            Chip(chips, CachedLocalizer.Instance.MechJebInfoItemsShowEmpty, () => h.ShowEmpty, h.ToggleShowEmpty);
+            Chip(chips, "RCS", () => h.ShowRcs, h.ToggleRcs);
+            if (!HighLogic.LoadedSceneIsEditor) Chip(chips, CachedLocalizer.Instance.MechJebInfoItemsButton5, () => h.LiveSLT, h.ToggleLiveSLT); //"Live SLT"
+            w.Segmented(parent, MechJebStageStatsHelper.DisplayStateNames, () => h.DisplayState, i =>
+            {
+                // the helper only cycles: step to the chosen set
+                for (int n = 0; n < MechJebStageStatsHelper.DisplayStateNames.Length && h.DisplayState != i; n++) h.CycleDisplayState();
+                Refresh();
+            });
+            if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
+        }
+
+        void Chip(UIObject parent, string text, System.Func<bool> get, System.Action toggle) =>
+            w.Chip(parent, text, get, v =>
+            {
+                if (v != get()) toggle();
+                Refresh();
+            });
+
+        void ClassicToolbar(UIObject parent)
+        {
             Layout bar = KodeWindow.Row(parent);
             KodeWindow.Label(bar, "#MechJeb_InfoItems_label1", true); //"Stage stats"
             ToolbarButton(bar, () => h.TimeSeconds ? "s" : "dhms", h.ToggleTimeSeconds);
@@ -53,13 +91,6 @@ namespace MuMech.UI
                     h.ToggleLiveSLT); //"Live SLT" "0Alt SLT"
             else
                 EditorEnvironment(parent);
-
-            grid = KodeWindow.Row(parent);
-            grid.Spacing(0);
-            foreach (StageData d in MechJebStageStatsHelper.Columns)
-                columns.Add(BuildColumn(d));
-
-            Refresh();
         }
 
         void ToolbarButton(UIObject parent, System.Func<string> text, System.Action onClick)
@@ -207,6 +238,10 @@ namespace MuMech.UI
                 }
             }
 
+            // the modern layout highlights the stage that burns now and dims the units
+            bool modern = KodeWindow.ModernLayout;
+            int current = modern ? CurrentRow(stages) : -1;
+            Theme th = Theme.Current;
             double gee = h.GeeASL;
             foreach (Column c in columns)
             {
@@ -215,17 +250,34 @@ namespace MuMech.UI
                 {
                     double v = h.Value(c.Id, row, gee, out int decimals, out string unit);
                     CharText ct = c.Chars[row].Clear();
-                    if (decimals >= 0) ct.Append(v, decimals).Append(unit);
-                    else if (h.TimeSeconds) ct.Append(v, 2).Append('s').Append(unit);
+                    if (decimals >= 0) ct.Append(v, decimals);
+                    else if (h.TimeSeconds) ct.Append(v, 2).Append('s');
                     else
                     {
                         long day = KSPUtil.dateTimeFormatter.Day, year = KSPUtil.dateTimeFormatter.Year;
-                        ct.AppendDHMS(v, 1, (int)(day / 3600), (int)(year / day)).Append(unit);
+                        ct.AppendDHMS(v, 1, (int)(day / 3600), (int)(year / day));
                     }
-                    FitWidth(c, ct.Length);
+                    int length = ct.Length + (unit?.Length ?? 0);
+                    if (modern && !string.IsNullOrEmpty(unit)) ct.Append("<alpha=#80>").Append(unit);
+                    else ct.Append(unit);
+                    FitWidth(c, length);
                     ct.Commit();
+                    if (!modern) continue;
+                    Color want = row == current ? th.Accent : th.Text;
+                    if (c.Cells[row].tmpText.color != want) c.Cells[row].tmpText.color = want;
                 }
             }
+        }
+
+        /// <summary>The row of the stage that burns now: the highest stage at or below the vessel's current stage (none in the editor).</summary>
+        static int CurrentRow(List<int> stages)
+        {
+            Vessel v = FlightGlobals.ActiveVessel;
+            if (HighLogic.LoadedSceneIsEditor || v == null) return -1;
+            int best = -1;
+            for (int i = 0; i < stages.Count; i++)
+                if (stages[i] <= v.currentStage && (best < 0 || stages[i] > stages[best])) best = i;
+            return best;
         }
 
         /// <summary>Column width = max(header, widest value so far); only grows, so changing values never re-lay out.</summary>

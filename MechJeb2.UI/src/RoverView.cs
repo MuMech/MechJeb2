@@ -34,8 +34,11 @@ namespace MuMech.UI
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlHeading", () => Ap != null && Ap.ControlHeading);
-            Layout heading = RoverUi.EditableRow(w, r, ed, "Editable:RoverController.heading");
-            if (heading != null)
+            // modern layout: steppers (Shift: ×10) instead of a field and two 18 px buttons
+            Layout heading = KodeWindow.ModernLayout
+                ? RoverUi.StepperRow(w, r, ed, "Editable:RoverController.heading", d => Ap.heading.Val += d)
+                : RoverUi.EditableRow(w, r, ed, "Editable:RoverController.heading");
+            if (heading != null && !KodeWindow.ModernLayout)
             {
                 RoverUi.Btn(heading, "-", () => Ap.heading.Val -= Alt ? 5 : 1).PreferredWidth(18);
                 RoverUi.Btn(heading, "+", () => Ap.heading.Val += Alt ? 5 : 1).PreferredWidth(18);
@@ -43,8 +46,10 @@ namespace MuMech.UI
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.headingErr", () => Ap?.headingErr ?? 0, "-180.0 º");
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlSpeed", () => Ap != null && Ap.ControlSpeed);
-            Layout speed = RoverUi.EditableRow(w, r, ed, "Editable:RoverController.speed");
-            if (speed != null)
+            Layout speed = KodeWindow.ModernLayout
+                ? RoverUi.StepperRow(w, r, ed, "Editable:RoverController.speed", d => Ap.speed.Val += d)
+                : RoverUi.EditableRow(w, r, ed, "Editable:RoverController.speed");
+            if (speed != null && !KodeWindow.ModernLayout)
             {
                 RoverUi.Btn(speed, "-", () => Ap.speed.Val -= Alt ? 5 : 1).PreferredWidth(18);
                 RoverUi.Btn(speed, "+", () => Ap.speed.Val += Alt ? 5 : 1).PreferredWidth(18);
@@ -96,6 +101,11 @@ namespace MuMech.UI
             w.Visible(go.gameObject, () => Ap != null && Ap.Waypoints.Count > 0 && (!Ap.ControlHeading || !Ap.ControlSpeed));
             UIButton stop = RoverUi.Btn(drive, "#MechJeb_Rover_button4", window.Stop, true); // "Stop"
             w.Visible(stop.gameObject, () => Ap != null && Ap.Waypoints.Count > 0 && Ap.ControlHeading && Ap.ControlSpeed);
+            if (KodeWindow.ModernLayout)
+            {
+                w.BindRole(go, () => ButtonRole.Primary);
+                w.BindRole(stop, () => ButtonRole.Danger);
+            }
             RoverUi.Btn(drive, "#MechJeb_Rover_button5", window.ToggleWaypointWindow, true); // "Waypoints"
         }
     }
@@ -151,14 +161,35 @@ namespace MuMech.UI
 
         static InfoItem Find(MechJebModuleCustomWindowEditor ed, string id) => ed?.registry.Find(i => i.id == id);
 
-        /// <summary>A ToggleInfoItem as InfoItem.DrawItem draws it; the value is read through <paramref name="get"/> (no reflection per frame).</summary>
+        /// <summary>
+        /// A ToggleInfoItem as InfoItem.DrawItem draws it (a switch in the modern layout); the value is read through
+        /// <paramref name="get"/> (no reflection per frame).
+        /// </summary>
         public static GameObject ToggleRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Func<bool> get)
         {
             if (!(Find(ed, id) is ToggleInfoItem item)) return null;
-            UnityEngine.UI.Toggle t = w.Toggle(parent, item.name, get, v => item.Value = v);
+            UnityEngine.UI.Toggle t = KodeWindow.ModernLayout
+                ? w.SwitchRow(parent, item.name, get, v => item.Value = v)
+                : w.Toggle(parent, item.name, get, v => item.Value = v);
             GameObject row = t.transform.parent.gameObject;
             if (!string.IsNullOrEmpty(item.localizedTooltip))
-                Tooltips.Add(row.GetComponentInChildren<ToggleLabelClick>().gameObject, item.localizedTooltip);
+                Tooltips.Add(KodeWindow.ModernLayout ? row.GetComponentInChildren<TMP_Text>().gameObject // the switch has no text: the first is its label
+                    : row.GetComponentInChildren<ToggleLabelClick>().gameObject, item.localizedTooltip);
+            return row;
+        }
+
+        /// <summary>The modern layout's EditableInfoItem with nudges: label [−][field][+] unit; − and + add ∓1 (×10 with Shift).</summary>
+        public static Layout StepperRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Action<double> add)
+        {
+            if (!(Find(ed, id) is EditableInfoItem item) || item.Editable == null) return null;
+            IEditable e = item.Editable;
+            var parsed = e as EditableDoubleMult;
+            Layout row = KodeWindow.Row(parent);
+            UIText label = KodeWindow.Label(row, item.name, true);
+            if (!string.IsNullOrEmpty(item.localizedTooltip)) Tooltips.Add(label.gameObject, item.localizedTooltip);
+            w.Stepper(row, () => e.Text, s => e.Text = s, add, () => 1, Math.Max(item.width, 45),
+                parsed != null ? (Func<bool>)(() => parsed.IsParsed) : null);
+            if (!string.IsNullOrEmpty(item.rightLabel)) KodeWindow.Label(row, item.rightLabel);
             return row;
         }
 

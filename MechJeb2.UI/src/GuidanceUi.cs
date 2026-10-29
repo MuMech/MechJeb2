@@ -2,6 +2,7 @@ using System;
 using KodeKit;
 using KodeUI;
 using KSP.Localization;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -62,7 +63,10 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, key, true);
-            return Live(w, row, template, false, fill, active);
+            // GuiUtils.SimpleLabel: the value flush right (the cell is as wide as the template, often wider than the value)
+            UIText value = Live(w, row, template, false, fill, active);
+            value.tmpText.alignment = TextAlignmentOptions.Right;
+            return value;
         }
 
         /// <summary>The text before and after the &lt;&lt;1&gt;&gt; of a localized string, so a number can be appended without Localizer.Format.</summary>
@@ -135,6 +139,66 @@ namespace MuMech.UI
         {
             var le = b.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
             le.minWidth = width;
+        }
+
+        /// <summary>
+        /// The modern layout's "AUTO": while <paramref name="auto"/> holds, <paramref name="body"/> stays in view but greyed
+        /// and inert, and a status bar under it says which module is in control (<paramref name="controller"/>).
+        /// </summary>
+        public static Layout AutoBar(KodeWindow w, UIObject parent, GameObject body, string autoKey, Func<bool> auto, Func<object> controller)
+        {
+            Layout bar = w.StatusBar(parent, () => KodeWindow.Tone.Warn);
+            Layout row = KodeWindow.Row(bar);
+            w.Badge(row, autoKey, KodeWindow.Tone.Warn);
+            object shownUser = null;
+            string text = Localizer.Format("#MechJeb_NewUI_OtherInControl"); //Another autopilot is in control
+            w.BoundLabel(row, () =>
+            {
+                object u = controller();
+                if (ReferenceEquals(u, shownUser)) return text;
+                shownUser = u;
+                string name = UserName(u);
+                text = name != null ? Localizer.Format("#MechJeb_NewUI_InControl", name) : Localizer.Format("#MechJeb_NewUI_OtherInControl"); //<<1>> is in control
+                return text;
+            }, true);
+            w.Visible(bar.gameObject, auto);
+
+            CanvasGroup group = body.GetComponent<CanvasGroup>() ?? body.AddComponent<CanvasGroup>();
+            bool shown = false;
+            w.AddSync(() =>
+            {
+                bool a = auto();
+                if (a == shown) return;
+                shown = a;
+                group.alpha = a ? 0.45f : 1;
+                group.interactable = !a;
+                group.blocksRaycasts = !a;
+            });
+            return bar;
+        }
+
+        /// <summary>A module's name for the player: its window title, or its type name in words ("Node Executor").</summary>
+        public static string UserName(object user)
+        {
+            if (user is DisplayModule d) return d.GetName();
+            if (!(user is ComputerModule)) return null;
+            string type = user.GetType().Name.Replace("MechJebModule", "");
+            var sb = new System.Text.StringBuilder(type.Length + 4);
+            for (int i = 0; i < type.Length; i++)
+            {
+                if (i > 0 && char.IsUpper(type[i]) && !char.IsUpper(type[i - 1])) sb.Append(' ');
+                sb.Append(type[i]);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>The first user of a controller other than <paramref name="self"/> (null: none).</summary>
+        public static object OtherUser(UserPool users, object self)
+        {
+            if (users == null) return null;
+            foreach (object u in users)
+                if (!ReferenceEquals(u, self)) return u;
+            return null;
         }
 
         public static int HoursPerDay => KSPUtil.dateTimeFormatter.Day / 3600;

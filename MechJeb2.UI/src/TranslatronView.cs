@@ -43,6 +43,12 @@ namespace MuMech.UI
 
         protected override void BuildContents(KodeWindow w)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                BuildModern(w);
+                return;
+            }
+
             UIObject r = w.Root;
 
             // other modules use the throttle: IMGUI shows one red, inert "auto" button
@@ -97,6 +103,40 @@ namespace MuMech.UI
             string panic = KodeWindow.Loc("#MechJeb_Trans_PANIC"), noPanic = KodeWindow.Loc("#MechJeb_Trans_NOPANIC");
             KodeWindow.Padded(MiscViewKit.BoundButton(w, r, () => tr.Aborting ? noPanic : panic, tr.PanicSwitch,
                 () => tr.Aborting ? KodeWindow.Tone.Bad : KodeWindow.Tone.Good, true));
+        }
+
+        static readonly string[] modeKeys =
+            { "#MechJeb_Translatron_off", "#MechJeb_Translatron_KEEP_OBT", "#MechJeb_Translatron_KEEP_SURF", "#MechJeb_Translatron_KEEP_VERT" };
+
+        // modern layout: the modes as one choice, a speed stepper, PANIC as a destructive button, the AUTO status bar
+        void BuildModern(KodeWindow w)
+        {
+            UIObject r = w.Root;
+            Layout body = KodeWindow.Panel(r);
+
+            w.Segmented(body, modeKeys, () => Mode, i => tr.SetMode((MechJebModuleThrustController.TMode)i));
+            w.SwitchRow(body, "#MechJeb_Trans_kill_h", () => Thrust.TransKillH, v => Thrust.TransKillH = v);
+
+            void ApplySpeed() => Thrust.TransSpdAct = (float)tr.trans_spd.Val;
+            Layout speed = KodeWindow.Row(body);
+            KodeWindow.Label(speed, "#MechJeb_Trans_spd", true);
+            w.Stepper(speed, () => tr.trans_spd.Text, s => tr.trans_spd.Text = s, d =>
+            {
+                tr.trans_spd += d;
+                ApplySpeed();
+            }, () => 1, 45, () => tr.trans_spd.IsParsed);
+            KodeWindow.Label(speed, "m/s");
+            KodeWindow.Button(body, "#MechJeb_Trans_spd_act", ApplySpeed, ButtonRole.Primary, true);
+
+            UIText current = MiscViewKit.LiveBound(w, body, Localizer.Format("#MechJeb_Trans_current_spd") + "-000.0km/s", SpeedText, true);
+            w.Visible(current.transform.parent.gameObject, () => Thrust.Tmode != MechJebModuleThrustController.TMode.OFF);
+
+            KodeWindow.Header(body, "Automation");
+            string panic = KodeWindow.Loc("#MechJeb_Trans_PANIC"), noPanic = KodeWindow.Loc("#MechJeb_Trans_NOPANIC");
+            UIButton p = KodeWindow.Padded(MiscViewKit.BoundButton(w, body, () => tr.Aborting ? noPanic : panic, tr.PanicSwitch, null, true), 6);
+            w.BindRole(p, () => tr.Aborting ? ButtonRole.Selected : ButtonRole.Danger);
+
+            GuidanceUi.AutoBar(w, r, body.gameObject, "#MechJeb_Trans_auto", AutoMode, () => GuidanceUi.OtherUser(Thrust.Users, tr));
         }
     }
 }

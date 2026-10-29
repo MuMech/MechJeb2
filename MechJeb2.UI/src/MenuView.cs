@@ -79,18 +79,24 @@ namespace MuMech.UI
 
         UIButton button;
         RectTransform buttonRect;
-        string upText = "▲ MechJeb ▲", downText = "▼ MechJeb ▼", shownText;
+        Image arrowBefore, arrowAfter;
+        int shownArrow = -1; // 0 up, 1 down
 
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
-            w.TitleRow.gameObject.SetActive(false);
+            // IMGUI's menu window is titled "MechJeb <version>", without a close button; the menu places itself, so no dragging
+            w.TitleText.Text("MechJeb " + Core.version);
+            w.CloseButton.gameObject.SetActive(false);
+            w.TitleRow.GetComponent<DragHandle>().Enabled = () => false;
+            w.BodyDrag.Enabled = () => false;
             builtSignature = Signature();
             nextCheck = Time.unscaledTime + 0.5f;
 
             // the small button at the top left of the panel that closes it when the big button is hidden
             UIButton close = KodeWindow.Button(r, "", menu.ShowHideWindow);
-            close.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            // Unity lays a child out unless all its layout elements ignore layout: KodeWindow.Button already added one
+            close.GetComponent<LayoutElement>().ignoreLayout = true;
             RectTransform cr = close.rectTransform;
             cr.anchorMin = cr.anchorMax = cr.pivot = new Vector2(0, 1);
             cr.anchoredPosition = new Vector2(2, -2);
@@ -104,6 +110,13 @@ namespace MuMech.UI
             columns.Finish();
 
             List<DisplayModule> modules = Core.GetDisplayModules(MechJebModuleMenu.DisplayOrder.instance);
+            if (KodeWindow.ModernLayout)
+            {
+                GroupedColumns(w, columns, modules);
+                BuildEdge(w, r);
+                return;
+            }
+
             int count = 0;
             for (int i = 0; i < modules.Count; i++)
                 if (InMenu(modules[i])) count++;
@@ -127,24 +140,89 @@ namespace MuMech.UI
 
             KodeWindow.Button(column, "#MechJeb_OnlineManualbutton", () => Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki")); //"Online Manual"
 
+            BuildEdge(w, r);
+        }
+
+        /// <summary>The locked-modules note and the "MechJeb" button on the screen edge (both layouts).</summary>
+        void BuildEdge(KodeWindow w, UIObject r)
+        {
             UIText locked = KodeWindow.Paragraph(r, "#MechJeb_ModuleAreLocked"); //"Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station."
             w.Visible(locked.gameObject, () => Core.someModuleAreLocked);
 
             // the "MechJeb" button on the edge
-            button = KodeWindow.Button(r, upText, menu.ShowHideWindow);
-            button.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            // "▲ MechJeb ▲": the arrows are sprites, KSP's fonts have no ▲▼
+            button = KodeWindow.Button(r, "MechJeb", menu.ShowHideWindow);
+            button.Spacing(4);
+            arrowBefore = KodeWindow.AddIcon(button, Sprites.Arrow(Sprites.Direction.Up), true);
+            arrowAfter = KodeWindow.AddIcon(button, Sprites.Arrow(Sprites.Direction.Up), false);
+            shownArrow = -1;
+            button.GetComponent<LayoutElement>().ignoreLayout = true; // placed every frame in BeforeSync, not by the layout
             button.gameObject.AddComponent<MenuButtonRightPress>().Menu = menu;
             buttonRect = button.rectTransform;
             buttonRect.anchorMin = buttonRect.anchorMax = buttonRect.pivot = new Vector2(0.5f, 0.5f);
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>();
-            if (label.font != null && !label.font.HasCharacter('▲'))
-            {
-                upText = "^ MechJeb ^";
-                downText = "v MechJeb v";
-            }
-
-            shownText = null;
             w.Visible(button.gameObject, () => !menu.HideMenuButton);
+        }
+
+        // ---- modern layout: the windows grouped by task ----
+
+        static readonly string[] groupKeys =
+        {
+            "#MechJeb_NewUI_MenuLaunch", "#MechJeb_NewUI_MenuManeuvers", "#MechJeb_NewUI_MenuRendezvous", "#MechJeb_NewUI_MenuControl",
+            "#MechJeb_NewUI_MenuInfo", "#MechJeb_NewUI_MenuTools"
+        };
+
+        /// <summary>The task a window belongs to (an index in groupKeys), from its module type.</summary>
+        static int Group(DisplayModule m)
+        {
+            if (m is MechJebModuleCustomInfoWindow) return 4;
+            string n = m.GetType().Name;
+            if (n.Contains("Ascent") || n.Contains("Landing") || n.Contains("Spaceplane") || n.Contains("Rover") || n.Contains("Waypoint")) return 0;
+            if (n.Contains("Maneuver") || n.Contains("NodeEditor") || n.Contains("Warp")) return 1;
+            if (n.Contains("Rendezvous") || n.Contains("Docking")) return 2;
+            if (n.Contains("SmartASS") || n.Contains("SmartRcs") || n.Contains("Translatron") || n.Contains("Attitude") || n.Contains("RCSBalancer") ||
+                n.Contains("ThrustWindow")) return 3;
+            return 5;
+        }
+
+        /// <summary>The same toggles under one header per task, the groups in order, split into the menu's columns.</summary>
+        void GroupedColumns(KodeWindow w, Layout columns, List<DisplayModule> modules)
+        {
+            var groups = new List<DisplayModule>[groupKeys.Length];
+            for (int g = 0; g < groups.Length; g++) groups[g] = new List<DisplayModule>();
+            foreach (DisplayModule m in modules)
+                if (InMenu(m)) groups[Group(m)].Add(m);
+
+            int rows = 1; // the online manual button
+            foreach (List<DisplayModule> g in groups)
+                if (g.Count > 0) rows += g.Count + (KodeWindow.ShowHeaders ? 1 : 0);
+            int step = Mathf.CeilToInt((float)rows / menu.columns);
+
+            Layout column = KodeWindow.Panel(columns);
+            int inColumn = 0;
+            for (int g = 0; g < groups.Length; g++)
+            {
+                if (groups[g].Count == 0) continue;
+                // a group starts a new column rather than leaving its header alone at the bottom of one
+                if (inColumn > 0 && inColumn + 2 > step)
+                {
+                    column = KodeWindow.Panel(columns);
+                    inColumn = 0;
+                }
+                KodeWindow.Header(column, groupKeys[g]);
+                if (KodeWindow.ShowHeaders) inColumn++;
+                foreach (DisplayModule module in groups[g])
+                {
+                    if (inColumn >= step)
+                    {
+                        column = KodeWindow.Panel(columns);
+                        inColumn = 0;
+                    }
+                    DisplayModule m = module;
+                    w.Toggle(column, m.GetName(), () => m.Enabled, v => m.Enabled = v, () => ModuleTone(m));
+                    inColumn++;
+                }
+            }
+            KodeWindow.Button(column, "#MechJeb_OnlineManualbutton", () => Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki")); //"Online Manual"
         }
 
         // ---- per frame ----
@@ -201,14 +279,14 @@ namespace MuMech.UI
             buttonRect.position = world;
             buttonRect.localRotation = Quaternion.Euler(0, 0, vertical ? 90 : 0);
 
-            string text = (menu.windowStat == MechJebModuleMenu.WindowStat.HIDDEN) ^
+            int arrow = (menu.windowStat == MechJebModuleMenu.WindowStat.HIDDEN) ^
                 (menu.windowSide == MechJebModuleMenu.WindowSide.TOP || menu.windowSide == MechJebModuleMenu.WindowSide.LEFT)
-                    ? upText
-                    : downText;
-            if (text != shownText)
+                    ? 0
+                    : 1;
+            if (arrow != shownArrow)
             {
-                shownText = text;
-                button.Text(text);
+                shownArrow = arrow;
+                arrowBefore.sprite = arrowAfter.sprite = Sprites.Arrow(arrow == 0 ? Sprites.Direction.Up : Sprites.Direction.Down);
             }
         }
 

@@ -80,15 +80,15 @@ namespace MuMech.UI
             KodeWindow.Button(main, "#MechJeb_RZplan_button3", guidance.InterceptWithHohmann); //"Intercept with Hohmann transfer"
             KodeWindow.Button(main, "#MechJeb_RZplan_button4", guidance.MatchVelocitiesAtClosestApproach); //"Match velocities at closest approach"
             KodeWindow.Button(main, "#MechJeb_RZplan_button5", guidance.GetCloser); //"Get closer"
-            KodeWindow.Button(main, "#MechJeb_RZplan_button9", () => guidance.Vessel.RemoveAllManeuverNodes()); //Remove ALL nodes
+            KodeWindow.Button(main, "#MechJeb_RZplan_button9", () => guidance.Vessel.RemoveAllManeuverNodes(), KodeWindow.ModernLayout ? ButtonRole.Danger : ButtonRole.Normal); //Remove ALL nodes
 
             Layout node = KodeWindow.Panel(main);
             w.Visible(node.gameObject, () => Core.Node != null);
-            UIButton execOne = KodeWindow.Button(node, "#MechJeb_RZplan_button6", () => Core.Node.ExecuteOneNode(guidance)); //"Execute next node"
+            UIButton execOne = KodeWindow.Button(node, "#MechJeb_RZplan_button6", () => Core.Node.ExecuteOneNode(guidance), KodeWindow.ModernLayout ? ButtonRole.Primary : ButtonRole.Normal); //"Execute next node"
             w.Visible(execOne.gameObject, () => Core.Node != null && NodeCount > 0 && !Core.Node.Enabled);
             UIButton execAll = KodeWindow.Button(node, "#MechJeb_RZplan_button7", () => Core.Node.ExecuteAllNodes(guidance)); //"Execute all nodes"
             w.Visible(execAll.gameObject, () => Core.Node != null && NodeCount > 1 && !Core.Node.Enabled);
-            UIButton abort = KodeWindow.Button(node, "#MechJeb_RZplan_button8", () => Core.Node.Abort()); //"Abort node execution"
+            UIButton abort = KodeWindow.Button(node, "#MechJeb_RZplan_button8", () => Core.Node.Abort(), KodeWindow.ModernLayout ? ButtonRole.Danger : ButtonRole.Normal); //"Abort node execution"
             w.Visible(abort.gameObject, () => Core.Node != null && Core.Node.Enabled);
             w.Toggle(node, "#MechJeb_RZplan_checkbox", () => Core.Node != null && Core.Node.Autowarp, v => //"Auto-warp"
             {

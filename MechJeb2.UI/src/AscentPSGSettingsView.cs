@@ -146,6 +146,12 @@ namespace MuMech.UI
 
         protected override void BuildContents(KodeWindow w)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                BuildModern(w);
+                return;
+            }
+
             UIObject r = w.Root;
 
             Layout stages = KodeWindow.Panel(r);
@@ -199,5 +205,61 @@ namespace MuMech.UI
         }
 
         bool OutsideRecommended => Psgs.LimitQa < 1000 || Psgs.LimitQa > 4000;
+
+        static readonly string[] coastLocations = { "Before", "During", "After" };
+
+        // modern layout: titled groups of aligned fields, the coast location as one choice, the Qα warnings in a status bar
+        void BuildModern(KodeWindow w)
+        {
+            UIObject r = w.Root;
+
+            Layout stages = KodeWindow.Panel(r);
+            KodeWindow.Header(stages, "#MechJeb_NewUI_Stages"); //Stages
+            BuildStageTable(w, stages);
+            w.Visible(stages.gameObject, () => hasStages);
+
+            KodeWindow.PropertyGrid plan = w.Properties(r);
+            ModernRows.Field(plan, "Min ΔV", Psgs.MinDeltaV, "m/s", 50);
+            ModernRows.Field(plan, "Last Stage", Settings.LastStage, "", 50);
+            ModernRows.Switch(plan, "Fixed Burn Stages", () => Settings.FixedStagesFlag, v => Settings.FixedStagesFlag = v, Settings.FixedStagesInternal, "", 100);
+            ModernRows.Switch(plan, "Unguided Stages", () => Settings.UnguidedStagesFlag, v => Settings.UnguidedStagesFlag = v,
+                Settings.UnguidedStagesInternal, "", 100);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Coast"); //Coast
+            KodeWindow.PropertyGrid coast = w.Properties(r);
+            ModernRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100);
+            Layout where = KodeWindow.Row(r);
+            w.Segmented(where, coastLocations, () => Settings.CoastLocation + 1, i => Settings.CoastLocation = i - 1);
+            KodeWindow.PropertyGrid coastTimes = w.Properties(r);
+            ModernRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50);
+            ModernRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50);
+            ModernRows.Field(coastTimes, "Ullage lead time", Core.Guidance.UllageLeadTime, "s", 50);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Spinup"); //Spinup
+            KodeWindow.PropertyGrid spin = w.Properties(r);
+            ModernRows.Switch(spin, "Spinup stage", () => Settings.SpinupStageFlag, v => Settings.SpinupStageFlag = v, Settings.SpinupStageInternal, "", 50);
+            ModernRows.Field(spin, "ω", Settings.SpinupAngularVelocity, "rpm", 50);
+            ModernRows.Field(spin, "Spinup lead time", Settings.SpinupLeadTime, "s", 50);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_BoosterDrag"); //Booster and drag
+            KodeWindow.PropertyGrid aero = w.Properties(r);
+            ModernRows.Field(aero, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
+            ModernRows.Field(aero, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
+            ModernRows.Field(aero, "Cd", Psgs.Cd, "", 50);
+            ModernRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Limits"); //Limits
+            KodeWindow.PropertyGrid limits = w.Properties(r);
+            ModernRows.Field(limits, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60); //Qα limit
+            bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
+            Layout qa = w.StatusBar(r, () => Clamped() ? Tone.Bad : Tone.Warn);
+            UIText clamped = GuidanceUi.Wrapped(qa, "Qα limit has been clamped to between 0 and 10000 Pa-rad");
+            w.Visible(clamped.gameObject, Clamped);
+            UIText recommended = GuidanceUi.Wrapped(qa, "#MechJeb_Ascent_label20"); //Qα limit is recommended to be 1000 to 4000 Pa-rad
+            w.Visible(recommended.gameObject, () => !Clamped());
+            w.Visible(qa.gameObject, () => OutsideRecommended);
+
+            w.SwitchRow(r, "Draw Trajectory on Map", () => Core.Guidance.ShouldDrawTrajectory, v => Core.Guidance.ShouldDrawTrajectory = v);
+        }
     }
 }

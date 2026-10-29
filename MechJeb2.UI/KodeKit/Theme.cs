@@ -6,6 +6,9 @@ using UnityEngine.UI;
 
 namespace KodeKit
 {
+    /// <summary>What a button does, which sets its look: plain, the main action, a destructive one, a selected choice.</summary>
+    public enum ButtonRole { Normal, Primary, Danger, Selected }
+
     /// <summary>One element's look: background sprite per state (sprite swap) or one sprite tinted (colour tint).</summary>
     public class ElementStyle
     {
@@ -58,6 +61,43 @@ namespace KodeKit
         public Color Text = Color.white, Dim = new Color(0.75f, 0.75f, 0.75f), Good = Color.green, Warn = Color.yellow, Bad = new Color(1f, 0.35f, 0.35f);
         public ElementStyle Window = new ElementStyle(), Button = new ElementStyle(), Toggle = new ElementStyle(), Check = new ElementStyle(),
             Field = new ElementStyle(), Box = new ElementStyle(), Tooltip = new ElementStyle();
+
+        // ---- the modern layout's widgets (segmented choices, switches, chips, action bars, headers) ----
+
+        /// <summary>The accent: selected choices, switches that are on, primary actions. AccentText is text drawn on it.</summary>
+        public Color Accent = new Color(0.18f, 0.75f, 0.48f), AccentText = new Color(0.02f, 0.08f, 0.05f);
+
+        /// <summary>Button looks by role. Null: the plain button tinted (see <see cref="Role"/>).</summary>
+        public ElementStyle Primary, Danger, Selected;
+
+        /// <summary>Section headers: colour, upper case, size relative to FontSize.</summary>
+        public Color Header = new Color(0.62f, 0.69f, 0.75f);
+        public bool HeaderUpper = true;
+        public float HeaderScale = 0.85f;
+
+        /// <summary>Hairlines: the tabs' base line, separators.</summary>
+        public Color Rule = new Color(1, 1, 1, 0.14f);
+
+        /// <summary>Primary and danger buttons without a style of their own are tinted (Classic+); off, they look plain, as in IMGUI (Classic).</summary>
+        public bool TintRoles;
+
+        /// <summary>The look of a button by role: its own style if the theme has one, else the plain button tinted.</summary>
+        public ElementStyle Role(ButtonRole role)
+        {
+            ElementStyle own = role == ButtonRole.Primary ? Primary : role == ButtonRole.Danger ? Danger : role == ButtonRole.Selected ? Selected : null;
+            if (own != null || role == ButtonRole.Normal) return own ?? Button;
+            if (!TintRoles && role != ButtonRole.Selected) return Button;
+            Color tint = role == ButtonRole.Primary ? new Color(0.62f, 0.8f, 1f) : role == ButtonRole.Danger ? new Color(1f, 0.6f, 0.55f) : new Color(0.6f, 1f, 0.65f);
+            return new ElementStyle
+            {
+                Normal = Button.Normal, Highlight = Button.Highlight, Active = Button.Active, Disabled = Button.Disabled, Type = Button.Type,
+                Tint = Button.Tint * tint, TextColor = Button.TextColor
+            };
+        }
+
+        /// <summary>Text colour of a button by role.</summary>
+        public Color RoleText(ButtonRole role) =>
+            role == ButtonRole.Normal ? Button.TextColor : (role == ButtonRole.Primary ? Primary : role == ButtonRole.Danger ? Danger : Selected)?.TextColor ?? Button.TextColor;
 
         public static Theme Current { get; private set; }
         public static int Version { get; private set; }
@@ -139,6 +179,88 @@ namespace KodeKit
             if (from.LineHeight > 0) t.LineHeight = from.LineHeight - 2;
             t.Padding = 3;
             t.Spacing = 0;
+            return t;
+        }
+
+        // ---- the new UI's skins, built on a base theme (font, sizes) ----
+
+        static ElementStyle Rounded(int radius, Color fill, Color edge, Color text, Color? hoverFill = null, Color? pressFill = null, Color? hoverEdge = null) =>
+            new ElementStyle
+            {
+                Normal = Sprites.RoundedBox(radius, 1, fill, edge),
+                Highlight = hoverFill.HasValue || hoverEdge.HasValue ? Sprites.RoundedBox(radius, 1, hoverFill ?? fill, hoverEdge ?? edge) : null,
+                Active = pressFill.HasValue ? Sprites.RoundedBox(radius, 1, pressFill.Value, hoverEdge ?? edge) : null,
+                TextColor = text
+            };
+
+        Theme Copy(string name)
+        {
+            var t = (Theme)MemberwiseClone();
+            t.Name = name;
+            return t;
+        }
+
+        /// <summary>Skin A, "Classic+": KSP's stock sprites, with section headers, an accent and button roles (tinted).</summary>
+        public static Theme ClassicPlus(Theme from)
+        {
+            Theme t = from.Copy("Classic+");
+            t.TintRoles = true;
+            t.Accent = new Color(0.31f, 0.66f, 0.39f);
+            t.AccentText = Color.white;
+            t.Header = new Color(0.62f, 0.69f, 0.75f);
+            return t;
+        }
+
+        /// <summary>Skin B, "Flat": solid dark panels, 4-7 px corners, one green accent.</summary>
+        public static Theme Flat(Theme from)
+        {
+            Theme t = from.Copy("Flat");
+            var text = new Color(0.87f, 0.9f, 0.93f);
+            t.Text = text;
+            t.Dim = new Color(0.6f, 0.66f, 0.72f);
+            t.Accent = new Color(0.18f, 0.75f, 0.48f);
+            t.AccentText = new Color(0.02f, 0.08f, 0.05f);
+            t.Header = new Color(0.44f, 0.49f, 0.55f);
+            t.Rule = new Color(0.17f, 0.2f, 0.235f);
+            t.Window = Rounded(7, new Color(0.086f, 0.102f, 0.122f), new Color(0.17f, 0.2f, 0.23f), text);
+            t.Button = Rounded(4, new Color(0.15f, 0.18f, 0.216f), new Color(0.2f, 0.243f, 0.286f), text,
+                new Color(0.19f, 0.23f, 0.27f), new Color(0.12f, 0.15f, 0.18f), new Color(0.3f, 0.36f, 0.42f));
+            t.Field = Rounded(3, new Color(0.059f, 0.075f, 0.09f), new Color(0.176f, 0.208f, 0.243f), text);
+            t.Toggle = Rounded(3, new Color(0.059f, 0.075f, 0.09f), new Color(0.33f, 0.38f, 0.43f), text, null, null, new Color(0.5f, 0.56f, 0.62f));
+            t.Check = new ElementStyle { Normal = Sprites.Tick, Tint = t.Accent };
+            t.Box = Rounded(5, new Color(1, 1, 1, 0.03f), new Color(0.17f, 0.2f, 0.235f), text);
+            t.Tooltip = Rounded(4, new Color(0.07f, 0.085f, 0.1f, 0.97f), new Color(0.2f, 0.24f, 0.28f), text);
+            t.Primary = Rounded(4, t.Accent, t.Accent, t.AccentText, t.Accent * 1.12f, t.Accent * 0.85f);
+            t.Selected = t.Primary;
+            t.Danger = Rounded(4, new Color(0.71f, 0.28f, 0.23f, 0.12f), new Color(0.71f, 0.28f, 0.23f), new Color(1f, 0.54f, 0.48f),
+                new Color(0.71f, 0.28f, 0.23f, 0.25f));
+            return t;
+        }
+
+        /// <summary>Skin C, "Glass": translucent panels with cyan outlines, close to KSP's navball and map HUD.</summary>
+        public static Theme Glass(Theme from)
+        {
+            Theme t = from.Copy("Glass");
+            var text = new Color(0.86f, 0.96f, 0.99f);
+            var cyan = new Color(0.333f, 0.816f, 0.949f);
+            t.Text = text;
+            t.Dim = new Color(0.55f, 0.72f, 0.79f);
+            t.Accent = cyan;
+            t.AccentText = new Color(0.012f, 0.082f, 0.11f);
+            t.Header = new Color(0.44f, 0.74f, 0.83f);
+            t.Rule = new Color(0.59f, 0.84f, 1f, 0.2f);
+            t.Window = Rounded(9, new Color(0.055f, 0.086f, 0.118f, 0.78f), new Color(0.59f, 0.84f, 1f, 0.32f), text);
+            t.Button = Rounded(3, new Color(cyan.r, cyan.g, cyan.b, 0.09f), new Color(cyan.r, cyan.g, cyan.b, 0.42f), new Color(0.8f, 0.95f, 0.98f),
+                new Color(cyan.r, cyan.g, cyan.b, 0.2f), new Color(cyan.r, cyan.g, cyan.b, 0.3f));
+            t.Field = Rounded(3, new Color(0, 0, 0, 0.35f), new Color(0.59f, 0.84f, 1f, 0.3f), text);
+            t.Toggle = Rounded(3, new Color(0, 0, 0, 0.2f), new Color(0.59f, 0.84f, 1f, 0.6f), text, null, null, cyan);
+            t.Check = new ElementStyle { Normal = Sprites.Tick, Tint = cyan };
+            t.Box = Rounded(6, new Color(cyan.r, cyan.g, cyan.b, 0.04f), new Color(0.59f, 0.84f, 1f, 0.18f), text);
+            t.Tooltip = Rounded(5, new Color(0.04f, 0.07f, 0.1f, 0.95f), new Color(0.59f, 0.84f, 1f, 0.4f), text);
+            t.Primary = Rounded(3, new Color(cyan.r, cyan.g, cyan.b, 0.85f), cyan, t.AccentText, cyan, cyan * 0.85f);
+            t.Selected = t.Primary;
+            t.Danger = Rounded(3, new Color(1f, 0.43f, 0.35f, 0.1f), new Color(1f, 0.43f, 0.35f, 0.6f), new Color(1f, 0.76f, 0.72f),
+                new Color(1f, 0.43f, 0.35f, 0.22f));
             return t;
         }
 

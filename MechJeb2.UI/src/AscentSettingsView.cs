@@ -53,6 +53,12 @@ namespace MuMech.UI
 
         protected override void BuildContents(KodeWindow w)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                BuildModern(w);
+                return;
+            }
+
             LayoutPanel box = KodeWindow.Box(w.Root);
 
             // the thrust limiter items
@@ -147,6 +153,62 @@ namespace MuMech.UI
 
             UnityEngine.UI.Toggle rss = w.Toggle(box, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
             w.Visible(AscentUi.RowOf(rss), () => psg);
+        }
+
+        // modern layout: about 25 options in five titled groups, each a property grid with the switches on the left
+        void BuildModern(KodeWindow w)
+        {
+            UIObject r = w.Root;
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
+            ModernRows.ThrustLimits(w, r, Thrust, () => psg, false);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Steering"); //Steering
+            KodeWindow.PropertyGrid steer = w.Properties(r);
+            ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox2", () => Settings.ForceRoll, v => Settings.ForceRoll = v); //Force Roll
+            Layout climb = ModernRows.Field(steer, menu._climbString, Settings.VerticalRoll, "º", 50); //climb
+            Layout turn = ModernRows.Field(steer, menu._turnString, Settings.TurnRoll, "º", 50); //turn
+            Layout alt = ModernRows.Field(steer, "Alt: ", Settings.RollAltitude, "m", 50);
+            foreach (Layout row in new[] { climb, turn, alt })
+                w.Visible(row.gameObject, () => Settings.ForceRoll);
+
+            // [switch] Limit AoA to [max] º (x.x°): the unit cell shows the current limit
+            Layout aoa = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox3", () => Settings.LimitAoA, v => Settings.LimitAoA = v,
+                tone: () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
+            TMPro.TMP_InputField maxAoA = EditFields.Field(w, aoa, () => Settings.MaxAoA.Text, s => Settings.MaxAoA.Text = s, 50,
+                () => Settings.MaxAoA.IsParsed);
+            UIText current = AscentUi.Live(w, aoa, "º (99.9°)", CurrentMaxAoA);
+            steer.Dim(maxAoA.gameObject, current.transform.parent.gameObject, () => !Settings.LimitAoA);
+            Layout fadeout = ModernRows.Field(steer, "#MechJeb_Ascent_label24", Settings.AOALimitFadeoutPressure, "Pa", 60); //Dynamic Pressure Fadeout
+            w.Visible(aoa.gameObject, () => !psg);
+            w.Visible(fadeout.gameObject, () => !psg && Settings.LimitAoA);
+
+            Layout corrective = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox4", () => Settings.CorrectiveSteering,
+                v => Settings.CorrectiveSteering = v); //Corrective steering
+            Layout gain = ModernRows.Field(steer, "#MechJeb_Ascent_label25", Settings.CorrectiveSteeringGain, "", 50); // Gain
+            w.Visible(corrective.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
+            w.Visible(gain.gameObject, () => Settings.AscentType == AscentType.CLASSIC && Settings.CorrectiveSteering);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Autostage"); //Autostage
+            w.SwitchRow(r, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
+            Layout autostage = KodeWindow.Panel(r);
+            ModernRows.AutostageSettings(w, autostage, Core.Staging);
+            w.Visible(autostage.gameObject, () => Settings.Autostage);
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Deployment"); //Deployment
+            w.SwitchRow(r, "#MechJeb_Ascent_checkbox6", () => Settings.AutoDeploySolarPanels, v => Settings.AutoDeploySolarPanels = v); //Auto-deploy solar panels
+            w.SwitchRow(r, "#MechJeb_Ascent_checkbox7", () => Settings.AutoDeployAntennas, v => Settings.AutoDeployAntennas = v); //Auto-deploy antennas
+
+            KodeWindow.Header(r, "#MechJeb_NewUI_Other"); //Other
+            w.SwitchRow(r, "#MechJeb_Ascent_checkbox8", () => Core.Node != null && Core.Node.Autowarp, v =>
+            {
+                if (Core.Node != null) Core.Node.Autowarp = v;
+            }); //Auto-warp
+            UnityEngine.UI.Toggle skip = w.SwitchRow(r, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
+                v => Settings.SkipCircularization = v); //Skip Circularization
+            w.Visible(skip.transform.parent.gameObject, () => !psg);
+            UnityEngine.UI.Toggle rss = w.SwitchRow(r, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
+            w.Visible(rss.transform.parent.gameObject, () => psg);
         }
     }
 }

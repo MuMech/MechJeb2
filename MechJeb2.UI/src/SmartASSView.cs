@@ -106,12 +106,14 @@ namespace MuMech.UI
         void ForceRoll(KodeWindow w, UIObject parent)
         {
             Layout row = KodeWindow.Row(parent);
-            w.Toggle(row, "#MechJeb_SmartASS_checkbox3", () => ss.forceRol, v =>
+            void Set(bool v)
             {
                 if (v == ss.forceRol) return;
                 ss.forceRol = v;
                 ss.Engage();
-            });
+            }
+            if (KodeWindow.ModernLayout) w.SwitchRow(row, "#MechJeb_SmartASS_checkbox3", () => ss.forceRol, Set);
+            else w.Toggle(row, "#MechJeb_SmartASS_checkbox3", () => ss.forceRol, Set);
             EditFields.Field(w, row, () => ss.rol.Text, s => ss.rol.Text = s, 30, () => ss.rol.IsParsed);
             KodeWindow.Label(row, "°");
         }
@@ -160,6 +162,12 @@ namespace MuMech.UI
 
         protected override void BuildContents(KodeWindow w)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                BuildModern(w);
+                return;
+            }
+
             UIObject r = w.Root;
 
             // another autopilot uses the attitude controller: just the red "AUTO"
@@ -223,7 +231,12 @@ namespace MuMech.UI
             TargetButton(w, b, Target.HORIZONTAL_PLUS);
             TargetButton(w, b, Target.HORIZONTAL_MINUS);
             TargetButton(w, b, Target.VERTICAL_PLUS);
+            SurfaceAngles(w, p);
+        }
 
+        /// <summary>The surface targets' angle rows, smooth control and EXECUTE (both layouts).</summary>
+        void SurfaceAngles(KodeWindow w, UIObject p)
+        {
             // target == SURFACE: heading, pitch, roll
             Layout hpr = KodeWindow.Panel(p);
             AngleRow(w, hpr, "HDG", () => ss.srfHdg, v => ss.srfHdg = v, () => ss.forceYaw, v => ss.forceYaw = v,
@@ -250,7 +263,8 @@ namespace MuMech.UI
             w.Toggle(smooth, "Smooth Control:", () => ss.smoothControl, v => ss.smoothControl = v);
             EditFields.Field(w, smooth, () => ss.degreesPerSecond.Text, s => ss.degreesPerSecond.Text = s, 40, () => ss.degreesPerSecond.IsParsed);
             KodeWindow.Label(smooth, "°/s");
-            KodeWindow.Button(common, "#MechJeb_SmartASS_button58", () => ss.Engage()); //"EXECUTE"
+            KodeWindow.Button(common, "#MechJeb_SmartASS_button58", () => ss.Engage(), // "EXECUTE"
+                KodeWindow.ModernLayout ? ButtonRole.Primary : ButtonRole.Normal, KodeWindow.ModernLayout);
             w.Visible(common.gameObject, () => ss.ShowsSurfaceAngles);
         }
 
@@ -276,6 +290,107 @@ namespace MuMech.UI
         }
 
         bool TargetExists() => ss.Core.Target != null && ss.Core.Target.NormalTargetExists;
+
+        // ---- modern layout: tiles with navball markers, the navball cross, a joined mode bar, an AUTO status bar ----
+
+        /// <summary>A target tile, selected while it is SmartASS's target; with its navball marker when it has one.</summary>
+        UIButton Tile(KodeWindow w, UIObject parent, Target bt, Sprites.Marker? marker = null, bool engage = true)
+        {
+            UIButton b = KodeWindow.Button(parent, TargetKey(bt), () =>
+            {
+                ss.target = bt;
+                if (engage) ss.Engage();
+            }, true);
+            b.Padding(5, 5, 5, 5);
+            if (marker.HasValue)
+            {
+                Sprites.Marker m = marker.Value;
+                b.Spacing(4);
+                Image icon = KodeWindow.AddIcon(b, Sprites.NavballMarker(m), true);
+                icon.name = "Marker"; // keeps its navball colour when the tile is selected
+                var le = icon.GetComponent<LayoutElement>();
+                KodeWindow.Styled(icon.gameObject, th =>
+                {
+                    icon.color = Sprites.MarkerColor(m);
+                    le.minWidth = le.preferredWidth = le.minHeight = le.preferredHeight = th.FontSize + 4;
+                });
+            }
+            w.BindRole(b, () => ss.target == bt ? ButtonRole.Selected : ButtonRole.Normal);
+            return b;
+        }
+
+        static readonly string[] modeKeys = { ModeKey(Mode.ORBITAL), ModeKey(Mode.SURFACE), ModeKey(Mode.TARGET), ModeKey(Mode.ADVANCED) };
+
+        void BuildModern(KodeWindow w)
+        {
+            UIObject r = w.Root;
+            Layout body = KodeWindow.Panel(r);
+
+            Layout top = KodeWindow.UniformGrid(body, 3);
+            Tile(w, top, Target.OFF);
+            Tile(w, top, Target.KILLROT);
+            UIButton node = Tile(w, top, Target.NODE);
+            w.Visible(node.gameObject, () => PatchedConics);
+
+            KodeWindow.Header(body, "#MechJeb_SmartASS_label1"); //"Mode:"
+            // navigation: the mode only changes which targets the window shows
+            w.Segmented(body, modeKeys, () => (int)ss.mode, i => ss.mode = (Mode)i, ChoiceStyle.Tabs);
+
+            // orbital: placed as on the navball, normal up, radial left and right, prograde in the centre
+            Layout obt = KodeWindow.Panel(body);
+            w.Visible(obt.gameObject, () => ss.mode == Mode.ORBITAL);
+            KodeWindow.CompassGrid c = KodeWindow.Compass(obt);
+            Tile(w, c[Dir.N], Target.NORMAL_PLUS, Sprites.Marker.Normal);
+            Tile(w, c[Dir.W], Target.RADIAL_MINUS, Sprites.Marker.RadialIn);
+            Tile(w, c[Dir.C], Target.PROGRADE, Sprites.Marker.Prograde);
+            Tile(w, c[Dir.E], Target.RADIAL_PLUS, Sprites.Marker.RadialOut);
+            Tile(w, c[Dir.S], Target.NORMAL_MINUS, Sprites.Marker.AntiNormal);
+            Tile(w, c[Dir.SE], Target.RETROGRADE, Sprites.Marker.Retrograde);
+            ForceRoll(w, obt);
+
+            Layout srf = KodeWindow.Panel(body);
+            w.Visible(srf.gameObject, () => ss.mode == Mode.SURFACE);
+            Layout sg = KodeWindow.UniformGrid(srf, 3);
+            Tile(w, sg, Target.SURFACE_PROGRADE, Sprites.Marker.Prograde);
+            Tile(w, sg, Target.SURFACE_RETROGRADE, Sprites.Marker.Retrograde);
+            Tile(w, sg, Target.SURFACE, null, false); // TargetButtonNoEngage
+            Tile(w, sg, Target.HORIZONTAL_PLUS);
+            Tile(w, sg, Target.HORIZONTAL_MINUS);
+            Tile(w, sg, Target.VERTICAL_PLUS);
+            SurfaceAngles(w, srf);
+
+            Layout tgt = KodeWindow.Panel(body);
+            w.Visible(tgt.gameObject, () => ss.mode == Mode.TARGET);
+            Layout has = KodeWindow.Panel(tgt);
+            Layout tg = KodeWindow.UniformGrid(has, 3);
+            Tile(w, tg, Target.TARGET_PLUS);
+            Tile(w, tg, Target.RELATIVE_PLUS);
+            Tile(w, tg, Target.PARALLEL_PLUS);
+            Tile(w, tg, Target.TARGET_MINUS);
+            Tile(w, tg, Target.RELATIVE_MINUS);
+            Tile(w, tg, Target.PARALLEL_MINUS);
+            ForceRoll(w, has);
+            w.Visible(has.gameObject, TargetExists);
+            UIText none = KodeWindow.Label(tgt, "#MechJeb_SmartASS_label2"); //"Please select a target"
+            w.Visible(none.gameObject, () => !TargetExists());
+
+            Layout adv = KodeWindow.Panel(body);
+            w.Visible(adv.gameObject, () => ss.mode == Mode.ADVANCED);
+            KodeWindow.Header(adv, "#MechJeb_SmartASS_label3"); //"Reference:"
+            new ComboBox(w, adv, () => (int)ss.advReference, i => ss.advReference = (AttitudeReference)i, () => ReferenceTexts);
+            KodeWindow.Header(adv, "#MechJeb_SmartASS_label4"); //"Direction:"
+            new ComboBox(w, adv, () => (int)ss.advDirection, i => ss.advDirection = (Vector6.Direction)i, () => directionTexts);
+            ForceRoll(w, adv);
+            KodeWindow.Button(adv, "#MechJeb_SmartASS_button58", () => //"EXECUTE"
+            {
+                ss.target = Target.ADVANCED;
+                ss.Engage();
+            }, ButtonRole.Primary, true);
+
+            // another autopilot steers: the body stays in view, greyed, and the bar says who
+            GuidanceUi.AutoBar(w, r, body.gameObject, "#MechJeb_SmartASS_button57", () => otherUsers, //"AUTO"
+                () => GuidanceUi.OtherUser(ss.Core.Attitude.Users, ss));
+        }
 
         void BuildAdvanced(KodeWindow w, UIObject parent)
         {

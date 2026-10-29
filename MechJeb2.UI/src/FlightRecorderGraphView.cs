@@ -273,11 +273,18 @@ namespace MuMech.UI
             if (yLabels.alpha != alpha) yLabels.alpha = alpha;
         }
 
+        // GUI.color = the graph's colour around IMGUI's toggle tints the box and the text
         static void Colorize(KodeWindow w, Toggle toggle, Color color)
         {
             TMP_Text label = MiscViewKit.ToggleLabel(toggle);
-            label.color = color;
-            w.Behaviour.AddRestyle(() => label.color = color);
+            Graphic box = toggle.targetGraphic;
+            void Paint()
+            {
+                label.color = color;
+                if (box != null) box.color = color;
+            }
+            Paint();
+            w.Behaviour.AddRestyle(Paint);
         }
 
         protected override void BuildContents(KodeWindow w)
@@ -287,6 +294,13 @@ namespace MuMech.UI
             builtWidth = g.width;
             builtHeight = g.height;
             stageMarkers = new StageMarkers(this);
+
+            if (KodeWindow.ModernLayout)
+            {
+                BuildModernControls(w, r);
+                BuildPlot(w, r);
+                return;
+            }
 
             string resume = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_1"), pause = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_2"); //"Resume""Pause"
             string downrange = KodeWindow.Loc("#MechJeb_Flightrecord_Button2_1"), time = KodeWindow.Loc("#MechJeb_Flightrecord_Button2_2"); //"Downrange""Time"
@@ -367,13 +381,107 @@ namespace MuMech.UI
                 Colorize(w, w.Toggle(toggles, info.Label, () => g.displayed[(int)type], v => g.displayed[(int)type] = v), info.Color);
             }
 
+            BuildPlot(w, r);
+        }
+
+        // modern layout: Downrange / Time as one choice, switches, and the 16 series as a legend of chips in their colours
+        void BuildModernControls(KodeWindow w, UIObject r)
+        {
+            string resume = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_1"), pause = KodeWindow.Loc("#MechJeb_Flightrecord_Button1_2"); //"Resume""Pause"
+            string[] axis = { KodeWindow.Loc("#MechJeb_Flightrecord_Button2_1"), KodeWindow.Loc("#MechJeb_Flightrecord_Button2_2") }; //"Downrange""Time"
+
+            Layout top = KodeWindow.Row(r);
+            MiscViewKit.BoundButton(w, top, () => g.paused ? resume : pause, () => g.paused = !g.paused);
+            w.Segmented(top, axis, () => g.downrange ? 0 : 1, i => g.downrange = i == 0).FlexibleLayout(0f, 0f);
+            MiscViewKit.LiveBound(w, top, Localizer.Format("#MechJeb_Flightrecord_Label1", "999d 99h 99m 99s"), TimeText);
+            MiscViewKit.LiveBound(w, top, Localizer.Format("#MechJeb_Flightrecord_Label2", "-999.9M") + "m", RangeText);
+            KodeWindow.FlexibleSpace(top);
+            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button3", () => //"Mark"
+            {
+                g.ResetScale();
+                Rec.Mark();
+            });
+            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button4", g.ResetScale); //"Reset Scale"
+            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button5", () => Rec.DumpCsv()); //CSV
+
+            Layout options = KodeWindow.Row(r);
+            w.SwitchRow(options, "#MechJeb_Flightrecord_checkbox1", () => g.autoScale, v => g.autoScale = v).transform.parent //Auto Scale
+                .GetComponent<LayoutElement>().flexibleWidth = 0;
+            Layout scale = Nudge(w, options, "999.99Mm/px", ScaleText, () =>
+            {
+                if (g.downrange) g.downrangeScale--;
+                else g.timeScale--;
+                g.ClampSizes();
+            }, () =>
+            {
+                if (g.downrange) g.downrangeScale++;
+                else g.timeScale++;
+                g.ClampSizes();
+            });
+            // auto scale picks the scale itself: show it, hide its - and +
+            w.Visible(scale.transform.GetChild(0).gameObject, () => !g.autoScale);
+            w.Visible(scale.transform.GetChild(scale.transform.childCount - 1).gameObject, () => !g.autoScale);
+            KodeWindow.FlexibleSpace(options);
+            Nudge(w, options, "9999", () => Number(g.width), () =>
+            {
+                g.hSize--;
+                g.ClampSizes();
+            }, () =>
+            {
+                g.hSize++;
+                g.ClampSizes();
+            });
+            KodeWindow.Label(options, "×");
+            Nudge(w, options, "9999", () => Number(g.height), () =>
+            {
+                g.vSize--;
+                g.ClampSizes();
+            }, () =>
+            {
+                g.vSize++;
+                g.ClampSizes();
+            });
+            w.SwitchRow(options, "#MechJeb_Flightrecord_checkbox2", () => g.realAtmo, v => //Real Atmo
+            {
+                g.realAtmo = v;
+                if (MechJebModuleFlightRecorderGraph.backgroundTexture != null && g.Vessel != null) g.RefreshAtmoTexture();
+            }).transform.parent.GetComponent<LayoutElement>().flexibleWidth = 0;
+            UIText storage = MiscViewKit.LiveBound(w, options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
+            KodeWindow.Styled(storage.gameObject, th => storage.tmpText.color = th.Dim);
+
+            Layout chips = KodeWindow.FlowWrap(r, 4);
+            w.Chip(chips, "#MechJeb_Flightrecord_checkbox3", () => g.stages, v => g.stages = v); //"Stages"
+            foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
+            {
+                RecordType type = info.Type;
+                w.Chip(chips, info.Label, () => g.displayed[(int)type], v => g.displayed[(int)type] = v, info.Color);
+            }
+        }
+
+        /// <summary>[−] value [+] on a value the window computes (a scale, a plot size): a stepper without a field.</summary>
+        static Layout Nudge(KodeWindow w, UIObject parent, string template, Func<string> value, Action minus, Action plus)
+        {
+            Layout row = KodeWindow.Row(parent);
+            row.FlexibleLayout(0f, 0f);
+            row.Spacing(1);
+            KodeWindow.Button(row, "-", minus);
+            UIText t = MiscViewKit.LiveBound(w, row, template, value);
+            t.tmpText.alignment = TextAlignmentOptions.Center;
+            KodeWindow.Button(row, "+", plus);
+            return row;
+        }
+
+        // the plot, and next to it which graph the Y labels belong to (both layouts)
+        void BuildPlot(KodeWindow w, UIObject r)
+        {
             // the plot, and next to it which graph the Y labels belong to
             Layout plotRow = KodeWindow.Row(r);
             Layout left = plotRow.Add<Layout>("Plot");
             left.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             left.Finish();
             int labels = Mathf.Clamp(g.height / 24 + 1, 3, 11);
-            graph = new LineGraph(w, left, g.width, g.height, labels);
+            // the scrollbar row spans the window, as IMGUI's HorizontalScrollbar does
+            graph = new LineGraph(w, left, g.width, g.height, labels, r);
 
             background = graph.Plot.Find("Background").GetComponent<RawImage>();
             yLabels = graph.Plot.parent.Find("YLabels").gameObject.AddComponent<CanvasGroup>();

@@ -49,6 +49,21 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public float UiOpacity = 0.85f;
 
+        // the new UI's look, set from its own Settings window; IMGUI ignores them
+        public enum UiSkinType { Classic, ClassicPlus, Flat, Glass }
+
+        /// <summary>New UI skin: Classic (IMGUI's look), Classic+ (stock sprites, tidied), Flat (dark, flat), Glass (translucent HUD).</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int UiSkin = (int)UiSkinType.Classic;
+
+        /// <summary>New UI: the modern layout (steppers, switches, segmented choices...) instead of IMGUI's layout.</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool UiModernLayout;
+
+        /// <summary>New UI, modern layout: the section headers it adds to long windows.</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool UiSectionHeaders = true;
+
         /// <summary>Raised after skin, scale, backend or menu settings change, so another UI can follow them.</summary>
         public static event Action<MechJebModuleSettings> Changed;
 

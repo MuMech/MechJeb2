@@ -96,6 +96,22 @@ namespace MuMech.UI
 
             if (Edited != null) BuildEditedWindow(w, r);
 
+            if (KodeWindow.ModernLayout)
+            {
+                // modern layout: every preset in a dropdown, and a button to create the chosen one
+                KodeWindow.Header(r, "#MechJeb_WindowEd_label5"); //Window presets:
+                var presetNames = new string[CustomWindowPresets.presets.Length];
+                for (int i = 0; i < presetNames.Length; i++) presetNames[i] = CustomWindowPresets.presets[i].name;
+                Layout pick = KodeWindow.Row(r);
+                new ComboBox(w, pick, () => ed.presetIndex, i => ed.presetIndex = i, () => presetNames);
+                KodeWindow.Button(pick, "#MechJeb_NewUI_Create", () => //Create
+                {
+                    MechJebModuleCustomInfoWindow created = ed.CreateWindowFromSharingString(CustomWindowPresets.presets[ed.presetIndex].sharingString);
+                    if (created != null) ed.editedWindow = created;
+                }, ButtonRole.Primary);
+                return;
+            }
+
             // presets
             UIText presets = KodeWindow.Label(r, "#MechJeb_WindowEd_label5", true); //Window presets:
             presets.tmpText.alignment = TextAlignmentOptions.Center;
@@ -117,13 +133,43 @@ namespace MuMech.UI
             KodeWindow.Button(presetRow, ">", () => ed.presetIndex = (ed.presetIndex + 1) % count);
         }
 
+        string[] titles = new string[0];
+
+        /// <summary>The custom windows' titles, rebuilt only when one changes (a rename, a new window).</summary>
+        string[] WindowTitles()
+        {
+            List<ComputerModule> all = AllWindows;
+            bool same = titles.Length == all.Count;
+            for (int i = 0; same && i < all.Count; i++)
+                same = ReferenceEquals(titles[i], ((MechJebModuleCustomInfoWindow)all[i]).title);
+            if (same) return titles;
+            titles = new string[all.Count];
+            for (int i = 0; i < all.Count; i++) titles[i] = ((MechJebModuleCustomInfoWindow)all[i]).title;
+            return titles;
+        }
+
         void BuildEditedWindow(KodeWindow w, UIObject r)
         {
             MechJebModuleCustomInfoWindow edited = Edited;
             List<ComputerModule> all = AllWindows;
 
+            if (KodeWindow.ModernLayout)
+            {
+                // modern layout: the edited window picked from a dropdown, its title in a field
+                KodeWindow.Header(r, "#MechJeb_WindowEd_Edtitle"); //Title:
+                Layout pick = KodeWindow.Row(r);
+                new ComboBox(w, pick, () => all.IndexOf(edited), i => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[i], WindowTitles);
+                EditFields.Field(w, pick, () => edited.title, s =>
+                {
+                    if (edited.title == s) return;
+                    edited.title = s;
+                    edited.Dirty = true;
+                }, 120);
+            }
+
             // Title: [<] [title field] [>]
             Layout title = KodeWindow.Row(r);
+            if (KodeWindow.ModernLayout) title.gameObject.SetActive(false);
             KodeWindow.Label(title, "#MechJeb_WindowEd_Edtitle"); //Title:
             KodeWindow.Button(title, "<", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) - 1 + all.Count) % all.Count]);
             EditFields.Field(w, title, () => edited.title, s =>

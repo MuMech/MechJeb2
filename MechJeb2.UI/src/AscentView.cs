@@ -184,16 +184,32 @@ namespace MuMech.UI
             w.Visible(disengage.gameObject, () => menu._autopilot.Enabled);
             UIButton engage = KodeWindow.Button(top, "#MechJeb_Ascent_button2", () => menu._autopilot.Users.Add(menu), true); //Engage autopilot
             w.Visible(engage.gameObject, () => !menu._autopilot.Enabled);
+            if (KodeWindow.ModernLayout)
+            {
+                w.BindRole(engage, () => ButtonRole.Primary);
+                w.BindRole(disengage, () => ButtonRole.Danger);
+            }
 
             BuildTargeting(w, r);
             BuildSettingsToggles(w, r);
             BuildStatus(w, r);
             BuildAutoWarp(w, r);
 
-            UIText apStatus = w.BoundLabel(r, () => menu.autopilotStatus ?? " ", true); //Autopilot status:
+            // the modern layout puts the autopilot's state and the avionics warning in status bars
+            UIObject statusParent = r, disabledParent = r;
+            if (KodeWindow.ModernLayout)
+            {
+                Layout statusBar = w.StatusBar(r, () => KodeWindow.Tone.Normal);
+                w.Visible(statusBar.gameObject, () => menu._autopilot.Enabled);
+                statusParent = statusBar;
+                Layout disabledBar = w.StatusBar(r, () => KodeWindow.Tone.Bad);
+                w.Visible(disabledBar.gameObject, () => Core.DeactivateControl);
+                disabledParent = disabledBar;
+            }
+            UIText apStatus = w.BoundLabel(statusParent, () => menu.autopilotStatus ?? " ", true); //Autopilot status:
             w.Visible(apStatus.transform.parent.gameObject, () => menu._autopilot.Enabled);
 
-            UIText disabled = AscentUi.ToneText(w, r, "#MechJeb_Ascent_label36", Tone.Bad); //CONTROL DISABLED (AVIONICS)
+            UIText disabled = AscentUi.ToneText(w, disabledParent, "#MechJeb_Ascent_label36", Tone.Bad); //CONTROL DISABLED (AVIONICS)
             w.Visible(disabled.gameObject, () => Core.DeactivateControl);
 
             UIText noTracking = KodeWindow.Paragraph(r, "#MechJeb_Ascent_label37"); //unable to circularize without an upgraded Tracking Station
@@ -202,9 +218,17 @@ namespace MuMech.UI
             Layout type = KodeWindow.Row(r);
             new ComboBox(w, type, () => (int)Settings.AscentType, i => Settings.AscentType = (AscentType)i, () => menu._ascentPathList);
 
-            UnityEngine.UI.Toggle classicPath = w.Toggle(r, "#MechJeb_Ascent_checkbox10", () => menu._classicPathMenu.Enabled,
-                v => menu._classicPathMenu.Enabled = v); //Edit ascent path
-            w.Visible(AscentUi.RowOf(classicPath), () => Settings.AscentType == AscentType.CLASSIC);
+            if (KodeWindow.ModernLayout)
+            {
+                UIButton path = WindowButton(w, r, "#MechJeb_Ascent_checkbox10", menu._classicPathMenu); //Edit ascent path
+                w.Visible(path.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
+            }
+            else
+            {
+                UnityEngine.UI.Toggle classicPath = w.Toggle(r, "#MechJeb_Ascent_checkbox10", () => menu._classicPathMenu.Enabled,
+                    v => menu._classicPathMenu.Enabled = v); //Edit ascent path
+                w.Visible(AscentUi.RowOf(classicPath), () => Settings.AscentType == AscentType.CLASSIC);
+            }
 
             // RefreshRateGUI
             Layout refresh = KodeWindow.Row(r);
@@ -273,11 +297,29 @@ namespace MuMech.UI
         // the "Ascent Settings" and "PSG Settings" window toggles
         void BuildSettingsToggles(KodeWindow w, UIObject r)
         {
+            // modern layout: buttons that open the windows, drawn selected while their window is open
+            if (KodeWindow.ModernLayout)
+            {
+                Layout buttons = KodeWindow.Row(r);
+                WindowButton(w, buttons, "Ascent Settings", menu._settingsMenu);
+                UIButton psgButton = WindowButton(w, buttons, "PSG Settings", menu._psgSettingsMenu);
+                w.Visible(psgButton.gameObject, () => psg);
+                return;
+            }
+
             LayoutPanel box = KodeWindow.Box(r);
             Layout row = KodeWindow.Row(box);
             w.Toggle(row, "Ascent Settings", () => menu._settingsMenu.Enabled, v => menu._settingsMenu.Enabled = v);
             UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => menu._psgSettingsMenu.Enabled, v => menu._psgSettingsMenu.Enabled = v);
             w.Visible(AscentUi.RowOf(psgSettings), () => psg);
+        }
+
+        /// <summary>A button that opens or closes another window, selected while that window is open.</summary>
+        static UIButton WindowButton(KodeWindow w, UIObject parent, string text, DisplayModule window)
+        {
+            UIButton b = KodeWindow.Button(parent, text, () => window.Enabled = !window.Enabled, true);
+            w.BindRole(b, () => window.Enabled ? ButtonRole.Selected : ButtonRole.Normal);
+            return b;
         }
 
         // ShowStatusGUIElements (PSG only)

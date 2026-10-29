@@ -111,6 +111,35 @@ namespace MuMech.UI
                 return pctText;
             }).transform.parent.GetComponent<UnityEngine.UI.LayoutElement>().preferredWidth = 40;
             Tooltips.Add(opacity.gameObject, "How opaque the new UI's window backgrounds are. Lower lets more of the scene show through.");
+
+            // the new UI's look: its skin, and the modern layout (KodeHost rebuilds the windows when the layout changes)
+            Layout skin = KodeWindow.Row(r);
+            KodeWindow.Label(skin, "#MechJeb_NewUI_Skin");
+            string[] skins = Locs("#MechJeb_NewUI_SkinClassic", "#MechJeb_NewUI_SkinClassicPlus", "#MechJeb_NewUI_SkinFlat", "#MechJeb_NewUI_SkinGlass");
+            new ComboBox(w, skin, () => settings.UiSkin, i =>
+            {
+                settings.UiSkin = i;
+                Changed();
+            }, () => skins);
+
+            w.Toggle(r, "#MechJeb_NewUI_ModernLayout", () => settings.UiModernLayout, v =>
+            {
+                settings.UiModernLayout = v;
+                Changed();
+            });
+            GameObject headers = w.Toggle(r, "#MechJeb_NewUI_SectionHeaders", () => settings.UiSectionHeaders, v =>
+            {
+                settings.UiSectionHeaders = v;
+                Changed();
+            }).transform.parent.gameObject;
+            w.Visible(headers, () => settings.UiModernLayout);
+        }
+
+        static string[] Locs(params string[] keys)
+        {
+            var r = new string[keys.Length];
+            for (int i = 0; i < keys.Length; i++) r[i] = Localizer.Format(keys[i]);
+            return r;
         }
 
         void SkinButton(KodeWindow w, string key, GuiUtils.SkinType skin)
