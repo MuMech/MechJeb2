@@ -1009,19 +1009,50 @@ namespace MuMech
             Profiler.EndSample();
         }
 
+        // compiled once per member: reflection's GetValue boxes the bool on every read, and toggles are read every frame
+        private static readonly Dictionary<MemberInfo, Func<object, bool>> _getters = new Dictionary<MemberInfo, Func<object, bool>>();
+        private static readonly Dictionary<MemberInfo, Action<object, bool>> _setters = new Dictionary<MemberInfo, Action<object, bool>>();
+        private Func<object, bool> _get;
+        private Action<object, bool> _set;
+
         public bool Value
         {
             get
             {
-                if (member is FieldInfo) return (bool)((FieldInfo)member).GetValue(obj);
-                if (member is PropertyInfo) return (bool)((PropertyInfo)member).GetValue(obj, new object[] { });
-                return false;
+                if (!(member is FieldInfo || member is PropertyInfo)) return false;
+                if (_get == null && !_getters.TryGetValue(member, out _get))
+                    _getters[member] = _get = (Func<object, bool>)CompileAccessor(member, true, typeof(Func<object, bool>));
+                return _get(obj);
             }
             set
             {
-                if (member is FieldInfo) ((FieldInfo)member).SetValue(obj, value);
-                else if (member is PropertyInfo) ((PropertyInfo)member).SetValue(obj, value, new object[] { });
+                if (!(member is FieldInfo || member is PropertyInfo)) return;
+                if (_set == null && !_setters.TryGetValue(member, out _set))
+                    _setters[member] = _set = (Action<object, bool>)CompileAccessor(member, false, typeof(Action<object, bool>));
+                _set(obj, value);
             }
+        }
+
+        private static Delegate CompileAccessor(MemberInfo m, bool get, Type delegateType)
+        {
+            Type owner = m.DeclaringType;
+            Type[] args = get ? new[] { typeof(object) } : new[] { typeof(object), typeof(bool) };
+            var dm = new DynamicMethod((get ? "get_" : "set_") + m.Name, get ? typeof(bool) : null, args, owner, true);
+            ILGenerator il = dm.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Castclass, owner);
+            if (!get) il.Emit(OpCodes.Ldarg_1);
+            switch (m)
+            {
+                case FieldInfo f:
+                    il.Emit(get ? OpCodes.Ldfld : OpCodes.Stfld, f);
+                    break;
+                case PropertyInfo p:
+                    il.Emit(OpCodes.Callvirt, get ? p.GetGetMethod(true) : p.GetSetMethod(true));
+                    break;
+            }
+            il.Emit(OpCodes.Ret);
+            return dm.CreateDelegate(delegateType);
         }
 
         public override void DrawItem()
