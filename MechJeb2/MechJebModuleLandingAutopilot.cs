@@ -194,7 +194,7 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Core.Attitude.attitudeDeactivate();
+            Core.Attitude.AttitudeDeactivate();
             _predictor.Users.Remove(this);
             _predictor.descentSpeedPolicy = null;
             Core.Thrust.ThrustOff();

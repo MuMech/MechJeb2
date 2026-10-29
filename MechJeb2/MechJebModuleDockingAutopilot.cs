@@ -102,7 +102,7 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             Core.RCS.Users.Remove(this);
-            Core.Attitude.attitudeDeactivate();
+            Core.Attitude.AttitudeDeactivate();
             dockingStep = DockingStep.OFF;
             drawBoundingBox = false;
         }
@@ -219,13 +219,13 @@ namespace MuMech
             }
 
             if (!align)
-                Core.Attitude.attitudeTo(Quaternion.LookRotation(Vessel.GetTransform().up, -Vessel.GetTransform().forward),
+                Core.Attitude.AttitudeTo(Quaternion.LookRotation(Vessel.GetTransform().up, -Vessel.GetTransform().forward),
                     AttitudeReference.INERTIAL, this);
             else if (forceRol)
-                Core.Attitude.attitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back),
+                Core.Attitude.AttitudeTo(Quaternion.LookRotation(Vector3d.back, Vector3d.up) * Quaternion.AngleAxis(-(float)rol, Vector3d.back),
                     AttitudeReference.TARGET_ORIENTATION, this);
             else
-                Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
+                Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
             // Purpose of of this section is to compensate for relative velocities because the docking code does poorly with very low speed limits
             // And can't seem to keep up if relative velocities are greater than the speed limit.

@@ -98,7 +98,8 @@ namespace MuMech
         private void DriveVerticalAscent()
         {
             //during the vertical ascent we just thrust straight up at max throttle
-            VerticalHeadingTo(Core.Guidance.Heading);
+            Core.Attitude.AttitudeToVerticalLaunch(Core.Guidance.Heading,
+                AscentSettings.ForceRoll && VesselState.AltitudeBottom > AscentSettings.RollAltitude, AscentSettings.VerticalRoll, this);
 
             bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed;
 
@@ -133,7 +134,7 @@ namespace MuMech
                 return;
             }
 
-            AttitudeTo(pitch, Core.Guidance.Heading);
+            Core.Attitude.LimitedAttitudeTo(Core.Guidance.Heading, pitch, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
         }
 
         private bool CheckForGuidanceTransition(double pitch)
@@ -156,7 +157,7 @@ namespace MuMech
             if (!Core.Guidance.IsStable())
             {
                 double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.Pitch);
-                AttitudeTo(pitch, SrfvelHeading());
+                Core.Attitude.LimitedAttitudeTo(SrfvelHeading(), pitch, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
                 Status = Localizer.Format("#MechJeb_Ascent_status16"); //"WARNING: Unstable Guidance"
             }
             else
@@ -164,11 +165,11 @@ namespace MuMech
                 double ang = Vector3d.Angle(Core.Guidance.Inertial, VesselState.Forward);
                 // FIXME: should be able to set status color to yellow for ang > 2 and red for ang > 5 or so
                 Status = $"Stable Guidance: {ang:F}° deviation";
-                AttitudeTo(Core.Guidance.Inertial);
+                Core.Attitude.LimitedAttitudeTo(Core.Guidance.Inertial, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
             }
         }
 
-        protected override Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
+        private Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
         {
             double lim = Clamp(Core.PSGSimulation.LimitQa, 0, 10000);
             AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;

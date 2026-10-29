@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using KSP.Localization;
 using UnityEngine;
 
@@ -17,9 +17,9 @@ namespace MuMech
 
             //core.GetComputerModule<MechJebModuleCustomWindowEditor>().registry.Find(i => i.id == "Toggle:AttitudeController.useSAS").DrawItem();
 
-            Core.Attitude.RCS_auto = GUILayout.Toggle(Core.Attitude.RCS_auto, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox1")); //RCS auto mode
+            Core.Attitude.RCSAuto = GUILayout.Toggle(Core.Attitude.RCSAuto, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox1")); //RCS auto mode
 
-            int currentController = Core.Attitude.activeController;
+            int currentController = Core.Attitude.ActiveController;
             if (GUILayout.Toggle(currentController == 0, Localizer.Format("#MechJeb_AttitudeAdjust_checkbox2"))) //MJAttitudeController
             {
                 currentController = 0;
@@ -52,7 +52,7 @@ namespace MuMech
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            if (currentController != Core.Attitude.activeController)
+            if (currentController != Core.Attitude.ActiveController)
             {
                 Core.Attitude.SetActiveController(currentController);
             }
@@ -67,7 +67,7 @@ namespace MuMech
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label2"), GuiUtils.LayoutExpandWidth); //Torque
-                GUILayout.Label("|" + Core.Attitude.torque.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Core.Attitude.torque),
+                GUILayout.Label("|" + Core.Attitude.Torque.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Core.Attitude.Torque),
                     GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
@@ -78,7 +78,7 @@ namespace MuMech
                     GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
 
-                var ratio = Vector3d.Scale(VesselState.MoI, Core.Attitude.torque.InvertNoNaN());
+                var ratio = Vector3d.Scale(VesselState.MoI, Core.Attitude.Torque.InvertNoNaN());
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeAdjust_Label4"), GuiUtils.LayoutExpandWidth); //MOI / torque

@@ -38,8 +38,8 @@ namespace MuMech
                     Vector3d decelerationStartAttitude = -Orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
                     decelerationStartAttitude += MainBody.getRFrmVel(Orbit.WorldPositionAtUT(decelerationStartTime));
                     decelerationStartAttitude = decelerationStartAttitude.normalized;
-                    Core.Attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
-                    bool warpReady = Core.Attitude.attitudeAngleFromTarget() < 5 && Core.vessel.angularVelocity.magnitude < 0.001;
+                    Core.Attitude.AttitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
+                    bool warpReady = Core.Attitude.AttitudeAngleFromTarget() < 5 && Core.vessel.angularVelocity.magnitude < 0.001;
 
                     if (warpReady && Core.Node.Autowarp)
                         Core.Warp.WarpToUT(decelerationStartTime - 5);
@@ -85,7 +85,7 @@ namespace MuMech
                         desiredSpeed >= double.MaxValue ? "∞" : Math.Abs(desiredSpeed).ToString("F1")); //"Braking: target speed = " +  + " m/s"
                 }
 
-                Core.Attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, Core.Landing);
+                Core.Attitude.AttitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, Core.Landing);
 
                 return this;
             }

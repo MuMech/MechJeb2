@@ -104,7 +104,7 @@ namespace MuMech
         {
             Core.Warp.MinimumWarp();
             Core.Thrust.ThrustOff();
-            Core.Attitude.attitudeDeactivate();
+            Core.Attitude.AttitudeDeactivate();
             Users.Clear();
             _direction = Vector3d.zero;
             _dvLeft = 0;
@@ -120,7 +120,7 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Core.Attitude.attitudeDeactivate();
+            Core.Attitude.AttitudeDeactivate();
             Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
             State = States.IDLE;
@@ -338,7 +338,7 @@ namespace MuMech
             }
         }
 
-        private void SetAttitude() => Core.Attitude.attitudeTo(_worldDirection, AttitudeReference.INERTIAL_COT, this, KillRollRotation);
+        private void SetAttitude() => Core.Attitude.AttitudeTo(_worldDirection, AttitudeReference.INERTIAL_COT, this, KillRollRotation);
 
         private bool ShouldTerminatePrincipia()
         {

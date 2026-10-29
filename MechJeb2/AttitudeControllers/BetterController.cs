@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using MechJebLib.Control;
@@ -225,11 +225,11 @@ namespace MuMech.AttitudeControllers
             (_desired, _error, _distance) = _directionTracker.Desired(Ac.RequestedAttitude);
 
             // low-pass filter the control torque
-            _controlTorque = _controlTorque == Vector3d.zero ? Ac.torque : _controlTorque + SmoothTorque * (Ac.torque - _controlTorque);
+            _controlTorque = _controlTorque == Vector3d.zero ? Ac.Torque : _controlTorque + SmoothTorque * (Ac.Torque - _controlTorque);
 
             // if torque is really zero, set it zero
             for (int i = 0; i < 3; i++)
-                if (Ac.torque[i] == 0)
+                if (Ac.Torque[i] == 0)
                     _controlTorque[i] = 0;
 
             // needed to stop wiggling at higher phys warp

@@ -91,9 +91,9 @@ namespace MuMech
                     return new DecelerationBurn(Core);
                 }
 
-                if (Core.Attitude.attitudeAngleFromTarget() < 1) { _warpReady = true; } // less warp start warp stop jumping
+                if (Core.Attitude.AttitudeAngleFromTarget() < 1) { _warpReady = true; } // less warp start warp stop jumping
 
-                if (Core.Attitude.attitudeAngleFromTarget() > 5) { _warpReady = false; } // hopefully
+                if (Core.Attitude.AttitudeAngleFromTarget() > 5) { _warpReady = false; } // hopefully
 
                 if (Core.Landing.PredictionReady)
                 {
@@ -105,11 +105,11 @@ namespace MuMech
                         Vector3d decelerationStartAttitude = -Orbit.WorldOrbitalVelocityAtUT(decelerationStartTime);
                         decelerationStartAttitude += MainBody.getRFrmVel(Orbit.WorldPositionAtUT(decelerationStartTime));
                         decelerationStartAttitude = decelerationStartAttitude.normalized;
-                        Core.Attitude.attitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
+                        Core.Attitude.AttitudeTo(decelerationStartAttitude, AttitudeReference.INERTIAL, Core.Landing);
                     }
                     else
                     {
-                        Core.Attitude.attitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, Core.Landing);
+                        Core.Attitude.AttitudeTo(Vector3.back, AttitudeReference.SURFACE_VELOCITY, Core.Landing);
                     }
                 }
 

@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -178,14 +178,14 @@ namespace MuMech.AttitudeControllers
 
             _error.Scale(Ac.AxisControl);
 
-            Vector3d err = _error + Ac.inertia;
+            Vector3d err = _error + Ac.Inertia;
             err = new Vector3d(
                 Math.Max(-Math.PI, Math.Min(Math.PI, err.x)),
                 Math.Max(-Math.PI, Math.Min(Math.PI, err.y)),
                 Math.Max(-Math.PI, Math.Min(Math.PI, err.z)));
 
             // ( MoI / available torque ) factor:
-            var normFactor = Vector3d.Scale(Ac.VesselState.MoI, Ac.torque.InvertNoNaN());
+            var normFactor = Vector3d.Scale(Ac.VesselState.MoI, Ac.Torque.InvertNoNaN());
 
             err.Scale(normFactor);
 
@@ -197,7 +197,7 @@ namespace MuMech.AttitudeControllers
             omega.Scale(normFactor);
 
             if (TfAutoTune)
-                TuneTf(Ac.torque);
+                TuneTf(Ac.Torque);
             SetPIDParameters();
 
             // angular velocity limit:
@@ -375,7 +375,7 @@ namespace MuMech.AttitudeControllers
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label20"), GuiUtils.LayoutExpandWidth); //"Inertia"
-                GUILayout.Label("|" + Ac.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Ac.inertia),
+                GUILayout.Label("|" + Ac.Inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Ac.Inertia),
                     GuiUtils.LayoutNoExpandWidth);
                 GUILayout.EndHorizontal();
             }

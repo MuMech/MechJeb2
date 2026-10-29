@@ -656,10 +656,10 @@ namespace MuMech
             switch (target)
             {
                 case Target.OFF:
-                    Core.Attitude.attitudeDeactivate();
+                    Core.Attitude.AttitudeDeactivate();
                     return;
                 case Target.KILLROT:
-                    Core.Attitude.attitudeKILLROT = true;
+                    Core.Attitude.AttitudeKillRot = true;
                     attitude = Quaternion.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
                     reference = AttitudeReference.INERTIAL;
                     break;
@@ -768,7 +768,7 @@ namespace MuMech
             if (smoothControl)
             {
                 // Get the reference rotation for the current mode
-                QuaternionD refRotation = Core.Attitude.attitudeGetReferenceRotation(reference);
+                QuaternionD refRotation = Core.Attitude.AttitudeGetReferenceRotation(reference);
                 var vesselRotation = QuaternionD.LookRotation(Part.vessel.GetTransform().up, -Part.vessel.GetTransform().forward);
 
                 // Get the vessel's current attitude in the reference frame
@@ -789,17 +789,17 @@ namespace MuMech
 
                 // Call attitudeTo with current values, smooth transition will take over in OnFixedUpdate
                 if (curDirection != Vector3d.zero)
-                    Core.Attitude.attitudeTo(curDirection, targetReference, this);
+                    Core.Attitude.AttitudeTo(curDirection, targetReference, this);
                 else
-                    Core.Attitude.attitudeTo(curAttitude, targetReference, this);
+                    Core.Attitude.AttitudeTo(curAttitude, targetReference, this);
             }
             else
             {
                 // Without smooth control, apply attitude immediately
                 if (direction != Vector3d.zero)
-                    Core.Attitude.attitudeTo(direction, reference, this);
+                    Core.Attitude.AttitudeTo(direction, reference, this);
                 else
-                    Core.Attitude.attitudeTo(attitude, reference, this);
+                    Core.Attitude.AttitudeTo(attitude, reference, this);
             }
 
             if (resetPID) { Core.Attitude.Controller.Reset(); }
@@ -835,7 +835,7 @@ namespace MuMech
                         curDirection = targetDirection;
                     }
 
-                    Core.Attitude.attitudeTo(curDirection, targetReference, this);
+                    Core.Attitude.AttitudeTo(curDirection, targetReference, this);
                 }
                 else
                 {
@@ -851,7 +851,7 @@ namespace MuMech
                         curAttitude = targetAttitude;
                     }
 
-                    Core.Attitude.attitudeTo(curAttitude, targetReference, this);
+                    Core.Attitude.AttitudeTo(curAttitude, targetReference, this);
                 }
             }
         }

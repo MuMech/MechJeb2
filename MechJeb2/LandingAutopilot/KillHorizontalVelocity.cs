@@ -21,7 +21,7 @@ namespace MuMech
                 if (Vector3d.Dot(horizontalPointingDirection, VesselState.SurfaceVelocity) > 0)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
-                    Core.Attitude.attitudeTo(Vector3.up, AttitudeReference.SURFACE_NORTH, Core.Landing);
+                    Core.Attitude.AttitudeTo(Vector3.up, AttitudeReference.SURFACE_NORTH, Core.Landing);
                     return new FinalDescent(Core);
                 }
 
@@ -45,7 +45,7 @@ namespace MuMech
                 //angle up and slightly away from vertical:
                 Vector3d desiredThrustVector = (VesselState.Up + 0.2 * horizontalPointingDirection).normalized;
 
-                Core.Attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, Core.Landing);
+                Core.Attitude.AttitudeTo(desiredThrustVector, AttitudeReference.INERTIAL, Core.Landing);
 
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status10"); //"Killing horizontal velocity before final descent"
 

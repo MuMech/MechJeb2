@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using KSP.Localization;
@@ -175,7 +175,7 @@ namespace MuMech
                 {
                     Core.Thrust.ThrustOff();
                     Core.Thrust.Users.Remove(this);
-                    Core.Attitude.attitudeDeactivate();
+                    Core.Attitude.AttitudeDeactivate();
                 }
 
                 abort = AbortStage.OFF;
@@ -257,7 +257,7 @@ namespace MuMech
                         if (Planetarium.GetUniversalTime() - burnUpTime < 2 || VesselState.SpeedVertical < 10)
                         {
                             Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
-                            Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+                            Core.Attitude.AttitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
                             double int_error = Math.Abs(Vector3d.Angle(VesselState.Up, VesselState.Forward));
                             Core.Thrust.TransSpdAct = int_error < 90 ? 100 : 0;
                         }

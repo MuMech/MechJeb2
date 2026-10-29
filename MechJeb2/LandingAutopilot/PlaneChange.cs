@@ -35,11 +35,11 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 2)
+                if (_planeChangeTriggered && Core.Attitude.AttitudeAngleFromTarget() < 2)
                 {
                     Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)(_planeChangeDVLeft / (2 * Core.VesselState.MaxThrustAcceleration))));
                 }
-                else if (_planeChangeTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
+                else if (_planeChangeTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
                 }
@@ -75,7 +75,7 @@ namespace MuMech
                     var burnDir = Vector3d.Exclude(VesselState.Up, Vector3d.Exclude(VesselState.OrbitalVelocity, deltaV));
                     _planeChangeDVLeft = UtilMath.Deg2Rad * Vector3d.Angle(finalVelocity, VesselState.OrbitalVelocity) *
                         VesselState.SpeedOrbitalHorizontal;
-                    Core.Attitude.attitudeTo(burnDir, AttitudeReference.INERTIAL, Core.Landing);
+                    Core.Attitude.AttitudeTo(burnDir, AttitudeReference.INERTIAL, Core.Landing);
                     Status = Localizer.Format("#MechJeb_LandingGuidance_Status14",
                         _planeChangeDVLeft.ToString("F0")); //"Executing low orbit plane change of about " +  + " m/s"
 

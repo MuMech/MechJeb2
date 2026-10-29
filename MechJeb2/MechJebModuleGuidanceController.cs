@@ -72,7 +72,7 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             Debug.Log("MechJebModuleGuidanceController: Disabled");
-            Core.Attitude.attitudeDeactivate();
+            Core.Attitude.AttitudeDeactivate();
             if (!Core.RssMode)
                 Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);

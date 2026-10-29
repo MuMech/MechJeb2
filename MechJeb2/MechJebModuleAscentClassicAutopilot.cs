@@ -88,7 +88,9 @@ namespace MuMech
             if (!IsVerticalAscent(VesselState.AltitudeTrue, VesselState.SpeedSurface)) _mode = AscentMode.GRAVITY_TURN;
             if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode = AscentMode.COAST_TO_APOAPSIS;
 
-            VerticalHeadingTo(OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val));
+            Core.Attitude.AttitudeToVerticalLaunch(
+                OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val),
+                AscentSettings.ForceRoll && VesselState.AltitudeBottom > AscentSettings.RollAltitude, AscentSettings.VerticalRoll, this);
 
             Core.Thrust.TargetThrottle = 1.0F;
 
@@ -118,7 +120,8 @@ namespace MuMech
             Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
             if (Core.Thrust.TargetThrottle < 1.0F)
             {
-                AttitudeTo(_desiredPitch * UtilMath.Rad2Deg, _desiredHeading);
+                Core.Attitude.LimitedAttitudeTo(_desiredHeading, _desiredPitch * UtilMath.Rad2Deg, AscentSettings.ForceRoll, AscentSettings.TurnRoll,
+                    ApplyAoALimiter, this);
                 Status = Localizer.Format("#MechJeb_Ascent_status21"); //"Fine tuning apoapsis"
                 return;
             }
@@ -142,7 +145,8 @@ namespace MuMech
             }
 
             _desiredHeading = OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val);
-            AttitudeTo(_desiredPitch * UtilMath.Rad2Deg, _desiredHeading);
+            Core.Attitude.LimitedAttitudeTo(_desiredHeading, _desiredPitch * UtilMath.Rad2Deg, AscentSettings.ForceRoll, AscentSettings.TurnRoll,
+                ApplyAoALimiter, this);
 
             Status = Localizer.Format("#MechJeb_Ascent_status22"); //"Gravity turn"
         }
@@ -158,7 +162,7 @@ namespace MuMech
             }
 
             // follow surface velocity to reduce flipping
-            AttitudeTo(VesselState.OrbitalVelocity);
+            Core.Attitude.LimitedAttitudeTo(VesselState.OrbitalVelocity, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
 
             if (Orbit.ApA < AscentSettings.DesiredOrbitAltitude)
                 Core.Thrust.TargetThrottle = ThrottleToRaiseApoapsis(Orbit.ApR, AscentSettings.DesiredOrbitAltitude + MainBody.Radius);
@@ -254,7 +258,7 @@ namespace MuMech
             return desiredThrottle;
         }
 
-        protected override Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
+        private Vector3d ApplyAoALimiter(Vector3d desiredThrustVector)
         {
             if (!AscentSettings.LimitAoA)
                 return desiredThrustVector;

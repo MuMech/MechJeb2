@@ -18,8 +18,8 @@ namespace MuMech
                     return new FinalDescent(Core);
                 }
 
-                Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.ORBIT_HORIZONTAL, Core.Landing);
-                if (Core.Attitude.attitudeAngleFromTarget() < 5)
+                Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.ORBIT_HORIZONTAL, Core.Landing);
+                if (Core.Attitude.AttitudeAngleFromTarget() < 5)
                     Core.Thrust.TargetThrottle = 1;
                 else
                     Core.Thrust.ThrustOff();
