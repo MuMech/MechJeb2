@@ -483,7 +483,11 @@ namespace KodeKit
         }
 
         /// <summary>Text, or the localized string when it is a '#key'.</summary>
-        public static string Loc(string text) => text != null && text.Length > 1 && text[0] == '#' ? Localizer.Format(text) : text;
+        public static string Loc(string text) => KeepLastLine(text != null && text.Length > 1 && text[0] == '#' ? Localizer.Format(text) : text);
+
+        // TMP's preferred height ignores a trailing empty line, IMGUI shows it ("\nRestore factory default settings\n" is
+        // a 3-line button): a space after the last newline keeps the line
+        static string KeepLastLine(string s) => s != null && s.Length > 0 && s[s.Length - 1] == '\n' ? s + " " : s;
 
         /// <summary>Set a text from a literal or a '#key'; keys are re-applied on a language switch.</summary>
         /// <summary>
@@ -502,7 +506,7 @@ namespace KodeKit
                 t.raycastTarget = true;
                 Tooltips.Add(t.gameObject, tip);
             }
-            t.GetComponentInParent<WindowBehaviour>()?.AddRelocalize(() => t.text = Localizer.Format(textOrKey));
+            t.GetComponentInParent<WindowBehaviour>()?.AddRelocalize(() => t.text = Loc(textOrKey));
         }
 
         // ---- layout ----

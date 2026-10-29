@@ -112,8 +112,8 @@ namespace MuMech.UI
             BuildPathPicture(w, r);
         }
 
-        // the texture is 400x100; the height must match it for the meters-per-pixel scale
-        const float PictureWidth = 280, PictureHeight = 100;
+        // the texture's own size, as GUILayout.Box(texture) shows it; the height sets the meters-per-pixel scale
+        const float PictureWidth = 400, PictureHeight = 100;
 
         /// <summary>A list of points as a graph line.</summary>
         sealed class PointSource : IGraphSource
@@ -170,6 +170,7 @@ namespace MuMech.UI
             trajectory.color = Color.white;
             trajectory.Thickness = 2;
             trajectory.raycastTarget = false;
+            trajectory.Unclamped = true; // like IMGUI: drawn up to its first point outside the picture, cut at the edge
             trajectory.XMin = 0;
             trajectory.YMin = 0;
 

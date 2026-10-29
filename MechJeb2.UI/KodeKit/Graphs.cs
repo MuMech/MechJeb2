@@ -27,6 +27,11 @@ namespace KodeKit
         public float Thickness = 2;
         /// <summary>When true, each point is a full-height vertical line at X (stage markers).</summary>
         public bool VerticalMarkers;
+        /// <summary>
+        /// Draw the polyline past the graph's edges, up to the first point beyond XMax, for a parent RectMask2D to clip:
+        /// what IMGUI's Drawing.DrawLine does inside a clipped area. Default: points are clamped into the rect.
+        /// </summary>
+        public bool Unclamped;
 
         public int LastSegments { get; private set; }
 
@@ -60,7 +65,7 @@ namespace KodeKit
                 return;
             }
 
-            if (Decimate)
+            if (Decimate && !Unclamped)
             {
                 PopulateDecimated(vh, r, sx, sy, n);
                 return;
@@ -73,8 +78,13 @@ namespace KodeKit
                 double xd = Source.X(i);
                 if (xd < XMin) continue;
                 var p = new Vector2(r.xMin + (float)((xd - XMin) * sx), r.yMin + (float)((Source.Y(i) - YMin) * sy));
-                if (p.x > r.xMax) break;
-                p.y = Mathf.Clamp(p.y, r.yMin, r.yMax);
+                if (p.x > r.xMax)
+                {
+                    // unclamped: the segment towards the first point outside, cut by the mask
+                    if (Unclamped && havePrev) Quad(vh, prev, p, Thickness);
+                    break;
+                }
+                if (!Unclamped) p.y = Mathf.Clamp(p.y, r.yMin, r.yMax);
                 if (!havePrev) { prev = p; havePrev = true; continue; }
                 if ((p - prev).sqrMagnitude < 1f) continue; // sub-pixel: skip, like MechJeb
                 Quad(vh, prev, p, Thickness);
