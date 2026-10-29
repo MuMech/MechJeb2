@@ -161,20 +161,14 @@ namespace MuMech.UI
 
         static InfoItem Find(MechJebModuleCustomWindowEditor ed, string id) => ed?.registry.Find(i => i.id == id);
 
-        /// <summary>
-        /// A ToggleInfoItem as InfoItem.DrawItem draws it (a switch in the modern layout); the value is read through
-        /// <paramref name="get"/> (no reflection per frame).
-        /// </summary>
+        /// <summary>A ToggleInfoItem as InfoItem.DrawItem draws it; the value is read through <paramref name="get"/> (no reflection per frame).</summary>
         public static GameObject ToggleRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Func<bool> get)
         {
             if (!(Find(ed, id) is ToggleInfoItem item)) return null;
-            UnityEngine.UI.Toggle t = KodeWindow.ModernLayout
-                ? w.SwitchRow(parent, item.name, get, v => item.Value = v)
-                : w.Toggle(parent, item.name, get, v => item.Value = v);
+            UnityEngine.UI.Toggle t = w.Toggle(parent, item.name, get, v => item.Value = v);
             GameObject row = t.transform.parent.gameObject;
             if (!string.IsNullOrEmpty(item.localizedTooltip))
-                Tooltips.Add(KodeWindow.ModernLayout ? row.GetComponentInChildren<TMP_Text>().gameObject // the switch has no text: the first is its label
-                    : row.GetComponentInChildren<ToggleLabelClick>().gameObject, item.localizedTooltip);
+                Tooltips.Add(row.GetComponentInChildren<ToggleLabelClick>().gameObject, item.localizedTooltip);
             return row;
         }
 

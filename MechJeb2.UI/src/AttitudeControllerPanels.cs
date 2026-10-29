@@ -197,21 +197,16 @@ namespace MuMech.UI
                 if (c != null) action(c);
             });
 
-            // a switch in the modern layout, a checkbox in IMGUI's
-            public Toggle Tog(UIObject parent, string text, Func<T, bool> get, Action<T, bool> set)
-            {
-                bool Get()
+            public Toggle Tog(UIObject parent, string text, Func<T, bool> get, Action<T, bool> set) =>
+                w.Toggle(parent, text, () =>
                 {
                     T c = C;
                     return c != null && get(c);
-                }
-                void Set(bool v)
+                }, v =>
                 {
                     T c = C;
                     if (c != null) set(c, v);
-                }
-                return KodeWindow.ModernLayout ? w.SwitchRow(parent, text, Get, Set) : w.Toggle(parent, text, Get, Set);
-            }
+                });
 
             public void Tog(string text, Func<T, bool> get, Action<T, bool> set) => Tog(Parent, text, get, set);
 

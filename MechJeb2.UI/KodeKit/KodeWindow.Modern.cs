@@ -183,19 +183,72 @@ namespace KodeKit
         }
 
         /// <summary>A switch on the left and its label (a click on the label flips it too).</summary>
-        public Toggle SwitchRow(UIObject parent, string text, Func<bool> get, Action<bool> set)
+        public Toggle SwitchRow(UIObject parent, string text, Func<bool> get, Action<bool> set) => SwitchToggle(parent, text, get, set, null);
+
+        /// <summary>
+        /// The modern layout's <see cref="Toggle(UIObject, string, Func{bool}, Action{bool}, Func{bool})"/>: a switch and its
+        /// label, green while <paramref name="green"/> holds. The label flips it through ToggleLabelClick, as the checkbox's
+        /// does, so code that looks up a toggle's label works with both.
+        /// </summary>
+        Toggle SwitchToggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green)
         {
             Layout row = Row(parent);
             Toggle t = Switch(row, get, set);
             UIText label = Label(row, text, true);
-            Clickable(label, () => t.isOn = !t.isOn);
+            LabelFlips(label, t);
+            if (green != null) ToneText(label, () => green() ? Tone.Good : Tone.Normal);
             return t;
         }
 
-        static void Clickable(UIText label, Action click)
+        static void LabelFlips(UIText label, Toggle t)
         {
             label.tmpText.raycastTarget = true;
-            label.gameObject.AddComponent<ClickHandler>().Click = click;
+            label.gameObject.AddComponent<ToggleLabelClick>().Toggle = t;
+        }
+
+        // ---- folding groups ----
+
+        /// <summary>
+        /// A folding group the modern layout adds to long windows: a header with a chevron that shows or hides the panel it
+        /// returns, remembered per window and title for the session. With the "Section headers" setting off there is no
+        /// header, and the panel always shows.
+        /// </summary>
+        public Layout Group(UIObject parent, string title, bool open = true) =>
+            ShowHeaders ? FoldSection(parent, title, open, Root.name + "/" + title) : Panel(parent);
+
+        /// <summary>The modern look of <see cref="Section"/> and <see cref="Group"/>: a chevron (down: open, right: folded) and a header.</summary>
+        Layout FoldSection(UIObject parent, string title, bool open, string key)
+        {
+            if (sectionState.TryGetValue(key, out bool saved)) open = saved;
+            Layout header = Row(parent);
+            GameObject chevGo = Child(header.transform, "Chevron", typeof(Image), typeof(LayoutElement));
+            var chevron = chevGo.GetComponent<Image>();
+            chevron.sprite = Sprites.ChevronDown;
+            var cle = chevGo.GetComponent<LayoutElement>();
+            UIText label = Header(header, title, true);
+            Layout content = Panel(parent);
+            content.gameObject.SetActive(open);
+
+            void Look(Theme th)
+            {
+                cle.minWidth = cle.preferredWidth = cle.minHeight = cle.preferredHeight = Mathf.Round(th.FontSize * 0.75f);
+                chevron.color = th.Header;
+                chevGo.transform.localRotation = Quaternion.Euler(0, 0, content.gameObject.activeSelf ? 0 : 90);
+            }
+
+            void Flip()
+            {
+                bool o = !content.gameObject.activeSelf;
+                content.gameObject.SetActive(o);
+                sectionState[key] = o;
+                Look(Th);
+            }
+
+            Styled(chevGo, Look);
+            label.tmpText.raycastTarget = true;
+            label.gameObject.AddComponent<ClickHandler>().Click = Flip;
+            chevGo.AddComponent<ClickHandler>().Click = Flip;
+            return content;
         }
 
         // ---- segmented choices ----
@@ -605,7 +658,7 @@ namespace KodeKit
                 Layout row = Row();
                 Toggle t = w.Switch(row, get, set);
                 UIText l = Label(row, label);
-                Clickable(l, () => t.isOn = !t.isOn);
+                LabelFlips(l, t);
                 if (tone != null) w.ToneText(l, tone);
                 if (text == null) return row;
                 TMP_InputField f = EditFields.Field(w, row, text, setText, width, valid);
@@ -761,13 +814,15 @@ namespace KodeKit
             return b;
         }
 
-        /// <summary>A borderless square icon button; the close button turns red on hover.</summary>
+        /// <summary>A borderless square title-bar button showing an icon or a short text ("?"); the close button turns red on hover.</summary>
         static void FlatIcon(UIButton b, bool close)
         {
             UnityEngine.Object.Destroy(b.GetComponent<ClickFlash>());
             b.Padding(2);
             var le = b.gameObject.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
-            Image icon = b.transform.Find("Icon").GetComponent<Image>();
+            Transform iconT = b.transform.Find("Icon");
+            Image icon = iconT != null ? iconT.GetComponent<Image>() : null;
+            TMP_Text text = icon == null ? b.GetComponentInChildren<TMP_Text>() : null;
             Styled(b.gameObject, th =>
             {
                 float size = th.FontSize + 3;
@@ -775,9 +830,17 @@ namespace KodeKit
                 Color hover = close ? new Color(0.85f, 0.25f, 0.2f, 0.85f) : Alpha(th.Text, 0.15f);
                 Paint(b.GetComponent<Button>(), b.GetComponent<Image>(), Sprites.RoundedBox(3, 0, Color.white, Color.white), Color.white,
                     Clear, hover, hover);
-                icon.color = Alpha(th.Text, 0.85f);
-                var ile = icon.GetComponent<LayoutElement>();
-                ile.minWidth = ile.preferredWidth = ile.minHeight = ile.preferredHeight = Mathf.Round(th.FontSize * 0.75f);
+                if (icon != null)
+                {
+                    icon.color = Alpha(th.Text, 0.85f);
+                    var ile = icon.GetComponent<LayoutElement>();
+                    ile.minWidth = ile.preferredWidth = ile.minHeight = ile.preferredHeight = Mathf.Round(th.FontSize * 0.75f);
+                }
+                else if (text != null)
+                {
+                    th.ApplyText(text, Alpha(th.Text, 0.85f));
+                    text.fontStyle = FontStyles.Bold;
+                }
             });
         }
     }

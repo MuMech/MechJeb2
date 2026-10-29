@@ -225,34 +225,34 @@ namespace MuMech.UI
             ModernRows.Switch(plan, "Unguided Stages", () => Settings.UnguidedStagesFlag, v => Settings.UnguidedStagesFlag = v,
                 Settings.UnguidedStagesInternal, "", 100);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Coast"); //Coast
-            KodeWindow.PropertyGrid coast = w.Properties(r);
+            UIObject g = w.Group(r, "#MechJeb_NewUI_Coast"); //Coast
+            KodeWindow.PropertyGrid coast = w.Properties(g);
             ModernRows.Switch(coast, "Coast Stage", () => Settings.CoastStageFlag, v => Settings.CoastStageFlag = v, Settings.CoastStageInternal, "", 100);
-            Layout where = KodeWindow.Row(r);
+            Layout where = KodeWindow.Row(g);
             w.Segmented(where, coastLocations, () => Settings.CoastLocation + 1, i => Settings.CoastLocation = i - 1);
-            KodeWindow.PropertyGrid coastTimes = w.Properties(r);
+            KodeWindow.PropertyGrid coastTimes = w.Properties(g);
             ModernRows.Field(coastTimes, "Min Coast", Psgs.MinCoast, "s", 50);
             ModernRows.Field(coastTimes, "Max Coast", Psgs.MaxCoast, "s", 50);
             ModernRows.Field(coastTimes, "Ullage lead time", Core.Guidance.UllageLeadTime, "s", 50);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Spinup"); //Spinup
-            KodeWindow.PropertyGrid spin = w.Properties(r);
+            g = w.Group(r, "#MechJeb_NewUI_Spinup"); //Spinup
+            KodeWindow.PropertyGrid spin = w.Properties(g);
             ModernRows.Switch(spin, "Spinup stage", () => Settings.SpinupStageFlag, v => Settings.SpinupStageFlag = v, Settings.SpinupStageInternal, "", 50);
             ModernRows.Field(spin, "ω", Settings.SpinupAngularVelocity, "rpm", 50);
             ModernRows.Field(spin, "Spinup lead time", Settings.SpinupLeadTime, "s", 50);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_BoosterDrag"); //Booster and drag
-            KodeWindow.PropertyGrid aero = w.Properties(r);
+            g = w.Group(r, "#MechJeb_NewUI_BoosterDrag"); //Booster and drag
+            KodeWindow.PropertyGrid aero = w.Properties(g);
             ModernRows.Field(aero, "#MechJeb_Ascent_label13", Settings.PitchStartHeight, "m", 50); //Booster Pitch start:
             ModernRows.Field(aero, "#MechJeb_Ascent_label14", Settings.PitchRate, "°/s", 50); //Booster Pitch rate:
             ModernRows.Field(aero, "Cd", Psgs.Cd, "", 50);
             ModernRows.Field(aero, "Aref", Psgs.Aref, "m²", 50);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Limits"); //Limits
-            KodeWindow.PropertyGrid limits = w.Properties(r);
+            g = w.Group(r, "#MechJeb_NewUI_Limits"); //Limits
+            KodeWindow.PropertyGrid limits = w.Properties(g);
             ModernRows.Field(limits, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad", 60); //Qα limit
             bool Clamped() => Psgs.LimitQa < 0 || Psgs.LimitQa > 10000;
-            Layout qa = w.StatusBar(r, () => Clamped() ? Tone.Bad : Tone.Warn);
+            Layout qa = w.StatusBar(g, () => Clamped() ? Tone.Bad : Tone.Warn);
             UIText clamped = GuidanceUi.Wrapped(qa, "Qα limit has been clamped to between 0 and 10000 Pa-rad");
             w.Visible(clamped.gameObject, Clamped);
             UIText recommended = GuidanceUi.Wrapped(qa, "#MechJeb_Ascent_label20"); //Qα limit is recommended to be 1000 to 4000 Pa-rad

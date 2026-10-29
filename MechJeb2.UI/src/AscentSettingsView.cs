@@ -155,16 +155,16 @@ namespace MuMech.UI
             w.Visible(AscentUi.RowOf(rss), () => psg);
         }
 
-        // modern layout: about 25 options in five titled groups, each a property grid with the switches on the left
+        // modern layout: about 25 options in five folding groups, each a property grid with the switches on the left
         void BuildModern(KodeWindow w)
         {
             UIObject r = w.Root;
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
-            ModernRows.ThrustLimits(w, r, Thrust, () => psg, false);
+            UIObject g = w.Group(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
+            ModernRows.ThrustLimits(w, g, Thrust, () => psg, false);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Steering"); //Steering
-            KodeWindow.PropertyGrid steer = w.Properties(r);
+            g = w.Group(r, "#MechJeb_NewUI_Steering"); //Steering
+            KodeWindow.PropertyGrid steer = w.Properties(g);
             ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox2", () => Settings.ForceRoll, v => Settings.ForceRoll = v); //Force Roll
             Layout climb = ModernRows.Field(steer, menu._climbString, Settings.VerticalRoll, "º", 50); //climb
             Layout turn = ModernRows.Field(steer, menu._turnString, Settings.TurnRoll, "º", 50); //turn
@@ -189,25 +189,25 @@ namespace MuMech.UI
             w.Visible(corrective.gameObject, () => Settings.AscentType == AscentType.CLASSIC);
             w.Visible(gain.gameObject, () => Settings.AscentType == AscentType.CLASSIC && Settings.CorrectiveSteering);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Autostage"); //Autostage
-            w.SwitchRow(r, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
-            Layout autostage = KodeWindow.Panel(r);
+            g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
+            w.SwitchRow(g, "#MechJeb_Ascent_checkbox5", () => Settings.Autostage, v => Settings.Autostage = v); //Autostage
+            Layout autostage = KodeWindow.Panel(g);
             ModernRows.AutostageSettings(w, autostage, Core.Staging);
             w.Visible(autostage.gameObject, () => Settings.Autostage);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Deployment"); //Deployment
-            w.SwitchRow(r, "#MechJeb_Ascent_checkbox6", () => Settings.AutoDeploySolarPanels, v => Settings.AutoDeploySolarPanels = v); //Auto-deploy solar panels
-            w.SwitchRow(r, "#MechJeb_Ascent_checkbox7", () => Settings.AutoDeployAntennas, v => Settings.AutoDeployAntennas = v); //Auto-deploy antennas
+            g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
+            w.SwitchRow(g, "#MechJeb_Ascent_checkbox6", () => Settings.AutoDeploySolarPanels, v => Settings.AutoDeploySolarPanels = v); //Auto-deploy solar panels
+            w.SwitchRow(g, "#MechJeb_Ascent_checkbox7", () => Settings.AutoDeployAntennas, v => Settings.AutoDeployAntennas = v); //Auto-deploy antennas
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Other"); //Other
-            w.SwitchRow(r, "#MechJeb_Ascent_checkbox8", () => Core.Node != null && Core.Node.Autowarp, v =>
+            g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
+            w.SwitchRow(g, "#MechJeb_Ascent_checkbox8", () => Core.Node != null && Core.Node.Autowarp, v =>
             {
                 if (Core.Node != null) Core.Node.Autowarp = v;
             }); //Auto-warp
-            UnityEngine.UI.Toggle skip = w.SwitchRow(r, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
+            UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
                 v => Settings.SkipCircularization = v); //Skip Circularization
             w.Visible(skip.transform.parent.gameObject, () => !psg);
-            UnityEngine.UI.Toggle rss = w.SwitchRow(r, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
+            UnityEngine.UI.Toggle rss = w.SwitchRow(g, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
             w.Visible(rss.transform.parent.gameObject, () => psg);
         }
     }

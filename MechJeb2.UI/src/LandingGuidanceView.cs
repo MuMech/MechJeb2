@@ -269,8 +269,6 @@ namespace MuMech.UI
 
         // ---- modern layout: D-M-S fields with the hemisphere as a choice, one nudge pad, the options in a property grid ----
 
-        static readonly string[] northSouth = { "N", "S" }, eastWest = { "E", "W" };
-
         void BuildModern(KodeWindow w)
         {
             UIObject r = w.Root;
@@ -280,8 +278,8 @@ namespace MuMech.UI
             KodeWindow.Header(target, "#MechJeb_LandingGuidance_label1"); //Target coordinates:
             Layout coords = KodeWindow.Row(target);
             Layout fields = KodeWindow.Panel(coords);
-            ModernAngle(w, fields, "Lat", () => Core.Target.targetLatitude, northSouth);
-            ModernAngle(w, fields, "Lon", () => Core.Target.targetLongitude, eastWest);
+            ModernAngle(w, fields, "Lat", () => Core.Target.targetLatitude, EditableAngle.Direction.NS);
+            ModernAngle(w, fields, "Lon", () => Core.Target.targetLongitude, EditableAngle.Direction.EW);
 
             // the four 10 m nudges as one pad, the step in its centre
             KodeWindow.CompassGrid pad = KodeWindow.Compass(coords, 20);
@@ -326,18 +324,11 @@ namespace MuMech.UI
         }
 
         /// <summary>Lat [d] ° [m] ' [s] " [N|S]: the hemisphere is a two-way choice, not a button that flips.</summary>
-        void ModernAngle(KodeWindow w, UIObject parent, string label, Func<EditableAngle> angle, string[] hemispheres)
+        static void ModernAngle(KodeWindow w, UIObject parent, string label, Func<EditableAngle> angle, EditableAngle.Direction direction)
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, label);
-            AngleField(w, row, () => angle().Degrees);
-            KodeWindow.Label(row, "°");
-            AngleField(w, row, () => angle().Minutes);
-            KodeWindow.Label(row, "'");
-            AngleField(w, row, () => angle().Seconds);
-            KodeWindow.Label(row, "\"");
-            Layout hemi = w.Segmented(row, hemispheres, () => angle().Negative ? 1 : 0, i => angle().Negative = i == 1, ChoiceStyle.Joined);
-            hemi.FlexibleLayout(0f, 0f);
+            OpUi.AngleRow(w, row, angle, direction, false);
         }
 
         void ModernAutopilot(KodeWindow w, UIObject p)

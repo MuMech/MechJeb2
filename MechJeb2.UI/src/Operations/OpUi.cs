@@ -92,6 +92,8 @@ namespace MuMech.UI
         }
 
         /// <summary>EditableAngle.DrawEditGUI: [deg]° [min]' [sec]" [N/S/E/W]</summary>
+        static readonly string[] northSouth = { "N", "S" }, eastWest = { "E", "W" };
+
         public static void AngleRow(KodeWindow w, UIObject parent, Func<EditableAngle> angle, EditableAngle.Direction direction, bool ownRow = true)
         {
             UIObject row = ownRow ? (UIObject)KodeWindow.Row(parent) : parent;
@@ -101,6 +103,13 @@ namespace MuMech.UI
             KodeWindow.Label(row, "'");
             EditFields.Field(w, row, () => angle().Seconds.Text, s => angle().Seconds.Text = s, 30, () => angle().Seconds.IsParsed);
             KodeWindow.Label(row, "\"");
+
+            if (KodeWindow.ModernLayout)
+            {
+                string[] hemispheres = direction == EditableAngle.Direction.NS ? northSouth : eastWest;
+                w.Segmented(row, hemispheres, () => angle().Negative ? 1 : 0, i => angle().Negative = i == 1).FlexibleLayout(0f, 0f);
+                return;
+            }
 
             string Dir(EditableAngle a) => direction == EditableAngle.Direction.NS ? a.Negative ? "S" : "N" : a.Negative ? "W" : "E";
             UIButton button = KodeWindow.Button(row, Dir(angle()), () => angle().Negative = !angle().Negative);

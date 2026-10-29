@@ -74,9 +74,14 @@ namespace MuMech.UI
         UIButton ModeButton(KodeWindow w, UIObject parent, Mode bt) =>
             StateButton(w, parent, ModeKey(bt), () => ss.mode = bt, () => ss.mode == bt);
 
-        /// <summary>GUILayout.Toggle(value, "", NoExpandWidth): a checkbox with no label.</summary>
+        /// <summary>GUILayout.Toggle(value, "", NoExpandWidth): a checkbox with no label (a switch in the modern layout).</summary>
         static void CheckBox(KodeWindow w, UIObject parent, Func<bool> get, Action<bool> set)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                w.Switch(parent, get, set);
+                return;
+            }
             UIToggle t = parent.Add<UIToggle>();
             t.PreferredSize(16, 16).Finish();
             Toggle toggle = t.GetComponent<Toggle>();
@@ -112,8 +117,7 @@ namespace MuMech.UI
                 ss.forceRol = v;
                 ss.Engage();
             }
-            if (KodeWindow.ModernLayout) w.SwitchRow(row, "#MechJeb_SmartASS_checkbox3", () => ss.forceRol, Set);
-            else w.Toggle(row, "#MechJeb_SmartASS_checkbox3", () => ss.forceRol, Set);
+            w.Toggle(row, "#MechJeb_SmartASS_checkbox3", () => ss.forceRol, Set);
             EditFields.Field(w, row, () => ss.rol.Text, s => ss.rol.Text = s, 30, () => ss.rol.IsParsed);
             KodeWindow.Label(row, "°");
         }

@@ -85,18 +85,18 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
-            ModernRows.ThrustLimits(w, r, Thrust, null, false);
+            UIObject g = w.Group(r, "#MechJeb_NewUI_ThrottleLimits"); //Throttle limits
+            ModernRows.ThrustLimits(w, g, Thrust, null, false);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Jets"); //Jet engines
-            KodeWindow.PropertyGrid jets = w.Properties(r);
+            g = w.Group(r, "#MechJeb_NewUI_Jets"); //Jet engines
+            KodeWindow.PropertyGrid jets = w.Properties(g);
             ModernRows.Switch(jets, "#MechJeb_Ascent_checkbox13", () => Thrust.LimitToPreventFlameout, v => Thrust.LimitToPreventFlameout = v,
                 tone: () => Thrust.Limiter == LimitMode.FLAMEOUT ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal); //"Prevent jet flameout"
             ModernRows.Switch(jets, "#MechJeb_Utilities_checkbox3", () => Thrust.ManageIntakes, v => Thrust.ManageIntakes = v);
             ModernRows.Field(jets, "#MechJeb_Utilities_label2", Thrust.FlameoutSafetyPct, "%", 50);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Other"); //Other
-            KodeWindow.PropertyGrid other = w.Properties(r);
+            g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
+            KodeWindow.PropertyGrid other = w.Properties(g);
             ModernRows.Switch(other, "#MechJeb_Ascent_checkbox19", () => Thrust.DifferentialThrottle, v =>
             {
                 bool old = Thrust.DifferentialThrottle;
@@ -105,18 +105,18 @@ namespace MuMech.UI
             }, tone: () => Thrust.DifferentialThrottle && window.Vessel.LiftedOff()
                 ? Thrust.DifferentialThrottleSuccess == DifferentialThrottleStatus.SUCCESS ? KodeWindow.Tone.Good : KodeWindow.Tone.Warn
                 : KodeWindow.Tone.Normal); //"Differential throttle"
-            Layout diffBar = w.StatusBar(r, () => KodeWindow.Tone.Warn);
+            Layout diffBar = w.StatusBar(g, () => KodeWindow.Tone.Warn);
             UIText diffStatus = w.BoundLabel(diffBar, DifferentialStatusText, true);
             diffStatus.tmpText.enableWordWrapping = true;
             w.Visible(diffBar.gameObject,
                 () => Thrust.DifferentialThrottle && window.Vessel.LiftedOff() && Thrust.DifferentialThrottleSuccess != DifferentialThrottleStatus.SUCCESS);
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Deployment"); //Deployment
-            DeployRow(w, r, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
-            DeployRow(w, r, Core.AntennaControl, "#MechJeb_Autodeployantennas"); //"Auto-deploy antennas"
+            g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
+            DeployRow(w, g, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
+            DeployRow(w, g, Core.AntennaControl, "#MechJeb_Autodeployantennas"); //"Auto-deploy antennas"
 
-            KodeWindow.Header(r, "#MechJeb_NewUI_Autostage"); //Autostage
-            Layout auto = KodeWindow.Row(r);
+            g = w.Group(r, "#MechJeb_NewUI_Autostage"); //Autostage
+            Layout auto = KodeWindow.Row(g);
             UnityEngine.UI.Toggle autostage = w.SwitchRow(auto, "#MechJeb_Utilities_checkbox1", () => Core.Staging.Users.Contains(window), v =>
             {
                 if (v) Core.Staging.Users.Add(window);
@@ -128,11 +128,11 @@ namespace MuMech.UI
             UIButton once = KodeWindow.Button(auto, "#MechJeb_Utilities_button1", () => Core.Staging.AutostageOnce(window)); //"Autostage once"
             w.Visible(once.gameObject, () => !Core.Staging.Enabled);
 
-            Layout settings = KodeWindow.Panel(r);
+            Layout settings = KodeWindow.Panel(g);
             ModernRows.AutostageSettings(w, settings, Core.Staging);
             w.Visible(settings.gameObject, () => Core.Staging.Enabled);
 
-            Layout statusBar = w.StatusBar(r, () => KodeWindow.Tone.Normal);
+            Layout statusBar = w.StatusBar(g, () => KodeWindow.Tone.Normal);
             w.BoundLabel(statusBar, () => Core.Staging.AutostageStatus(), true);
             w.Visible(statusBar.gameObject, () => Core.Staging.Enabled);
         }

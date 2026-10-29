@@ -211,10 +211,19 @@ namespace KodeKit
         /// <summary>The title bar (title text and close button); also the drag handle.</summary>
         public Layout TitleRow { get; }
 
-        /// <summary>A small button at the left of the title bar (like the custom windows' "E" and "C").</summary>
+        /// <summary>
+        /// A small button at the left of the title bar (like the custom windows' "E" and "C"); in the modern layout a flat one
+        /// on the right, before the close button, like the title-bar icons.
+        /// </summary>
         public UIButton TitleButton(string text, Action onClick)
         {
             UIButton b = Button(TitleRow, text, onClick);
+            if (ModernLayout)
+            {
+                FlatIcon(b, false);
+                b.transform.SetSiblingIndex(CloseButton.transform.GetSiblingIndex());
+                return b;
+            }
             SquareButton(b, false);
             b.transform.SetSiblingIndex(0);
             return b;
@@ -455,6 +464,7 @@ namespace KodeKit
         public Layout Section(UIObject parent, string title, bool open = true, string key = null)
         {
             key ??= title;
+            if (ModernLayout) return FoldSection(parent, title, open, key);
             if (sectionState.TryGetValue(key, out bool saved)) open = saved;
 
             Layout header = Row(parent);
@@ -709,9 +719,15 @@ namespace KodeKit
         Color ToneColor(Tone t) => t == Tone.Good ? T.Good : t == Tone.Warn ? T.Warn : t == Tone.Bad ? T.Bad : T.Text;
 
         /// <summary>A toggle whose label colour follows a state (MechJeb's Green/Yellow/RedToggle styles).</summary>
-        public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<Tone> tone)
+        public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<Tone> tone) =>
+            ToneLabel(Toggle(parent, text, get, set), tone);
+
+        /// <summary>A checkbox whose label colour follows a state, in either layout.</summary>
+        public Toggle CheckBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<Tone> tone) =>
+            ToneLabel(CheckBox(parent, text, get, set), tone);
+
+        Toggle ToneLabel(Toggle toggle, Func<Tone> tone)
         {
-            Toggle toggle = Toggle(parent, text, get, set);
             TMP_Text label = toggle.transform.parent.GetComponentInChildren<ToggleLabelClick>().GetComponent<TMP_Text>();
             Tone shown = Tone.Normal;
             Behaviour.AddRestyle(() => label.color = ToneColor(shown));
@@ -725,7 +741,12 @@ namespace KodeKit
             return toggle;
         }
 
-        public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null)
+        /// <summary>A checkbox and its label; a switch in the modern layout. The label flips it too.</summary>
+        public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null) =>
+            ModernLayout ? SwitchToggle(parent, text, get, set, green) : CheckBox(parent, text, get, set, green);
+
+        /// <summary>A checkbox and its label in either layout (the menu's window list keeps checkboxes in the modern layout).</summary>
+        public Toggle CheckBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null)
         {
             Layout row = Row(parent);
             UIToggle t = row.Add<UIToggle>();
@@ -807,6 +828,11 @@ namespace KodeKit
         /// <param name="padding">0: normal buttons; else like <see cref="Padded"/>.</param>
         public void SelectionGrid(UIObject parent, string[] items, Func<int> get, Action<int> set, int padding = 0)
         {
+            if (ModernLayout)
+            {
+                Segmented(parent, items, get, set);
+                return;
+            }
             var images = new Image[items.Length];
             for (int i = 0; i < items.Length; i++)
             {

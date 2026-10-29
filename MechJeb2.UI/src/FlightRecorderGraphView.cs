@@ -277,7 +277,7 @@ namespace MuMech.UI
         static void Colorize(KodeWindow w, Toggle toggle, Color color)
         {
             TMP_Text label = MiscViewKit.ToggleLabel(toggle);
-            Graphic box = toggle.targetGraphic;
+            Graphic box = KodeWindow.ModernLayout ? null : toggle.targetGraphic;
             void Paint()
             {
                 label.color = color;

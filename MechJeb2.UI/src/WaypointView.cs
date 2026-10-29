@@ -315,7 +315,9 @@ namespace MuMech.UI
             settingsScroll = KodeWindow.ScrollList(page, ListHeight, out Layout content, 2);
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
 
-            w.SelectionGrid(content, m._settingPages, () => m._settingPageIndex, i => m._settingPageIndex = i);
+            // the settings pages: navigation, so tabs in the modern layout
+            if (KodeWindow.ModernLayout) w.Segmented(content, m._settingPages, () => m._settingPageIndex, i => m._settingPageIndex = i, ChoiceStyle.Tabs);
+            else w.SelectionGrid(content, m._settingPages, () => m._settingPageIndex, i => m._settingPageIndex = i);
 
             // rover: PID and traction
             Layout rover = KodeWindow.Row(content);

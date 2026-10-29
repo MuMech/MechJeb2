@@ -218,7 +218,7 @@ namespace MuMech.UI
                         inColumn = 0;
                     }
                     DisplayModule m = module;
-                    w.Toggle(column, m.GetName(), () => m.Enabled, v => m.Enabled = v, () => ModuleTone(m));
+                    w.CheckBox(column, m.GetName(), () => m.Enabled, v => m.Enabled = v, () => ModuleTone(m)); // checkboxes, as proposal 10A
                     inColumn++;
                 }
             }
