@@ -150,12 +150,12 @@ namespace MuMech
             // only offered when a second UI is installed
             if (MechJebUiHost.Current != null)
             {
-                bool kode = GUILayout.Toggle(Backend == UiBackendType.Kode, "Use the new UI for ported windows (experimental)");
+                bool kode = GUILayout.Toggle(Backend == UiBackendType.Kode, Localizer.Format("#MechJeb_NewUI_UseNewUI")); //Use the new UI for ported windows (experimental)
                 UiBackend = (int)(kode ? UiBackendType.Kode : UiBackendType.Imgui);
                 if (kode)
                 {
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("New UI opacity", GuiUtils.LayoutNoExpandWidth);
+                    GUILayout.Label(Localizer.Format("#MechJeb_NewUI_Opacity"), GuiUtils.LayoutNoExpandWidth); //New UI opacity
                     float opacity = GUILayout.HorizontalSlider(UiOpacity, 0.3f, 1f, GuiUtils.LayoutExpandWidth);
                     GUILayout.EndHorizontal();
                     // ReSharper disable once CompareOfFloatsByEqualityOperator

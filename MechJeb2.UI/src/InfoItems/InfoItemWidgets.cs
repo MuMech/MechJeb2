@@ -138,18 +138,46 @@ namespace MuMech.UI
             else
             {
                 // strings, and numbers MechJeb formats with a .NET format CharText doesn't do: MechJeb's own string
-                string shown = null;
+                string shown = first;
+                // IMGUI keeps the window's width and wraps a long value (biomes, orbit summaries): when the row would be wider
+                // than RowWidth, the cell keeps the room left by the label and grows in height instead of widening the window
+                void Fit(string s)
+                {
+                    if (RowWidth <= 0 || item.Width > 0)
+                    {
+                        Grow(s?.Length ?? 0);
+                        return;
+                    }
+                    Theme th = Theme.Current;
+                    float room = Mathf.Max(60, RowWidth - TextMeasure.Measure(item.localizedName, th).x - 12);
+                    Vector2 natural = TextMeasure.Measure(s ?? "", th);
+                    // the text fills its cell (no inner margin): it wraps only when it doesn't fit the room itself
+                    bool wrap = natural.x > room;
+                    value.tmpText.enableWordWrapping = wrap;
+                    value.tmpText.overflowMode = wrap ? TextOverflowModes.Overflow : TextOverflowModes.Ellipsis;
+                    size.preferredWidth = wrap ? room : Mathf.Min(room, Mathf.Max(natural.x + 8, Mathf.Min(size.preferredWidth, room)));
+                    size.preferredHeight = Mathf.Max(th.LineHeight, wrap ? TextMeasure.Measure(s, th, room).y : natural.y);
+                }
+                Fit(first);
+                // a theme change re-sizes the cell from its template: fit the shown text again
+                w.Behaviour.AddRestyle(() => Fit(shown));
                 refresh.Add(() =>
                 {
                     item.UpdateItem();
                     string s = item.StringValue;
                     if (s == shown) return;
                     shown = s;
-                    Grow(s?.Length ?? 0);
+                    Fit(s);
                     value.tmpText.text = s;
                 });
             }
         }
+
+        /// <summary>
+        /// Width of a row in the window (the IMGUI window's width minus its margins): string values longer than the room left
+        /// wrap instead of widening the window. 0 = no limit.
+        /// </summary>
+        public float RowWidth;
 
         void ApplyColor(TMP_Text t)
         {

@@ -43,7 +43,7 @@ namespace MuMech.UI
         /// <summary>A button drawn with IMGUI's btActive look (green text and tint) while active() is true.</summary>
         static UIButton StateButton(KodeWindow w, UIObject parent, string text, Action click, Func<bool> active)
         {
-            UIButton b = KodeWindow.Button(parent, text, click, true);
+            UIButton b = KodeWindow.Padded(KodeWindow.Button(parent, text, click, true)); // btNormal: padding 8
             var img = b.GetComponent<Image>();
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             bool shown = false;
@@ -97,7 +97,8 @@ namespace MuMech.UI
             });
         }
 
-        static Layout ButtonRow(UIObject parent) => KodeWindow.Row(parent);
+        // GUILayout.ExpandHeight(true) on every button of the row
+        static Layout ButtonRow(UIObject parent) => KodeWindow.EqualHeights(KodeWindow.Row(parent));
 
         // ---- rows ----
 
@@ -163,7 +164,7 @@ namespace MuMech.UI
 
             // another autopilot uses the attitude controller: just the red "AUTO"
             Layout autoPanel = KodeWindow.Panel(r);
-            UIButton auto = KodeWindow.Button(autoPanel, "#MechJeb_SmartASS_button57", () => { }, true);
+            UIButton auto = KodeWindow.Padded(KodeWindow.Button(autoPanel, "#MechJeb_SmartASS_button57", () => { }, true)); // btAuto
             TMP_Text autoLabel = auto.GetComponentInChildren<TMP_Text>();
             autoLabel.color = Color.red;
             w.Behaviour.AddRestyle(() => autoLabel.color = Color.red);

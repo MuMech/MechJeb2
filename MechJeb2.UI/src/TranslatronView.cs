@@ -46,19 +46,20 @@ namespace MuMech.UI
             UIObject r = w.Root;
 
             // other modules use the throttle: IMGUI shows one red, inert "auto" button
-            UIButton auto = MiscViewKit.ToneButton(w, r, "#MechJeb_Trans_auto", () => { }, () => KodeWindow.Tone.Bad, true);
+            // buttonStyle: padding 8
+            UIButton auto = KodeWindow.Padded(MiscViewKit.ToneButton(w, r, "#MechJeb_Trans_auto", () => { }, () => KodeWindow.Tone.Bad, true));
             w.Visible(auto.gameObject, AutoMode);
 
             Layout manual = KodeWindow.Panel(r);
             w.Visible(manual.gameObject, () => !AutoMode());
 
             // SelectionGrid(mode, texts, 2 columns)
-            Layout gridTop = KodeWindow.Row(manual);
+            Layout gridTop = KodeWindow.EqualHeights(KodeWindow.Row(manual));
             w.SelectionGrid(gridTop, new[] { "#MechJeb_Translatron_off", "#MechJeb_Translatron_KEEP_OBT" },
-                () => Mode < 2 ? Mode : -1, i => tr.SetMode((MechJebModuleThrustController.TMode)i));
-            Layout gridBottom = KodeWindow.Row(manual);
+                () => Mode < 2 ? Mode : -1, i => tr.SetMode((MechJebModuleThrustController.TMode)i), 8);
+            Layout gridBottom = KodeWindow.EqualHeights(KodeWindow.Row(manual));
             w.SelectionGrid(gridBottom, new[] { "#MechJeb_Translatron_KEEP_SURF", "#MechJeb_Translatron_KEEP_VERT" },
-                () => Mode >= 2 ? Mode - 2 : -1, i => tr.SetMode((MechJebModuleThrustController.TMode)(i + 2)));
+                () => Mode >= 2 ? Mode - 2 : -1, i => tr.SetMode((MechJebModuleThrustController.TMode)(i + 2)), 8);
 
             w.Toggle(manual, "#MechJeb_Trans_kill_h", () => Thrust.TransKillH, v => Thrust.TransKillH = v);
 
@@ -85,7 +86,7 @@ namespace MuMech.UI
                 ApplySpeed();
             });
 
-            KodeWindow.Button(manual, KodeWindow.Loc("#MechJeb_Trans_spd_act") + ":", ApplySpeed, true);
+            KodeWindow.Padded(KodeWindow.Button(manual, KodeWindow.Loc("#MechJeb_Trans_spd_act") + ":", ApplySpeed, true));
 
             UIText current = MiscViewKit.LiveBound(w, r, Localizer.Format("#MechJeb_Trans_current_spd") + "-000.0km/s", SpeedText, true);
             w.Visible(current.transform.parent.gameObject, () => Thrust.Tmode != MechJebModuleThrustController.TMode.OFF);
@@ -94,8 +95,8 @@ namespace MuMech.UI
             automation.tmpText.alignment = TextAlignmentOptions.Center;
 
             string panic = KodeWindow.Loc("#MechJeb_Trans_PANIC"), noPanic = KodeWindow.Loc("#MechJeb_Trans_NOPANIC");
-            MiscViewKit.BoundButton(w, r, () => tr.Aborting ? noPanic : panic, tr.PanicSwitch,
-                () => tr.Aborting ? KodeWindow.Tone.Bad : KodeWindow.Tone.Good, true);
+            KodeWindow.Padded(MiscViewKit.BoundButton(w, r, () => tr.Aborting ? noPanic : panic, tr.PanicSwitch,
+                () => tr.Aborting ? KodeWindow.Tone.Bad : KodeWindow.Tone.Good, true));
         }
     }
 }

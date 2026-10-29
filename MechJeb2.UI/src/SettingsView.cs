@@ -84,7 +84,7 @@ namespace MuMech.UI
 
             w.Toggle(r, "#MechJeb_Settings_checkbox2", () => Core.Warp.activateSASOnWarp, v => Core.Warp.activateSASOnWarp = v); //"Activate SAS on Warp"
 
-            w.Toggle(r, "Use the new UI for ported windows (experimental)", () => settings.Backend == MechJebModuleSettings.UiBackendType.Kode, v =>
+            w.Toggle(r, "#MechJeb_NewUI_UseNewUI", () => settings.Backend == MechJebModuleSettings.UiBackendType.Kode, v =>
             {
                 settings.UiBackend = (int)(v ? MechJebModuleSettings.UiBackendType.Kode : MechJebModuleSettings.UiBackendType.Imgui);
                 Changed();
@@ -92,7 +92,7 @@ namespace MuMech.UI
 
             // the new UI's window opacity (KodeHost applies it to the theme)
             Layout opacity = KodeWindow.Row(r);
-            KodeWindow.Label(opacity, "New UI opacity");
+            KodeWindow.Label(opacity, "#MechJeb_NewUI_Opacity");
             w.Slider(opacity, () => settings.UiOpacity, v =>
             {
                 settings.UiOpacity = v;

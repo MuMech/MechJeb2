@@ -66,7 +66,7 @@ namespace MuMech.UI
             w.Toggle(r, "#MechJeb_AttitudeAdjust_checkbox1", () => Attitude.RCS_auto, v => Attitude.RCS_auto = v); //RCS auto mode
 
             // the radio choice and the active controller's settings
-            Layout controller = w.Section(r, "Controller");
+            Layout controller = w.Section(r, "#MechJeb_NewUI_SectionController");
             ControllerToggle(w, controller, "#MechJeb_AttitudeAdjust_checkbox2", 0); //MJAttitudeController
             ControllerToggle(w, controller, "#MechJeb_AttitudeAdjust_checkbox3", 1); //KosAttitudeController
             ControllerToggle(w, controller, "#MechJeb_AttitudeAdjust_checkbox4", 2); //HybridController
@@ -88,7 +88,7 @@ namespace MuMech.UI
 
             // "Show Numbers" is the section: open = numbers shown. adj.showInfos (persisted, shared with IMGUI) follows
             // the section, so the readouts below are only computed while it is open.
-            Layout infos = w.Section(r, "Numbers", adj.showInfos);
+            Layout infos = w.Section(r, "#MechJeb_NewUI_SectionNumbers", adj.showInfos);
             w.AddSync(() =>
             {
                 bool open = infos.gameObject.activeSelf;
@@ -120,7 +120,7 @@ namespace MuMech.UI
             MechJebModuleDebugArrows arrows = adj.Core.GetComputerModule<MechJebModuleDebugArrows>();
             if (arrows == null) return;
 
-            Layout debug = w.Section(r, "Debug arrows", false);
+            Layout debug = w.Section(r, "#MechJeb_NewUI_SectionDebugArrows", false);
             Layout length = KodeWindow.Row(debug);
             KodeWindow.Label(length, "#MechJeb_AttitudeAdjust_Label9"); //Arrows length
             EditFields.Field(w, length, () => arrows.arrowsLength.Text, s => arrows.arrowsLength.Text = s, 50, () => arrows.arrowsLength.IsParsed);

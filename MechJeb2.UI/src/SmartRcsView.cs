@@ -26,7 +26,7 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            UIButton auto = MiscViewKit.ToneButton(w, r, "#MechJeb_SmartRcs_button3", () => { }, () => KodeWindow.Tone.Bad, true); //"AUTO"
+            UIButton auto = KodeWindow.Padded(MiscViewKit.ToneButton(w, r, "#MechJeb_SmartRcs_button3", () => { }, () => KodeWindow.Tone.Bad, true)); //"AUTO"
             w.Visible(auto.gameObject, () => blocked);
 
             UIText choose = KodeWindow.Label(r, "#MechJeb_SmartRcs_label1"); //"Choose a target"
@@ -43,11 +43,11 @@ namespace MuMech.UI
 
         void TargetButton(KodeWindow w, UIObject parent, string key, MechJebModuleSmartRcs.Target bt)
         {
-            MiscViewKit.ToneButton(w, parent, key, () =>
+            KodeWindow.Padded(MiscViewKit.ToneButton(w, parent, key, () =>
             {
                 smart.target = bt;
                 smart.Engage();
-            }, () => smart.target == bt ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal, true);
+            }, () => smart.target == bt ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal, true)); // btNormal: padding 8
         }
     }
 }

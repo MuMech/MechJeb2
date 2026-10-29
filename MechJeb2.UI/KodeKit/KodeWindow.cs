@@ -626,6 +626,23 @@ namespace KodeKit
             return b;
         }
 
+        /// <summary>
+        /// IMGUI's big state buttons: a GUIStyle with padding 8 on every side (SmartASS, SmartRcs, Translatron), so the
+        /// button is the text's height plus 16.
+        /// </summary>
+        public static UIButton Padded(UIButton b, int padding = 8)
+        {
+            b.Padding(padding, padding, padding, padding);
+            return b;
+        }
+
+        /// <summary>The row's children take the height of the tallest one (GUILayout.ExpandHeight in a horizontal group).</summary>
+        public static Layout EqualHeights(Layout row)
+        {
+            row.ChildForceExpand(false, true);
+            return row;
+        }
+
         public static UIButton RepeatButton(UIObject parent, string text, Action action)
         {
             UIButton b = Button(parent, text, () => { });
@@ -733,13 +750,15 @@ namespace KodeKit
         }
 
         /// <summary>GUILayout.SelectionGrid with one row.</summary>
-        public void SelectionGrid(UIObject parent, string[] items, Func<int> get, Action<int> set)
+        /// <param name="padding">0: normal buttons; else like <see cref="Padded"/>.</param>
+        public void SelectionGrid(UIObject parent, string[] items, Func<int> get, Action<int> set, int padding = 0)
         {
             var images = new Image[items.Length];
             for (int i = 0; i < items.Length; i++)
             {
                 int k = i;
                 UIButton b = Button(parent, items[i], () => set(k), true);
+                if (padding > 0) Padded(b, padding);
                 images[i] = b.GetComponent<Image>();
             }
 
@@ -793,6 +812,16 @@ namespace KodeKit
             }
             theme.ApplyText(measurer);
             return measurer.GetPreferredValues(text);
+        }
+
+        /// <summary>The size of text word-wrapped at maxWidth.</summary>
+        public static Vector2 Measure(string text, Theme theme, float maxWidth)
+        {
+            Measure("", theme);
+            measurer.enableWordWrapping = true;
+            Vector2 size = measurer.GetPreferredValues(text, maxWidth, 0);
+            measurer.enableWordWrapping = false;
+            return size;
         }
     }
 }
