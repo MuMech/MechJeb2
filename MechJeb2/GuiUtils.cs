@@ -43,7 +43,10 @@ namespace MuMech
 
         private readonly double _multiplier;
 
-        protected bool Parsed;
+        protected bool Parsed = true; // text generated from the value is valid until the user types something that isn't
+
+        /// <summary>False while the text does not parse (the value keeps its last good value).</summary>
+        public bool IsParsed => Parsed;
 
         [UsedImplicitly, Persistent]
         public string TextConfig;
@@ -771,7 +774,8 @@ namespace MuMech
             //try to check if the mouse is over any active DisplayModule
             foreach (DisplayModule m in core.GetComputerModules<DisplayModule>())
             {
-                if (m.Enabled && m.ShowInCurrentScene && !m.IsOverlay && m.WindowPos.Contains(mousePos))
+                // windows drawn by a MechJebUiHost report their own hover through the host
+                if (m.Enabled && m.ShowInCurrentScene && !m.IsOverlay && !MechJebUiHost.Owns(m) && m.WindowPos.Contains(mousePos))
                     return true;
             }
 

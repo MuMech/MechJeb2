@@ -63,10 +63,142 @@ namespace MuMech
             SetVisibility(StageDisplayState);
         }
 
-        private enum StageData
+        internal enum StageData
         {
             KSPStage, InitialMass, FinalMass, StagedMass, BurnedMass, Thrust, VacInitialTWR, VacMaxTWR, AtmoInitialTWR, AtmoMaxTWR,
             Isp, AtmoDeltaV, VacDeltaV, Time, AtmoCumulativeDeltaV, VacCumulativeDeltaV, ControllableMass, RcsUllageTime
+        }
+
+        // ---- read access and actions for another UI (MechJeb2.UI's stage stats table); AllStageStats uses the same actions ----
+
+        internal static IReadOnlyList<StageData> Columns => AllStages;
+        internal static string[] DisplayStateNames => StageDisplayStates;
+        internal string[] Bodies => bodies;
+        internal List<int> Stages => stages;
+        internal bool IsVisible(StageData d) => stageVisibility[d];
+        internal string Header(StageData d) => stageHeaderData[d];
+        internal bool TimeSeconds => timeSeconds;
+        internal bool ShowEmpty => showEmpty;
+        internal bool ShowRcs => showRcs;
+        internal bool LiveSLT => liveSLT;
+        internal int DisplayState => StageDisplayState;
+        internal int TwrBody { get => TWRBody; set => TWRBody = infoItems.TWRBody = value; }
+        internal float AltSLTScale { get => altSLTScale; set => altSLTScale = infoItems.altSLTScale = value; }
+        internal float MachScale { get => machScale; set => machScale = infoItems.machScale = value; }
+        internal double AltSLT => stats.AltSLT;
+        internal double Mach => stats.Mach;
+
+        internal void ToggleTimeSeconds() => timeSeconds = infoItems.timeSeconds = !timeSeconds;
+        internal void ToggleShowEmpty() => showEmpty = infoItems.showEmpty = !showEmpty;
+
+        internal void CycleDisplayState()
+        {
+            StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
+            SetVisibility(StageDisplayState);
+        }
+
+        internal void ToggleRcs()
+        {
+            showRcs = !showRcs;
+            infoItems.showRcs = showRcs;
+            InitalizeStageHeaderData();
+            SetVisibility(StageDisplayState);
+        }
+
+        internal void ToggleLiveSLT() => liveSLT = infoItems.liveSLT = !liveSLT;
+
+        /// <summary>Clicking a column header hides it and switches to the "Custom" display state.</summary>
+        internal void HideColumn(StageData d)
+        {
+            if (d == StageData.KSPStage) return;
+            stageVisibility[d] = false;
+            StageDisplayState = 3;
+            SaveStageVisibility();
+        }
+
+        /// <summary>Push the environment the stats are computed for (live SLT in flight; body, altitude and mach in the editor).</summary>
+        internal void ApplyEnvironment()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                stats.EditorBody = FlightGlobals.Bodies[TWRBody];
+                stats.AltSLT = Math.Pow(altSLTScale, 2) * stats.EditorBody.atmosphereDepth;
+                stats.Mach = Math.Pow(machScale * 2, 3);
+            }
+            else
+            {
+                stats.LiveSLT = liveSLT;
+                stats.EditorBody = stats.MainBody;
+            }
+        }
+
+        internal double GeeASL => HighLogic.LoadedSceneIsEditor ? FlightGlobals.Bodies[TWRBody].GeeASL : stats.MainBody.GeeASL;
+
+        /// <summary>UpdateStageStats without building the display strings.</summary>
+        internal void UpdateStagesOnly()
+        {
+            stats.RequestUpdate();
+            GatherStages(stages);
+        }
+
+        /// <summary>
+        /// The number shown in column d for the stage at position row of Stages, and how UpdateStageDisplayInfo formats it:
+        /// decimals ≥ 0 → "F{decimals}" + unit; -1 → a time (F2 + "s" with TimeSeconds, else DHMS with 1 decimal) + unit.
+        /// </summary>
+        internal double Value(StageData d, int row, double geeASL, out int decimals, out string unit)
+        {
+            int index = stages[row];
+            unit = "   ";
+            decimals = 2;
+            switch (d)
+            {
+                case StageData.KSPStage:
+                    decimals = 0;
+                    return stats.AtmoStats[index].KSPStage;
+                case StageData.ControllableMass:
+                    decimals = 3; unit = " t   ";
+                    return stats.AtmoStats[index].ControllableMass;
+                case StageData.InitialMass:
+                    decimals = 3; unit = " t   ";
+                    return stats.AtmoStats[index].StartMass;
+                case StageData.FinalMass:
+                    decimals = 3; unit = " t   ";
+                    return stats.AtmoStats[index].EndMass;
+                case StageData.StagedMass:
+                    decimals = 3; unit = " t   ";
+                    return stats.AtmoStats[index].StagedMass;
+                case StageData.BurnedMass:
+                    decimals = 3; unit = " t   ";
+                    return _burnedMass(index);
+                case StageData.Thrust:
+                    decimals = 3; unit = " kN   ";
+                    return _thrust(index);
+                case StageData.VacInitialTWR: return _vacStartTWR(index, geeASL);
+                case StageData.VacMaxTWR: return _vacEndTWR(index, geeASL);
+                case StageData.AtmoInitialTWR: return _atmoStartTWR(index, geeASL);
+                case StageData.AtmoMaxTWR: return _atmoEndTWR(index, geeASL);
+                case StageData.Isp: return _isp(index);
+                case StageData.RcsUllageTime:
+                    decimals = -1;
+                    return stats.AtmoStats[index].RcsUllageTime;
+                case StageData.AtmoDeltaV:
+                    decimals = 0; unit = " m/s   ";
+                    return _atmoDv(index);
+                case StageData.VacDeltaV:
+                    decimals = 0; unit = " m/s   ";
+                    return _vacDv(index);
+                case StageData.AtmoCumulativeDeltaV:
+                    decimals = 0; unit = " m/s   ";
+                    return CalculateCumulativeAtmoDeltaV(stages, row);
+                case StageData.VacCumulativeDeltaV:
+                    decimals = 0; unit = " m/s   ";
+                    return CalculateCumulativeVacDeltaV(stages, row);
+                case StageData.Time:
+                    decimals = -1;
+                    return _deltaTime(index);
+            }
+
+            return 0;
         }
 
         private static readonly List<StageData> AllStages = new List<StageData>
@@ -261,45 +393,25 @@ namespace MuMech
             GUILayout.Label(CachedLocalizer.Instance.MechJebInfoItemsLabel1); //"Stage stats"
 
             if (GUILayout.Button(timeSeconds ? "s" : "dhms", GuiUtils.LayoutNoExpandWidth))
-            {
-                timeSeconds = !timeSeconds;
-                infoItems.timeSeconds = timeSeconds;
-            }
+                ToggleTimeSeconds();
 
             if (GUILayout.Button(
                     showEmpty ? CachedLocalizer.Instance.MechJebInfoItemsShowEmpty : CachedLocalizer.Instance.MechJebInfoItemsHideEmpty,
                     GuiUtils.LayoutNoExpandWidth))
-            {
-                showEmpty = !showEmpty;
-                infoItems.showEmpty = showEmpty;
-            }
+                ToggleShowEmpty();
 
             if (GUILayout.Button(StageDisplayStates[StageDisplayState], GuiUtils.LayoutNoExpandWidth))
-            {
-                StageDisplayState = (StageDisplayState + 1) % StageDisplayStates.Length;
-                SetVisibility(StageDisplayState);
-            }
+                CycleDisplayState();
 
             if (GUILayout.Button(showRcs ? "RCS" : "Engine", GuiUtils.LayoutNoExpandWidth))
-            {
-                showRcs = !showRcs;
-                infoItems.showRcs = showRcs;
-                InitalizeStageHeaderData();
-
-                SetVisibility(StageDisplayState);
-            }
+                ToggleRcs();
 
             if (!HighLogic.LoadedSceneIsEditor)
             {
                 if (GUILayout.Button(
                         liveSLT ? CachedLocalizer.Instance.MechJebInfoItemsButton5 : CachedLocalizer.Instance.MechJebInfoItemsButton6,
                         GuiUtils.LayoutNoExpandWidth)) //"Live SLT" "0Alt SLT"
-                {
-                    liveSLT = !liveSLT;
-                    infoItems.liveSLT = liveSLT;
-                }
-
-                stats.LiveSLT = liveSLT;
+                    ToggleLiveSLT();
             }
 
             GUILayout.EndHorizontal();
@@ -308,23 +420,19 @@ namespace MuMech
             {
                 GUILayout.BeginHorizontal();
 
-                TWRBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this, false);
-                infoItems.TWRBody = TWRBody;
-                stats.EditorBody = FlightGlobals.Bodies[TWRBody];
+                TwrBody = GuiUtils.ComboBox.Box(TWRBody, bodies, this, false);
 
                 GUILayout.BeginVertical();
 
                 GUILayout.BeginHorizontal();
-                altSLTScale = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GuiUtils.LayoutExpandWidth);
-                infoItems.altSLTScale = altSLTScale;
-                stats.AltSLT = Math.Pow(altSLTScale, 2) * stats.EditorBody.atmosphereDepth;
+                AltSLTScale = GUILayout.HorizontalSlider(altSLTScale, 0, 1, GuiUtils.LayoutExpandWidth);
+                ApplyEnvironment();
                 GUILayout.Label(stats.AltSLT.ToSI() + "m", GuiUtils.LayoutWidth(80));
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                machScale = GUILayout.HorizontalSlider(machScale, 0, 1, GuiUtils.LayoutExpandWidth);
-                infoItems.machScale = machScale;
-                stats.Mach = Math.Pow(machScale * 2, 3);
+                MachScale = GUILayout.HorizontalSlider(machScale, 0, 1, GuiUtils.LayoutExpandWidth);
+                ApplyEnvironment();
                 GUILayout.Label(stats.Mach.ToString("F1") + " M", GuiUtils.LayoutWidth(80));
                 GUILayout.EndHorizontal();
 
@@ -333,7 +441,7 @@ namespace MuMech
                 GUILayout.EndHorizontal();
             }
             else
-                stats.EditorBody = stats.MainBody;
+                ApplyEnvironment();
 
             Profiler.EndSample();
 

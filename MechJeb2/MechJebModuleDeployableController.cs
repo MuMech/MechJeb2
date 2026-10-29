@@ -119,6 +119,21 @@ namespace MuMech
             Extended = extendedThisPass;
         }
 
+        /// <summary>The toggle button's text ("Toggle ... (currently extended)").</summary>
+        internal string CurrentButtonText => ButtonText;
+
+        /// <summary>The toggle button's action: extend or retract all, unless parts are still moving.</summary>
+        internal void ToggleDeploy()
+        {
+            if (ExtendingOrRetracting())
+                return;
+
+            if (!Extended)
+                ExtendAll();
+            else
+                RetractAll();
+        }
+
         protected bool ExtendingOrRetracting()
         {
             foreach (ModuleDeployablePart mdp in CachedPartModules)

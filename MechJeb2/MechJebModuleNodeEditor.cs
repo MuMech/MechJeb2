@@ -8,9 +8,10 @@ namespace MuMech
 {
     public class MechJebModuleNodeEditor : DisplayModule
     {
-        private EditableDouble prograde = 0;
-        private EditableDouble radialPlus = 0;
-        private EditableDouble normalPlus = 0;
+        // internal: also edited by MechJeb2.UI's window
+        internal EditableDouble prograde = 0;
+        internal EditableDouble radialPlus = 0;
+        internal EditableDouble normalPlus = 0;
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public EditableDouble progradeDelta = 0;
@@ -24,15 +25,15 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableTime timeOffset = 0;
 
-        private ManeuverNode node;
+        internal ManeuverNode node;
         private ManeuverGizmo gizmo;
 
-        private enum Snap { PERIAPSIS, APOAPSIS, REL_ASCENDING, REL_DESCENDING, EQ_ASCENDING, EQ_DESCENDING }
+        internal enum Snap { PERIAPSIS, APOAPSIS, REL_ASCENDING, REL_DESCENDING, EQ_ASCENDING, EQ_DESCENDING }
 
-        private static readonly int numSnaps = Enum.GetNames(typeof(Snap)).Length;
-        private Snap snap = Snap.PERIAPSIS;
+        internal static readonly int numSnaps = Enum.GetNames(typeof(Snap)).Length;
+        internal Snap snap = Snap.PERIAPSIS;
 
-        private readonly string[] snapStrings = { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") }; //"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
+        internal readonly string[] snapStrings = { Localizer.Format("#MechJeb_NodeEd_Snap1"), Localizer.Format("#MechJeb_NodeEd_Snap2"), Localizer.Format("#MechJeb_NodeEd_Snap3"), Localizer.Format("#MechJeb_NodeEd_Snap4"), Localizer.Format("#MechJeb_NodeEd_Snap5"), Localizer.Format("#MechJeb_NodeEd_Snap6") }; //"periapsis""apoapsis""AN with target""DN with target""equatorial AN""equatorial DN"
 
         private void GizmoUpdateHandler(Vector3d dV, double UT)
         {
@@ -41,7 +42,7 @@ namespace MuMech
             normalPlus = dV.y;
         }
 
-        private void MergeNext(int index)
+        internal void MergeNext(int index)
         {
             ManeuverNode cur = Vessel.patchedConicSolver.maneuverNodes[index];
             ManeuverNode next = Vessel.patchedConicSolver.maneuverNodes[index + 1];
@@ -51,37 +52,11 @@ namespace MuMech
             next.RemoveSelf();
         }
 
-        protected override void WindowGUI(int windowID)
+        /// <summary>Make `newNode` the edited node: reload the fields when it changed and follow its gizmo.</summary>
+        internal void SelectNode(ManeuverNode newNode)
         {
-            if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label1")); //"No maneuver nodes to edit."
-                RelativityModeSelectUI();
-                base.WindowGUI(windowID);
-                return;
-            }
-
-            GUILayout.BeginVertical();
-
             ManeuverNode oldNode = node;
-
-            if (Vessel.patchedConicSolver.maneuverNodes.Count == 1)
-            {
-                node = Vessel.patchedConicSolver.maneuverNodes[0];
-            }
-            else
-            {
-                if (!Vessel.patchedConicSolver.maneuverNodes.Contains(node)) node = Vessel.patchedConicSolver.maneuverNodes[0];
-
-                int nodeIndex = Vessel.patchedConicSolver.maneuverNodes.IndexOf(node);
-                int numNodes = Vessel.patchedConicSolver.maneuverNodes.Count;
-
-                nodeIndex = GuiUtils.ArrowSelector(nodeIndex, numNodes, "Maneuver node #" + (nodeIndex + 1));
-
-                node = Vessel.patchedConicSolver.maneuverNodes[nodeIndex];
-                if (nodeIndex < numNodes - 1 && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button1")))
-                    MergeNext(nodeIndex); //"Merge next node"
-            }
+            node = newNode;
 
             if (node != oldNode)
             {
@@ -96,6 +71,85 @@ namespace MuMech
                 gizmo = node.attachedGizmo;
                 if (gizmo != null) gizmo.OnGizmoUpdated += GizmoUpdateHandler;
             }
+        }
+
+        /// <summary>Write the three edited components to the node.</summary>
+        internal void UpdateNodeFromFields() => node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+
+        /// <summary>Move the node to the selected snap point.</summary>
+        internal void SnapNode()
+        {
+            Orbit o = node.patch;
+            double UT = node.UT;
+            switch (snap)
+            {
+                case Snap.PERIAPSIS:
+                    UT = o.NextPeriapsisTime(o.eccentricity < 1 ? UT - o.period / 2 : UT);
+                    break;
+
+                case Snap.APOAPSIS:
+                    if (o.eccentricity < 1) UT = o.NextApoapsisTime(UT - o.period / 2);
+                    break;
+
+                case Snap.EQ_ASCENDING:
+                    if (o.AscendingNodeEquatorialExists()) UT = o.TimeOfAscendingNodeEquatorial(UT - o.period / 2);
+                    break;
+
+                case Snap.EQ_DESCENDING:
+                    if (o.DescendingNodeEquatorialExists()) UT = o.TimeOfDescendingNodeEquatorial(UT - o.period / 2);
+                    break;
+
+                case Snap.REL_ASCENDING:
+                    if (Core.Target.NormalTargetExists && Core.Target.TargetOrbit.referenceBody == o.referenceBody)
+                    {
+                        if (o.AscendingNodeExists(Core.Target.TargetOrbit))
+                            UT = o.TimeOfAscendingNode(Core.Target.TargetOrbit, UT - o.period / 2);
+                    }
+
+                    break;
+
+                case Snap.REL_DESCENDING:
+                    if (Core.Target.NormalTargetExists && Core.Target.TargetOrbit.referenceBody == o.referenceBody)
+                    {
+                        if (o.DescendingNodeExists(Core.Target.TargetOrbit))
+                            UT = o.TimeOfDescendingNode(Core.Target.TargetOrbit, UT - o.period / 2);
+                    }
+
+                    break;
+            }
+
+            node.UpdateNode(node.DeltaV, UT);
+        }
+
+        protected override void WindowGUI(int windowID)
+        {
+            if (Vessel.patchedConicSolver.maneuverNodes.Count == 0)
+            {
+                GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label1")); //"No maneuver nodes to edit."
+                RelativityModeSelectUI();
+                base.WindowGUI(windowID);
+                return;
+            }
+
+            GUILayout.BeginVertical();
+
+            if (Vessel.patchedConicSolver.maneuverNodes.Count == 1)
+            {
+                SelectNode(Vessel.patchedConicSolver.maneuverNodes[0]);
+            }
+            else
+            {
+                ManeuverNode selected = Vessel.patchedConicSolver.maneuverNodes.Contains(node) ? node : Vessel.patchedConicSolver.maneuverNodes[0];
+
+                int nodeIndex = Vessel.patchedConicSolver.maneuverNodes.IndexOf(selected);
+                int numNodes = Vessel.patchedConicSolver.maneuverNodes.Count;
+
+                nodeIndex = GuiUtils.ArrowSelector(nodeIndex, numNodes, "Maneuver node #" + (nodeIndex + 1));
+
+                SelectNode(Vessel.patchedConicSolver.maneuverNodes[nodeIndex]);
+                if (nodeIndex < numNodes - 1 && GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button1")))
+                    MergeNext(nodeIndex); //"Merge next node"
+            }
 
 
             GUILayout.BeginHorizontal();
@@ -103,14 +157,14 @@ namespace MuMech
             if (LimitedRepeatButtoon("-"))
             {
                 prograde -= progradeDelta;
-                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                UpdateNodeFromFields();
             }
 
             progradeDelta.Text = GUILayout.TextField(progradeDelta.Text, GuiUtils.LayoutWidth(50));
             if (LimitedRepeatButtoon("+"))
             {
                 prograde += progradeDelta;
-                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                UpdateNodeFromFields();
             }
 
             GUILayout.Label("m/s", GuiUtils.LayoutNoExpandWidth);
@@ -121,14 +175,14 @@ namespace MuMech
             if (LimitedRepeatButtoon("-"))
             {
                 radialPlus -= radialPlusDelta;
-                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                UpdateNodeFromFields();
             }
 
             radialPlusDelta.Text = GUILayout.TextField(radialPlusDelta.Text, GuiUtils.LayoutWidth(50));
             if (LimitedRepeatButtoon("+"))
             {
                 radialPlus += radialPlusDelta;
-                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                UpdateNodeFromFields();
             }
 
             GUILayout.Label("m/s", GuiUtils.LayoutNoExpandWidth);
@@ -139,14 +193,14 @@ namespace MuMech
             if (LimitedRepeatButtoon("-"))
             {
                 normalPlus -= normalPlusDelta;
-                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                UpdateNodeFromFields();
             }
 
             normalPlusDelta.Text = GUILayout.TextField(normalPlusDelta.Text, GuiUtils.LayoutWidth(50));
             if (LimitedRepeatButtoon("+"))
             {
                 normalPlus += normalPlusDelta;
-                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT);
+                UpdateNodeFromFields();
             }
 
             GUILayout.Label("m/s", GuiUtils.LayoutNoExpandWidth);
@@ -167,7 +221,7 @@ namespace MuMech
             GUILayout.EndHorizontal();
 
             if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button2")))
-                node.UpdateNode(new Vector3d(radialPlus, normalPlus, prograde), node.UT); //"Update"
+                UpdateNodeFromFields(); //"Update"
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_NodeEd_Label6"), GuiUtils.LayoutExpandWidth); //"Shift time"
@@ -197,46 +251,7 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Localizer.Format("#MechJeb_NodeEd_button3"), GuiUtils.LayoutExpandWidth)) //"Snap node to"
             {
-                Orbit o = node.patch;
-                double UT = node.UT;
-                switch (snap)
-                {
-                    case Snap.PERIAPSIS:
-                        UT = o.NextPeriapsisTime(o.eccentricity < 1 ? UT - o.period / 2 : UT);
-                        break;
-
-                    case Snap.APOAPSIS:
-                        if (o.eccentricity < 1) UT = o.NextApoapsisTime(UT - o.period / 2);
-                        break;
-
-                    case Snap.EQ_ASCENDING:
-                        if (o.AscendingNodeEquatorialExists()) UT = o.TimeOfAscendingNodeEquatorial(UT - o.period / 2);
-                        break;
-
-                    case Snap.EQ_DESCENDING:
-                        if (o.DescendingNodeEquatorialExists()) UT = o.TimeOfDescendingNodeEquatorial(UT - o.period / 2);
-                        break;
-
-                    case Snap.REL_ASCENDING:
-                        if (Core.Target.NormalTargetExists && Core.Target.TargetOrbit.referenceBody == o.referenceBody)
-                        {
-                            if (o.AscendingNodeExists(Core.Target.TargetOrbit))
-                                UT = o.TimeOfAscendingNode(Core.Target.TargetOrbit, UT - o.period / 2);
-                        }
-
-                        break;
-
-                    case Snap.REL_DESCENDING:
-                        if (Core.Target.NormalTargetExists && Core.Target.TargetOrbit.referenceBody == o.referenceBody)
-                        {
-                            if (o.DescendingNodeExists(Core.Target.TargetOrbit))
-                                UT = o.TimeOfDescendingNode(Core.Target.TargetOrbit, UT - o.period / 2);
-                        }
-
-                        break;
-                }
-
-                node.UpdateNode(node.DeltaV, UT);
+                SnapNode();
             }
 
             snap = (Snap)GuiUtils.ArrowSelector((int)snap, numSnaps, snapStrings[(int)snap]);

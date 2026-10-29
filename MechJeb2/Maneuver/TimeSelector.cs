@@ -24,6 +24,8 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public int _currentTimeRef;
 
+        internal string[] TimeRefNames => _timeRefNames;
+
         public TimeReference TimeReference => _allowedTimeRef[_currentTimeRef];
 
         // Input parameters

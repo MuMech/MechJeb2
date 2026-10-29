@@ -109,5 +109,11 @@ namespace MuMech
         }
 
         public virtual bool Draggable => true;
+
+        /// <summary>
+        /// Per-frame model work that DoParametersGUI does as a side effect of drawing (keeping a target in sync, starting a computation);
+        /// the new UI calls this for the selected operation instead of DoParametersGUI.
+        /// </summary>
+        internal virtual void ViewUpdate(Orbit o, double universalTime, MechJebModuleTargetController target) { }
     }
 }

@@ -13,8 +13,8 @@ namespace MuMech.MechJebKos
     // ADDONS:MECHJEB:SETTINGS - MechJeb's global settings (MechJebModuleSettings).
     //
     // These are the persisted (Pass.GLOBAL) settings from MechJeb's Settings window.  Several of them
-    // are applied through GuiUtils when the window draws, so the setters here replicate that apply (skin
-    // load, GUI scale, drop-down/advanced toggles) to make the write take effect immediately.
+    // are applied through GuiUtils when the window draws, so the setters here call ApplySettings (skin
+    // load, GUI scale, drop-down/advanced toggles, Changed event) to make the write take effect immediately.
     [KOSNomenclature("MechJebSettings")]
     public class SettingsBinding : ComputerModuleBinding<MechJebModuleSettings>
     {
@@ -26,7 +26,7 @@ namespace MuMech.MechJebKos
                 value =>
                 {
                     Module.UIScale.Val = value;
-                    GuiUtils.SetGUIScale(value);
+                    Module.ApplySettings();
                 },
                 "MechJeb UI scale factor (1.0 = normal)."));
 
@@ -34,7 +34,7 @@ namespace MuMech.MechJebKos
                 value =>
                 {
                     Module.SkinId = (int)value;
-                    GuiUtils.LoadSkin((GuiUtils.SkinType)(int)value);
+                    Module.ApplySettings(true);
                 },
                 "GUI skin (0 = MJ2, 1 = MJ1, 2 = MJ2 compact)."));
 
@@ -42,7 +42,7 @@ namespace MuMech.MechJebKos
                 value =>
                 {
                     Module.DontUseDropDownMenu = value;
-                    GuiUtils.DontUseDropDownMenu = value;
+                    Module.ApplySettings();
                 },
                 "Replace the drop-down menu with an arrow selector."));
 
@@ -50,7 +50,7 @@ namespace MuMech.MechJebKos
                 value =>
                 {
                     Module.ShowAdvancedWindowSettings = value;
-                    GuiUtils.ShowAdvancedWindowSettings = value;
+                    Module.ApplySettings();
                 },
                 "Show advanced window settings."));
 

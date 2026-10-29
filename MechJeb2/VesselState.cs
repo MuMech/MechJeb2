@@ -414,6 +414,9 @@ namespace MuMech
         // lowestUllage is always VeryStable without RealFuels installed
         public double LowestUllage => _einfo.LowestUllage;
 
+        // for the new UI's torque comparison item
+        internal Vector6 DifferentialThrottleTorque => _einfo.TorqueDifferentialThrottle;
+
         // Thrust in the forward direction (for historical reasons).
         public double ThrustAvailable => Vector3d.Dot(ThrustVectorMaxThrottle, Forward);
         public double ThrustMinimum   => Vector3d.Dot(ThrustVectorMinThrottle, Forward);

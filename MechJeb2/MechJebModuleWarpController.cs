@@ -70,7 +70,7 @@ namespace MuMech
                 WarpToUT(warpToUT);
         }
 
-        private void PauseWarp()
+        internal void PauseWarp()
         {
             WarpPaused = true;
 
@@ -78,7 +78,7 @@ namespace MuMech
                 Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, false);
         }
 
-        private void ResumeWarp()
+        internal void ResumeWarp()
         {
             if (!WarpPaused)
                 return;

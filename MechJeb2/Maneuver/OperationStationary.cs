@@ -25,6 +25,25 @@ namespace MuMech
             angle += angularDelta;
         }
 
+        // what DoParametersGUI does besides drawing, for the new UI
+        internal override void ViewUpdate(Orbit o, double UT, MechJebModuleTargetController targetController)
+        {
+            if (!targetController.PositionTargetExists)
+            {
+                targetController.SetPositionTarget(o.referenceBody, targetLatitude, targetLongitude);
+            }
+
+            targetLatitude = 0;
+            targetLongitude = targetController.targetLongitude;
+        }
+
+        // the ◄ / ► buttons
+        internal void MoveTargetLongitude(double distance, Orbit o, MechJebModuleTargetController targetController)
+        {
+            double asl = o.referenceBody.TerrainAltitude(targetController.targetLatitude, targetController.targetLongitude);
+            MoveByMeter(ref targetController.targetLongitude, distance, asl, o);
+        }
+
         public override void DoParametersGUI(Orbit o, double UT, MechJebModuleTargetController targetController)
         {
             double asl = o.referenceBody.TerrainAltitude(targetController.targetLatitude, targetController.targetLongitude);

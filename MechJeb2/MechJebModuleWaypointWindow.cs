@@ -216,8 +216,8 @@ namespace MuMech
         }
 
         public WaypointMode Mode = WaypointMode.ROVER;
-        private MechJebModuleRoverController _ap;
-        private static readonly List<MechJebWaypointRoute> _routes = new List<MechJebWaypointRoute>();
+        internal MechJebModuleRoverController _ap;
+        internal static readonly List<MechJebWaypointRoute> _routes = new List<MechJebWaypointRoute>();
 
         [EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
         // Moho Mapdist
@@ -284,12 +284,12 @@ namespace MuMech
         public readonly EditableDouble VallMapdist = 5000;
 
         internal int SelIndex = -1;
-        private int _saveIndex = -1;
-        private string _tmpRadius = "";
-        private string _tmpMinSpeed = "";
-        private string _tmpMaxSpeed = "";
-        private string _tmpLat = "";
-        private string _tmpLon = "";
+        internal int _saveIndex = -1;
+        internal string _tmpRadius = "";
+        internal string _tmpMinSpeed = "";
+        internal string _tmpMaxSpeed = "";
+        internal string _tmpLat = "";
+        internal string _tmpLon = "";
 
         private const string COORD_REG_EX =
             @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
@@ -298,19 +298,19 @@ namespace MuMech
         private GUIStyle _styleActive;
         private GUIStyle _styleInactive;
         private GUIStyle _styleQuicksave;
-        private string _titleAdd = "";
-        private string _saveName = "";
-        private bool _waitingForPick;
-        private Pages _showPage = Pages.WAYPOINTS;
+        internal string _titleAdd = "";
+        internal string _saveName = "";
+        internal bool _waitingForPick;
+        internal Pages _showPage = Pages.WAYPOINTS;
 
-        private enum Pages { WAYPOINTS, SETTINGS, ROUTES }
+        internal enum Pages { WAYPOINTS, SETTINGS, ROUTES }
 
         private static MechJebRouteRenderer _renderer;
         private Rect[] _waypointRects = Array.Empty<Rect>();
-        private int _lastIndex = -1;
-        private int _settingPageIndex;
+        internal int _lastIndex = -1;
+        internal int _settingPageIndex;
 
-        private readonly string[] _settingPages = { "Rover", "Waypoints" };
+        internal readonly string[] _settingPages = { "Rover", "Waypoints" };
         //		private static LineRenderer redLine;
         //		private static LineRenderer greenLine;
 
@@ -381,6 +381,7 @@ namespace MuMech
             if (wps.HasNode("Waypoints"))
             {
                 _routes.Clear();
+                RoutesVersion++;
                 foreach (ConfigNode cn in wps.GetNodes("Waypoints"))
                 {
                     _routes.Add(new MechJebWaypointRoute(cn));
@@ -404,6 +405,7 @@ namespace MuMech
             }
 
             cn.Save(MuUtils.GetCfgPath("mechjeb_routes.cfg"));
+            RoutesVersion++;
         }
 
         public override string GetName() => Mode + " Waypoints" + (_titleAdd != "" ? " - " + _titleAdd : "");
@@ -493,7 +495,7 @@ namespace MuMech
             //				}
         }
 
-        private static string LatToString(double lat)
+        internal static string LatToString(double lat)
         {
             while (lat > 90) { lat -= 180; }
 
@@ -515,7 +517,7 @@ namespace MuMech
             return $"{ns} {h}° {m}' {s:F3}\"";
         }
 
-        private static string LonToString(double lon)
+        internal static string LonToString(double lon)
         {
             lon = Clamp180(lon);
 
@@ -535,7 +537,7 @@ namespace MuMech
             return $"{ew} {h}° {m}' {s:F3}\"";
         }
 
-        private static double ParseCoord(string latLon, bool isLongitute = false)
+        internal static double ParseCoord(string latLon, bool isLongitute = false)
         {
             Match match = new Regex(COORD_REG_EX, RegexOptions.IgnoreCase).Match(latLon);
             int range = isLongitute ? 180 : 90;
@@ -597,6 +599,341 @@ namespace MuMech
 
         protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(500), GUILayout.Height(400) };
 
+        // ---- logic shared by the IMGUI window below and the uGUI view (MechJeb2.UI) ----
+
+        /// <summary>Distance and ETA up to waypoint i, as the list shows them, plus its speed limits.</summary>
+        internal void AccumulateStats(int i, MechJebWaypoint wp, ref double eta, ref double dist, out double maxSpeed, out float minSpeed)
+        {
+            maxSpeed = wp.MaxSpeed > 0 ? wp.MaxSpeed : _ap.speed.Val;
+            minSpeed = wp.MinSpeed > 0 ? wp.MinSpeed : 0;
+            if (i >= _ap.WaypointIndex)
+            {
+                if (_ap.WaypointIndex > -1)
+                {
+                    eta += GuiUtils.FromToETA(i == _ap.WaypointIndex ? Vessel.CoM : (Vector3)_ap.Waypoints[i - 1].Position, wp.Position,
+                        _ap.etaSpeed > 0.1 && _ap.etaSpeed < maxSpeed ? (float)Math.Round(_ap.etaSpeed, 1) : maxSpeed);
+                }
+
+                dist += Vector3.Distance(
+                    i == _ap.WaypointIndex || (_ap.WaypointIndex == -1 && i == 0) ? Vessel.CoM : (Vector3)_ap.Waypoints[i - 1].Position,
+                    wp.Position);
+            }
+        }
+
+        /// <summary>The red marker on the selected waypoint in the map view (a GL draw: needs an OnGUI repaint).</summary>
+        internal void DrawSelectedMarker()
+        {
+            if (!MapView.MapIsEnabled || SelIndex < 0 || SelIndex >= _ap.Waypoints.Count) return;
+            MechJebWaypoint wp = _ap.Waypoints[SelIndex];
+            GLUtils.DrawGroundMarker(MainBody, wp.Latitude, wp.Longitude, Color.red, true,
+                (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, MainBody.Radius / 100);
+        }
+
+        /// <summary>A click on waypoint i in the list: Alt sets the current waypoint, otherwise it (un)selects it.</summary>
+        internal void WaypointClicked(int i, bool alt)
+        {
+            if (i < 0 || i >= _ap.Waypoints.Count) return;
+            MechJebWaypoint wp = _ap.Waypoints[i];
+            if (alt)
+            {
+                _ap.WaypointIndex = _ap.WaypointIndex == i ? -1 : i;
+                // set current waypoint or unset it if it's already the current one
+            }
+            else
+            {
+                if (SelIndex == i)
+                {
+                    SelIndex = -1;
+                }
+                else
+                {
+                    SelIndex = i;
+                    _tmpRadius = wp.Radius.ToString();
+                    _tmpMinSpeed = wp.MinSpeed.ToString();
+                    _tmpMaxSpeed = wp.MaxSpeed.ToString();
+                    _tmpLat = LatToString(wp.Latitude);
+                    _tmpLon = LonToString(wp.Longitude);
+                }
+            }
+        }
+
+        internal void RadiusToRest(int i)
+        {
+            MechJebWaypoint wp = _ap.Waypoints[i];
+            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.Radius = wp.Radius);
+        }
+
+        internal void MinSpeedToRest(int i)
+        {
+            MechJebWaypoint wp = _ap.Waypoints[i];
+            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.MinSpeed = wp.MinSpeed);
+        }
+
+        internal void MaxSpeedToRest(int i)
+        {
+            MechJebWaypoint wp = _ap.Waypoints[i];
+            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed);
+        }
+
+        internal void ToggleQuicksave(int i, bool alt)
+        {
+            MechJebWaypoint wp = _ap.Waypoints[i];
+            if (alt)
+            {
+                _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
+            }
+            else
+            {
+                wp.Quicksave = !wp.Quicksave;
+            }
+        }
+
+        /// <summary>"Add Waypoint" / "Abort Adding"; with Alt, "Reverse".</summary>
+        internal void AddOrReverse(bool alt)
+        {
+            if (alt)
+            {
+                _ap.Waypoints.Reverse();
+                if (_ap.WaypointIndex > -1) { _ap.WaypointIndex = _ap.Waypoints.Count - 1 - _ap.WaypointIndex; }
+
+                if (SelIndex > -1) { SelIndex = _ap.Waypoints.Count - 1 - SelIndex; }
+            }
+            else
+            {
+                if (!_waitingForPick)
+                {
+                    _waitingForPick = true;
+                    if (MapView.MapIsEnabled)
+                    {
+                        Core.Target.Unset();
+                        Core.Target.PickPositionTargetOnMap();
+                    }
+                }
+                else
+                {
+                    _waitingForPick = false;
+                }
+            }
+        }
+
+        /// <summary>"Remove" the selected waypoint; with Alt, "Clear" all.</summary>
+        internal void RemoveOrClear(bool alt)
+        {
+            if (_ap.Waypoints.Count <= 0) return;
+            if (alt)
+            {
+                _ap.WaypointIndex = -1;
+                _ap.Waypoints.Clear();
+            }
+            else if (SelIndex >= 0)
+            {
+                _ap.Waypoints.RemoveAt(SelIndex);
+                if (_ap.WaypointIndex > SelIndex) { _ap.WaypointIndex--; }
+
+                if (_ap.WaypointIndex >= _ap.Waypoints.Count) { _ap.WaypointIndex = _ap.Waypoints.Count - 1; }
+            }
+
+            SelIndex = -1;
+        }
+
+        /// <summary>"Up"; with Alt, "Top".</summary>
+        internal void MoveUp(bool alt)
+        {
+            if (!(SelIndex > 0 && SelIndex < _ap.Waypoints.Count && _ap.Waypoints.Count >= 2)) return;
+            if (alt)
+            {
+                MechJebWaypoint t = _ap.Waypoints[SelIndex];
+                _ap.Waypoints.RemoveAt(SelIndex);
+                _ap.Waypoints.Insert(0, t);
+                SelIndex = 0;
+            }
+            else
+            {
+                _ap.Waypoints.Swap(SelIndex, --SelIndex);
+            }
+        }
+
+        /// <summary>"Down"; with Alt, "Bottom".</summary>
+        internal void MoveDown(bool alt)
+        {
+            if (!(SelIndex >= 0 && SelIndex < _ap.Waypoints.Count - 1 && _ap.Waypoints.Count >= 2)) return;
+            if (alt)
+            {
+                MechJebWaypoint t = _ap.Waypoints[SelIndex];
+                _ap.Waypoints.RemoveAt(SelIndex);
+                _ap.Waypoints.Add(t);
+                SelIndex = _ap.Waypoints.Count - 1;
+            }
+            else
+            {
+                _ap.Waypoints.Swap(SelIndex, ++SelIndex);
+            }
+        }
+
+        internal void ShowWaypointsPage()
+        {
+            _showPage = Pages.WAYPOINTS;
+            _scroll = Vector2.zero;
+            _lastIndex = -1;
+        }
+
+        internal void ShowRoutesPage()
+        {
+            _showPage = Pages.ROUTES;
+            _scroll = Vector2.zero;
+        }
+
+        internal void ShowSettingsPage()
+        {
+            _showPage = Pages.SETTINGS;
+            _scroll = Vector2.zero;
+        }
+
+        internal void ToggleHelpWindow()
+        {
+            Core.GetComputerModule<MechJebModuleWaypointHelpWindow>().Enabled =
+                !Core.GetComputerModule<MechJebModuleWaypointHelpWindow>().Enabled;
+        }
+
+        /// <summary>The "?" title button: open the help on the topic of the current page.</summary>
+        internal void OpenPageHelp()
+        {
+            MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
+            switch (_showPage)
+            {
+                case Pages.WAYPOINTS:
+                    help.SelTopic = ((IList)help.Topics).IndexOf("Waypoints");
+                    break;
+                case Pages.SETTINGS:
+                    help.SelTopic = ((IList)help.Topics).IndexOf("Settings");
+                    break;
+                case Pages.ROUTES:
+                    help.SelTopic = ((IList)help.Topics).IndexOf("Routes");
+                    break;
+            }
+
+            help.Enabled = help.SelTopic > -1 || help.Enabled;
+        }
+
+        /// <summary>What the settings page does every frame before drawing.</summary>
+        internal void SettingsPageTick()
+        {
+            _titleAdd = "Settings";
+            if (!_ap.Enabled) { _ap.CalculateTraction(); } // keep calculating traction just for displaying it
+        }
+
+        internal List<MechJebWaypointRoute> BodyRoutes() => _routes.FindAll(r => r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+
+        /// <summary>Bumped whenever the saved routes change, so a view knows when to rebuild its list.</summary>
+        internal static int RoutesVersion;
+
+        internal void RouteClicked(int i) => _saveIndex = _saveIndex == i ? -1 : i;
+
+        internal void DeleteRoute(string name)
+        {
+            _routes.RemoveAll(r => r.Name == name && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+            SaveRoutes();
+            _saveIndex = -1;
+        }
+
+        internal void SaveCurrentRoute()
+        {
+            if (_saveName != "" && _ap.Waypoints.Count > 0)
+            {
+                MechJebWaypointRoute old = _routes.Find(r => r.Name == _saveName && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+                var wps = new MechJebWaypointRoute(_saveName, Vessel.mainBody);
+                _ap.Waypoints.ForEach(wp => wps.Add(wp));
+                if (old == null)
+                {
+                    _routes.Add(wps);
+                }
+                else
+                {
+                    _routes[_routes.IndexOf(old)] = wps;
+                }
+
+                _routes.Sort(SortRoutes);
+                SaveRoutes();
+            }
+        }
+
+        /// <summary>"Load" the selected route; with Alt, "Add" it to the current one.</summary>
+        internal void LoadSelectedRoute(bool alt)
+        {
+            // _saveIndex is a row of the route list, which only shows this body's routes (BodyRoutes), not an index in _routes
+            List<MechJebWaypointRoute> bodyRoutes = BodyRoutes();
+            if (_saveIndex > -1 && _saveIndex < bodyRoutes.Count)
+            {
+                if (!alt)
+                {
+                    _ap.WaypointIndex = -1;
+                    _ap.Waypoints.Clear();
+                }
+
+                bodyRoutes[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp));
+            }
+        }
+
+        /// <summary>The click on the terrain or the map while "Add Waypoint" waits for a position (the IMGUI window ran this on Repaint).</summary>
+        internal void ProcessWaypointPick(bool alt)
+        {
+            if (!_waitingForPick || !Vessel.isActiveVessel) return;
+
+            if (MapView.MapIsEnabled)
+            {
+                if (!Core.Target.pickingPositionTarget)
+                {
+                    if (Core.Target.PositionTargetExists)
+                    {
+                        if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
+                        {
+                            _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
+                            _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
+                            _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
+                            _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                        }
+                        else
+                        {
+                            _ap.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
+                        }
+
+                        Core.Target.Unset();
+                        _waitingForPick = alt;
+                    }
+                    else
+                    {
+                        Core.Target.PickPositionTargetOnMap();
+                    }
+                }
+            }
+            else
+            {
+                if (!GuiUtils.MouseIsOverWindow(Core) && !MechJebUiHost.MouseOverHostWindow())
+                {
+                    Coordinates mouseCoords = GetMouseFlightCoordinates();
+                    if (mouseCoords != null)
+                    {
+                        if (Input.GetMouseButtonDown(0))
+                        {
+                            if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
+                            {
+                                _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
+                                _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
+                                _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
+                                _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
+                            }
+                            else
+                            {
+                                _ap.Waypoints.Add(new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
+                            }
+
+                            _waitingForPick = alt;
+                        }
+                    }
+                }
+            }
+        }
+
         private void DrawPageWaypoints()
         {
             bool alt = GameSettings.MODIFIER_KEY.GetKey();
@@ -610,53 +947,15 @@ namespace MuMech
                 for (int i = 0; i < _ap.Waypoints.Count; i++)
                 {
                     MechJebWaypoint wp = _ap.Waypoints[i];
-                    double maxSpeed = wp.MaxSpeed > 0 ? wp.MaxSpeed : _ap.speed.Val;
-                    float minSpeed = wp.MinSpeed > 0 ? wp.MinSpeed : 0;
-                    if (MapView.MapIsEnabled && i == SelIndex)
-                    {
-                        GLUtils.DrawGroundMarker(MainBody, wp.Latitude, wp.Longitude, Color.red, true,
-                            (DateTime.Now.Second + DateTime.Now.Millisecond / 1000f) * 6, MainBody.Radius / 100);
-                    }
-
-                    if (i >= _ap.WaypointIndex)
-                    {
-                        if (_ap.WaypointIndex > -1)
-                        {
-                            eta += GuiUtils.FromToETA(i == _ap.WaypointIndex ? Vessel.CoM : (Vector3)_ap.Waypoints[i - 1].Position, wp.Position,
-                                _ap.etaSpeed > 0.1 && _ap.etaSpeed < maxSpeed ? (float)Math.Round(_ap.etaSpeed, 1) : maxSpeed);
-                        }
-
-                        dist += Vector3.Distance(
-                            i == _ap.WaypointIndex || (_ap.WaypointIndex == -1 && i == 0) ? Vessel.CoM : (Vector3)_ap.Waypoints[i - 1].Position,
-                            wp.Position);
-                    }
+                    AccumulateStats(i, wp, ref eta, ref dist, out double maxSpeed, out float minSpeed);
+                    if (i == SelIndex) DrawSelectedMarker();
 
                     string str =
                         $"[{i + 1}] - {wp.GetNameWithCoords()} - R: {wp.Radius:F1} m\n       S: {minSpeed:F0} ~ {maxSpeed:F0} - D: {dist.ToSI(-1)}m - ETA: {GuiUtils.TimeToDHMS(eta)}";
                     GUI.backgroundColor = i == _ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white;
                     if (GUILayout.Button(str, i == SelIndex ? _styleActive : wp.Quicksave ? _styleQuicksave : _styleInactive))
                     {
-                        if (alt)
-                        {
-                            _ap.WaypointIndex = _ap.WaypointIndex == i ? -1 : i;
-                            // set current waypoint or unset it if it's already the current one
-                        }
-                        else
-                        {
-                            if (SelIndex == i)
-                            {
-                                SelIndex = -1;
-                            }
-                            else
-                            {
-                                SelIndex = i;
-                                _tmpRadius = wp.Radius.ToString();
-                                _tmpMinSpeed = wp.MinSpeed.ToString();
-                                _tmpMaxSpeed = wp.MaxSpeed.ToString();
-                                _tmpLat = LatToString(wp.Latitude);
-                                _tmpLon = LonToString(wp.Longitude);
-                            }
-                        }
+                        WaypointClicked(i, alt);
                     }
 
                     if (Event.current.type == EventType.Repaint)
@@ -676,7 +975,7 @@ namespace MuMech
                         float.TryParse(_tmpRadius, out wp.Radius);
                         if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
                         {
-                            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.Radius = wp.Radius);
+                            RadiusToRest(i);
                         }
 
                         GUILayout.Label("- Speed: ", GuiUtils.LayoutNoExpandWidth);
@@ -684,7 +983,7 @@ namespace MuMech
                         float.TryParse(_tmpMinSpeed, out wp.MinSpeed);
                         if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
                         {
-                            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.MinSpeed = wp.MinSpeed);
+                            MinSpeedToRest(i);
                         }
 
                         GUILayout.Label(" - ", GuiUtils.LayoutNoExpandWidth);
@@ -692,20 +991,13 @@ namespace MuMech
                         float.TryParse(_tmpMaxSpeed, out wp.MaxSpeed);
                         if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
                         {
-                            _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.MaxSpeed = wp.MaxSpeed);
+                            MaxSpeedToRest(i);
                         }
 
                         GUILayout.FlexibleSpace();
                         if (GUILayout.Button("QS", wp.Quicksave ? _styleQuicksave : _styleInactive, GuiUtils.LayoutNoExpandWidth))
                         {
-                            if (alt)
-                            {
-                                _ap.Waypoints.GetRange(i, _ap.Waypoints.Count - i).ForEach(fewp => fewp.Quicksave = !fewp.Quicksave);
-                            }
-                            else
-                            {
-                                wp.Quicksave = !wp.Quicksave;
-                            }
+                            ToggleQuicksave(i, alt);
                         }
 
                         GUILayout.EndHorizontal();
@@ -738,91 +1030,32 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(alt ? "Reverse" : !_waitingForPick ? "Add Waypoint" : "Abort Adding", GuiUtils.LayoutWidth(110)))
             {
-                if (alt)
-                {
-                    _ap.Waypoints.Reverse();
-                    if (_ap.WaypointIndex > -1) { _ap.WaypointIndex = _ap.Waypoints.Count - 1 - _ap.WaypointIndex; }
-
-                    if (SelIndex > -1) { SelIndex = _ap.Waypoints.Count - 1 - SelIndex; }
-                }
-                else
-                {
-                    if (!_waitingForPick)
-                    {
-                        _waitingForPick = true;
-                        if (MapView.MapIsEnabled)
-                        {
-                            Core.Target.Unset();
-                            Core.Target.PickPositionTargetOnMap();
-                        }
-                    }
-                    else
-                    {
-                        _waitingForPick = false;
-                    }
-                }
+                AddOrReverse(alt);
             }
 
-            if (GUILayout.Button(alt ? "Clear" : "Remove", GuiUtils.LayoutWidth(65)) && _ap.Waypoints.Count > 0)
+            if (GUILayout.Button(alt ? "Clear" : "Remove", GuiUtils.LayoutWidth(65)))
             {
-                if (alt)
-                {
-                    _ap.WaypointIndex = -1;
-                    _ap.Waypoints.Clear();
-                }
-                else if (SelIndex >= 0)
-                {
-                    _ap.Waypoints.RemoveAt(SelIndex);
-                    if (_ap.WaypointIndex > SelIndex) { _ap.WaypointIndex--; }
-
-                    if (_ap.WaypointIndex >= _ap.Waypoints.Count) { _ap.WaypointIndex = _ap.Waypoints.Count - 1; }
-                }
-
-                SelIndex = -1;
+                RemoveOrClear(alt);
             }
 
-            if (GUILayout.Button(alt ? "Top" : "Up", GuiUtils.LayoutWidth(57)) && SelIndex > 0 && SelIndex < _ap.Waypoints.Count &&
-                _ap.Waypoints.Count >= 2)
+            if (GUILayout.Button(alt ? "Top" : "Up", GuiUtils.LayoutWidth(57)))
             {
-                if (alt)
-                {
-                    MechJebWaypoint t = _ap.Waypoints[SelIndex];
-                    _ap.Waypoints.RemoveAt(SelIndex);
-                    _ap.Waypoints.Insert(0, t);
-                    SelIndex = 0;
-                }
-                else
-                {
-                    _ap.Waypoints.Swap(SelIndex, --SelIndex);
-                }
+                MoveUp(alt);
             }
 
-            if (GUILayout.Button(alt ? "Bottom" : "Down", GuiUtils.LayoutWidth(57)) && SelIndex >= 0 && SelIndex < _ap.Waypoints.Count - 1 &&
-                _ap.Waypoints.Count >= 2)
+            if (GUILayout.Button(alt ? "Bottom" : "Down", GuiUtils.LayoutWidth(57)))
             {
-                if (alt)
-                {
-                    MechJebWaypoint t = _ap.Waypoints[SelIndex];
-                    _ap.Waypoints.RemoveAt(SelIndex);
-                    _ap.Waypoints.Add(t);
-                    SelIndex = _ap.Waypoints.Count - 1;
-                }
-                else
-                {
-                    _ap.Waypoints.Swap(SelIndex, ++SelIndex);
-                }
+                MoveDown(alt);
             }
 
             if (GUILayout.Button("Routes"))
             {
-                _showPage = Pages.ROUTES;
-                _scroll = Vector2.zero;
+                ShowRoutesPage();
             }
 
             if (GUILayout.Button("Settings"))
             {
-                _showPage = Pages.SETTINGS;
-                _scroll = Vector2.zero;
+                ShowSettingsPage();
             }
 
             GUILayout.EndHorizontal();
@@ -839,9 +1072,8 @@ namespace MuMech
 
         private void DrawPageSettings()
         {
-            _titleAdd = "Settings";
+            SettingsPageTick();
             MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-            if (!_ap.Enabled) { _ap.CalculateTraction(); } // keep calculating traction just for displaying it
 
             _scroll = GUILayout.BeginScrollView(_scroll);
 
@@ -907,21 +1139,17 @@ namespace MuMech
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Waypoints"))
             {
-                _showPage = Pages.WAYPOINTS;
-                _scroll = Vector2.zero;
-                _lastIndex = -1;
+                ShowWaypointsPage();
             }
 
             if (GUILayout.Button("Routes"))
             {
-                _showPage = Pages.ROUTES;
-                _scroll = Vector2.zero;
+                ShowRoutesPage();
             }
 
             if (GUILayout.Button("Help"))
             {
-                Core.GetComputerModule<MechJebModuleWaypointHelpWindow>().Enabled =
-                    !Core.GetComputerModule<MechJebModuleWaypointHelpWindow>().Enabled;
+                ToggleHelpWindow();
             }
 
             GUILayout.EndHorizontal();
@@ -933,23 +1161,21 @@ namespace MuMech
             _titleAdd = "Routes for " + Vessel.mainBody.bodyName;
 
             _scroll = GUILayout.BeginScrollView(_scroll);
-            List<MechJebWaypointRoute> bodyWPs = _routes.FindAll(r => r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+            List<MechJebWaypointRoute> bodyWPs = BodyRoutes();
             for (int i = 0; i < bodyWPs.Count; i++)
             {
                 GUILayout.BeginHorizontal();
                 string str = bodyWPs[i].Name + " - " + bodyWPs[i].Stats;
                 if (GUILayout.Button(str, i == _saveIndex ? _styleActive : _styleInactive))
                 {
-                    _saveIndex = _saveIndex == i ? -1 : i;
+                    RouteClicked(i);
                 }
 
                 if (i == _saveIndex)
                 {
                     if (GUILayout.Button("Delete", GuiUtils.LayoutWidth(70)))
                     {
-                        _routes.RemoveAll(r => r.Name == bodyWPs[i].Name && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
-                        SaveRoutes();
-                        _saveIndex = -1;
+                        DeleteRoute(bodyWPs[i].Name);
                     }
                 }
 
@@ -962,51 +1188,22 @@ namespace MuMech
             _saveName = GUILayout.TextField(_saveName, GuiUtils.LayoutWidth(150));
             if (GUILayout.Button("Save", GuiUtils.LayoutWidth(50)))
             {
-                if (_saveName != "" && _ap.Waypoints.Count > 0)
-                {
-                    MechJebWaypointRoute old = _routes.Find(r => r.Name == _saveName && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
-                    var wps = new MechJebWaypointRoute(_saveName, Vessel.mainBody);
-                    _ap.Waypoints.ForEach(wp => wps.Add(wp));
-                    if (old == null)
-                    {
-                        _routes.Add(wps);
-                    }
-                    else
-                    {
-                        _routes[_routes.IndexOf(old)] = wps;
-                    }
-
-                    _routes.Sort(SortRoutes);
-                    SaveRoutes();
-                }
+                SaveCurrentRoute();
             }
 
             if (GUILayout.Button(alt ? "Add" : "Load", GuiUtils.LayoutWidth(50)))
             {
-                // _saveIndex is a row of the list above, which only shows this body's routes (bodyWPs)
-                if (_saveIndex > -1 && _saveIndex < bodyWPs.Count)
-                {
-                    if (!alt)
-                    {
-                        _ap.WaypointIndex = -1;
-                        _ap.Waypoints.Clear();
-                    }
-
-                    bodyWPs[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp));
-                }
+                LoadSelectedRoute(alt);
             }
 
             if (GUILayout.Button("Waypoints"))
             {
-                _showPage = Pages.WAYPOINTS;
-                _scroll = Vector2.zero;
-                _lastIndex = -1;
+                ShowWaypointsPage();
             }
 
             if (GUILayout.Button("Settings"))
             {
-                _showPage = Pages.SETTINGS;
-                _scroll = Vector2.zero;
+                ShowSettingsPage();
             }
 
             GUILayout.EndHorizontal();
@@ -1016,21 +1213,7 @@ namespace MuMech
         {
             if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.YellowOnHover))
             {
-                MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
-                switch (_showPage)
-                {
-                    case Pages.WAYPOINTS:
-                        help.SelTopic = ((IList)help.Topics).IndexOf("Waypoints");
-                        break;
-                    case Pages.SETTINGS:
-                        help.SelTopic = ((IList)help.Topics).IndexOf("Settings");
-                        break;
-                    case Pages.ROUTES:
-                        help.SelTopic = ((IList)help.Topics).IndexOf("Routes");
-                        break;
-                }
-
-                help.Enabled = help.SelTopic > -1 || help.Enabled;
+                OpenPageHelp();
             }
 
             _styleInactive ??= new GUIStyle(GuiUtils.Skin != null ? GuiUtils.Skin.button : GuiUtils.DefaultSkin.button) { alignment = TextAnchor.UpperLeft };
@@ -1064,61 +1247,9 @@ namespace MuMech
                     break;
             }
 
-            if (_waitingForPick && Vessel.isActiveVessel && Event.current.type == EventType.Repaint)
+            if (Event.current.type == EventType.Repaint)
             {
-                if (MapView.MapIsEnabled)
-                {
-                    if (!Core.Target.pickingPositionTarget)
-                    {
-                        if (Core.Target.PositionTargetExists)
-                        {
-                            if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
-                            {
-                                _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
-                                _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                                _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                                _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
-                            }
-                            else
-                            {
-                                _ap.Waypoints.Add(new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
-                            }
-
-                            Core.Target.Unset();
-                            _waitingForPick = alt;
-                        }
-                        else
-                        {
-                            Core.Target.PickPositionTargetOnMap();
-                        }
-                    }
-                }
-                else
-                {
-                    if (!GuiUtils.MouseIsOverWindow(Core))
-                    {
-                        Coordinates mouseCoords = GetMouseFlightCoordinates();
-                        if (mouseCoords != null)
-                        {
-                            if (Input.GetMouseButtonDown(0))
-                            {
-                                if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
-                                {
-                                    _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
-                                    _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
-                                    _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
-                                    _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
-                                }
-                                else
-                                {
-                                    _ap.Waypoints.Add(new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
-                                }
-
-                                _waitingForPick = alt;
-                            }
-                        }
-                    }
-                }
+                ProcessWaypointPick(alt);
             }
 
             base.WindowGUI(windowID);
@@ -1142,17 +1273,22 @@ namespace MuMech
     {
         public int SelTopic;
         public readonly string[] Topics = { "Rover Controller", "Waypoints", "Routes", "Settings" };
-        private string _selSubTopic = "";
+        internal string _selSubTopic = "";
         private GUIStyle _btnActive;
         private GUIStyle _btnInactive;
+
+        internal void ToggleSubTopic(string title)
+        {
+            _selSubTopic = _selSubTopic != title ? title : "";
+            WindowPos = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
+        }
 
         private void HelpTopic(string title, string text)
         {
             GUILayout.BeginVertical();
             if (GUILayout.Button(title, _selSubTopic == title ? _btnActive : _btnInactive))
             {
-                _selSubTopic = _selSubTopic != title ? title : "";
-                WindowPos = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
+                ToggleSubTopic(title);
             }
 
             if (_selSubTopic == title)
@@ -1171,6 +1307,91 @@ namespace MuMech
 
         public override string IconName() => "Waypoint Help";
 
+        /// <summary>The help texts of one topic, as (title, text) pairs; both UIs draw them.</summary>
+        internal void HelpContent(string topic, Action<string, string> add)
+        {
+            switch (topic)
+            {
+                case "Rover Controller":
+                    add("Holding a set Heading",
+                        "To hold a specific heading just tick the box next to 'Heading control' and the autopilot will try to keep going for the entered heading." +
+                        "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
+                        "'Heading Error' simply shows the error between current heading and target heading.");
+                    add("Holding a set Speed",
+                        "To hold a specific speed just tick the box next to 'Speed control' and the autopilot will try to keep going at the entered speed." +
+                        "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
+                        "'Speed Error' simply shows the error between current speed and target speed.");
+                    add("More stability while driving and nice landings",
+                        "If you turn on 'Stability Control' then the autopilot will use the reaction wheel's torque to keep the rover aligned with the surface." +
+                        "\nThis means that if you make a jump the autopilot will try to align the rover in the best possible way to land as straight and flat as possible given the available time and torque." +
+                        "\nBe aware that this doesn't make your rover indestructible, only relatively unlikely to land in a bad way." +
+                        "\n\n'Stability Control' will also limit the brake to reduce the chances of flipping over from too much braking power." +
+                        "\nSee 'Settings' -> 'Traction and Braking'. This setting is also saved per vessel.");
+                    add("Brake on Pilot Eject",
+                        "With this option enabled the rover will stop if the pilot (on manned rovers) should get thrown out of his seat.");
+                    add("Target Speed", "Current speed the autopilot tries to achieve.");
+                    add("Waypoint Index", "Overview of waypoints and which the autopilot is currently driving to.");
+                    add("Button 'Waypoints'", "Opens the waypoint list to set up a route.");
+                    add("Button 'Follow' / 'Stop'",
+                        "This sets the autopilot to drive along the set route starting at the first waypoint. Only visible when atleast one waypoint is set." +
+                        "\n\nAlt click will set the autopilot to 'Loop Mode' which will make it go for the first waypoint again after reaching the last." +
+                        "If the only waypoint happens to be a target it will keep following that instead of only going to it once." +
+                        "\n\nIf the autopilot is already active the 'Follow' button will turn into the 'Stop' button which will obviously stop it when pressed.");
+                    add("Button 'To Target'",
+                        "Clears the route, adds the target as only waypoint and starts the autopilot. Only visible with a selected target." +
+                        "\n\nAlt click will set the autopilot to 'Loop Mode' which will make it continue to follow the target, pausing when near it instead of turning off then.");
+                    add("Button 'Add Target'",
+                        "Adds the selected target as a waypoint either at the end of the route or before the selected waypoint. Only visible with a selected target.");
+                    break;
+
+                case "Waypoints":
+                    add("Adding Waypoints", "Adds a new waypoint to the route at the end or before the currently selected waypoint, " +
+                        "simply click the terrain or somewhere on the body in Mapview." +
+                        "\n\nAlt clicking will reverse the route for easier going back and holding Alt while clicking the terrain or body in Mapview will allow to add more waypoints without having to click the button again.");
+                    add("Removing Waypoints", "Removes the currently selected waypoint." +
+                        "\n\nAlt clicking will remove all waypoints.");
+                    add("Reordering Waypoints",
+                        "'Up' and 'Down' will move the selected waypoint up or down in the list, Alt clicking will move it to the top or bottom respectively.");
+                    add("Waypoint Radius",
+                        "Radius defines the distance to the center of the waypoint after which the waypoint will be considered 'reached'." +
+                        "\n\nA radius of 5m (default) simply means that when you're 5m from the waypoint away the autopilot will jump to the next or turn off if it was the last." +
+                        "\n\nThe 'A' button behind the textfield will set the entered radius for all waypoints.");
+                    add("Speedlimits", "The two speed textfields represent the minimum and maximum speed for the waypoint." +
+                        "\n\nThe maximum speed is the speed the autopilot tries to reach to get to the waypoint." +
+                        "\n\nThe minimum speed was before used to set the speed with which the autopilot will go through the waypoint, but that got reworked now to be based on the next waypoint's max. speed and the turn needed at the waypoint." +
+                        "\n\nI have no idea what this will currently do if set so better just leave it at 0..." +
+                        "\n\nThe 'A' buttons set their respective speed for all waypoints.");
+                    add("Quicksaving at a Waypoint", "Clicking the 'QS' button will turn on QuickSave for that waypoint." +
+                        "\n\nThis will make the autopilot stop and try to quicksave at that waypoint and then continue. A QuickSave waypoint has yellow text instead of white." +
+                        "\n\nSmall sideeffect: leaving the throttle up will prevent the saving from occurring effectively pausing the autopilot at that point until interefered with. (Discovered by Greys)" +
+                        "\n\nAlt clicking will toggle QS for all waypoints including the clicked one.");
+                    add("Changing the current target Waypoint",
+                        "Alt clicking a waypoint will mark it as the current target waypoint. The active waypoint has a green tinted background.");
+                    break;
+
+                case "Routes":
+                    add("Routes Help", "The empty textfield is for saving routes, enter a name there before clicking 'Save'." +
+                        "\n\nTo load a route simply select one from the list and click 'Load'." +
+                        "\n\nTo delete a route simply select it and a 'Delete' button will appear right of it.");
+                    break;
+
+                case "Settings":
+                    add("Heading / Speed PID",
+                        "These parameters control the behaviour of the heading's / speed's PID. Saved globally so NO TOUCHING unless you know what you're doing (or atleast know how to write down numbers to restore it if you mess up)");
+                    add("Safe Turn Speed",
+                        "'Safe Turn Speed' tells the autopilot which speed the rover can usually go full turn through corners without tipping over." +
+                        "\n\nGiven how differently terrain can be and other influences you can just leave it at 3 m/s but if you're impatient or just want to experiment feel free to test around. Saved per vessel type (same named vessels will share the setting).");
+                    add("Traction and Braking", "'Traction' shows in % how many wheels have ground contact." +
+                        "\n'Traction Brake Limit' defines what traction is atleast needed for the autopilot to still apply the brakes (given 'Stability Control' is active) even if you hold the brake down." +
+                        "\nThis means the default setting of 75 will make it brake only if atleast 3 wheels have ground contact." +
+                        "\n'Traction Brake Limit' is saved per vessel type." +
+                        "\n\nIf you have 'Stability Control' off then it won't take care of your brake and you can flip as much as you want.");
+                    add("Changing the route height in Mapview",
+                        "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
+                    break;
+            }
+        }
+
         protected override void WindowGUI(int windowID)
         {
             _btnInactive ??= new GUIStyle(GuiUtils.Skin.button) { alignment = TextAnchor.MiddleLeft };
@@ -1183,86 +1404,7 @@ namespace MuMech
 
             SelTopic = GUILayout.SelectionGrid(SelTopic, Topics, Topics.Length);
 
-            switch (Topics[SelTopic])
-            {
-                case "Rover Controller":
-                    HelpTopic("Holding a set Heading",
-                        "To hold a specific heading just tick the box next to 'Heading control' and the autopilot will try to keep going for the entered heading." +
-                        "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
-                        "'Heading Error' simply shows the error between current heading and target heading.");
-                    HelpTopic("Holding a set Speed",
-                        "To hold a specific speed just tick the box next to 'Speed control' and the autopilot will try to keep going at the entered speed." +
-                        "\nThis also needs to be enabled when the autopilot is supposed to drive to a waypoint" +
-                        "'Speed Error' simply shows the error between current speed and target speed.");
-                    HelpTopic("More stability while driving and nice landings",
-                        "If you turn on 'Stability Control' then the autopilot will use the reaction wheel's torque to keep the rover aligned with the surface." +
-                        "\nThis means that if you make a jump the autopilot will try to align the rover in the best possible way to land as straight and flat as possible given the available time and torque." +
-                        "\nBe aware that this doesn't make your rover indestructible, only relatively unlikely to land in a bad way." +
-                        "\n\n'Stability Control' will also limit the brake to reduce the chances of flipping over from too much braking power." +
-                        "\nSee 'Settings' -> 'Traction and Braking'. This setting is also saved per vessel.");
-                    HelpTopic("Brake on Pilot Eject",
-                        "With this option enabled the rover will stop if the pilot (on manned rovers) should get thrown out of his seat.");
-                    HelpTopic("Target Speed", "Current speed the autopilot tries to achieve.");
-                    HelpTopic("Waypoint Index", "Overview of waypoints and which the autopilot is currently driving to.");
-                    HelpTopic("Button 'Waypoints'", "Opens the waypoint list to set up a route.");
-                    HelpTopic("Button 'Follow' / 'Stop'",
-                        "This sets the autopilot to drive along the set route starting at the first waypoint. Only visible when atleast one waypoint is set." +
-                        "\n\nAlt click will set the autopilot to 'Loop Mode' which will make it go for the first waypoint again after reaching the last." +
-                        "If the only waypoint happens to be a target it will keep following that instead of only going to it once." +
-                        "\n\nIf the autopilot is already active the 'Follow' button will turn into the 'Stop' button which will obviously stop it when pressed.");
-                    HelpTopic("Button 'To Target'",
-                        "Clears the route, adds the target as only waypoint and starts the autopilot. Only visible with a selected target." +
-                        "\n\nAlt click will set the autopilot to 'Loop Mode' which will make it continue to follow the target, pausing when near it instead of turning off then.");
-                    HelpTopic("Button 'Add Target'",
-                        "Adds the selected target as a waypoint either at the end of the route or before the selected waypoint. Only visible with a selected target.");
-                    break;
-
-                case "Waypoints":
-                    HelpTopic("Adding Waypoints", "Adds a new waypoint to the route at the end or before the currently selected waypoint, " +
-                        "simply click the terrain or somewhere on the body in Mapview." +
-                        "\n\nAlt clicking will reverse the route for easier going back and holding Alt while clicking the terrain or body in Mapview will allow to add more waypoints without having to click the button again.");
-                    HelpTopic("Removing Waypoints", "Removes the currently selected waypoint." +
-                        "\n\nAlt clicking will remove all waypoints.");
-                    HelpTopic("Reordering Waypoints",
-                        "'Up' and 'Down' will move the selected waypoint up or down in the list, Alt clicking will move it to the top or bottom respectively.");
-                    HelpTopic("Waypoint Radius",
-                        "Radius defines the distance to the center of the waypoint after which the waypoint will be considered 'reached'." +
-                        "\n\nA radius of 5m (default) simply means that when you're 5m from the waypoint away the autopilot will jump to the next or turn off if it was the last." +
-                        "\n\nThe 'A' button behind the textfield will set the entered radius for all waypoints.");
-                    HelpTopic("Speedlimits", "The two speed textfields represent the minimum and maximum speed for the waypoint." +
-                        "\n\nThe maximum speed is the speed the autopilot tries to reach to get to the waypoint." +
-                        "\n\nThe minimum speed was before used to set the speed with which the autopilot will go through the waypoint, but that got reworked now to be based on the next waypoint's max. speed and the turn needed at the waypoint." +
-                        "\n\nI have no idea what this will currently do if set so better just leave it at 0..." +
-                        "\n\nThe 'A' buttons set their respective speed for all waypoints.");
-                    HelpTopic("Quicksaving at a Waypoint", "Clicking the 'QS' button will turn on QuickSave for that waypoint." +
-                        "\n\nThis will make the autopilot stop and try to quicksave at that waypoint and then continue. A QuickSave waypoint has yellow text instead of white." +
-                        "\n\nSmall sideeffect: leaving the throttle up will prevent the saving from occurring effectively pausing the autopilot at that point until interefered with. (Discovered by Greys)" +
-                        "\n\nAlt clicking will toggle QS for all waypoints including the clicked one.");
-                    HelpTopic("Changing the current target Waypoint",
-                        "Alt clicking a waypoint will mark it as the current target waypoint. The active waypoint has a green tinted background.");
-                    break;
-
-                case "Routes":
-                    HelpTopic("Routes Help", "The empty textfield is for saving routes, enter a name there before clicking 'Save'." +
-                        "\n\nTo load a route simply select one from the list and click 'Load'." +
-                        "\n\nTo delete a route simply select it and a 'Delete' button will appear right of it.");
-                    break;
-
-                case "Settings":
-                    HelpTopic("Heading / Speed PID",
-                        "These parameters control the behaviour of the heading's / speed's PID. Saved globally so NO TOUCHING unless you know what you're doing (or atleast know how to write down numbers to restore it if you mess up)");
-                    HelpTopic("Safe Turn Speed",
-                        "'Safe Turn Speed' tells the autopilot which speed the rover can usually go full turn through corners without tipping over." +
-                        "\n\nGiven how differently terrain can be and other influences you can just leave it at 3 m/s but if you're impatient or just want to experiment feel free to test around. Saved per vessel type (same named vessels will share the setting).");
-                    HelpTopic("Traction and Braking", "'Traction' shows in % how many wheels have ground contact." +
-                        "\n'Traction Brake Limit' defines what traction is atleast needed for the autopilot to still apply the brakes (given 'Stability Control' is active) even if you hold the brake down." +
-                        "\nThis means the default setting of 75 will make it brake only if atleast 3 wheels have ground contact." +
-                        "\n'Traction Brake Limit' is saved per vessel type." +
-                        "\n\nIf you have 'Stability Control' off then it won't take care of your brake and you can flip as much as you want.");
-                    HelpTopic("Changing the route height in Mapview",
-                        "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
-                    break;
-            }
+            HelpContent(Topics[SelTopic], HelpTopic);
 
             base.WindowGUI(windowID);
         }

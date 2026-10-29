@@ -24,7 +24,7 @@ namespace MuMech
             TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE
         };
 
-        private static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
+        internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
         public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
         {

@@ -14,12 +14,12 @@ namespace MuMech.AttitudeControllers
 
         private Vector3d _lastAct = Vector3d.zero;
         private Vector3d _pidAction; //info
-        private Vector3d _error; //info
+        internal Vector3d _error; //info
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool TfAutoTune = true;
 
-        private Vector3d _tfV = new Vector3d(0.3, 0.3, 0.3);
+        internal Vector3d _tfV = new Vector3d(0.3, 0.3, 0.3);
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public Vector3 TfVec = new Vector3(0.3f, 0.3f, 0.3f); // use the serialize since Vector3d does not
@@ -52,15 +52,15 @@ namespace MuMech.AttitudeControllers
         private readonly Vector3d _defaultTfV = new Vector3d(0.3, 0.3, 0.3);
 
         // GUI
-        private EditableDouble _uiTfX;
-        private EditableDouble _uiTfY;
-        private EditableDouble _uiTfZ;
-        private EditableDouble _uiTfMin;
-        private EditableDouble _uiTfMax;
-        private EditableDouble _uiKpFactor;
-        private EditableDouble _uiKiFactor;
-        private EditableDouble _uiKdFactor;
-        private EditableDouble _uiDeadband;
+        internal EditableDouble _uiTfX;
+        internal EditableDouble _uiTfY;
+        internal EditableDouble _uiTfZ;
+        internal EditableDouble _uiTfMin;
+        internal EditableDouble _uiTfMax;
+        internal EditableDouble _uiKpFactor;
+        internal EditableDouble _uiKiFactor;
+        internal EditableDouble _uiKdFactor;
+        internal EditableDouble _uiDeadband;
 
         public MJAttitudeController(MechJebModuleAttitudeController controller) : base(controller)
         {
@@ -230,6 +230,39 @@ namespace MuMech.AttitudeControllers
             deltaEuler = _error * UtilMath.Rad2Deg;
         }
 
+        // the clamps below are shared by the IMGUI and the uGUI panels; they only replace a value that is too small,
+        // so the text being edited is not rewritten while it is valid
+        internal void ClampTf()
+        {
+            if (_uiTfX < 0.01) _uiTfX = 0.01;
+            if (_uiTfY < 0.01) _uiTfY = 0.01;
+            if (_uiTfZ < 0.01) _uiTfZ = 0.01;
+        }
+
+        internal void ClampTfRange()
+        {
+            if (_uiTfMin < 0.01) _uiTfMin = 0.01;
+            if (_uiTfMax < 0.01) _uiTfMax = 0.01;
+        }
+
+        internal void ClampFactors()
+        {
+            if (_uiKdFactor < 0.01) _uiKdFactor = 0.01;
+            if (_uiKpFactor < 0.01) _uiKpFactor = 0.01;
+            if (_uiKiFactor < 0.01) _uiKiFactor = 0.01;
+        }
+
+        internal void ClampDeadband() => Deadband = Math.Max(_uiDeadband, 0.0);
+
+        internal void SetLowPassFilter(bool newLowPassFilter)
+        {
+            if (LowPassFilter != newLowPassFilter)
+            {
+                SetPIDParameters();
+                LowPassFilter = newLowPassFilter;
+            }
+        }
+
         public override void GUI()
         {
             if (GUILayout.Button(Localizer.Format("#MechJeb_adv_reset_button"))) //"Reset"
@@ -257,9 +290,7 @@ namespace MuMech.AttitudeControllers
                 _uiTfZ.Text = GUILayout.TextField(_uiTfZ.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(40));
                 GUILayout.EndHorizontal();
 
-                _uiTfX = Math.Max(0.01, _uiTfX);
-                _uiTfY = Math.Max(0.01, _uiTfY);
-                _uiTfZ = Math.Max(0.01, _uiTfZ);
+                ClampTf();
             }
             else
             {
@@ -271,32 +302,23 @@ namespace MuMech.AttitudeControllers
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_label7"), GuiUtils.LayoutExpandWidth); //"Tf range"
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label8"), _uiTfMin, "", 50); //"min"
-                _uiTfMin = Math.Max(_uiTfMin, 0.01);
                 GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label9"), _uiTfMax, "", 50); //"max"
-                _uiTfMax = Math.Max(_uiTfMax, 0.01);
+                ClampTfRange();
                 GUILayout.EndHorizontal();
             }
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            bool newLowPassFilter = GUILayout.Toggle(LowPassFilter, Localizer.Format("#MechJeb_AttitudeController_checkbox2")); //" Low Pass Filter"
-
-            if (LowPassFilter != newLowPassFilter)
-            {
-                SetPIDParameters();
-                LowPassFilter = newLowPassFilter;
-            }
+            SetLowPassFilter(GUILayout.Toggle(LowPassFilter, Localizer.Format("#MechJeb_AttitudeController_checkbox2"))); //" Low Pass Filter"
 
             GUILayout.Label(Localizer.Format("#MechJeb_AttitudeController_PIDF")); //"PID factors"
             GuiUtils.SimpleTextBox("Kd = ", _uiKdFactor, " / Tf", 50); //
-            _uiKdFactor = Math.Max(_uiKdFactor, 0.01);
             GuiUtils.SimpleTextBox("Kp = pid.Kd / (", _uiKpFactor, " * Math.Sqrt(2) * Tf)", 50);
-            _uiKpFactor = Math.Max(_uiKpFactor, 0.01);
             GuiUtils.SimpleTextBox("Ki = pid.Kp / (", _uiKiFactor, " * Math.Sqrt(2) * Tf)", 50);
-            _uiKiFactor = Math.Max(_uiKiFactor, 0.01);
+            ClampFactors();
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_PIDFactor1"), _uiDeadband, "", 50); //"Deadband = "
-            Deadband = Math.Max(_uiDeadband, 0.0);
+            ClampDeadband();
 
             GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_AttitudeController_label11"), KWlimit, "%"); //"Maximum Relative Angular Velocity"
             double tmpKWlimit = KWlimit;

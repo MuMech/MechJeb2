@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: InternalsVisibleTo("MechJebLibTest")]
+[assembly: InternalsVisibleTo("MechJeb2.UI")] // the optional uGUI front end (ports read window state)
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from

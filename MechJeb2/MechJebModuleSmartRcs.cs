@@ -65,15 +65,8 @@ namespace MuMech
             }
 
             // Disable if RCS is used by an other module
-            if (Core.RCS.Enabled && Core.RCS.Users.Count(u => !Equals(u)) > 0)
+            if (RcsUsedByOtherModule())
             {
-                if (autoDisableSmartRCS)
-                {
-                    target = Target.OFF;
-                    if (Core.RCS.Users.Contains(this))
-                        Core.RCS.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
-                }
-
                 GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GuiUtils.LayoutExpandWidth); //"AUTO"
             }
             else if (Core.Target.Target == null)
@@ -96,6 +89,35 @@ namespace MuMech
             Core.RCS.rcsForRotation =
                 GUILayout.Toggle(Core.RCS.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3")); // " Use RCS for rotation"
             base.WindowGUI(windowID);
+        }
+
+        // shared by the IMGUI window and the new UI: true when RCS is used by an other module (and then switches SmartRcs off if configured so)
+        internal bool RcsUsedByOtherModule()
+        {
+            if (!Core.RCS.Enabled)
+                return false;
+
+            bool other = false;
+            for (int i = 0; i < Core.RCS.Users.Count; i++)
+            {
+                if (!Equals(Core.RCS.Users[i]))
+                {
+                    other = true;
+                    break;
+                }
+            }
+
+            if (!other)
+                return false;
+
+            if (autoDisableSmartRCS)
+            {
+                target = Target.OFF;
+                if (Core.RCS.Users.Contains(this))
+                    Core.RCS.Users.Remove(this); // so we don't suddenly turn on when the other autopilot finishes
+            }
+
+            return true;
         }
 
         public void Engage()

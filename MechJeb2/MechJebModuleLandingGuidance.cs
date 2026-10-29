@@ -35,7 +35,7 @@ namespace MuMech
 
         protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(200), GUILayout.Height(150) };
 
-        private void MoveByMeter(ref EditableAngle angle, double distance, double alt)
+        internal void MoveByMeter(ref EditableAngle angle, double distance, double alt)
         {
             double angularDelta = distance * UtilMath.Rad2Deg / (alt + MainBody.Radius);
             angle += angularDelta;
