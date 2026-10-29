@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using UnityEngine;
@@ -39,7 +39,7 @@ namespace MuMech.AttitudeControllers
         /* max angular rotation */
         internal Vector3d _maxOmega = Vector3d.zero;
 
-        internal Vector3d _controlTorque => Ac.torque;
+        internal Vector3d _controlTorque => Ac.Torque;
 
         public KosAttitudeController(MechJebModuleAttitudeController controller) : base(controller)
         {

@@ -40,7 +40,7 @@ namespace MuMech
 
         protected override void OnModuleDisabled()
         {
-            Core.Attitude.attitudeDeactivate();
+            Core.Attitude.AttitudeDeactivate();
             if (!Core.RssMode)
                 Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
@@ -214,9 +214,9 @@ namespace MuMech
                 Vector3d.Dot(desiredThrustVector, VesselState.North)));
 
             if (AscentSettings.ForceRoll)
-                Core.Attitude.attitudeTo(hdg, pitch, AscentSettings.TurnRoll, this, fixCOT: true);
+                Core.Attitude.AttitudeTo(hdg, pitch, AscentSettings.TurnRoll, this, fixCOT: true);
             else
-                Core.Attitude.attitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
+                Core.Attitude.AttitudeTo(desiredThrustVector, AttitudeReference.INERTIAL_COT, this);
 
             Core.Attitude.SetActuationControl();
             Core.Attitude.SetAxisControl(true, true, AscentSettings.ForceRoll);

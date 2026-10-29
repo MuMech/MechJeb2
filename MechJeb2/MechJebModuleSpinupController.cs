@@ -69,7 +69,7 @@ namespace MuMech
             if (!Vessel.ActionGroups[KSPActionGroup.RCS])
                 Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
-            if (_state == SpinupState.STABILIZING && (Core.Attitude.attitudeAngleFromTarget() > 1.0 || Core.vessel.angularVelocity.magnitude > 0.001))
+            if (_state == SpinupState.STABILIZING && (Core.Attitude.AttitudeAngleFromTarget() > 1.0 || Core.vessel.angularVelocity.magnitude > 0.001))
                 return;
 
             _state = SpinupState.SPINUP;

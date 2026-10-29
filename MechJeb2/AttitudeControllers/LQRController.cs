@@ -1,4 +1,4 @@
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using MechJebLib.Control;
 using UnityEngine;
 using static System.Math;
@@ -43,11 +43,11 @@ namespace MuMech.AttitudeControllers
             _velocity = _vessel.angularVelocityD;
 
             // low-pass filter the control torque
-            _controlTorque = _controlTorque == Vector3d.zero ? Ac.torque : _controlTorque + SmoothTorque * (Ac.torque - _controlTorque);
+            _controlTorque = _controlTorque == Vector3d.zero ? Ac.Torque : _controlTorque + SmoothTorque * (Ac.Torque - _controlTorque);
 
             // if torque is really zero, set it zero
             for (int i = 0; i < 3; i++)
-                if (Ac.torque[i] == 0)
+                if (Ac.Torque[i] == 0)
                     _controlTorque[i] = 0;
 
             for (int i = 0; i < 3; i++)

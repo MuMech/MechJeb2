@@ -208,7 +208,7 @@ namespace MuMech
             if (Core.Attitude.Users.Contains(this))
             {
                 //				line.enabled = false;
-                Core.Attitude.attitudeDeactivate();
+                Core.Attitude.AttitudeDeactivate();
                 Core.Attitude.Users.Remove(this);
             }
 
@@ -396,7 +396,7 @@ namespace MuMech
                 var quat = Quaternion.LookRotation(fwd, norm);
 
                 if (VesselState.TorqueAvailable.sqrMagnitude > 0)
-                    Core.Attitude.attitudeTo(quat, AttitudeReference.INERTIAL, this);
+                    Core.Attitude.AttitudeTo(quat, AttitudeReference.INERTIAL, this);
             }
 
             if (BrakeOnEnergyDepletion)
@@ -533,7 +533,7 @@ namespace MuMech
 
             if (!StabilityControl && Core.Attitude.Users.Contains(this))
             {
-                Core.Attitude.attitudeDeactivate();
+                Core.Attitude.AttitudeDeactivate();
                 Core.Attitude.Users.Remove(this);
             }
         }

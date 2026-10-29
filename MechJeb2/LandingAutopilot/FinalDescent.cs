@@ -59,21 +59,21 @@ namespace MuMech
                     if (VesselState.SurfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.SurfaceVelocity, VesselState.Up) < 80)
                     {
                         // if we have positive vertical velocity, point up and follow min thrust limiter:
-                        Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
+                        Core.Attitude.AttitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, null);
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
                         Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
                     }
                     else if (VesselState.SurfaceVelocity.magnitude > 5 && Vector3d.Angle(VesselState.Forward, -VesselState.SurfaceVelocity) > 45)
                     {
                         // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
-                        Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                        Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.DIRECT;
                         Core.Thrust.TransSpdAct = Core.Thrust.LimiterMinThrottle ? 100 * (float)Core.Thrust.MinThrottle : 0;
                     }
                     else
                     {
                         //if we're above 300m, point retrograde and control surface velocity:
-                        Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                        Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
 
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.KEEP_SURFACE;
 
@@ -98,7 +98,7 @@ namespace MuMech
                         {
                             // if we're not facing approximately retrograde, turn to point retrograde and follow min thrust limiter:
                             Core.Thrust.Tmode = MechJebModuleThrustController.TMode.OFF;
-                            Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                            Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                             Core.Thrust.RequestActiveThrottle(0.0f);
                         }
                         else
@@ -118,7 +118,7 @@ namespace MuMech
                         // quite small but we might still need to decelerate. Reduce the horizontal speed
                         // by thrusting directly retrograde
                         Core.Thrust.Tmode = MechJebModuleThrustController.TMode.OFF;
-                        Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
+                        Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, null);
                         Core.Thrust.RequestActiveThrottle(1.0f);
                     }
                 }

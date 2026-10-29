@@ -382,7 +382,7 @@ namespace MuMech
                                 rot = dir.normalized;
                             }
 
-                            Core.Attitude.attitudeTo(rot, AttitudeReference.INERTIAL, null);
+                            Core.Attitude.AttitudeTo(rot, AttitudeReference.INERTIAL, null);
                         }
 
                         break;
@@ -400,8 +400,8 @@ namespace MuMech
 
                 if (Tmode != TMode.KEEP_VERTICAL
                     || !TransKillH
-                    || Core.Attitude.attitudeError < 2
-                    || (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) < 1000 && Core.Attitude.attitudeError < 90))
+                    || Core.Attitude.AttitudeError < 2
+                    || (Math.Min(VesselState.AltitudeASL, VesselState.AltitudeTrue) < 1000 && Core.Attitude.AttitudeError < 90))
                 {
                     if (Tmode == TMode.DIRECT)
                     {
@@ -420,7 +420,7 @@ namespace MuMech
                     bool useDiffThrottle = VesselState.TorqueDifferentialThrottle.x > VesselState.TorqueAvailable.x * 10 ||
                         VesselState.TorqueDifferentialThrottle.z > VesselState.TorqueAvailable.z * 10;
 
-                    if (Core.Attitude.attitudeError >= 2 && (useGimbal || (useDiffThrottle && Core.Thrust.DifferentialThrottle)))
+                    if (Core.Attitude.AttitudeError >= 2 && (useGimbal || (useDiffThrottle && Core.Thrust.DifferentialThrottle)))
                     {
                         _transPrevThrust = TargetThrottle = 0.1F;
                         Print(" targetThrottle = 0.1F");
@@ -817,7 +817,7 @@ namespace MuMech
             {
                 if (TransKillH && Tmode == TMode.OFF)
                 {
-                    Core.Attitude.attitudeDeactivate();
+                    Core.Attitude.AttitudeDeactivate();
                 }
 
                 _pid.Reset();

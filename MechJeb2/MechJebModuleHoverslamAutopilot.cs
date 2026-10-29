@@ -149,7 +149,7 @@ namespace MuMech
 
         private void TickAligning()
         {
-            Core.Attitude.attitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
+            Core.Attitude.AttitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
             if (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
                 Core.Warp.MinimumWarp(true);
         }
@@ -158,7 +158,7 @@ namespace MuMech
 
         private void TickCoast()
         {
-            Core.Attitude.attitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
+            Core.Attitude.AttitudeTo(Core.Hoverslam.IgnitionAttitude, AttitudeReference.INERTIAL_COT, this);
             if (AutoWarp)
                 Core.Warp.WarpToUT(Core.Hoverslam.IgnitionUT);
             else if (!MuUtils.PhysicsRunning() && VesselState.Time + TimeWarp.fixedDeltaTime > Core.Hoverslam.IgnitionUT)
@@ -167,12 +167,12 @@ namespace MuMech
 
         private void OnEnterBurn() => Core.Thrust.TargetThrottle = 1.0f;
 
-        private void TickBurn() => Core.Attitude.attitudeTo(-_adjV, AttitudeReference.INERTIAL_COT, this);
+        private void TickBurn() => Core.Attitude.AttitudeTo(-_adjV, AttitudeReference.INERTIAL_COT, this);
 
         private void OnEnterFinalDescent()
         {
             _pwm.Reset();
-            Core.Attitude.attitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, this);
+            Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.SURFACE_VELOCITY, this);
         }
 
         private readonly DeltaSigmaThrottleModulator _pwm = new DeltaSigmaThrottleModulator(0.02, DEFAULT_MIN_ON_TIME);
@@ -180,7 +180,7 @@ namespace MuMech
         private void TickFinalDescent()
         {
             if (Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Up) >= -1.0)
-                Core.Attitude.attitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
+                Core.Attitude.AttitudeTo(Vector3d.up, AttitudeReference.SURFACE_NORTH, this);
 
             double v2 = VesselState.SurfaceVelocity.sqrMagnitude;
             double g = Vessel.graviticAcceleration.magnitude;

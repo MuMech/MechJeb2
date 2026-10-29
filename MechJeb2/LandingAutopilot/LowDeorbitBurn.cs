@@ -24,11 +24,11 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
-                if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 5)
+                if (_deorbitBurnTriggered && Core.Attitude.AttitudeAngleFromTarget() < 5)
                 {
                     Core.Thrust.RequestActiveThrottle(Mathf.Clamp01((float)_lowDeorbitBurnMaxThrottle), allowZero: true);
                 }
-                else if (_deorbitBurnTriggered && Core.Attitude.attitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
+                else if (_deorbitBurnTriggered && Core.Attitude.AttitudeAngleFromTarget() < 10 && Core.Thrust.LimiterMinThrottle)
                 {
                     Core.Thrust.RequestActiveThrottle(0.0f);
                 }
@@ -136,7 +136,7 @@ namespace MuMech
                     }
                 }
 
-                Core.Attitude.attitudeTo(thrustDirection, AttitudeReference.INERTIAL, Core.Landing);
+                Core.Attitude.AttitudeTo(thrustDirection, AttitudeReference.INERTIAL, Core.Landing);
 
                 return this;
             }

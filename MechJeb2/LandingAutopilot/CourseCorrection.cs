@@ -61,11 +61,11 @@ namespace MuMech
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status3",
                     deltaV.magnitude.ToString("F1")); //"Performing course correction of about " +  + " m/s"
 
-                Core.Attitude.attitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, Core.Landing);
+                Core.Attitude.AttitudeTo(deltaV.normalized, AttitudeReference.INERTIAL, Core.Landing);
 
-                if (Core.Attitude.attitudeAngleFromTarget() < 2)
+                if (Core.Attitude.AttitudeAngleFromTarget() < 2)
                     _courseCorrectionBurning = true;
-                else if (Core.Attitude.attitudeAngleFromTarget() > 30)
+                else if (Core.Attitude.AttitudeAngleFromTarget() > 30)
                     _courseCorrectionBurning = false;
 
                 if (_courseCorrectionBurning)

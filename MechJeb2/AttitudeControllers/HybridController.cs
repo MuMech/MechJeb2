@@ -1,4 +1,4 @@
-extern alias JetBrainsAnnotations;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -43,7 +43,7 @@ namespace MuMech.AttitudeControllers
         /* max angular rotation */
         internal Vector3d _maxOmega = Vector3d.zero;
 
-        internal Vector3d _controlTorque => Ac.torque;
+        internal Vector3d _controlTorque => Ac.Torque;
 
         public HybridController(MechJebModuleAttitudeController controller) : base(controller)
         {
@@ -93,7 +93,7 @@ namespace MuMech.AttitudeControllers
             phi.Scale(Ac.AxisControl);
 
             if (UseInertia)
-                phi -= Ac.inertia;
+                phi -= Ac.Inertia;
 
             _phiVector = phi;
         }
@@ -204,7 +204,7 @@ namespace MuMech.AttitudeControllers
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label6"), GuiUtils.LayoutExpandWidth); //"Inertia"
-            GUILayout.Label("|" + Ac.inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Ac.inertia), GuiUtils.LayoutNoExpandWidth);
+            GUILayout.Label("|" + Ac.Inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Ac.Inertia), GuiUtils.LayoutNoExpandWidth);
             GUILayout.EndHorizontal();
         }
     }
