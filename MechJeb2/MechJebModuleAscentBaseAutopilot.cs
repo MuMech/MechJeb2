@@ -222,16 +222,6 @@ namespace MuMech
             Core.Attitude.SetAxisControl(true, true, AscentSettings.ForceRoll);
         }
 
-        // this handles vertical rise and bypasses AoA limiters and other inapplicable settings
-        protected void VerticalHeadingTo(double desiredHeading)
-        {
-            Core.Attitude.attitudeTo(desiredHeading, 90, AscentSettings.VerticalRoll, this, fixCOT: true);
-            bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed;
-
-            Core.Attitude.SetActuationControl(liftedOff, liftedOff, liftedOff);
-            Core.Attitude.SetAxisControl(liftedOff, liftedOff, liftedOff && AscentSettings.ForceRoll && VesselState.AltitudeBottom > AscentSettings.RollAltitude);
-        }
-
         protected abstract Vector3d ApplyAoALimiter(Vector3d desiredThrustVector);
     }
 }

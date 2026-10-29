@@ -287,6 +287,16 @@ namespace MuMech
                 AxisCtrlYaw, AxisCtrlRoll);
         }
 
+        // points straight up at the given heading, actuation and control stay off until liftoff
+        public void AttitudeToVerticalLaunch(double heading, bool forceRoll, double roll, object controller)
+        {
+            attitudeTo(heading, 90, roll, controller, fixCOT: true);
+            bool liftedOff = Vessel.LiftedOff() && !Vessel.Landed;
+
+            SetActuationControl(liftedOff, liftedOff, liftedOff);
+            SetAxisControl(liftedOff, liftedOff, liftedOff && forceRoll);
+        }
+
         public void attitudeDeactivate()
         {
             Users.Clear();

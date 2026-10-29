@@ -88,7 +88,9 @@ namespace MuMech
             if (!IsVerticalAscent(VesselState.AltitudeTrue, VesselState.SpeedSurface)) _mode = AscentMode.GRAVITY_TURN;
             if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode = AscentMode.COAST_TO_APOAPSIS;
 
-            VerticalHeadingTo(OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val));
+            Core.Attitude.AttitudeToVerticalLaunch(
+                OrbitalManeuverCalculator.HeadingForLaunchInclination(Vessel.orbit, AscentSettings.DesiredInclination, AscentSettings.DesiredOrbitAltitude.Val),
+                AscentSettings.ForceRoll && VesselState.AltitudeBottom > AscentSettings.RollAltitude, AscentSettings.VerticalRoll, this);
 
             Core.Thrust.TargetThrottle = 1.0F;
 
