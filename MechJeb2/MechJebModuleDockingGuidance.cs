@@ -142,12 +142,13 @@ namespace MuMech
 
         internal bool OnAxisNodeExists()
         {
-            foreach (ITargetable node in Vessel.GetTargetables()
-                        .Where(t => t.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation))
-            {
-                if (Vector3d.Angle(node.GetTransform().forward, Vessel.ReferenceTransform.up) < 2)
-                    return true;
-            }
+            // GetTargetables without its list: both UIs check this while the window is open
+            if (Vessel == null) return false;
+            foreach (Part part in Vessel.Parts)
+                for (int i = 0; i < part.Modules.Count; i++)
+                    if (part.Modules[i] is ITargetable node && node.GetTargetingMode() == VesselTargetModes.DirectionVelocityAndOrientation &&
+                        Vector3d.Angle(node.GetTransform().forward, Vessel.ReferenceTransform.up) < 2)
+                        return true;
 
             return false;
         }
