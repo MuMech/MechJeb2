@@ -1,4 +1,4 @@
-﻿using KSP.Localization;
+using KSP.Localization;
 using UnityEngine;
 
 namespace MuMech

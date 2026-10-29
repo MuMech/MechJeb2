@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2014, Majiir
  * All rights reserved.
  *

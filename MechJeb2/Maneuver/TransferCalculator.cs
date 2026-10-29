@@ -1,4 +1,4 @@
-﻿// #define DEBUG
+// #define DEBUG
 
 extern alias JetBrainsAnnotations;
 using System;

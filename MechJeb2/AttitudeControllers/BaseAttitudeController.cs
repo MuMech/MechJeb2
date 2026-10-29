@@ -1,4 +1,4 @@
-﻿namespace MuMech.AttitudeControllers
+namespace MuMech.AttitudeControllers
 {
     public abstract class BaseAttitudeController
     {

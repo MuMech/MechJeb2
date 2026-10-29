@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 

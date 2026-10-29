@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLibBindings;
 using UnityEngine;
