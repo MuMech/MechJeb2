@@ -983,7 +983,8 @@ namespace MuMech
 
             if (GUILayout.Button(alt ? "Add" : "Load", GuiUtils.LayoutWidth(50)))
             {
-                if (_saveIndex > -1)
+                // _saveIndex is a row of the list above, which only shows this body's routes (bodyWPs)
+                if (_saveIndex > -1 && _saveIndex < bodyWPs.Count)
                 {
                     if (!alt)
                     {
@@ -991,7 +992,7 @@ namespace MuMech
                         _ap.Waypoints.Clear();
                     }
 
-                    _routes[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp));
+                    bodyWPs[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp));
                 }
             }
 

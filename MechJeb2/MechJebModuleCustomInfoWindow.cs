@@ -631,7 +631,7 @@ namespace MuMech
 
                 if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button5")) && selectedItemIndex != -1) //Move down
                 {
-                    if (selectedItemIndex < editedWindow.items.Count)
+                    if (selectedItemIndex < editedWindow.items.Count - 1)
                     {
                         InfoItem item = editedWindow.items[selectedItemIndex];
                         editedWindow.items.RemoveAt(selectedItemIndex);

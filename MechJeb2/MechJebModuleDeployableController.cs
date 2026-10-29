@@ -142,6 +142,9 @@ namespace MuMech
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
+            // OnFixedUpdate only sets the text when the state changes; parts that start retracted never change it,
+            // which left the button empty. Start from the state Extended has now.
+            ButtonText = GetButtonText(Extended ? DeployablePartState.EXTENDED : DeployablePartState.RETRACTED);
             if (HighLogic.LoadedSceneIsFlight)
                 DiscoverDeployablePartModules();
         }

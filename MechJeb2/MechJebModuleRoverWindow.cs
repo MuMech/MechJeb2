@@ -27,7 +27,7 @@ namespace MuMech
             if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.YellowOnHover))
             {
                 MechJebModuleWaypointHelpWindow help = Core.GetComputerModule<MechJebModuleWaypointHelpWindow>();
-                help.SelTopic = ((IList)help.Topics).IndexOf("Controller");
+                help.SelTopic = ((IList)help.Topics).IndexOf("Rover Controller");
                 help.Enabled = help.SelTopic > -1 || help.Enabled;
             }
 
