@@ -1,0 +1,798 @@
+using System;
+using System.Collections.Generic;
+using KodeUI;
+using KSP.Localization;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+namespace KodeKit
+{
+    /// <summary>A short highlight after a click, so an action with no visible result still shows it happened.</summary>
+    public class ClickFlash : MonoBehaviour, IPointerClickHandler
+    {
+        public Image Target;
+        public static Color FlashColor = new Color(0.55f, 1f, 0.55f, 1f);
+        const float Duration = 0.35f;
+        float start = -1;
+        Color baseColor;
+
+        public void OnPointerClick(PointerEventData e)
+        {
+            if (Target == null) return;
+            if (start < 0) baseColor = Target.color;
+            start = Time.unscaledTime;
+        }
+
+        void Update()
+        {
+            if (start < 0) return;
+            float t = (Time.unscaledTime - start) / Duration;
+            if (t >= 1)
+            {
+                Target.color = baseColor;
+                start = -1;
+                return;
+            }
+            Target.color = Color.Lerp(FlashColor, baseColor, t * t);
+        }
+
+        void OnDisable()
+        {
+            if (start < 0 || Target == null) return;
+            Target.color = baseColor;
+            start = -1;
+        }
+    }
+
+    /// <summary>
+    /// KodeUI's Window moves itself when its empty background is dragged, bypassing KodeKit's clamp, window lock and
+    /// position save (and doubling the movement when a DragHandle is on the same object). KodeKit windows drag through
+    /// DragHandle only.
+    /// </summary>
+    public class KodeRootWindow : Window
+    {
+        public override void OnBeginDrag(PointerEventData eventData) { }
+        public override void OnDrag(PointerEventData eventData) { }
+        public override void OnEndDrag(PointerEventData eventData) { }
+    }
+
+    /// <summary>Calls Click when the object is clicked (labels that act like buttons).</summary>
+    public class ClickHandler : MonoBehaviour, IPointerClickHandler
+    {
+        public Action Click;
+        public void OnPointerClick(PointerEventData e) => Click?.Invoke();
+    }
+
+    /// <summary>Hold-to-repeat behaviour for GUILayout.RepeatButton parity (fires at once, then every 0.2 s).</summary>
+    public class RepeatTrigger : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
+    {
+        public Action Action;
+        bool held;
+        float next;
+
+        public void OnPointerDown(PointerEventData e) { held = true; next = 0; }
+        public void OnPointerUp(PointerEventData e) => held = false;
+        public void OnPointerExit(PointerEventData e) => held = false;
+
+        void Update()
+        {
+            if (!held || Time.time < next) return;
+            next = Time.time + 0.2f;
+            Action?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// A retained window plus the bindings that push model changes into it. MechJeb-style widgets
+    /// (toggled text box, numeric field, arrow selector, selection grid) are built on KodeUI here,
+    /// because KodeUI has none of them. Every widget follows Theme.Current and re-localizes on a
+    /// language switch; text starting with '#' is a localization key.
+    /// </summary>
+    public class KodeWindow
+    {
+        public Window Root;
+        readonly List<Action> syncs = new List<Action>();
+
+        static Theme T => Theme.Current ?? SetDefaultTheme();
+
+        static Theme SetDefaultTheme()
+        {
+            Theme.Set(Theme.KodeDefault());
+            return Theme.Current;
+        }
+
+        /// <summary>Register a per-frame update for a custom widget.</summary>
+        public void AddSync(Action sync) => syncs.Add(sync);
+
+        public void Sync()
+        {
+            for (int i = 0; i < syncs.Count; i++)
+                syncs[i]();
+        }
+
+        /// <summary>Give each window its own nested Canvas so a dirty text only re-batches that window.</summary>
+        public static bool CanvasPerWindow;
+
+        public KodeWindow(RectTransform canvas, string title, float minWidth, Vector2 pos)
+        {
+            Root = UIKit.CreateUI<KodeRootWindow>(canvas, title);
+            if (CanvasPerWindow)
+            {
+                Root.gameObject.AddComponent<Canvas>();
+                Root.gameObject.AddComponent<GraphicRaycaster>();
+            }
+            Root.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
+            Root.PreferredSizeFitter(true, true).Anchor(AnchorPresets.TopLeft).Pivot(PivotPresets.TopLeft);
+            Root.Finish();
+            Root.gameObject.AddComponent<LayoutElement>().minWidth = minWidth;
+            Root.rectTransform.anchoredPosition = new Vector2(pos.x, -pos.y);
+
+            Behaviour = Root.gameObject.AddComponent<WindowBehaviour>();
+            Window root = Root;
+            Styled(Root.gameObject, t =>
+            {
+                t.Window.ApplyImage(root.BackGround);
+                root.Padding(t.Padding, t.Padding, 2, t.Padding).Spacing(t.Spacing);
+            });
+
+            Layout titleRow = Row(Root);
+            TitleRow = titleRow;
+            titleRow.gameObject.AddComponent<DragHandle>().Target = Behaviour;
+            // the rest of the window drags too (GUI.DragWindow), unless MechJeb's "titlebar only" setting is on
+            BodyDrag = Root.gameObject.AddComponent<DragHandle>();
+            BodyDrag.Target = Behaviour;
+            BodyDrag.Enabled = () => !TitleBarOnly();
+            UIText titleText = Label(titleRow, title, true);
+            titleText.tmpText.alignment = TextAlignmentOptions.Center;
+            titleText.tmpText.raycastTarget = true; // so the title bar catches drags
+            SquareButton(Button(titleRow, "x", () => (OnClose ?? (() => Root.gameObject.SetActive(false)))()), true);
+        }
+
+        /// <summary>
+        /// A small square title-bar button: an outlined frame instead of a full button; the close button turns red on hover.
+        /// </summary>
+        static void SquareButton(UIButton b, bool close)
+        {
+            var button = b.GetComponent<Button>();
+            var img = b.GetComponent<Image>();
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            b.Padding(0);
+            var le = b.gameObject.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
+            Styled(b.gameObject, th =>
+            {
+                float size = th.FontSize + 3;
+                le.minWidth = le.preferredWidth = le.minHeight = le.preferredHeight = size;
+                img.sprite = Sprites.CheckBox;
+                img.type = Image.Type.Sliced;
+                img.color = Color.white;
+                button.transition = Selectable.Transition.ColorTint;
+                ColorBlock cb = ColorBlock.defaultColorBlock;
+                cb.normalColor = new Color(1, 1, 1, 0.8f);
+                cb.highlightedColor = close ? new Color(1f, 0.35f, 0.3f) : new Color(1f, 1f, 0.7f);
+                cb.pressedColor = cb.highlightedColor * 0.8f;
+                cb.selectedColor = cb.normalColor;
+                button.colors = cb;
+                th.ApplyText(label, th.Text);
+                label.fontSize = th.FontSize - 2;
+            });
+        }
+
+        public WindowBehaviour Behaviour { get; }
+
+        /// <summary>What the close button does; hides the window when null.</summary>
+        public Action OnClose;
+
+        /// <summary>The drag handle on the window body (dragging anywhere but a control moves the window).</summary>
+        public DragHandle BodyDrag { get; }
+
+        /// <summary>True when only the title bar drags windows (MechJeb's "Use only the titlebar for window dragging").</summary>
+        public static Func<bool> TitleBarOnly = () => false;
+
+        /// <summary>The title bar (title text and close button); also the drag handle.</summary>
+        public Layout TitleRow { get; }
+
+        /// <summary>A small button at the left of the title bar (like the custom windows' "E" and "C").</summary>
+        public UIButton TitleButton(string text, Action onClick)
+        {
+            UIButton b = Button(TitleRow, text, onClick);
+            SquareButton(b, false);
+            b.transform.SetSiblingIndex(0);
+            return b;
+        }
+
+        /// <summary>GUILayout.HorizontalSlider: a flexible-width slider bound to a value.</summary>
+        public Slider Slider(UIObject parent, Func<float> get, Action<float> set, float min = 0, float max = 1)
+        {
+            GameObject go = DefaultControls.CreateSlider(new DefaultControls.Resources());
+            go.transform.SetParent(parent.transform, false);
+            // DefaultControls builds on layer 0, which UIMainCamera culls (FINDINGS rule 9)
+            foreach (Transform t in go.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = parent.gameObject.layer;
+            var le = go.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1;
+            le.minWidth = 40;
+            var slider = go.GetComponent<Slider>();
+            slider.minValue = min;
+            slider.maxValue = max;
+            slider.SetValueWithoutNotify(get());
+            slider.onValueChanged.AddListener(v => set(v));
+            // thin track with a round handle: DefaultControls' 10 px bar and 20 px square handle are too heavy
+            Image[] images = go.GetComponentsInChildren<Image>(true);
+            foreach (Image img in images)
+            {
+                var rt = img.rectTransform;
+                switch (img.gameObject.name)
+                {
+                    case "Background":
+                        rt.anchorMin = new Vector2(0, 0.5f);
+                        rt.anchorMax = new Vector2(1, 0.5f);
+                        rt.sizeDelta = new Vector2(0, 3);
+                        break;
+                    case "Fill":
+                        rt.parent.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0.5f);
+                        rt.parent.GetComponent<RectTransform>().anchorMax = new Vector2(1, 0.5f);
+                        rt.parent.GetComponent<RectTransform>().sizeDelta = new Vector2(-12, 3);
+                        rt.sizeDelta = new Vector2(6, 0);
+                        break;
+                    case "Handle":
+                        img.sprite = Sprites.Circle;
+                        break;
+                }
+                if (img.gameObject.name != "Handle") img.sprite = null;
+            }
+            Styled(go, th =>
+            {
+                le.preferredHeight = th.FontSize;
+                foreach (Image img in images)
+                {
+                    if (img.gameObject.name == "Handle")
+                    {
+                        img.color = th.Text;
+                        img.rectTransform.sizeDelta = new Vector2(th.FontSize - 2, 0);
+                        img.rectTransform.parent.GetComponent<RectTransform>().sizeDelta = new Vector2(-(th.FontSize - 2), 0);
+                    }
+                    else img.color = img.gameObject.name == "Fill" ? th.Good * 0.8f : new Color(1, 1, 1, 0.25f);
+                }
+            });
+            syncs.Add(() =>
+            {
+                float v = get();
+                if (!Mathf.Approximately(slider.value, v)) slider.SetValueWithoutNotify(v);
+            });
+            return slider;
+        }
+
+        // ---- panels and lists ----
+
+        /// <summary>A vertical group that fills the width (GUILayout.BeginVertical): rows stacked, each as wide as the panel.</summary>
+        public static Layout Panel(UIObject parent)
+        {
+            Layout l = parent.Add<Layout>("Panel");
+            l.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false);
+            l.FlexibleLayout(true, false);
+            l.Finish();
+            return l;
+        }
+
+        /// <summary>
+        /// A vertical scroll list of a fixed height (GUILayout.BeginScrollView) on the dark list backdrop, with a scrollbar
+        /// shown when needed. Rows go in <paramref name="content"/>; text changes inside relayout only the list.
+        /// </summary>
+        public static ScrollView ScrollList(UIObject parent, float height, out Layout content, int spacing = 0)
+        {
+            ScrollView sv = parent.Add<ScrollView>("Scroll");
+            sv.PreferredHeight(height);
+            sv.FlexibleLayout(true, false);
+            sv.Horizontal(false);
+            sv.Vertical(true);
+
+            sv.BackgroundColor(ListBackground);
+            ScrollRect sr = sv.ScrollRect;
+            sr.movementType = ScrollRect.MovementType.Clamped;
+            sr.scrollSensitivity = 25;
+            sr.inertia = false;
+
+            content = sv.Content;
+            content.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false).Spacing(spacing);
+            content.PreferredSizeFitter(true, false);
+            RectTransform c = content.rectTransform;
+            c.anchorMin = new Vector2(0, 1);
+            c.anchorMax = new Vector2(1, 1);
+            c.pivot = new Vector2(0.5f, 1);
+            c.sizeDelta = Vector2.zero;
+            c.anchoredPosition = Vector2.zero;
+
+            // the viewport (which masks the rows) leaves room for the scrollbar on the right
+            sv.Viewport.rectTransform.offsetMin = Vector2.zero;
+            sv.Viewport.rectTransform.offsetMax = new Vector2(-12, 0);
+
+            UIScrollbar bar = sv.Add<UIScrollbar>("Bar");
+            bar.Direction(Scrollbar.Direction.BottomToTop);
+            RectTransform br = bar.rectTransform;
+            br.anchorMin = new Vector2(1, 0);
+            br.anchorMax = new Vector2(1, 1);
+            br.pivot = new Vector2(1, 1);
+            br.sizeDelta = new Vector2(10, 0);
+            br.anchoredPosition = Vector2.zero;
+            sv.VerticalScrollbar = bar;
+            sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+
+            Image barImage = bar.GetComponent<Image>();
+            Image handleImage = bar.scrollbar.handleRect.GetComponent<Image>();
+            Styled(bar.gameObject, th =>
+            {
+                barImage.color = new Color(0, 0, 0, 0.35f);
+                handleImage.color = new Color(th.Text.r, th.Text.g, th.Text.b, 0.6f);
+            });
+            return sv;
+        }
+
+        // ---- lists ----
+
+        /// <summary>A dark backdrop for a vertical list of rows (ListRow), like IMGUI's scroll views.</summary>
+        public static Layout ListBox(UIObject parent)
+        {
+            LayoutPanel box = parent.Add<LayoutPanel>("List");
+            box.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false).Spacing(0).Padding(0);
+            box.FlexibleLayout(true, false);
+            box.Finish();
+            box.BackGround.sprite = null;
+            box.BackGround.color = ListBackground;
+            return box;
+        }
+
+        public static Color ListBackground = new Color(0.07f, 0.08f, 0.09f, 0.85f);
+
+        /// <summary>
+        /// A flat, left-aligned clickable row for lists (item pickers, help topics): no button frame, a hover highlight
+        /// and a hairline separator. SetSelected marks the selected row (yellow text and a bar on the left).
+        /// </summary>
+        public static UIButton ListRow(UIObject parent, string text, Action onClick)
+        {
+            UIButton b = parent.Add<UIButton>("ListRow");
+            b.Text("").OnClick(() => onClick());
+            b.FlexibleLayout(true, false);
+            b.Finish();
+            b.Padding(8, 8, 2, 2);
+            b.ChildAlignment(TextAnchor.MiddleLeft);
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            label.alignment = TextAlignmentOptions.Left;
+            SetText(label, text);
+            var button = b.GetComponent<Button>();
+            var img = b.GetComponent<Image>();
+
+            // separator and selection bar: drawn over the row, outside its layout
+            Image line = Overlay(b, "Separator", new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 1));
+            Image bar = Overlay(b, "SelectBar", new Vector2(0, 0), new Vector2(0, 1), new Vector2(3, 0));
+            bar.color = new Color(0.95f, 0.82f, 0.35f);
+            bar.gameObject.SetActive(false);
+
+            Styled(b.gameObject, th =>
+            {
+                img.sprite = null;
+                img.color = Color.white;
+                button.transition = Selectable.Transition.ColorTint;
+                ColorBlock cb = ColorBlock.defaultColorBlock;
+                cb.normalColor = new Color(1, 1, 1, 0);
+                cb.highlightedColor = new Color(1, 1, 1, 0.12f);
+                cb.pressedColor = new Color(1, 1, 1, 0.2f);
+                cb.selectedColor = cb.normalColor;
+                button.colors = cb;
+                th.ApplyText(label, bar.gameObject.activeSelf ? bar.color : th.Text);
+                line.color = new Color(1, 1, 1, 0.07f);
+            });
+            return b;
+        }
+
+        /// <summary>Mark a ListRow as selected or not.</summary>
+        public static void SetSelected(UIButton row, bool selected)
+        {
+            Transform bar = row.transform.Find("SelectBar");
+            if (bar == null || bar.gameObject.activeSelf == selected) return;
+            bar.gameObject.SetActive(selected);
+            row.GetComponentInChildren<TMP_Text>().color = selected ? bar.GetComponent<Image>().color : Theme.Current.Text;
+        }
+
+        /// <summary>A flat clickable column header (stage stats): dim text that brightens on hover, no button frame.</summary>
+        public static UIButton HeaderButton(UIObject parent, string text, Action onClick)
+        {
+            UIButton b = ListRow(parent, text, onClick);
+            b.FlexibleLayout(false, false);
+            b.Padding(2, 2, 1, 1);
+            b.ChildAlignment(TextAnchor.MiddleRight);
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            label.alignment = TextAlignmentOptions.Right;
+            Styled(b.gameObject, th =>
+            {
+                th.ApplyText(label, th.Dim);
+                b.transform.Find("Separator").GetComponent<Image>().color = new Color(1, 1, 1, 0.25f);
+            });
+            return b;
+        }
+
+        static Image Overlay(UIObject parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+            go.layer = parent.gameObject.layer;
+            go.transform.SetParent(parent.transform, false);
+            go.GetComponent<LayoutElement>().ignoreLayout = true;
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = anchorMin;
+            rt.anchorMax = anchorMax;
+            rt.pivot = new Vector2(0, 0);
+            rt.sizeDelta = size;
+            rt.anchoredPosition = Vector2.zero;
+            var img = go.GetComponent<Image>();
+            img.raycastTarget = false;
+            return img;
+        }
+
+        static readonly Dictionary<string, bool> sectionState = new Dictionary<string, bool>();
+
+        /// <summary>
+        /// A collapsible section: a header row ("-"/"+" and the title) and a content panel it shows or hides. Returns the
+        /// content panel. The open/closed state is remembered per key for the session (key defaults to the title).
+        /// </summary>
+        public Layout Section(UIObject parent, string title, bool open = true, string key = null)
+        {
+            key ??= title;
+            if (sectionState.TryGetValue(key, out bool saved)) open = saved;
+
+            Layout header = Row(parent);
+            UIButton toggle = Button(header, open ? "-" : "+", () => { });
+            UIText label = Label(header, title, true);
+            label.tmpText.fontStyle = FontStyles.Bold;
+
+            Layout content = parent.Add<Layout>("Section");
+            content.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false).Padding(10, 0, 0, 2);
+            content.FlexibleLayout(true, false);
+            content.Finish();
+            content.gameObject.SetActive(open);
+
+            void Flip()
+            {
+                bool o = !content.gameObject.activeSelf;
+                content.gameObject.SetActive(o);
+                sectionState[key] = o;
+                toggle.Text(o ? "-" : "+");
+            }
+
+            toggle.GetComponent<Button>().onClick.AddListener(Flip);
+            label.tmpText.raycastTarget = true;
+            label.gameObject.AddComponent<ClickHandler>().Click = Flip;
+            return content;
+        }
+
+        /// <summary>A static text that wraps to the window width (help texts, long descriptions).</summary>
+        public static UIText Paragraph(UIObject parent, string text)
+        {
+            UIText t = Label(parent, text, true);
+            t.tmpText.enableWordWrapping = true;
+            return t;
+        }
+
+        // ---- theme and localization plumbing ----
+
+        /// <summary>Apply a theme-dependent look now and again on every theme change (via the owning window).</summary>
+        public static void Styled(GameObject go, Action<Theme> apply)
+        {
+            WindowBehaviour wb = go.GetComponentInParent<WindowBehaviour>();
+            apply(wb != null ? wb.Theme ?? T : T);
+            wb?.AddRestyle(() => apply(wb.Theme ?? T));
+        }
+
+        /// <summary>Text, or the localized string when it is a '#key'.</summary>
+        public static string Loc(string text) => text != null && text.Length > 1 && text[0] == '#' ? Localizer.Format(text) : text;
+
+        /// <summary>Set a text from a literal or a '#key'; keys are re-applied on a language switch.</summary>
+        /// <summary>
+        /// Tooltip text for a localization key (null: none). Every label, toggle and button whose text is a '#key'
+        /// gets that tooltip automatically, so tooltips can be added for a whole UI from one table.
+        /// </summary>
+        public static Func<string, string> TooltipFor;
+
+        public static void SetText(TMP_Text t, string textOrKey)
+        {
+            t.text = Loc(textOrKey);
+            if (textOrKey == null || textOrKey.Length < 2 || textOrKey[0] != '#') return;
+            string tip = TooltipFor?.Invoke(textOrKey);
+            if (tip != null && t.GetComponent<TooltipTrigger>() == null)
+            {
+                t.raycastTarget = true;
+                Tooltips.Add(t.gameObject, tip);
+            }
+            t.GetComponentInParent<WindowBehaviour>()?.AddRelocalize(() => t.text = Localizer.Format(textOrKey));
+        }
+
+        // ---- layout ----
+
+        public static Layout Row(UIObject parent)
+        {
+            Layout row = parent.Add<Layout>("Row");
+            row.Horizontal().ControlChildSize(true, true).ChildForceExpand(false, false).Spacing(4).ChildAlignment(TextAnchor.MiddleLeft);
+            row.FlexibleLayout(true, false);
+            row.Finish();
+            return row;
+        }
+
+        public static LayoutPanel Box(UIObject parent)
+        {
+            LayoutPanel box = parent.Add<LayoutPanel>("Box");
+            box.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false).Spacing(2).Padding(4);
+            box.FlexibleLayout(true, false);
+            box.Finish();
+            Styled(box.gameObject, t => t.Box.ApplyImage(box.BackGround));
+            return box;
+        }
+
+        public static void FlexibleSpace(UIObject parent) => parent.Add<UIEmpty>().FlexibleLayout(true, false).Finish();
+
+        public static void Space(UIObject parent, float w) => parent.Add<UIEmpty>().PreferredWidth(w).Finish();
+
+        // ---- widgets ----
+
+        public static UIText Label(UIObject parent, string text, bool flexible = false)
+        {
+            UIText t = parent.Add<UIText>();
+            if (flexible) t.FlexibleLayout(true, false);
+            t.Finish();
+            t.tmpText.enableWordWrapping = false;
+            t.tmpText.alignment = TextAlignmentOptions.Left; // middle-left: rows are taller than the text, keep it centred like IMGUI
+            SetText(t.tmpText, text);
+            var lineLe = t.gameObject.GetComponent<LayoutElement>() ?? t.gameObject.AddComponent<LayoutElement>();
+            Styled(t.gameObject, th =>
+            {
+                th.ApplyText(t.tmpText);
+                lineLe.minHeight = th.LineHeight; // IMGUI pads labels to a fixed row height
+            });
+            return t;
+        }
+
+        /// <summary>
+        /// Put live labels and input fields in fixed-size boxes with no layout group, so a text change
+        /// stops LayoutRebuilder.MarkLayoutForRebuild at the widget instead of rebuilding the whole window.
+        /// </summary>
+        public static bool IsolateLayout = true;
+
+        /// <summary>
+        /// A layout cell of fixed height (and fixed or flexible width) whose child text does not drive layout.
+        /// Size it from a template string as wide as the widest expected value; it re-sizes on theme change.
+        /// </summary>
+        public static UIText LiveLabel(UIObject parent, string template, bool flexible) => IsolatedLabel(parent, template, flexible);
+
+        static UIText IsolatedLabel(UIObject parent, string text, bool flexible)
+        {
+            UIEmpty cell = parent.Add<UIEmpty>("LiveCell");
+            UIText t = cell.Add<UIText>();
+            t.Text(text).Anchor(AnchorPresets.StretchAll);
+            t.Finish();
+            t.tmpText.enableWordWrapping = false;
+            t.tmpText.alignment = TextAlignmentOptions.Left; // middle-left
+            t.tmpText.overflowMode = TextOverflowModes.Ellipsis;
+            t.rectTransform.offsetMin = t.rectTransform.offsetMax = Vector2.zero;
+
+            var le = cell.gameObject.AddComponent<LayoutElement>();
+            if (flexible) le.flexibleWidth = 1;
+            cell.Finish();
+            Styled(cell.gameObject, th =>
+            {
+                th.ApplyText(t.tmpText);
+                // measure the template on a copy of the settings, not on the live text (KSP's TMP overwrites the buffer)
+                Vector2 size = TextMeasure.Measure(text, th);
+                le.preferredHeight = Mathf.Max(size.y, th.LineHeight);
+                if (!flexible) le.preferredWidth = size.x + 24;
+            });
+            return t;
+        }
+
+        public UIText BoundLabel(UIObject parent, Func<string> value, bool flexible = false)
+        {
+            UIText t = IsolateLayout ? IsolatedLabel(parent, value(), flexible) : Label(parent, value(), flexible);
+            string last = t.tmpText.text;
+            syncs.Add(() =>
+            {
+                string s = value();
+                if (s == last) return;
+                last = s;
+                t.Text(s);
+            });
+            return t;
+        }
+
+        public static UIButton Button(UIObject parent, string text, Action onClick, bool flexible = false)
+        {
+            UIButton b = parent.Add<UIButton>();
+            b.Text("").OnClick(() => onClick());
+            if (flexible) b.FlexibleLayout(true, false);
+            b.Finish();
+            b.Padding(6, 6, 1, 1);
+            // KodeUI's button lays its text out at preferred width from the left: centre it, so a wide button centres its label
+            // (not ChildForceExpand: that makes the layout group flexible and every button would stretch)
+            b.ChildAlignment(TextAnchor.MiddleCenter);
+            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
+            label.alignment = TextAlignmentOptions.Center; // like GUILayout.Button
+            SetText(label, text);
+            var button = b.GetComponent<Button>();
+            var img = b.GetComponent<Image>();
+            b.gameObject.AddComponent<ClickFlash>().Target = img;
+            var buttonLe = b.gameObject.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
+            Styled(b.gameObject, th =>
+            {
+                th.Button.ApplySelectable(button, img);
+                th.ApplyText(label, th.Button.TextColor);
+                buttonLe.minHeight = th.LineHeight;
+            });
+            return b;
+        }
+
+        public static UIButton RepeatButton(UIObject parent, string text, Action action)
+        {
+            UIButton b = Button(parent, text, () => { });
+            b.gameObject.AddComponent<RepeatTrigger>().Action = action;
+            return b;
+        }
+
+        public enum Tone { Normal, Good, Warn, Bad }
+
+        Color ToneColor(Tone t) => t == Tone.Good ? T.Good : t == Tone.Warn ? T.Warn : t == Tone.Bad ? T.Bad : T.Text;
+
+        /// <summary>A toggle whose label colour follows a state (MechJeb's Green/Yellow/RedToggle styles).</summary>
+        public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<Tone> tone)
+        {
+            Toggle toggle = Toggle(parent, text, get, set);
+            TMP_Text label = toggle.transform.parent.GetComponentInChildren<ToggleLabelClick>().GetComponent<TMP_Text>();
+            Tone shown = Tone.Normal;
+            Behaviour.AddRestyle(() => label.color = ToneColor(shown));
+            syncs.Add(() =>
+            {
+                Tone t = tone();
+                if (t == shown) return;
+                shown = t;
+                label.color = ToneColor(t);
+            });
+            return toggle;
+        }
+
+        public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null)
+        {
+            Layout row = Row(parent);
+            UIToggle t = row.Add<UIToggle>();
+            t.PreferredSize(16, 16).Finish();
+            UIText label = Label(row, text, true);
+
+            Toggle toggle = t.GetComponent<Toggle>();
+            label.gameObject.AddComponent<ToggleLabelClick>().Toggle = toggle;
+            toggle.SetIsOnWithoutNotify(get());
+            toggle.onValueChanged.AddListener(v => set(v));
+
+            var box = t.GetComponent<Image>();
+            var check = (Image)toggle.graphic;
+            bool wasGreen = false;
+            Styled(t.gameObject, th =>
+            {
+                th.Toggle.ApplySelectable(toggle, box);
+                th.Check.ApplyImage(check);
+                t.PreferredSize(th.FontSize + 2, th.FontSize + 2);
+                label.tmpText.color = wasGreen ? th.Good : th.Text;
+            });
+
+            syncs.Add(() =>
+            {
+                bool v = get();
+                if (toggle.isOn != v) toggle.SetIsOnWithoutNotify(v);
+                if (green == null) return;
+                bool g = green();
+                if (g == wasGreen) return;
+                wasGreen = g;
+                label.tmpText.color = g ? T.Good : T.Text;
+            });
+            return toggle;
+        }
+
+        public TMP_InputField Field(UIObject parent, Ed ed, float width) =>
+            EditFields.Field(this, parent, () => ed.Text, s => ed.Text = s, width);
+
+        /// <summary>GuiUtils.ToggledTextBox: [x] label [field] unit</summary>
+        public void ToggledTextBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Ed ed, string unit, float width, Func<bool> green = null)
+        {
+            Layout row = Row(parent);
+            Toggle(row, text, get, set, green);
+            Field(row, ed, width);
+            if (!string.IsNullOrEmpty(unit)) Label(row, unit);
+        }
+
+        /// <summary>GuiUtils.SimpleTextBox: label [field] unit</summary>
+        public void SimpleTextBox(UIObject parent, string left, Ed ed, string unit, float width, bool horizontalFraming = true)
+        {
+            UIObject row = horizontalFraming ? Row(parent) : parent;
+            if (!string.IsNullOrEmpty(left)) Label(row, left);
+            Field(row, ed, width);
+            if (!string.IsNullOrEmpty(unit)) Label(row, unit);
+        }
+
+        /// <summary>GuiUtils.ArrowSelector: [&lt;] label [&gt;]</summary>
+        public void ArrowSelector(UIObject parent, Func<int> get, Action<int> set, int count, Func<string> label) =>
+            ArrowSelector(parent, get, set, () => count, label);
+
+        /// <summary>ArrowSelector over a list whose length changes (e.g. maneuver nodes).</summary>
+        public void ArrowSelector(UIObject parent, Func<int> get, Action<int> set, Func<int> count, Func<string> label)
+        {
+            Layout row = Row(parent);
+            Button(row, "<", () =>
+            {
+                int n = count();
+                if (n > 0) set((get() - 1 + n) % n);
+            });
+            BoundLabel(row, label, true).tmpText.alignment = TextAlignmentOptions.Center;
+            Button(row, ">", () =>
+            {
+                int n = count();
+                if (n > 0) set((get() + 1) % n);
+            });
+        }
+
+        /// <summary>GUILayout.SelectionGrid with one row.</summary>
+        public void SelectionGrid(UIObject parent, string[] items, Func<int> get, Action<int> set)
+        {
+            var images = new Image[items.Length];
+            for (int i = 0; i < items.Length; i++)
+            {
+                int k = i;
+                UIButton b = Button(parent, items[i], () => set(k), true);
+                images[i] = b.GetComponent<Image>();
+            }
+
+            int shown = -1;
+            Action paint = () =>
+            {
+                for (int i = 0; i < images.Length; i++)
+                    images[i].color = i == shown ? new Color(0.5f, 1f, 0.5f) : T.Button.Tint;
+            };
+            Behaviour.AddRestyle(paint);
+            syncs.Add(() =>
+            {
+                int v = get();
+                if (v == shown) return;
+                shown = v;
+                paint();
+            });
+        }
+
+        public void Visible(GameObject go, Func<bool> visible)
+        {
+            bool shown = visible();
+            go.SetActive(shown);
+            syncs.Add(() =>
+            {
+                bool v = visible();
+                if (v == shown) return;
+                shown = v;
+                go.SetActive(v);
+            });
+        }
+    }
+
+    /// <summary>
+    /// Measures text with a hidden TMP object: KSP's TMP overwrites an object's own text buffer in
+    /// GetPreferredValues(string), so visible texts must never be used for measuring.
+    /// </summary>
+    public static class TextMeasure
+    {
+        static TextMeshProUGUI measurer;
+
+        public static Vector2 Measure(string text, Theme theme)
+        {
+            if (measurer == null)
+            {
+                var go = new GameObject("KodeKit.TextMeasure", typeof(RectTransform));
+                UnityEngine.Object.DontDestroyOnLoad(go);
+                measurer = go.AddComponent<TextMeshProUGUI>();
+                measurer.enableWordWrapping = false;
+                measurer.enabled = false; // never drawn
+            }
+            theme.ApplyText(measurer);
+            return measurer.GetPreferredValues(text);
+        }
+    }
+}
