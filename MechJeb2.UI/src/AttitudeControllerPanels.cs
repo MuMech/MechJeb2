@@ -389,7 +389,7 @@ namespace MuMech.UI
             p.Vec("MaxOmega", c => c._maxOmega);
             p.Vec("#MechJeb_HybridController_label4", c => c._targetTorque); //"TargetTorque"
             p.Vec("#MechJeb_HybridController_label5", c => c._controlTorque); //"ControlTorque"
-            Magnitude(p, "#MechJeb_HybridController_label6", c => p.Att.inertia); //"Inertia"
+            Magnitude(p, "#MechJeb_HybridController_label6", c => p.Att.Inertia); //"Inertia"
         }
 
         // ---- BetterController ----

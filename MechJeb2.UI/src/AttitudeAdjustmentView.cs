@@ -20,7 +20,7 @@ namespace MuMech.UI
 
         protected override float MinWidth => 350;
 
-        // in the order of MechJebModuleAttitudeController.activeController
+        // in the order of MechJebModuleAttitudeController.ActiveController
         static readonly System.Type[] ControllerTypes =
         {
             typeof(MJAttitudeController), typeof(KosAttitudeController), typeof(HybridController), typeof(BetterController),
@@ -31,10 +31,10 @@ namespace MuMech.UI
 
         /// <summary>One radio-like toggle: checked while it is the active controller; clicking sets it.</summary>
         void ControllerToggle(KodeWindow w, UIObject parent, string text, int index) =>
-            w.Toggle(parent, text, () => Attitude.activeController == index, v =>
+            w.Toggle(parent, text, () => Attitude.ActiveController == index, v =>
             {
                 // GUILayout.Toggle(current == index) returned true only when switched on; unchecking the active one did nothing
-                if (v && Attitude.activeController != index) Attitude.SetActiveController(index);
+                if (v && Attitude.ActiveController != index) Attitude.SetActiveController(index);
             });
 
         static void Padded(CharText t, double v, int decimals) => AttitudeControllerPanels.Padded(t, v, decimals);
@@ -69,7 +69,7 @@ namespace MuMech.UI
 
             UIObject r = w.Root;
 
-            w.Toggle(r, "#MechJeb_AttitudeAdjust_checkbox1", () => Attitude.RCS_auto, v => Attitude.RCS_auto = v); //RCS auto mode
+            w.Toggle(r, "#MechJeb_AttitudeAdjust_checkbox1", () => Attitude.RCSAuto, v => Attitude.RCSAuto = v); //RCS auto mode
 
             // the radio choice and the active controller's settings
             Layout controller = w.Section(r, "#MechJeb_NewUI_SectionController");
@@ -89,7 +89,7 @@ namespace MuMech.UI
                 Layout panel = KodeWindow.Panel(panels);
                 build(w, panel, Attitude);
                 int index = i;
-                w.Visible(panel.gameObject, () => Attitude.activeController == index);
+                w.Visible(panel.gameObject, () => Attitude.ActiveController == index);
             }
 
             // "Show Numbers" is the section: open = numbers shown. adj.showInfos (persisted, shared with IMGUI) follows
@@ -111,11 +111,11 @@ namespace MuMech.UI
                 Padded(t, a.z, 0);
                 t.Append(" ]");
             });
-            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label2", VectorTemplate, t => Vector(t, Attitude.torque)); //Torque
+            InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label2", VectorTemplate, t => Vector(t, Attitude.Torque)); //Torque
             InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label3", VectorTemplate, //torqueReactionSpeed
                 t => Vector(t, adj.VesselState.TorqueReactionSpeed));
             InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label4", VectorTemplate, t => //MOI / torque
-                Vector(t, Vector3d.Scale(adj.VesselState.MoI, Attitude.torque.InvertNoNaN())));
+                Vector(t, Vector3d.Scale(adj.VesselState.MoI, Attitude.Torque.InvertNoNaN())));
             InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label5", VectorTemplate, t => Vector(t, adj.VesselState.MoI)); //MOI
             InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label6", VectorTemplate, //Angular Velocity
                 t => Vector(t, adj.Vessel.angularVelocity));
@@ -158,12 +158,12 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            w.SwitchRow(r, "#MechJeb_AttitudeAdjust_checkbox1", () => Attitude.RCS_auto, v => Attitude.RCS_auto = v); //RCS auto mode
+            w.SwitchRow(r, "#MechJeb_AttitudeAdjust_checkbox1", () => Attitude.RCSAuto, v => Attitude.RCSAuto = v); //RCS auto mode
 
             Layout controller = w.Section(r, "#MechJeb_NewUI_SectionController");
-            w.Segmented(controller, controllerNames, () => Attitude.activeController, i =>
+            w.Segmented(controller, controllerNames, () => Attitude.ActiveController, i =>
             {
-                if (Attitude.activeController != i) Attitude.SetActiveController(i);
+                if (Attitude.ActiveController != i) Attitude.SetActiveController(i);
             });
             Layout panels = KodeWindow.Panel(controller);
             for (int i = 0; i < ControllerTypes.Length; i++)
@@ -172,7 +172,7 @@ namespace MuMech.UI
                 Layout panel = KodeWindow.Panel(panels);
                 build(w, panel, Attitude);
                 int index = i;
-                w.Visible(panel.gameObject, () => Attitude.activeController == index);
+                w.Visible(panel.gameObject, () => Attitude.ActiveController == index);
             }
 
             Layout infos = w.Section(r, "#MechJeb_NewUI_SectionNumbers", adj.showInfos);
@@ -184,10 +184,10 @@ namespace MuMech.UI
             bool Shown() => adj.showInfos && adj.Vessel != null;
             var grid = new AttitudeControllerPanels.VectorGrid(w, infos, true);
             grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label1"), Shown, () => Attitude.AxisControl, false, false); //Axis Control
-            grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label2"), Shown, () => Attitude.torque, false, true); //Torque
+            grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label2"), Shown, () => Attitude.Torque, false, true); //Torque
             grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label3"), Shown, () => adj.VesselState.TorqueReactionSpeed, false, true); //torqueReactionSpeed
             grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label4"), Shown, //MOI / torque
-                () => Vector3d.Scale(adj.VesselState.MoI, Attitude.torque.InvertNoNaN()), false, true);
+                () => Vector3d.Scale(adj.VesselState.MoI, Attitude.Torque.InvertNoNaN()), false, true);
             grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label5"), Shown, () => adj.VesselState.MoI, false, true); //MOI
             grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label6"), Shown, () => adj.Vessel.angularVelocity, false, true); //Angular Velocity
             grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label7"), Shown, () => adj.VesselState.AngularMomentum, false, true); //Angular M
