@@ -1,4 +1,4 @@
-﻿using Smooth.Pools;
+using Smooth.Pools;
 
 namespace MuMech
 {

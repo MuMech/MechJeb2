@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;

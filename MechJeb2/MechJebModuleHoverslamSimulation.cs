@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 extern alias JetBrainsAnnotations;
 using System;

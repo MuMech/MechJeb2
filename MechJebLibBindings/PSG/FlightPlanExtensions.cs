@@ -1,4 +1,4 @@
-﻿using MechJebLib.PSG;
+using MechJebLib.PSG;
 using UnityEngine;
 
 namespace MechJebLibBindings.PSG

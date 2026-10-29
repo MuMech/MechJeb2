@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
 using static MechJebLib.Utils.Statics;

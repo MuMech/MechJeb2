@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using System;
 using System.IO;
 using JetBrainsAnnotations::JetBrains.Annotations;

@@ -67,6 +67,13 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
+      # .editorconfig asks for UTF-8 without a BOM, but some IDE code paths still write one
+      - name: Check for UTF-8 BOMs
+        run: |
+          bom=$(git ls-files -z '*.cs' | xargs -0 perl -ne 'print "$ARGV\n" if $. == 1 && /^\xEF\xBB\xBF/; close ARGV if eof')
+          for f in $bom; do echo "::error file=$f::UTF-8 BOM (strip it: perl -pi -e 's/^\xEF\xBB\xBF// if \$. == 1' $f)"; done
+          test -z "$bom"
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:

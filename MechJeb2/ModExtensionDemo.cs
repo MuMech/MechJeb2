@@ -1,4 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
+extern alias JetBrainsAnnotations;
 using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace MuMech

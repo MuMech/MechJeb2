@@ -1,4 +1,4 @@
-﻿using KSP.Localization;
+using KSP.Localization;
 using KSP.UI.Screens;
 using UnityEngine;
 
