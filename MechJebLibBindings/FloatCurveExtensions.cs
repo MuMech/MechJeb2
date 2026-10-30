@@ -15,7 +15,13 @@ namespace MechJebLibBindings
         {
             h.Clear();
 
-            if (f == null) return;
+            // Unity evaluates an empty curve to 0. An empty interpolant throws on Evaluate instead, and the Δv simulation of
+            // the whole vessel failed for one engine with, say, an empty atmosphereCurve or useAtmCurve and no atmCurve.
+            if (f == null || f.Curve.keys.Length == 0)
+            {
+                h.Append(ConstantDoubleNode.Rent(0), 0, 0);
+                return;
+            }
 
             double lastValue = double.NaN;
             double lastTime = double.NaN;
