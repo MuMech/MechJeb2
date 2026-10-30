@@ -81,6 +81,7 @@ namespace MechJebLibTest
         }
 
         [Fact]
+        [InvariantCulture]
         public void ToSITest()
         {
             Assert.Equal("0.000001000 q", 1e-36.ToSI(4, -99));
