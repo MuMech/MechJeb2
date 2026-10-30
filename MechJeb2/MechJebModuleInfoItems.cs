@@ -288,7 +288,7 @@ namespace MuMech
         public double LiquidFuelAndOxidizerMass() => Vessel.TotalResourceMass("LiquidFuel") + Vessel.TotalResourceMass("Oxidizer");
 
         [ValueInfoItem("#MechJeb_MonopropellantMass", InfoItem.Category.Vessel, showInEditor = true, format = "F2",
-            units = "kg")] //Monopropellant mass
+            units = "t")] //Monopropellant mass
         public double MonoPropellantMass() => Vessel.TotalResourceMass("MonoPropellant");
 
         [ValueInfoItem("#MechJeb_TotalElectricCharge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI,
