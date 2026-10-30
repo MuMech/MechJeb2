@@ -1493,6 +1493,7 @@ namespace MuMech
 
                 req.RequiredLastFrame += current;
                 req.RequiredAtMaxThrottle += max;
+                ResourceRequired[id] = req; // a struct: req is a copy
             }
 
             public struct FuelRequirement
