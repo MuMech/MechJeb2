@@ -438,6 +438,9 @@ namespace MuMech
             if (Users.Count > 1)
                 s.mainThrottle = TargetThrottle;
 
+            // before any comparison or Mathf.Min, which turn a NaN request into the throttle limit (often full throttle)
+            if (float.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
+
             ThrottleLimit = 1;
             ThrottleFixedLimit = 1;
 
@@ -544,8 +547,6 @@ namespace MuMech
             if (s.mainThrottle < ThrottleLimit) Limiter = LimitMode.NONE;
 
             s.mainThrottle = Mathf.Min(s.mainThrottle, ThrottleLimit);
-
-            if (double.IsNaN(s.mainThrottle)) s.mainThrottle = 0;
 
             s.mainThrottle = Mathf.Clamp01(s.mainThrottle);
 
