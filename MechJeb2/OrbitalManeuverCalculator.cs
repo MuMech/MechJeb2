@@ -167,7 +167,7 @@ namespace MuMech
 
             (V3 dv1, double dt1, V3 dv2, double dt2) =
                 TwoImpulseTransfer.NextManeuver(o.referenceBody.gravParameter, r1, v1, r2, v2, lagTime: lagTime, coplanar: coplanar,
-                    rendezvous: rendezvous, capture: capture);
+                    rendezvous: rendezvous, capture: capture, fixedTime: fixedTime);
 
             return (dv1.V3ToWorld(), ut + dt1, dv2.V3ToWorld(), ut + dt2);
         }
