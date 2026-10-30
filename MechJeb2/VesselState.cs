@@ -1366,7 +1366,8 @@ namespace MuMech
 
                 foreach (Propellant propellant in e.propellants)
                 {
-                    double maxreq = e.maxFuelFlow * propellant.ratio;
+                    // maxFuelFlow is in tonnes per second: units per second need the mixture density (as the comment above says)
+                    double maxreq = e.maxFuelFlow * e.mixtureDensityRecip * propellant.ratio;
                     AddResource(propellant.id, propellant.currentRequirement, maxreq);
                 }
 
