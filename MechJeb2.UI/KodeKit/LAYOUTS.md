@@ -288,6 +288,10 @@ w.Toggle(parent, "#key", get, set, () => tone());                   // a toggle 
 never moves the layout. `w.Visible(label, ...)` and `w.Visible(toggle, ...)` show or hide a live label's cell or a toggle's
 whole row (`KodeWindow.CellOf`, `KodeWindow.RowOf`).
 
+A live text with no fixed length (an autopilot's status) ends in an ellipsis when it is wider than its cell. IMGUI wraps
+it: `w.Wrap(w.BoundLabel(parent, () => status, true))` wraps it too, and the cell grows to the lines it needs. The text
+is measured only when it or the cell's width changes, and the layout moves only when the line count does.
+
 ### Header and Rule
 
 `KodeWindow.Header(parent, text)` is a small, upper-case, bold header in the theme's header colour. A trailing colon is

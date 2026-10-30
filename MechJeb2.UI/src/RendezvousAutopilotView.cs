@@ -51,7 +51,7 @@ namespace MuMech.UI
             UIText warn = GuidanceUi.Warning(w, main, "#MechJeb_RZauto_label6"); //"Max # of phasing orbits must be at least 5."
             w.Visible(warn.gameObject, () => Autopilot != null && Autopilot.maxPhasingOrbits < 5);
 
-            UIText status = w.BoundLabel(main, GuidanceUi.Format1("#MechJeb_RZauto_label7", () => Autopilot?.status), true); //"Status: <<1>>"
+            UIText status = w.Wrap(w.BoundLabel(main, GuidanceUi.Format1("#MechJeb_RZauto_label7", () => Autopilot?.status), true)); //"Status: <<1>>"
             w.Visible(status, () => Autopilot != null && Autopilot.Enabled);
 
             NodeUi.AutowarpToggle(w, main, Core, "#MechJeb_RZauto_checkbox1"); //"Auto-warp"

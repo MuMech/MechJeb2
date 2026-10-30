@@ -233,7 +233,7 @@ namespace MuMech.UI
             string status = Localizer.Format("#MechJeb_LandingGuidance_label6");
             string step = Localizer.Format("#MechJeb_LandingGuidance_label7");
             string mode = Localizer.Format("#MechJeb_LandingGuidance_label8");
-            w.BoundLabel(running, Memo.Of(() => Core.Landing?.Status ?? "", s => status + s), true); //Status:
+            w.Wrap(w.BoundLabel(running, Memo.Of(() => Core.Landing?.Status ?? "", s => status + s), true)); //Status:
             w.BoundLabel(running, Memo.Of(() => Core.Landing?.CurrentStep?.GetType(), t => step + (t != null ? t.Name : "N/A")), true); //Step:
             w.BoundLabel(running, Memo.Of(() => (Core.Landing?.DescentSpeedPolicy?.GetType(), Core.Landing != null && Core.Landing.UseAtmosphereToBrake()),
                 k => mode + (k.Item1 != null ? k.Item1.Name : "N/A") + " (" + k.Item2 + ")"), true); //Mode

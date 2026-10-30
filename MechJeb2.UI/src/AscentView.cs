@@ -169,7 +169,7 @@ namespace MuMech.UI
                 w.Visible(disabledBar.gameObject, () => Core.DeactivateControl);
                 disabledParent = disabledBar;
             }
-            UIText apStatus = w.BoundLabel(statusParent, () => menu.autopilotStatus ?? " ", true); //Autopilot status:
+            UIText apStatus = w.Wrap(w.BoundLabel(statusParent, () => menu.autopilotStatus ?? " ", true)); //Autopilot status:
             w.Visible(apStatus, () => menu._autopilot.Enabled);
             w.ToneText(apStatus, StatusTone);
 
@@ -317,7 +317,7 @@ namespace MuMech.UI
             w.BoundLabel(n, "n: 100(100)", () => menu.n ?? " ");
             w.BoundLabel(n, "infeasibility: -1.2345E-05", () => menu.znorm ?? " ", true);
 
-            UIText failure = w.BoundLabel(box, () => menu.label30 ?? " ", true); //LAST FAILURE:
+            UIText failure = w.Wrap(w.BoundLabel(box, () => menu.label30 ?? " ", true)); //LAST FAILURE:
             KodeWindow.ToneText(failure, Tone.Bad);
             w.Visible(failure, () => Psgs.LastFailureMessage != null);
         }

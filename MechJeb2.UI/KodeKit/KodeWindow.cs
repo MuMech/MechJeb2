@@ -740,6 +740,37 @@ namespace KodeKit
             return t;
         }
 
+        /// <summary>
+        /// Let a flexible BoundLabel wrap onto more lines when its text is wider than its cell, as IMGUI's labels do (an
+        /// autopilot's status), instead of ending in an ellipsis. The cell grows in height. The text is measured at the
+        /// cell's width only when the text or the width changes, and the layout is touched only when the line count does,
+        /// so a value that keeps its lines costs no layout. For string texts (BoundLabel), not CharText ones.
+        /// </summary>
+        public UIText Wrap(UIText t)
+        {
+            GameObject cell = CellOf(t);
+            var le = cell.GetComponent<LayoutElement>() ?? cell.AddComponent<LayoutElement>();
+            var rt = (RectTransform)cell.transform;
+            t.tmpText.enableWordWrapping = true;
+            t.tmpText.overflowMode = TextOverflowModes.Overflow;
+            string measured = null;
+            float measuredWidth = -1;
+            // a theme change sizes the cell from its first text again: measure again
+            Behaviour.AddRestyle(() => measured = null);
+            syncs.Add(() =>
+            {
+                float width = rt.rect.width;
+                string s = t.tmpText.text;
+                if (width <= 0 || s == measured && width == measuredWidth) return;
+                measured = s;
+                measuredWidth = width;
+                Theme th = ThemeOf(cell);
+                float height = Mathf.Max(TextMeasure.Measure(s ?? "", th, width).y, th.LineHeight);
+                if (Mathf.Abs(height - le.preferredHeight) > 0.5f) le.preferredHeight = height;
+            });
+            return t;
+        }
+
         public static UIButton Button(UIObject parent, string text, Action onClick, bool flexible = false)
         {
             UIButton b = parent.Add<UIButton>();
