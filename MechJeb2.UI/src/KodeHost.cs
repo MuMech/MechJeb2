@@ -80,8 +80,9 @@ namespace MuMech.UI
 
         public bool MouseOverWindow()
         {
+            // overlays (custom windows as a HUD) don't lock the game's controls, as in GuiUtils.MouseIsOverWindow
             foreach (KodeView v in views.Values)
-                if (v.Visible && v.Window.Behaviour.Hovered) return true;
+                if (v.Visible && !v.Module.IsOverlay && v.Window.Behaviour.Hovered) return true;
             // an open combo popup or its list
             return ComboBox.Open != null && ComboBox.Open.PopupList != null &&
                 ComboBox.Open.PopupList.GetComponent<WindowBehaviour>()?.Hovered == true;
@@ -96,7 +97,13 @@ namespace MuMech.UI
             {
                 DestroyViews();
                 core = c;
-                settings = core?.GetComputerModule<MechJebModuleSettings>();
+            }
+            // a new core, or "Restore factory default settings", which recreates every module of the same core (this one too)
+            MechJebModuleSettings s = core?.Settings;
+            if (s != settings)
+            {
+                settings = s;
+                broken.Clear(); // the broken modules were recreated as well
                 ApplyTheme();
             }
             if (core == null) return;
@@ -115,8 +122,8 @@ namespace MuMech.UI
             foreach (DisplayModule m in stale)
             {
                 views[m].Destroy();
+                failedSync.Remove(views[m]);
                 views.Remove(m);
-                if (m is MechJebModuleSettings) settings = core.GetComputerModule<MechJebModuleSettings>();
             }
 
             foreach (ComputerModule cm in modules)

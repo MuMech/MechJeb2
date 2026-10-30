@@ -177,12 +177,17 @@ namespace KodeKit
 
         public void NotifyMoved() => Moved?.Invoke(this);
 
+        // the parent's and the window's sizes at the last clamp
+        Vector2 clampedParent, clampedSize;
+
         /// <summary>Keep at least MinVisible units of the window inside its parent (the canvas).</summary>
         public void Clamp()
         {
             var parent = (RectTransform)Rect.parent;
             Rect p = parent.rect;
-            Vector2 size = Rect.rect.size * Scale;
+            clampedParent = p.size;
+            clampedSize = Rect.rect.size;
+            Vector2 size = clampedSize * Scale;
             Vector3 pos = Rect.localPosition; // top-left corner (pivot 0,1)
 
             float minX = p.xMin - size.x + MinVisible;
@@ -223,6 +228,10 @@ namespace KodeKit
                 lastFocusFrame = Time.frameCount;
                 BringToFrontAt(Input.mousePosition);
             }
+
+            // the resolution or KSP's UI scale (the canvas size) changed, or the window grew: keep it on screen, as IMGUI's
+            // DisplayModule.WindowPos does every frame (the owner's stored position only changes when the player drags it)
+            if (((RectTransform)Rect.parent).rect.size != clampedParent || Rect.rect.size != clampedSize) Clamp();
 
             // Same policy as MechJebCore.PreventClickthrough: lock while hovered, but not when a right-drag
             // (camera rotation) starts over the window. Off when the host application owns the lock (MechJeb).

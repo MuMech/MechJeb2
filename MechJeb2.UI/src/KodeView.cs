@@ -122,11 +122,26 @@ namespace MuMech.UI
             });
         }
 
+        bool beforeSyncFailed;
+
         public void Sync()
         {
             if (Module.IsOverlay != builtOverlay) RebuildRequested = true;
             Window.Behaviour.Draggable = !Module.WindowLocked;
-            BeforeSync();
+            // when the view's own per-frame work throws, the window's bindings still run (each isolated by KodeWindow.Sync)
+            try
+            {
+                BeforeSync();
+            }
+            catch (System.Exception e)
+            {
+                if (!beforeSyncFailed)
+                {
+                    beforeSyncFailed = true;
+                    Debug.LogError($"[MechJeb2.UI] the update of the \"{Module.GetName()}\" window threw (logged once, its bindings still update):");
+                    Debug.LogException(e);
+                }
+            }
             Window.Sync();
         }
 

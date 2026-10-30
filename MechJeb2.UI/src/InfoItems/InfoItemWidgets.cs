@@ -24,10 +24,26 @@ namespace MuMech.UI
 
         public InfoItemWidgets(KodeWindow w) => this.w = w;
 
-        /// <summary>Refresh every value (call at the window's refresh rate).</summary>
+        // refreshes that threw, logged once each
+        HashSet<Action> failed;
+
+        /// <summary>Refresh every value (call at the window's refresh rate). An item that throws doesn't stop the ones after it.</summary>
         public void Refresh()
         {
-            for (int i = 0; i < refresh.Count; i++) refresh[i]();
+            for (int i = 0; i < refresh.Count; i++)
+            {
+                try
+                {
+                    refresh[i]();
+                }
+                catch (Exception e)
+                {
+                    if (failed == null) failed = new HashSet<Action>();
+                    if (!failed.Add(refresh[i])) continue;
+                    Debug.LogError($"[MechJeb2.UI] an item of window \"{w.TitleText?.tmpText.text}\" threw (logged once, the others still update):");
+                    Debug.LogException(e);
+                }
+            }
         }
 
         // the modern layout puts each run of toggles and fields in one property grid, so their labels and fields line up

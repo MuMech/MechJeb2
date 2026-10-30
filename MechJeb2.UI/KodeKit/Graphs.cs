@@ -509,7 +509,7 @@ namespace KodeKit
             svPixels = new Color32[SV * SV];
             var svImg = Graphs.Fill<RawImage>(svArea, "SVTexture");
             svImg.texture = OwnedTextures.Own(svImg, sv);
-            svImg.gameObject.AddComponent<PickArea>().Picked = n => { s = n.x; v = n.y; Push(Color.HSVToRGB(h, s, v)); };
+            svImg.gameObject.AddComponent<PickArea>().Picked = n => { s = n.x; v = n.y; PushHsv(); };
             svMarker = Marker(svArea);
 
             RectTransform hueArea = Graphs.Surface(top, 16, SV, "Hue");
@@ -518,7 +518,7 @@ namespace KodeKit
             hueTex.Apply();
             var hueImg = Graphs.Fill<RawImage>(hueArea, "HueTexture");
             hueImg.texture = OwnedTextures.Own(hueImg, hueTex);
-            hueImg.gameObject.AddComponent<PickArea>().Picked = n => { h = n.y; Push(Color.HSVToRGB(h, s, v)); };
+            hueImg.gameObject.AddComponent<PickArea>().Picked = n => { h = n.y; PushHsv(); };
             hueMarker = Marker(hueArea);
 
             RectTransform swatchArea = Graphs.Surface(top, 32, SV, "Swatch");
@@ -565,6 +565,14 @@ namespace KodeKit
         {
             set(c);
             Sync();
+        }
+
+        // HSVToRGB's colour is opaque: keep the colour's alpha (only the A bar changes it)
+        void PushHsv()
+        {
+            Color c = Color.HSVToRGB(h, s, v);
+            c.a = get().a;
+            Push(c);
         }
 
         void Sync()
