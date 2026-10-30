@@ -343,15 +343,15 @@ namespace MuMech.UI
             Layout panel = KodeWindow.Panel(parent);
             w.Toggle(panel, "RCS Manual Pid", () => c.rcsManualPID, v => c.rcsManualPID = v);
 
-            // manual: P, I and D are fields (the labels and fields are paired as the IMGUI item pairs them)
+            // manual: P, I and D are fields
             Layout manual = KodeWindow.Row(panel);
             w.Visible(manual.gameObject, () => c.rcsManualPID);
             KodeWindow.Label(manual, "P");
             EditUi.Field(w, manual, () => c.Kp, 60);
             KodeWindow.Label(manual, "I");
-            EditUi.Field(w, manual, () => c.Kd, 60);
-            KodeWindow.Label(manual, "D");
             EditUi.Field(w, manual, () => c.Ki, 60);
+            KodeWindow.Label(manual, "D");
+            EditUi.Field(w, manual, () => c.Kd, 60);
 
             // automatic: Tf is a field, P, I and D are computed
             Layout auto = KodeWindow.Panel(panel);

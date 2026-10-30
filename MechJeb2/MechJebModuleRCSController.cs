@@ -112,10 +112,10 @@ namespace MuMech
                 Kp.Text = GUILayout.TextField(Kp.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
 
                 GUILayout.Label("I", GuiUtils.LayoutNoExpandWidth);
-                Kd.Text = GUILayout.TextField(Kd.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
+                Ki.Text = GUILayout.TextField(Ki.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
 
                 GUILayout.Label("D", GuiUtils.LayoutNoExpandWidth);
-                Ki.Text = GUILayout.TextField(Ki.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
+                Kd.Text = GUILayout.TextField(Kd.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
                 GUILayout.EndHorizontal();
             }
             else
