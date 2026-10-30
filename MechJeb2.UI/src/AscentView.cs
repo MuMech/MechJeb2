@@ -126,9 +126,17 @@ namespace MuMech.UI
         Tone GuidanceTone()
         {
             if (Core.Guidance.IsStable()) return Tone.Good;
-            if (Core.Guidance.IsInitializing() || Core.Guidance.Status == PSGStatus.FINISHED) return Tone.Warn;
+            if (Core.Guidance.IsInitializing() || Core.Guidance.Status == PSGStatus.FINISHED) return Tone.Caution; // OrangeLabel
             return Tone.Bad;
         }
+
+        // the autopilot status line: plain, yellow or red with the autopilot's severity (read with the text, by UpdateStrings)
+        Tone StatusTone() => menu.autopilotStatusLevel switch
+        {
+            MechJebModuleAscentBaseAutopilot.StatusLevel.ERROR => Tone.Bad,
+            MechJebModuleAscentBaseAutopilot.StatusLevel.WARNING => Tone.Warn,
+            _ => Tone.Normal
+        };
 
         protected override void BuildContents(KodeWindow w)
         {
@@ -154,7 +162,7 @@ namespace MuMech.UI
             UIObject statusParent = r, disabledParent = r;
             if (KodeWindow.ModernLayout)
             {
-                Layout statusBar = w.StatusBar(r, () => KodeWindow.Tone.Normal);
+                Layout statusBar = w.StatusBar(r, StatusTone);
                 w.Visible(statusBar.gameObject, () => menu._autopilot.Enabled);
                 statusParent = statusBar;
                 Layout disabledBar = w.StatusBar(r, () => KodeWindow.Tone.Bad);
@@ -163,6 +171,7 @@ namespace MuMech.UI
             }
             UIText apStatus = w.BoundLabel(statusParent, () => menu.autopilotStatus ?? " ", true); //Autopilot status:
             w.Visible(apStatus, () => menu._autopilot.Enabled);
+            w.ToneText(apStatus, StatusTone);
 
             UIText disabled = AscentUi.ToneText(disabledParent, "#MechJeb_Ascent_label36", Tone.Bad); //CONTROL DISABLED (AVIONICS)
             w.Visible(disabled.gameObject, () => Core.DeactivateControl);
@@ -215,11 +224,12 @@ namespace MuMech.UI
             bool ApLtPe() => Psgs.ApoapsisAltitude + BodyRadius >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
             UIText l3 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label3", Tone.Warn); //Ap < Pe: circularizing orbit
             w.Visible(l3.gameObject, ApLtPe);
-            UIText high = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Warn); //Attach > Ap: apoapsis insertion
+            // IMGUI draws these three with OrangeLabel (green until dev fixed it), the one above yellow
+            UIText high = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Caution); //Attach > Ap: apoapsis insertion
             w.Visible(high.gameObject, () => !ApLtPe() && Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
-            UIText l4 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label4", Tone.Warn); //Hyperbolic target orbit (neg Ap)
+            UIText l4 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label4", Tone.Caution); //Hyperbolic target orbit (neg Ap)
             w.Visible(l4.gameObject, () => Psgs.ApoapsisAltitude + BodyRadius < 0);
-            UIText low = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltLow", Tone.Warn); //Attach < Pe: periapsis insertion
+            UIText low = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltLow", Tone.Caution); //Attach < Pe: periapsis insertion
             w.Visible(low.gameObject, () => Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude < Psgs.PeriapsisAltitude);
 
             // PSG without: flight path angle (unless a plane is controlled) and attach altitude
@@ -324,7 +334,7 @@ namespace MuMech.UI
             KodeWindow.Label(countdown, "s");
             w.Visible(countdown.gameObject, () => Core.Node != null && Core.Node.Autowarp);
 
-            UIText invalid = AscentUi.ToneText(box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Warn, true); // Target must be in the same sphere of influence.
+            UIText invalid = AscentUi.ToneText(box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Caution, true); // Target must be in the same sphere of influence. (OrangeLabel)
             invalid.tmpText.enableWordWrapping = true;
             w.Visible(invalid.gameObject, () => !anyPlaneControl && !targetExists && Core.Target.NormalTargetExists);
             UIText select = KodeWindow.Label(box, "#MechJeb_Ascent_label34"); //Select a target for a timed launch.

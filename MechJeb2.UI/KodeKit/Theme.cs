@@ -59,6 +59,7 @@ namespace KodeKit
         public float LineHeight = 0;    // minimum height of a text row (labels, live cells, buttons); 0: the text's own height
         public int Padding = 6, Spacing = 2;
         public Color Text = Color.white, Dim = new Color(0.75f, 0.75f, 0.75f), Good = Color.green, Warn = Color.yellow, Bad = new Color(1f, 0.35f, 0.35f);
+        public Color Caution = new Color(0.976f, 0.451f, 0.024f); // KSP's XKCDColors.Orange, MechJeb's OrangeLabel
         public ElementStyle Window = new ElementStyle(), Button = new ElementStyle(), Toggle = new ElementStyle(), Check = new ElementStyle(),
             Field = new ElementStyle(), Box = new ElementStyle(), Tooltip = new ElementStyle();
 
@@ -110,9 +111,10 @@ namespace KodeKit
             };
         }
 
-        /// <summary>The colour of a state (green, yellow, red, dim); <paramref name="normal"/> for Tone.Normal: the text, a button's text or the accent.</summary>
+        /// <summary>The colour of a state (green, yellow, red, dim, orange); <paramref name="normal"/> for Tone.Normal: the text, a button's text or the accent.</summary>
         public Color ToneColor(KodeWindow.Tone tone, Color normal) =>
-            tone == KodeWindow.Tone.Good ? Good : tone == KodeWindow.Tone.Warn ? Warn : tone == KodeWindow.Tone.Bad ? Bad : tone == KodeWindow.Tone.Dim ? Dim : normal;
+            tone == KodeWindow.Tone.Good ? Good : tone == KodeWindow.Tone.Warn ? Warn : tone == KodeWindow.Tone.Bad ? Bad :
+            tone == KodeWindow.Tone.Dim ? Dim : tone == KodeWindow.Tone.Caution ? Caution : normal;
 
         public static Theme Current { get; private set; }
         public static int Version { get; private set; }

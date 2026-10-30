@@ -822,8 +822,8 @@ namespace KodeKit
             return b;
         }
 
-        /// <summary>A state shown by a text colour (Theme.ToneColor): Normal, green, yellow, red, or dimmed.</summary>
-        public enum Tone { Normal, Good, Warn, Bad, Dim }
+        /// <summary>A state shown by a text colour (Theme.ToneColor): Normal, green, yellow, red, dimmed, or orange (Caution).</summary>
+        public enum Tone { Normal, Good, Warn, Bad, Dim, Caution }
 
         /// <summary>A toggle whose label colour follows a state (MechJeb's Green/Yellow/RedToggle styles).</summary>
         public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<Tone> tone) =>

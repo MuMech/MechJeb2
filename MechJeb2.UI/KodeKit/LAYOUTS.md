@@ -272,7 +272,7 @@ KodeWindow.Button(parent, "#MechJeb_NodeEd_button6", () => core.Node.Abort(), Bu
 
 ### Text colours (tones)
 
-`KodeWindow.Tone` is Normal, Good (green), Warn (yellow), Bad (red) or Dim; `Theme.ToneColor(tone, normal)` gives its
+`KodeWindow.Tone` is Normal, Good (green), Warn (yellow), Bad (red), Dim or Caution (orange, MechJeb's `OrangeLabel`); `Theme.ToneColor(tone, normal)` gives its
 colour in a theme, with the plain text, a button's text or the accent colour for Normal. All in the window's own theme.
 
 ```csharp
