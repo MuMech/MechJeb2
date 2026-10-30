@@ -317,14 +317,18 @@ namespace MuMech
                 ? direction > 0 ? 0 : targetPorts.Count - 1
                 : (currentIndex + direction + targetPorts.Count) % targetPorts.Count;
 
-            ModuleDockingNode targetPort = targetPorts[nextIndex];
+            SelectTargetPort(targetPorts[nextIndex]);
+        }
+
+        internal void SelectTargetPort(ModuleDockingNode targetPort)
+        {
             selectedTargetPort = targetPort;
             Core.Target.Set(targetPort);
             // Keep KSP's global target in sync so other docking aids observe the port change immediately.
             FlightGlobals.fetch.SetVesselTarget(targetPort);
         }
 
-        private static string GetPortName(ModuleDockingNode port)
+        internal static string GetPortName(ModuleDockingNode port)
         {
             string portName = port.GetName();
             if (!string.IsNullOrEmpty(portName))

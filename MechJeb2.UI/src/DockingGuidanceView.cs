@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KodeKit;
 using KodeUI;
 using KSP.Localization;
@@ -248,7 +249,7 @@ namespace MuMech.UI
         /// <summary>GuiUtils.SimpleTextBox(label, editable, unit); the editable is read again on every access (the autopilot replaces it when it clamps).</summary>
         static Layout EditRow(KodeWindow w, UIObject parent, string key, Func<EditableDouble> ed, string unit) => EditUi.Row(w, parent, key, ed, unit);
 
-        // DrawTargetPortSelector: "Target port" [<] port (n/m) [>], or a note when the target is out of range
+        // DrawTargetPortSelector: "Target port" [<] port (n/m) [>] (the modern layout: a dropdown), or a note when the target is out of range
         void TargetPortSelector(KodeWindow w, UIObject parent)
         {
             Layout row = KodeWindow.Row(parent);
@@ -262,6 +263,18 @@ namespace MuMech.UI
 
             Func<bool> ready = () => portState == MechJebModuleDockingGuidance.PortSelectorState.Ready;
             Func<bool> canSelect = () => guidance.targetPorts.Count > 0 && !ApEnabled;
+
+            if (KodeWindow.ModernLayout)
+            {
+                // modern layout: the target vessel's free compatible ports in a dropdown, by name. The combo shows itself as
+                // [<] entry [>] when MechJeb's "no drop-down menus" setting is on, so its own row is shown and hidden here
+                Layout combo = KodeWindow.Row(row);
+                combo.FlexibleLayout(true, false);
+                new ComboBox(w, combo, () => guidance.currentPortIndex < 0 ? 0 : guidance.currentPortIndex, SelectPort, PortNames);
+                w.Visible(combo.gameObject, ready);
+                foreach (UIButton b in combo.GetComponentsInChildren<UIButton>(true)) GuidanceUi.Enable(w, b, canSelect);
+                return;
+            }
 
             UIButton prev = KodeWindow.Button(row, "<", () =>
             {
@@ -280,6 +293,39 @@ namespace MuMech.UI
             });
             w.Visible(next.gameObject, ready);
             GuidanceUi.Enable(w, next, canSelect);
+        }
+
+        // the dropdown's entries: "name (n/m)" per port, after "Select a port (m available)" while none is chosen. Rebuilt
+        // only when the ports or the first entry change; SelectPort reads the ports the entries were made from
+        ModuleDockingNode[] listedPorts = new ModuleDockingNode[0];
+        string[] portNames = new string[0];
+        bool listedPrompt;
+
+        string[] PortNames()
+        {
+            List<ModuleDockingNode> ports = guidance.targetPorts;
+            bool prompt = guidance.currentPortIndex < 0;
+            bool same = prompt == listedPrompt && ports.Count == listedPorts.Length && (!prompt || portNames[0] == guidance.targetPortLabel);
+            for (int i = 0; same && i < ports.Count; i++) same = ports[i] == listedPorts[i];
+            if (same) return portNames;
+
+            listedPorts = ports.ToArray();
+            listedPrompt = prompt;
+            int first = prompt ? 1 : 0;
+            portNames = new string[ports.Count + first];
+            if (prompt) portNames[0] = guidance.targetPortLabel; // "Select a port (m available)", or "No compatible undocked ports"
+            for (int i = 0; i < ports.Count; i++)
+                portNames[first + i] = Localizer.Format("#MechJeb_Docking_targetPortSelected", MechJebModuleDockingGuidance.GetPortName(ports[i]),
+                    i + 1, ports.Count);
+            return portNames;
+        }
+
+        void SelectPort(int entry)
+        {
+            int i = entry - (listedPrompt ? 1 : 0);
+            if (i < 0 || i >= listedPorts.Length || listedPorts[i] == null || ApEnabled) return;
+            guidance.SelectTargetPort(listedPorts[i]);
+            portState = guidance.UpdateTargetPortSelector(); // show the choice now, not at the next slow update
         }
     }
 }
