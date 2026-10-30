@@ -6,6 +6,7 @@
 
 extern alias JetBrainsAnnotations;
 using System;
+using System.Collections.Generic;
 using MechJebLib.FuelFlowSimulation;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
@@ -146,10 +147,31 @@ namespace MuMech
 
         public void RequestFlightPlanUpdate()
         {
-            // the flight plan is frozen in flight
-            if (Enabled)
+            // the flight plan is frozen in flight, once there is one
+            if (Enabled && FlightPlan != null)
                 return;
             FlightPlan = LogicalPlan == null ? null : FlightPlan.FromLogicalPlan(LogicalPlan.Plan, Core.StageStats.VacStats, Core.StageStats.AtmoStats, MinDeltaV);
+        }
+
+        /// <summary>
+        ///     Builds the logical plan from the stage stats and the ascent settings, then the flight plan from it (unless that is
+        ///     frozen). The Ascent window calls this every physics frame while it is open with PSG selected, and the PSG ascent
+        ///     autopilot until there is a flight plan, so launches don't depend on that window being open (kOS launches never
+        ///     open it). Returns whether there were stages to plan.
+        /// </summary>
+        public bool UpdateLogicalPlan(MechJebModuleAscentSettings settings)
+        {
+            List<FuelStats> vacStats = Core.StageStats.VacStats;
+
+            if (vacStats.Count == 0)
+                return false;
+
+            LogicalPlan = new PersistedLogicalPlan(MechJebLib.PSG.LogicalPlan.GenerateLogicalPlan(vacStats, settings.UnguidedStages, settings.FixedStages,
+                settings.LastStage, MinDeltaV, settings.CoastStage, settings.CoastLocation));
+
+            RequestFlightPlanUpdate();
+
+            return true;
         }
 
         private void HandleDoneTask()
