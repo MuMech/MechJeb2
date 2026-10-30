@@ -5,6 +5,7 @@
 
 using MechJebLib.Control;
 using Xunit;
+using static MechJebLib.Utils.Statics;
 using static System.Math;
 
 namespace MechJebLibTest.ControlTests
@@ -27,6 +28,30 @@ namespace MechJebLibTest.ControlTests
 
             Assert.Equal(2.0, pid.Update(0, -1), 8);
             Assert.Equal(-2.0, pid.Update(0, 1), 8);
+        }
+
+        [Fact]
+        public void NaNInputPassesThroughAndRecovers()
+        {
+            var pid = new PIDLoop { Kp = 2.0, Ki = 1.0, Kd = 0.1, Ts = 0.02 };
+
+            pid.Update(1, 0);
+            Assert.True(double.IsNaN(pid.Update(1, double.NaN)));
+            Assert.True(double.IsNaN(pid.Update(double.NaN, 0)));
+            Assert.True(IsFinite(pid.Update(1, 0)));
+            Assert.True(IsFinite(pid.Update(1, 0)));
+        }
+
+        [Fact]
+        public void NaNInputPassesThroughAndRecovers2()
+        {
+            var pid = new PIDLoop2 { Kp = 2.0, Ki = 1.0, Kd = 0.1, Ts = 0.02 };
+
+            pid.Update(1, 0);
+            Assert.True(double.IsNaN(pid.Update(1, double.NaN)));
+            Assert.True(double.IsNaN(pid.Update(double.NaN, 0)));
+            Assert.True(IsFinite(pid.Update(1, 0)));
+            Assert.True(IsFinite(pid.Update(1, 0)));
         }
 
         [Fact]
