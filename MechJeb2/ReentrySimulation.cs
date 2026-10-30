@@ -21,6 +21,9 @@ namespace MuMech
         private double _inputParachuteSemiDeployMultiplier;
         private double _inputProbableLandingSiteASL;
         private bool _inputMultiplierHasError;
+
+        // which kind of run this is, for the predictor when the run throws (the result carries it otherwise)
+        public bool InputMultiplierHasError => _inputMultiplierHasError;
         private double _inputDT;
 
         //parameters of the problem:
