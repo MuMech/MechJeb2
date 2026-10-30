@@ -41,7 +41,7 @@ namespace MuMech
             Vector3d anDeltaV = anExists
                 ? OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, target.TargetOrbit, ut, out anTime)
                 : Vector3d.zero;
-            Vector3d dnDeltaV = anExists
+            Vector3d dnDeltaV = dnExists
                 ? OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, target.TargetOrbit, ut, out dnTime)
                 : Vector3d.zero;
             Vector3d dV;
