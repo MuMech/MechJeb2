@@ -16,7 +16,7 @@ namespace MuMech
 
         protected void SetStatus(string status, StatusLevel severity = StatusLevel.NORMAL)
         {
-            Status         = status;
+            Status = status;
             StatusSeverity = severity;
         }
 
