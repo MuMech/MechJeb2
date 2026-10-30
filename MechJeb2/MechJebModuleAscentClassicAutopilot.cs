@@ -94,8 +94,8 @@ namespace MuMech
 
             Core.Thrust.TargetThrottle = 1.0F;
 
-            if (!Vessel.LiftedOff() || Vessel.Landed) Status = Localizer.Format("#MechJeb_Ascent_status6"); //"Awaiting liftoff"
-            else Status = Localizer.Format("#MechJeb_Ascent_status18"); //"Vertical ascent"
+            if (!Vessel.LiftedOff() || Vessel.Landed) SetStatus(Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
+            else SetStatus(Localizer.Format("#MechJeb_Ascent_status18")); //"Vertical ascent"
         }
 
         private double _desiredHeading;
@@ -122,7 +122,7 @@ namespace MuMech
             {
                 Core.Attitude.LimitedAttitudeTo(_desiredHeading, _desiredPitch * UtilMath.Rad2Deg, AscentSettings.ForceRoll, AscentSettings.TurnRoll,
                     ApplyAoALimiter, this);
-                Status = Localizer.Format("#MechJeb_Ascent_status21"); //"Fine tuning apoapsis"
+                SetStatus(Localizer.Format("#MechJeb_Ascent_status21")); //"Fine tuning apoapsis"
                 return;
             }
 
@@ -148,7 +148,7 @@ namespace MuMech
             Core.Attitude.LimitedAttitudeTo(_desiredHeading, _desiredPitch * UtilMath.Rad2Deg, AscentSettings.ForceRoll, AscentSettings.TurnRoll,
                 ApplyAoALimiter, this);
 
-            Status = Localizer.Format("#MechJeb_Ascent_status22"); //"Gravity turn"
+            SetStatus(Localizer.Format("#MechJeb_Ascent_status22")); //"Gravity turn"
         }
 
         private void DriveCoastToApoapsis()
@@ -172,7 +172,7 @@ namespace MuMech
             if (Core.Node.Autowarp)
                 Core.Warp.WarpPhysicsAtRate(2); // 2x physics warp
 
-            Status = Localizer.Format("#MechJeb_Ascent_status23"); //"Coasting to edge of atmosphere"
+            SetStatus(Localizer.Format("#MechJeb_Ascent_status23")); //"Coasting to edge of atmosphere"
         }
 
         private bool _placedCircularizeNode;
@@ -213,8 +213,8 @@ namespace MuMech
                 Core.Node.ExecuteOneNode(this);
             }
 
-            Status = Localizer.Format(
-                Core.Node.State == MechJebModuleNodeExecutor.States.BURN ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8");
+            SetStatus(Localizer.Format(
+                Core.Node.State == MechJebModuleNodeExecutor.States.BURN ? "#MechJeb_Ascent_status7" : "#MechJeb_Ascent_status8"));
 
             return true;
         }

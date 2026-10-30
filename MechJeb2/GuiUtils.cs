@@ -347,7 +347,7 @@ namespace MuMech
             {
                 if (_orangeLabel != null) return _orangeLabel;
 
-                _orangeLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.green }, hover = { textColor = Color.green } };
+                _orangeLabel = new GUIStyle(GUI.skin.label) { normal = { textColor = XKCDColors.Orange }, hover = { textColor = XKCDColors.Orange } };
 
                 return _orangeLabel;
             }

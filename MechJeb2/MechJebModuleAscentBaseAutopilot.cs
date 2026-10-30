@@ -8,7 +8,17 @@ namespace MuMech
     {
         protected MechJebModuleAscentBaseAutopilot(MechJebCore core) : base(core) { }
 
-        public string Status = "";
+        public enum StatusLevel { NORMAL, WARNING, ERROR }
+
+        public string Status { get; private set; } = "";
+
+        public StatusLevel StatusSeverity { get; private set; }
+
+        protected void SetStatus(string status, StatusLevel severity = StatusLevel.NORMAL)
+        {
+            Status = status;
+            StatusSeverity = severity;
+        }
 
         protected MechJebModuleAscentSettings AscentSettings => Core.AscentSettings;
 
@@ -33,7 +43,7 @@ namespace MuMech
             Core.Thrust.Users.Add(this);
             if (AscentSettings.Autostage) Core.Staging.Users.Add(this);
 
-            Status = Localizer.Format("#MechJeb_Ascent_status1"); //"Pre Launch"
+            SetStatus(Localizer.Format("#MechJeb_Ascent_status1")); //"Pre Launch"
         }
 
         protected override void OnModuleDisabled()
@@ -44,7 +54,7 @@ namespace MuMech
             Core.Thrust.Users.Remove(this);
             Core.Staging.Users.Remove(this);
 
-            Status = Localizer.Format("#MechJeb_Ascent_status2"); //"Off"
+            SetStatus(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
         }
 
         public void StartCountdown(double time)
@@ -126,7 +136,7 @@ namespace MuMech
         {
             if (Vessel.LiftedOff() && !Vessel.Landed)
             {
-                Status = Localizer.Format("#MechJeb_Ascent_status4"); //"Vessel is not landed, skipping pre-launch"
+                SetStatus(Localizer.Format("#MechJeb_Ascent_status4")); //"Vessel is not landed, skipping pre-launch"
                 _mode = AscentMode.ASCEND;
                 return;
             }
@@ -137,7 +147,7 @@ namespace MuMech
 
             if (TimedLaunch && TMinus > 10.0)
             {
-                Status = Localizer.Format("#MechJeb_Ascent_status1"); //"Pre Launch"
+                SetStatus(Localizer.Format("#MechJeb_Ascent_status1")); //"Pre Launch"
                 return;
             }
 
@@ -151,7 +161,7 @@ namespace MuMech
                 }
                 else
                 {
-                    Status = Localizer.Format("#MechJeb_Ascent_status5"); //"Retracting solar panels"
+                    SetStatus(Localizer.Format("#MechJeb_Ascent_status5")); //"Retracting solar panels"
                 }
             }
             else
@@ -164,7 +174,7 @@ namespace MuMech
         {
             if (TimedLaunch)
             {
-                Status = Localizer.Format("#MechJeb_Ascent_status6"); //"Awaiting liftoff"
+                SetStatus(Localizer.Format("#MechJeb_Ascent_status6")); //"Awaiting liftoff"
 
                 Core.Attitude.SetAxisControl(false, false, false);
                 return;
