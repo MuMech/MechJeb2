@@ -75,6 +75,13 @@ namespace MuMech.UI
             }
         }
 
+        /// <summary>An item this scene can't show: its name only, like IMGUI. It ends a run of options (the next ones go below it).</summary>
+        public void AddUnavailable(UIObject parent, InfoItem item)
+        {
+            grid = null;
+            KodeWindow.Label(parent, item.localizedName);
+        }
+
         static void Tooltip(GameObject go, InfoItem item)
         {
             if (!string.IsNullOrEmpty(item.localizedTooltip)) Tooltips.Add(go, item.localizedTooltip);
@@ -93,13 +100,14 @@ namespace MuMech.UI
                 ApplyColor(text.tmpText);
             }
             text.gameObject.SetActive(h.Text.Length > 0);
-            // the editor changes the text in place
+            // the editor changes the text in place (the modern header drops a trailing colon, as when it was built)
             string shown = h.Text;
+            bool modern = KodeWindow.ModernLayout;
             w.AddSync(() =>
             {
                 if (ReferenceEquals(h.Text, shown)) return;
                 shown = h.Text;
-                text.tmpText.text = shown;
+                text.tmpText.text = modern ? shown.TrimEnd(':', ' ', ' ') : shown;
                 text.gameObject.SetActive(shown.Length > 0);
             });
             KodeWindow.Rule(parent);

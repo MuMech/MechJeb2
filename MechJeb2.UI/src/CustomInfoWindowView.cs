@@ -88,7 +88,7 @@ namespace MuMech.UI
                 if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
                     widgets.Add(r, item);
                 else
-                    KodeWindow.Label(r, item.localizedName); // not available in this scene: its name only, like IMGUI
+                    widgets.AddUnavailable(r, item);
             }
 
             if (built.Length == 0)

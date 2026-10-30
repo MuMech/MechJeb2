@@ -40,6 +40,14 @@ namespace MuMech.UI
         readonly List<DisplayModule> stale = new List<DisplayModule>();
 
         readonly Dictionary<DisplayModule, KodeView> views = new Dictionary<DisplayModule, KodeView>();
+
+        // modules whose view threw while it was built: IMGUI draws their windows (OwnsWindow says no) until the views are
+        // made again (another vessel, a layout change)
+        readonly HashSet<DisplayModule> broken = new HashSet<DisplayModule>();
+
+        // views whose per-frame update threw, logged once each; the other windows still update
+        readonly HashSet<KodeView> failedSync = new HashSet<KodeView>();
+
         MechJebCore core;
         MechJebModuleSettings settings;
 
@@ -65,7 +73,7 @@ namespace MuMech.UI
 
         // ---- IMechJebUiHost ----
 
-        public bool OwnsWindow(DisplayModule module) => Kode && module.Core == core && factories.ContainsKey(module.GetType());
+        public bool OwnsWindow(DisplayModule module) => Kode && module.Core == core && factories.ContainsKey(module.GetType()) && !broken.Contains(module);
 
         /// <summary>The live view of a module, if it has one (for tests and screenshots).</summary>
         public KodeView ViewOf(DisplayModule module) => views.TryGetValue(module, out KodeView v) ? v : null;
@@ -114,26 +122,57 @@ namespace MuMech.UI
             foreach (ComputerModule cm in modules)
             {
                 var m = (DisplayModule)cm;
-                if (!factories.TryGetValue(m.GetType(), out Func<DisplayModule, KodeView> factory)) continue;
+                if (!factories.TryGetValue(m.GetType(), out Func<DisplayModule, KodeView> factory) || broken.Contains(m)) continue;
                 bool want = show && m.Enabled && m.ShowInCurrentScene;
                 views.TryGetValue(m, out KodeView v);
-                if (want && v == null)
+                if (want && (v == null || v.RebuildRequested))
                 {
-                    v = factory(m);
-                    v.Build(AppCanvas);
-                    views[m] = v;
+                    // first shown, or its structure changed (e.g. items added to a custom window): build it (again, in place)
+                    if (v != null)
+                    {
+                        v.Destroy();
+                        failedSync.Remove(v);
+                    }
+                    v = Build(m, factory);
                 }
                 if (v == null) continue;
-                if (want && v.RebuildRequested)
-                {
-                    // the window's structure changed (e.g. items added to a custom window): build it again in place
-                    v.Destroy();
-                    v = factory(m);
-                    v.Build(AppCanvas);
-                    views[m] = v;
-                }
                 v.SetVisible(want);
-                if (want) v.Sync();
+                if (!want) continue;
+                try
+                {
+                    v.Sync();
+                }
+                catch (Exception e)
+                {
+                    if (!failedSync.Add(v)) continue;
+                    Debug.LogError($"[MechJeb2.UI] the update of the \"{m.GetName()}\" window threw (logged once, the other windows still update):");
+                    Debug.LogException(e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Build a module's view. When the build throws, the half-built window is removed, the error logged, and the module
+        /// left to IMGUI, instead of a new half-built window every frame.
+        /// </summary>
+        KodeView Build(DisplayModule m, Func<DisplayModule, KodeView> factory)
+        {
+            KodeView v = null;
+            try
+            {
+                v = factory(m);
+                v.Build(AppCanvas);
+                views[m] = v;
+                return v;
+            }
+            catch (Exception e)
+            {
+                v?.Destroy();
+                views.Remove(m);
+                broken.Add(m);
+                Debug.LogError($"[MechJeb2.UI] the \"{m.GetName()}\" window could not be built; IMGUI draws it instead:");
+                Debug.LogException(e);
+                return null;
             }
         }
 
@@ -234,6 +273,8 @@ namespace MuMech.UI
         {
             foreach (KodeView v in views.Values) v.Destroy();
             views.Clear();
+            broken.Clear();
+            failedSync.Clear();
         }
     }
 }
