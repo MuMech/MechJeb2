@@ -30,10 +30,24 @@ namespace MuMech.UI
             for (int i = 0; i < refresh.Count; i++) refresh[i]();
         }
 
+        // the modern layout puts each run of toggles and fields in one property grid, so their labels and fields line up
+        KodeWindow.PropertyGrid grid;
+        UIObject gridParent;
+
         public void Add(UIObject parent, InfoItem item)
         {
+            if (KodeWindow.ModernLayout && (item is ToggleInfoItem || item is EditableInfoItem))
+            {
+                AddOption(parent, item);
+                return;
+            }
+
+            grid = null;
             switch (item)
             {
+                case HeaderInfoItem h:
+                    AddHeader(parent, h);
+                    break;
                 case ValueInfoItem v:
                     AddValue(parent, v);
                     break;
@@ -64,6 +78,59 @@ namespace MuMech.UI
         static void Tooltip(GameObject go, InfoItem item)
         {
             if (!string.IsNullOrEmpty(item.localizedTooltip)) Tooltips.Add(go, item.localizedTooltip);
+        }
+
+        /// <summary>A header item: its text (bold; the modern layout's header style) over a hairline, or the line alone.</summary>
+        void AddHeader(UIObject parent, HeaderInfoItem h)
+        {
+            UIText text;
+            if (KodeWindow.ModernLayout)
+                text = KodeWindow.Header(parent, h.Text, true);
+            else
+            {
+                text = KodeWindow.Label(parent, h.Text);
+                KodeWindow.Styled(text.gameObject, th => text.tmpText.fontStyle = FontStyles.Bold);
+                ApplyColor(text.tmpText);
+            }
+            text.gameObject.SetActive(h.Text.Length > 0);
+            // the editor changes the text in place
+            string shown = h.Text;
+            w.AddSync(() =>
+            {
+                if (ReferenceEquals(h.Text, shown)) return;
+                shown = h.Text;
+                text.tmpText.text = shown;
+                text.gameObject.SetActive(shown.Length > 0);
+            });
+            KodeWindow.Rule(parent);
+        }
+
+        /// <summary>The modern layout's option row of a toggle ([switch] label) or a field (label [field] unit).</summary>
+        void AddOption(UIObject parent, InfoItem item)
+        {
+            if (grid == null || gridParent != parent)
+            {
+                grid = w.Properties(parent);
+                gridParent = parent;
+            }
+
+            Layout row;
+            if (item is ToggleInfoItem t)
+                row = grid.Switch(item.localizedName, () => t.Value, x => t.Value = x);
+            else
+            {
+                var e = (EditableInfoItem)item;
+                IEditable ed = e.Editable;
+                if (ed == null) return;
+                Func<bool> valid = ed is EditableDoubleMult m ? (Func<bool>)(() => m.IsParsed) : null;
+                row = grid.Field(item.localizedName, () => ed.Text, s => ed.Text = s, e.width, e.rightLabel, valid);
+            }
+
+            // cells: switch (or an empty cell), label, then a field row's field and unit
+            Transform cells = row.transform;
+            Tooltip(cells.GetChild(1).gameObject, item);
+            ApplyColor(cells.GetChild(1).GetComponentInChildren<TMP_Text>());
+            if (cells.childCount > 3) ApplyColor(cells.GetChild(3).GetComponentInChildren<TMP_Text>());
         }
 
         void AddEditable(UIObject parent, EditableInfoItem e)

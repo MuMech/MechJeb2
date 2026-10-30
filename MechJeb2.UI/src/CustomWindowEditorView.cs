@@ -54,15 +54,23 @@ namespace MuMech.UI
                 if (i == contentRows.Count)
                 {
                     int index = i;
-                    UIButton row = KodeWindow.ListRow(contentsList, Localizer.Format(items[i].description), () => ed.selectedItemIndex = index);
+                    UIButton row = KodeWindow.ListRow(contentsList, items[i].ListName, () => ed.selectedItemIndex = index);
                     win.AddSync(() => KodeWindow.SetSelected(row, ed.selectedItemIndex == index)); // GuiUtils.YellowLabel
+                    // a header's name follows its text as it is typed
+                    string shownText = null;
+                    win.AddSync(() =>
+                    {
+                        if (index >= rowItems.Count || !(rowItems[index] is HeaderInfoItem h) || ReferenceEquals(h.Text, shownText)) return;
+                        shownText = h.Text;
+                        row.Text(h.ListName);
+                    });
                     contentRows.Add(row);
                     rowItems.Add(items[i]);
                 }
                 else if (rowItems[i] != items[i])
                 {
                     rowItems[i] = items[i];
-                    contentRows[i].Text(Localizer.Format(items[i].description));
+                    contentRows[i].Text(items[i].ListName);
                 }
                 if (!contentRows[i].gameObject.activeSelf) contentRows[i].gameObject.SetActive(true);
             }
@@ -225,6 +233,12 @@ namespace MuMech.UI
             KodeWindow.Button(edit, "#MechJeb_WindowEd_button4", () => ed.MoveSelectedItem(-1), true); //Move up
             KodeWindow.Button(edit, "#MechJeb_WindowEd_button5", () => ed.MoveSelectedItem(1), true); //Move down
 
+            // the selected header's text
+            Layout header = KodeWindow.Row(r);
+            KodeWindow.Label(header, "#MechJeb_WindowEd_HeaderText"); //Header text:
+            EditFields.Field(w, header, () => ed.SelectedHeader()?.Text ?? "", s => ed.SetHeaderText(ed.SelectedHeader(), s), 120);
+            w.Visible(header.gameObject, () => ed.SelectedHeader() != null);
+
             // the registry: pick a category, click an item to add it
             KodeWindow.Label(r, "#MechJeb_WindowEd_label4"); //Click an item to add it to the info window:
             new ComboBox(w, r, () => (int)ed.itemCategory, i => ed.itemCategory = (InfoItem.Category)i,
@@ -233,7 +247,7 @@ namespace MuMech.UI
             foreach (InfoItem item in ed.ItemsOfCategory())
             {
                 InfoItem add = item;
-                KodeWindow.ListRow(registry, Localizer.Format(item.description), () => edited.items.Add(add));
+                KodeWindow.ListRow(registry, Localizer.Format(item.description), () => ed.AddItem(add));
             }
         }
 
