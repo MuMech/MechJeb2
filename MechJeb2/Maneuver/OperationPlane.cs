@@ -74,7 +74,7 @@ namespace MuMech
                         Localizer.Format("#MechJeb_match_planes_Exception5")); //neither ascending nor descending node with target exists.
                 }
 
-                if (!dnExists || anTime <= dnTime)
+                if (!dnExists || anExists && anTime <= dnTime)
                 {
                     ut = anTime;
                     dV = anDeltaV;
@@ -93,7 +93,7 @@ namespace MuMech
                         Localizer.Format("#MechJeb_match_planes_Exception5")); //neither ascending nor descending node with target exists.
                 }
 
-                if (!dnExists || anDeltaV.magnitude <= dnDeltaV.magnitude)
+                if (!dnExists || anExists && anDeltaV.magnitude <= dnDeltaV.magnitude)
                 {
                     ut = anTime;
                     dV = anDeltaV;
