@@ -616,7 +616,7 @@ namespace MuMech
         public string TargetEccentricity()
         {
             if (!Core.Target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(Core.Target.TargetOrbit.eccentricity);
+            return Core.Target.TargetOrbit.eccentricity.ToString("F3");
         }
 
         [ValueInfoItem("#MechJeb_TargetSMA", InfoItem.Category.Target)] //Target SMA
