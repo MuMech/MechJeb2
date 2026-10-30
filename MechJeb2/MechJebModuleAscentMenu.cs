@@ -343,6 +343,7 @@ namespace MuMech
 
         private DateTime _lastRefresh = DateTime.MinValue;
         internal string vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
+        internal GUIStyle autopilotStatusStyle;
         private TimeSpan _refreshInterval = TimeSpan.FromSeconds(0.1);
 
         [UsedImplicitly]
@@ -377,6 +378,12 @@ namespace MuMech
                 launchTimer += $": T-{GuiUtils.TimeToDHMS(_autopilot.TMinus, 1)}";
 
             autopilotStatus = CachedLocalizer.Instance.MechJebAscentLabel35 + _autopilot.Status;
+            autopilotStatusStyle = _autopilot.StatusSeverity switch
+            {
+                MechJebModuleAscentBaseAutopilot.StatusLevel.ERROR   => GuiUtils.RedLabel,
+                MechJebModuleAscentBaseAutopilot.StatusLevel.WARNING => GuiUtils.YellowLabel,
+                _                                                    => GUI.skin.label
+            };
             UpdatePhaseLines();
             Profiler.EndSample();
         }
@@ -441,7 +448,7 @@ namespace MuMech
             ShowStatusGUIElements();
             ShowAutoWarpGUIElements();
 
-            if (_autopilot.Enabled) GUILayout.Label(autopilotStatus); //Autopilot status:
+            if (_autopilot.Enabled) GUILayout.Label(autopilotStatus, autopilotStatusStyle); //Autopilot status:
             if (Core.DeactivateControl)
                 GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel36, GuiUtils.RedLabel); //CONTROL DISABLED (AVIONICS)
 

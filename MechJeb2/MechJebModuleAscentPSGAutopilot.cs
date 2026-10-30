@@ -105,7 +105,7 @@ namespace MuMech
 
             if (!liftedOff)
             {
-                Status = Localizer.Format("#MechJeb_Ascent_status12"); //"Awaiting liftoff"
+                SetStatus(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
                 return;
             }
 
@@ -117,7 +117,7 @@ namespace MuMech
             }
 
             double dh = AscentSettings.PitchStartHeight - VesselState.AltitudeBottom;
-            Status = $"Vertical ascent {dh:F2}m to go";
+            SetStatus($"Vertical ascent {dh:F2}m to go");
         }
 
         private void DrivePitchProgram()
@@ -126,7 +126,7 @@ namespace MuMech
             double theta = dt * AscentSettings.PitchRate;
             double pitch = 90 - theta;
 
-            Status = Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}"); //Pitch program <<1>>° to guidance
+            SetStatus(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
 
             if (CheckForGuidanceTransition(pitch))
             {
@@ -158,13 +158,13 @@ namespace MuMech
             {
                 double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.Pitch);
                 Core.Attitude.LimitedAttitudeTo(SrfvelHeading(), pitch, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
-                Status = Localizer.Format("#MechJeb_Ascent_status16"); //"WARNING: Unstable Guidance"
+                SetStatus(Localizer.Format("#MechJeb_Ascent_status16"), StatusLevel.WARNING); //"WARNING: Unstable Guidance"
             }
             else
             {
                 double ang = Vector3d.Angle(Core.Guidance.Inertial, VesselState.Forward);
-                // FIXME: should be able to set status color to yellow for ang > 2 and red for ang > 5 or so
-                Status = $"Stable Guidance: {ang:F}° deviation";
+                StatusLevel severity = ang > 5 ? StatusLevel.ERROR : ang > 1 ? StatusLevel.WARNING : StatusLevel.NORMAL;
+                SetStatus($"Stable Guidance: {ang:F}° deviation", severity);
                 Core.Attitude.LimitedAttitudeTo(Core.Guidance.Inertial, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
             }
         }
