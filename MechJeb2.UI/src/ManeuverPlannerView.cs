@@ -74,31 +74,7 @@ namespace MuMech.UI
 
             new ComboBox(w, r, () => planner.OperationId, i => planner.OperationId = i, () => planner.OperationNames);
 
-            // one panel per operation
-            Operation[] operations = planner.Operations;
-            for (int i = 0; i < operations.Length; i++)
-            {
-                int index = i;
-                var ctx = new OpContext { W = w, Panel = KodeWindow.Panel(r), Op = operations[i], Planner = planner };
-                if (!OperationPanels.Build(ctx))
-                {
-                    Operation op = operations[i];
-                    new ImguiBlock(ctx.Panel, () =>
-                    {
-                        if (!HasVessel) return;
-                        try
-                        {
-                            planner.GetOrbitAndUT(out Orbit o, out double ut);
-                            op.DoParametersGUI(o, ut, Core.Target);
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    });
-                }
-
-                w.Visible(ctx.Panel.gameObject, () => planner.OperationId == index);
-            }
+            OperationPanelsFor(w, r);
 
             UIText after = KodeWindow.Label(r, "#MechJeb_Maneu_createlab3"); //"after the last maneuver node."
             w.Visible(after.gameObject, () => planner.PlannerNodeCount() > 0);
@@ -207,29 +183,7 @@ namespace MuMech.UI
                 Group = k => groups[Group(operations[order[k]])]
             };
 
-            for (int i = 0; i < operations.Length; i++)
-            {
-                int index = i;
-                var ctx = new OpContext { W = w, Panel = KodeWindow.Panel(r), Op = operations[i], Planner = planner };
-                if (!OperationPanels.Build(ctx))
-                {
-                    Operation op = operations[i];
-                    new ImguiBlock(ctx.Panel, () =>
-                    {
-                        if (!HasVessel) return;
-                        try
-                        {
-                            planner.GetOrbitAndUT(out Orbit o, out double ut);
-                            op.DoParametersGUI(o, ut, Core.Target);
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    });
-                }
-
-                w.Visible(ctx.Panel.gameObject, () => planner.OperationId == index);
-            }
+            OperationPanelsFor(w, r);
 
             UIText after = KodeWindow.Label(r, "#MechJeb_Maneu_createlab3"); //"after the last maneuver node."
             w.Visible(after.gameObject, () => planner.PlannerNodeCount() > 0);
@@ -278,6 +232,37 @@ namespace MuMech.UI
             }, d => LeadTime.Val += d, () => 1, 45, () => LeadTime.IsParsed);
             KodeWindow.Label(lead, "s");
             KodeWindow.Button(lead, "R", () => LeadTime.Val = 3); // back to the default 3 s
+        }
+
+        /// <summary>
+        /// One panel per operation, the selected one shown. Each is built the first time it is selected: opening the planner
+        /// builds one of its 18 operations, not all of them.
+        /// </summary>
+        void OperationPanelsFor(KodeWindow w, UIObject parent)
+        {
+            Operation[] operations = planner.Operations;
+            for (int i = 0; i < operations.Length; i++)
+            {
+                int index = i;
+                Operation op = operations[i];
+                w.LazyPanel(parent, () => planner.OperationId == index, panel =>
+                {
+                    var ctx = new OpContext { W = w, Panel = panel, Op = op, Planner = planner };
+                    if (OperationPanels.Build(ctx)) return;
+                    new ImguiBlock(panel, () =>
+                    {
+                        if (!HasVessel) return;
+                        try
+                        {
+                            planner.GetOrbitAndUT(out Orbit o, out double ut);
+                            op.DoParametersGUI(o, ut, Core.Target);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    });
+                });
+            }
         }
 
         // the Create node / Create and execute buttons

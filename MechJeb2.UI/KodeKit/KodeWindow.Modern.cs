@@ -214,10 +214,10 @@ namespace KodeKit
         /// header, and the panel always shows.
         /// </summary>
         public Layout Group(UIObject parent, string title, bool open = true) =>
-            ShowHeaders ? FoldSection(parent, title, open, Root.name + "/" + title) : Panel(parent);
+            ShowHeaders ? FoldSection(parent, title, open, Root.name + "/" + title, false) : Panel(parent);
 
         /// <summary>The modern look of <see cref="Section"/> and <see cref="Group"/>: a chevron (down: open, right: folded) and a header.</summary>
-        Layout FoldSection(UIObject parent, string title, bool open, string key)
+        Layout FoldSection(UIObject parent, string title, bool open, string key, bool lazy)
         {
             if (sectionState.TryGetValue(key, out bool saved)) open = saved;
             Layout header = Row(parent);
@@ -227,7 +227,7 @@ namespace KodeKit
             var cle = chevGo.GetComponent<LayoutElement>();
             UIText label = Header(header, title, true);
             Layout content = Panel(parent);
-            content.gameObject.SetActive(open);
+            content.gameObject.SetActive(open || !lazy);
 
             void Look(Theme th)
             {
@@ -245,6 +245,7 @@ namespace KodeKit
             }
 
             Styled(chevGo, Look);
+            if (!open && !lazy) FoldInFirstSync(content, () => Look(Th));
             label.tmpText.raycastTarget = true;
             label.gameObject.AddComponent<ClickHandler>().Click = Flip;
             chevGo.AddComponent<ClickHandler>().Click = Flip;

@@ -200,16 +200,16 @@ namespace MuMech.UI
             ModeButton(w, modes, Mode.TARGET);
             ModeButton(w, modes, Mode.ADVANCED);
 
-            BuildOrbital(w, main);
-            BuildSurface(w, main);
-            BuildTarget(w, main);
-            BuildAdvanced(w, main);
+            // one panel per mode, each built the first time its mode is selected
+            w.LazyPanel(main, () => ss.mode == Mode.ORBITAL, p => BuildOrbital(w, p));
+            w.LazyPanel(main, () => ss.mode == Mode.SURFACE, p => BuildSurface(w, p));
+            w.LazyPanel(main, () => ss.mode == Mode.TARGET, p => BuildTarget(w, p));
+            w.LazyPanel(main, () => ss.mode == Mode.ADVANCED, p => BuildAdvanced(w, p));
             // Mode.AUTO shows nothing
         }
 
-        void BuildOrbital(KodeWindow w, UIObject parent)
+        void BuildOrbital(KodeWindow w, Layout p)
         {
-            Layout p = KodeWindow.Panel(parent);
             Layout a = ButtonRow(p);
             TargetButton(w, a, Target.PROGRADE);
             TargetButton(w, a, Target.NORMAL_PLUS);
@@ -219,13 +219,10 @@ namespace MuMech.UI
             TargetButton(w, b, Target.NORMAL_MINUS);
             TargetButton(w, b, Target.RADIAL_MINUS);
             ForceRoll(w, p);
-            w.Visible(p.gameObject, () => ss.mode == Mode.ORBITAL);
         }
 
-        void BuildSurface(KodeWindow w, UIObject parent)
+        void BuildSurface(KodeWindow w, Layout p)
         {
-            Layout p = KodeWindow.Panel(parent);
-            w.Visible(p.gameObject, () => ss.mode == Mode.SURFACE);
 
             Layout a = ButtonRow(p);
             TargetButton(w, a, Target.SURFACE_PROGRADE);
@@ -272,10 +269,8 @@ namespace MuMech.UI
             w.Visible(common.gameObject, () => ss.ShowsSurfaceAngles);
         }
 
-        void BuildTarget(KodeWindow w, UIObject parent)
+        void BuildTarget(KodeWindow w, Layout p)
         {
-            Layout p = KodeWindow.Panel(parent);
-            w.Visible(p.gameObject, () => ss.mode == Mode.TARGET);
 
             Layout has = KodeWindow.Panel(p);
             Layout a = ButtonRow(has);
@@ -341,65 +336,67 @@ namespace MuMech.UI
             w.Segmented(body, modeKeys, () => (int)ss.mode, i => ss.mode = (Mode)i, ChoiceStyle.Tabs);
 
             // orbital: placed as on the navball, normal up, radial left and right, prograde in the centre
-            Layout obt = KodeWindow.Panel(body);
-            w.Visible(obt.gameObject, () => ss.mode == Mode.ORBITAL);
-            KodeWindow.CompassGrid c = KodeWindow.Compass(obt);
-            Tile(w, c[Dir.N], Target.NORMAL_PLUS, Sprites.Marker.Normal);
-            Tile(w, c[Dir.W], Target.RADIAL_MINUS, Sprites.Marker.RadialIn);
-            Tile(w, c[Dir.C], Target.PROGRADE, Sprites.Marker.Prograde);
-            Tile(w, c[Dir.E], Target.RADIAL_PLUS, Sprites.Marker.RadialOut);
-            Tile(w, c[Dir.S], Target.NORMAL_MINUS, Sprites.Marker.AntiNormal);
-            Tile(w, c[Dir.SE], Target.RETROGRADE, Sprites.Marker.Retrograde);
-            ForceRoll(w, obt);
-
-            Layout srf = KodeWindow.Panel(body);
-            w.Visible(srf.gameObject, () => ss.mode == Mode.SURFACE);
-            Layout sg = KodeWindow.UniformGrid(srf, 3);
-            Tile(w, sg, Target.SURFACE_PROGRADE, Sprites.Marker.Prograde);
-            Tile(w, sg, Target.SURFACE_RETROGRADE, Sprites.Marker.Retrograde);
-            Tile(w, sg, Target.SURFACE, null, false); // TargetButtonNoEngage
-            Tile(w, sg, Target.HORIZONTAL_PLUS);
-            Tile(w, sg, Target.HORIZONTAL_MINUS);
-            Tile(w, sg, Target.VERTICAL_PLUS);
-            SurfaceAngles(w, srf);
-
-            Layout tgt = KodeWindow.Panel(body);
-            w.Visible(tgt.gameObject, () => ss.mode == Mode.TARGET);
-            Layout has = KodeWindow.Panel(tgt);
-            Layout tg = KodeWindow.UniformGrid(has, 3);
-            Tile(w, tg, Target.TARGET_PLUS);
-            Tile(w, tg, Target.RELATIVE_PLUS);
-            Tile(w, tg, Target.PARALLEL_PLUS);
-            Tile(w, tg, Target.TARGET_MINUS);
-            Tile(w, tg, Target.RELATIVE_MINUS);
-            Tile(w, tg, Target.PARALLEL_MINUS);
-            ForceRoll(w, has);
-            w.Visible(has.gameObject, TargetExists);
-            UIText none = KodeWindow.Label(tgt, "#MechJeb_SmartASS_label2"); //"Please select a target"
-            w.Visible(none.gameObject, () => !TargetExists());
-
-            Layout adv = KodeWindow.Panel(body);
-            w.Visible(adv.gameObject, () => ss.mode == Mode.ADVANCED);
-            KodeWindow.Header(adv, "#MechJeb_SmartASS_label3"); //"Reference:"
-            new ComboBox(w, adv, () => (int)ss.advReference, i => ss.advReference = (AttitudeReference)i, () => ReferenceTexts);
-            KodeWindow.Header(adv, "#MechJeb_SmartASS_label4"); //"Direction:"
-            new ComboBox(w, adv, () => (int)ss.advDirection, i => ss.advDirection = (Vector6.Direction)i, () => directionTexts);
-            ForceRoll(w, adv);
-            KodeWindow.Button(adv, "#MechJeb_SmartASS_button58", () => //"EXECUTE"
+            w.LazyPanel(body, () => ss.mode == Mode.ORBITAL, obt =>
             {
-                ss.target = Target.ADVANCED;
-                ss.Engage();
-            }, ButtonRole.Primary, true);
+                KodeWindow.CompassGrid c = KodeWindow.Compass(obt);
+                Tile(w, c[Dir.N], Target.NORMAL_PLUS, Sprites.Marker.Normal);
+                Tile(w, c[Dir.W], Target.RADIAL_MINUS, Sprites.Marker.RadialIn);
+                Tile(w, c[Dir.C], Target.PROGRADE, Sprites.Marker.Prograde);
+                Tile(w, c[Dir.E], Target.RADIAL_PLUS, Sprites.Marker.RadialOut);
+                Tile(w, c[Dir.S], Target.NORMAL_MINUS, Sprites.Marker.AntiNormal);
+                Tile(w, c[Dir.SE], Target.RETROGRADE, Sprites.Marker.Retrograde);
+                ForceRoll(w, obt);
+            });
+
+            w.LazyPanel(body, () => ss.mode == Mode.SURFACE, srf =>
+            {
+                Layout sg = KodeWindow.UniformGrid(srf, 3);
+                Tile(w, sg, Target.SURFACE_PROGRADE, Sprites.Marker.Prograde);
+                Tile(w, sg, Target.SURFACE_RETROGRADE, Sprites.Marker.Retrograde);
+                Tile(w, sg, Target.SURFACE, null, false); // TargetButtonNoEngage
+                Tile(w, sg, Target.HORIZONTAL_PLUS);
+                Tile(w, sg, Target.HORIZONTAL_MINUS);
+                Tile(w, sg, Target.VERTICAL_PLUS);
+                SurfaceAngles(w, srf);
+            });
+
+            w.LazyPanel(body, () => ss.mode == Mode.TARGET, tgt =>
+            {
+                Layout has = KodeWindow.Panel(tgt);
+                Layout tg = KodeWindow.UniformGrid(has, 3);
+                Tile(w, tg, Target.TARGET_PLUS);
+                Tile(w, tg, Target.RELATIVE_PLUS);
+                Tile(w, tg, Target.PARALLEL_PLUS);
+                Tile(w, tg, Target.TARGET_MINUS);
+                Tile(w, tg, Target.RELATIVE_MINUS);
+                Tile(w, tg, Target.PARALLEL_MINUS);
+                ForceRoll(w, has);
+                w.Visible(has.gameObject, TargetExists);
+                UIText none = KodeWindow.Label(tgt, "#MechJeb_SmartASS_label2"); //"Please select a target"
+                w.Visible(none.gameObject, () => !TargetExists());
+            });
+
+            w.LazyPanel(body, () => ss.mode == Mode.ADVANCED, adv =>
+            {
+                KodeWindow.Header(adv, "#MechJeb_SmartASS_label3"); //"Reference:"
+                new ComboBox(w, adv, () => (int)ss.advReference, i => ss.advReference = (AttitudeReference)i, () => ReferenceTexts);
+                KodeWindow.Header(adv, "#MechJeb_SmartASS_label4"); //"Direction:"
+                new ComboBox(w, adv, () => (int)ss.advDirection, i => ss.advDirection = (Vector6.Direction)i, () => directionTexts);
+                ForceRoll(w, adv);
+                KodeWindow.Button(adv, "#MechJeb_SmartASS_button58", () => //"EXECUTE"
+                {
+                    ss.target = Target.ADVANCED;
+                    ss.Engage();
+                }, ButtonRole.Primary, true);
+            });
 
             // another autopilot steers: the body stays in view, greyed, and the bar says who
             GuidanceUi.AutoBar(w, r, body.gameObject, "#MechJeb_SmartASS_button57", () => otherUsers, //"AUTO"
                 () => GuidanceUi.OtherUser(ss.Core.Attitude.Users, ss));
         }
 
-        void BuildAdvanced(KodeWindow w, UIObject parent)
+        void BuildAdvanced(KodeWindow w, Layout p)
         {
-            Layout p = KodeWindow.Panel(parent);
-            w.Visible(p.gameObject, () => ss.mode == Mode.ADVANCED);
 
             KodeWindow.Label(p, "#MechJeb_SmartASS_label3"); //"Reference:"
             new ComboBox(w, p, () => (int)ss.advReference, i => ss.advReference = (AttitudeReference)i, () => ReferenceTexts);

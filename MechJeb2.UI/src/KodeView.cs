@@ -38,14 +38,21 @@ namespace MuMech.UI
         /// <summary>Per-frame model work the IMGUI WindowGUI did before drawing (runs before the bindings).</summary>
         protected virtual void BeforeSync() { }
 
+        /// <summary>The last Build's cost in ms: creating the window's contents, and the canvas update that lays it out (for tests).</summary>
+        public static double LastContentsMs, LastCanvasMs;
+
         public void Build(RectTransform canvas)
         {
+            var timer = System.Diagnostics.Stopwatch.StartNew();
             Window = new KodeWindow(canvas, Module.GetName(), MinWidth, Vector2.zero);
             Window.OnClose = () => Module.Enabled = false;
             BuildContents(Window);
             builtOverlay = Module.IsOverlay;
             if (builtOverlay) MakeOverlay();
+            LastContentsMs = timer.Elapsed.TotalMilliseconds;
+            timer.Restart();
             Canvas.ForceUpdateCanvases();
+            LastCanvasMs = timer.Elapsed.TotalMilliseconds;
             ApplyScale();
             Vector4 v = StoredPosition;
             Window.Behaviour.SetImguiPosition(new Vector2(v.x, v.y), GuiUtils.Scale);

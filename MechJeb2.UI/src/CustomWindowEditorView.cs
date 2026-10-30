@@ -148,6 +148,21 @@ namespace MuMech.UI
             return titles;
         }
 
+        /// <summary>IMGUI's title row: Title: [&lt;] [title field] [&gt;], stepping through the custom windows.</summary>
+        void TitleRow(KodeWindow w, UIObject r, MechJebModuleCustomInfoWindow edited, List<ComputerModule> all)
+        {
+            Layout title = KodeWindow.Row(r);
+            KodeWindow.Label(title, "#MechJeb_WindowEd_Edtitle"); //Title:
+            KodeWindow.Button(title, "<", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) - 1 + all.Count) % all.Count]);
+            EditFields.Field(w, title, () => edited.title, s =>
+            {
+                if (edited.title == s) return;
+                edited.title = s;
+                edited.Dirty = true;
+            }, 120);
+            KodeWindow.Button(title, ">", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) + 1) % all.Count]);
+        }
+
         void BuildEditedWindow(KodeWindow w, UIObject r)
         {
             MechJebModuleCustomInfoWindow edited = Edited;
@@ -166,19 +181,8 @@ namespace MuMech.UI
                     edited.Dirty = true;
                 }, 120);
             }
-
-            // Title: [<] [title field] [>]
-            Layout title = KodeWindow.Row(r);
-            if (KodeWindow.ModernLayout) title.gameObject.SetActive(false);
-            KodeWindow.Label(title, "#MechJeb_WindowEd_Edtitle"); //Title:
-            KodeWindow.Button(title, "<", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) - 1 + all.Count) % all.Count]);
-            EditFields.Field(w, title, () => edited.title, s =>
-            {
-                if (edited.title == s) return;
-                edited.title = s;
-                edited.Dirty = true;
-            }, 120);
-            KodeWindow.Button(title, ">", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) + 1) % all.Count]);
+            else
+                TitleRow(w, r, edited, all);
 
             Layout showIn = KodeWindow.Row(r);
             KodeWindow.Label(showIn, "#MechJeb_WindowEd_label1"); //Show in:
@@ -203,13 +207,13 @@ namespace MuMech.UI
                 ed.editingBackground = v;
                 if (v) ed.editingText = false;
             });
-            Layout picker = KodeWindow.Panel(r);
-            new KodeKit.ColorPicker(w, picker, () => ed.editingText ? edited.text : edited.backgroundColor, c =>
-            {
-                if (ed.editingText) ed.SetTextColor(c);
-                else ed.SetBackgroundColor(c);
-            });
-            w.Visible(picker.gameObject, () => ed.editingText || ed.editingBackground);
+            // the picker (and its textures) is made the first time a colour is edited
+            w.LazyPanel(r, () => ed.editingText || ed.editingBackground, picker =>
+                new KodeKit.ColorPicker(w, picker, () => ed.editingText ? edited.text : edited.backgroundColor, c =>
+                {
+                    if (ed.editingText) ed.SetTextColor(c);
+                    else ed.SetBackgroundColor(c);
+                }));
 
             // the window's items: click to select
             KodeWindow.Label(r, "#MechJeb_WindowEd_label3"); //Window contents (click to edit):

@@ -458,13 +458,68 @@ namespace KodeKit
         static readonly Dictionary<string, bool> sectionState = new Dictionary<string, bool>();
 
         /// <summary>
+        /// A panel shown while <paramref name="visible"/> holds, its contents made by <paramref name="build"/> the first time
+        /// it shows rather than with the window: a window with many alternative panels (the planner's operations, the
+        /// attitude controllers) then builds only the one in view when it opens.
+        /// </summary>
+        public Layout LazyPanel(UIObject parent, Func<bool> visible, Action<Layout> build)
+        {
+            Layout panel = Panel(parent);
+            Visible(panel.gameObject, visible);
+            BuildWhenShown(panel, build);
+            return panel;
+        }
+
+        /// <summary>A collapsible section whose contents are made the first time it is open (a folded section costs nothing until then).</summary>
+        public Layout Section(UIObject parent, string title, bool open, Action<Layout> build, string key = null)
+        {
+            Layout content = SectionCore(parent, title, open, key ?? title, true);
+            BuildWhenShown(content, build);
+            return content;
+        }
+
+        // a folded section's content is filled while active (TMP needs an active parent, FINDINGS rule 4) and folded in
+        // the window's first sync, which runs before the window is first drawn
+        void FoldInFirstSync(Layout content, Action folded)
+        {
+            bool done = false;
+            syncs.Add(() =>
+            {
+                if (done) return;
+                done = true;
+                content.gameObject.SetActive(false);
+                folded?.Invoke();
+            });
+        }
+
+        // builds now if the panel is on screen, else in the first sync where it is (TMP needs active parents to set up,
+        // FINDINGS rule 4): a lazy panel inside a folded section waits for the section too
+        void BuildWhenShown(Layout panel, Action<Layout> build)
+        {
+            if (panel.gameObject.activeInHierarchy)
+            {
+                build(panel);
+                return;
+            }
+            bool built = false;
+            syncs.Add(() =>
+            {
+                if (built || !panel.gameObject.activeInHierarchy) return;
+                built = true;
+                build(panel);
+            });
+        }
+
+        /// <summary>
         /// A collapsible section: a header row ("-"/"+" and the title) and a content panel it shows or hides. Returns the
         /// content panel. The open/closed state is remembered per key for the session (key defaults to the title).
         /// </summary>
-        public Layout Section(UIObject parent, string title, bool open = true, string key = null)
+        public Layout Section(UIObject parent, string title, bool open = true, string key = null) => SectionCore(parent, title, open, key ?? title, false);
+
+        // lazy: a folded section starts inactive and its contents are made when it opens; else they are made now, open
+        Layout SectionCore(UIObject parent, string title, bool open, string key, bool lazy)
         {
-            key ??= title;
-            if (ModernLayout) return FoldSection(parent, title, open, key);
+            if (ModernLayout) return FoldSection(parent, title, open, key, lazy);
             if (sectionState.TryGetValue(key, out bool saved)) open = saved;
 
             Layout header = Row(parent);
@@ -476,7 +531,8 @@ namespace KodeKit
             content.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false).Padding(10, 0, 0, 2);
             content.FlexibleLayout(true, false);
             content.Finish();
-            content.gameObject.SetActive(open);
+            content.gameObject.SetActive(open || !lazy);
+            if (!open && !lazy) FoldInFirstSync(content, null);
 
             void Flip()
             {
