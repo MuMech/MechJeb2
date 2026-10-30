@@ -108,10 +108,29 @@ namespace KodeKit
         /// <summary>Register a per-frame update for a custom widget.</summary>
         public void AddSync(Action sync) => syncs.Add(sync);
 
+        HashSet<Action> failed; // the syncs that threw, so each is logged once
+
+        /// <summary>
+        /// Runs the per-frame updates. One that throws is logged the first time and the others still run, so a broken
+        /// readout does not freeze the rest of the window. It is still called every frame: it recovers when its cause
+        /// goes (a target that comes back).
+        /// </summary>
         public void Sync()
         {
             for (int i = 0; i < syncs.Count; i++)
-                syncs[i]();
+            {
+                try
+                {
+                    syncs[i]();
+                }
+                catch (Exception e)
+                {
+                    if (failed == null) failed = new HashSet<Action>();
+                    if (!failed.Add(syncs[i])) continue;
+                    Debug.LogError($"[KodeKit] an update of window \"{(TitleText != null ? TitleText.tmpText.text : Root.name)}\" threw (logged once, the others still run):");
+                    Debug.LogException(e);
+                }
+            }
         }
 
         /// <summary>Give each window its own nested Canvas so a dirty text only re-batches that window.</summary>
