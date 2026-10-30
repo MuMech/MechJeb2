@@ -566,8 +566,15 @@ namespace MuMech
             }
 
             Profiler.BeginSample("vesselState");
-            _ready = VesselState.Update();
+            _ready = UpdateVesselState();
             Profiler.EndSample();
+
+            // no module runs on a half-updated vessel state (as when the exception used to leave FixedUpdate)
+            if (_vesselStateFailed)
+            {
+                Profiler.EndSample();
+                return;
+            }
 
             foreach (ComputerModule module in GetComputerModules<ComputerModule>())
             {
@@ -1089,11 +1096,41 @@ namespace MuMech
             _currentThrottle = s.mainThrottle;
         }
 
+        private bool _vesselStateFailed;
+
+        // VesselState.Update runs in FixedUpdate and in Drive, which is called from the vessel's OnFlyByWire chain: an exception
+        // must not leave here (it would reach stock's and other mods' FlyByWire callbacks). The modules skip the tick
+        // (_vesselStateFailed), _ready keeps its value as it did when the exception left (so the windows stay up), and the
+        // first failure of a run is logged.
+        private bool UpdateVesselState()
+        {
+            try
+            {
+                bool ready = VesselState.Update();
+                _vesselStateFailed = false;
+                return ready;
+            }
+            catch (Exception e)
+            {
+                if (!_vesselStateFailed)
+                {
+                    _vesselStateFailed = true;
+                    Debug.LogError("[MechJeb] VesselState.Update threw (logged once until it works again):");
+                    Debug.LogException(e);
+                }
+
+                return _ready;
+            }
+        }
+
         private void Drive(FlightCtrlState s)
         {
             Profiler.BeginSample("vesselState");
-            _ready = VesselState.Update();
+            _ready = UpdateVesselState();
             Profiler.EndSample();
+
+            if (_vesselStateFailed)
+                return;
 
             Profiler.BeginSample("MechJebCore.Drive");
             if (this == vessel.GetMasterMechJeb())

@@ -488,13 +488,24 @@ namespace MuMech
         //{
         //    gimbalExtDict[typeof(T)] = gimbalExtension;
         //}
+        // other mods' part modules and VesselState extensions: one that throws mustn't stop the whole vessel state
+        private readonly HashSet<string> _loggedPartCallFailures = new HashSet<string>();
+
+        private void PartCallFailed(string call, Exception e)
+        {
+            if (!_loggedPartCallFailures.Add(call))
+                return;
+            Debug.LogError($"[MechJeb] VesselState: {call} threw (logged once; what it adds is left out):");
+            Debug.LogException(e);
+        }
+
         public bool Update()
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (Time == Planetarium.GetUniversalTime())
                 return true;
 
-            if (Vessel.rootPart.rb == null)
+            if (Vessel.rootPart == null || Vessel.rootPart.rb == null)
                 return false; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
 
             UpdateVelocityAndCoM();
@@ -898,7 +909,14 @@ namespace MuMech
 
                 foreach (VesselStatePartExtension vspe in VesselStatePartExtensions)
                 {
-                    vspe(p);
+                    try
+                    {
+                        vspe(p);
+                    }
+                    catch (Exception e)
+                    {
+                        PartCallFailed(vspe.Method.DeclaringType?.FullName + "." + vspe.Method.Name, e);
+                    }
                 }
 
                 _engines.Clear();
@@ -1011,16 +1029,33 @@ namespace MuMech
                             // All mod that supports it. Including FAR
                             case ITorqueProvider provider:
                                 {
-                                    provider.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
+                                    try
+                                    {
+                                        provider.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
-                                    TorqueOthers.Add(pos);
-                                    TorqueOthers.Add(neg);
+                                        TorqueOthers.Add(pos);
+                                        TorqueOthers.Add(neg);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        PartCallFailed(provider.GetType().FullName + ".GetPotentialTorque", e);
+                                    }
+
                                     break;
                                 }
                         }
 
                     foreach (VesselStatePartModuleExtension vspme in VesselStatePartModuleExtensions)
-                        vspme(pm);
+                    {
+                        try
+                        {
+                            vspme(pm);
+                        }
+                        catch (Exception e)
+                        {
+                            PartCallFailed(vspme.Method.DeclaringType?.FullName + "." + vspme.Method.Name, e);
+                        }
+                    }
                 }
 
                 foreach (ModuleEngines engine in _engines)
