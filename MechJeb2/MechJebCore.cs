@@ -737,9 +737,10 @@ namespace MuMech
             if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
                 Print("Loading Mechjeb " + version);
 
-            try
+            foreach (Type t in _moduleRegistry)
             {
-                foreach (Type t in _moduleRegistry)
+                // one module whose constructor throws (another mod's included) must not keep the ones after it from existing
+                try
                 {
                     if (t != typeof(ComputerModule) && t != typeof(DisplayModule) && t != typeof(MechJebModuleCustomInfoWindow)
                         && t != typeof(AutopilotModule) && t != typeof(MechJebModuleAscentBaseAutopilot)
@@ -750,10 +751,10 @@ namespace MuMech
                             AddComputerModule((ComputerModule)constructorInfo.Invoke(new object[] { this }));
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules: " + e);
+                catch (Exception e)
+                {
+                    Debug.LogError("MechJeb moduleRegistry loading threw an exception in LoadComputerModules for " + t.FullName + ": " + e);
+                }
             }
 
             VesselState = GetComputerModule<VesselState>();
