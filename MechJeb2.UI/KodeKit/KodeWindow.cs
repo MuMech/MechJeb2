@@ -16,18 +16,20 @@ namespace KodeKit
         public static Color FlashColor = new Color(0.55f, 1f, 0.55f, 1f);
         const float Duration = 0.35f;
         float start = -1;
-        Color baseColor;
+        Color baseColor, written;
 
         public void OnPointerClick(PointerEventData e)
         {
             if (Target == null) return;
-            if (start < 0) baseColor = Target.color;
+            if (start < 0) written = baseColor = Target.color;
             start = Time.unscaledTime;
         }
 
         void Update()
         {
             if (start < 0) return;
+            // repainted since the last frame (a selection turning green, a role change): fade back to the new colour
+            if (Target.color != written) baseColor = Target.color;
             float t = (Time.unscaledTime - start) / Duration;
             if (t >= 1)
             {
@@ -35,7 +37,7 @@ namespace KodeKit
                 start = -1;
                 return;
             }
-            Target.color = Color.Lerp(FlashColor, baseColor, t * t);
+            Target.color = written = Color.Lerp(FlashColor, baseColor, t * t);
         }
 
         void OnDisable()
@@ -418,7 +420,7 @@ namespace KodeKit
             Transform bar = row.transform.Find("SelectBar");
             if (bar == null || bar.gameObject.activeSelf == selected) return;
             bar.gameObject.SetActive(selected);
-            row.GetComponentInChildren<TMP_Text>().color = selected ? bar.GetComponent<Image>().color : Theme.Current.Text;
+            row.GetComponentInChildren<TMP_Text>().color = selected ? bar.GetComponent<Image>().color : ThemeOf(row.gameObject).Text;
         }
 
         /// <summary>A flat clickable column header (stage stats): dim text that brightens on hover, no button frame.</summary>
@@ -573,13 +575,13 @@ namespace KodeKit
         // a 3-line button): a space after the last newline keeps the line
         static string KeepLastLine(string s) => s != null && s.Length > 0 && s[s.Length - 1] == '\n' ? s + " " : s;
 
-        /// <summary>Set a text from a literal or a '#key'; keys are re-applied on a language switch.</summary>
         /// <summary>
         /// Tooltip text for a localization key (null: none). Every label, toggle and button whose text is a '#key'
         /// gets that tooltip automatically, so tooltips can be added for a whole UI from one table.
         /// </summary>
         public static Func<string, string> TooltipFor;
 
+        /// <summary>Set a text from a literal or a '#key'; keys are re-applied on a language switch.</summary>
         public static void SetText(TMP_Text t, string textOrKey)
         {
             t.text = Loc(textOrKey);
@@ -649,9 +651,21 @@ namespace KodeKit
         /// </summary>
         public static UIText LiveLabel(UIObject parent, string template, bool flexible) => IsolatedLabel(parent, template, flexible);
 
+        const string LiveCellName = "LiveCell";
+
+        /// <summary>The object that holds a label's place in its row: the fixed-size cell of a live or bound label, else the label.</summary>
+        public static GameObject CellOf(UIText t)
+        {
+            Transform p = t.transform.parent;
+            return p != null && p.name == LiveCellName ? p.gameObject : t.gameObject;
+        }
+
+        /// <summary>The row of a toggle made by Toggle, CheckBox or SwitchRow: its box or switch and its label.</summary>
+        public static GameObject RowOf(Toggle t) => t.transform.parent.gameObject;
+
         static UIText IsolatedLabel(UIObject parent, string text, bool flexible)
         {
-            UIEmpty cell = parent.Add<UIEmpty>("LiveCell");
+            UIEmpty cell = parent.Add<UIEmpty>(LiveCellName);
             UIText t = cell.Add<UIText>();
             t.Text(text).Anchor(AnchorPresets.StretchAll);
             t.Finish();
@@ -670,6 +684,25 @@ namespace KodeKit
                 Vector2 size = TextMeasure.Measure(text, th);
                 le.preferredHeight = Mathf.Max(size.y, th.LineHeight);
                 if (!flexible) le.preferredWidth = size.x + 24;
+            });
+            return t;
+        }
+
+        /// <summary>
+        /// A label that changes, in a cell sized from <paramref name="template"/> (the longest text it shows), so the text
+        /// never drives the layout. The getter is called every frame: return cached strings.
+        /// </summary>
+        public UIText BoundLabel(UIObject parent, string template, Func<string> value, bool flexible = false)
+        {
+            UIText t = LiveLabel(parent, template, flexible);
+            string last = value();
+            t.Text(last);
+            syncs.Add(() =>
+            {
+                string s = value();
+                if (s == last) return;
+                last = s;
+                t.Text(s);
             });
             return t;
         }
@@ -770,9 +803,8 @@ namespace KodeKit
             return b;
         }
 
-        public enum Tone { Normal, Good, Warn, Bad }
-
-        Color ToneColor(Tone t) => t == Tone.Good ? T.Good : t == Tone.Warn ? T.Warn : t == Tone.Bad ? T.Bad : T.Text;
+        /// <summary>A state shown by a text colour (Theme.ToneColor): Normal, green, yellow, red, or dimmed.</summary>
+        public enum Tone { Normal, Good, Warn, Bad, Dim }
 
         /// <summary>A toggle whose label colour follows a state (MechJeb's Green/Yellow/RedToggle styles).</summary>
         public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<Tone> tone) =>
@@ -784,18 +816,12 @@ namespace KodeKit
 
         Toggle ToneLabel(Toggle toggle, Func<Tone> tone)
         {
-            TMP_Text label = toggle.transform.parent.GetComponentInChildren<ToggleLabelClick>().GetComponent<TMP_Text>();
-            Tone shown = Tone.Normal;
-            Behaviour.AddRestyle(() => label.color = ToneColor(shown));
-            syncs.Add(() =>
-            {
-                Tone t = tone();
-                if (t == shown) return;
-                shown = t;
-                label.color = ToneColor(t);
-            });
+            ToneText(LabelOf(toggle), tone);
             return toggle;
         }
+
+        /// <summary>The label of a toggle made by Toggle, CheckBox or SwitchToggle (the text that flips it).</summary>
+        public static TMP_Text LabelOf(Toggle toggle) => toggle.transform.parent.GetComponentInChildren<ToggleLabelClick>().GetComponent<TMP_Text>();
 
         /// <summary>A checkbox and its label; a switch in the modern layout. The label flips it too.</summary>
         public Toggle Toggle(UIObject parent, string text, Func<bool> get, Action<bool> set, Func<bool> green = null) =>
@@ -816,25 +842,19 @@ namespace KodeKit
 
             var box = t.GetComponent<Image>();
             var check = (Image)toggle.graphic;
-            bool wasGreen = false;
             Styled(t.gameObject, th =>
             {
                 th.Toggle.ApplySelectable(toggle, box);
                 th.Check.ApplyImage(check);
                 t.PreferredSize(th.FontSize + 2, th.FontSize + 2);
-                label.tmpText.color = wasGreen ? th.Good : th.Text;
             });
 
             syncs.Add(() =>
             {
                 bool v = get();
                 if (toggle.isOn != v) toggle.SetIsOnWithoutNotify(v);
-                if (green == null) return;
-                bool g = green();
-                if (g == wasGreen) return;
-                wasGreen = g;
-                label.tmpText.color = g ? T.Good : T.Text;
             });
+            if (green != null) ToneText(label, () => green() ? Tone.Good : Tone.Normal);
             return toggle;
         }
 
@@ -870,13 +890,13 @@ namespace KodeKit
             Button(row, "<", () =>
             {
                 int n = count();
-                if (n > 0) set((get() - 1 + n) % n);
+                if (n > 0) set((Mathf.Clamp(get(), 0, n - 1) - 1 + n) % n);
             });
             BoundLabel(row, label, true).tmpText.alignment = TextAlignmentOptions.Center;
             Button(row, ">", () =>
             {
                 int n = count();
-                if (n > 0) set((get() + 1) % n);
+                if (n > 0) set((Mathf.Clamp(get(), 0, n - 1) + 1) % n);
             });
         }
 
@@ -913,6 +933,12 @@ namespace KodeKit
                 paint();
             });
         }
+
+        /// <summary>Shows a live or bound label's cell (or a plain label) while <paramref name="visible"/> holds.</summary>
+        public void Visible(UIText t, Func<bool> visible) => Visible(CellOf(t), visible);
+
+        /// <summary>Shows a toggle's whole row while <paramref name="visible"/> holds.</summary>
+        public void Visible(Toggle t, Func<bool> visible) => Visible(RowOf(t), visible);
 
         public void Visible(GameObject go, Func<bool> visible)
         {

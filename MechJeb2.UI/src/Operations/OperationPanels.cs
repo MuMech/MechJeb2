@@ -156,9 +156,9 @@ namespace MuMech.UI
             OpUi.DynamicParagraph(c.W, c.Panel, Description);
             Layout row = KodeWindow.Row(c.Panel);
             KodeWindow.Label(row, "#MechJeb_resonant_label2", true); //New orbital period ratio :
-            EditFields.Field(c.W, row, () => op.ResonanceNumerator.Text, s => op.ResonanceNumerator.Text = s, 30);
+            EditUi.Field(c.W, row, () => op.ResonanceNumerator, 30);
             KodeWindow.Label(row, "/");
-            EditFields.Field(c.W, row, () => op.ResonanceDenominator.Text, s => op.ResonanceDenominator.Text = s, 30);
+            EditUi.Field(c.W, row, () => op.ResonanceDenominator, 30);
             OpUi.TimeSelectorRows(c.W, c.Panel, op._timeSelector);
         }
 
@@ -177,9 +177,9 @@ namespace MuMech.UI
 
             Layout row = KodeWindow.Row(c.Panel);
             OpUi.AngleRow(c.W, row, () => TargetLongitude(c), EditableAngle.Direction.EW, false);
-            KodeWindow.Button(row, "◄", () => Move(-10));
+            KodeWindow.IconButton(row, Sprites.Arrow(Sprites.Direction.Left), () => Move(-10));
             KodeWindow.Label(row, "10m");
-            KodeWindow.Button(row, "►", () => Move(10));
+            KodeWindow.IconButton(row, Sprites.Arrow(Sprites.Direction.Right), () => Move(10));
 
             // the biome under the target, looked up only when the target moves
             double shownLat = double.NaN, shownLon = double.NaN;
@@ -202,7 +202,7 @@ namespace MuMech.UI
             }
 
             UIText biomeLabel = c.W.BoundLabel(c.Panel, Biome, true);
-            c.W.Visible(biomeLabel.transform.parent.gameObject, () => c.Target != null && c.Target.targetBody != null);
+            c.W.Visible(biomeLabel, () => c.Target != null && c.Target.targetBody != null);
 
             KodeWindow.Button(c.Panel, "#MechJeb_LandingGuidance_button2", () => c.Target?.PickPositionTargetOnMap()); //Pick target on map
         }

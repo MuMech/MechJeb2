@@ -8,14 +8,17 @@ using UnityEngine.UI;
 
 namespace KodeKit
 {
-    /// <summary>Shows a tooltip after the pointer rests on this object for Tooltips.Delay seconds (GuiUtils uses 1 s).</summary>
-    public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
+    /// <summary>
+    /// Shows a tooltip after the pointer rests on this object for Tooltips.Delay seconds (GuiUtils uses 1 s). A press
+    /// hides it (Tooltips.Update). Not an IPointerDownHandler: on a button's label that would make the label the pressed
+    /// object, and the button would never get its click.
+    /// </summary>
+    public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public Func<string> Text;
 
         public void OnPointerEnter(PointerEventData e) => Tooltips.Schedule(this, e.position);
         public void OnPointerExit(PointerEventData e) => Tooltips.Cancel(this);
-        public void OnPointerDown(PointerEventData e) => Tooltips.Cancel(this);
         void OnDisable() => Tooltips.Cancel(this);
     }
 
@@ -37,7 +40,7 @@ namespace KodeKit
         TextMeshProUGUI label;
         Image background;
 
-        public static TooltipTrigger Add(GameObject target, string textOrKey) => Add(target, () => textOrKey);
+        public static TooltipTrigger Add(GameObject target, string textOrKey) => string.IsNullOrEmpty(textOrKey) ? null : Add(target, () => textOrKey);
 
         public static TooltipTrigger Add(GameObject target, Func<string> text)
         {
@@ -115,7 +118,15 @@ namespace KodeKit
 
         void Update()
         {
-            if (pending == null || Visible || Time.unscaledTime < showAt) return;
+            if (pending == null) return;
+            // any press cancels the tooltip under the pointer, shown or still waiting
+            if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
+            {
+                pending = null;
+                Hide();
+                return;
+            }
+            if (Visible || Time.unscaledTime < showAt) return;
             if (!pending.isActiveAndEnabled) { pending = null; return; }
             string text = KodeWindow.Loc(pending.Text?.Invoke());
             if (string.IsNullOrEmpty(text)) return;

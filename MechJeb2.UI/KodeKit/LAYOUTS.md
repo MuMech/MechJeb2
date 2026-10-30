@@ -122,7 +122,7 @@ Guidance (autopilot options), Docking Autopilot and the Node Editor (with steppe
 KodeWindow.PropertyGrid g = w.Properties(parent);
 g.Switch("#MechJeb_Ascent_checkbox11", () => t.LimitDynamicPressure, v => t.LimitDynamicPressure = v,
     () => t.MaxDynamicPressure.Text, s => t.MaxDynamicPressure.Text = s, 70, "Pa", () => t.MaxDynamicPressure.IsParsed,
-    () => t.Limiter == LimitMode.DYNAMIC_PRESSURE ? Tone.Good : Tone.Normal);   // the label turns green while limiting
+    LimiterTones.For(t, LimitMode.DYNAMIC_PRESSURE));  // the label turns green while limiting
 g.Field("Min Coast", () => p.MinCoast.Text, s => p.MinCoast.Text = s, 50, "s");
 g.Value("Apoapsis", ApoapsisText);
 g.Note("Stage fairings when:");                    // one cell across the grid
@@ -131,7 +131,8 @@ g.Dim(fieldGo, unitGo, () => !enabled);            // fade cells while a conditi
 g.FlexibleColumn = 0;                              // for label | control | unit rows, without a switch
 ```
 
-`MuMech.UI.ModernRows` builds the thrust limiter and autostage blocks that several windows share.
+`MuMech.UI.ModernRows` builds the thrust limiter and autostage blocks that several windows share. On MechJeb's editables,
+`EditUi.Grid(g, label, () => editable, unit, width)` is the field row (red while the text does not parse).
 
 ### MasterDetail
 
@@ -262,9 +263,30 @@ its own style in Flat and Glass. Classic+ tints the stock button for each role. 
 and leaves Primary and Danger plain, as IMGUI does. Use `w.BindRole(button, () => role)` for a
 role that follows a state, such as a state button that turns Selected while its mode is on.
 
+A fixed role (`Button(..., role)` or `KodeWindow.Role(button, role)`) only shows in the modern layout: the classic layout
+keeps IMGUI's plain buttons, so a view builds the same buttons in both. `BindRole` applies in both layouts.
+
 ```csharp
 KodeWindow.Button(parent, "#MechJeb_NodeEd_button6", () => core.Node.Abort(), ButtonRole.Danger, true);
 ```
+
+### Text colours (tones)
+
+`KodeWindow.Tone` is Normal, Good (green), Warn (yellow), Bad (red) or Dim; `Theme.ToneColor(tone, normal)` gives its
+colour in a theme, with the plain text, a button's text or the accent colour for Normal. All in the window's own theme.
+
+```csharp
+w.ToneText(label, () => engaged ? Tone.Good : Tone.Normal);        // follows a state, set when it changes
+w.ToneText(buttonLabel, () => tone(), true);                        // Normal is the button's text colour
+KodeWindow.ToneText(note, Tone.Dim);                                // fixed: restyled with the theme, no binding
+w.Toggle(parent, "#key", get, set, () => tone());                   // a toggle whose label follows a state
+```
+
+### Live text and visibility
+
+`w.BoundLabel(parent, template, () => text)` is a label that changes, in a cell sized from the template, so the text
+never moves the layout. `w.Visible(label, ...)` and `w.Visible(toggle, ...)` show or hide a live label's cell or a toggle's
+whole row (`KodeWindow.CellOf`, `KodeWindow.RowOf`).
 
 ### Header and Rule
 

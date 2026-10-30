@@ -40,8 +40,8 @@ namespace MuMech.UI
                 : RoverUi.EditableRow(w, r, ed, "Editable:RoverController.heading");
             if (heading != null && !KodeWindow.ModernLayout)
             {
-                RoverUi.Btn(heading, "-", () => Ap.heading.Val -= Alt ? 5 : 1).PreferredWidth(18);
-                RoverUi.Btn(heading, "+", () => Ap.heading.Val += Alt ? 5 : 1).PreferredWidth(18);
+                KodeWindow.Button(heading, "-", () => Ap.heading.Val -= Alt ? 5 : 1).PreferredWidth(18);
+                KodeWindow.Button(heading, "+", () => Ap.heading.Val += Alt ? 5 : 1).PreferredWidth(18);
             }
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.headingErr", () => Ap?.headingErr ?? 0, "-180.0 º");
@@ -51,8 +51,8 @@ namespace MuMech.UI
                 : RoverUi.EditableRow(w, r, ed, "Editable:RoverController.speed");
             if (speed != null && !KodeWindow.ModernLayout)
             {
-                RoverUi.Btn(speed, "-", () => Ap.speed.Val -= Alt ? 5 : 1).PreferredWidth(18);
-                RoverUi.Btn(speed, "+", () => Ap.speed.Val += Alt ? 5 : 1).PreferredWidth(18);
+                KodeWindow.Button(speed, "-", () => Ap.speed.Val -= Alt ? 5 : 1).PreferredWidth(18);
+                KodeWindow.Button(speed, "+", () => Ap.speed.Val += Alt ? 5 : 1).PreferredWidth(18);
             }
 
             RoverUi.ValueRow(w, r, ed, "Value:RoverController.speedErr", () => Ap?.speedErr ?? 0, "-999.9 m/s");
@@ -92,40 +92,29 @@ namespace MuMech.UI
             });
 
             Layout targets = KodeWindow.Row(r);
-            RoverUi.Btn(targets, "#MechJeb_Rover_button1", () => window.ToTarget(Alt), true); // "To Target"
-            RoverUi.Btn(targets, "#MechJeb_Rover_button2", window.AddTarget, true);          // "Add Target"
+            KodeWindow.Button(targets, "#MechJeb_Rover_button1", () => window.ToTarget(Alt), true); // "To Target"
+            KodeWindow.Button(targets, "#MechJeb_Rover_button2", window.AddTarget, true);          // "Add Target"
             w.Visible(targets.gameObject, HasTarget);
 
             Layout drive = KodeWindow.Row(r);
-            UIButton go = RoverUi.Btn(drive, "#MechJeb_Rover_button3", () => window.Drive(Alt), true); // "Drive"
+            UIButton go = KodeWindow.Button(drive, "#MechJeb_Rover_button3", () => window.Drive(Alt), true); // "Drive"
             w.Visible(go.gameObject, () => Ap != null && Ap.Waypoints.Count > 0 && (!Ap.ControlHeading || !Ap.ControlSpeed));
-            UIButton stop = RoverUi.Btn(drive, "#MechJeb_Rover_button4", window.Stop, true); // "Stop"
+            UIButton stop = KodeWindow.Button(drive, "#MechJeb_Rover_button4", window.Stop, true); // "Stop"
             w.Visible(stop.gameObject, () => Ap != null && Ap.Waypoints.Count > 0 && Ap.ControlHeading && Ap.ControlSpeed);
-            if (KodeWindow.ModernLayout)
-            {
-                w.BindRole(go, () => ButtonRole.Primary);
-                w.BindRole(stop, () => ButtonRole.Danger);
-            }
-            RoverUi.Btn(drive, "#MechJeb_Rover_button5", window.ToggleWaypointWindow, true); // "Waypoints"
+            KodeWindow.Role(go, ButtonRole.Primary);
+            KodeWindow.Role(stop, ButtonRole.Danger);
+            KodeWindow.Button(drive, "#MechJeb_Rover_button5", window.ToggleWaypointWindow, true); // "Waypoints"
         }
     }
 
     /// <summary>Widget helpers shared by the rover and waypoint windows: registry items (InfoItems) and a scroll list.</summary>
     internal static class RoverUi
     {
-        /// <summary>A button with its text centred (UIButton lays its text out from the left).</summary>
-        public static UIButton Btn(UIObject parent, string text, Action click, bool flexible = false)
-        {
-            UIButton b = KodeWindow.Button(parent, text, click, flexible);
-            b.ChildAlignment(TextAnchor.MiddleCenter);
-            return b;
-        }
-
         /// <summary>A button whose text changes (Alt held, state): the cell has a fixed width so the text never drives the layout.</summary>
         public static UIButton DynButton(KodeWindow w, UIObject parent, Func<string> text, Action click, float width, bool flexible = false)
         {
             string shown = text();
-            UIButton b = Btn(parent, shown, click, flexible);
+            UIButton b = KodeWindow.Button(parent, shown, click, flexible);
             if (width > 0) b.PreferredWidth(width);
             w.AddSync(() =>
             {
@@ -144,16 +133,7 @@ namespace MuMech.UI
             b.ChildAlignment(TextAnchor.MiddleLeft);
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.alignment = TextAlignmentOptions.Left;
-            bool shown = false;
-            Action paint = () => label.color = shown ? Theme.Current.Good : Theme.Current.Button.TextColor;
-            w.Behaviour.AddRestyle(paint);
-            w.AddSync(() =>
-            {
-                bool a = active();
-                if (a == shown) return;
-                shown = a;
-                paint();
-            });
+            w.ToneText(label, () => active() ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal, true);
             return b;
         }
 
@@ -161,15 +141,16 @@ namespace MuMech.UI
 
         static InfoItem Find(MechJebModuleCustomWindowEditor ed, string id) => ed?.registry.Find(i => i.id == id);
 
-        /// <summary>A ToggleInfoItem as InfoItem.DrawItem draws it; the value is read through <paramref name="get"/> (no reflection per frame).</summary>
-        public static GameObject ToggleRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Func<bool> get)
+        /// <summary>
+        /// A ToggleInfoItem as InfoItem.DrawItem draws it (its key as the label, so it follows a language switch); the
+        /// value is read through <paramref name="get"/>, or the item's compiled getter. Returns its row.
+        /// </summary>
+        public static GameObject ToggleRow(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor ed, string id, Func<bool> get = null)
         {
             if (!(Find(ed, id) is ToggleInfoItem item)) return null;
-            UnityEngine.UI.Toggle t = w.Toggle(parent, item.name, get, v => item.Value = v);
-            GameObject row = t.transform.parent.gameObject;
-            if (!string.IsNullOrEmpty(item.localizedTooltip))
-                Tooltips.Add(row.GetComponentInChildren<ToggleLabelClick>().gameObject, item.localizedTooltip);
-            return row;
+            UnityEngine.UI.Toggle t = w.Toggle(parent, item.name, get ?? (() => item.Value), v => item.Value = v);
+            Tooltips.Add(KodeWindow.LabelOf(t).gameObject, item.localizedTooltip);
+            return KodeWindow.RowOf(t);
         }
 
         /// <summary>The modern layout's EditableInfoItem with nudges: label [−][field][+] unit; − and + add ∓1 (×10 with Shift).</summary>
@@ -180,7 +161,7 @@ namespace MuMech.UI
             var parsed = e as EditableDoubleMult;
             Layout row = KodeWindow.Row(parent);
             UIText label = KodeWindow.Label(row, item.name, true);
-            if (!string.IsNullOrEmpty(item.localizedTooltip)) Tooltips.Add(label.gameObject, item.localizedTooltip);
+            Tooltips.Add(label.gameObject, item.localizedTooltip);
             w.Stepper(row, () => e.Text, s => e.Text = s, add, () => 1, Math.Max(item.width, 45),
                 parsed != null ? (Func<bool>)(() => parsed.IsParsed) : null);
             if (!string.IsNullOrEmpty(item.rightLabel)) KodeWindow.Label(row, item.rightLabel);
@@ -195,8 +176,8 @@ namespace MuMech.UI
             var parsed = e as EditableDoubleMult;
             Layout row = KodeWindow.Row(parent);
             UIText label = KodeWindow.Label(row, item.name, true);
-            if (!string.IsNullOrEmpty(item.localizedTooltip)) Tooltips.Add(label.gameObject, item.localizedTooltip);
-            EditFields.Field(w, row, () => e.Text, s => e.Text = s, item.width, parsed != null ? (Func<bool>)(() => parsed.IsParsed) : null);
+            Tooltips.Add(label.gameObject, item.localizedTooltip);
+            EditUi.Field(w, row, e, item.width);
             if (!string.IsNullOrEmpty(item.rightLabel)) KodeWindow.Label(row, item.rightLabel);
             return row;
         }
@@ -209,7 +190,7 @@ namespace MuMech.UI
             UIText label = KodeWindow.Label(row, item.name, true);
             UIText value = KodeWindow.LiveLabel(row, template, false);
             value.tmpText.alignment = TextAlignmentOptions.Right;
-            if (!string.IsNullOrEmpty(item.localizedTooltip)) Tooltips.Add(label.gameObject, item.localizedTooltip);
+            Tooltips.Add(label.gameObject, item.localizedTooltip);
 
             var text = new CharText(value.tmpText);
             string units = item.Units ?? "";

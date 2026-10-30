@@ -32,7 +32,7 @@ namespace MuMech.UI
         string SpeedText()
         {
             float v = Thrust.TransSpdAct;
-            if (speedText == null || v != shownSpeed)
+            if (speedText == null || !v.Equals(shownSpeed))
             {
                 shownSpeed = v;
                 speedText = Localizer.Format("#MechJeb_Trans_current_spd") + v.ToSI() + "m/s";
@@ -75,7 +75,7 @@ namespace MuMech.UI
 
             Layout speed = KodeWindow.Row(manual);
             KodeWindow.Label(speed, "#MechJeb_Trans_spd");
-            EditFields.Field(w, speed, () => tr.trans_spd.Text, s => tr.trans_spd.Text = s, 37, () => tr.trans_spd.IsParsed);
+            EditUi.Field(w, speed, () => tr.trans_spd, 37);
             KodeWindow.Button(speed, "-", () =>
             {
                 tr.trans_spd -= Step();
@@ -94,8 +94,8 @@ namespace MuMech.UI
 
             KodeWindow.Padded(KodeWindow.Button(manual, KodeWindow.Loc("#MechJeb_Trans_spd_act") + ":", ApplySpeed, true));
 
-            UIText current = MiscViewKit.LiveBound(w, r, Localizer.Format("#MechJeb_Trans_current_spd") + "-000.0km/s", SpeedText, true);
-            w.Visible(current.transform.parent.gameObject, () => Thrust.Tmode != MechJebModuleThrustController.TMode.OFF);
+            UIText current = w.BoundLabel(r, Localizer.Format("#MechJeb_Trans_current_spd") + "-000.0km/s", SpeedText, true);
+            w.Visible(current, () => Thrust.Tmode != MechJebModuleThrustController.TMode.OFF);
 
             UIText automation = KodeWindow.Label(r, "Automation", true);
             automation.tmpText.alignment = TextAlignmentOptions.Center;
@@ -128,8 +128,8 @@ namespace MuMech.UI
             KodeWindow.Label(speed, "m/s");
             KodeWindow.Button(body, "#MechJeb_Trans_spd_act", ApplySpeed, ButtonRole.Primary, true);
 
-            UIText current = MiscViewKit.LiveBound(w, body, Localizer.Format("#MechJeb_Trans_current_spd") + "-000.0km/s", SpeedText, true);
-            w.Visible(current.transform.parent.gameObject, () => Thrust.Tmode != MechJebModuleThrustController.TMode.OFF);
+            UIText current = w.BoundLabel(body, Localizer.Format("#MechJeb_Trans_current_spd") + "-000.0km/s", SpeedText, true);
+            w.Visible(current, () => Thrust.Tmode != MechJebModuleThrustController.TMode.OFF);
 
             KodeWindow.Header(body, "Automation");
             string panic = KodeWindow.Loc("#MechJeb_Trans_PANIC"), noPanic = KodeWindow.Loc("#MechJeb_Trans_NOPANIC");

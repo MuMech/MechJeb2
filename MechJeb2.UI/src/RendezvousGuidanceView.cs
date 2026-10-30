@@ -19,12 +19,7 @@ namespace MuMech.UI
 
         MechJebCore Core => guidance.Core;
 
-        // 0 = no target, 1 = target in another sphere of influence, 2 = usable target
-        int Mode()
-        {
-            if (Core.Target == null || !Core.Target.NormalTargetExists) return 0;
-            return Core.Target.TargetOrbit.referenceBody != guidance.Orbit.referenceBody ? 1 : 2;
-        }
+        int Mode() => GuidanceUi.RendezvousMode(Core, guidance.Orbit);
 
         int NodeCount => guidance.Vessel.patchedConicSolver != null ? guidance.Vessel.patchedConicSolver.maneuverNodes.Count : 0;
 
@@ -40,16 +35,8 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            Layout none = KodeWindow.Panel(r);
-            GuidanceUi.Wrapped(none, "#MechJeb_RZplan_label1"); //"Select a target to rendezvous with."
-            w.Visible(none.gameObject, () => Mode() == 0);
-
-            Layout other = KodeWindow.Panel(r);
-            GuidanceUi.Wrapped(other, "#MechJeb_RZplan_label2"); //"Rendezvous target must be in the same sphere of influence."
-            w.Visible(other.gameObject, () => Mode() == 1);
-
-            Layout main = KodeWindow.Panel(r);
-            w.Visible(main.gameObject, () => Mode() == 2);
+            //"Select a target to rendezvous with.", "Rendezvous target must be in the same sphere of influence."
+            Layout main = GuidanceUi.RendezvousGate(w, r, Mode, "#MechJeb_RZplan_label1", "#MechJeb_RZplan_label2");
             System.Func<bool> on = () => Mode() == 2;
 
             //Information readouts:
@@ -80,20 +67,13 @@ namespace MuMech.UI
             KodeWindow.Button(main, "#MechJeb_RZplan_button3", guidance.InterceptWithHohmann); //"Intercept with Hohmann transfer"
             KodeWindow.Button(main, "#MechJeb_RZplan_button4", guidance.MatchVelocitiesAtClosestApproach); //"Match velocities at closest approach"
             KodeWindow.Button(main, "#MechJeb_RZplan_button5", guidance.GetCloser); //"Get closer"
-            KodeWindow.Button(main, "#MechJeb_RZplan_button9", () => guidance.Vessel.RemoveAllManeuverNodes(), KodeWindow.ModernLayout ? ButtonRole.Danger : ButtonRole.Normal); //Remove ALL nodes
+            KodeWindow.Button(main, "#MechJeb_RZplan_button9", () => guidance.Vessel.RemoveAllManeuverNodes(), ButtonRole.Danger); //Remove ALL nodes
 
             Layout node = KodeWindow.Panel(main);
             w.Visible(node.gameObject, () => Core.Node != null);
-            UIButton execOne = KodeWindow.Button(node, "#MechJeb_RZplan_button6", () => Core.Node.ExecuteOneNode(guidance), KodeWindow.ModernLayout ? ButtonRole.Primary : ButtonRole.Normal); //"Execute next node"
-            w.Visible(execOne.gameObject, () => Core.Node != null && NodeCount > 0 && !Core.Node.Enabled);
-            UIButton execAll = KodeWindow.Button(node, "#MechJeb_RZplan_button7", () => Core.Node.ExecuteAllNodes(guidance)); //"Execute all nodes"
-            w.Visible(execAll.gameObject, () => Core.Node != null && NodeCount > 1 && !Core.Node.Enabled);
-            UIButton abort = KodeWindow.Button(node, "#MechJeb_RZplan_button8", () => Core.Node.Abort(), KodeWindow.ModernLayout ? ButtonRole.Danger : ButtonRole.Normal); //"Abort node execution"
-            w.Visible(abort.gameObject, () => Core.Node != null && Core.Node.Enabled);
-            w.Toggle(node, "#MechJeb_RZplan_checkbox", () => Core.Node != null && Core.Node.Autowarp, v => //"Auto-warp"
-            {
-                if (Core.Node != null) Core.Node.Autowarp = v;
-            });
+            NodeUi.ExecuteButtons(w, node, Core, guidance, "#MechJeb_RZplan_button6", "#MechJeb_RZplan_button7", "#MechJeb_RZplan_button8",
+                () => NodeCount > 0, () => NodeCount > 1, false); //"Execute next node", "Execute all nodes", "Abort node execution"
+            NodeUi.AutowarpToggle(w, node, Core, "#MechJeb_RZplan_checkbox"); //"Auto-warp"
         }
     }
 }

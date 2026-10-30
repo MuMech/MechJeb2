@@ -42,13 +42,8 @@ namespace MuMech.UI
             window.MaintainBalancerUser();
         }
 
-        void SimpleBox(KodeWindow w, UIObject parent, string key, Func<EditableDoubleMult> ed, string unit = null)
-        {
-            Layout row = KodeWindow.Row(parent);
-            KodeWindow.Label(row, key);
-            EditFields.Field(w, row, () => ed().Text, s => ed().Text = s, 100, () => ed().IsParsed);
-            if (unit != null) KodeWindow.Label(row, unit);
-        }
+        static void SimpleBox(KodeWindow w, UIObject parent, string key, Func<EditableDoubleMult> ed, string unit = null) =>
+            EditUi.Row(w, parent, key, ed, unit);
 
         protected override void BuildContents(KodeWindow w)
         {

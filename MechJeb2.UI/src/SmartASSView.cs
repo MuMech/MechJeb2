@@ -45,22 +45,17 @@ namespace MuMech.UI
         {
             UIButton b = KodeWindow.Padded(KodeWindow.Button(parent, text, click, true)); // btNormal: padding 8
             var img = b.GetComponent<Image>();
-            TMP_Text label = b.GetComponentInChildren<TMP_Text>();
-            bool shown = false;
-            Action paint = () =>
-            {
-                Theme th = Theme.Current;
-                img.color = shown ? ActiveTint : th.Button.Tint;
-                label.color = shown ? th.Good : th.Button.TextColor;
-            };
-            w.Behaviour.AddRestyle(paint);
+            bool shown = active();
+            void Tint(Theme th) => img.color = shown ? ActiveTint : th.Button.Tint;
+            KodeWindow.Styled(b.gameObject, Tint);
             w.AddSync(() =>
             {
                 bool a = active();
                 if (a == shown) return;
                 shown = a;
-                paint();
+                Tint(KodeWindow.ThemeOf(b.gameObject));
             });
+            w.ToneText(b.GetComponentInChildren<TMP_Text>(), () => active() ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal, true);
             return b;
         }
 
@@ -118,7 +113,7 @@ namespace MuMech.UI
                 ss.Engage();
             }
             w.Toggle(row, "#MechJeb_SmartASS_checkbox3", () => ss.forceRol, Set);
-            EditFields.Field(w, row, () => ss.rol.Text, s => ss.rol.Text = s, 30, () => ss.rol.IsParsed);
+            EditUi.Field(w, row, () => ss.rol, 30);
             KodeWindow.Label(row, "°");
         }
 
@@ -143,7 +138,7 @@ namespace MuMech.UI
             Layout row = KodeWindow.Row(parent);
             CheckBox(w, row, force, setForce);
             KodeWindow.Label(row, label);
-            EditFields.Field(w, row, () => get().Text, s => get().Text = s, 37, () => get().IsParsed);
+            EditUi.Field(w, row, get, 37);
             KodeWindow.Label(row, "°");
 
             // change by 5 if the mod_key is held down, else by 1
@@ -177,9 +172,7 @@ namespace MuMech.UI
             // another autopilot uses the attitude controller: just the red "AUTO"
             Layout autoPanel = KodeWindow.Panel(r);
             UIButton auto = KodeWindow.Padded(KodeWindow.Button(autoPanel, "#MechJeb_SmartASS_button57", () => { }, true)); // btAuto
-            TMP_Text autoLabel = auto.GetComponentInChildren<TMP_Text>();
-            autoLabel.color = Color.red;
-            w.Behaviour.AddRestyle(() => autoLabel.color = Color.red);
+            KodeWindow.ToneText(auto.GetComponentInChildren<TMP_Text>(), KodeWindow.Tone.Bad);
             w.Visible(autoPanel.gameObject, () => otherUsers);
 
             Layout main = KodeWindow.Panel(r);
@@ -262,10 +255,9 @@ namespace MuMech.UI
             Layout common = KodeWindow.Panel(p);
             Layout smooth = KodeWindow.Row(common);
             w.Toggle(smooth, "Smooth Control:", () => ss.smoothControl, v => ss.smoothControl = v);
-            EditFields.Field(w, smooth, () => ss.degreesPerSecond.Text, s => ss.degreesPerSecond.Text = s, 40, () => ss.degreesPerSecond.IsParsed);
+            EditUi.Field(w, smooth, () => ss.degreesPerSecond, 40);
             KodeWindow.Label(smooth, "°/s");
-            KodeWindow.Button(common, "#MechJeb_SmartASS_button58", () => ss.Engage(), // "EXECUTE"
-                KodeWindow.ModernLayout ? ButtonRole.Primary : ButtonRole.Normal, KodeWindow.ModernLayout);
+            KodeWindow.Button(common, "#MechJeb_SmartASS_button58", () => ss.Engage(), ButtonRole.Primary, KodeWindow.ModernLayout); // "EXECUTE"
             w.Visible(common.gameObject, () => ss.ShowsSurfaceAngles);
         }
 

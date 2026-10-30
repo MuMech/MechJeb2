@@ -62,36 +62,24 @@ namespace MuMech.UI
             });
 
             // "E": edit this window, "C": copy its sharing string; the modern layout draws them as icons beside the close button
-            if (KodeWindow.ModernLayout)
+            void TitleAction(UnityEngine.Sprite icon, string letter, string tooltipKey, System.Action click)
             {
-                if (window.Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } ed)
-                    w.TitleIcon(Sprites.Edit, "#MechJeb_NewUI_EditWindow_tooltip", () => //Edit this window
-                    {
-                        ed.Enabled = true;
-                        ed.editedWindow = window;
-                    });
-                w.TitleIcon(Sprites.Copy, "#MechJeb_NewUI_CopyWindow_tooltip", () => //Copy this window's configuration
+                if (KodeWindow.ModernLayout) w.TitleIcon(icon, tooltipKey, click);
+                else Tooltips.Add(w.TitleButton(letter, click).gameObject, Localizer.Format(tooltipKey));
+            }
+
+            if (window.Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } editor)
+                TitleAction(Sprites.Edit, "E", "#MechJeb_NewUI_EditWindow_tooltip", () => //Edit this window
                 {
-                    MuUtils.SystemClipboard = window.ToSharingString();
-                    ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg1", window.GetName()), 3.0f,
-                        ScreenMessageStyle.UPPER_RIGHT); //Configuration of <<1>> window copied to clipboard.
+                    editor.Enabled = true;
+                    editor.editedWindow = window;
                 });
-            }
-            else
+            TitleAction(Sprites.Copy, "C", "#MechJeb_NewUI_CopyWindow_tooltip", () => //Copy this window's configuration
             {
-                if (window.Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } editor)
-                    Tooltips.Add(w.TitleButton("E", () =>
-                    {
-                        editor.Enabled = true;
-                        editor.editedWindow = window;
-                    }).gameObject, Localizer.Format("#MechJeb_NewUI_EditWindow_tooltip")); //Edit this window
-                Tooltips.Add(w.TitleButton("C", () =>
-                {
-                    MuUtils.SystemClipboard = window.ToSharingString();
-                    ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg1", window.GetName()), 3.0f,
-                        ScreenMessageStyle.UPPER_RIGHT); //Configuration of <<1>> window copied to clipboard.
-                }).gameObject, Localizer.Format("#MechJeb_NewUI_CopyWindow_tooltip")); //Copy this window's configuration
-            }
+                MuUtils.SystemClipboard = window.ToSharingString();
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg1", window.GetName()), 3.0f,
+                    ScreenMessageStyle.UPPER_RIGHT); //Configuration of <<1>> window copied to clipboard.
+            });
 
             // IMGUI's window is 250 wide and wraps long values: same width for the rows (minus the window's side padding)
             widgets = new InfoItemWidgets(w) { TextColor = () => window.text, RowWidth = MinWidth - 2 * Theme.Current.Padding };

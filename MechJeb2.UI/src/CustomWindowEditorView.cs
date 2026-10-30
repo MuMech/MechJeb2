@@ -104,11 +104,7 @@ namespace MuMech.UI
                 for (int i = 0; i < presetNames.Length; i++) presetNames[i] = CustomWindowPresets.presets[i].name;
                 Layout pick = KodeWindow.Row(r);
                 new ComboBox(w, pick, () => ed.presetIndex, i => ed.presetIndex = i, () => presetNames);
-                KodeWindow.Button(pick, "#MechJeb_NewUI_Create", () => //Create
-                {
-                    MechJebModuleCustomInfoWindow created = ed.CreateWindowFromSharingString(CustomWindowPresets.presets[ed.presetIndex].sharingString);
-                    if (created != null) ed.editedWindow = created;
-                }, ButtonRole.Primary);
+                KodeWindow.Button(pick, "#MechJeb_NewUI_Create", CreateFromPreset, ButtonRole.Primary); //Create
                 return;
             }
 
@@ -118,11 +114,7 @@ namespace MuMech.UI
             Layout presetRow = KodeWindow.Row(r);
             int count = CustomWindowPresets.presets.Length;
             KodeWindow.Button(presetRow, "<", () => ed.presetIndex = (ed.presetIndex - 1 + count) % count);
-            UIButton preset = KodeWindow.Button(presetRow, CustomWindowPresets.presets[ed.presetIndex].name, () =>
-            {
-                MechJebModuleCustomInfoWindow created = ed.CreateWindowFromSharingString(CustomWindowPresets.presets[ed.presetIndex].sharingString);
-                if (created != null) ed.editedWindow = created;
-            }, true);
+            UIButton preset = KodeWindow.Button(presetRow, CustomWindowPresets.presets[ed.presetIndex].name, CreateFromPreset, true);
             int shownPreset = ed.presetIndex;
             w.AddSync(() =>
             {
@@ -132,6 +124,21 @@ namespace MuMech.UI
             });
             KodeWindow.Button(presetRow, ">", () => ed.presetIndex = (ed.presetIndex + 1) % count);
         }
+
+        void CreateFromPreset()
+        {
+            MechJebModuleCustomInfoWindow created = ed.CreateWindowFromSharingString(CustomWindowPresets.presets[ed.presetIndex].sharingString);
+            if (created != null) ed.editedWindow = created;
+        }
+
+        /// <summary>The edited window's title, in a field; a change marks the window for saving.</summary>
+        static void TitleField(KodeWindow w, UIObject parent, MechJebModuleCustomInfoWindow edited) =>
+            EditFields.Field(w, parent, () => edited.title, s =>
+            {
+                if (edited.title == s) return;
+                edited.title = s;
+                edited.Dirty = true;
+            }, 120);
 
         string[] titles = new string[0];
 
@@ -154,12 +161,7 @@ namespace MuMech.UI
             Layout title = KodeWindow.Row(r);
             KodeWindow.Label(title, "#MechJeb_WindowEd_Edtitle"); //Title:
             KodeWindow.Button(title, "<", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) - 1 + all.Count) % all.Count]);
-            EditFields.Field(w, title, () => edited.title, s =>
-            {
-                if (edited.title == s) return;
-                edited.title = s;
-                edited.Dirty = true;
-            }, 120);
+            TitleField(w, title, edited);
             KodeWindow.Button(title, ">", () => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[(all.IndexOf(edited) + 1) % all.Count]);
         }
 
@@ -174,12 +176,7 @@ namespace MuMech.UI
                 KodeWindow.Header(r, "#MechJeb_WindowEd_Edtitle"); //Title:
                 Layout pick = KodeWindow.Row(r);
                 new ComboBox(w, pick, () => all.IndexOf(edited), i => ed.editedWindow = (MechJebModuleCustomInfoWindow)all[i], WindowTitles);
-                EditFields.Field(w, pick, () => edited.title, s =>
-                {
-                    if (edited.title == s) return;
-                    edited.title = s;
-                    edited.Dirty = true;
-                }, 120);
+                TitleField(w, pick, edited);
             }
             else
                 TitleRow(w, r, edited, all);

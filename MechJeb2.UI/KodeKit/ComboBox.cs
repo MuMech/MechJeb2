@@ -71,7 +71,7 @@ namespace KodeKit
                 string[] e = this.entries();
                 int i = Mathf.Clamp(this.get(), 0, Math.Max(0, e.Length - 1));
                 string s = e.Length == 0 ? "" : e[i];
-                if ((object)s == shown) return;
+                if (s == shown) return;
                 shown = s;
                 Button.Text(s);
             });
@@ -99,13 +99,13 @@ namespace KodeKit
             if (!flexible)
             {
                 // a flexible label in a row that doesn't stretch gets no width at all: size it for the widest entry
-                GameObject cell = KodeWindow.IsolateLayout ? current.transform.parent.gameObject : current.gameObject;
+                GameObject cell = KodeWindow.CellOf(current);
                 var le = cell.GetComponent<UnityEngine.UI.LayoutElement>() ?? cell.AddComponent<UnityEngine.UI.LayoutElement>();
                 void FitWidest()
                 {
                     float widest = 0;
                     foreach (string e in this.entries())
-                        widest = Mathf.Max(widest, TextMeasure.Measure(e ?? "", Theme.Current).x);
+                        widest = Mathf.Max(widest, TextMeasure.Measure(e ?? "", KodeWindow.ThemeOf(arrows.gameObject)).x);
                     le.minWidth = le.preferredWidth = widest + 8;
                 }
                 FitWidest();
@@ -181,7 +181,7 @@ namespace KodeKit
             panel.Vertical().ControlChildSize(true, true).ChildForceExpand(true, false).Spacing(1).Padding(3);
             panel.PreferredSizeFitter(true, true).Anchor(AnchorPresets.TopLeft).Pivot(PivotPresets.TopLeft);
             panel.Finish();
-            (Theme.Current ?? Theme.KodeDefault()).Window.ApplyImage(panel.BackGround);
+            KodeWindow.ThemeOf(Button.gameObject).Window.ApplyImage(panel.BackGround);
             list = panel.rectTransform;
             panel.gameObject.AddComponent<WindowBehaviour>(); // click-through lock while hovered
 

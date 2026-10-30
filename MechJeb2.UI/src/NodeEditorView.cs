@@ -21,7 +21,7 @@ namespace MuMech.UI
 
         List<ManeuverNode> Nodes => ed.Vessel.patchedConicSolver != null ? ed.Vessel.patchedConicSolver.maneuverNodes : null;
         int Count => Nodes?.Count ?? 0;
-        int NodeIndex => Nodes.IndexOf(ed.node);
+        int NodeIndex => Nodes?.IndexOf(ed.node) ?? -1;
 
         static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
 
@@ -98,7 +98,7 @@ namespace MuMech.UI
             KodeWindow.Label(shift, "#MechJeb_NodeEd_Label6", true); //"Shift time"
             KodeWindow.Button(shift, "-o", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT - ed.node.patch.period));
             KodeWindow.Button(shift, "-", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT - ed.timeOffset));
-            EditFields.Field(w, shift, () => ed.timeOffset.Text, s => ed.timeOffset.Text = s, 100);
+            EditUi.Field(w, shift, () => ed.timeOffset, 100);
             KodeWindow.Button(shift, "+", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT + ed.timeOffset));
             KodeWindow.Button(shift, "+o", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT + ed.node.patch.period));
 
@@ -109,17 +109,17 @@ namespace MuMech.UI
 
             RelativityModeSelect(w, edit);
 
-            // node executor
+            ExecuteRows(w, edit, false);
+        }
+
+        // the node executor: Execute next node / Execute all nodes (with more than one node) / Abort, Auto-warp
+        void ExecuteRows(KodeWindow w, UIObject parent, bool flexible)
+        {
             MechJebCore core = ed.Core;
-            bool HasNode() => core.Node != null;
-            UIButton execOne = KodeWindow.Button(edit, "#MechJeb_NodeEd_button4", () => core.Node.ExecuteOneNode(ed)); //"Execute next node"
-            w.Visible(execOne.gameObject, () => HasNode() && !core.Node.Enabled);
-            UIButton execAll = KodeWindow.Button(edit, "#MechJeb_NodeEd_button5", () => core.Node.ExecuteAllNodes(ed)); //"Execute all nodes"
-            w.Visible(execAll.gameObject, () => HasNode() && !core.Node.Enabled && Count > 1);
-            UIButton abort = KodeWindow.Button(edit, "#MechJeb_NodeEd_button6", () => core.Node.Abort()); //"Abort node execution"
-            w.Visible(abort.gameObject, () => HasNode() && core.Node.Enabled);
-            UnityEngine.UI.Toggle autowarp = w.Toggle(edit, "#MechJeb_NodeEd_checkbox1", () => core.Node.Autowarp, v => core.Node.Autowarp = v); //"Auto-warp"
-            w.Visible(autowarp.transform.parent.gameObject, HasNode);
+            NodeUi.ExecuteButtons(w, parent, core, ed, "#MechJeb_NodeEd_button4", "#MechJeb_NodeEd_button5", "#MechJeb_NodeEd_button6",
+                () => true, () => Count > 1, flexible); //"Execute next node", "Execute all nodes", "Abort node execution"
+            UnityEngine.UI.Toggle autowarp = NodeUi.AutowarpToggle(w, parent, core, "#MechJeb_NodeEd_checkbox1"); //"Auto-warp"
+            w.Visible(autowarp, () => core.Node != null);
         }
 
         /// <summary>label [value] m/s [-] [delta] [+] m/s; -/+ repeat every 0.2 s while held, like LimitedRepeatButtoon.</summary>
@@ -128,14 +128,14 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, label);
-            EditFields.Field(w, row, () => value().Text, s => value().Text = s, 60, () => value().IsParsed);
+            EditUi.Field(w, row, value, 60);
             KodeWindow.Label(row, "m/s");
             KodeWindow.RepeatButton(row, "-", () =>
             {
                 setValue(value() - delta());
                 ed.UpdateNodeFromFields();
             });
-            EditFields.Field(w, row, () => delta().Text, s => delta().Text = s, 50, () => delta().IsParsed);
+            EditUi.Field(w, row, delta, 50);
             KodeWindow.RepeatButton(row, "+", () =>
             {
                 setValue(value() + delta());
@@ -215,17 +215,8 @@ namespace MuMech.UI
             KodeWindow.Header(edit, "#MechJeb_NewUI_Display"); //Display
             ModernRelativity(w, edit);
 
-            MechJebCore core = ed.Core;
-            bool HasNode() => core.Node != null;
             KodeWindow.Header(edit, "#MechJeb_NewUI_Execute"); //Execute
-            UIButton execOne = KodeWindow.Button(edit, "#MechJeb_NodeEd_button4", () => core.Node.ExecuteOneNode(ed), ButtonRole.Primary, true); //"Execute next node"
-            w.Visible(execOne.gameObject, () => HasNode() && !core.Node.Enabled);
-            UIButton execAll = KodeWindow.Button(edit, "#MechJeb_NodeEd_button5", () => core.Node.ExecuteAllNodes(ed), ButtonRole.Normal, true); //"Execute all nodes"
-            w.Visible(execAll.gameObject, () => HasNode() && !core.Node.Enabled && Count > 1);
-            UIButton abort = KodeWindow.Button(edit, "#MechJeb_NodeEd_button6", () => core.Node.Abort(), ButtonRole.Danger, true); //"Abort node execution"
-            w.Visible(abort.gameObject, () => HasNode() && core.Node.Enabled);
-            UnityEngine.UI.Toggle autowarp = w.SwitchRow(edit, "#MechJeb_NodeEd_checkbox1", () => core.Node.Autowarp, v => core.Node.Autowarp = v); //"Auto-warp"
-            w.Visible(autowarp.transform.parent.gameObject, HasNode);
+            ExecuteRows(w, edit, true);
         }
 
         /// <summary>label [−][value][+] m/s, the step being the axis's delta; − and + repeat while held.</summary>
@@ -249,8 +240,7 @@ namespace MuMech.UI
             w.Segmented(row, relativityModeStrings, () => (int)ed.Vessel.patchedConicRenderer.relativityMode,
                 i => ed.Vessel.patchedConicRenderer.relativityMode = (PatchRendering.RelativityMode)i);
             UIText mode = w.BoundLabel(parent, ModeLabel, true); //"Current mode: <<1>>"
-            mode.tmpText.color = Theme.Current.Dim;
-            w.Behaviour.AddRestyle(() => mode.tmpText.color = Theme.Current.Dim);
+            KodeWindow.ToneText(mode, KodeWindow.Tone.Dim);
         }
 
         void RelativityModeSelect(KodeWindow w, UIObject parent)

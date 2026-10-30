@@ -51,7 +51,7 @@ namespace MuMech.UI
 
             Layout time = KodeWindow.Row(r);
             KodeWindow.Label(time, "#MechJeb_WarpHelper_label2", true); //"Warp for: "
-            EditFields.Field(w, time, () => helper.timeOffset.Text, s => helper.timeOffset.Text = s, 100, () => helper.timeOffset.IsParsed);
+            EditUi.Field(w, time, () => helper.timeOffset, 100);
             w.Visible(time.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.Time);
 
             // I wonder if I should check for target that don't make sense
@@ -59,23 +59,23 @@ namespace MuMech.UI
             w.Visible(needTarget.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.PhaseAngleT && !TargetExists());
             Layout phase = KodeWindow.Row(r);
             KodeWindow.Label(phase, "#MechJeb_WarpHelper_label4"); //"Phase Angle:"
-            EditFields.Field(w, phase, () => helper.phaseAngle.Text, s => helper.phaseAngle.Text = s, 60, () => helper.phaseAngle.IsParsed);
+            EditUi.Field(w, phase, () => helper.phaseAngle, 60);
             KodeWindow.Label(phase, "º");
             w.Visible(phase.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.PhaseAngleT && TargetExists());
 
             Layout lead = KodeWindow.Row(r);
             KodeWindow.Label(lead, "#MechJeb_WarpHelper_label5"); //"Lead time: "
-            EditFields.Field(w, lead, () => helper.leadTime.Text, s => helper.leadTime.Text = s, 100, () => helper.leadTime.IsParsed);
-            UIButton abort = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button1", helper.AbortWarp, KodeWindow.ModernLayout ? ButtonRole.Danger : ButtonRole.Normal); //"Abort"
+            EditUi.Field(w, lead, () => helper.leadTime, 100);
+            UIButton abort = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button1", helper.AbortWarp, ButtonRole.Danger); //"Abort"
             w.Visible(abort.gameObject, () => helper.warping);
-            UIButton warp = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button2", helper.StartWarp, KodeWindow.ModernLayout ? ButtonRole.Primary : ButtonRole.Normal); //"Warp"
+            UIButton warp = KodeWindow.Button(lead, "#MechJeb_WarpHelper_button2", helper.StartWarp, ButtonRole.Primary); //"Warp"
             w.Visible(warp.gameObject, () => !helper.warping);
 
             // useQuickWarpInfoItem()
             w.Toggle(r, "#MechJeb_WarpHelper_checkbox1", () => Core.Warp.useQuickWarp, v => Core.Warp.useQuickWarp = v); //"Quick warp"
 
-            UIText warping = MiscViewKit.LiveBound(w, r, "Warping to 99y 999d 99h 99m 99s before atmospheric entry.", WarpingText, true);
-            w.Visible(warping.transform.parent.gameObject, () => helper.warping);
+            UIText warping = w.BoundLabel(r, "Warping to 99y 999d 99h 99m 99s before atmospheric entry.", WarpingText, true);
+            w.Visible(warping, () => helper.warping);
 
             // ControlWarpButton
             GeneralItemBuilders.Build(w, r, "General:WarpController.ControlWarpButton", Core.Warp);

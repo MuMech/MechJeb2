@@ -24,12 +24,34 @@ namespace MuMech.UI
             return t;
         }
 
+        /// <summary>The rendezvous windows' state: 0 = no target, 1 = target in another sphere of influence, 2 = usable target.</summary>
+        public static int RendezvousMode(MechJebCore core, Orbit orbit)
+        {
+            if (core.Target == null || !core.Target.NormalTargetExists) return 0;
+            return core.Target.TargetOrbit.referenceBody != orbit.referenceBody ? 1 : 2;
+        }
+
+        /// <summary>The rendezvous windows' notes for modes 0 (no target) and 1 (other sphere of influence); returns the panel shown in mode 2.</summary>
+        public static Layout RendezvousGate(KodeWindow w, UIObject r, Func<int> mode, string noneKey, string otherKey)
+        {
+            Layout none = KodeWindow.Panel(r);
+            Wrapped(none, noneKey);
+            w.Visible(none.gameObject, () => mode() == 0);
+
+            Layout other = KodeWindow.Panel(r);
+            Wrapped(other, otherKey);
+            w.Visible(other.gameObject, () => mode() == 1);
+
+            Layout main = KodeWindow.Panel(r);
+            w.Visible(main.gameObject, () => mode() == 2);
+            return main;
+        }
+
         /// <summary>A wrapping text in the theme's warning colour (GuiUtils.YellowLabel).</summary>
         public static UIText Warning(KodeWindow w, UIObject parent, string textOrKey)
         {
             UIText t = Wrapped(parent, textOrKey);
-            t.tmpText.color = Theme.Current.Warn;
-            w.Behaviour.AddRestyle(() => t.tmpText.color = Theme.Current.Warn);
+            KodeWindow.ToneText(t, KodeWindow.Tone.Warn);
             return t;
         }
 

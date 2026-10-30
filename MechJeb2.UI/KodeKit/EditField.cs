@@ -71,18 +71,20 @@ namespace KodeKit
             // the field only grows, like the value cells: a value that doesn't fit widens it once (IMGUI's field shows
             // "0.562" in 35 px; this one, with its rounded inner margins, would cut the last digit)
             float fieldWidth = width;
+            Theme theme = null; // the window's (a custom window can have its own), set by the restyle below
             void Fit(string value)
             {
                 if (string.IsNullOrEmpty(value)) return;
-                float wanted = TextMeasure.Measure(value, Theme.Current).x + 10; // the text area's 4 px margins, and 2 to spare
+                float wanted = TextMeasure.Measure(value, theme).x + 10; // the text area's 4 px margins, and 2 to spare
                 // numbers need a few pixels more at most; free text (names) scrolls inside the field instead of widening the window
                 wanted = Mathf.Min(wanted, width * 1.6f);
                 if (wanted <= fieldWidth) return;
                 fieldWidth = wanted;
-                f.PreferredSize(fieldWidth, Theme.Current.RowHeight);
+                f.PreferredSize(fieldWidth, theme.RowHeight);
             }
             KodeWindow.Styled(f.gameObject, th =>
             {
+                theme = th;
                 th.Field.ApplySelectable(input, bg);
                 foreach (var t in texts) th.ApplyText(t, th.Field.TextColor);
                 if (!shownValid) input.textComponent.color = th.Bad;
@@ -143,8 +145,7 @@ namespace KodeKit
                 bool v = valid();
                 if (v == shownValid) return;
                 shownValid = v;
-                Theme th = Theme.Current;
-                text.color = v ? th.Field.TextColor : th.Bad;
+                text.color = v ? theme.Field.TextColor : theme.Bad;
             });
             return input;
         }

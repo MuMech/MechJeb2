@@ -25,6 +25,13 @@ namespace MuMech.UI
         bool HasVessel => planner.Vessel != null && planner.Vessel.patchedConicSolver != null;
         bool HasNode => Core.Node != null;
 
+        // the node executor, as IMGUI's planner shows it: "all" with more than one node (or under Principia, which hides them)
+        void ExecuteButtons(KodeWindow w, UIObject parent) =>
+            NodeUi.ExecuteButtons(w, parent, Core, planner, "#MechJeb_Maneu_button4", "#MechJeb_Maneu_button5", "#MechJeb_Maneu_button6",
+                () => planner.PlannerNodeCount() > 0,
+                () => planner.PlannerNodeCount() > 0 && (HasVessel && planner.Vessel.patchedConicSolver.maneuverNodes.Count > 1 || ReflectionUtils.IsLoadedPrincipia),
+                true); //Execute next node, Execute all nodes, Abort node execution
+
         // what WindowGUI did before drawing: forced "create" mode without nodes, and the selected operation's drawing side effects
         protected override void BeforeSync()
         {
@@ -90,21 +97,10 @@ namespace MuMech.UI
 
             KodeWindow.Button(r, "#MechJeb_Maneu_button3", () => planner.Vessel.RemoveAllManeuverNodes(), true); //Remove ALL nodes
 
-            // node executor
-            UIButton execOne = KodeWindow.Button(r, "#MechJeb_Maneu_button4", () => Core.Node.ExecuteOneNode(planner), true); //Execute next node
-            w.Visible(execOne.gameObject, () => HasNode && planner.PlannerNodeCount() > 0 && !Core.Node.Enabled);
-            UIButton execAll = KodeWindow.Button(r, "#MechJeb_Maneu_button5", () => Core.Node.ExecuteAllNodes(planner), true); //Execute all nodes
-            w.Visible(execAll.gameObject,
-                () => HasNode && planner.PlannerNodeCount() > 0 && !Core.Node.Enabled &&
-                    (HasVessel && planner.Vessel.patchedConicSolver.maneuverNodes.Count > 1 || ReflectionUtils.IsLoadedPrincipia));
-            UIButton abort = KodeWindow.Button(r, "#MechJeb_Maneu_button6", () => Core.Node.Abort(), true); //Abort node execution
-            w.Visible(abort.gameObject, () => HasNode && Core.Node.Enabled);
+            ExecuteButtons(w, r);
 
             Layout options = KodeWindow.Row(r);
-            w.Toggle(options, "#MechJeb_Maneu_Autowarp", () => HasNode && Core.Node.Autowarp, v => //"Auto-warp"
-            {
-                if (HasNode) Core.Node.Autowarp = v;
-            });
+            NodeUi.AutowarpToggle(w, options, Core, "#MechJeb_Maneu_Autowarp"); //"Auto-warp"
             w.Toggle(options, "RCS Burn", () => HasNode && Core.Node.RCSOnly, v =>
             {
                 if (HasNode) Core.Node.RCSOnly = v;
@@ -202,19 +198,9 @@ namespace MuMech.UI
             Layout exec = KodeWindow.Panel(r);
             w.Visible(exec.gameObject, () => HasNode);
             KodeWindow.Header(exec, "#MechJeb_NewUI_Execute"); //Execute
-            UIButton execOne = KodeWindow.Button(exec, "#MechJeb_Maneu_button4", () => Core.Node.ExecuteOneNode(planner), ButtonRole.Primary, true); //Execute next node
-            w.Visible(execOne.gameObject, () => HasNode && planner.PlannerNodeCount() > 0 && !Core.Node.Enabled);
-            UIButton execAll = KodeWindow.Button(exec, "#MechJeb_Maneu_button5", () => Core.Node.ExecuteAllNodes(planner), ButtonRole.Normal, true); //Execute all nodes
-            w.Visible(execAll.gameObject,
-                () => HasNode && planner.PlannerNodeCount() > 0 && !Core.Node.Enabled &&
-                    (HasVessel && planner.Vessel.patchedConicSolver.maneuverNodes.Count > 1 || ReflectionUtils.IsLoadedPrincipia));
-            UIButton abort = KodeWindow.Button(exec, "#MechJeb_Maneu_button6", () => Core.Node.Abort(), ButtonRole.Danger, true); //Abort node execution
-            w.Visible(abort.gameObject, () => HasNode && Core.Node.Enabled);
+            ExecuteButtons(w, exec);
 
-            w.SwitchRow(exec, "#MechJeb_Maneu_Autowarp", () => HasNode && Core.Node.Autowarp, v => //"Auto-warp"
-            {
-                if (HasNode) Core.Node.Autowarp = v;
-            });
+            NodeUi.AutowarpToggle(w, exec, Core, "#MechJeb_Maneu_Autowarp"); //"Auto-warp"
             w.SwitchRow(exec, "RCS Burn", () => HasNode && Core.Node.RCSOnly, v =>
             {
                 if (HasNode) Core.Node.RCSOnly = v;

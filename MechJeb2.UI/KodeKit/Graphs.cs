@@ -199,6 +199,25 @@ namespace KodeKit
         }
     }
 
+    /// <summary>Destroys the textures made for a widget with it: Unity keeps a texture alive until it is destroyed, so every window rebuild leaked them.</summary>
+    public class OwnedTextures : MonoBehaviour
+    {
+        readonly List<Texture> textures = new List<Texture>();
+
+        public static T Own<T>(Component owner, T texture) where T : Texture
+        {
+            OwnedTextures o = owner.GetComponent<OwnedTextures>() ?? owner.gameObject.AddComponent<OwnedTextures>();
+            o.textures.Add(texture);
+            return texture;
+        }
+
+        void OnDestroy()
+        {
+            foreach (Texture t in textures)
+                if (t != null) Destroy(t);
+        }
+    }
+
     public static class Graphs
     {
         static Texture2D VerticalGradient(Color bottom, Color top, int h = 64)
@@ -250,7 +269,7 @@ namespace KodeKit
         public static RawImage Background(RectTransform surface, Color bottom, Color top)
         {
             var img = Fill<RawImage>(surface, "Background");
-            img.texture = VerticalGradient(bottom, top);
+            img.texture = OwnedTextures.Own(img, VerticalGradient(bottom, top));
             img.raycastTarget = false;
             return img;
         }
@@ -416,7 +435,9 @@ namespace KodeKit
             selection.raycastTarget = false;
             selection.gameObject.SetActive(false);
 
-            pick.Hover = n => HoveredPoint = Pixel(n);
+            // hovering runs every frame: one buffer (readers compare its values)
+            int[] hovered = new int[2];
+            pick.Hover = n => HoveredPoint = Pixel(n, hovered);
             pick.Picked = n =>
             {
                 pressed ??= n;
@@ -438,10 +459,13 @@ namespace KodeKit
             };
         }
 
-        int[] Pixel(Vector2 n)
+        int[] Pixel(Vector2 n, int[] into = null)
         {
             var t = Image.texture;
-            return new[] { Mathf.Clamp((int)(n.x * t.width), 0, t.width - 1), Mathf.Clamp((int)(n.y * t.height), 0, t.height - 1) };
+            into ??= new int[2];
+            into[0] = Mathf.Clamp((int)(n.x * t.width), 0, t.width - 1);
+            into[1] = Mathf.Clamp((int)(n.y * t.height), 0, t.height - 1);
+            return into;
         }
 
         void ShowSelection(Vector2 a, Vector2 b)
@@ -484,7 +508,7 @@ namespace KodeKit
             sv = new Texture2D(SV, SV, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
             svPixels = new Color32[SV * SV];
             var svImg = Graphs.Fill<RawImage>(svArea, "SVTexture");
-            svImg.texture = sv;
+            svImg.texture = OwnedTextures.Own(svImg, sv);
             svImg.gameObject.AddComponent<PickArea>().Picked = n => { s = n.x; v = n.y; Push(Color.HSVToRGB(h, s, v)); };
             svMarker = Marker(svArea);
 
@@ -493,7 +517,7 @@ namespace KodeKit
             for (int y = 0; y < 64; y++) hueTex.SetPixel(0, y, Color.HSVToRGB(y / 63f, 1, 1));
             hueTex.Apply();
             var hueImg = Graphs.Fill<RawImage>(hueArea, "HueTexture");
-            hueImg.texture = hueTex;
+            hueImg.texture = OwnedTextures.Own(hueImg, hueTex);
             hueImg.gameObject.AddComponent<PickArea>().Picked = n => { h = n.y; Push(Color.HSVToRGB(h, s, v)); };
             hueMarker = Marker(hueArea);
 
@@ -510,7 +534,7 @@ namespace KodeKit
                 RectTransform bar = Graphs.Surface(row, SV + 48, 12, "Bar" + names[c]);
                 rgbaTex[c] = new Texture2D(32, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
                 var img = Graphs.Fill<RawImage>(bar, "Gradient");
-                img.texture = rgbaTex[c];
+                img.texture = OwnedTextures.Own(img, rgbaTex[c]);
                 img.gameObject.AddComponent<PickArea>().Picked = n =>
                 {
                     Color col = get();

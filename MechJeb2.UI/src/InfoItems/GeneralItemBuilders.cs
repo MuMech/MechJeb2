@@ -122,24 +122,30 @@ namespace MuMech.UI
             });
         }
 
-        /// <summary>MechJebModuleStagingController.AutostageSettingsInfoItem, in a box.</summary>
+        /// <summary>MechJebModuleStagingController.AutostageSettingsInfoItem, in a box (a property grid in the modern layout).</summary>
         static void AutostageSettings(KodeWindow w, UIObject parent, MechJebModuleStagingController s)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                ModernRows.AutostageSettings(w, parent, s);
+                return;
+            }
+
             LayoutPanel box = KodeWindow.Box(parent);
 
             Layout limit = KodeWindow.Row(box);
             KodeWindow.Label(limit, "#MechJeb_Ascent_label42", true); //"Stop at stage #"
-            EditFields.Field(w, limit, () => s.AutostageLimit.Text, x => s.AutostageLimit.Text = x, 40);
+            EditUi.Field(w, limit, () => s.AutostageLimit, 40);
 
             Layout delays = KodeWindow.Row(box);
             KodeWindow.Label(delays, "Delays: ");
             KodeWindow.Space(delays, 30);
             KodeWindow.Label(delays, "pre: ");
-            EditFields.Field(w, delays, () => s.AutostagePreDelay.Text, x => s.AutostagePreDelay.Text = x, 35, () => s.AutostagePreDelay.IsParsed);
+            EditUi.Field(w, delays, () => s.AutostagePreDelay, 35);
             KodeWindow.Label(delays, "s");
             KodeWindow.FlexibleSpace(delays);
             KodeWindow.Label(delays, "post: ");
-            EditFields.Field(w, delays, () => s.AutostagePostDelay.Text, x => s.AutostagePostDelay.Text = x, 35, () => s.AutostagePostDelay.IsParsed);
+            EditUi.Field(w, delays, () => s.AutostagePostDelay, 35);
             KodeWindow.Label(delays, "s");
 
             ClampAutostageThrust(w, box, s);
@@ -153,13 +159,13 @@ namespace MuMech.UI
             w.Toggle(hot, "#MechJeb_Ascent_hotStaging", () => s.HotStaging, v => s.HotStaging = v); //"Support hotstaging"
             KodeWindow.FlexibleSpace(hot);
             KodeWindow.Label(hot, s._sLeadTime);
-            EditFields.Field(w, hot, () => s.HotStagingLeadTime.Text, x => s.HotStagingLeadTime.Text = x, 35, () => s.HotStagingLeadTime.IsParsed);
+            EditUi.Field(w, hot, () => s.HotStagingLeadTime, 35);
             KodeWindow.Label(hot, "s");
 
             Layout solids = KodeWindow.Row(box);
             w.Toggle(solids, "#MechJeb_Ascent_dropSolids", () => s.DropSolids, v => s.DropSolids = v); //"Drop solids early"
             KodeWindow.FlexibleSpace(solids);
-            EditFields.Field(w, solids, () => s.DropSolidsTwrPct.Text, x => s.DropSolidsTwrPct.Text = x, 35, () => s.DropSolidsTwrPct.IsParsed);
+            EditUi.Field(w, solids, () => s.DropSolidsTwrPct, 35);
             KodeWindow.Label(solids, "% rocket accel");
         }
 
@@ -167,11 +173,7 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, CachedLocalizer.Instance.MechJebAscentLabel44, true); //"Clamp AutoStage Thrust "
-            EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x =>
-            {
-                s.ClampAutoStageThrustPct.Text = x;
-                s.ClampAutostageThrustValue();
-            }, 50, () => s.ClampAutoStageThrustPct.IsParsed);
+            EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x => ModernRows.SetClamp(s, x), 50, () => s.ClampAutoStageThrustPct.IsParsed);
             KodeWindow.Label(row, "%");
         }
 
@@ -179,7 +181,7 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Label(row, label, true);
-            EditFields.Field(w, row, () => ed.Text, x => ed.Text = x, width, () => ed.IsParsed);
+            EditUi.Field(w, row, () => ed, width);
             KodeWindow.Label(row, unit);
         }
 
@@ -190,13 +192,19 @@ namespace MuMech.UI
             string once = KSP.Localization.Localizer.Format("#MechJeb_Utilities_label1", KSP.Localization.Localizer.Format("#MechJeb_Utilities_label1_1"));
             string always = KSP.Localization.Localizer.Format("#MechJeb_Utilities_label1", " ");
             UIText status = w.BoundLabel(parent, () => s.AutostagingOnce ? once : always, true);
-            w.Visible(status.transform.parent.gameObject, () => s.Enabled);
+            w.Visible(status, () => s.Enabled);
             UIButton b = KodeWindow.Button(parent, "#MechJeb_Utilities_button1", () => s.AutostageOnce(window), true); //"Autostage once"
             w.Visible(b.gameObject, () => !s.Enabled);
         }
 
         static void Separator(UIObject parent)
         {
+            if (KodeWindow.ModernLayout)
+            {
+                KodeWindow.Rule(parent);
+                return;
+            }
+
             UIEmpty line = parent.Add<UIEmpty>("Separator");
             line.PreferredHeight(2).FlexibleLayout(true, false).Finish();
             Image img = line.gameObject.AddComponent<Image>();

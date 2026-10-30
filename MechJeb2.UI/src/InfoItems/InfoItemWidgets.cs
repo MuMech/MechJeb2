@@ -39,7 +39,7 @@ namespace MuMech.UI
                     break;
                 case ToggleInfoItem t:
                     UnityEngine.UI.Toggle toggle = w.Toggle(parent, item.localizedName, () => t.Value, x => t.Value = x);
-                    Tooltip(toggle.transform.parent.GetComponentInChildren<ToggleLabelClick>().gameObject, item);
+                    Tooltip(KodeWindow.LabelOf(toggle).gameObject, item);
                     break;
                 case EditableInfoItem e:
                     AddEditable(parent, e);

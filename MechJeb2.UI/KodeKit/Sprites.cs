@@ -74,11 +74,16 @@ namespace KodeKit
                 new Vector4(b, b, b, b));
         }
 
+        static Sprite pill, pillOutline, rounded;
+
         /// <summary>A white pill (fully rounded ends), 9-sliced: switch tracks and chips (tint it).</summary>
-        public static Sprite Pill => RoundedBox(9, 0, Color.white, Color.white);
+        public static Sprite Pill => pill ??= RoundedBox(9, 0, Color.white, Color.white);
 
         /// <summary>A white pill outline with a transparent inside (tint it).</summary>
-        public static Sprite PillOutline => RoundedBox(9, 1, new Color(1, 1, 1, 0), Color.white);
+        public static Sprite PillOutline => pillOutline ??= RoundedBox(9, 1, new Color(1, 1, 1, 0), Color.white);
+
+        /// <summary>A white box with 3 px rounded corners (tint it): status bars, flat icon buttons.</summary>
+        public static Sprite Rounded => rounded ??= RoundedBox(3, 0, Color.white, Color.white);
 
         // ---- navball markers (white: tint them with the navball colours) ----
 

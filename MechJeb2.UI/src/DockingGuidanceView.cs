@@ -81,22 +81,7 @@ namespace MuMech.UI
         }
 
         // Localizer.Format(key, value.ToString("F2")) rebuilt only when the value changes
-        static Func<string> FloatLabel(string key, Func<float> value)
-        {
-            float last = float.NaN;
-            string text = null;
-            return () =>
-            {
-                float v = value();
-                if (text == null || v != last)
-                {
-                    last = v;
-                    text = Localizer.Format(key, v.ToString("F2"));
-                }
-
-                return text;
-            };
-        }
+        static Func<string> FloatLabel(string key, Func<float> value) => Memo.Of(value, v => Localizer.Format(key, v.ToString("F2")));
 
         protected override void BuildContents(KodeWindow w)
         {
@@ -108,12 +93,7 @@ namespace MuMech.UI
 
             UIObject r = w.Root;
 
-            Layout none = KodeWindow.Panel(r);
-            GuidanceUi.Wrapped(none, "#MechJeb_Docking_label1"); //"Choose a target to dock with"
-            w.Visible(none.gameObject, () => !HasTarget);
-
-            Layout main = KodeWindow.Panel(r);
-            w.Visible(main.gameObject, () => HasTarget);
+            Layout main = TargetGate(w, r);
 
             UIText warnControl = GuidanceUi.Warning(w, main, "#MechJeb_Docking_label2");
             w.Visible(warnControl.gameObject, () => noDockingPortControl);
@@ -126,11 +106,7 @@ namespace MuMech.UI
             UIText warnAxis = GuidanceUi.Warning(w, main, "#MechJeb_Docking_label4");
             w.Visible(warnAxis.gameObject, () => noOnAxisNode);
 
-            w.Toggle(main, "#MechJeb_Docking_checkbox1", () => ApEnabled, v => //"Autopilot enabled"
-            {
-                if (v) Ap.Users.Add(guidance);
-                else Ap.Users.Remove(guidance);
-            });
+            AutopilotSwitch(w, main);
             EditRow(w, main, "#MechJeb_Docking_label5", () => Ap?.speedLimit, "m/s"); //"Speed limit"
 
             w.Toggle(main, "#MechJeb_Docking_checkbox2", () => Ap != null && Ap.overrideSafeDistance, v => //"Override Safe Distance"
@@ -161,21 +137,13 @@ namespace MuMech.UI
             {
                 if (Ap != null) Ap.forceRol = v;
             });
-            EditFields.Field(w, roll, () => Ap?.rol.Text ?? "", s =>
-            {
-                if (Ap != null) Ap.rol.Text = s;
-            }, 30, () => Ap?.rol.IsParsed ?? true);
+            EditUi.Field(w, roll, () => Ap?.rol, 30);
             KodeWindow.Label(roll, "°");
 
             // while the autopilot runs
             Layout running = KodeWindow.Panel(main);
             w.Visible(running.gameObject, () => ApEnabled);
-            w.BoundLabel(running, GuidanceUi.Format1("#MechJeb_Docking_label9", () => Ap?.status), true); //"Status: <<1>>"
-            ErrorLabel(w, running, "#MechJeb_Docking_label10", " m/s  [L/J]", () => errorX); //Error X: <<1>>
-            ErrorLabel(w, running, "#MechJeb_Docking_label11", " m/s  [I/K]", () => errorY); //Error Y: <<1>>
-            ErrorLabel(w, running, "#MechJeb_Docking_label12", " m/s  [H/N]", () => errorZ); //Error Z: <<1>>
-            ErrorLabel(w, running, "#MechJeb_Docking_label13", "m", () => Ap.zSep); //Distance Dock: <<1>>
-            ErrorLabel(w, running, "#MechJeb_Docking_label14", "m", () => Ap.lateralSep.magnitude); //Distance Dock Axis: <<1>>
+            RunningLabels(w, running);
         }
 
         // modern layout: the setup problems in one status bar at the top, the options in a property grid, the running
@@ -184,12 +152,7 @@ namespace MuMech.UI
         {
             UIObject r = w.Root;
 
-            Layout none = KodeWindow.Panel(r);
-            GuidanceUi.Wrapped(none, "#MechJeb_Docking_label1"); //"Choose a target to dock with"
-            w.Visible(none.gameObject, () => !HasTarget);
-
-            Layout main = KodeWindow.Panel(r);
-            w.Visible(main.gameObject, () => HasTarget);
+            Layout main = TargetGate(w, r);
 
             bool NoTargetPort() => !(Core.Target.Target is ModuleDockingNode) && guidance.selectedTargetPort == null;
             Layout problems = w.StatusBar(main, () => KodeWindow.Tone.Warn);
@@ -200,11 +163,7 @@ namespace MuMech.UI
 
             TargetPortSelector(w, main);
 
-            w.SwitchRow(main, "#MechJeb_Docking_checkbox1", () => ApEnabled, v => //"Autopilot enabled"
-            {
-                if (v) Ap.Users.Add(guidance);
-                else Ap.Users.Remove(guidance);
-            });
+            AutopilotSwitch(w, main);
 
             KodeWindow.PropertyGrid g = w.Properties(main);
             GridField(g, "#MechJeb_Docking_label5", () => Ap?.speedLimit, "m/s"); //"Speed limit"
@@ -236,14 +195,37 @@ namespace MuMech.UI
             Layout box = KodeWindow.Row(main);
             UIText safeText = w.BoundLabel(box, FloatLabel("#MechJeb_Docking_label7", () => Ap?.safeDistance ?? 0), true); //"safeDistance "
             UIText sizeText = w.BoundLabel(box, FloatLabel("#MechJeb_Docking_label8", () => Ap?.targetSize ?? 0), true); //"targetSize   "
-            foreach (UIText t in new[] { safeText, sizeText })
-            {
-                UIText x = t;
-                KodeWindow.Styled(x.gameObject, th => x.tmpText.color = th.Dim);
-            }
+            KodeWindow.ToneText(safeText, KodeWindow.Tone.Dim);
+            KodeWindow.ToneText(sizeText, KodeWindow.Tone.Dim);
 
             Layout running = w.StatusBar(r, () => KodeWindow.Tone.Normal);
             w.Visible(running.gameObject, () => HasTarget && ApEnabled);
+            RunningLabels(w, running);
+        }
+
+        // the parts both layouts share: the target gate, the autopilot switch and the running state
+
+        /// <summary>"Choose a target to dock with" without a target; returns the panel shown with one.</summary>
+        Layout TargetGate(KodeWindow w, UIObject r)
+        {
+            Layout none = KodeWindow.Panel(r);
+            GuidanceUi.Wrapped(none, "#MechJeb_Docking_label1"); //"Choose a target to dock with"
+            w.Visible(none.gameObject, () => !HasTarget);
+
+            Layout main = KodeWindow.Panel(r);
+            w.Visible(main.gameObject, () => HasTarget);
+            return main;
+        }
+
+        void AutopilotSwitch(KodeWindow w, UIObject parent) =>
+            w.Toggle(parent, "#MechJeb_Docking_checkbox1", () => ApEnabled, v => //"Autopilot enabled"
+            {
+                if (v) Ap.Users.Add(guidance);
+                else Ap.Users.Remove(guidance);
+            });
+
+        void RunningLabels(KodeWindow w, UIObject running)
+        {
             w.BoundLabel(running, GuidanceUi.Format1("#MechJeb_Docking_label9", () => Ap?.status), true); //"Status: <<1>>"
             ErrorLabel(w, running, "#MechJeb_Docking_label10", " m/s  [L/J]", () => errorX); //Error X: <<1>>
             ErrorLabel(w, running, "#MechJeb_Docking_label11", " m/s  [I/K]", () => errorY); //Error Y: <<1>>
@@ -253,12 +235,7 @@ namespace MuMech.UI
         }
 
         /// <summary>label [field] unit in a property grid; the editable is read again on every access (the autopilot replaces it).</summary>
-        Layout GridField(KodeWindow.PropertyGrid g, string key, Func<EditableDouble> ed, string unit) =>
-            g.Field(key, () => ed()?.Text ?? "", s =>
-            {
-                EditableDouble e = ed();
-                if (e != null) e.Text = s;
-            }, 70, unit, () => ed()?.IsParsed ?? true);
+        static Layout GridField(KodeWindow.PropertyGrid g, string key, Func<EditableDouble> ed, string unit) => EditUi.Grid(g, key, ed, unit, 70);
 
         /// <summary>"label: value suffix" refilled every frame without allocating.</summary>
         void ErrorLabel(KodeWindow w, UIObject parent, string key, string suffix, Func<double> value)
@@ -269,18 +246,7 @@ namespace MuMech.UI
         }
 
         /// <summary>GuiUtils.SimpleTextBox(label, editable, unit); the editable is read again on every access (the autopilot replaces it when it clamps).</summary>
-        Layout EditRow(KodeWindow w, UIObject parent, string key, Func<EditableDouble> ed, string unit)
-        {
-            Layout row = KodeWindow.Row(parent);
-            KodeWindow.Label(row, key);
-            EditFields.Field(w, row, () => ed()?.Text ?? "", s =>
-            {
-                EditableDouble e = ed();
-                if (e != null) e.Text = s;
-            }, 100, () => ed()?.IsParsed ?? true);
-            KodeWindow.Label(row, unit);
-            return row;
-        }
+        static Layout EditRow(KodeWindow w, UIObject parent, string key, Func<EditableDouble> ed, string unit) => EditUi.Row(w, parent, key, ed, unit);
 
         // DrawTargetPortSelector: "Target port" [<] port (n/m) [>], or a note when the target is out of range
         void TargetPortSelector(KodeWindow w, UIObject parent)
@@ -306,7 +272,7 @@ namespace MuMech.UI
 
             UIText label = GuidanceUi.Live(w, row, "Docking Port Jr. (12/12)", true, ct => ct.Append(guidance.targetPortLabel), ready);
             label.tmpText.alignment = TextAlignmentOptions.Center;
-            w.Visible(label.transform.parent.gameObject, ready);
+            w.Visible(label, ready);
 
             UIButton next = KodeWindow.Button(row, ">", () =>
             {

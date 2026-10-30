@@ -81,23 +81,38 @@ namespace KodeKit
         /// <summary>Primary and danger buttons without a style of their own are tinted (Classic+); off, they look plain, as in IMGUI (Classic).</summary>
         public bool TintRoles;
 
+        // the tinted role looks, made once per role and Button (Role is called on every restyle of every role button)
+        ElementStyle[] tinted;
+        ElementStyle tintedFrom;
+        Color tintedTint;
+
         /// <summary>The look of a button by role: its own style if the theme has one, else the plain button tinted.</summary>
         public ElementStyle Role(ButtonRole role)
         {
             ElementStyle own = role == ButtonRole.Primary ? Primary : role == ButtonRole.Danger ? Danger : role == ButtonRole.Selected ? Selected : null;
             if (own != null || role == ButtonRole.Normal) return own ?? Button;
             if (!TintRoles && role != ButtonRole.Selected) return Button;
+            // a new array, not a cleared one: Copy() shares this one with the theme it was copied from
+            if (tinted == null || tintedFrom != Button || tintedTint != Button.Tint)
+            {
+                tinted = new ElementStyle[4];
+                tintedFrom = Button;
+                tintedTint = Button.Tint;
+            }
+
+            int i = (int)role;
+            if (tinted[i] != null) return tinted[i];
             Color tint = role == ButtonRole.Primary ? new Color(0.62f, 0.8f, 1f) : role == ButtonRole.Danger ? new Color(1f, 0.6f, 0.55f) : new Color(0.6f, 1f, 0.65f);
-            return new ElementStyle
+            return tinted[i] = new ElementStyle
             {
                 Normal = Button.Normal, Highlight = Button.Highlight, Active = Button.Active, Disabled = Button.Disabled, Type = Button.Type,
                 Tint = Button.Tint * tint, TextColor = Button.TextColor
             };
         }
 
-        /// <summary>Text colour of a button by role.</summary>
-        public Color RoleText(ButtonRole role) =>
-            role == ButtonRole.Normal ? Button.TextColor : (role == ButtonRole.Primary ? Primary : role == ButtonRole.Danger ? Danger : Selected)?.TextColor ?? Button.TextColor;
+        /// <summary>The colour of a state (green, yellow, red, dim); <paramref name="normal"/> for Tone.Normal: the text, a button's text or the accent.</summary>
+        public Color ToneColor(KodeWindow.Tone tone, Color normal) =>
+            tone == KodeWindow.Tone.Good ? Good : tone == KodeWindow.Tone.Warn ? Warn : tone == KodeWindow.Tone.Bad ? Bad : tone == KodeWindow.Tone.Dim ? Dim : normal;
 
         public static Theme Current { get; private set; }
         public static int Version { get; private set; }

@@ -125,7 +125,7 @@ namespace MuMech.UI
         {
             if (Rec == null || Rec.HistoryIdx < 0 || Rec.HistoryIdx >= Rec.History.Length) return rangeText ?? "";
             double d = Rec.History[Rec.HistoryIdx].DownRange;
-            if (rangeText == null || d != shownRange)
+            if (rangeText == null || !d.Equals(shownRange))
             {
                 shownRange = d;
                 rangeText = Localizer.Format("#MechJeb_Flightrecord_Label2", d.ToSI()) + "m"; //Downrange <<1>>
@@ -157,7 +157,7 @@ namespace MuMech.UI
 
         string ScaleText()
         {
-            if (scaleText == null || curScaleX != shownScale || g.downrange != shownScaleDownrange)
+            if (scaleText == null || !curScaleX.Equals(shownScale) || g.downrange != shownScaleDownrange)
             {
                 shownScale = curScaleX;
                 shownScaleDownrange = g.downrange;
@@ -239,7 +239,7 @@ namespace MuMech.UI
                 if (g.displayed[(int)MechJebModuleFlightRecorderGraph.graphInfos[i].Type]) mask |= 1 << i;
             if (g.stages) mask |= 1 << 30;
 
-            bool force = curScaleX != lastScaleX || g.downrange != lastDownrange || g.scaleIdx != lastScaleIdx || mask != lastMask;
+            bool force = !curScaleX.Equals(lastScaleX) || g.downrange != lastDownrange || g.scaleIdx != lastScaleIdx || mask != lastMask;
             // LineGraph rebuilds one mesh per frame after a Refresh: don't refresh again before it has gone through them all
             bool due = Time.frameCount - lastRefreshFrame >= graph.Series.Count + 2 && Time.unscaledTime - lastRefreshTime >= 0.2f;
             if (force || due)
@@ -276,7 +276,7 @@ namespace MuMech.UI
         // GUI.color = the graph's colour around IMGUI's toggle tints the box and the text
         static void Colorize(KodeWindow w, Toggle toggle, Color color)
         {
-            TMP_Text label = MiscViewKit.ToggleLabel(toggle);
+            TMP_Text label = KodeWindow.LabelOf(toggle);
             Graphic box = KodeWindow.ModernLayout ? null : toggle.targetGraphic;
             void Paint()
             {
@@ -309,67 +309,33 @@ namespace MuMech.UI
             Layout top = KodeWindow.Row(r);
             MiscViewKit.BoundButton(w, top, () => g.paused ? resume : pause, () => g.paused = !g.paused);
             MiscViewKit.BoundButton(w, top, () => g.downrange ? downrange : time, () => g.downrange = !g.downrange);
-            MiscViewKit.LiveBound(w, top, Localizer.Format("#MechJeb_Flightrecord_Label1", "999d 99h 99m 99s"), TimeText);
-            MiscViewKit.LiveBound(w, top, Localizer.Format("#MechJeb_Flightrecord_Label2", "-999.9M") + "m", RangeText);
+            w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label1", "999d 99h 99m 99s"), TimeText);
+            w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label2", "-999.9M") + "m", RangeText);
             KodeWindow.FlexibleSpace(top);
-            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button3", () => //"Mark"
-            {
-                g.ResetScale(); // TODO : should check something else to catch Mark calls from other code
-                Rec.Mark();
-            });
+            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button3", Mark); //"Mark"
             KodeWindow.Button(top, "#MechJeb_Flightrecord_Button4", g.ResetScale); //"Reset Scale"
 
             // row 2: scale, plot size, real atmo, csv, storage
             Layout options = KodeWindow.Row(r);
             w.Toggle(options, "#MechJeb_Flightrecord_checkbox1", () => g.autoScale, v => g.autoScale = v); //Auto Scale
-            UIButton scaleDown = KodeWindow.Button(options, "-", () =>
-            {
-                if (g.downrange) g.downrangeScale--;
-                else g.timeScale--;
-                g.ClampSizes();
-            });
+            UIButton scaleDown = KodeWindow.Button(options, "-", () => ScaleBy(-1));
             w.Visible(scaleDown.gameObject, () => !g.autoScale);
-            MiscViewKit.LiveBound(w, options, "999.99Mm/px", ScaleText);
-            UIButton scaleUp = KodeWindow.Button(options, "+", () =>
-            {
-                if (g.downrange) g.downrangeScale++;
-                else g.timeScale++;
-                g.ClampSizes();
-            });
+            w.BoundLabel(options, "999.99Mm/px", ScaleText);
+            UIButton scaleUp = KodeWindow.Button(options, "+", () => ScaleBy(1));
             w.Visible(scaleUp.gameObject, () => !g.autoScale);
 
-            KodeWindow.Button(options, "-", () =>
-            {
-                g.hSize--;
-                g.ClampSizes();
-            });
-            MiscViewKit.LiveBound(w, options, "9999", () => Number(g.width));
-            KodeWindow.Button(options, "+", () =>
-            {
-                g.hSize++;
-                g.ClampSizes();
-            });
+            KodeWindow.Button(options, "-", () => Resize(-1, 0));
+            w.BoundLabel(options, "9999", () => Number(g.width));
+            KodeWindow.Button(options, "+", () => Resize(1, 0));
             KodeWindow.Label(options, "x");
-            KodeWindow.Button(options, "-", () =>
-            {
-                g.vSize--;
-                g.ClampSizes();
-            });
-            MiscViewKit.LiveBound(w, options, "9999", () => Number(g.height));
-            KodeWindow.Button(options, "+", () =>
-            {
-                g.vSize++;
-                g.ClampSizes();
-            });
+            KodeWindow.Button(options, "-", () => Resize(0, -1));
+            w.BoundLabel(options, "9999", () => Number(g.height));
+            KodeWindow.Button(options, "+", () => Resize(0, 1));
 
-            w.Toggle(options, "#MechJeb_Flightrecord_checkbox2", () => g.realAtmo, v => //Real Atmo
-            {
-                g.realAtmo = v;
-                if (MechJebModuleFlightRecorderGraph.backgroundTexture != null && g.Vessel != null) g.RefreshAtmoTexture();
-            });
+            w.Toggle(options, "#MechJeb_Flightrecord_checkbox2", () => g.realAtmo, SetRealAtmo); //Real Atmo
             KodeWindow.FlexibleSpace(options);
             KodeWindow.Button(options, "#MechJeb_Flightrecord_Button5", () => Rec.DumpCsv()); //CSV
-            MiscViewKit.LiveBound(w, options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
+            w.BoundLabel(options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
 
             // row 3: which graphs to show, in their colours
             Layout toggles = KodeWindow.Row(r);
@@ -384,6 +350,34 @@ namespace MuMech.UI
             BuildPlot(w, r);
         }
 
+        // ---- the controls' actions, in both layouts ----
+
+        void Mark()
+        {
+            g.ResetScale(); // TODO : should check something else to catch Mark calls from other code
+            Rec.Mark();
+        }
+
+        void ScaleBy(int d)
+        {
+            if (g.downrange) g.downrangeScale += d;
+            else g.timeScale += d;
+            g.ClampSizes();
+        }
+
+        void Resize(int dh, int dv)
+        {
+            g.hSize += dh;
+            g.vSize += dv;
+            g.ClampSizes();
+        }
+
+        void SetRealAtmo(bool v)
+        {
+            g.realAtmo = v;
+            if (MechJebModuleFlightRecorderGraph.backgroundTexture != null && g.Vessel != null) g.RefreshAtmoTexture();
+        }
+
         // modern layout: Downrange / Time as one choice, switches, and the 16 series as a legend of chips in their colours
         void BuildModernControls(KodeWindow w, UIObject r)
         {
@@ -393,61 +387,28 @@ namespace MuMech.UI
             Layout top = KodeWindow.Row(r);
             MiscViewKit.BoundButton(w, top, () => g.paused ? resume : pause, () => g.paused = !g.paused);
             w.Segmented(top, axis, () => g.downrange ? 0 : 1, i => g.downrange = i == 0).FlexibleLayout(0f, 0f);
-            MiscViewKit.LiveBound(w, top, Localizer.Format("#MechJeb_Flightrecord_Label1", "999d 99h 99m 99s"), TimeText);
-            MiscViewKit.LiveBound(w, top, Localizer.Format("#MechJeb_Flightrecord_Label2", "-999.9M") + "m", RangeText);
+            w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label1", "999d 99h 99m 99s"), TimeText);
+            w.BoundLabel(top, Localizer.Format("#MechJeb_Flightrecord_Label2", "-999.9M") + "m", RangeText);
             KodeWindow.FlexibleSpace(top);
-            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button3", () => //"Mark"
-            {
-                g.ResetScale();
-                Rec.Mark();
-            });
+            KodeWindow.Button(top, "#MechJeb_Flightrecord_Button3", Mark); //"Mark"
             KodeWindow.Button(top, "#MechJeb_Flightrecord_Button4", g.ResetScale); //"Reset Scale"
             KodeWindow.Button(top, "#MechJeb_Flightrecord_Button5", () => Rec.DumpCsv()); //CSV
 
             Layout options = KodeWindow.Row(r);
             w.SwitchRow(options, "#MechJeb_Flightrecord_checkbox1", () => g.autoScale, v => g.autoScale = v).transform.parent //Auto Scale
                 .GetComponent<LayoutElement>().flexibleWidth = 0;
-            Layout scale = Nudge(w, options, "999.99Mm/px", ScaleText, () =>
-            {
-                if (g.downrange) g.downrangeScale--;
-                else g.timeScale--;
-                g.ClampSizes();
-            }, () =>
-            {
-                if (g.downrange) g.downrangeScale++;
-                else g.timeScale++;
-                g.ClampSizes();
-            });
+            Layout scale = Nudge(w, options, "999.99Mm/px", ScaleText, () => ScaleBy(-1), () => ScaleBy(1));
             // auto scale picks the scale itself: show it, hide its - and +
             w.Visible(scale.transform.GetChild(0).gameObject, () => !g.autoScale);
             w.Visible(scale.transform.GetChild(scale.transform.childCount - 1).gameObject, () => !g.autoScale);
             KodeWindow.FlexibleSpace(options);
-            Nudge(w, options, "9999", () => Number(g.width), () =>
-            {
-                g.hSize--;
-                g.ClampSizes();
-            }, () =>
-            {
-                g.hSize++;
-                g.ClampSizes();
-            });
+            Nudge(w, options, "9999", () => Number(g.width), () => Resize(-1, 0), () => Resize(1, 0));
             KodeWindow.Label(options, "×");
-            Nudge(w, options, "9999", () => Number(g.height), () =>
-            {
-                g.vSize--;
-                g.ClampSizes();
-            }, () =>
-            {
-                g.vSize++;
-                g.ClampSizes();
-            });
-            w.SwitchRow(options, "#MechJeb_Flightrecord_checkbox2", () => g.realAtmo, v => //Real Atmo
-            {
-                g.realAtmo = v;
-                if (MechJebModuleFlightRecorderGraph.backgroundTexture != null && g.Vessel != null) g.RefreshAtmoTexture();
-            }).transform.parent.GetComponent<LayoutElement>().flexibleWidth = 0;
-            UIText storage = MiscViewKit.LiveBound(w, options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
-            KodeWindow.Styled(storage.gameObject, th => storage.tmpText.color = th.Dim);
+            Nudge(w, options, "9999", () => Number(g.height), () => Resize(0, -1), () => Resize(0, 1));
+            KodeWindow.RowOf(w.SwitchRow(options, "#MechJeb_Flightrecord_checkbox2", () => g.realAtmo, SetRealAtmo)) //Real Atmo
+                .GetComponent<LayoutElement>().flexibleWidth = 0;
+            UIText storage = w.BoundLabel(options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
+            KodeWindow.ToneText(storage, KodeWindow.Tone.Dim);
 
             Layout chips = KodeWindow.FlowWrap(r, 4);
             w.Chip(chips, "#MechJeb_Flightrecord_checkbox3", () => g.stages, v => g.stages = v); //"Stages"
@@ -465,7 +426,7 @@ namespace MuMech.UI
             row.FlexibleLayout(0f, 0f);
             row.Spacing(1);
             KodeWindow.Button(row, "-", minus);
-            UIText t = MiscViewKit.LiveBound(w, row, template, value);
+            UIText t = w.BoundLabel(row, template, value);
             t.tmpText.alignment = TextAlignmentOptions.Center;
             KodeWindow.Button(row, "+", plus);
             return row;
@@ -505,7 +466,7 @@ namespace MuMech.UI
                     if (v) g.scaleIdx = (int)type;
                 });
                 Colorize(w, pick, info.Color);
-                w.Visible(pick.transform.parent.gameObject, () => g.displayed[(int)type]);
+                w.Visible(pick, () => g.displayed[(int)type]);
             }
         }
     }

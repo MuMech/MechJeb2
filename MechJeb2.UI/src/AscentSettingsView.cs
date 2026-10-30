@@ -1,9 +1,7 @@
 using System;
 using KodeKit;
 using KodeUI;
-using MechJebLibBindings;
 using Tone = KodeKit.KodeWindow.Tone;
-using static MuMech.MechJebModuleThrustController;
 
 namespace MuMech.UI
 {
@@ -32,8 +30,6 @@ namespace MuMech.UI
             menu.ForcePsgThrustLimits();
         }
 
-        Tone LimitTone(LimitMode mode) => Thrust.Limiter == mode ? Tone.Good : Tone.Normal;
-
         // "º (x.x°)" after the AoA field, formatted when the tenth changes
         long aoaKey = long.MinValue;
         string aoaText;
@@ -61,43 +57,17 @@ namespace MuMech.UI
 
             LayoutPanel box = KodeWindow.Box(w.Root);
 
-            // the thrust limiter items
-            w.Toggle(box, "#MechJeb_Ascent_checkbox12", () => Thrust.LimitToPreventOverheats, v => Thrust.LimitToPreventOverheats = v,
-                () => LimitTone(LimitMode.TEMPERATURE)); //Prevent engine overheats
-            AscentUi.ToggledBox(w, box, "#MechJeb_Ascent_checkbox11", () => Thrust.LimitDynamicPressure, v => Thrust.LimitDynamicPressure = v,
-                Thrust.MaxDynamicPressure, "Pa", 80, () => LimitTone(LimitMode.DYNAMIC_PRESSURE));
-            AscentUi.ToggledBox(w, box, "#MechJeb_Ascent_checkbox16", () => Thrust.LimitAcceleration, v => Thrust.LimitAcceleration = v,
-                Thrust.MaxAcceleration, "m/s²", 30, () => LimitTone(LimitMode.ACCELERATION));
-
+            // the thrust limiter items, the Utilities window's builders (the throttle and electric limits hide in PSG ascents)
+            GeneralItemBuilders.Build(w, box, "General:ThrustController.LimitToPreventOverheatsInfoItem", Thrust);
+            GeneralItemBuilders.Build(w, box, "General:ThrustController.LimitToMaxDynamicPressureInfoItem", Thrust);
+            GeneralItemBuilders.Build(w, box, "General:ThrustController.LimitAccelerationInfoItem", Thrust);
             Layout throttle = KodeWindow.Panel(box);
             w.Visible(throttle.gameObject, () => !psg);
-            AscentUi.ToggledBox(w, throttle, "#MechJeb_Ascent_checkbox17", () => Thrust.LimitThrottle, v => Thrust.LimitThrottle = v,
-                Thrust.MaxThrottle, "%", 30,
-                () => Thrust.Limiter == LimitMode.THROTTLE ? Thrust.MaxThrottle > 0d ? Tone.Good : Tone.Bad : Tone.Normal);
-
-            Layout minThrottle = AscentUi.ToggledBox(w, box, "#MechJeb_Ascent_checkbox18", () => Thrust.LimiterMinThrottle,
-                v => Thrust.LimiterMinThrottle = v, Thrust.MinThrottle, "%", 30, () =>
-                {
-                    // RF users should almost always have this set, "stock" users should almost always never have this set
-                    bool warn = ReflectionUtils.IsLoadedRealFuels
-                        ? !Thrust.LimiterMinThrottle || Thrust.MinThrottle <= 0d
-                        : Thrust.LimiterMinThrottle && Thrust.MinThrottle > 0d;
-                    return Thrust.Limiter == LimitMode.MIN_THROTTLE ? Tone.Good : warn ? Tone.Warn : Tone.Normal;
-                });
-            Tooltips.Add(minThrottle.GetComponentInChildren<ToggleLabelClick>().gameObject, "#MechJeb_Ascent_checkbox18_tooltip");
-
-            // LimitElectricInfoItem (the green "engine running" state needs a private method; only the limiter state colours it here)
-            Layout electricPanel = KodeWindow.Panel(box);
-            w.Visible(electricPanel.gameObject, () => !psg);
-            Layout electric = KodeWindow.Row(electricPanel);
-            w.Toggle(electric, "#MechJeb_Ascent_checkbox20", () => Thrust.ElectricThrottle, v => Thrust.ElectricThrottle = v,
-                () => Thrust.Limiter == LimitMode.ELECTRIC
-                    ? Thrust.ThrottleLimit < 0.001 ? Tone.Bad : Tone.Warn
-                    : Tone.Normal);
-            AscentUi.Field(w, electric, Thrust.ElectricThrottleLo, 30);
-            KodeWindow.Label(electric, "% Hi");
-            AscentUi.Field(w, electric, Thrust.ElectricThrottleHi, 30);
-            KodeWindow.Label(electric, "%");
+            GeneralItemBuilders.Build(w, throttle, "General:ThrustController.LimitThrottleInfoItem", Thrust);
+            GeneralItemBuilders.Build(w, box, "General:ThrustController.LimiterMinThrottleInfoItem", Thrust);
+            Layout electric = KodeWindow.Panel(box);
+            w.Visible(electric.gameObject, () => !psg);
+            GeneralItemBuilders.Build(w, electric, "General:ThrustController.LimitElectricInfoItem", Thrust);
 
             // force roll
             w.Toggle(box, "#MechJeb_Ascent_checkbox2", () => Settings.ForceRoll, v => Settings.ForceRoll = v); //Force Roll
@@ -114,8 +84,8 @@ namespace MuMech.UI
             Layout limit = KodeWindow.Row(aoa);
             w.Toggle(limit, "#MechJeb_Ascent_checkbox3", () => Settings.LimitAoA, v => Settings.LimitAoA = v,
                 () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
-            AscentUi.Field(w, limit, Settings.MaxAoA, 30);
-            AscentUi.Live(w, limit, "º (99.9°)", CurrentMaxAoA);
+            EditUi.Field(w, limit, Settings.MaxAoA, 30);
+            w.BoundLabel(limit, "º (99.9°)", CurrentMaxAoA);
 
             Layout fadeout = KodeWindow.Row(aoa);
             KodeWindow.Space(fadeout, 25);
@@ -143,16 +113,13 @@ namespace MuMech.UI
             w.Toggle(box, "#MechJeb_Ascent_checkbox7", () => Settings.AutoDeployAntennas, v => Settings.AutoDeployAntennas = v); //Auto-deploy antennas
 
             Layout warp = KodeWindow.Row(box);
-            w.Toggle(warp, "#MechJeb_Ascent_checkbox8", () => Core.Node != null && Core.Node.Autowarp, v =>
-            {
-                if (Core.Node != null) Core.Node.Autowarp = v;
-            }); //Auto-warp
+            NodeUi.AutowarpToggle(w, warp, Core, "#MechJeb_Ascent_checkbox8"); //Auto-warp
             UnityEngine.UI.Toggle skip = w.Toggle(warp, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
                 v => Settings.SkipCircularization = v); //Skip Circularization
-            w.Visible(AscentUi.RowOf(skip), () => !psg);
+            w.Visible(KodeWindow.RowOf(skip), () => !psg);
 
             UnityEngine.UI.Toggle rss = w.Toggle(box, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
-            w.Visible(AscentUi.RowOf(rss), () => psg);
+            w.Visible(KodeWindow.RowOf(rss), () => psg);
         }
 
         // modern layout: about 25 options in five folding groups, each a property grid with the switches on the left
@@ -177,8 +144,8 @@ namespace MuMech.UI
                 tone: () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
             TMPro.TMP_InputField maxAoA = EditFields.Field(w, aoa, () => Settings.MaxAoA.Text, s => Settings.MaxAoA.Text = s, 50,
                 () => Settings.MaxAoA.IsParsed);
-            UIText current = AscentUi.Live(w, aoa, "º (99.9°)", CurrentMaxAoA);
-            steer.Dim(maxAoA.gameObject, current.transform.parent.gameObject, () => !Settings.LimitAoA);
+            UIText current = w.BoundLabel(aoa, "º (99.9°)", CurrentMaxAoA);
+            steer.Dim(maxAoA.gameObject, KodeWindow.CellOf(current), () => !Settings.LimitAoA);
             Layout fadeout = ModernRows.Field(steer, "#MechJeb_Ascent_label24", Settings.AOALimitFadeoutPressure, "Pa", 60); //Dynamic Pressure Fadeout
             w.Visible(aoa.gameObject, () => !psg);
             w.Visible(fadeout.gameObject, () => !psg && Settings.LimitAoA);
@@ -200,15 +167,12 @@ namespace MuMech.UI
             w.SwitchRow(g, "#MechJeb_Ascent_checkbox7", () => Settings.AutoDeployAntennas, v => Settings.AutoDeployAntennas = v); //Auto-deploy antennas
 
             g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
-            w.SwitchRow(g, "#MechJeb_Ascent_checkbox8", () => Core.Node != null && Core.Node.Autowarp, v =>
-            {
-                if (Core.Node != null) Core.Node.Autowarp = v;
-            }); //Auto-warp
+            NodeUi.AutowarpToggle(w, g, Core, "#MechJeb_Ascent_checkbox8"); //Auto-warp
             UnityEngine.UI.Toggle skip = w.SwitchRow(g, "#MechJeb_Ascent_checkbox9", () => Settings.SkipCircularization,
                 v => Settings.SkipCircularization = v); //Skip Circularization
-            w.Visible(skip.transform.parent.gameObject, () => !psg);
+            w.Visible(skip, () => !psg);
             UnityEngine.UI.Toggle rss = w.SwitchRow(g, "Module disabling does not kill throttle", () => Core.Settings.RssMode, v => Core.Settings.RssMode = v);
-            w.Visible(rss.transform.parent.gameObject, () => psg);
+            w.Visible(rss, () => psg);
         }
     }
 }

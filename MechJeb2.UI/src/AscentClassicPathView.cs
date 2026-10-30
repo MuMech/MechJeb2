@@ -51,8 +51,7 @@ namespace MuMech.UI
             public string Get()
             {
                 double v = HasValue ? value() : 0;
-                // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (text == null || v != last)
+                if (text == null || !v.Equals(last))
                 {
                     last = v;
                     text = v.ToSI(digits) + suffix;
@@ -90,12 +89,12 @@ namespace MuMech.UI
             var endAlt = new SiText(() => Settings.AutoTurnEndAltitude, 2, "m") { Available = () => HasVessel };
             Layout start = KodeWindow.Row(auto);
             KodeWindow.Label(start, "#MechJeb_AscentPathEd_label3"); //"Turn start when Altitude is "
-            AscentUi.Live(w, start, "999.99km ", startAlt.Get);
+            w.BoundLabel(start, "999.99km ", startAlt.Get);
             KodeWindow.Label(start, "#MechJeb_AscentPathEd_label4"); //"or Velocity reach "
-            AscentUi.Live(w, start, "9.999km/s", startVel.Get);
+            w.BoundLabel(start, "9.999km/s", startVel.Get);
             Layout end = KodeWindow.Row(auto);
             KodeWindow.Label(end, "#MechJeb_AscentPathEd_label5"); //"Turn end altitude: "
-            AscentUi.Live(w, end, "999.99km", endAlt.Get, true).tmpText.alignment = TMPro.TextAlignmentOptions.MidlineRight;
+            w.BoundLabel(end, "999.99km", endAlt.Get, true).tmpText.alignment = TMPro.TextAlignmentOptions.MidlineRight;
 
             // manual path: the three fields
             Layout manual = KodeWindow.Panel(r);
@@ -200,10 +199,8 @@ namespace MuMech.UI
                     int count = trajectorySource.Count;
                     MechJebModuleFlightRecorder rec = menu.Recorder;
                     double down = count > 0 ? rec.History[count - 1].DownRange : 0;
-                    // ReSharper disable CompareOfFloatsByEqualityOperator
-                    if (count != lastCount || end != lastEnd || down != lastDown || rec.History != lastHistory)
+                    if (count != lastCount || !end.Equals(lastEnd) || !down.Equals(lastDown) || rec.History != lastHistory)
                     {
-                        // ReSharper restore CompareOfFloatsByEqualityOperator
                         lastCount = count;
                         lastEnd = end;
                         lastDown = down;

@@ -10,53 +10,11 @@ namespace MuMech.UI
     /// <summary>Small widget helpers shared by the four Ascent views (GuiUtils.SimpleTextBox and friends).</summary>
     internal static class AscentUi
     {
-        public static Color ToneColor(Theme th, Tone t) => t == Tone.Good ? th.Good : t == Tone.Warn ? th.Warn : t == Tone.Bad ? th.Bad : th.Text;
-
-        /// <summary>GuiUtils.SimpleTextField: a field on an IEditable; red while the text does not parse.</summary>
-        public static void Field(KodeWindow w, UIObject parent, IEditable ed, float width)
-        {
-            Func<bool> valid = ed is EditableDoubleMult m ? (Func<bool>)(() => m.IsParsed) : null;
-            EditFields.Field(w, parent, () => ed.Text, s => ed.Text = s, width, valid);
-        }
-
-        /// <summary>A text whose colour follows a state (MechJeb's Green/Yellow/Red labels).</summary>
-        public static UIText ToneText(KodeWindow w, UIObject parent, string text, Func<Tone> tone, bool flexible = false)
+        /// <summary>A text in a state colour (MechJeb's Green/Yellow/Red labels).</summary>
+        public static UIText ToneText(UIObject parent, string text, Tone tone, bool flexible = false)
         {
             UIText t = KodeWindow.Label(parent, text, flexible);
-            ApplyTone(w, t, tone);
-            return t;
-        }
-
-        public static UIText ToneText(KodeWindow w, UIObject parent, string text, Tone tone, bool flexible = false) =>
-            ToneText(w, parent, text, () => tone, flexible);
-
-        public static void ApplyTone(KodeWindow w, UIText t, Func<Tone> tone)
-        {
-            Tone shown = tone();
-            Action paint = () => t.tmpText.color = ToneColor(Theme.Current, shown);
-            paint();
-            w.Behaviour.AddRestyle(paint);
-            w.AddSync(() =>
-            {
-                Tone n = tone();
-                if (n == shown) return;
-                shown = n;
-                paint();
-            });
-        }
-
-        /// <summary>A changing text in a fixed-size cell sized from <paramref name="template"/>.</summary>
-        public static UIText Live(KodeWindow w, UIObject parent, string template, Func<string> get, bool flexible = false)
-        {
-            UIText t = KodeWindow.LiveLabel(parent, template, flexible);
-            string last = null;
-            w.AddSync(() =>
-            {
-                string s = get();
-                if (s == last) return;
-                last = s;
-                t.Text(s);
-            });
+            KodeWindow.ToneText(t, tone);
             return t;
         }
 
@@ -68,11 +26,11 @@ namespace MuMech.UI
             UIObject p = framing ? row : parent;
             if (!string.IsNullOrEmpty(left))
             {
-                if (leftTone != null) ToneText(w, p, left, leftTone);
-                else KodeWindow.Label(p, left);
+                UIText label = KodeWindow.Label(p, left);
+                if (leftTone != null) w.ToneText(label, leftTone);
             }
 
-            Field(w, p, ed, width);
+            EditUi.Field(w, p, ed, width);
             if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(p, unit);
             return row;
         }
@@ -84,7 +42,7 @@ namespace MuMech.UI
             Layout row = KodeWindow.Row(parent);
             if (tone != null) w.Toggle(row, key, get, set, tone);
             else w.Toggle(row, key, get, set);
-            Field(w, row, ed, width);
+            EditUi.Field(w, row, ed, width);
             if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(row, unit);
             return row;
         }
@@ -94,12 +52,12 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             KodeWindow.Button(row, key, action);
-            Field(w, row, ed, width);
+            EditUi.Field(w, row, ed, width);
             if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(row, unit);
             return row;
         }
 
-        public static GameObject RowOf(UnityEngine.UI.Toggle t) => t.transform.parent.gameObject;
+
     }
 
     /// <summary>
@@ -184,11 +142,8 @@ namespace MuMech.UI
             w.Visible(disengage.gameObject, () => menu._autopilot.Enabled);
             UIButton engage = KodeWindow.Button(top, "#MechJeb_Ascent_button2", () => menu._autopilot.Users.Add(menu), true); //Engage autopilot
             w.Visible(engage.gameObject, () => !menu._autopilot.Enabled);
-            if (KodeWindow.ModernLayout)
-            {
-                w.BindRole(engage, () => ButtonRole.Primary);
-                w.BindRole(disengage, () => ButtonRole.Danger);
-            }
+            KodeWindow.Role(engage, ButtonRole.Primary);
+            KodeWindow.Role(disengage, ButtonRole.Danger);
 
             BuildTargeting(w, r);
             BuildSettingsToggles(w, r);
@@ -207,9 +162,9 @@ namespace MuMech.UI
                 disabledParent = disabledBar;
             }
             UIText apStatus = w.BoundLabel(statusParent, () => menu.autopilotStatus ?? " ", true); //Autopilot status:
-            w.Visible(apStatus.transform.parent.gameObject, () => menu._autopilot.Enabled);
+            w.Visible(apStatus, () => menu._autopilot.Enabled);
 
-            UIText disabled = AscentUi.ToneText(w, disabledParent, "#MechJeb_Ascent_label36", Tone.Bad); //CONTROL DISABLED (AVIONICS)
+            UIText disabled = AscentUi.ToneText(disabledParent, "#MechJeb_Ascent_label36", Tone.Bad); //CONTROL DISABLED (AVIONICS)
             w.Visible(disabled.gameObject, () => Core.DeactivateControl);
 
             UIText noTracking = KodeWindow.Paragraph(r, "#MechJeb_Ascent_label37"); //unable to circularize without an upgraded Tracking Station
@@ -227,7 +182,7 @@ namespace MuMech.UI
             {
                 UnityEngine.UI.Toggle classicPath = w.Toggle(r, "#MechJeb_Ascent_checkbox10", () => menu._classicPathMenu.Enabled,
                     v => menu._classicPathMenu.Enabled = v); //Edit ascent path
-                w.Visible(AscentUi.RowOf(classicPath), () => Settings.AscentType == AscentType.CLASSIC);
+                w.Visible(KodeWindow.RowOf(classicPath), () => Settings.AscentType == AscentType.CLASSIC);
             }
 
             // RefreshRateGUI
@@ -258,13 +213,13 @@ namespace MuMech.UI
             AscentUi.ToggledBox(w, opt, "Arg Periapsis:", () => Psgs.ArgPFlag, v => Psgs.ArgPFlag = v, Psgs.ArgP, "°", 100);
 
             bool ApLtPe() => Psgs.ApoapsisAltitude + BodyRadius >= 0 && Psgs.ApoapsisAltitude < Psgs.PeriapsisAltitude;
-            UIText l3 = AscentUi.ToneText(w, opt, "#MechJeb_Ascent_label3", Tone.Warn); //Ap < Pe: circularizing orbit
+            UIText l3 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label3", Tone.Warn); //Ap < Pe: circularizing orbit
             w.Visible(l3.gameObject, ApLtPe);
-            UIText high = AscentUi.ToneText(w, opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Warn); //Attach > Ap: apoapsis insertion
+            UIText high = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltHigh", Tone.Warn); //Attach > Ap: apoapsis insertion
             w.Visible(high.gameObject, () => !ApLtPe() && Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude > Psgs.ApoapsisAltitude);
-            UIText l4 = AscentUi.ToneText(w, opt, "#MechJeb_Ascent_label4", Tone.Warn); //Hyperbolic target orbit (neg Ap)
+            UIText l4 = AscentUi.ToneText(opt, "#MechJeb_Ascent_label4", Tone.Warn); //Hyperbolic target orbit (neg Ap)
             w.Visible(l4.gameObject, () => Psgs.ApoapsisAltitude + BodyRadius < 0);
-            UIText low = AscentUi.ToneText(w, opt, "#MechJeb_Ascent_warnAttachAltLow", Tone.Warn); //Attach < Pe: periapsis insertion
+            UIText low = AscentUi.ToneText(opt, "#MechJeb_Ascent_warnAttachAltLow", Tone.Warn); //Attach < Pe: periapsis insertion
             w.Visible(low.gameObject, () => Psgs.BurnoutAltitudeFlag && Psgs.BurnoutAltitude < Psgs.PeriapsisAltitude);
 
             // PSG without: flight path angle (unless a plane is controlled) and attach altitude
@@ -290,8 +245,8 @@ namespace MuMech.UI
             Tooltips.Add(current.gameObject, MechJebModuleAscentMenu.InclinationCurrentTooltip);
 
             UIText below = w.BoundLabel(box, DeltaText, true);
-            AscentUi.ApplyTone(w, below, () => Tone.Bad);
-            w.Visible(below.transform.parent.gameObject, () => 2.001 < incDelta);
+            KodeWindow.ToneText(below, Tone.Bad);
+            w.Visible(below, () => 2.001 < incDelta);
         }
 
         // the "Ascent Settings" and "PSG Settings" window toggles
@@ -311,7 +266,7 @@ namespace MuMech.UI
             Layout row = KodeWindow.Row(box);
             w.Toggle(row, "Ascent Settings", () => menu._settingsMenu.Enabled, v => menu._settingsMenu.Enabled = v);
             UnityEngine.UI.Toggle psgSettings = w.Toggle(row, "PSG Settings", () => menu._psgSettingsMenu.Enabled, v => menu._psgSettingsMenu.Enabled = v);
-            w.Visible(AscentUi.RowOf(psgSettings), () => psg);
+            w.Visible(KodeWindow.RowOf(psgSettings), () => psg);
         }
 
         /// <summary>A button that opens or closes another window, selected while that window is open.</summary>
@@ -332,29 +287,29 @@ namespace MuMech.UI
             {
                 int k = i;
                 UIText line = w.BoundLabel(box, () => k < menu.PhaseLineCount ? menu.PhaseLines[k] ?? "-" : "-", true);
-                w.Visible(line.transform.parent.gameObject, () => k < menu.PhaseLineCount);
+                w.Visible(line, () => k < menu.PhaseLineCount);
             }
 
             Layout vgo = KodeWindow.Row(box);
-            AscentUi.Live(w, vgo, "vgo: 99999.9", () => menu.vgo ?? " ");
-            AscentUi.Live(w, vgo, "heading: 360.0", () => menu.heading ?? " ", true);
+            w.BoundLabel(vgo, "vgo: 99999.9", () => menu.vgo ?? " ");
+            w.BoundLabel(vgo, "heading: 360.0", () => menu.heading ?? " ", true);
             Layout tgo = KodeWindow.Row(box);
-            AscentUi.Live(w, tgo, "tgo: 999.999", () => menu.tgo ?? " ");
-            AscentUi.Live(w, tgo, "pitch: -90.0", () => menu.pitch ?? " ", true);
+            w.BoundLabel(tgo, "tgo: 999.999", () => menu.tgo ?? " ");
+            w.BoundLabel(tgo, "pitch: -90.0", () => menu.pitch ?? " ", true);
 
             UIText status = w.BoundLabel(box, () => menu.label26 ?? " ", true); //Guidance Status:
-            AscentUi.ApplyTone(w, status, GuidanceTone);
+            w.ToneText(status, GuidanceTone);
 
             Layout conv = KodeWindow.Row(box);
-            AscentUi.Live(w, conv, "converges: 999", () => menu.label27 ?? " "); //converges:
-            AscentUi.Live(w, conv, "staleness: 99d 99h 99m 99s", () => menu.label29 ?? " ", true); //staleness:
+            w.BoundLabel(conv, "converges: 999", () => menu.label27 ?? " "); //converges:
+            w.BoundLabel(conv, "staleness: 99d 99h 99m 99s", () => menu.label29 ?? " ", true); //staleness:
             Layout n = KodeWindow.Row(box);
-            AscentUi.Live(w, n, "n: 100(100)", () => menu.n ?? " ");
-            AscentUi.Live(w, n, "infeasibility: -1.2345E-05", () => menu.znorm ?? " ", true);
+            w.BoundLabel(n, "n: 100(100)", () => menu.n ?? " ");
+            w.BoundLabel(n, "infeasibility: -1.2345E-05", () => menu.znorm ?? " ", true);
 
             UIText failure = w.BoundLabel(box, () => menu.label30 ?? " ", true); //LAST FAILURE:
-            AscentUi.ApplyTone(w, failure, () => Tone.Bad);
-            w.Visible(failure.transform.parent.gameObject, () => Psgs.LastFailureMessage != null);
+            KodeWindow.ToneText(failure, Tone.Bad);
+            w.Visible(failure, () => Psgs.LastFailureMessage != null);
         }
 
         // ShowAutoWarpGUIElements (only when landed)
@@ -365,11 +320,11 @@ namespace MuMech.UI
 
             Layout countdown = KodeWindow.Row(box);
             KodeWindow.Label(countdown, "#MechJeb_Ascent_label33"); //Launch countdown:
-            AscentUi.Field(w, countdown, Settings.WarpCountDown, 35);
+            EditUi.Field(w, countdown, Settings.WarpCountDown, 35);
             KodeWindow.Label(countdown, "s");
             w.Visible(countdown.gameObject, () => Core.Node != null && Core.Node.Autowarp);
 
-            UIText invalid = AscentUi.ToneText(w, box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Warn, true); // Target must be in the same sphere of influence.
+            UIText invalid = AscentUi.ToneText(box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Warn, true); // Target must be in the same sphere of influence.
             invalid.tmpText.enableWordWrapping = true;
             w.Visible(invalid.gameObject, () => !anyPlaneControl && !targetExists && Core.Target.NormalTargetExists);
             UIText select = KodeWindow.Label(box, "#MechJeb_Ascent_label34"); //Select a target for a timed launch.
@@ -385,7 +340,7 @@ namespace MuMech.UI
             Layout lan = AscentUi.ButtonBox(w, idle, "#MechJeb_Ascent_LaunchToLan", menu.LaunchToLan, Psgs.LAN, "º", 40); //Launch to LAN
             w.Visible(lan.gameObject, () => psg);
             UnityEngine.UI.Toggle relative = w.Toggle(idle, "Use LAN relative to launch site", () => Settings.RelativeLAN, v => Settings.RelativeLAN = v);
-            w.Visible(AscentUi.RowOf(relative), () => psg);
+            w.Visible(KodeWindow.RowOf(relative), () => psg);
 
             // launching: timer and abort
             Layout launching = KodeWindow.Panel(box);

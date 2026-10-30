@@ -51,7 +51,7 @@ namespace MuMech.UI
             Layout limited = KodeWindow.Panel(c.Panel);
             OpUi.LabeledField(w, limited, "#MechJeb_adv_label5", () => op.MaxArrivalTime, edited: op.MarkChanged); //Max arrival time
             UIText computing = w.BoundLabel(limited, op.ComputingText, true);
-            w.Visible(computing.transform.parent.gameObject, () => op.IsComputing);
+            w.Visible(computing, () => op.IsComputing);
             w.Visible(limited.gameObject, () => !op.IsPorkchopMode);
 
             // Porkchop selection (nothing is drawn while there is no worker, as in IMGUI)

@@ -347,18 +347,18 @@ namespace MuMech.UI
             Layout manual = KodeWindow.Row(panel);
             w.Visible(manual.gameObject, () => c.rcsManualPID);
             KodeWindow.Label(manual, "P");
-            EditFields.Field(w, manual, () => c.Kp.Text, s => c.Kp.Text = s, 60, () => c.Kp.IsParsed);
+            EditUi.Field(w, manual, () => c.Kp, 60);
             KodeWindow.Label(manual, "I");
-            EditFields.Field(w, manual, () => c.Kd.Text, s => c.Kd.Text = s, 60, () => c.Kd.IsParsed);
+            EditUi.Field(w, manual, () => c.Kd, 60);
             KodeWindow.Label(manual, "D");
-            EditFields.Field(w, manual, () => c.Ki.Text, s => c.Ki.Text = s, 60, () => c.Ki.IsParsed);
+            EditUi.Field(w, manual, () => c.Ki, 60);
 
             // automatic: Tf is a field, P, I and D are computed
             Layout auto = KodeWindow.Panel(panel);
             w.Visible(auto.gameObject, () => !c.rcsManualPID);
             Layout tf = KodeWindow.Row(auto);
             KodeWindow.Label(tf, "Tf");
-            EditFields.Field(w, tf, () => c.Tf.Text, s => c.Tf.Text = s, 40, () => c.Tf.IsParsed);
+            EditUi.Field(w, tf, () => c.Tf, 40);
             Layout pid = KodeWindow.Row(auto);
             KodeWindow.Label(pid, "P");
             GuidanceUi.Live(w, pid, "0.0000", true, ct => ct.Append(c.Kp.Val, 4));
@@ -367,10 +367,24 @@ namespace MuMech.UI
             KodeWindow.Label(pid, "D");
             GuidanceUi.Live(w, pid, "0.0000", true, ct => ct.Append(c.Kd.Val, 4));
 
-            // the IMGUI item pushed the parameters into the PID controller on every draw
+            // the IMGUI item pushed the parameters into the PID controller on every draw. Manual mode only copies three
+            // numbers. Automatic mode derives them from Tf and allocates (Tf = Math.Max(...), the fields' new texts), so it
+            // runs when the item comes into view, the mode changes or Tf changes (Equals: a NaN Tf is not a change)
+            bool pushed = false, pushedManual = false;
+            double pushedTf = 0;
             w.AddSync(() =>
             {
-                if (panel.gameObject.activeInHierarchy) c.setPIDParameters();
+                if (!panel.gameObject.activeInHierarchy)
+                {
+                    pushed = false;
+                    return;
+                }
+
+                bool manual = c.rcsManualPID;
+                if (manual || !pushed || pushedManual || !c.Tf.Val.Equals(pushedTf)) c.setPIDParameters();
+                pushed = true;
+                pushedManual = manual;
+                pushedTf = c.Tf.Val;
             });
         }
     }

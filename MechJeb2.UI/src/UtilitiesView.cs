@@ -1,7 +1,7 @@
+using System;
 using KodeKit;
 using KodeUI;
 using MechJebLibBindings;
-using UnityEngine;
 using static MuMech.MechJebModuleThrustController;
 
 namespace MuMech.UI
@@ -49,18 +49,13 @@ namespace MuMech.UI
             w.Toggle(r, "#MechJeb_Utilities_checkbox3", () => Thrust.ManageIntakes, v => Thrust.ManageIntakes = v);
             Layout jet = KodeWindow.Row(r);
             KodeWindow.Label(jet, "#MechJeb_Utilities_label2", true);
-            EditFields.Field(w, jet, () => Thrust.FlameoutSafetyPct.Text, s => Thrust.FlameoutSafetyPct.Text = s, 40, () => Thrust.FlameoutSafetyPct.IsParsed);
+            EditUi.Field(w, jet, () => Thrust.FlameoutSafetyPct, 40);
             KodeWindow.Label(jet, "%");
 
             // DifferentialThrottleMenu + the failure messages under it
             GeneralItemBuilders.Build(w, r, "General:ThrustController.DifferentialThrottleMenu", Thrust);
-            UIText diffStatus = w.BoundLabel(r, DifferentialStatusText, true);
-            diffStatus.tmpText.enableWordWrapping = true;
-            Color Warn() => Theme.Current.Warn;
-            diffStatus.tmpText.color = Warn();
-            w.Behaviour.AddRestyle(() => diffStatus.tmpText.color = Warn());
-            w.Visible(diffStatus.transform.parent.gameObject,
-                () => Thrust.DifferentialThrottle && window.Vessel.LiftedOff() && Thrust.DifferentialThrottleSuccess != DifferentialThrottleStatus.SUCCESS);
+            UIText diffStatus = OpUi.DynamicParagraph(w, r, DifferentialStatus(), true);
+            w.Visible(diffStatus.gameObject, DifferentialFailed);
 
             GeneralItemBuilders.Build(w, r, "General:SolarPanelController.SolarPanelDeployButton", Core.Solarpanel);
             GeneralItemBuilders.Build(w, r, "General:DeployableAntennaController.AntennaDeployButton", Core.AntennaControl);
@@ -76,8 +71,8 @@ namespace MuMech.UI
             GeneralItemBuilders.Build(w, autostageSettings, "General:StagingController.AutostageSettingsInfoItem", Core.Staging);
             w.Visible(autostageSettings.gameObject, () => Core.Staging.Enabled);
 
-            UIText status = w.BoundLabel(r, () => Core.Staging.AutostageStatus(), true);
-            w.Visible(status.transform.parent.gameObject, () => Core.Staging.Enabled);
+            UIText status = w.BoundLabel(r, AutostageStatus(), true);
+            w.Visible(status, () => Core.Staging.Enabled);
         }
 
         // modern layout: the same options in property grids (switches on the left, fields dimmed when off), under headers
@@ -91,25 +86,17 @@ namespace MuMech.UI
             g = w.Group(r, "#MechJeb_NewUI_Jets"); //Jet engines
             KodeWindow.PropertyGrid jets = w.Properties(g);
             ModernRows.Switch(jets, "#MechJeb_Ascent_checkbox13", () => Thrust.LimitToPreventFlameout, v => Thrust.LimitToPreventFlameout = v,
-                tone: () => Thrust.Limiter == LimitMode.FLAMEOUT ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal); //"Prevent jet flameout"
+                tone: LimiterTones.For(Thrust, LimitMode.FLAMEOUT)); //"Prevent jet flameout"
             ModernRows.Switch(jets, "#MechJeb_Utilities_checkbox3", () => Thrust.ManageIntakes, v => Thrust.ManageIntakes = v);
             ModernRows.Field(jets, "#MechJeb_Utilities_label2", Thrust.FlameoutSafetyPct, "%", 50);
 
             g = w.Group(r, "#MechJeb_NewUI_Other"); //Other
             KodeWindow.PropertyGrid other = w.Properties(g);
-            ModernRows.Switch(other, "#MechJeb_Ascent_checkbox19", () => Thrust.DifferentialThrottle, v =>
-            {
-                bool old = Thrust.DifferentialThrottle;
-                Thrust.DifferentialThrottle = v;
-                if (old && !v) Thrust.DisableDifferentialThrottle();
-            }, tone: () => Thrust.DifferentialThrottle && window.Vessel.LiftedOff()
-                ? Thrust.DifferentialThrottleSuccess == DifferentialThrottleStatus.SUCCESS ? KodeWindow.Tone.Good : KodeWindow.Tone.Warn
-                : KodeWindow.Tone.Normal); //"Differential throttle"
+            ModernRows.Switch(other, "#MechJeb_Ascent_checkbox19", () => Thrust.DifferentialThrottle, LimiterTones.SetDifferential(Thrust),
+                tone: () => LimiterTones.Differential(Thrust)); //"Differential throttle"
             Layout diffBar = w.StatusBar(g, () => KodeWindow.Tone.Warn);
-            UIText diffStatus = w.BoundLabel(diffBar, DifferentialStatusText, true);
-            diffStatus.tmpText.enableWordWrapping = true;
-            w.Visible(diffBar.gameObject,
-                () => Thrust.DifferentialThrottle && window.Vessel.LiftedOff() && Thrust.DifferentialThrottleSuccess != DifferentialThrottleStatus.SUCCESS);
+            OpUi.DynamicParagraph(w, diffBar, DifferentialStatus());
+            w.Visible(diffBar.gameObject, DifferentialFailed);
 
             g = w.Group(r, "#MechJeb_NewUI_Deployment"); //Deployment
             DeployRow(w, g, Core.Solarpanel, "#MechJeb_SolarPanelDeployButton"); //"Auto-deploy solar panels"
@@ -133,7 +120,7 @@ namespace MuMech.UI
             w.Visible(settings.gameObject, () => Core.Staging.Enabled);
 
             Layout statusBar = w.StatusBar(g, () => KodeWindow.Tone.Normal);
-            w.BoundLabel(statusBar, () => Core.Staging.AutostageStatus(), true);
+            w.BoundLabel(statusBar, AutostageStatus(), true);
             w.Visible(statusBar.gameObject, () => Core.Staging.Enabled);
         }
 
@@ -151,6 +138,15 @@ namespace MuMech.UI
                 b.Text(s ?? " ");
             });
         }
+
+        bool DifferentialFailed() =>
+            Thrust.DifferentialThrottle && window.Vessel.LiftedOff() && Thrust.DifferentialThrottleSuccess != DifferentialThrottleStatus.SUCCESS;
+
+        // the texts, made when what they show changes (AutostageStatus concatenates a new string on every call)
+        Func<string> DifferentialStatus() => Memo.Of(() => (int)Thrust.DifferentialThrottleSuccess, _ => DifferentialStatusText());
+
+        Func<string> AutostageStatus() =>
+            Memo.Of(() => (Core.Staging.Enabled, Core.Staging.AutostagingOnce, (int)Core.Staging.AutostageLimit), _ => Core.Staging.AutostageStatus());
 
         string DifferentialStatusText()
         {

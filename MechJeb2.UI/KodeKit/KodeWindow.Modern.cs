@@ -28,7 +28,8 @@ namespace KodeKit
 
         Theme Th => Behaviour.Theme ?? T;
 
-        static Theme ThemeOf(GameObject go) => go.GetComponentInParent<WindowBehaviour>()?.Theme ?? T;
+        /// <summary>The theme a widget is drawn with: its window's (a custom window's own Compact setting) or Theme.Current.</summary>
+        public static Theme ThemeOf(GameObject go) => go.GetComponentInParent<WindowBehaviour>()?.Theme ?? T;
 
         /// <summary>A bare child object on the UI layer (KodeUI's own objects are UIObjects; these are plain graphics).</summary>
         static GameObject Child(Transform parent, string name, params Type[] components)
@@ -74,7 +75,10 @@ namespace KodeKit
         public static UIText Header(UIObject parent, string text, bool always = false)
         {
             // labels that become headers often end in a colon ("Mode:"); a header doesn't need it
-            UIText t = Label(parent, Loc(text)?.TrimEnd(':', ' ', '\u00A0'), true);
+            UIText t = Label(parent, text, true);
+            string Trimmed() => Loc(text)?.TrimEnd(':', ' ', '\u00A0');
+            t.tmpText.text = Trimmed();
+            if (text != null && text.Length > 1 && text[0] == '#') t.GetComponentInParent<WindowBehaviour>()?.AddRelocalize(() => t.tmpText.text = Trimmed());
             t.tmpText.margin = new Vector4(0, 5, 0, 1);
             Styled(t.gameObject, th =>
             {
@@ -102,10 +106,13 @@ namespace KodeKit
         // ---- buttons with a role ----
 
         /// <summary>A button whose look says what it does: the main action, a destructive one, or a selected choice.</summary>
-        public static UIButton Button(UIObject parent, string text, Action onClick, ButtonRole role, bool flexible = false)
+        public static UIButton Button(UIObject parent, string text, Action onClick, ButtonRole role, bool flexible = false) =>
+            Role(Button(parent, text, onClick, flexible), role);
+
+        /// <summary>Gives a button a fixed role (primary, danger) in the modern layout; the classic layout keeps IMGUI's plain buttons.</summary>
+        public static UIButton Role(UIButton b, ButtonRole role)
         {
-            UIButton b = Button(parent, text, onClick, flexible);
-            if (role != ButtonRole.Normal) Styled(b.gameObject, th => PaintRole(th, b, role));
+            if (ModernLayout && role != ButtonRole.Normal) Styled(b.gameObject, th => PaintRole(th, b, role));
             return b;
         }
 
@@ -114,9 +121,9 @@ namespace KodeKit
             ElementStyle st = th.Role(role);
             var img = b.GetComponent<Image>();
             Paint(b.GetComponent<Button>(), img, st.Normal, st.Tint, Color.white, new Color(0.92f, 0.92f, 0.92f), new Color(0.78f, 0.78f, 0.78f));
-            foreach (TMP_Text label in b.GetComponentsInChildren<TMP_Text>(true)) th.ApplyText(label, th.RoleText(role));
+            foreach (TMP_Text label in b.GetComponentsInChildren<TMP_Text>(true)) th.ApplyText(label, st.TextColor);
             foreach (Transform c in b.transform)
-                if (c.name == "Icon") c.GetComponent<Image>().color = th.RoleText(role);
+                if (c.name == "Icon") c.GetComponent<Image>().color = st.TextColor;
         }
 
         /// <summary>A button whose role follows a state (a state button that turns "selected" while its mode is on).</summary>
@@ -325,7 +332,7 @@ namespace KodeKit
                             ElementStyle sel = th.Role(ButtonRole.Selected);
                             if (on) Paint(btn, img, sel.Normal, sel.Tint, Color.white, new Color(0.92f, 0.92f, 0.92f), new Color(0.8f, 0.8f, 0.8f));
                             else Paint(btn, img, null, Color.white, Clear, HoverWash, PressWash);
-                            th.ApplyText(label, on ? th.RoleText(ButtonRole.Selected) : th.Text);
+                            th.ApplyText(label, on ? sel.TextColor : th.Text);
                             break;
                         case ChoiceStyle.Tabs:
                             Paint(btn, img, null, Color.white, Clear, Clear, Clear);
@@ -446,11 +453,14 @@ namespace KodeKit
             return b;
         }
 
-        /// <summary>A text coloured by a state (MechJeb's green, yellow and red labels); Normal is the plain text colour.</summary>
-        public void ToneText(UIText t, Func<Tone> tone)
+        /// <summary>
+        /// A text coloured by a state (MechJeb's green, yellow and red labels). Normal is the plain text colour, or a
+        /// button's text colour with <paramref name="button"/>. Call it after the widget is built: its restyle runs later and wins.
+        /// </summary>
+        public void ToneText(TMP_Text t, Func<Tone> tone, bool button = false)
         {
             Tone shown = tone();
-            void Look(Theme th) => t.tmpText.color = shown == Tone.Normal ? th.Text : ToneOf(th, shown);
+            void Look(Theme th) => t.color = th.ToneColor(shown, button ? th.Button.TextColor : th.Text);
             Styled(t.gameObject, Look);
             syncs.Add(() =>
             {
@@ -461,7 +471,12 @@ namespace KodeKit
             });
         }
 
-        static Color ToneOf(Theme th, Tone t) => t == Tone.Good ? th.Good : t == Tone.Warn ? th.Warn : t == Tone.Bad ? th.Bad : th.Accent;
+        public void ToneText(UIText t, Func<Tone> tone) => ToneText(t.tmpText, tone);
+
+        /// <summary>A text in a fixed state colour (warnings, dim notes): restyled with the theme, no per-frame binding.</summary>
+        public static void ToneText(TMP_Text t, Tone tone) => Styled(t.gameObject, th => t.color = th.ToneColor(tone, th.Text));
+
+        public static void ToneText(UIText t, Tone tone) => ToneText(t.tmpText, tone);
 
         /// <summary>A small upper-case pill of text in a tone's colour ("LIMITING", "ON"). Show it with <see cref="Visible"/>.</summary>
         public LayoutPanel Badge(UIObject parent, string text, Tone tone)
@@ -472,7 +487,7 @@ namespace KodeKit
             UIText t = Label(p, text);
             Styled(p.gameObject, th =>
             {
-                Color c = ToneOf(th, tone);
+                Color c = th.ToneColor(tone, th.Accent);
                 p.BackGround.sprite = Sprites.Pill;
                 p.BackGround.type = Image.Type.Sliced;
                 p.BackGround.color = Alpha(c, 0.2f);
@@ -502,8 +517,8 @@ namespace KodeKit
 
             void Look(Theme th)
             {
-                Color c = ToneOf(th, shown);
-                p.BackGround.sprite = Sprites.RoundedBox(3, 0, Color.white, Color.white);
+                Color c = th.ToneColor(shown, th.Accent);
+                p.BackGround.sprite = Sprites.Rounded;
                 p.BackGround.type = Image.Type.Sliced;
                 p.BackGround.color = Alpha(c, 0.14f);
                 edge.color = c;
@@ -829,7 +844,7 @@ namespace KodeKit
                 float size = th.FontSize + 3;
                 le.minWidth = le.preferredWidth = le.minHeight = le.preferredHeight = size;
                 Color hover = close ? new Color(0.85f, 0.25f, 0.2f, 0.85f) : Alpha(th.Text, 0.15f);
-                Paint(b.GetComponent<Button>(), b.GetComponent<Image>(), Sprites.RoundedBox(3, 0, Color.white, Color.white), Color.white,
+                Paint(b.GetComponent<Button>(), b.GetComponent<Image>(), Sprites.Rounded, Color.white,
                     Clear, hover, hover);
                 if (icon != null)
                 {

@@ -71,16 +71,16 @@ namespace MuMech.UI
             });
 
             MechJebModuleCustomWindowEditor editor = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-            RegistryToggle(w, r, editor, "Toggle:Settings.HideBrakeOnEject");
-            RegistryToggle(w, r, editor, "Toggle:Settings.UseTitlebarDragging");
-            RegistryToggle(w, r, editor, "Toggle:Menu.useAppLauncher");
-            GameObject hideButton = RegistryToggle(w, r, editor, "Toggle:Menu.hideButton");
+            RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.HideBrakeOnEject");
+            RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.UseTitlebarDragging");
+            RoverUi.ToggleRow(w, r, editor, "Toggle:Menu.useAppLauncher");
+            GameObject hideButton = RoverUi.ToggleRow(w, r, editor, "Toggle:Menu.hideButton");
             MechJebModuleMenu menu = Core.GetComputerModule<MechJebModuleMenu>();
             if (hideButton != null) w.Visible(hideButton, () => ToolbarManager.ToolbarAvailable || menu.useAppLauncher);
 
             MenuView.BuildMenuPosition(w, r, menu);
 
-            RegistryToggle(w, r, editor, "Toggle:Settings.RssMode");
+            RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.RssMode");
 
             w.Toggle(r, "#MechJeb_Settings_checkbox2", () => Core.Warp.activateSASOnWarp, v => Core.Warp.activateSASOnWarp = v); //"Activate SAS on Warp"
 
@@ -151,17 +151,6 @@ namespace MuMech.UI
                 Changed();
             }, true);
             w.Visible(b.gameObject, () => settings.SkinId != (int)skin);
-        }
-
-        /// <summary>A ToggleInfoItem from the custom window registry, as InfoItem.DrawItem draws it. Returns its row.</summary>
-        static GameObject RegistryToggle(KodeWindow w, UIObject parent, MechJebModuleCustomWindowEditor editor, string id)
-        {
-            if (!(editor.registry.Find(i => i.id == id) is ToggleInfoItem item)) return null;
-            UnityEngine.UI.Toggle t = w.Toggle(parent, item.localizedName, () => item.Value, v => item.Value = v);
-            GameObject row = t.transform.parent.gameObject;
-            if (!string.IsNullOrEmpty(item.localizedTooltip))
-                Tooltips.Add(row.GetComponentInChildren<ToggleLabelClick>().gameObject, item.localizedTooltip);
-            return row;
         }
     }
 }

@@ -35,26 +35,10 @@ namespace MuMech.UI
             return g;
         }
 
-        /// <summary>A numeric/time field bound to an editable (red while its text does not parse).</summary>
-        public static void Field(KodeWindow w, UIObject parent, Func<EditableDoubleMult> ed, float width = 100, Action edited = null)
-        {
-            EditFields.Field(w, parent, () => ed().Text, s =>
-            {
-                ed().Text = s;
-                edited?.Invoke();
-            }, width, () => ed().IsParsed);
-        }
-
         /// <summary>GuiUtils.SimpleTextBox: label [field] unit. <paramref name="stacked"/> puts a long label on its own line.</summary>
         public static void LabeledField(KodeWindow w, UIObject parent, string label, Func<EditableDoubleMult> ed, string unit = null, bool stacked = false,
-            float width = 100, Action edited = null)
-        {
-            if (stacked) KodeWindow.Label(parent, label);
-            Layout row = KodeWindow.Row(parent);
-            if (!stacked) KodeWindow.Label(row, label);
-            Field(w, row, ed, width, edited);
-            if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(row, unit);
-        }
+            float width = 100, Action edited = null) =>
+            EditUi.Row(w, parent, label, ed, unit, width, stacked, edited);
 
         /// <summary>GuiUtils.ToggledTextBox: [x] label [field] unit</summary>
         public static void ToggledField(KodeWindow w, UIObject parent, string label, Func<bool> get, Action<bool> set, Func<EditableDoubleMult> ed, string unit,
@@ -62,7 +46,7 @@ namespace MuMech.UI
         {
             Layout row = KodeWindow.Row(parent);
             w.Toggle(row, label, get, set);
-            Field(w, row, ed, width);
+            EditUi.Field(w, row, ed, width);
             if (!string.IsNullOrEmpty(unit)) KodeWindow.Label(row, unit);
         }
 
@@ -81,12 +65,12 @@ namespace MuMech.UI
 
             Layout lead = Group(row);
             KodeWindow.Label(lead, "#MechJeb_of"); //"of"
-            Field(w, lead, () => ts.LeadTime);
+            EditUi.Field(w, lead, () => ts.LeadTime);
             w.Visible(lead.gameObject, () => Is(ts, TimeReference.X_FROM_NOW));
 
             Layout altitude = Group(row);
             KodeWindow.Label(altitude, "#MechJeb_of");
-            Field(w, altitude, () => ts.CircularizeAltitude);
+            EditUi.Field(w, altitude, () => ts.CircularizeAltitude);
             KodeWindow.Label(altitude, "km");
             w.Visible(altitude.gameObject, () => Is(ts, TimeReference.ALTITUDE));
         }
@@ -97,11 +81,11 @@ namespace MuMech.UI
         public static void AngleRow(KodeWindow w, UIObject parent, Func<EditableAngle> angle, EditableAngle.Direction direction, bool ownRow = true)
         {
             UIObject row = ownRow ? (UIObject)KodeWindow.Row(parent) : parent;
-            EditFields.Field(w, row, () => angle().Degrees.Text, s => angle().Degrees.Text = s, 30, () => angle().Degrees.IsParsed);
+            EditUi.Field(w, row, () => angle().Degrees, 30);
             KodeWindow.Label(row, "°");
-            EditFields.Field(w, row, () => angle().Minutes.Text, s => angle().Minutes.Text = s, 30, () => angle().Minutes.IsParsed);
+            EditUi.Field(w, row, () => angle().Minutes, 30);
             KodeWindow.Label(row, "'");
-            EditFields.Field(w, row, () => angle().Seconds.Text, s => angle().Seconds.Text = s, 30, () => angle().Seconds.IsParsed);
+            EditUi.Field(w, row, () => angle().Seconds, 30);
             KodeWindow.Label(row, "\"");
 
             if (KodeWindow.ModernLayout)
@@ -113,6 +97,7 @@ namespace MuMech.UI
 
             string Dir(EditableAngle a) => direction == EditableAngle.Direction.NS ? a.Negative ? "S" : "N" : a.Negative ? "W" : "E";
             UIButton button = KodeWindow.Button(row, Dir(angle()), () => angle().Negative = !angle().Negative);
+            GuidanceUi.MinWidth(button, 25); // GUILayout.Width(25)
             string shown = Dir(angle());
             w.AddSync(() =>
             {
@@ -128,11 +113,7 @@ namespace MuMech.UI
         {
             string shown = text();
             UIText p = KodeWindow.Paragraph(parent, string.IsNullOrEmpty(shown) ? " " : shown);
-            if (warn)
-            {
-                p.tmpText.color = Theme.Current.Warn;
-                w.Behaviour.AddRestyle(() => p.tmpText.color = Theme.Current.Warn);
-            }
+            if (warn) KodeWindow.ToneText(p, KodeWindow.Tone.Warn);
 
             w.AddSync(() =>
             {

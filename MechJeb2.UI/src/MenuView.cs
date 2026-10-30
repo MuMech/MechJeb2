@@ -304,7 +304,7 @@ namespace MuMech.UI
             Layout row = KodeWindow.Row(parent);
             MiscViewKit.BoundButton(w, row, () => sideNames[(int)menu.windowSide], menu.CycleSide, null, true);
             KodeWindow.Button(row, "-", () => menu.columns = Math.Max(1, menu.columns - 1));
-            MiscViewKit.LiveBound(w, row, "99", () =>
+            w.BoundLabel(row, "99", () =>
             {
                 int c = menu.columns;
                 if (!numbers.TryGetValue(c, out string s)) numbers[c] = s = c.ToString();

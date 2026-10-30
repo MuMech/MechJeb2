@@ -99,11 +99,7 @@ namespace MuMech.UI
             // "Show Numbers" is the section: open = numbers shown. adj.showInfos (persisted, shared with IMGUI) follows
             // the section, so the readouts below are only computed while it is open.
             Layout infos = w.Section(r, "#MechJeb_NewUI_SectionNumbers", adj.showInfos);
-            w.AddSync(() =>
-            {
-                bool open = infos.gameObject.activeSelf;
-                if (adj.showInfos != open) adj.showInfos = open;
-            });
+            FollowSection(w, infos);
             InfoRow(w, infos, "#MechJeb_AttitudeAdjust_Label1", "[ 1,  1,  1 ]", t => //Axis Control
             {
                 Vector3d a = Attitude.AxisControl;
@@ -134,27 +130,45 @@ namespace MuMech.UI
             {
                 Layout length = KodeWindow.Row(debug);
                 KodeWindow.Label(length, "#MechJeb_AttitudeAdjust_Label9"); //Arrows length
-                EditFields.Field(w, length, () => arrows.arrowsLength.Text, s => arrows.arrowsLength.Text = s, 50, () => arrows.arrowsLength.IsParsed);
+                EditUi.Field(w, length, () => arrows.arrowsLength, 50);
 
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox6", () => arrows.seeThrough, v => arrows.seeThrough = v); //Visible through object
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox7", () => arrows.comSphereActive, v => arrows.comSphereActive = v); //Display the CoM
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox8", () => arrows.colSphereActive, v => arrows.colSphereActive = v); //Display the CoL
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox9", () => arrows.cotSphereActive, v => arrows.cotSphereActive = v); //Display the CoT
+                SphereToggles(w, debug, arrows);
 
                 Layout radius = KodeWindow.Row(debug);
                 KodeWindow.Label(radius, "#MechJeb_AttitudeAdjust_Label10", true); //Radius of Sphere
-                EditFields.Field(w, radius, () => arrows.comSphereRadius.Text, s => arrows.comSphereRadius.Text = s, 40,
-                    () => arrows.comSphereRadius.IsParsed);
+                EditUi.Field(w, radius, () => arrows.comSphereRadius, 40);
 
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox10", () => arrows.displayAtCoM, v => arrows.displayAtCoM = v); //Arrows origins at the CoM
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox11", () => arrows.srfVelocityArrowActive, v => arrows.srfVelocityArrowActive = v); //Pod Surface Velocity (green)
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox12", () => arrows.obtVelocityArrowActive, v => arrows.obtVelocityArrowActive = v); //Pod Orbital Velocity (red)
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox13", () => arrows.dotArrowActive, v => arrows.dotArrowActive = v); //Direction of Thrust (purple pink)
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox14", () => arrows.forwardArrowActive, v => arrows.forwardArrowActive = v); //Command Pod Forward (electric blue)
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox15", () => arrows.requestedAttitudeArrowActive, v => arrows.requestedAttitudeArrowActive = v); //Requested Attitude (gray)
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox16", () => arrows.debugArrowActive, v => arrows.debugArrowActive = v); //Debug (magenta)
-                w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox17", () => arrows.debugArrow2Active, v => arrows.debugArrow2Active = v); //Debug2 (light blue)
+                ArrowToggles(w, debug, arrows);
             });
+        }
+
+        // adj.showInfos (persisted, shared with IMGUI) follows the "Numbers" section's fold
+        void FollowSection(KodeWindow w, Layout infos) =>
+            w.AddSync(() =>
+            {
+                bool open = infos.gameObject.activeSelf;
+                if (adj.showInfos != open) adj.showInfos = open;
+            });
+
+        // the debug arrow options, in IMGUI's order (the radius field goes between the two groups in the classic layout)
+        static void SphereToggles(KodeWindow w, UIObject debug, MechJebModuleDebugArrows arrows)
+        {
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox6", () => arrows.seeThrough, v => arrows.seeThrough = v); //Visible through object
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox7", () => arrows.comSphereActive, v => arrows.comSphereActive = v); //Display the CoM
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox8", () => arrows.colSphereActive, v => arrows.colSphereActive = v); //Display the CoL
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox9", () => arrows.cotSphereActive, v => arrows.cotSphereActive = v); //Display the CoT
+        }
+
+        static void ArrowToggles(KodeWindow w, UIObject debug, MechJebModuleDebugArrows arrows)
+        {
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox10", () => arrows.displayAtCoM, v => arrows.displayAtCoM = v); //Arrows origins at the CoM
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox11", () => arrows.srfVelocityArrowActive, v => arrows.srfVelocityArrowActive = v); //Pod Surface Velocity (green)
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox12", () => arrows.obtVelocityArrowActive, v => arrows.obtVelocityArrowActive = v); //Pod Orbital Velocity (red)
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox13", () => arrows.dotArrowActive, v => arrows.dotArrowActive = v); //Direction of Thrust (purple pink)
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox14", () => arrows.forwardArrowActive, v => arrows.forwardArrowActive = v); //Command Pod Forward (electric blue)
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox15", () => arrows.requestedAttitudeArrowActive, v => arrows.requestedAttitudeArrowActive = v); //Requested Attitude (gray)
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox16", () => arrows.debugArrowActive, v => arrows.debugArrowActive = v); //Debug (magenta)
+            w.Toggle(debug, "#MechJeb_AttitudeAdjust_checkbox17", () => arrows.debugArrow2Active, v => arrows.debugArrow2Active = v); //Debug2 (light blue)
         }
 
         static readonly string[] controllerNames = { "MJ", "kOS", "Hybrid", "Better", "LQR" };
@@ -175,11 +189,7 @@ namespace MuMech.UI
             ControllerPanels(w, panels);
 
             Layout infos = w.Section(r, "#MechJeb_NewUI_SectionNumbers", adj.showInfos);
-            w.AddSync(() =>
-            {
-                bool open = infos.gameObject.activeSelf;
-                if (adj.showInfos != open) adj.showInfos = open;
-            });
+            FollowSection(w, infos);
             bool Shown() => adj.showInfos && adj.Vessel != null;
             var grid = new AttitudeControllerPanels.VectorGrid(w, infos, true);
             grid.Row(KodeWindow.Loc("#MechJeb_AttitudeAdjust_Label1"), Shown, () => Attitude.AxisControl, false, false); //Axis Control
@@ -201,23 +211,13 @@ namespace MuMech.UI
                 sizes.FlexibleColumn = 0;
                 Layout length = sizes.Row();
                 KodeWindow.Label(length, "#MechJeb_AttitudeAdjust_Label9"); //Arrows length
-                EditFields.Field(w, length, () => arrows.arrowsLength.Text, s => arrows.arrowsLength.Text = s, 50, () => arrows.arrowsLength.IsParsed);
+                EditUi.Field(w, length, () => arrows.arrowsLength, 50);
                 Layout radius = sizes.Row();
                 KodeWindow.Label(radius, "#MechJeb_AttitudeAdjust_Label10"); //Radius of Sphere
-                EditFields.Field(w, radius, () => arrows.comSphereRadius.Text, s => arrows.comSphereRadius.Text = s, 50, () => arrows.comSphereRadius.IsParsed);
+                EditUi.Field(w, radius, () => arrows.comSphereRadius, 50);
 
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox6", () => arrows.seeThrough, v => arrows.seeThrough = v); //Visible through object
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox7", () => arrows.comSphereActive, v => arrows.comSphereActive = v); //Display the CoM
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox8", () => arrows.colSphereActive, v => arrows.colSphereActive = v); //Display the CoL
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox9", () => arrows.cotSphereActive, v => arrows.cotSphereActive = v); //Display the CoT
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox10", () => arrows.displayAtCoM, v => arrows.displayAtCoM = v); //Arrows origins at the CoM
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox11", () => arrows.srfVelocityArrowActive, v => arrows.srfVelocityArrowActive = v); //Pod Surface Velocity (green)
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox12", () => arrows.obtVelocityArrowActive, v => arrows.obtVelocityArrowActive = v); //Pod Orbital Velocity (red)
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox13", () => arrows.dotArrowActive, v => arrows.dotArrowActive = v); //Direction of Thrust (purple pink)
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox14", () => arrows.forwardArrowActive, v => arrows.forwardArrowActive = v); //Command Pod Forward (electric blue)
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox15", () => arrows.requestedAttitudeArrowActive, v => arrows.requestedAttitudeArrowActive = v); //Requested Attitude (gray)
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox16", () => arrows.debugArrowActive, v => arrows.debugArrowActive = v); //Debug (magenta)
-                w.SwitchRow(debug, "#MechJeb_AttitudeAdjust_checkbox17", () => arrows.debugArrow2Active, v => arrows.debugArrow2Active = v); //Debug2 (light blue)
+                SphereToggles(w, debug, arrows);
+                ArrowToggles(w, debug, arrows);
             });
         }
     }

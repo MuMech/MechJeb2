@@ -102,7 +102,7 @@ namespace MuMech.UI
                 UIText t = KodeWindow.LiveLabel(row, text, false);
                 t.tmpText.alignment = TMPro.TextAlignmentOptions.Right;
                 t.Text(dim ? text : "");
-                if (dim) KodeWindow.Styled(t.gameObject, th => t.tmpText.color = th.Dim);
+                if (dim) KodeWindow.ToneText(t, KodeWindow.Tone.Dim);
                 return t;
             }
 

@@ -41,7 +41,6 @@ namespace MuMech.UI
         Layout editPanel;
         readonly List<WpRow> rows = new List<WpRow>();
         int panelFor = -2;
-        bool quicksaveShown;
 
         // routes page
         ScrollView routeScroll;
@@ -120,34 +119,24 @@ namespace MuMech.UI
                 m._tmpRadius = s;
                 Selected(wp => float.TryParse(s, out wp.Radius));
             }, 50);
-            RoverUi.Btn(limits, "A", () => m.RadiusToRest(m.SelIndex));
+            KodeWindow.Button(limits, "A", () => m.RadiusToRest(m.SelIndex));
             KodeWindow.Label(limits, "- Speed: ");
             EditFields.Field(w, limits, () => m._tmpMinSpeed, s =>
             {
                 m._tmpMinSpeed = s;
                 Selected(wp => float.TryParse(s, out wp.MinSpeed));
             }, 40);
-            RoverUi.Btn(limits, "A", () => m.MinSpeedToRest(m.SelIndex));
+            KodeWindow.Button(limits, "A", () => m.MinSpeedToRest(m.SelIndex));
             KodeWindow.Label(limits, " - ");
             EditFields.Field(w, limits, () => m._tmpMaxSpeed, s =>
             {
                 m._tmpMaxSpeed = s;
                 Selected(wp => float.TryParse(s, out wp.MaxSpeed));
             }, 40);
-            RoverUi.Btn(limits, "A", () => m.MaxSpeedToRest(m.SelIndex));
+            KodeWindow.Button(limits, "A", () => m.MaxSpeedToRest(m.SelIndex));
             KodeWindow.FlexibleSpace(limits);
-            UIButton qs = RoverUi.Btn(limits, "QS", () => m.ToggleQuicksave(m.SelIndex, Alt));
-            TMP_Text qsLabel = qs.GetComponentInChildren<TMP_Text>();
-            Action paintQs = () => qsLabel.color = quicksaveShown ? Theme.Current.Warn : Theme.Current.Button.TextColor;
-            w.Behaviour.AddRestyle(paintQs);
-            w.AddSync(() =>
-            {
-                bool q = false;
-                Selected(wp => q = wp.Quicksave);
-                if (q == quicksaveShown) return;
-                quicksaveShown = q;
-                paintQs();
-            });
+            UIButton qs = KodeWindow.Button(limits, "QS", () => m.ToggleQuicksave(m.SelIndex, Alt));
+            w.ToneText(qs.GetComponentInChildren<TMP_Text>(), () => SelectedWaypoint()?.Quicksave == true ? KodeWindow.Tone.Warn : KodeWindow.Tone.Normal, true);
 
             Layout coords = KodeWindow.Row(editPanel);
             KodeWindow.Label(coords, "Lat ");
@@ -169,8 +158,8 @@ namespace MuMech.UI
             RoverUi.DynButton(w, buttons, () => Alt ? "Clear" : "Remove", () => m.RemoveOrClear(Alt), 65);
             RoverUi.DynButton(w, buttons, () => Alt ? "Top" : "Up", () => m.MoveUp(Alt), 57);
             RoverUi.DynButton(w, buttons, () => Alt ? "Bottom" : "Down", () => m.MoveDown(Alt), 57);
-            RoverUi.Btn(buttons, "Routes", m.ShowRoutesPage, true);
-            RoverUi.Btn(buttons, "Settings", m.ShowSettingsPage, true);
+            KodeWindow.Button(buttons, "Routes", m.ShowRoutesPage, true);
+            KodeWindow.Button(buttons, "Settings", m.ShowSettingsPage, true);
 
             // the map marker of the selected waypoint is drawn by GL in OnGUI: no GUILayout, no room
             ImguiBlock.DrawOnly(page, () =>
@@ -180,11 +169,17 @@ namespace MuMech.UI
         }
 
         /// <summary>Runs an action on the selected waypoint, if there is one.</summary>
-        void Selected(Action<MechJebWaypoint> action)
+        MechJebWaypoint SelectedWaypoint()
         {
             List<MechJebWaypoint> wps = Ap?.Waypoints;
             int i = m.SelIndex;
-            if (wps != null && i >= 0 && i < wps.Count) action(wps[i]);
+            return wps != null && i >= 0 && i < wps.Count ? wps[i] : null;
+        }
+
+        void Selected(Action<MechJebWaypoint> action)
+        {
+            MechJebWaypoint wp = SelectedWaypoint();
+            if (wp != null) action(wp);
         }
 
         WpRow CreateRow(int index)
@@ -347,9 +342,9 @@ namespace MuMech.UI
                 RoverUi.EditableRow(w, mapsRight, ed, "Editable:WaypointWindow." + body + "Mapdist");
 
             Layout buttons = KodeWindow.Row(page);
-            RoverUi.Btn(buttons, "Waypoints", m.ShowWaypointsPage, true);
-            RoverUi.Btn(buttons, "Routes", m.ShowRoutesPage, true);
-            RoverUi.Btn(buttons, "Help", m.ToggleHelpWindow, true);
+            KodeWindow.Button(buttons, "Waypoints", m.ShowWaypointsPage, true);
+            KodeWindow.Button(buttons, "Routes", m.ShowRoutesPage, true);
+            KodeWindow.Button(buttons, "Help", m.ToggleHelpWindow, true);
         }
 
         // ---------------- routes page ----------------
@@ -360,10 +355,10 @@ namespace MuMech.UI
 
             Layout buttons = KodeWindow.Row(page);
             EditFields.Field(w, buttons, () => m._saveName, s => m._saveName = s, 150);
-            RoverUi.Btn(buttons, "Save", m.SaveCurrentRoute).PreferredWidth(50);
+            KodeWindow.Button(buttons, "Save", m.SaveCurrentRoute).PreferredWidth(50);
             RoverUi.DynButton(w, buttons, () => Alt ? "Add" : "Load", () => m.LoadSelectedRoute(Alt), 50);
-            RoverUi.Btn(buttons, "Waypoints", m.ShowWaypointsPage, true);
-            RoverUi.Btn(buttons, "Settings", m.ShowSettingsPage, true);
+            KodeWindow.Button(buttons, "Waypoints", m.ShowWaypointsPage, true);
+            KodeWindow.Button(buttons, "Settings", m.ShowSettingsPage, true);
         }
 
         RouteRow CreateRouteRow(int index)
@@ -372,7 +367,7 @@ namespace MuMech.UI
             var row = new RouteRow();
             row.Item = KodeWindow.Row(routeContent);
             row.Button = RoverUi.StateButton(w, row.Item, "", () => m.RouteClicked(index), () => m._saveIndex == index);
-            row.Delete = RoverUi.Btn(row.Item, "Delete", () =>
+            row.Delete = KodeWindow.Button(row.Item, "Delete", () =>
             {
                 if (index < shownRoutes.Count) m.DeleteRoute(shownRoutes[index].Name);
             });
