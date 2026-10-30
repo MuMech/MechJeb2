@@ -19,7 +19,8 @@ namespace MuMech
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
+            // all the time references here are relative nodes, found below from the start time: the selector only says which one
+            double ut = universalTime;
 
             if (!target.NormalTargetExists)
             {
