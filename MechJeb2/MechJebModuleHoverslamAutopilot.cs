@@ -83,7 +83,10 @@ namespace MuMech
 
         private State DetermineState(State desired)
         {
-            if (!IsFinite(Core.Hoverslam.IgnitionUT))
+            // Once burning, the autopilot flies without the simulation. The simulation stops and resets IgnitionUT when the
+            // apoapsis falls below the vertical phase's altitude, which it does in the last metres of every landing: going
+            // back to Init there would cut the thrust.
+            if (!IsFinite(Core.Hoverslam.IgnitionUT) && desired != State.Burn && desired != State.Vertical)
                 return State.Init;
 
             if (desired == State.Init)
