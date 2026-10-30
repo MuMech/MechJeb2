@@ -308,7 +308,7 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor) return 1000 * EditorLastStageThrust(true);
 
-            return VesselState.ThrustMinimum;
+            return 1000 * VesselState.ThrustMinimum;
         }
 
         // Thrust of the engines in the editor's last stage, in kN: at full throttle, or at minimum (throttle-locked engines
