@@ -5,8 +5,8 @@ namespace MuMech.UI
 {
     /// <summary>
     /// Text rebuilt only when its key changes: bindings call the getter every frame, the string is made once per change.
-    /// Keys compare with EqualityComparer, so a NaN key equals the last NaN instead of rebuilding every frame. Do not
-    /// use an enum as the key: Unity's Mono compares enums through object Equals, which boxes every frame. Cast to int.
+    /// Keys compare with EqualityComparer, so a NaN key equals the last NaN instead of rebuilding every frame. Cast an
+    /// enum key to int: Mono's default comparer may compare enums through object Equals, which would box every frame.
     /// </summary>
     internal static class Memo
     {
