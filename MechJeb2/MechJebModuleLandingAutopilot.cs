@@ -158,6 +158,8 @@ namespace MuMech
             SetStep(null);
         }
 
+        protected override void StopAfterStepFailures() => StopLanding();
+
         public override void Drive(FlightCtrlState s)
         {
             if (!Active)
