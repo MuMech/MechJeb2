@@ -491,6 +491,10 @@ namespace MuMech
         // other mods' part modules and VesselState extensions: one that throws mustn't stop the whole vessel state
         private readonly HashSet<string> _loggedPartCallFailures = new HashSet<string>();
 
+        // extensions that threw in this update, skipped for the rest of it: a broken one costs one exception per tick as before,
+        // not one per part or part module
+        private readonly List<Delegate> _failedExtensions = new List<Delegate>();
+
         private void PartCallFailed(string call, Exception e)
         {
             if (!_loggedPartCallFailures.Add(call))
@@ -848,6 +852,7 @@ namespace MuMech
         // Loop over all the parts in the vessel and calculate some things.
         private void AnalyzeParts(EngineInfo einfo, IntakeInfo iinfo)
         {
+            _failedExtensions.Clear();
             Parachutes.Clear();
             ParachuteDeployed = false;
 
@@ -909,12 +914,15 @@ namespace MuMech
 
                 foreach (VesselStatePartExtension vspe in VesselStatePartExtensions)
                 {
+                    if (_failedExtensions.Count > 0 && _failedExtensions.Contains(vspe))
+                        continue;
                     try
                     {
                         vspe(p);
                     }
                     catch (Exception e)
                     {
+                        _failedExtensions.Add(vspe);
                         PartCallFailed(vspe.Method.DeclaringType?.FullName + "." + vspe.Method.Name, e);
                     }
                 }
@@ -1047,12 +1055,15 @@ namespace MuMech
 
                     foreach (VesselStatePartModuleExtension vspme in VesselStatePartModuleExtensions)
                     {
+                        if (_failedExtensions.Count > 0 && _failedExtensions.Contains(vspme))
+                            continue;
                         try
                         {
                             vspme(pm);
                         }
                         catch (Exception e)
                         {
+                            _failedExtensions.Add(vspme);
                             PartCallFailed(vspme.Method.DeclaringType?.FullName + "." + vspme.Method.Name, e);
                         }
                     }
