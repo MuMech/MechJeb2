@@ -142,7 +142,7 @@ namespace MuMech
 
                 double steerOffset = AscentSettings.CorrectiveSteeringGain * difficulty * fpaError;
 
-                double steerAngle = Clamp(Math.Asin(steerOffset), -Math.PI / 6, Math.PI / 6);
+                double steerAngle = Clamp(SafeAsin(steerOffset), -Math.PI / 6, Math.PI / 6);
 
                 _desiredPitch = Clamp(_desiredPitch + steerAngle, -Math.PI / 2, Math.PI / 2);
             }
