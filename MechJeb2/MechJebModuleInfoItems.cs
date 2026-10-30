@@ -382,7 +382,7 @@ namespace MuMech
         {
             double cost = 0;
             foreach (Part p in parts) cost += p.partInfo.cost;
-            return cost * 1000;
+            return cost;
         }
 
         [ValueInfoItem("#MechJeb_CrewCount", InfoItem.Category.Vessel)] //Crew count
