@@ -137,7 +137,7 @@ namespace MechJebLib.PSG
 
         public Phase Rescale(Scale scale)
         {
-            Check.False(Normalized);
+            CheckDebug.False(Normalized);
 
             var phase = (Phase)MemberwiseClone();
 
@@ -158,17 +158,17 @@ namespace MechJebLib.PSG
         public static Phase NewStage(double m0, double mf, double thrust, double isp, int kspStage, int mjPhase,
             bool unguided = false, bool allowShutdown = true, bool massContinuity = false, double ispCurrent = -1, double minThrottle = 1.0)
         {
-            Check.PositiveFinite(m0);
-            Check.PositiveFinite(thrust);
-            Check.PositiveFinite(mf);
-            Check.PositiveFinite(isp);
-            Check.NonNegativeFinite(minThrottle);
+            CheckDebug.PositiveFinite(m0);
+            CheckDebug.PositiveFinite(thrust);
+            CheckDebug.PositiveFinite(mf);
+            CheckDebug.PositiveFinite(isp);
+            CheckDebug.NonNegativeFinite(minThrottle);
+            CheckDebug.True(m0 > mf);
 
             double mdot = thrust / (isp * G0);
             double bt = (m0 - mf) / mdot;
 
-            Check.PositiveFinite(mdot);
-            Check.PositiveFinite(isp);
+            CheckDebug.PositiveFinite(mdot);
 
             Phase phase = Rent();
             phase.Set(m0, thrust, isp, mf, bt, kspStage, mjPhase, ispCurrent);

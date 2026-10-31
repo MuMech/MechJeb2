@@ -845,7 +845,7 @@ namespace MechJebLib.Utils
 
         [Conditional("DEBUG")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void DebugPrint(string message) => Logger.Print(message);
+        public static void PrintDebug(string message) => Logger.Print(message);
 
         public static void CopyFrom(this double[] dest, double[] source)
         {

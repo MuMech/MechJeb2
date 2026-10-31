@@ -5,6 +5,7 @@
 
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static MechJebLib.Utils.AutoDiff;
 using static System.Math;
@@ -23,6 +24,13 @@ namespace MechJebLib.PSG.Terminal
 
         public FlightPathAngle5(double gammaT, double rT, double vT, double incT, double lanT)
         {
+            // gammaT, rT and vT are derived from the user's target apsides, which can produce NaN
+            Check.Finite(gammaT, nameof(gammaT));
+            Check.PositiveFinite(rT, nameof(rT));
+            Check.PositiveFinite(vT, nameof(vT));
+            Check.Finite(incT, nameof(incT));
+            Check.Finite(lanT, nameof(lanT));
+
             NumConstraints = 5;
             _gammaT = gammaT;
             _rT = rT;

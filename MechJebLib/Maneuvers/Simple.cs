@@ -17,9 +17,9 @@ namespace MechJebLib.Maneuvers
     {
         public static V3 DeltaVRelativeToCircularVelocity(double mu, V3 r, V3 v, double n = 1.0)
         {
-            Check.PositiveFinite(mu);
-            Check.Finite(v);
-            Check.NonZeroFinite(r);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.Finite(v);
+            CheckDebug.NonZeroFinite(r);
 
             var h = V3.Cross(r, v);
             return n * Astro.CircularVelocityFromHvec(mu, r, h) - v;
@@ -27,9 +27,9 @@ namespace MechJebLib.Maneuvers
 
         public static V3 DeltaVToCircularize(double mu, V3 r, V3 v)
         {
-            Check.PositiveFinite(mu);
-            Check.Finite(v);
-            Check.NonZeroFinite(r);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.Finite(v);
+            CheckDebug.NonZeroFinite(r);
 
             var h = V3.Cross(r, v);
             return Astro.CircularVelocityFromHvec(mu, r, h) - v;
@@ -37,11 +37,11 @@ namespace MechJebLib.Maneuvers
 
         public static V3 DeltaVToEllipticize(double mu, V3 r, V3 v, double newPeR, double newApR)
         {
-            Check.PositiveFinite(mu);
-            Check.NonZeroFinite(r);
-            Check.Finite(v);
-            Check.PositiveFinite(newPeR);
-            Check.Finite(newApR);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.NonZeroFinite(r);
+            CheckDebug.Finite(v);
+            CheckDebug.PositiveFinite(newPeR);
+            CheckDebug.Finite(newApR);
 
             double rm = r.magnitude;
             // orbital energy
@@ -61,18 +61,18 @@ namespace MechJebLib.Maneuvers
             V3 one = vtransverse * transversehat + vradial * radialhat - v;
             V3 two = vtransverse * transversehat - vradial * radialhat - v;
 
-            Check.Finite(one);
-            Check.Finite(two);
+            CheckDebug.Finite(one);
+            CheckDebug.Finite(two);
 
             return one.magnitude < two.magnitude ? one : two;
         }
 
         public static V3 DeltaVToCircularizeAfterTime(double mu, V3 r, V3 v, double dt)
         {
-            Check.PositiveFinite(mu);
-            Check.NonZeroFinite(r);
-            Check.Finite(v);
-            Check.Finite(dt);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.NonZeroFinite(r);
+            CheckDebug.Finite(v);
+            CheckDebug.Finite(dt);
 
             (V3 r1, V3 v1) = Shepperd.Solve(mu, dt, r, v);
             var h = V3.Cross(r1, v1);
@@ -81,28 +81,28 @@ namespace MechJebLib.Maneuvers
 
         public static (V3 dv, double dt) ManeuverToCircularizeAtPeriapsis(double mu, V3 r, V3 v)
         {
-            Check.PositiveFinite(mu);
-            Check.NonZeroFinite(r);
-            Check.Finite(v);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.NonZeroFinite(r);
+            CheckDebug.Finite(v);
 
             double dt = Astro.TimeToNextPeriapsis(mu, r, v);
 
-            Check.Finite(dt);
+            CheckDebug.Finite(dt);
 
             return (DeltaVToCircularizeAfterTime(mu, r, v, dt), dt);
         }
 
         public static (V3 dv, double dt) ManeuverToCircularizeAtApoapsis(double mu, V3 r, V3 v)
         {
-            Check.PositiveFinite(mu);
-            Check.NonZeroFinite(r);
-            Check.Finite(v);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.NonZeroFinite(r);
+            CheckDebug.Finite(v);
 
             double dt = Astro.TimeToNextApoapsis(mu, r, v);
             V3 dv = DeltaVToCircularizeAfterTime(mu, r, v, dt);
 
-            Check.Finite(dv);
-            Check.Finite(dt);
+            CheckDebug.Finite(dv);
+            CheckDebug.Finite(dt);
 
             return (dv, dt);
         }
@@ -110,10 +110,10 @@ namespace MechJebLib.Maneuvers
         // simple proportional yaw guidance for non-hyperbolic target orbits
         public static V3 DeltaVForLaunchInclination(double mu, V3 r, V3 v, double newInc, double rotFreq, double desiredApoapsis)
         {
-            Check.PositiveFinite(mu);
-            Check.NonZeroFinite(r);
-            Check.Finite(v);
-            Check.Finite(newInc);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.NonZeroFinite(r);
+            CheckDebug.Finite(v);
+            CheckDebug.Finite(newInc);
 
             // This is all overly-complicated to deal with button mashers.  If we didn't care, we'd just use dv1.
 
@@ -137,7 +137,7 @@ namespace MechJebLib.Maneuvers
             if (vhoriz.magnitude / dvinc1.magnitude < 0.05 && Abs(dv1.magnitude - dv2.magnitude) / dv1.magnitude < 0.05)
                 dv = dv1;
 
-            Check.Finite(dv);
+            CheckDebug.Finite(dv);
 
             return dv;
         }
@@ -146,26 +146,26 @@ namespace MechJebLib.Maneuvers
 
         public static V3 DeltaVToChangeInclination(V3 r, V3 v, double newInc)
         {
-            Check.NonZeroFinite(r);
-            Check.Finite(v);
-            Check.Finite(newInc);
+            CheckDebug.NonZeroFinite(r);
+            CheckDebug.Finite(v);
+            CheckDebug.Finite(newInc);
 
             V3 dv = Astro.VelocityForInclination(r, v, newInc) - v;
 
-            Check.Finite(dv);
+            CheckDebug.Finite(dv);
 
             return dv;
         }
 
         public static V3 DeltaVToChangeFPA(V3 r, V3 v, double newFPA)
         {
-            Check.NonZeroFinite(r);
-            Check.Finite(v);
-            Check.Finite(newFPA);
+            CheckDebug.NonZeroFinite(r);
+            CheckDebug.Finite(v);
+            CheckDebug.Finite(newFPA);
 
             V3 dv = Astro.VelocityForFPA(r, v, newFPA) - v;
 
-            Check.Finite(dv);
+            CheckDebug.Finite(dv);
 
             return dv;
         }
@@ -181,10 +181,10 @@ namespace MechJebLib.Maneuvers
         /// <returns>Delta-V</returns>
         public static V3 DeltaVToChangeApoapsisPrograde(double mu, V3 r, V3 v, double newApR)
         {
-            Check.Finite(v);
-            Check.PositiveFinite(mu);
-            Check.NonZeroFinite(r);
-            Check.PositiveFinite(newApR);
+            CheckDebug.Finite(v);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.NonZeroFinite(r);
+            CheckDebug.PositiveFinite(newApR);
 
             return RealDeltaVToChangeApoapsisPrograde.Run(mu, r, v, newApR);
         }

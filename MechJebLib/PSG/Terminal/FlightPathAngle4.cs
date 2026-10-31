@@ -19,10 +19,11 @@ namespace MechJebLib.PSG.Terminal
 
         public FlightPathAngle4(double gammaT, double rT, double vT, double incT)
         {
-            Check.Finite(gammaT);
-            Check.PositiveFinite(rT);
-            Check.PositiveFinite(vT);
-            Check.Finite(incT);
+            // gammaT, rT and vT are derived from the user's target apsides, which can produce NaN
+            Check.Finite(gammaT, nameof(gammaT));
+            Check.PositiveFinite(rT, nameof(rT));
+            Check.PositiveFinite(vT, nameof(vT));
+            Check.Finite(incT, nameof(incT));
 
             NumConstraints = 4;
             _gammaT = gammaT;

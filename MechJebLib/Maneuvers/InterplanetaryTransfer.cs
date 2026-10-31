@@ -212,18 +212,18 @@ namespace MechJebLib.Maneuvers
         public (V3 dv, double dt1, double dt2, double dt3) Maneuver(V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi1, double mu2, V3 r2, V3 v2, double soi2, double mu3, double arrivalDT, double arrivalDTlower = 0, double arrivalDTupper = double.PositiveInfinity, double peR = double.PositiveInfinity, double inc = double.NaN, bool captureBurn = false, bool optguard = false)
         {
             Print($"InterplanetaryTransfer.Maneuver({r0}, {v0}, {mu1:G17}, {r1}, {v1}, {soi1:G17}, {mu2:G17}, {r2}, {v2}, {soi2:G17}, {mu3:G17}, {arrivalDT:G17}, arrivalDTlower: {arrivalDTlower:G17} arrivalDTupper: {arrivalDTupper:G17}, peR: {peR:G17}, inc: {inc:G17}, captureBurn: {captureBurn})");
-            Check.PositiveFinite(mu1);
-            Check.NonNegativeFinite(mu2);
-            Check.PositiveFinite(mu3);
-            Check.Finite(r0);
-            Check.Finite(v0);
-            Check.Finite(r1);
-            Check.Finite(v1);
-            Check.Finite(r2);
-            Check.Finite(v2);
-            Check.PositiveFinite(soi1);
-            Check.NonNegativeFinite(soi2);
-            Check.NonNegative(peR);
+            CheckDebug.PositiveFinite(mu1);
+            CheckDebug.NonNegativeFinite(mu2);
+            CheckDebug.PositiveFinite(mu3);
+            CheckDebug.Finite(r0);
+            CheckDebug.Finite(v0);
+            CheckDebug.Finite(r1);
+            CheckDebug.Finite(v1);
+            CheckDebug.Finite(r2);
+            CheckDebug.Finite(v2);
+            CheckDebug.PositiveFinite(soi1);
+            CheckDebug.NonNegativeFinite(soi2);
+            CheckDebug.NonNegative(peR);
 
             // problem scaling
 
@@ -406,7 +406,7 @@ namespace MechJebLib.Maneuvers
             double savedsoi2 = _soi2;
             _soi2 = 0;
 
-            DebugPrint("initial constraint violation:");
+            PrintDebug("initial constraint violation:");
             GetCost(x0);
 
             (double[] x1, alglib.minnlcreport rep1) = RunPass(x0, bndl, bndu, optguard);
@@ -447,7 +447,7 @@ namespace MechJebLib.Maneuvers
             x1[15] = vsoiSph2.z;
 
             for (int i = 0; i < x1.Length; i++)
-                DebugPrint($"x1[{i}] = {x1[i]}");
+                PrintDebug($"x1[{i}] = {x1[i]}");
 
             // the plane of the arrival hyperbola contains v-infinity, so its inclination is no less than the declination of
             // v-infinity (and no more than 180 degrees minus it).  getting any closer to equatorial means bending the
@@ -457,7 +457,7 @@ namespace MechJebLib.Maneuvers
             double cosInc = _cosInc;
             _cosInc = double.NaN;
 
-            DebugPrint("second-pass initial constraint violation:");
+            PrintDebug("second-pass initial constraint violation:");
             GetCost(x1);
 
             (double[] x2, alglib.minnlcreport rep2) = RunPass(x1, bndl, bndu, optguard);
@@ -480,7 +480,7 @@ namespace MechJebLib.Maneuvers
                     Print($"clamping inc to {Rad2Deg(TargetInc):G17} degrees, the arrival v-infinity has a declination of {Rad2Deg(decl):G17} degrees");
                 }
 
-                DebugPrint("third-pass initial constraint violation:");
+                PrintDebug("third-pass initial constraint violation:");
                 GetCost(x2);
 
                 (x2, rep2) = RunPass(x2, bndl, bndu, optguard);
@@ -489,7 +489,7 @@ namespace MechJebLib.Maneuvers
             }
 
             for (int i = 0; i < x2.Length; i++)
-                DebugPrint($"x2[{i}] = {x2[i]}");
+                PrintDebug($"x2[{i}] = {x2[i]}");
 
             V3 dv2 = GetManeuverDeltaV(x2, ref cost2, ref err2);
 
@@ -508,11 +508,11 @@ namespace MechJebLib.Maneuvers
 
         private (double cost, double err) AnalyzeSolution(double[] x, alglib.minnlcreport rep)
         {
-            DebugPrint($"termination type: {rep.terminationtype}");
-            DebugPrint($"iterations count: {rep.iterationscount}");
-            DebugPrint($"num function evals: {rep.nfev}");
+            PrintDebug($"termination type: {rep.terminationtype}");
+            PrintDebug($"iterations count: {rep.iterationscount}");
+            PrintDebug($"num function evals: {rep.nfev}");
             double err = Max(Max(rep.bcerr, rep.lcerr), rep.nlcerr);
-            DebugPrint($"maxerr = {err}");
+            PrintDebug($"maxerr = {err}");
             double cost = GetCost(x);
             return (cost, err);
         }
@@ -525,9 +525,9 @@ namespace MechJebLib.Maneuvers
             NLPFunction(x, _fi, _jac, true);
             double cost = _fi[0];
 
-            DebugPrint($"cost = {cost}");
+            PrintDebug($"cost = {cost}");
             for (int i = 0; i < _fi.Length; i++)
-                DebugPrint($"fi[{i}]: {_fi[i]}");
+                PrintDebug($"fi[{i}]: {_fi[i]}");
             return cost;
         }
 
@@ -540,14 +540,14 @@ namespace MechJebLib.Maneuvers
 
             foreach (int i in new[]{11, 12, 13, 14, 15})
             {
-                DebugPrint($"--- var {i} = {x[i]} ---");
+                PrintDebug($"--- var {i} = {x[i]} ---");
                 foreach (double h in new[]{1e-1, 1e-2, 1e-3,1e-4,1e-5,1e-6,1e-7,1e-8,1e-9,1e-10})
                 {
                     double[] xp = (double[])x.Clone(); xp[i] += h;
                     double[] fip = new double[m];
                     NLPFunction(xp, fip, _jac);
                     // raw delta floors at ~δf; derivative shows convergence then jitter
-                    DebugPrint($"h={h:E1} dPe={fip[1]-fi0[1]:E3} dPe={(fip[1]-fi0[1])/h:E3}");
+                    PrintDebug($"h={h:E1} dPe={fip[1]-fi0[1]:E3} dPe={(fip[1]-fi0[1])/h:E3}");
                 }
             }
         }
