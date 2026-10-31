@@ -96,7 +96,7 @@ namespace MechJebLibTest.TwoBodyTests
         [MemberData(nameof(Seeds))]
         public void RandomComparedToDP5(int seed)
         {
-            var solver = new DP5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
+            var solver = new DP5 { Rtol = 1e-10, Atol = 1e-10, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
             var rng = new Random(seed);
 
             var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
@@ -133,22 +133,22 @@ namespace MechJebLibTest.TwoBodyTests
                 vf2 = yf.Get(3);
             }
 
-            if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
+            if (!NearlyEqual(rf, rf2, 1e-7) || !NearlyEqual(vf, vf2, 1e-7))
             {
                 Logger.Print("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
                     rf2 + " vf2:" +
                     vf2 + "\n");
             }
 
-            rf.ShouldEqual(rf2, 1e-5);
-            vf.ShouldEqual(vf2, 1e-5);
+            rf.ShouldEqual(rf2, 1e-7);
+            vf.ShouldEqual(vf2, 1e-7);
         }
 
         [Theory]
         [MemberData(nameof(Seeds))]
         public void RandomComparedToTsit5(int seed)
         {
-            var solver = new Tsit5 { Rtol = 1e-6, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
+            var solver = new Tsit5 { Rtol = 1e-10, Atol = 1e-10, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
             var rng = new Random(seed);
 
             var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
@@ -185,15 +185,15 @@ namespace MechJebLibTest.TwoBodyTests
                 vf2 = yf.Get(3);
             }
 
-            if (!NearlyEqual(rf, rf2, 1e-5) || !NearlyEqual(vf, vf2, 1e-5))
+            if (!NearlyEqual(rf, rf2, 1e-7) || !NearlyEqual(vf, vf2, 1e-7))
             {
                 Logger.Print("r0 :" + r0 + " v0:" + v0 + " dt:" + dt + " ecc:" + ecc + "\nrf:" + rf + " vf:" + vf + "\nrf2:" +
                     rf2 + " vf2:" +
                     vf2 + "\n");
             }
 
-            rf.ShouldEqual(rf2, 1e-5);
-            vf.ShouldEqual(vf2, 1e-5);
+            rf.ShouldEqual(rf2, 1e-7);
+            vf.ShouldEqual(vf2, 1e-7);
         }
 
         [Theory]
