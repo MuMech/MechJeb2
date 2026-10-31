@@ -194,27 +194,33 @@ namespace MuMech
             return n;
         }
 
-        internal ManeuverNode LastPlannerNode()
+        internal ManeuverNode LastPlannerNode() => PlannerNodeFromEnd(0);
+
+        // the planner node fromEnd places before the last one (0: the last), skipping the aerobrake node
+        private ManeuverNode PlannerNodeFromEnd(int fromEnd)
         {
             List<ManeuverNode> nodes = RawNodes;
             if (nodes == null) return null;
             ManeuverNode skip = AerobrakeNode;
             for (int i = nodes.Count - 1; i >= 0; i--)
-                if (nodes[i] != skip) return nodes[i];
+                if (nodes[i] != skip && fromEnd-- == 0)
+                    return nodes[i];
             return null;
         }
 
-        /// <summary>The orbit and universal time the next maneuver is computed from (after the last node when there is one).</summary>
+        /// <summary>
+        /// The orbit and universal time the next maneuver is computed from: after the last node when there is one, or, when
+        /// changing the last node, after the node before it.
+        /// </summary>
         internal void GetOrbitAndUT(out Orbit o, out double ut)
         {
             ut = VesselState.Time;
             o = Orbit;
-            int count = PlannerNodeCount();
-            if (count > 0 && (_createNode || count > 1))
+            ManeuverNode from = PlannerNodeFromEnd(_createNode ? 0 : 1);
+            if (from != null)
             {
-                ManeuverNode last = LastPlannerNode();
-                ut = last.UT;
-                o = last.nextPatch;
+                ut = from.UT;
+                o = from.nextPatch;
             }
         }
 
@@ -222,14 +228,16 @@ namespace MuMech
         internal void CreateNodes(bool execute, Orbit o, double ut)
         {
             List<ManeuverParameters> nodeList = CurrentOperation.MakeNodes(o, ut, Core.Target);
-            if (nodeList != null)
+
+            // the operation has an error to show: leave the nodes alone, and don't execute the ones that were already there
+            if (nodeList == null)
+                return;
+
+            if (!_createNode)
+                LastPlannerNode().RemoveSelf();
+            for (int i = 0; i < nodeList.Count; i++)
             {
-                if (!_createNode)
-                    LastPlannerNode().RemoveSelf();
-                for (int i = 0; i < nodeList.Count; i++)
-                {
-                    Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
-                }
+                Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
             }
 
             if (execute && Core.Node != null)

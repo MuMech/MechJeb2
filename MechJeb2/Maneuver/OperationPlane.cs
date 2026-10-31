@@ -19,7 +19,8 @@ namespace MuMech
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
+            // all the time references here are relative nodes, found below from the start time: the selector only says which one
+            double ut = universalTime;
 
             if (!target.NormalTargetExists)
             {
@@ -40,7 +41,7 @@ namespace MuMech
             Vector3d anDeltaV = anExists
                 ? OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(o, target.TargetOrbit, ut, out anTime)
                 : Vector3d.zero;
-            Vector3d dnDeltaV = anExists
+            Vector3d dnDeltaV = dnExists
                 ? OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(o, target.TargetOrbit, ut, out dnTime)
                 : Vector3d.zero;
             Vector3d dV;
@@ -73,7 +74,7 @@ namespace MuMech
                         Localizer.Format("#MechJeb_match_planes_Exception5")); //neither ascending nor descending node with target exists.
                 }
 
-                if (!dnExists || anTime <= dnTime)
+                if (!dnExists || anExists && anTime <= dnTime)
                 {
                     ut = anTime;
                     dV = anDeltaV;
@@ -92,7 +93,7 @@ namespace MuMech
                         Localizer.Format("#MechJeb_match_planes_Exception5")); //neither ascending nor descending node with target exists.
                 }
 
-                if (!dnExists || anDeltaV.magnitude <= dnDeltaV.magnitude)
+                if (!dnExists || anExists && anDeltaV.magnitude <= dnDeltaV.magnitude)
                 {
                     ut = anTime;
                     dV = anDeltaV;

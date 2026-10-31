@@ -56,6 +56,15 @@ namespace MuMech
         //"Warning: neither ascending nor descending node exists."
         private static readonly string _maneuverException7 = Localizer.Format("#MechJeb_Maneu_Exception7");
 
+        //"No ascending node with the target exists."
+        private static readonly string _relativeAscendingException = Localizer.Format("#MechJeb_Hohm_Exception3");
+
+        //"No descending node with the target exists."
+        private static readonly string _relativeDescendingException = Localizer.Format("#MechJeb_Hohm_Exception4");
+
+        //"No ascending or descending node with the target exists."
+        private static readonly string _relativeNodesException = Localizer.Format("#MechJeb_Hohm_Exception5");
+
         public TimeSelector(TimeReference[] allowedTimeRef)
         {
             _allowedTimeRef = allowedTimeRef;
@@ -172,10 +181,57 @@ namespace MuMech
                         throw new OperationException(_maneuverException7);
 
                     break;
+
+                case TimeReference.REL_ASCENDING:
+                case TimeReference.REL_DESCENDING:
+                case TimeReference.REL_NEAREST_AD:
+                case TimeReference.REL_HIGHEST_AD:
+                    ut = RelativeNodeTime(o, ut, target);
+                    break;
             }
 
             _universalTime = ut;
             return _universalTime;
+        }
+
+        // the ascending and descending nodes with the target's orbit, as the EQ_* references do with the equator
+        private double RelativeNodeTime(Orbit o, double ut, MechJebModuleTargetController target)
+        {
+            if (!target.NormalTargetExists)
+                throw new OperationException(_maneuverException2);
+
+            Orbit t = target.TargetOrbit;
+            bool anExists = o.AscendingNodeExists(t);
+            bool dnExists = o.DescendingNodeExists(t);
+
+            switch (_allowedTimeRef[_currentTimeRef])
+            {
+                case TimeReference.REL_ASCENDING:
+                    if (!anExists)
+                        throw new OperationException(_relativeAscendingException);
+                    return o.TimeOfAscendingNode(t, ut);
+
+                case TimeReference.REL_DESCENDING:
+                    if (!dnExists)
+                        throw new OperationException(_relativeDescendingException);
+                    return o.TimeOfDescendingNode(t, ut);
+            }
+
+            if (anExists && dnExists)
+            {
+                double anTime = o.TimeOfAscendingNode(t, ut);
+                double dnTime = o.TimeOfDescendingNode(t, ut);
+                if (_allowedTimeRef[_currentTimeRef] == TimeReference.REL_NEAREST_AD)
+                    return Math.Min(anTime, dnTime);
+                // REL_HIGHEST_AD: the slower node is the higher one
+                return o.getOrbitalVelocityAtUT(anTime).magnitude <= o.getOrbitalVelocityAtUT(dnTime).magnitude ? anTime : dnTime;
+            }
+
+            if (anExists)
+                return o.TimeOfAscendingNode(t, ut);
+            if (dnExists)
+                return o.TimeOfDescendingNode(t, ut);
+            throw new OperationException(_relativeNodesException);
         }
     }
 }
