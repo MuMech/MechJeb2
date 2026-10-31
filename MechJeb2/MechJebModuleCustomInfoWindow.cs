@@ -97,18 +97,6 @@ namespace MuMech
             lastRefresh = now;
         }
 
-        private void RefreshRateGUI()
-        {
-            int oldRate = refreshRate;
-            if (GuiUtils.ShowAdvancedWindowSettings)
-                GuiUtils.SimpleTextBox("Update Interval", refreshRate, "Hz");
-            if (oldRate != refreshRate)
-            {
-                refreshRate = Math.Max(refreshRate, 1);
-                UpdateRefreshRate();
-            }
-        }
-
         public void Init()
         {
             if (!background)

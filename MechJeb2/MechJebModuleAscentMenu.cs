@@ -218,14 +218,6 @@ namespace MuMech
             PhaseLines[PhaseLineCount++] = solution.TerminalString();
         }
 
-        private void RefreshRateGUI()
-        {
-            int oldRate = _refreshRate;
-            if (GuiUtils.ShowAdvancedWindowSettings)
-                GuiUtils.SimpleTextBox("Update Interval", _refreshRate, "Hz");
-            RefreshRateChanged(oldRate);
-        }
-
         internal void RefreshRateChanged(int oldRate)
         {
             if (oldRate != _refreshRate)

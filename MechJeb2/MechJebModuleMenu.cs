@@ -119,8 +119,6 @@ namespace MuMech
             }
         }
 
-        public bool firstDraw = true;
-
         internal bool movingButton;
 
         [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc), Persistent(pass = (int)Pass.GLOBAL)]
@@ -479,7 +477,6 @@ namespace MuMech
             {
                 windowStat = WindowStat.OPENING;
                 windowProgr = 0;
-                firstDraw = true;
             }
             else if (windowStat == WindowStat.NORMAL)
             {

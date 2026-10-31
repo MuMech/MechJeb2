@@ -220,50 +220,6 @@ namespace MuMech
             return downrange ? Math.Pow(2, activeScaleX) : precision * Math.Pow(2, activeScaleX);
         }
 
-        private void DrawnPath(Rect r, RecordType type, float minimum, double scaleX, bool downRange, Color color)
-        {
-            if (recorder.History.Length <= 2 || recorder.HistoryIdx == 0)
-                return;
-
-            graphState graphState = graphStates[(int)type];
-
-            double scaleY = (graphState.maximum - graphState.minimum) / height;
-
-            double invScaleX = 1 / scaleX;
-            double invScaleY = 1 / scaleY;
-
-            float xBase = (float)(r.xMin - minimum * invScaleX);
-            float yBase = r.yMax + (float)(graphState.minimum * invScaleY);
-
-            int t = 0;
-            while (t < recorder.HistoryIdx && t < recorder.History.Length &&
-                   xBase + (float)((downRange ? recorder.History[t].DownRange : recorder.History[t].TimeSinceMark) * invScaleX) <= r.xMin)
-            {
-                t++;
-            }
-
-            var p1 = new Vector2(xBase + (float)((downRange ? recorder.History[t].DownRange : recorder.History[t].TimeSinceMark) * invScaleX),
-                yBase - (float)(recorder.History[t][type] * invScaleY));
-            var p2 = new Vector2();
-
-            while (t <= recorder.HistoryIdx && t < recorder.History.Length)
-            {
-                MechJebModuleFlightRecorder.RecordStruct rec = recorder.History[t];
-                p2.x = xBase + (float)((downRange ? rec.DownRange : rec.TimeSinceMark) * invScaleX);
-                p2.y = yBase - (float)(rec[type] * invScaleY);
-
-                // skip 0 length line but always drawn the first 2 points
-                if (r.Contains(p2) && ((p1 - p2).sqrMagnitude >= 1.0 || t < 2))
-                {
-                    Drawing.DrawLine(p1, p2, color, 2, true);
-                    p1.x = p2.x;
-                    p1.y = p2.y;
-                }
-
-                t++;
-            }
-        }
-
         internal void UpdateScale()
         {
             if (recorder.HistoryIdx == 0)

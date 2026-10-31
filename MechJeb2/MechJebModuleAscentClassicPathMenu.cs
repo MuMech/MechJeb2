@@ -156,18 +156,6 @@ namespace MuMech
             };
         }
 
-        private static readonly List<Vector2> _imguiPoints = new List<Vector2>();
-
-        private void DrawnPath(Rect r, float scaleX, float scaleY, MechJebModuleAscentClassicAutopilot path, Color color)
-        {
-            ComputePathPoints(r.width, r.height, _imguiPoints);
-            for (int i = 1; i < _imguiPoints.Count; i++)
-            {
-                Vector2 a = _imguiPoints[i - 1], b = _imguiPoints[i];
-                Drawing.DrawLine(new Vector2(r.xMin + a.x, r.yMax - a.y), new Vector2(r.xMin + b.x, r.yMax - b.y), color, 2, true);
-            }
-        }
-
         public override string GetName() => Localizer.Format("#MechJeb_AscentPathEd_title"); //"Ascent Path Editor"
 
         public override string IconName() => "Ascent Path Editor";

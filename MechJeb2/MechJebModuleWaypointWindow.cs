@@ -293,8 +293,6 @@ namespace MuMech
 
         private const string COORD_REG_EX =
             @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
-
-        private Vector2 _scroll;
         internal string _titleAdd = "";
         internal string _saveName = "";
         internal bool _waitingForPick;
@@ -767,20 +765,17 @@ namespace MuMech
         internal void ShowWaypointsPage()
         {
             _showPage = Pages.WAYPOINTS;
-            _scroll = Vector2.zero;
             _lastIndex = -1;
         }
 
         internal void ShowRoutesPage()
         {
             _showPage = Pages.ROUTES;
-            _scroll = Vector2.zero;
         }
 
         internal void ShowSettingsPage()
         {
             _showPage = Pages.SETTINGS;
-            _scroll = Vector2.zero;
         }
 
         internal void ToggleHelpWindow()
