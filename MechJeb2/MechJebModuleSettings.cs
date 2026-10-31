@@ -60,7 +60,7 @@ namespace MuMech
 
         /// <summary>New UI skin: Classic (stock sprites, tinted button roles), Flat (dark, flat), Glass (translucent HUD), ZTheme (the ZTheme mod's colours).</summary>
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public int UiSkin = (int)UiSkinType.Classic;
+        public int UiSkin = (int)UiSkinType.Flat;
 
         /// <summary>New UI: tighter margins and rows, in every skin. A custom window's own Compact setting overrides it.</summary>
         [Persistent(pass = (int)Pass.GLOBAL)]

@@ -15,7 +15,7 @@ The new UI's Settings window has four settings for this. All are saved globally 
 
 | Setting | Field | Values | Effect |
 |---|---|---|---|
-| New UI skin | `UiSkin` | Classic, Flat, Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
+| New UI skin | `UiSkin` | Classic, Flat (default), Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
 | Compact | `UiCompact` | on (default) / off | Tighter margins and rows, in every skin (`Theme.Compact`). MechJeb's IMGUI skin no longer decides this. A custom window's own Compact switch can follow it, or override it on or off. |
 | Modern layout | `UiModernLayout` | on (default) / off | Views build with the widgets below instead of IMGUI's. Changing it rebuilds the open windows. |
 | Section headers | `UiSectionHeaders` | on (default) / off | The headers the modern layout adds to long windows (`KodeWindow.Header`). |
