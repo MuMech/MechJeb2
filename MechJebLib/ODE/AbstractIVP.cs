@@ -20,13 +20,16 @@ namespace MechJebLib.ODE
     //  - Needs working event API
     public abstract class AbstractIVP
     {
-        public enum IVPStatus { Initialized, Success, EventTerminated, MaxStepsExceeded, Failed }
+        public enum IVPStatus { Initialized, Success, EventTerminated, MaxEvalsExceeded, NonFiniteAtMinStep, Failed }
 
         private readonly List<Event> _activeEvents = new List<Event>();
 
         private Func<Vec, double, AbstractIVP, double> _eventFunc = null!;
 
-        private double _habsNext;
+        // the caller's RHS, called only through _countedRhs
+        private IVPFunc _f = null!;
+
+        protected double HabsNext;
         protected int Direction;
         protected bool Snapping;
         protected double Habs;
@@ -56,9 +59,15 @@ namespace MechJebLib.ODE
         public double Hmax { get; set; } = double.PositiveInfinity;
 
         /// <summary>
-        ///     Maximum number of steps.
+        ///     Maximum number of RHS evaluations, counting rejected steps (zero or less for no limit).  Integration stops at the
+        ///     last accepted step before a step attempt that would go over it.
         /// </summary>
-        public double Maxiter { get; set; } = 2000;
+        public int MaxEvals { get; set; } = 12000;
+
+        /// <summary>
+        ///     Number of RHS evaluations made by the last Solve.
+        /// </summary>
+        public int Evals { get; private set; }
 
         /// <summary>
         ///     Desired relative tolerance.
@@ -76,25 +85,39 @@ namespace MechJebLib.ODE
         public double Hstart { get; set; } = 0.0;
 
         /// <summary>
-        ///     Throw exception when MaxIter is hit (old PVG optimizer worked better with this set to false).
+        ///     Throw exception when MaxEvals is hit, otherwise integration ends at the last accepted step with Status
+        ///     MaxEvalsExceeded.
         /// </summary>
-        public bool ThrowOnMaxIter { get; set; } = true;
+        public bool ThrowOnMaxEvals { get; set; } = true;
 
         /// <summary>
-        ///     Throw exception when MinStep is hit.
+        ///     Throw exception when the step size would go below the minimum, or the step is still NaN or infinite at the
+        ///     minimum step size.  Otherwise a finite step at the minimum step size is accepted whatever its error, and a
+        ///     non-finite one ends the integration at the last accepted step with Status NonFiniteAtMinStep (T, yf and the
+        ///     interpolant all stop there).
         /// </summary>
         public bool ThrowOnMinStep { get; set; } = true;
 
         public IVPStatus Status { get; set; } = IVPStatus.Success;
 
-        public CancellationToken CancellationToken { get; }
+        public CancellationToken CancellationToken { get; set; }
 
         protected AbstractIVP()
         {
             _eventFunctionDelegate = EventFuncWrapper;
+            _countedRhs            = CountedRhs;
         }
 
         private readonly Func<double, object?, double> _eventFunctionDelegate;
+
+        // every RHS evaluation goes through here so MaxEvals can bound the step loop, cached so a Solve doesn't allocate
+        private readonly IVPFunc _countedRhs;
+
+        private void CountedRhs(Vec y, double t, Vec dy)
+        {
+            Evals++;
+            _f(y, t, dy);
+        }
 
         /// <summary>
         ///     Dormand Prince 5(4)7FM ODE integrator (aka DOPRI5 aka ODE45)
@@ -119,8 +142,10 @@ namespace MechJebLib.ODE
                 Ynew = Vec.Rent(N);
                 Dynew = Vec.Rent(N);
 
+                _f = f;
+
                 Init();
-                _Solve(f, y0, yf, t0, tf, interpolant, events);
+                _Solve(_countedRhs, y0, yf, t0, tf, interpolant, events);
             }
             catch (Exception)
             {
@@ -130,6 +155,7 @@ namespace MechJebLib.ODE
             }
             finally
             {
+                _f = null!;
                 Y.Dispose();
                 Dy.Dispose();
                 Dynew.Dispose();
@@ -157,9 +183,16 @@ namespace MechJebLib.ODE
 
             T = t0;
             Y.CopyFrom(y0);
-            double niter = 0;
+            Evals = 0;
+
+            // no step can be taken from a non-finite start, however small, so these throw whatever ThrowOnMinStep says
+            if (!Y.IsFinite())
+                throw new ArgumentException($"Initial state is not finite at t={T}");
 
             f(Y, T, Dy);
+
+            if (!Dy.IsFinite())
+                throw new InvalidOperationException($"RHS is not finite at the initial state at t={T}");
 
             Habs = Hstart > 0 ? Hstart : SelectInitialStep(f, T, Y, Dy, Direction);
             Habs = Clamp(Habs, MinStep, MaxStep);
@@ -189,7 +222,9 @@ namespace MechJebLib.ODE
                     Habs = Math.Abs(tnext - T); // deliberate for bit-stability
                 }
 
-                (Habs, _habsNext) = Step(f);
+                // no step could be taken from T (Status says why): Y, T and the interpolant stay at the last accepted step
+                if (!Step(f))
+                    break;
 
                 Tnew = Snapping && MaxStep == Habs ? tf : T + Habs * Direction;
 
@@ -247,22 +282,11 @@ namespace MechJebLib.ODE
                 Y.CopyFrom(Ynew);
                 Dy.CopyFrom(Dynew);
                 T = Tnew;
-                Habs = _habsNext;
+                Habs = HabsNext;
 
                 if (terminate)
                 {
                     Status = IVPStatus.EventTerminated;
-                    break;
-                }
-
-                // handle max iterations
-                if (Maxiter > 0 && niter++ > Maxiter)
-                {
-                    Status = IVPStatus.MaxStepsExceeded;
-
-                    if (ThrowOnMaxIter)
-                        throw new InvalidOperationException("maximum iterations exceeded");
-
                     break;
                 }
             }
@@ -285,7 +309,11 @@ namespace MechJebLib.ODE
             return (up && e.Direction > 0) || (down && e.Direction < 0) || (either && e.Direction == 0);
         }
 
-        protected abstract (double, double) Step(IVPFunc f);
+        /// <summary>
+        ///     Take one step from T, setting Habs, HabsNext, Tnew, Ynew and Dynew.
+        /// </summary>
+        /// <returns>false if no step can be taken, with Status set to say why</returns>
+        protected abstract bool Step(IVPFunc f);
 
         protected abstract double SelectInitialStep(IVPFunc f, double t0, Vec y0,
             Vec f0, int direction);
