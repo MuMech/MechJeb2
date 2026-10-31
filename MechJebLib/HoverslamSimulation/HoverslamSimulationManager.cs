@@ -81,7 +81,7 @@ namespace MechJebLib.HoverslamSimulation
             public HoverslamSimulationManager Initial(V3 r0, V3 v0, double t0, double mu, V3 w)
             {
                 if (_debug)
-                    DebugPrint($"[MechJebLib.HoverslamSimulationBuilder] Initial(new V3({r0}), new V3({v0}), {t0}, {mu}, new V3({w}))");
+                    PrintDebug($"[MechJebLib.HoverslamSimulationBuilder] Initial(new V3({r0}), new V3({v0}), {t0}, {mu}, new V3({w}))");
 
                 _r0 = r0;
                 _v0 = v0;
@@ -95,7 +95,7 @@ namespace MechJebLib.HoverslamSimulation
             public HoverslamSimulationManager AddStage(double m0, double mf, double thrust, double isp, int kspStage, int mjPhase)
             {
                 if (_debug)
-                    DebugPrint($"[MechJebLib.HoverslamSimulationBuilder] AddStage({m0}, {mf}, {thrust}, {isp}, {kspStage}, {mjPhase})");
+                    PrintDebug($"[MechJebLib.HoverslamSimulationBuilder] AddStage({m0}, {mf}, {thrust}, {isp}, {kspStage}, {mjPhase})");
 
                 _phases.Add(Phase.NewStage(m0, mf, thrust, isp, kspStage, mjPhase));
 
@@ -105,7 +105,7 @@ namespace MechJebLib.HoverslamSimulation
             public HoverslamSimulationManager AddCoast(double m0, double mf, double ct, int kspStage, int mjPhase)
             {
                 if (_debug)
-                    DebugPrint($"[MechJebLib.HoverslamSimulationBuilder] AddCoast({m0}, {ct}, {kspStage}, {mjPhase})");
+                    PrintDebug($"[MechJebLib.HoverslamSimulationBuilder] AddCoast({m0}, {ct}, {kspStage}, {mjPhase})");
 
                 _phases.Add(Phase.NewCoast(m0, m0, ct, ct, kspStage, mjPhase));
 
@@ -115,7 +115,7 @@ namespace MechJebLib.HoverslamSimulation
             public HoverslamSimulationManager TargetConditions(double height, double descentSpeed)
             {
                 if (_debug)
-                    DebugPrint($"[MechJebLib.HoverslamSimulationBuilder] TargetConditions({height}, {descentSpeed})");
+                    PrintDebug($"[MechJebLib.HoverslamSimulationBuilder] TargetConditions({height}, {descentSpeed})");
 
                 _height = height;
                 _vfm = -descentSpeed; // a positive final descent speed is a negative final vertical speed

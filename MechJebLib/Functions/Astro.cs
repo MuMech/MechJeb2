@@ -565,10 +565,10 @@ namespace MechJebLib.Functions
         // starting point equals 'distance', returning the state vectors there.
         public static (V3 r, V3 v) StateVectorsAtDistance(double mu, V3 r0, V3 v0, double distance)
         {
-            Check.PositiveFinite(mu);
-            Check.Finite(r0);
-            Check.Finite(v0);
-            Check.PositiveFinite(distance);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.Finite(r0);
+            CheckDebug.Finite(v0);
+            CheckDebug.PositiveFinite(distance);
 
             double hi = distance / v0.magnitude;
             double sma = SmaFromStateVectors(mu, r0, v0);
@@ -867,22 +867,22 @@ namespace MechJebLib.Functions
 
         public static double DeltaVFromMassThrustIspBurntime(double m0, double thrust, double isp, double bt)
         {
-            Check.PositiveFinite(m0);
-            Check.PositiveFinite(thrust);
-            Check.PositiveFinite(isp);
-            Check.Finite(bt);
+            CheckDebug.PositiveFinite(m0);
+            CheckDebug.PositiveFinite(thrust);
+            CheckDebug.PositiveFinite(isp);
+            CheckDebug.Finite(bt);
             double mdot = thrust / (isp * G0);
             double mf = m0 - mdot * bt;
-            Check.PositiveFinite(mf);
+            CheckDebug.PositiveFinite(mf);
             return isp * G0 * Log(m0 / mf);
         }
 
         public static double MassFromMassThrustIspBurntime(double m0, double thrust, double isp, double bt)
         {
-            Check.PositiveFinite(m0);
-            Check.PositiveFinite(thrust);
-            Check.PositiveFinite(isp);
-            Check.Finite(bt);
+            CheckDebug.PositiveFinite(m0);
+            CheckDebug.PositiveFinite(thrust);
+            CheckDebug.PositiveFinite(isp);
+            CheckDebug.Finite(bt);
             double mdot = thrust / (isp * G0);
             return m0 - mdot * bt;
         }

@@ -29,9 +29,9 @@ namespace MechJebLib.Rootfinding
         /// <exception cref="ArgumentException">guess does not bracket the root</exception>
         public static double Solve(RootFunc f, RootFunc df, double a, double b, object? o, int maxiter = 100, double tol = EPS)
         {
-            Check.Finite(a);
-            Check.Finite(b);
-            Check.NonNegative(tol);
+            CheckDebug.Finite(a);
+            CheckDebug.Finite(b);
+            CheckDebug.NonNegative(tol);
 
             double fa = f(a, o);
             double fb = f(b, o);

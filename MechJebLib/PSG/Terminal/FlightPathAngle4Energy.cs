@@ -5,6 +5,7 @@
 
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static System.Math;
 using static MechJebLib.Utils.AutoDiff;
 
@@ -21,6 +22,12 @@ namespace MechJebLib.PSG.Terminal
 
         public FlightPathAngle4Energy(double gammaT, double rT, double incT, double lanT)
         {
+            // rT is the user's burnout altitude, which is not clamped for fixed burntime rockets
+            Check.Finite(gammaT, nameof(gammaT));
+            Check.PositiveFinite(rT, nameof(rT));
+            Check.Finite(incT, nameof(incT));
+            Check.Finite(lanT, nameof(lanT));
+
             NumConstraints = 4;
             _rT = rT;
             _incT = incT;

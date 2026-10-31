@@ -49,8 +49,8 @@ namespace MechJebLib.Maths
             int numiter = 35, double rtol = 1e-8)
         {
             // Check preconditions
-            Check.PositiveFinite(tof);
-            Check.PositiveFinite(mu);
+            CheckDebug.PositiveFinite(tof);
+            CheckDebug.PositiveFinite(mu);
 
             // Check collinearity of r1 and r2
             if (V3.Cross(r1, r2) == V3.zero)
@@ -166,8 +166,8 @@ namespace MechJebLib.Maths
         private static (double x, double y) FindXY(double ll, double t, int m, int numiter, bool lowpath, double rtol)
         {
             // For abs(ll) == 1 the derivative is not continuous
-            Check.True(Abs(ll) < 1);
-            Check.True(t > 0); // Mistake in the original paper
+            CheckDebug.True(Abs(ll) < 1);
+            CheckDebug.True(t > 0); // Mistake in the original paper
 
             // NOTE: we dropped the determination of mMax and prefer to just let
             // the householder iteration fail to converge if the caller asks for

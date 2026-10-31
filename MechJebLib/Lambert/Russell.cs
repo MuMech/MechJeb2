@@ -204,10 +204,10 @@ namespace MechJebLib.Lambert
         internal static (V3 v1, V3 v2, double k, double p, double tau, bool halfRev) SolveWithState(double mu, V3 r1, V3 r2, double tof,
             TransferGeometry direction, int nrev, V3? h, int numiter, double halfRevAngle, out int iterations)
         {
-            Check.PositiveFinite(mu);
-            Check.PositiveFinite(tof);
-            Check.NonZeroFinite(r1);
-            Check.NonZeroFinite(r2);
+            CheckDebug.PositiveFinite(mu);
+            CheckDebug.PositiveFinite(tof);
+            CheckDebug.NonZeroFinite(r1);
+            CheckDebug.NonZeroFinite(r2);
 
             int nabs = Abs(nrev);
             bool zeroRev = nrev == 0;

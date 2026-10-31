@@ -275,91 +275,103 @@ namespace MuMech
             if (_blockOptimizerUntilTime > VesselState.Time)
                 return;
 
-            Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
-               .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
-                  , MainBody.gravParameter, MainBody.Radius)
-               .SetTarget(peR, apR, attR, Deg2Rad(Inc), Deg2Rad(lan), ArgP, fpa, attachAltFlag, lanflag, ArgPFlag);
-
-            // note that we have to solve the atmospheric solution even when flying in vacuum, or the optimizer may decide to dip back
-            // into the atmosphere again and burn up the rocket.
-            if (MainBody.atmosphere)
+            try
             {
-                // This very crudely fits an exponential between "sea" level and 15% of the way to space to find rho0 and h0
-                double r1 = MainBody.atmosphereDepth * 0.15;
+                Ascent.AscentBuilder ascentBuilder = Ascent.Builder()
+                   .Initial(Core.StageStats.VacR, Core.StageStats.VacV, Core.StageStats.VacU, Core.StageStats.VacT
+                      , MainBody.gravParameter, MainBody.Radius)
+                   .SetTarget(peR, apR, attR, Deg2Rad(Inc), Deg2Rad(lan), ArgP, fpa, attachAltFlag, lanflag, ArgPFlag);
 
-                double rho0 = MainBody.atmDensityASL;
-                double rho1 = MainBody.GetDensity(MainBody.GetPressure(r1), MainBody.GetTemperature(r1));
-
-                double h0 = r1 / Log(rho0 / rho1);
-                double cd = Cd;
-                double aRef = Aref;
-                double qAlphaMax = LimitQa;
-                double qMax = Core.Thrust.LimitDynamicPressure ? Core.Thrust.MaxDynamicPressure.Val : 0.0;
-                V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
-
-                ascentBuilder.AerodynamicConstants(cd, aRef, rho0, qAlphaMax, qMax, h0, w);
-            }
-
-            if (Core.Guidance.Solution != null)
-                ascentBuilder.OldSolution(Core.Guidance.Solution);
-
-            bool massContinuity = false;
-
-            double mint = MinCoast;
-            double maxt = MaxCoast;
-
-            if (Core.Guidance.IsCoasting())
-            {
-                mint = Max(mint - (VesselState.Time - Core.Guidance.StartCoast), 0);
-                maxt = Max(maxt - (VesselState.Time - Core.Guidance.StartCoast), 0);
-            }
-
-            int startingIndex = FindStartingIndex();
-
-            if (startingIndex == -1)
-                return;
-
-            // walk the rocket from the bottom up
-            // NOTE: if we ever reversed the order the AscentBuilder takes stages this API gets cleaner
-            for (int i = startingIndex; i >= 0 ; i--)
-            {
-                FlightPlanStage stage = FlightPlan.Stages[i];
-                if (stage.Done)
-                    continue;
-
-                FuelStats fuelStats = stage.FuelStats;
-
-                switch (stage.StageType)
+                // note that we have to solve the atmospheric solution even when flying in vacuum, or the optimizer may decide to dip back
+                // into the atmosphere again and burn up the rocket.
+                if (MainBody.atmosphere)
                 {
-                    case StageType.BURN:
-                        {
-                            double minThrottle = fuelStats.MinThrust / fuelStats.MaxThrust;
+                    // This very crudely fits an exponential between "sea" level and 15% of the way to space to find rho0 and h0
+                    double r1 = MainBody.atmosphereDepth * 0.15;
 
-                            double ispCurrent = stage.AtmoISP;
+                    double rho0 = MainBody.atmDensityASL;
+                    double rho1 = MainBody.GetDensity(MainBody.GetPressure(r1), MainBody.GetTemperature(r1));
 
-                            ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.MaxThrust * 1000, fuelStats.Isp,
-                                stage.KSPStage, stage.MJStage, stage.Unguided, stage.AllowShutdown, massContinuity, ispCurrent, minThrottle);
-                            massContinuity = false;
-                            break;
-                        }
-                    case StageType.COAST_DURING:
-                        if (i != startingIndex)
-                            massContinuity = true; // this coast and next burn should be mass continuity.
-                        ascentBuilder.AddCoast(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
-                        break;
-                    case StageType.COAST_BEFORE:
-                    case StageType.COAST_DEDICATED:
-                        ascentBuilder.AddCoast(fuelStats.StartMass * 1000, fuelStats.StartMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
-                        break;
-                    case StageType.COAST_AFTER:
-                        ascentBuilder.AddCoast(fuelStats.EndMass * 1000, fuelStats.EndMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    double h0 = r1 / Log(rho0 / rho1);
+                    double cd = Cd;
+                    double aRef = Aref;
+                    double qAlphaMax = LimitQa;
+                    double qMax = Core.Thrust.LimitDynamicPressure ? Core.Thrust.MaxDynamicPressure.Val : 0.0;
+                    V3 w = 2 * PI / MainBody.rotationPeriod * V3.northpole;
+
+                    ascentBuilder.AerodynamicConstants(cd, aRef, rho0, qAlphaMax, qMax, h0, w);
                 }
-            }
 
-            _ascent = ascentBuilder.Build();
+                if (Core.Guidance.Solution != null)
+                    ascentBuilder.OldSolution(Core.Guidance.Solution);
+
+                bool massContinuity = false;
+
+                double mint = MinCoast;
+                double maxt = MaxCoast;
+
+                if (Core.Guidance.IsCoasting())
+                {
+                    mint = Max(mint - (VesselState.Time - Core.Guidance.StartCoast), 0);
+                    maxt = Max(maxt - (VesselState.Time - Core.Guidance.StartCoast), 0);
+                }
+
+                int startingIndex = FindStartingIndex();
+
+                if (startingIndex == -1)
+                    return;
+
+                // walk the rocket from the bottom up
+                // NOTE: if we ever reversed the order the AscentBuilder takes stages this API gets cleaner
+                for (int i = startingIndex; i >= 0 ; i--)
+                {
+                    FlightPlanStage stage = FlightPlan.Stages[i];
+                    if (stage.Done)
+                        continue;
+
+                    FuelStats fuelStats = stage.FuelStats;
+
+                    switch (stage.StageType)
+                    {
+                        case StageType.BURN:
+                            {
+                                double minThrottle = fuelStats.MinThrust / fuelStats.MaxThrust;
+
+                                double ispCurrent = stage.AtmoISP;
+
+                                ascentBuilder.AddStage(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, fuelStats.MaxThrust * 1000, fuelStats.Isp,
+                                    stage.KSPStage, stage.MJStage, stage.Unguided, stage.AllowShutdown, massContinuity, ispCurrent, minThrottle);
+                                massContinuity = false;
+                                break;
+                            }
+                        case StageType.COAST_DURING:
+                            if (i != startingIndex)
+                                massContinuity = true; // this coast and next burn should be mass continuity.
+                            ascentBuilder.AddCoast(fuelStats.StartMass * 1000, fuelStats.EndMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
+                            break;
+                        case StageType.COAST_BEFORE:
+                        case StageType.COAST_DEDICATED:
+                            ascentBuilder.AddCoast(fuelStats.StartMass * 1000, fuelStats.StartMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
+                            break;
+                        case StageType.COAST_AFTER:
+                            ascentBuilder.AddCoast(fuelStats.EndMass * 1000, fuelStats.EndMass * 1000, mint, maxt, stage.KSPStage, stage.MJStage, stage.Unguided, massContinuity);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+
+                _ascent = ascentBuilder.Build();
+            }
+            catch (Exception e)
+            {
+                // the builder runs synchronously, so a failure (e.g. a Check on an invalid user setting) would otherwise
+                // escape OnFixedUpdate on every tick without being reported in the UI or backing off.
+                LastFailureMessage = e.Message;
+                Debug.Log(e);
+                _blockOptimizerUntilTime = VesselState.Time + 1;
+                return;
+            }
 
             // TODO: wire up Cancellation and Timeouts
             if (!_ascent.TryStartJob())

@@ -112,7 +112,7 @@ namespace MechJebLib.PSG
             if ((_problem.Rho0InvQAlphaMax <= 0 && _problem.Rho0InvQMax <= 0) || solution == null)
                 return psg;
 
-            DebugPrint("*** PHASE 6: Imposing QAlpha Constraints ***");
+            PrintDebug("*** PHASE 6: Imposing QAlpha Constraints ***");
             var psg2 = new Optimizer(_problem, psg.Phases, _problem.Terminal, Optimizer.ObjectiveType.MIN_TIME);
             psg2.TranscribePreviousBootSolution(solution);
             Solution? solution2 = psg2.Run();
@@ -143,7 +143,7 @@ namespace MechJebLib.PSG
 
             Problem problemNoQa = _problem.WithoutDynamicPressure();
 
-            DebugPrint("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
+            PrintDebug("*** PHASE 1: DOING INITIAL ALL-GUIDED ROCKET ***");
             var psg = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
             Solution? solution = _guesser.InitialGuess(bootPhases, _problem.Terminal.IncT(), _problem.Terminal.TargetOrbitalEnergy(), CancelToken);
             psg.TranscribePreviousBootSolution(solution);
@@ -165,7 +165,7 @@ namespace MechJebLib.PSG
 
             if (reConverge)
             {
-                DebugPrint("*** PHASE 4: ADDING BACK UNGUIDED STAGES ***");
+                PrintDebug("*** PHASE 4: ADDING BACK UNGUIDED STAGES ***");
                 psg = new Optimizer(problemNoQa, bootPhases, _problem.Terminal.GetFPA(), Optimizer.ObjectiveType.MIN_TIME);
                 psg.TranscribePreviousBootSolution(solution);
                 solution = psg.Run();
@@ -181,21 +181,21 @@ namespace MechJebLib.PSG
              * relaxing to free attachment
              */
 
-            DebugPrint("*** PHASE 5: RELAXING TO FREE ATTACHMENT ***");
+            PrintDebug("*** PHASE 5: RELAXING TO FREE ATTACHMENT ***");
             var psg2 = new Optimizer(problemNoQa, bootPhases, _problem.Terminal, Optimizer.ObjectiveType.MIN_TIME);
             psg2.TranscribePreviousBootSolution(solution);
             Solution? solution2 = psg2.Run();
 
             if (!psg2.Success() || solution2 == null)
             {
-                DebugPrint("*** FREE ATTACHMENT FAILED, FALLING BACK TO PERIAPSIS ***");
+                PrintDebug("*** FREE ATTACHMENT FAILED, FALLING BACK TO PERIAPSIS ***");
                 return psg;
             }
 
             // this should catch if free attachment picked the apoapsis accidentally
             if (solution.Vgo(solution2.T0) < solution2.Vgo(solution2.T0))
             {
-                DebugPrint($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution.Vgo(solution2.T0)} < {solution2.Vgo(solution2.T0)}) THAN FREE ATTACHMENT SOLUTION ***");
+                PrintDebug($"*** PERIAPSIS ATTACHMENT IS MORE OPTIMAL ({solution.Vgo(solution2.T0)} < {solution2.Vgo(solution2.T0)}) THAN FREE ATTACHMENT SOLUTION ***");
                 return psg;
             }
 

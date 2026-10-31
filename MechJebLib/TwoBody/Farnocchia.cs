@@ -113,7 +113,7 @@ namespace MechJebLib.TwoBody
                 double E = Angles.EFromNu(nu, ecc);
                 double M = Angles.MFromE(E, ecc);
                 double n = Math.Sqrt(mu * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
-                Check.Finite(M / n);
+                CheckDebug.Finite(M / n);
                 return M / n;
             }
 
@@ -124,7 +124,7 @@ namespace MechJebLib.TwoBody
                 {
                     double M = Angles.MFromE(E, ecc);
                     double n = Math.Sqrt(mu * Math.Pow(1 - ecc, 3) / Math.Pow(q, 3));
-                    Check.Finite(M / n);
+                    CheckDebug.Finite(M / n);
                     return M / n;
                 }
                 else
@@ -132,7 +132,7 @@ namespace MechJebLib.TwoBody
                     double D = Angles.DFromNu(nu);
                     double M = DToMNearParabolic(D, ecc);
                     double n = Math.Sqrt(mu / (2 * Math.Pow(q, 3)));
-                    Check.Finite(M / n);
+                    CheckDebug.Finite(M / n);
                     return M / n;
                 }
             }
@@ -142,7 +142,7 @@ namespace MechJebLib.TwoBody
                 double D = Angles.DFromNu(nu);
                 double M = Angles.MFromD(D);
                 double n = Math.Sqrt(mu / (2 * Math.Pow(q, 3)));
-                Check.Finite(M / n);
+                CheckDebug.Finite(M / n);
                 return M / n;
             }
 
@@ -156,7 +156,7 @@ namespace MechJebLib.TwoBody
                 {
                     double M = Angles.MFromF(F, ecc);
                     double n = Math.Sqrt(mu * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
-                    Check.Finite(M / n);
+                    CheckDebug.Finite(M / n);
                     return M / n;
                 }
                 else
@@ -164,7 +164,7 @@ namespace MechJebLib.TwoBody
                     double D = Angles.DFromNu(nu);
                     double M = DToMNearParabolic(D, ecc);
                     double n = Math.Sqrt(mu / (2 * Math.Pow(q, 3)));
-                    Check.Finite(M / n);
+                    CheckDebug.Finite(M / n);
                     return M / n;
                 }
             }
@@ -174,7 +174,7 @@ namespace MechJebLib.TwoBody
                 double F = Angles.FFromNu(nu, ecc);
                 double M = Angles.MFromF(F, ecc);
                 double n = Math.Sqrt(mu * Math.Pow(ecc - 1, 3) / Math.Pow(q, 3));
-                Check.Finite(M / n);
+                CheckDebug.Finite(M / n);
                 return M / n;
             }
 
@@ -184,11 +184,11 @@ namespace MechJebLib.TwoBody
 
         public static double NuFromDeltaT(double delta_t, double ecc, double k = 1.0, double q = 1.0, double delta = 1e-2)
         {
-            Check.Finite(delta_t);
-            Check.Finite(ecc);
-            Check.Finite(k);
-            Check.Finite(q);
-            Check.Finite(delta);
+            CheckDebug.Finite(delta_t);
+            CheckDebug.Finite(ecc);
+            CheckDebug.Finite(k);
+            CheckDebug.Finite(q);
+            CheckDebug.Finite(delta);
 
             double n, M, E, nu, E_delta, D, F, F_delta;
 
@@ -255,16 +255,16 @@ namespace MechJebLib.TwoBody
 
         public static double FarnocchiaFromKeplerian(double mu, double tau, double p, double ecc, double tanom)
         {
-            Check.Finite(mu);
-            Check.Finite(tau);
-            Check.Finite(p);
-            Check.Finite(ecc);
-            Check.Finite(tanom);
+            CheckDebug.Finite(mu);
+            CheckDebug.Finite(tau);
+            CheckDebug.Finite(p);
+            CheckDebug.Finite(ecc);
+            CheckDebug.Finite(tanom);
 
             double q = p / (1 + ecc);
 
             double delta_t0 = DeltaTFromNu(tanom, ecc, mu, q);
-            Check.Finite(delta_t0);
+            CheckDebug.Finite(delta_t0);
             double delta_t = delta_t0 + tau;
 
             return NuFromDeltaT(delta_t, ecc, mu, q);

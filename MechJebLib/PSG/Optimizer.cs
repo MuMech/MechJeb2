@@ -73,13 +73,13 @@ namespace MechJebLib.PSG
                 if (upper > 0)
                 {
                     if (upper > 1e-5 && debug)
-                        DebugPrint($"constraint violation {i}: {f[i]} upper limit: {_nu[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
+                        PrintDebug($"constraint violation {i}: {f[i]} upper limit: {_nu[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
                     PrimalFeasibility += upper * upper;
                 }
                 else if (lower > 0)
                 {
                     if (lower > 1e-5 && debug)
-                        DebugPrint($"constraint violation {i}: {f[i]} lower limit: {_nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
+                        PrintDebug($"constraint violation {i}: {f[i]} lower limit: {_nl[i - 1]} ({_ascentProblem.ConstraintNames[i]})");
                     PrimalFeasibility += lower * lower;
                 }
             }
@@ -468,8 +468,8 @@ namespace MechJebLib.PSG
 
             CalculatePrimalFeasibility(f, true);
 
-            DebugPrint($"Initial Cost: {Cost}");
-            DebugPrint($"Initial PrimalFeasibility: {PrimalFeasibility}");
+            PrintDebug($"Initial Cost: {Cost}");
+            PrintDebug($"Initial PrimalFeasibility: {PrimalFeasibility}");
             InitialPrimalFeasibility = PrimalFeasibility;
 
             alglib.minnlccreate(_vars.TotalVariables, _xGuess, out _state);
@@ -492,8 +492,8 @@ namespace MechJebLib.PSG
             TerminationType = _rep.terminationtype;
             Iterations = _rep.iterationscount;
 
-            DebugPrint("terminationtype: " + TerminationType);
-            DebugPrint("iterations: " + Iterations);
+            PrintDebug("terminationtype: " + TerminationType);
+            PrintDebug("iterations: " + Iterations);
 
             alglib.minnlcoptguardresults(_state, out alglib.optguardreport ogrep);
 
@@ -513,8 +513,8 @@ namespace MechJebLib.PSG
             _ascentProblem.ConstraintFunction(f, jac, x, null);
             CalculatePrimalFeasibility(f, true);
 
-            DebugPrint($"Cost: {Cost}");
-            DebugPrint($"PrimalFeasibility: {PrimalFeasibility}");
+            PrintDebug($"Cost: {Cost}");
+            PrintDebug($"PrimalFeasibility: {PrimalFeasibility}");
 
             _vars.WrapVars(x);
             Solution solution = new SolutionBuilder(N, _vars, Problem, Phases).Build();
@@ -525,7 +525,7 @@ namespace MechJebLib.PSG
         public Solution? Run()
         {
             foreach (Phase phase in Phases)
-                DebugPrint(phase.ToString());
+                PrintDebug(phase.ToString());
 
             try
             {

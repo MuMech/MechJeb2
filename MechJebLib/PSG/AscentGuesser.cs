@@ -31,7 +31,7 @@ namespace MechJebLib.PSG
 
             public void Rhs(Vec yin, double x, Vec dyout)
             {
-                Check.True(Phase.Normalized);
+                CheckDebug.True(Phase.Normalized);
 
                 var y = InterpolantLayout.CreateFrom(yin);
                 var dy = new InterpolantLayout();

@@ -247,7 +247,7 @@ namespace MechJebLib.HoverslamSimulation
         public void Rhs(Vec yin, double x, Vec dyout)
         {
             // TODO: normalization
-            //Check.True(_phase.Normalized);
+            //CheckDebug.True(_phase.Normalized);
 
             var y = HoverslamLayout.CreateFrom(yin);
             var dy = new HoverslamLayout();

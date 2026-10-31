@@ -61,7 +61,7 @@ namespace MechJebLib.PSG
                 if (minThrottle != 1.0)
                     sb.Append($", minThrottle: {minThrottle}");
                 sb.Append(")");
-                DebugPrint(sb.ToString());
+                PrintDebug(sb.ToString());
 
                 _phases.Add(Phase.NewStage(m0, mf, thrust, isp, kspStage, mjPhase, unguided, allowShutdown, massContinuity, ispCurrent, minThrottle));
 
@@ -70,7 +70,7 @@ namespace MechJebLib.PSG
 
             public AscentBuilder AerodynamicConstants(double cd, double aRef, double rho0, double qAlphaMax, double qMax, double h0, V3 w)
             {
-                DebugPrint($"[MechJebLib.AscentBuilder] AerodynamicConstants({cd}, {aRef}, {rho0}, {qAlphaMax}, {qMax}, {h0}, new V3({w}))");
+                PrintDebug($"[MechJebLib.AscentBuilder] AerodynamicConstants({cd}, {aRef}, {rho0}, {qAlphaMax}, {qMax}, {h0}, new V3({w}))");
                 _h0 = h0;
                 _rho0CdAref = cd * aRef * rho0;
                 _rho0QAlphaMaxInv = qAlphaMax > 0 ? rho0 / qAlphaMax : 0;
@@ -88,7 +88,13 @@ namespace MechJebLib.PSG
                 if (massContinuity)
                     sb.Append(", massContinuity: true");
                 sb.Append(")");
-                DebugPrint(sb.ToString());
+                PrintDebug(sb.ToString());
+
+                // user-settable (MinCoast/MaxCoast); validated here and not in Phase.NewCoast because the hoverslam
+                // simulation uses negative coast times to propagate backwards.
+                Check.NonNegativeFinite(mint, nameof(mint));
+                Check.NonNegativeFinite(maxt, nameof(maxt));
+                Check.True(maxt >= mint, "coast maxt must be >= mint");
 
                 _phases.Add(Phase.NewCoast(m0, mf, mint, maxt, kspStage, mjPhase, unguided, massContinuity));
 
@@ -97,13 +103,13 @@ namespace MechJebLib.PSG
 
             public AscentBuilder Initial(V3 r0, V3 v0, V3 u0, double t0, double mu, double rbody)
             {
-                Check.NonZeroFinite(r0);
-                Check.NonZeroFinite(v0);
-                Check.Finite(t0);
-                Check.PositiveFinite(mu);
-                Check.PositiveFinite(rbody);
+                CheckDebug.NonZeroFinite(r0);
+                CheckDebug.NonZeroFinite(v0);
+                CheckDebug.Finite(t0);
+                CheckDebug.PositiveFinite(mu);
+                CheckDebug.PositiveFinite(rbody);
 
-                DebugPrint($"[MechJebLib.AscentBuilder] Initial(new V3({r0}), new V3({v0}), new V3({u0}), {t0}, {mu}, {rbody})");
+                PrintDebug($"[MechJebLib.AscentBuilder] Initial(new V3({r0}), new V3({v0}), new V3({u0}), {t0}, {mu}, {rbody})");
                 _r0 = r0;
                 _v0 = v0;
                 _u0 = u0.normalized;
@@ -115,6 +121,8 @@ namespace MechJebLib.PSG
 
             public Ascent Build()
             {
+                Check.True(_phases.Count > 0, "no stages to optimize");
+
                 double m0 = _phases[0].M0;
                 ITerminal terminal;
 
@@ -132,6 +140,12 @@ namespace MechJebLib.PSG
                 }
                 else
                 {
+                    // the apsides are user-settable and only used (and so only validated) for non-fixed burntime rockets.
+                    // a negative apR denotes a hyperbolic orbit, which requires sma = (peR + apR) / 2 < 0.
+                    Check.PositiveFinite(_peR, "peR");
+                    Check.Finite(_apR, "apR");
+                    Check.True(_apR > 0 || _apR < -_peR, "hyperbolic target apR must be less than -peR");
+
                     (double smaT, double eccT) = Astro.SmaEccFromApsides(_peR, _apR);
 
                     // for nearly circular orbits, force periapsis attachment
@@ -178,7 +192,7 @@ namespace MechJebLib.PSG
             public AscentBuilder SetTarget(double peR, double apR, double attR, double inclination, double lan, double argp,
                 double fpa, bool attachAltFlag, bool lanflag, bool argpflag)
             {
-                DebugPrint(
+                PrintDebug(
                     $"[MechJebLib.AscentBuilder] SetTarget({peR}, {apR}, {attR}, {inclination}, {lan}, {argp}, {fpa}, {(attachAltFlag ? "true" : "false")}, {(lanflag ? "true" : "false")}, {(argpflag ? "true" : "false")})");
                 _peR = peR;
                 _apR = apR;
@@ -196,7 +210,7 @@ namespace MechJebLib.PSG
 
             public AscentBuilder OldSolution(Solution solution)
             {
-                DebugPrint("[MechJebLib.AscentBuilder] OldSolution(<solution>)");
+                PrintDebug("[MechJebLib.AscentBuilder] OldSolution(<solution>)");
 
                 _solution = solution;
 

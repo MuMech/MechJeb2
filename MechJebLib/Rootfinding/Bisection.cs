@@ -27,9 +27,9 @@ namespace MechJebLib.Rootfinding
         public static (double c, double fc) Solve(RootFunc f, double a, double b, object? o, double tolX = 0,
             bool preferLeft = true)
         {
-            Check.Finite(a);
-            Check.Finite(b);
-            Check.NonNegative(tolX);
+            CheckDebug.Finite(a);
+            CheckDebug.Finite(b);
+            CheckDebug.NonNegative(tolX);
 
             if (a > b)
             {
@@ -40,8 +40,8 @@ namespace MechJebLib.Rootfinding
             double fa = f(a, o);
             double fb = f(b, o);
 
-            Check.Finite(fa);
-            Check.Finite(fb);
+            CheckDebug.Finite(fa);
+            CheckDebug.Finite(fb);
 
             if (fa == 0)
                 return (a, fa);

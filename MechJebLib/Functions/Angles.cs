@@ -19,9 +19,9 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double KeplerEquation(double E, double M, double ecc)
         {
-            Check.Finite(E);
-            Check.Finite(M);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(E);
+            CheckDebug.Finite(M);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return MFromE(E, ecc) - M;
         }
@@ -30,9 +30,9 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double KeplerEquationPrime(double E, double M, double ecc)
         {
-            Check.Finite(E);
-            Check.Finite(M);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(E);
+            CheckDebug.Finite(M);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return 1 - ecc * Cos(E);
         }
@@ -40,9 +40,9 @@ namespace MechJebLib.Functions
         [UsedImplicitly]
         public static double NewtonElliptic(double E0, double M, double ecc)
         {
-            Check.Finite(E0);
-            Check.Finite(M);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(E0);
+            CheckDebug.Finite(M);
+            CheckDebug.NonNegativeFinite(ecc);
 
             double tol = 1.48e-08;
             double E = E0;
@@ -64,9 +64,9 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double KeplerEquationHyper(double F, double M, double ecc)
         {
-            Check.Finite(F);
-            Check.Finite(M);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(F);
+            CheckDebug.Finite(M);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return MFromF(F, ecc) - M;
         }
@@ -75,9 +75,9 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double KeplerEquationPrimeHyper(double F, double M, double ecc)
         {
-            Check.Finite(F);
-            Check.Finite(M);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(F);
+            CheckDebug.Finite(M);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return ecc * Cosh(F) - 1;
         }
@@ -85,9 +85,9 @@ namespace MechJebLib.Functions
         [UsedImplicitly]
         public static double NewtonHyperbolic(double F0, double M, double ecc)
         {
-            Check.Finite(F0);
-            Check.Finite(M);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(F0);
+            CheckDebug.Finite(M);
+            CheckDebug.NonNegativeFinite(ecc);
 
             double tol = 1.48e-08;
             double F = F0;
@@ -108,7 +108,7 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double NuFromD(double D)
         {
-            Check.Finite(D);
+            CheckDebug.Finite(D);
 
             return 2.0 * Atan(D);
         }
@@ -116,7 +116,7 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double DFromNu(double nu)
         {
-            Check.Finite(nu);
+            CheckDebug.Finite(nu);
 
             return Tan(nu / 2.0);
         }
@@ -124,8 +124,8 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double EFromNu(double nu, double ecc)
         {
-            Check.Finite(nu);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(nu);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return 2 * Atan(Sqrt((1 - ecc) / (1 + ecc)) * Tan(nu / 2));
         }
@@ -133,8 +133,8 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double FFromNu(double nu, double ecc)
         {
-            Check.Finite(nu);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(nu);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return 2 * Atanh(Sqrt((ecc - 1) / (ecc + 1)) * Tan(nu / 2));
         }
@@ -142,8 +142,8 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double NuFromE(double E, double ecc)
         {
-            Check.Finite(E);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(E);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return 2 * Atan(Sqrt((1 + ecc) / (1 - ecc)) * Tan(E / 2));
         }
@@ -151,16 +151,16 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double NuFromF(double F, double ecc)
         {
-            Check.Finite(F);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(F);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return 2 * Atan(Sqrt((ecc + 1) / (ecc - 1)) * Tanh(F / 2));
         }
 
         public static double EFromM(double M, double ecc)
         {
-            Check.Finite(M);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(M);
+            CheckDebug.NonNegativeFinite(ecc);
 
             double E0;
             if ((-PI < M && M < 0) || PI < M)
@@ -177,8 +177,8 @@ namespace MechJebLib.Functions
 
         public static double FFromM(double M, double ecc)
         {
-            Check.Finite(M);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(M);
+            CheckDebug.NonNegativeFinite(ecc);
 
             double F0 = Asinh(M / ecc);
             return NewtonHyperbolic(F0, M, ecc);
@@ -186,7 +186,7 @@ namespace MechJebLib.Functions
 
         public static double DFromM(double M)
         {
-            Check.Finite(M);
+            CheckDebug.Finite(M);
 
             double B = 3.0 * M / 2.0;
             double A = Pow(B + Sqrt(1.0 + Pow(B, 2)), 2.0 / 3.0);
@@ -196,8 +196,8 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double MFromE(double E, double ecc)
         {
-            Check.Finite(E);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(E);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return E - ecc * Sin(E);
         }
@@ -205,8 +205,8 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double MFromF(double F, double ecc)
         {
-            Check.Finite(F);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(F);
+            CheckDebug.NonNegativeFinite(ecc);
 
             return ecc * Sinh(F) - F;
         }
@@ -214,15 +214,15 @@ namespace MechJebLib.Functions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double MFromD(double D)
         {
-            Check.Finite(D);
+            CheckDebug.Finite(D);
 
             return D + Pow(D, 3) / 3.0;
         }
 
         public static double MFromNu(double nu, double ecc)
         {
-            Check.Finite(nu);
-            Check.NonNegativeFinite(ecc);
+            CheckDebug.Finite(nu);
+            CheckDebug.NonNegativeFinite(ecc);
 
             if (ecc < 1)
                 return MFromE(EFromNu(nu, ecc), ecc);

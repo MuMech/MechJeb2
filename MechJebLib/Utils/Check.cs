@@ -5,142 +5,172 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Utils
 {
+    /// <summary>
+    ///     Always-compiled input validation, throwing <see cref="ArgumentException" />.  This is the Release-build twin of
+    ///     <see cref="CheckDebug" /> and should be used sparingly: only at user-facing entry points where a value the user
+    ///     (UI or kOS) can set may arrive as NaN or out of range.  Internal invariants and hot code (anything inside an ODE
+    ///     RHS, a rootfinder or optimizer loop, or the Astro/Angles functions) should use <see cref="CheckDebug" />.
+    /// </summary>
     public static class Check
     {
-        private static void DoCheck(bool b)
-        {
-            if (!b)
-                throw new FailedCheck("check failed");
-        }
+        /*
+         * Failure paths are kept out of line so that the success path at each call site is just the comparison.
+         *
+         * The name is put into the message rather than passed as ArgumentException.ParamName, because the latter makes
+         * the runtime append a "Parameter name: ..." line to Message, which is what gets shown to the user in the UI.
+         */
 
-        public class FailedCheck : Exception
-        {
-            internal FailedCheck(string msg) : base(msg)
-            {
-            }
-        }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void Fail(string? message) => throw new ArgumentException(message ?? "check failed");
 
-        private static string GetTypeName<T>() => typeof(T).FullName;
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void FailNull(string? name) => throw new ArgumentException($"{name ?? "argument"} must not be null");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void Fail(string? name, string requirement, double d) =>
+            throw new ArgumentException($"{name ?? "argument"} {requirement}, got {d.ToString(CultureInfo.InvariantCulture)}");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void Fail(string? name, string requirement, V3 v) =>
+            throw new ArgumentException($"{name ?? "argument"} {requirement}, got {v}");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void Fail(string? name, string requirement, int len) =>
+            throw new ArgumentException($"{name ?? "argument"} {requirement}, got length {len}");
 
         /*
          * Booleans
          */
 
-        [Conditional("DEBUG")]
-        public static void True(bool b) => DoCheck(b);
+        public static void True(bool b, string? message = null)
+        {
+            if (!b) Fail(message);
+        }
 
-        [Conditional("DEBUG")]
-        public static void False(bool b) => DoCheck(!b);
+        public static void False(bool b, string? message = null)
+        {
+            if (b) Fail(message);
+        }
 
         /*
          * Null
          */
 
-        [Conditional("DEBUG")]
-        public static void NotNull<T>(T? obj) where T : class => DoCheck(obj != null);
+        public static void NotNull<T>(T? obj, string? name = null) where T : class
+        {
+            if (obj == null) FailNull(name);
+        }
 
-        [Conditional("DEBUG")]
-        public static void NotNull<T>(T? obj) where T : struct => DoCheck(obj != null);
+        public static void NotNull<T>(T? obj, string? name = null) where T : struct
+        {
+            if (obj == null) FailNull(name);
+        }
 
         /*
          * Floats
          */
 
-        [Conditional("DEBUG")]
-        public static void Finite(double d) => DoCheck(IsFinite(d));
-
-        [Conditional("DEBUG")]
-        public static void Positive(double d) => DoCheck(d > 0);
-
-        [Conditional("DEBUG")]
-        public static void PositiveFinite(double d)
+        public static void Finite(double d, string? name = null)
         {
-            DoCheck(d > 0);
-            DoCheck(IsFinite(d));
+            if (!IsFinite(d)) Fail(name, "must be finite", d);
         }
 
-        [Conditional("DEBUG")]
-        public static void NonNegative(double d) => DoCheck(d >= 0);
-
-        [Conditional("DEBUG")]
-        public static void NonNegativeFinite(double d)
+        public static void Positive(double d, string? name = null)
         {
-            DoCheck(d >= 0);
-            DoCheck(IsFinite(d));
+            if (!(d > 0)) Fail(name, "must be positive", d);
         }
 
-        [Conditional("DEBUG")]
-        public static void Negative(double d) => DoCheck(d < 0);
-
-        [Conditional("DEBUG")]
-        public static void NegativeFinite(double d)
+        public static void PositiveFinite(double d, string? name = null)
         {
-            DoCheck(d < 0);
-            DoCheck(IsFinite(d));
+            if (!(d > 0 && IsFinite(d))) Fail(name, "must be positive and finite", d);
         }
 
-        [Conditional("DEBUG")]
-        public static void NonPositive(double d) => DoCheck(d <= 0);
-
-        [Conditional("DEBUG")]
-        public static void NonPositiveFinite(double d)
+        public static void NonNegative(double d, string? name = null)
         {
-            DoCheck(d <= 0);
-            DoCheck(IsFinite(d));
+            if (!(d >= 0)) Fail(name, "must be non-negative", d);
         }
 
-        [Conditional("DEBUG")]
-        public static void Zero(double d) => DoCheck(d == 0);
-
-        [Conditional("DEBUG")]
-        public static void NonZero(double d) => DoCheck(d != 0);
-
-        [Conditional("DEBUG")]
-        public static void NonZeroFinite(double d)
+        public static void NonNegativeFinite(double d, string? name = null)
         {
-            DoCheck(d != 0);
-            DoCheck(IsFinite(d));
+            if (!(d >= 0 && IsFinite(d))) Fail(name, "must be non-negative and finite", d);
+        }
+
+        public static void Negative(double d, string? name = null)
+        {
+            if (!(d < 0)) Fail(name, "must be negative", d);
+        }
+
+        public static void NegativeFinite(double d, string? name = null)
+        {
+            if (!(d < 0 && IsFinite(d))) Fail(name, "must be negative and finite", d);
+        }
+
+        public static void NonPositive(double d, string? name = null)
+        {
+            if (!(d <= 0)) Fail(name, "must be non-positive", d);
+        }
+
+        public static void NonPositiveFinite(double d, string? name = null)
+        {
+            if (!(d <= 0 && IsFinite(d))) Fail(name, "must be non-positive and finite", d);
+        }
+
+        public static void Zero(double d, string? name = null)
+        {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (d != 0) Fail(name, "must be zero", d);
+        }
+
+        public static void NonZero(double d, string? name = null)
+        {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (d == 0) Fail(name, "must be non-zero", d);
+        }
+
+        public static void NonZeroFinite(double d, string? name = null)
+        {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (d == 0 || !IsFinite(d)) Fail(name, "must be non-zero and finite", d);
         }
 
         /*
          * Vectors
          */
 
-        /*
-        [Conditional("DEBUG")]
-        public static void Finite(Vector3d v)
+        public static void Finite(V3 v, string? name = null)
         {
-            DoCheck(IsFinite(v));
+            if (!IsFinite(v)) Fail(name, "must be finite", v);
         }
-        */
 
-        [Conditional("DEBUG")]
-        public static void Finite(V3 v) => DoCheck(IsFinite(v));
-
-        [Conditional("DEBUG")]
-        public static void NonZero(V3 v) => DoCheck(v != V3.zero);
-
-        [Conditional("DEBUG")]
-        public static void NonZeroFinite(V3 v)
+        public static void NonZero(V3 v, string? name = null)
         {
-            DoCheck(v != V3.zero);
-            DoCheck(IsFinite(v));
+            if (v == V3.zero) Fail(name, "must be non-zero", v);
+        }
+
+        public static void NonZeroFinite(V3 v, string? name = null)
+        {
+            if (v == V3.zero || !IsFinite(v)) Fail(name, "must be non-zero and finite", v);
         }
 
         /*
          * Arrays
          */
 
-        [Conditional("DEBUG")]
-        public static void CanContain(double[] arry, int len) => DoCheck(arry.Length >= len);
+        public static void CanContain(double[] arry, int len, string? name = null)
+        {
+            if (arry.Length < len) Fail(name, $"must have length >= {len}", arry.Length);
+        }
 
-        [Conditional("DEBUG")]
-        public static void CanContain(IReadOnlyList<double> arry, int len) => DoCheck(arry.Count >= len);
+        public static void CanContain(IReadOnlyList<double> arry, int len, string? name = null)
+        {
+            if (arry.Count < len) Fail(name, $"must have length >= {len}", arry.Count);
+        }
     }
 }

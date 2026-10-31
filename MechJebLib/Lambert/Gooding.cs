@@ -139,11 +139,11 @@ namespace MechJebLib.Lambert
         internal static ( int N, double VR11, double VT11, double VR12, double VT12, double VR21, double VT21, double VR22,
             double VT22) VLAMB(double GM, double R1, double R2, double TH, double TDELT)
         {
-            Check.Finite(GM);
-            Check.Finite(R1);
-            Check.Finite(R1);
-            Check.Finite(TH);
-            Check.Finite(TDELT);
+            CheckDebug.Finite(GM);
+            CheckDebug.Finite(R1);
+            CheckDebug.Finite(R2);
+            CheckDebug.Finite(TH);
+            CheckDebug.Finite(TDELT);
 
             double VR11 = 0.0, VT11 = 0.0, VR12 = 0.0, VT12 = 0.0;
             double VR21 = 0.0, VT21 = 0.0, VR22 = 0.0, VT22 = 0.0;
@@ -213,10 +213,10 @@ namespace MechJebLib.Lambert
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ( int N, double X, double XPL) XLAMB(int M, double Q, double QSQFM1, double TIN)
         {
-            Check.Finite(M);
-            Check.Finite(Q);
-            Check.Finite(QSQFM1);
-            Check.Finite(TIN);
+            CheckDebug.Finite(M);
+            CheckDebug.Finite(Q);
+            CheckDebug.Finite(QSQFM1);
+            CheckDebug.Finite(TIN);
 
             const double TOL = 3e-7;
             const double C0 = 1.7;
@@ -367,11 +367,11 @@ namespace MechJebLib.Lambert
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ( double T, double DT, double D2T, double D3T) TLAMB(int M, double Q, double QSQFM1, double X, int N)
         {
-            Check.Finite(X);
-            Check.Finite(QSQFM1);
-            Check.Finite(Q);
-            Check.Finite(M);
-            Check.Finite(N);
+            CheckDebug.Finite(X);
+            CheckDebug.Finite(QSQFM1);
+            CheckDebug.Finite(Q);
+            CheckDebug.Finite(M);
+            CheckDebug.Finite(N);
 
             const double SW = 0.4;
             bool LM1 = N == -1;
