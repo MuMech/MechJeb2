@@ -109,6 +109,9 @@ namespace MechJebLib.Control
 
         private double ApplyDeadband(double v, double deadband)
         {
+            // Sign throws on NaN.  A NaN passes through and the next Update clears it from the internal state.
+            if (double.IsNaN(v))
+                return v;
             if (Abs(v) < deadband)
                 return 0;
             return v - Sign(v) * deadband;

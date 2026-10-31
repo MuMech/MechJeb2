@@ -15,6 +15,37 @@ namespace MechJebLib.TwoBody
     /// </summary>
     public static class Shepperd
     {
+        // q near -1e16, the most negative a double u can give, takes about 530,000 iterations; from about -1e18 it doesn't end
+        private const int MAX_CF_ITERATIONS = 1000000;
+
+        // The continued fraction G(3, 0, 3/2, q) for l = 1, d = 3, k = -5, and G(5, 0, 5/2, q) for l = 3, d = 15, k = -9.
+        private static double ContinuedFraction(double q, double l, double d, double k)
+        {
+            double n = 0;
+            double r = 1;
+            double s = 1;
+            double gcf = 1;
+            double gold = 0;
+
+            for (int i = 0; gcf != gold; i++)
+            {
+                // a NaN never equals gold, and every non-finite input ends up here as a NaN
+                if (double.IsNaN(gcf) || i == MAX_CF_ITERATIONS)
+                    throw new InvalidOperationException($"Shepperd: the continued fraction did not converge for q={q}");
+
+                k = -k;
+                l += 2;
+                d += 4 * l;
+                n += (1 + k) * l;
+                r = d / (d - n * r * q);
+                s = (r - 1) * s;
+                gold = gcf;
+                gcf = gold + s;
+            }
+
+            return gcf;
+        }
+
         // More robust version of Shepperd's method that solves for U3 directly to just propagate state, with a
         // fallback to bisection.
         public static (V3 rf, V3 vf) Solve(double mu, double tau, V3 ri, V3 vi)
@@ -56,28 +87,8 @@ namespace MechJebLib.TwoBody
                 double q = beta * u * u;
                 q /= 1.0 + q;
 
-                double n = 0;
-                double r = 1;
-                double l = 1;
-                double s = 1;
-                double d = 3;
-                double gcf = 1;
-                double k = -5;
-
-                double gold = 0;
-
                 // this solves for U3 directly by using G(3, 0, 3/2, q)
-                while (gcf != gold)
-                {
-                    k = -k;
-                    l += 2;
-                    d += 4 * l;
-                    n += (1 + k) * l;
-                    r = d / (d - n * r * q);
-                    s = (r - 1) * s;
-                    gold = gcf;
-                    gcf = gold + s;
-                }
+                double gcf = ContinuedFraction(q, 1, 3, -5);
 
                 double h0 = 1 - 2 * q;
                 double h1 = 2 * u * (1 - q);
@@ -210,35 +221,15 @@ namespace MechJebLib.TwoBody
             double r1 = 0.0;
             double q = 0.0;
 
-            double n, r, l, s, d, gcf, k, gold, h0, h1, u3;
+            double gcf, h0, h1, u3;
 
             for (int i = 1; i < imax; i++)
             {
                 q = beta * u * u;
                 q /= 1.0 + q;
 
-                n = 0;
-                r = 1;
-                l = 1;
-                s = 1;
-                d = 3;
-                gcf = 1;
-                k = -5;
-
-                gold = 0;
-
                 // this solves for U3 directly by using G(3, 0, 3/2, q)
-                while (gcf != gold)
-                {
-                    k = -k;
-                    l += 2;
-                    d += 4 * l;
-                    n += (1 + k) * l;
-                    r = d / (d - n * r * q);
-                    s = (r - 1) * s;
-                    gold = gcf;
-                    gcf = gold + s;
-                }
+                gcf = ContinuedFraction(q, 1, 3, -5);
 
                 h0 = 1 - 2 * q;
                 h1 = 2 * u * (1 - q);
@@ -300,28 +291,8 @@ namespace MechJebLib.TwoBody
             V3 rf = f * ri + g * vi;
             V3 vf = ff * ri + gg * vi;
 
-            n = 0;
-            r = 1;
-            l = 3;
-            s = 1;
-            d = 15;
-            gcf = 1;
-            k = -9;
-
-            gold = 0;
-
             // this solves for U5 directly by using G(5, 0, 5/2, q)
-            while (gcf != gold)
-            {
-                k = -k;
-                l += 2;
-                d += 4 * l;
-                n += (1 + k) * l;
-                r = d / (d - n * r * q);
-                s = (r - 1) * s;
-                gold = gcf;
-                gcf = gold + s;
-            }
+            gcf = ContinuedFraction(q, 3, 15, -9);
 
             h0 = 1 - 2 * q;
             h1 = 2 * u * (1 - q);
