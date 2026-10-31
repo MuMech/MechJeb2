@@ -319,6 +319,13 @@ namespace MuMech
                 return;
             }
 
+            // Don't fire a stage that will activate a parachute, unless that parachute gets decoupled (checked before the
+            // no-active-engines rule below, or a stage that runs dry in orbit fires the recovery chutes)
+            if (HasStayingChutes(Vessel.currentStage - 1))
+            {
+                return;
+            }
+
             // always stage if we have no active engines
             if (!InverseStageHasActiveEngines(Vessel.currentStage))
             {
@@ -330,12 +337,6 @@ namespace MuMech
             if (HotStaging && InverseStageHasEngines(Vessel.currentStage - 1) &&
                 !InverseStageFiresDecoupler(Vessel.currentStage - 1) && !InverseStageReleasesClamps(Vessel.currentStage - 1) &&
                 LastNonZeroDVStageBurnTime() > HotStagingLeadTime)
-            {
-                return;
-            }
-
-            // Don't fire a stage that will activate a parachute, unless that parachute gets decoupled:
-            if (HasStayingChutes(Vessel.currentStage - 1))
             {
                 return;
             }
