@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <!--
-      Optional uGUI front end for MechJeb2 (KodeUI + KodeKit, built entirely in code, no asset bundles).
-      Ships as GameData/MechJeb2/Plugins/MechJeb2.UI.dll; without it MechJeb2 runs on IMGUI as before.
+      The uGUI front end for MechJeb2 (KodeUI + KodeKit, built entirely in code, no asset bundles).
+      Ships as GameData/MechJeb2/Plugins/MechJeb2.UI.dll; MechJeb's windows have no other UI, so it is required.
       KodeUI and KodeKit are compiled into this assembly (KSP binds assemblies by name, so a separate
       KodeUI.dll could collide with another mod's copy). KodeKit (widgets, bindings, themes on top of
       KodeUI) lives in KodeKit/ here; KodeUI/ is a copy of the sources of https://github.com/sarbian/KodeUI
-      at 5fca133 (b178cd6 plus the parts moved from KodeKit, on its local branch kodekit-parts), with only their UTF-8 BOMs removed.
+      at 5fca133 (b178cd6 plus the parts moved from KodeKit), with only their UTF-8 BOMs removed.
     -->
 
     <PropertyGroup>

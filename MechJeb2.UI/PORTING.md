@@ -1,29 +1,28 @@
-# Porting a MechJeb window to the new UI (MechJeb2.UI)
+# Writing a MechJeb window (MechJeb2.UI)
 
 MechJeb2.UI draws MechJeb's `DisplayModule` windows with **KodeKit** (`KodeKit/`), a retained uGUI + TextMeshPro
-layer built on KodeUI. IMGUI stays the fallback: a window is drawn by the new UI only when Settings →
-"Use the new UI for ported windows" is on **and** a view exists for its module type.
+layer built on KodeUI. MechJeb's own windows have no IMGUI drawing code, so each of them needs a view here. IMGUI
+only draws another mod's windows, and its operations and info items inside the new windows, through `ImguiBlock`.
 
-## How a port is wired
+## How a view is wired
 
 1. Create `src/<Name>View.cs`: a class deriving from `KodeView`, marked `[KodeViewFor(typeof(MechJebModuleX))]`,
    with a public constructor taking the module. `KodeHost` finds it by reflection; nothing else to register.
-2. Override `MinWidth` (use the width from the module's `WindowOptions()`), and `BuildContents(KodeWindow w)`,
+2. Override `MinWidth` and `BuildContents(KodeWindow w)`,
    called **once**. Build every row there; things that come and go use `w.Visible(go, () => condition)`.
-3. Per-frame model work that IMGUI's `WindowGUI` did before drawing (selecting a node, refreshing a cache,
+3. Per-frame model work (selecting a node, refreshing a cache,
    pushing settings into a controller each frame) goes in `protected override void BeforeSync()`.
 4. If the structure must change at runtime (a list grows), set `RebuildRequested = true`; the host rebuilds the view.
 
 Examples: `UtilitiesView` (toggles with tones, fields, ImguiBlock fallback), `NodeEditorView` (selectors, repeat
 buttons, state in the module), `SettingsView` (registry toggles, title, skin buttons).
 
-## Port row for row
+## Keep the logic in MechJeb
 
-Follow the module's `WindowGUI` in order. Same texts (`#MechJeb_...` keys: pass the key string, KodeKit localizes
-it and re-localizes on language switch), same conditions, same actions. Keep the logic in MechJeb: if the IMGUI
-code computes something inline that the view also needs, move it into an `internal` method on the module and make
-`WindowGUI` call it too, so both UIs share one implementation. Make private fields/methods `internal` when the view
-needs them (`InternalsVisibleTo("MechJeb2.UI")` is set). Don't change behaviour.
+Texts are `#MechJeb_...` keys: pass the key string, and KodeKit localizes it and re-localizes on language switch. If
+a view computes something that isn't drawing, it belongs in an `internal` method on the module, where kOS and other
+views can reach it too. Make private fields/methods `internal` when the view needs them
+(`InternalsVisibleTo("MechJeb2.UI")` is set).
 
 ## Widget map (KodeKit, `KodeWindow w`, parent `UIObject p`)
 
@@ -47,7 +46,7 @@ needs them (`InternalsVisibleTo("MechJeb2.UI")` is set). Don't change behaviour.
 | tooltip | `Tooltips.Add(gameObject, "#key or text")` |
 | title-bar extra button | `w.TitleButton("E", action)` |
 | scrolling list | KodeUI `ScrollView` (`KodeUI/ScrollView.cs`) |
-| anything not worth porting now (a GeneralInfoItem method, a complex custom draw) | `new ImguiBlock(p, () => module.ImguiMethod())` (IMGUI drawn inside the new window) |
+| another mod's IMGUI draw method, or GL in `OnGUI` | `new ImguiBlock(p, () => module.ImguiMethod())` (IMGUI drawn inside the new window) |
 
 A `[GeneralInfoItem]` method is ported once, as a builder in `src/InfoItems/` registered in `GeneralItemBuilders` by id
 (`General:<Module>.<Method>`); windows that draw the same rows (Utilities, Landing Guidance, Warp Helper) call
