@@ -302,7 +302,9 @@ namespace MuMech.UI
         public static void BuildMenuPosition(KodeWindow w, UIObject parent, MechJebModuleMenu menu)
         {
             Layout row = KodeWindow.Row(parent);
+            KodeWindow.Label(row, "#MechJeb_MenuPos"); //Pos:
             MiscViewKit.BoundButton(w, row, () => sideNames[(int)menu.windowSide], menu.CycleSide, null, true);
+            KodeWindow.Label(row, "#MechJeb_MenuCol"); //Col
             KodeWindow.Button(row, "-", () => menu.columns = Math.Max(1, menu.columns - 1));
             w.BoundLabel(row, "99", () =>
             {

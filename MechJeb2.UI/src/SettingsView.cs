@@ -78,6 +78,7 @@ namespace MuMech.UI
             MechJebModuleMenu menu = Core.GetComputerModule<MechJebModuleMenu>();
             if (hideButton != null) w.Visible(hideButton, () => ToolbarManager.ToolbarAvailable || menu.useAppLauncher);
 
+            KodeWindow.Header(r, "#MechJeb_MenuHeader", true); //Menu
             MenuView.BuildMenuPosition(w, r, menu);
 
             RoverUi.ToggleRow(w, r, editor, "Toggle:Settings.RssMode");

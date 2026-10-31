@@ -159,6 +159,7 @@ namespace MuMech
             if (ToolbarManager.ToolbarAvailable || Core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
                 ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();
 
+            GUILayout.Label(Localizer.Format("#MechJeb_MenuHeader")); //Menu
             ed.registry.Find(i => i.id == "General:Menu.MenuPosition").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Settings.RssMode").DrawItem();
