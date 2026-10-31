@@ -4,6 +4,7 @@ using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
 using MechJebLib.Functions;
 using MechJebLib.PSG;
+using MechJebLibBindings.PSG;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -69,6 +70,26 @@ namespace MuMech
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
             _psgSettingsMenu.Enabled = false;
             _settingsMenu.Enabled = false;
+        }
+
+        // Keeps the PSG LogicalPlan, and the FlightPlan built from it, current while this window is open with PSG selected,
+        // whichever UI draws it. Engaging the autopilot enables the PSGSimulation, which freezes both for the flight.
+        // BUG: this is the only place the LogicalPlan is created, so kOS can't drive PSG without this window open.
+        public override void OnFixedUpdate()
+        {
+            if (_ascentSettings.AscentType != AscentType.PSG || !Vessel.isActiveVessel || Core.PSGSimulation.Enabled)
+                return;
+
+            Core.StageStats.RequestUpdate();
+
+            if (Core.StageStats.VacStats.Count == 0)
+                return;
+
+            Core.PSGSimulation.LogicalPlan = new PersistedLogicalPlan(LogicalPlan.GenerateLogicalPlan(Core.StageStats.VacStats,
+                _ascentSettings.UnguidedStages, _ascentSettings.FixedStages, _ascentSettings.LastStage, Core.PSGSimulation.MinDeltaV,
+                _ascentSettings.CoastStage, _ascentSettings.CoastLocation));
+
+            Core.PSGSimulation.RequestFlightPlanUpdate();
         }
 
         private static GUIStyle _btNormal, _btActive;
