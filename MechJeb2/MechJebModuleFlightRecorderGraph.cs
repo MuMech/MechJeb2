@@ -574,8 +574,9 @@ namespace MuMech
                 if (graphStates[t].labels == null)
                 {
                     change = true;
-                    graphStates[t].labels = new string[ScaleTicks];
-                    graphStates[t].labelsPos = new double[ScaleTicks];
+                    // ScaleTicks is only a target: rounding the limits out to a whole step can give one more
+                    graphStates[t].labels = new string[2 * ScaleTicks];
+                    graphStates[t].labelsPos = new double[2 * ScaleTicks];
                 }
 
                 if (change)
@@ -591,7 +592,7 @@ namespace MuMech
 
                     double currX = minimum;
                     int i = 0;
-                    while (currX <= maximum + 0.5 * step)
+                    while (i < graphStates[t].labels.Length && currX <= maximum + 0.5 * step)
                     {
                         graphStates[t].labels[i] = currX.ToString("F" + digit);
                         graphStates[t].labelsPos[i] = currX;
