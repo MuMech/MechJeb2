@@ -18,22 +18,11 @@ namespace MuMech
 
         public Target target;
 
-        private static GUIStyle btNormal, btActive, btAuto;
-
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoDisableSmartRCS = true;
 
         [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)] //Disable SmartRcs automatically
         public void AutoDisableSmartRCS() { } //"Disable SmartRcs automatically"
-
-        protected void TargetButton(Target bt)
-        {
-            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
-            {
-                target = bt;
-                Engage();
-            }
-        }
 
         public MechJebModuleSmartRcs(MechJebCore core) : base(core)
         {

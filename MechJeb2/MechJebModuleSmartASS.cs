@@ -59,8 +59,6 @@ namespace MuMech
         public static readonly string[] ReferenceTexts = Enum.GetNames(typeof(AttitudeReference));
         public static readonly string[] directionTexts = Enum.GetNames(typeof(Vector6.Direction));
 
-        public static GUIStyle btNormal, btActive, btAuto;
-
         [Persistent(pass = (int)Pass.LOCAL)]
         public Mode mode = Mode.ORBITAL;
 
@@ -128,46 +126,6 @@ namespace MuMech
 
         public MechJebModuleSmartASS(MechJebCore core) : base(core) { }
 
-        protected void ModeButton(Mode bt)
-        {
-            if (GUILayout.Button(ModeTexts[(int)bt], mode == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
-            {
-                mode = bt;
-            }
-        }
-
-        protected void TargetButton(Target bt)
-        {
-            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
-            {
-                target = bt;
-                Engage();
-            }
-        }
-
-        protected void TargetButtonNoEngage(Target bt)
-        {
-            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
-            {
-                target = bt;
-            }
-        }
-
-        protected void ForceRoll()
-        {
-            GUILayout.BeginHorizontal();
-            bool _forceRol = forceRol;
-            forceRol = GUILayout.Toggle(forceRol, Localizer.Format("#MechJeb_SmartASS_checkbox3"), GuiUtils.LayoutNoExpandWidth); //"Force Roll :"
-            if (_forceRol != forceRol)
-            {
-                Engage();
-            }
-
-            rol.Text = GUILayout.TextField(rol.Text, GuiUtils.LayoutWidth(30));
-            GUILayout.Label("°", GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-        }
-
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
             base.OnLoad(local, type, global);
@@ -219,14 +177,6 @@ namespace MuMech
                 smoothControl = false;
             else
                 Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
-        }
-
-        private void DisplaySmoothControlUI()
-        {
-            GUILayout.BeginHorizontal();
-            smoothControl = GUILayout.Toggle(smoothControl, "Smooth Control:", GuiUtils.LayoutNoExpandWidth);
-            GuiUtils.SimpleTextBox("", degreesPerSecond, "°/s", 40);
-            GUILayout.EndHorizontal();
         }
 
         public void Engage(bool resetPID = true)

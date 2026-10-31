@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using KSP.Localization;
 using KSP.UI.Screens;
 using UnityEngine;
 
@@ -70,8 +69,6 @@ namespace MuMech
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int columns = 2;
-
-        private const int colWidth = 200;
 
         public Rect displayedPos
         {

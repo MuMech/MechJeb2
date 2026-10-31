@@ -1019,24 +1019,6 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_PoolsStatus", InfoItem.Category.Misc, showInEditor = true)] //Pools Status
         public void DebugString() { }
 
-        private static GUIStyle _separatorStyleField;
-
-        private static GUIStyle _separatorStyle
-        {
-            get
-            {
-                if (_separatorStyleField == null || _separatorStyleField.normal.background == null)
-                {
-                    var texture = new Texture2D(1, 1);
-                    texture.SetPixel(0, 0, new Color(0.5f, 0.5f, 0.5f));
-                    texture.Apply();
-                    _separatorStyleField = new GUIStyle { normal = { background = texture }, padding = { left = 50 } };
-                }
-
-                return _separatorStyleField;
-            }
-        }
-
         [GeneralInfoItem("#MechJeb_Separator", InfoItem.Category.Misc, showInEditor = true)] //Separator
         public void HorizontalSeparator() { }
     }

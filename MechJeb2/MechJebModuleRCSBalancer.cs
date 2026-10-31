@@ -2,7 +2,6 @@ extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 

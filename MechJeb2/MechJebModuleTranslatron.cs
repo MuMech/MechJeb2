@@ -10,7 +10,6 @@ namespace MuMech
 {
     public class MechJebModuleTranslatron : DisplayModule
     {
-        protected static readonly string[] trans_texts = { Localizer.Format("#MechJeb_Translatron_off"), Localizer.Format("#MechJeb_Translatron_KEEP_OBT"), Localizer.Format("#MechJeb_Translatron_KEEP_SURF"), Localizer.Format("#MechJeb_Translatron_KEEP_VERT") };
         //protected static string[] trans_texts = { "OFF", "KEEP\nOBT", "KEEP\nSURF", "KEEP\nVERT" };
 
         public enum AbortStage
@@ -29,12 +28,9 @@ namespace MuMech
         internal bool Aborting => abort != AbortStage.OFF;
         protected double burnUpTime;
 
-        protected bool autoMode;
-
         [Persistent(pass = (int)Pass.LOCAL)]
         public EditableDouble trans_spd = new EditableDouble(0);
 
-        private static GUIStyle buttonStyle;
 
         public MechJebModuleTranslatron(MechJebCore core) : base(core) { }
 

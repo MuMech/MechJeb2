@@ -48,9 +48,6 @@ namespace MuMech
 
         private CelestialBody? _lastTargetCelestial;
         private TransferCalculator? _worker;
-        private PlotArea? _plot;
-
-        private static Texture2D? _texture;
 
         private bool _draggable = true;
         public override bool Draggable => _draggable;
@@ -61,14 +58,12 @@ namespace MuMech
 
         internal const int PLOT_WIDTH = 276;
         internal const int PLOT_HEIGHT = PORKCHOP_HEIGHT;
-
-        private bool _native;
         private bool _nativeChanged; // what GUI.changed is to DoParametersGUI
         private bool _nativePlotReady;
         private int[]? _nativeSelected;
         private Texture2D? _nativeTexture;
 
-        private int[]? SelectedPoint => _native ? _nativeSelected : _plot?.SelectedPoint;
+        private int[]? SelectedPoint => _nativeSelected;
 
         private string? CheckPreconditions(Orbit o, MechJebModuleTargetController target)
         {
@@ -125,7 +120,6 @@ namespace MuMech
 
             if (_worker != null)
                 _worker.Stop = true;
-            _plot = null;
             _nativePlotReady = false;
             _nativeSelected = null;
 
@@ -178,14 +172,12 @@ namespace MuMech
         /// <summary>DoParametersGUI without the drawing, run every frame while this operation is selected.</summary>
         internal override void ViewUpdate(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
-            _native = true;
             _draggable = true;
             _windowWidth = PLOT_WIDTH;
             if (_worker != null && !target.NormalTargetExists)
             {
                 _worker.Stop = true;
                 _worker = null;
-                _plot = null;
                 _nativePlotReady = false;
                 _nativeSelected = null;
             }

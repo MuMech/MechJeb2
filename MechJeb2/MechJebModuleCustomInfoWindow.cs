@@ -63,7 +63,6 @@ namespace MuMech
 
         public Texture2D background;
 
-        private GUISkin localSkin;
 
         private TimeSpan refreshInterval = TimeSpan.FromSeconds(0.1);
         private DateTime lastRefresh = DateTime.MinValue;
@@ -117,13 +116,6 @@ namespace MuMech
                 background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
                 background.SetPixel(0, 0, backgroundColor);
                 background.Apply();
-            }
-
-            if (IsOverlay && !localSkin)
-            {
-                localSkin = Object.Instantiate(GuiUtils.TransparentSkin);
-                localSkin.window.normal.background = background;
-                localSkin.window.onNormal.background = background;
             }
         }
 
@@ -660,8 +652,6 @@ namespace MuMech
         private int cacheValidity = -1;
         public bool externalRefresh;
 
-        private readonly GUILayoutOption[] _widthOption;
-        private readonly GUIContent _labelContent;
 
         // read access for another UI (MechJeb2.UI formats the value itself, without strings)
         public object Target => _obj;
@@ -697,7 +687,6 @@ namespace MuMech
             timeDecimalPlaces = attribute.timeDecimalPlaces;
             width = attribute.width;
 
-            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             _obj = obj;
             Member = member;
@@ -707,7 +696,6 @@ namespace MuMech
 
             getValue = _getterCache[member];
 
-            _widthOption = new[] { width > 0 ? GuiUtils.LayoutWidth(width) : GuiUtils.LayoutNoExpandWidth };
 
             Profiler.EndSample();
         }
@@ -810,7 +798,6 @@ namespace MuMech
     public class ActionInfoItem : InfoItem
     {
         private readonly Action action;
-        private readonly GUIContent _labelContent;
 
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
@@ -821,7 +808,6 @@ namespace MuMech
 
             action = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
 
-            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             Profiler.EndSample();
         }
@@ -833,7 +819,6 @@ namespace MuMech
     {
         private readonly object obj;
         private readonly MemberInfo member;
-        private readonly GUIContent _labelContent;
 
         public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
             : base(attribute)
@@ -845,7 +830,6 @@ namespace MuMech
             this.obj = obj;
             this.member = member;
 
-            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             Profiler.EndSample();
         }
@@ -936,7 +920,6 @@ namespace MuMech
         public readonly bool expandWidth;
         private readonly IEditable val;
         public IEditable Editable => val;
-        private readonly GUIContent _labelContent;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
@@ -949,7 +932,6 @@ namespace MuMech
             width = attribute.width;
             expandWidth = attribute.expandWidth;
 
-            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             if (member is FieldInfo) val = (IEditable)((FieldInfo)member).GetValue(obj);
             else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });

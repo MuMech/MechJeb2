@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using KSP.Localization;
 using MechJebLibBindings;
 using Smooth.Pools;
 using UnityEngine;

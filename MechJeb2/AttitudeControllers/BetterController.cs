@@ -1,6 +1,5 @@
 extern alias JetBrainsAnnotations;
 using JetBrainsAnnotations::JetBrains.Annotations;
-using KSP.Localization;
 using MechJebLib.Control;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;

@@ -51,27 +51,6 @@ namespace MuMech
             }
         }
 
-        // the path picture: the atmosphere texture with the planned path and the flown trajectory drawn over it
-        internal void DrawPathImage()
-        {
-            GUILayout.Box(PathTexture);
-
-            if (Event.current.type == EventType.Repaint)
-            {
-                Rect r = GUILayoutUtility.GetLastRect();
-                r.xMin += GUI.skin.box.margin.left;
-                r.yMin += GUI.skin.box.margin.top;
-
-                r.xMax -= GUI.skin.box.margin.right;
-                r.yMax -= GUI.skin.box.margin.bottom;
-
-                float scale = (float)((AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude) / r.height);
-
-                DrawnPath(r, scale, scale, _path, Color.red);
-                DrawnTrajectory(r, Recorder);
-            }
-        }
-
         //redraw the picture of the planned flight path
         public static void UpdateAtmoTexture(Texture2D texture, CelestialBody mainBody, double maxAltitude, bool realAtmo = false)
         {
@@ -186,36 +165,6 @@ namespace MuMech
             {
                 Vector2 a = _imguiPoints[i - 1], b = _imguiPoints[i];
                 Drawing.DrawLine(new Vector2(r.xMin + a.x, r.yMax - a.y), new Vector2(r.xMin + b.x, r.yMax - b.y), color, 2, true);
-            }
-        }
-
-        private void DrawnTrajectory(Rect r, MechJebModuleFlightRecorder recorder)
-        {
-            if (recorder.History.Length <= 2 || recorder.HistoryIdx == 0)
-                return;
-
-            float scale = (float)((AscentSettings.AutoPath ? AscentSettings.AutoTurnEndAltitude : AscentSettings.TurnEndAltitude) /
-                r.height); //meters per pixel
-
-            int t = 1;
-
-            var p1 = new Vector2(r.xMin + (float)(recorder.History[0].DownRange / scale), r.yMax - (float)(recorder.History[0].AltitudeASL / scale));
-            var p2 = new Vector2();
-
-            while (t <= recorder.HistoryIdx && t < recorder.History.Length)
-            {
-                MechJebModuleFlightRecorder.RecordStruct rec = recorder.History[t];
-                p2.x = r.xMin + (float)(rec.DownRange / scale);
-                p2.y = r.yMax - (float)(rec.AltitudeASL / scale);
-
-                if ((r.Contains(p2) && (p1 - p2).sqrMagnitude >= 1.0) || t < 2)
-                {
-                    Drawing.DrawLine(p1, p2, Color.white, 2, true);
-                    p1.x = p2.x;
-                    p1.y = p2.y;
-                }
-
-                t++;
             }
         }
 

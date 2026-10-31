@@ -121,19 +121,6 @@ namespace MuMech
             node.UpdateNode(node.DeltaV, UT);
         }
 
-        private static float nextClick;
-
-        private static bool LimitedRepeatButtoon(string text)
-        {
-            if (GUILayout.RepeatButton(text, GuiUtils.LayoutNoExpandWidth) && nextClick < Time.time)
-            {
-                nextClick = Time.time + 0.2f;
-                return true;
-            }
-
-            return false;
-        }
-
         private static readonly string[] relativityModeStrings = { "0", "1", "2", "3", "4" };
 
         public override string GetName() => Localizer.Format("#MechJeb_NodeEd_title"); //"Maneuver Node Editor"

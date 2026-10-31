@@ -108,9 +108,7 @@ namespace MuMech
 
         internal bool paused;
 
-        private float hPos;
 
-        private bool follow = true;
 
         internal MechJebModuleFlightRecorder recorder;
 

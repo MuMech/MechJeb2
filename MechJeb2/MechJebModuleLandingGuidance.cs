@@ -55,58 +55,6 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_LandingPredictions", InfoItem.Category.Misc)] //Landing predictions
         private void DrawGUITogglePredictions() { }
 
-        private void DrawGUIPrediction()
-        {
-            ReentrySimulation.Result result = _predictor.Result;
-            if (result != null)
-            {
-                switch (result.Outcome)
-                {
-                    case ReentrySimulation.Outcome.LANDED:
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_label9")); //Landing Predictions:
-                        GUILayout.Label(Coordinates.ToStringDMS(result.EndPosition.Latitude, result.EndPosition.Longitude) + "\nASL:" +
-                            result.EndASL.ToSI() + "m");
-                        GUILayout.Label(result.Body.GetExperimentBiomeSafe(result.EndPosition.Latitude, result.EndPosition.Longitude));
-                        double error = Vector3d.Distance(
-                            MainBody.GetWorldSurfacePosition(result.EndPosition.Latitude, result.EndPosition.Longitude, 0) - MainBody.position,
-                            MainBody.GetWorldSurfacePosition(Core.Target.targetLatitude, Core.Target.targetLongitude, 0) - MainBody.position);
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label10") + error.ToSI() + "m"
-                            + Localizer.Format("#MechJeb_LandingGuidance_Label11") + result.MaxDragGees.ToString("F1") + "g"
-                            + Localizer.Format("#MechJeb_LandingGuidance_Label12") + result.DeltaVExpended.ToString("F1") + "m/s"
-                            + Localizer.Format("#MechJeb_LandingGuidance_Label13") + (Vessel.Landed
-                                ? "0.0s"
-                                : GuiUtils.TimeToDHMS(result.EndUT - Planetarium.GetUniversalTime(),
-                                    1))); //Target difference = \nMax drag: \nDelta-v needed: \nTime to land:
-                        break;
-
-                    case ReentrySimulation.Outcome.AEROBRAKED:
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label14")); //Predicted orbit after aerobraking:
-                        Orbit o = result.AeroBrakeOrbit();
-                        if (o.eccentricity > 1)
-                            GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label15") +
-                                o.eccentricity.ToString("F2")); //Hyperbolic, eccentricity =
-                        else GUILayout.Label(o.PeA.ToSI(3) + "m x " + o.ApA.ToSI(3) + "m");
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label16", result.MaxDragGees.ToString("F1")) +
-                            Localizer.Format("#MechJeb_LandingGuidance_Label17",
-                                GuiUtils.TimeToDHMS(result.AeroBrakeUT - Planetarium.GetUniversalTime(),
-                                    1))); //Max drag:<<1>>g  \nExit atmosphere in:
-                        break;
-
-                    case ReentrySimulation.Outcome.NO_REENTRY:
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label18_1")
-                            + Orbit.PeA.ToSI(3) + "m Pe > " + MainBody.RealMaxAtmosphereAltitude().ToSI(3) + (MainBody.atmosphere
-                                ? Localizer.Format("#MechJeb_LandingGuidance_Label18_2")
-                                : Localizer.Format(
-                                    "#MechJeb_LandingGuidance_Label18_3"))); //"Orbit does not reenter:\n""m atmosphere height""m ground"
-                        break;
-
-                    case ReentrySimulation.Outcome.TIMED_OUT:
-                        GUILayout.Label(Localizer.Format("#MechJeb_LandingGuidance_Label19")); //Reentry simulation timed out.
-                        break;
-                }
-            }
-        }
-
         private void InitLandingSitesList()
         {
             LandingSites = new List<LandingSite>();

@@ -1,7 +1,6 @@
 extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
-using KSP.Localization;
 using UnityEngine;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator

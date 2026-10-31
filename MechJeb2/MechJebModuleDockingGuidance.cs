@@ -109,33 +109,6 @@ namespace MuMech
             return PortSelectorState.Ready;
         }
 
-        private void DrawTargetPortSelector()
-        {
-            PortSelectorState state = UpdateTargetPortSelector();
-            if (state == PortSelectorState.Hidden)
-                return;
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPort"), GuiUtils.LayoutNoExpandWidth);
-
-            if (state == PortSelectorState.Unavailable)
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_Docking_targetPortUnavailable"), GuiUtils.ArrowSelectorStyeGuiStyleExpand);
-                GUILayout.EndHorizontal();
-                return;
-            }
-
-            bool guiEnabled = GUI.enabled;
-            GUI.enabled = guiEnabled && targetPorts.Count > 0 && !autopilot.Enabled;
-            if (GUILayout.Button("<", GUILayout.ExpandWidth(false)))
-                SelectTargetPort(targetPorts, currentPortIndex, -1);
-            GUILayout.Label(targetPortLabel, GuiUtils.ArrowSelectorStyeGuiStyleExpand);
-            if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
-                SelectTargetPort(targetPorts, currentPortIndex, 1);
-            GUI.enabled = guiEnabled;
-            GUILayout.EndHorizontal();
-        }
-
         private Vessel GetTargetVessel()
         {
             if (Core.Target.Target is Vessel targetVessel)
