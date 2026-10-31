@@ -50,7 +50,16 @@ namespace MuMech
             ErrorMessage = "";
             try
             {
-                return MakeNodesImpl(o, universalTime, target);
+                List<ManeuverParameters>? nodes = MakeNodesImpl(o, universalTime, target);
+
+                // PlaceManeuverNode would throw on these, once the planner had started changing the existing nodes
+                ManeuverParameters? bad = nodes?.Find(n => !n.dV.IsFinite() || !n.UT.IsFinite());
+                if (bad == null)
+                    return nodes;
+
+                Debug.LogError($"[MechJeb] {GetName()} made a bad node: dV {bad.dV} at UT {bad.UT}");
+                ErrorMessage = Localizer.Format("#MechJeb_Maneu_errorMessage"); //An error occurred while creating the node.
+                return null;
             }
             catch (OperationException e)
             {
