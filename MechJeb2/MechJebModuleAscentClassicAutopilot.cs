@@ -18,6 +18,7 @@ namespace MuMech
             base.OnModuleEnabled();
             _placedCircularizeNode = false;
             _mode = AscentMode.VERTICAL_ASCENT;
+            _actualTurnStart = 0;
         }
 
         protected override void OnModuleDisabled()
@@ -33,7 +34,7 @@ namespace MuMech
 
         private bool IsVerticalAscent(double altitude, double velocity)
         {
-            _actualTurnStart = Math.Min(_actualTurnStart, AscentSettings.AutoTurnStartAltitude);
+            _actualTurnStart = Math.Min(_actualTurnStart, VerticalAscentEnd());
             if (altitude < VerticalAscentEnd() && velocity < SpeedAscentEnd())
             {
                 _actualTurnStart = Math.Max(_actualTurnStart, altitude);
@@ -51,9 +52,11 @@ namespace MuMech
 
             if (altitude > turnEnd) return AscentSettings.TurnEndAngle;
 
-            return Mathf.Clamp(
-                (float)(90.0 - Math.Pow((altitude - _actualTurnStart) / (turnEnd - _actualTurnStart), AscentSettings.TurnShapeExponent) *
-                    (90.0 - AscentSettings.TurnEndAngle)), 0.01F, 89.99F);
+            // below the altitude the turn started at (falling back, or a different altitude reference) Pow of a negative base is NaN
+            double turnFraction = altitude > _actualTurnStart ? (altitude - _actualTurnStart) / (turnEnd - _actualTurnStart) : 0;
+
+            return Mathf.Clamp((float)(90.0 - Math.Pow(turnFraction, AscentSettings.TurnShapeExponent) * (90.0 - AscentSettings.TurnEndAngle)),
+                0.01F, 89.99F);
         }
 
         private enum AscentMode { VERTICAL_ASCENT, GRAVITY_TURN, COAST_TO_APOAPSIS, CIRCULARIZE }
@@ -139,7 +142,7 @@ namespace MuMech
 
                 double steerOffset = AscentSettings.CorrectiveSteeringGain * difficulty * fpaError;
 
-                double steerAngle = Clamp(Math.Asin(steerOffset), -Math.PI / 6, Math.PI / 6);
+                double steerAngle = Clamp(SafeAsin(steerOffset), -Math.PI / 6, Math.PI / 6);
 
                 _desiredPitch = Clamp(_desiredPitch + steerAngle, -Math.PI / 2, Math.PI / 2);
             }

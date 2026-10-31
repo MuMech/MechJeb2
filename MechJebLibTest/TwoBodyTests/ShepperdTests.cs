@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using MechJebLib.Functions;
 using MechJebLib.ODE;
 using MechJebLib.Primitives;
@@ -343,5 +344,36 @@ namespace MechJebLibTest.TwoBodyTests
 
         [Fact]
         public void Stm_HyperbolicInclined() => AssertStmMatchesFD(1.0, 2.0, new V3(1, 0, 0), new V3(0, 1.4, 0.3));
+
+        public static IEnumerable<object[]> NonFiniteInputs()
+        {
+            var r = new V3(1, 0, 0);
+            var v = new V3(0, 1, 0);
+            var nan = new V3(double.NaN, 0, 0);
+
+            yield return new object[] { double.NaN, 1.0, r, v };
+            yield return new object[] { 1.0, double.NaN, r, v };
+            yield return new object[] { 1.0, double.PositiveInfinity, r, v };
+            yield return new object[] { 1.0, double.NegativeInfinity, r, v };
+            yield return new object[] { 1.0, 1.0, nan, v };
+            yield return new object[] { 1.0, 1.0, r, nan };
+        }
+
+        // on a thread of its own, so that a solve that never returns fails its test instead of hanging the whole run, and the
+        // time limit doesn't run out waiting for a thread pool that the other tests are keeping busy
+        private static void AssertFails(Action solve)
+        {
+            AggregateException e = Assert.Throws<AggregateException>(() =>
+                Assert.True(Task.Factory.StartNew(solve, TaskCreationOptions.LongRunning).Wait(TimeSpan.FromSeconds(30)), "Shepperd never returned"));
+            Assert.IsType<InvalidOperationException>(e.InnerException);
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteInputs))]
+        public void NonFiniteInputFails(double mu, double tau, V3 ri, V3 vi) => AssertFails(() => Shepperd.Solve(mu, tau, ri, vi));
+
+        [Theory]
+        [MemberData(nameof(NonFiniteInputs))]
+        public void NonFiniteInputFails2(double mu, double tau, V3 ri, V3 vi) => AssertFails(() => Shepperd.Solve2(mu, tau, ri, vi));
     }
 }

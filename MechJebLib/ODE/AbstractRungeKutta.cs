@@ -17,6 +17,7 @@ namespace MechJebLib.ODE
         private const double MAX_FACTOR = 10;
         private const double MIN_FACTOR = 0.2;
         private const double SAFETY = 0.9;
+        private const int MAX_NAN_STEPS = 50;
 
         private double _beta = 0.2;
         private double _lastErrorNorm = 1e-4;
@@ -36,10 +37,15 @@ namespace MechJebLib.ODE
         protected override (double, double) Step(IVPFunc f)
         {
             bool previouslyRejected = false;
+            int nanSteps = 0;
 
             while (true)
             {
                 CancellationToken.ThrowIfCancellationRequested();
+
+                // every comparison below is false for a NaN step size, so this loop would never end
+                if (double.IsNaN(Habs))
+                    throw new InvalidOperationException($"Step size is NaN at t={T}");
 
                 double minStep = 10 * Abs(NextAfter(T, Direction * double.PositiveInfinity) - T);
                 minStep = Max(minStep, MinStep);
@@ -66,6 +72,17 @@ namespace MechJebLib.ODE
                     return (Habs, Habs);
 
                 double errorNorm = ScaledErrorNorm();
+
+                // a step too large for the RHS is rejected like any other: Max(MIN_FACTOR, NaN) below would make the step size
+                // NaN.  If shrinking it doesn't help the state itself is NaN.
+                if (double.IsNaN(errorNorm))
+                {
+                    if (++nanSteps > MAX_NAN_STEPS)
+                        throw new InvalidOperationException($"Error estimate is NaN at t={T}");
+                    Habs *= MIN_FACTOR;
+                    previouslyRejected = true;
+                    continue;
+                }
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (errorNorm < 1 || (Habs == minStep && !ThrowOnMinStep))
