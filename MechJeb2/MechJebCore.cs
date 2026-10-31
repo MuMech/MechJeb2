@@ -1031,7 +1031,8 @@ namespace MuMech
 
         public void OnDestroy()
         {
-            if (this == vessel.GetMasterMechJeb() && (vessel == null || vessel.isActiveVessel))
+            // FlightGlobals is already gone when the game quits from flight, and with it the active vessel: Update's periodic save has to do
+            if (this == vessel.GetMasterMechJeb() && (vessel == null || (FlightGlobals.fetch != null && vessel.isActiveVessel)))
             {
                 OnSave(null);
             }
