@@ -117,7 +117,8 @@ namespace MechJebLib.ODE
                 error += Powi(err[i] / scale, 2);
             }
 
-            return Sqrt(error / N);
+            // the local error estimate is h * sum(E_i * k_i)
+            return Habs * Sqrt(error / N);
         }
 
         protected override void InitInterpolant()

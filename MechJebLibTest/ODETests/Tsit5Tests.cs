@@ -60,7 +60,7 @@ namespace MechJebLibTest.ODETests
             int count1 = random.Next(20, 40);
             int count2 = random.Next(5, 40);
 
-            var solver = new Tsit5 { Rtol = 1e-9, Atol = 0, Maxiter = 400, ThrowOnMaxIter = true };
+            var solver = new Tsit5 { Rtol = 1e-11, Atol = 0, Maxiter = 400, ThrowOnMaxIter = true };
             var ode = new SimpleOscillator(k, m);
             var f = new Action<Vec, double, Vec>(ode.Rhs);
 
@@ -171,7 +171,7 @@ namespace MechJebLibTest.ODETests
         [Fact]
         public void AltitudeEventTest()
         {
-            var solver = new Tsit5 { Rtol = 1e-9, Atol = 1e-9, Maxiter = 200 };
+            var solver = new Tsit5 { Rtol = 1e-11, Atol = 1e-11, Maxiter = 200 };
 
             var r0 = new V3(1, 0, 0);
             var v0 = new V3(0, 1.3, 0);

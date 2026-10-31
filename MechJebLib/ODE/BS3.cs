@@ -14,7 +14,8 @@ namespace MechJebLib.ODE
     using IVPFunc = Action<Vec, double, Vec>;
 
     /*
-     * BS3 requires a smaller Rtol+Atol of 1e-8 and higher MaxIterations of 20,000 (10x DP5) or so.
+     * BS3 is only 3rd order, so it needs a much smaller Rtol+Atol than DP5 for the same accuracy (around 1e-7 for
+     * ~1e-6 global error on a simple oscillator), and correspondingly more steps.
      * - Without fixing the minstepsize to always take at least a minimum floating point step, BS3 may hang.
      */
     public class BS3 : AbstractRungeKutta
@@ -59,7 +60,8 @@ namespace MechJebLib.ODE
                 error += Powi(err[i] / scale, 2);
             }
 
-            return Sqrt(error / N);
+            // the local error estimate is h * sum(E_i * k_i)
+            return Habs * Sqrt(error / N);
         }
 
         protected override void InitInterpolant()
