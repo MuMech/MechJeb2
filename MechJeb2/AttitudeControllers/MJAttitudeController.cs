@@ -70,8 +70,12 @@ namespace MuMech.AttitudeControllers
             _pid = new PIDControllerV3(Vector3d.zero, Vector3d.zero, Vector3d.zero, 1, -1);
             SetPIDParameters();
             _lastAct = Vector3d.zero;
+            CopyToUi();
+        }
 
-
+        // the values the window edits, from the live ones
+        private void CopyToUi()
+        {
             _uiTfX = new EditableDouble(_tfV.x);
             _uiTfY = new EditableDouble(_tfV.y);
             _uiTfZ = new EditableDouble(_tfV.z);
@@ -172,6 +176,7 @@ namespace MuMech.AttitudeControllers
             KdFactor = 0.5;
             Deadband = 0.0001;
             KWlimit = 0.15;
+            CopyToUi();
         }
 
         public override void Reset() => _pid.Reset();
