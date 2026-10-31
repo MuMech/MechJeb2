@@ -87,7 +87,8 @@ namespace MechJebLib.PSG
             PrimalFeasibility = Sqrt(PrimalFeasibility);
         }
 
-        private (double t0, double oldt0) TranscribePhasesFromOldSolution(int phaseStart, int phaseLimit, double t0, Solution oldSolution, double oldt0, double oldtf)
+        private (double t0, double oldt0) TranscribePhasesFromOldSolution(int phaseStart, int phaseLimit, double t0, Solution oldSolution, Scale oldToNewScale,
+            double oldt0, double oldtf)
         {
             double tbt = 0;
             double oldtbt = oldtf - oldt0;
@@ -106,6 +107,8 @@ namespace MechJebLib.PSG
                 Phase phase = Phases[p];
                 PhaseProxy thisPhase = _vars[p];
 
+                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
+
                 oldtbt = oldtf - oldt0;
                 double bt = Phases[p].Coast ? oldtbt : Clamp(phase.Bt, 0, oldtbt / frac);
                 double oldbt = bt * frac;
@@ -114,15 +117,13 @@ namespace MechJebLib.PSG
                 double h = bt / N;
                 double oldh = oldbt / N;
 
-                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0) : phase.M0;
-
                 for (int k = 0; k < K; k++)
                 {
                     int n = k / 3;
                     double dt = (n + _tau[k % 3]) * h;
                     double olddt = (n + _tau[k % 3]) * oldh;
 
-                    TranscribePoint(oldSolution, k, thisPhase, phase, m0, oldt0 + olddt, dt);
+                    TranscribePoint(oldSolution, oldToNewScale, k, thisPhase, phase, m0, oldt0 + olddt, dt);
                 }
 
                 if (phase.Coast)
@@ -142,11 +143,20 @@ namespace MechJebLib.PSG
 
         // this makes no assumptions about the phases in the old solution, just that
         // we must be doing burn / coast-burn or / burn-coast-burn, where the burns
-        // may be multi-stage.
+        // may be multi-stage.  times on the old solution's timeline keep its origin but are in this problem's time units.
         public void TranscribePreviousSolution(Solution oldSolution)
         {
             _xGuess = new double[_vars.TotalVariables];
             _vars.WrapVars(_xGuess);
+
+            Scale oldToNewScale = oldSolution.Problem.Scale.ConvertTo(Problem.Scale);
+            double oldtBar = oldSolution.Tbar(Problem.T0);
+            (double oldburn1, double oldcoast, double oldburn2) = oldSolution.TgoBarSplit(oldtBar);
+
+            double oldt0 = oldtBar / oldToNewScale.TimeScale;
+            oldburn1 /= oldToNewScale.TimeScale;
+            oldcoast /= oldToNewScale.TimeScale;
+            oldburn2 /= oldToNewScale.TimeScale;
 
             int coastPhaseIndex = -1;
 
@@ -155,16 +165,13 @@ namespace MechJebLib.PSG
                     coastPhaseIndex = p;
 
             double t0 = 0;
-            double oldt0 = (Problem.T0 - oldSolution.T0) / Problem.Scale.TimeScale;
-
-            (double oldburn1, double oldcoast, double oldburn2) = oldSolution.TgoBarSplit(oldt0);
 
             if (coastPhaseIndex > 0)
             {
                 // transcribe the first burn phase(s)
                 // FIXME: if there's no coast in the oldSolution, guess a coast?
                 double oldtf1 = oldt0 + oldburn1;
-                (t0, oldt0) = TranscribePhasesFromOldSolution(0, coastPhaseIndex, t0, oldSolution, oldt0, oldtf1);
+                (t0, oldt0) = TranscribePhasesFromOldSolution(0, coastPhaseIndex, t0, oldSolution, oldToNewScale, oldt0, oldtf1);
             }
             else
             {
@@ -176,7 +183,7 @@ namespace MechJebLib.PSG
             {
                 // transcribe the coast phase
                 double oldtf2 = oldt0 + oldcoast;
-                (t0, oldt0) = TranscribePhasesFromOldSolution(coastPhaseIndex, coastPhaseIndex + 1, t0, oldSolution, oldt0, oldtf2);
+                (t0, oldt0) = TranscribePhasesFromOldSolution(coastPhaseIndex, coastPhaseIndex + 1, t0, oldSolution, oldToNewScale, oldt0, oldtf2);
             }
             else
             {
@@ -186,21 +193,23 @@ namespace MechJebLib.PSG
 
             // transcribe the last burn phase(s)
             double oldtf3 = oldt0 + oldburn2;
-            TranscribePhasesFromOldSolution(coastPhaseIndex + 1, Phases.Count, t0, oldSolution, oldt0, oldtf3);
+            TranscribePhasesFromOldSolution(coastPhaseIndex + 1, Phases.Count, t0, oldSolution, oldToNewScale, oldt0, oldtf3);
         }
 
-        private void TranscribePoint(Solution oldSolution, int k, PhaseProxy thisPhase, Phase phase, double m0, double oldt, double dt)
+        // oldt is on the old solution's timeline in this problem's time units, the old solution is sampled in its own units
+        // and converted to this problem's units.
+        private void TranscribePoint(Solution oldSolution, Scale oldToNewScale, int k, PhaseProxy thisPhase, Phase phase, double m0, double oldt, double dt)
         {
-            V3 r = oldSolution.RBar(oldt);
-            thisPhase.R[k] = r;
+            double oldtBar = oldt * oldToNewScale.TimeScale;
+            V3 r = oldSolution.RBar(oldtBar) / oldToNewScale.LengthScale;
+            V3 v = oldSolution.VBar(oldtBar) / oldToNewScale.VelocityScale;
+            V3 u = oldSolution.UBar(oldtBar);
 
-            V3 v = oldSolution.VBar(oldt);
+            thisPhase.R[k] = r;
             thisPhase.V[k] = v;
 
             if (!phase.Coast)
                 thisPhase.M[k] = m0 - phase.Mdot * dt;
-
-            V3 u = oldSolution.UBar(oldt);
 
             if (phase.GuidedCoast)
             {
@@ -232,6 +241,8 @@ namespace MechJebLib.PSG
             _xGuess = new double[_vars.TotalVariables];
             _vars.WrapVars(_xGuess);
 
+            Scale oldToNewScale = oldSolution.Problem.Scale.ConvertTo(Problem.Scale);
+
             double t0 = 0;
             double oldt0 = 0;
             for (int p = 0; p < Phases.Count; p++)
@@ -239,7 +250,9 @@ namespace MechJebLib.PSG
                 Phase phase = Phases[p];
                 PhaseProxy thisPhase = _vars[p];
 
-                double oldbt = oldSolution.BtBar(p, 0);
+                double oldbt = oldSolution.BtBar(p, 0) / oldToNewScale.TimeScale;
+                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0 * oldToNewScale.TimeScale) / oldToNewScale.MassScale : phase.M0;
+
                 double bt = oldbt;
                 if (!phase.Coast)
                     bt = Min(oldbt, phase.Bt);
@@ -247,15 +260,13 @@ namespace MechJebLib.PSG
                 double h = bt / N;
                 double oldh = oldbt / N;
 
-                double m0 = phase.MassContinuity ? oldSolution.MBar(oldt0) : phase.M0;
-
                 for (int k = 0; k < K; k++)
                 {
                     int n = k / 3;
                     double dt = (n + _tau[k % 3]) * h;
                     double olddt = (n + _tau[k % 3]) * oldh;
 
-                    TranscribePoint(oldSolution, k, thisPhase, phase, m0, oldt0 + olddt, dt);
+                    TranscribePoint(oldSolution, oldToNewScale, k, thisPhase, phase, m0, oldt0 + olddt, dt);
                 }
 
                 if (phase.Coast)
