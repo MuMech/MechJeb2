@@ -158,40 +158,5 @@ namespace MuMech.AttitudeControllers
                 _actuation[i] = Math.Max(Math.Min(_actuation[i], clamp), -clamp);
             }
         }
-
-        public override void GUI()
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("MaxStoppingTime", GuiUtils.LayoutNoExpandWidth);
-            MaxStoppingTime.Text = GUILayout.TextField(MaxStoppingTime.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(40));
-            GUILayout.EndHorizontal();
-
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("RollControlRange", GuiUtils.LayoutNoExpandWidth);
-            RollControlRange.Text = GUILayout.TextField(RollControlRange.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(40));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Actuation", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_actuation), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("phiVector", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_phiVector), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("TargetTorque", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_targetTorque), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("ControlTorque", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_controlTorque), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-        }
     }
 }
