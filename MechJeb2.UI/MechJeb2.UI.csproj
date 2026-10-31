@@ -5,7 +5,8 @@
       Ships as GameData/MechJeb2/Plugins/MechJeb2.UI.dll; without it MechJeb2 runs on IMGUI as before.
       KodeUI and KodeKit are compiled into this assembly (KSP binds assemblies by name, so a separate
       KodeUI.dll could collide with another mod's copy). KodeKit (widgets, bindings, themes on top of
-      KodeUI) lives in KodeKit/ here; KodeUI is still read from its own repository.
+      KodeUI) lives in KodeKit/ here; KodeUI/ is a copy of the sources of https://github.com/sarbian/KodeUI
+      at d8d1312, unmodified.
     -->
 
     <PropertyGroup>
@@ -17,14 +18,12 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
         <NoWarn>$(NoWarn);CS0414;CS0649;CS0168;CS0219</NoWarn>
-        <!-- KodeUI is read from its own repository next to this one; override if it moves -->
-        <KodeUIDir Condition="'$(KodeUIDir)' == ''">$(MSBuildThisFileDirectory)..\..\KodeUI\KodeUI-Unity\Assets\KodeUI</KodeUIDir>
     </PropertyGroup>
 
     <ItemGroup>
         <Compile Include="src\**\*.cs" />
         <Compile Include="KodeKit\**\*.cs" />
-        <Compile Include="$(KodeUIDir)\**\*.cs" Link="KodeUI\%(RecursiveDir)%(Filename)%(Extension)" />
+        <Compile Include="KodeUI\**\*.cs" />
     </ItemGroup>
 
     <ItemGroup>

@@ -46,7 +46,7 @@ needs them (`InternalsVisibleTo("MechJeb2.UI")` is set). Don't change behaviour.
 | `GUILayout.TextArea` / long help text | `KodeWindow.Paragraph(p, text)` (wraps) |
 | tooltip | `Tooltips.Add(gameObject, "#key or text")` |
 | title-bar extra button | `w.TitleButton("E", action)` |
-| scrolling list | KodeUI `ScrollView` (see KodeUI repo) |
+| scrolling list | KodeUI `ScrollView` (`KodeUI/ScrollView.cs`) |
 | anything not worth porting now (a GeneralInfoItem method, a complex custom draw) | `new ImguiBlock(p, () => module.ImguiMethod())` (IMGUI drawn inside the new window) |
 
 A `[GeneralInfoItem]` method is ported once, as a builder in `src/InfoItems/` registered in `GeneralItemBuilders` by id
@@ -68,5 +68,6 @@ Live numbers that change every frame: prefer `CharText` (garbage-free formatting
 ## Building
 
 From the repository root: `dotnet build MechJeb2.UI/MechJeb2.UI.csproj -c Release`. A worktree needs
-`Directory.Build.props.user` (copy it from the main checkout) and `-p:KodeUIDir=<path to KodeUI/KodeUI-Unity/Assets/KodeUI>`.
+`Directory.Build.props.user` (copy it from the main checkout). `KodeUI/` is a copy of the sources of
+https://github.com/sarbian/KodeUI (MIT, see `KodeUI/LICENSE.md`): change KodeUI there and copy it back.
 Don't set `KSPDIR` (it copies the build into KSP).
