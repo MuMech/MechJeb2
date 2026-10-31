@@ -19,6 +19,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble UIScale = 1.0;
 
+        /// <summary>The scales both Settings windows offer next to the UI Scale field.</summary>
+        public static readonly double[] UiScalePresets = { 0.75, 1, 1.25, 1.5, 2 };
+
+        public static readonly string[] UiScaleNames = Array.ConvertAll(UiScalePresets, p => p.ToString());
+
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool DontUseDropDownMenu;
 
@@ -138,6 +143,9 @@ namespace MuMech
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GuiUtils.LayoutExpandWidth); //"UI Scale:"
+            int preset = Array.IndexOf(UiScalePresets, UIScale.Val);
+            int picked = GUILayout.SelectionGrid(preset, UiScaleNames, UiScaleNames.Length, GuiUtils.LayoutNoExpandWidth);
+            if (picked != preset) UIScale.Text = UiScaleNames[picked];
             UIScale.Text = GUILayout.TextField(UIScale.Text, GuiUtils.LayoutWidth(60));
             GUILayout.EndHorizontal();
 

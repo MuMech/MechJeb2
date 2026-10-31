@@ -53,6 +53,18 @@ namespace MuMech.UI
 
             Layout scale = KodeWindow.Row(r);
             KodeWindow.Label(scale, "#MechJeb_Settings_label2", true); //"UI Scale:"
+            for (int i = 0; i < MechJebModuleSettings.UiScalePresets.Length; i++)
+            {
+                double preset = MechJebModuleSettings.UiScalePresets[i];
+                string name = MechJebModuleSettings.UiScaleNames[i];
+                UIButton b = KodeWindow.Button(scale, name, () =>
+                {
+                    settings.UIScale.Text = name;
+                    Changed();
+                });
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                w.BindRole(b, () => settings.UIScale.Val == preset ? ButtonRole.Selected : ButtonRole.Normal);
+            }
             EditFields.Field(w, scale, () => settings.UIScale.Text, s =>
             {
                 settings.UIScale.Text = s;
