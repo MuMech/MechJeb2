@@ -9,6 +9,13 @@ namespace MuMech
 {
     public static class VesselExtensions
     {
+        private static readonly List<Part> noParts = new List<Part>();
+
+        // The ship's parts in the editor, empty until the editor is ready: a scene change sets the scene first, so the windows
+        // of the scene being left still draw with LoadedSceneIsEditor true, before EditorLogic.fetch and its ship exist.
+        public static List<Part> EditorParts =>
+            EditorLogic.fetch != null && EditorLogic.fetch.ship != null ? EditorLogic.fetch.ship.parts : noParts;
+
         public static bool VesselOffGround(this Vessel vessel) =>
             vessel.situation == Vessel.Situations.FLYING || vessel.situation == Vessel.Situations.ESCAPING ||
             vessel.situation == Vessel.Situations.ORBITING || vessel.situation == Vessel.Situations.SUB_ORBITAL;
@@ -105,7 +112,7 @@ namespace MuMech
         public static double TotalResourceAmount(this Vessel vessel, PartResourceDefinition definition)
         {
             if (definition == null) return 0;
-            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts : vessel.parts;
+            List<Part> parts = HighLogic.LoadedSceneIsEditor ? EditorParts : vessel.parts;
 
             double amount = 0;
             for (int i = 0; i < parts.Count; i++)

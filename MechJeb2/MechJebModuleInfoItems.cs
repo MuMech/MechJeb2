@@ -21,7 +21,7 @@ namespace MuMech
 
         //Provides a unified interface for getting the parts list in the editor or in flight:
         private List<Part> parts =>
-            HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.parts :
+            HighLogic.LoadedSceneIsEditor ? VesselExtensions.EditorParts :
             Vessel == null ? new List<Part>() : Vessel.Parts;
 
         [ValueInfoItem("#MechJeb_NodeBurnTime", InfoItem.Category.Misc)] //Node burn time
@@ -257,7 +257,7 @@ namespace MuMech
         {
             if (!HighLogic.LoadedSceneIsEditor) return VesselState.Mass;
             double mass = 0;
-            foreach (Part p in EditorLogic.fetch.ship.parts) mass += p.mass + p.GetResourceMass();
+            foreach (Part p in VesselExtensions.EditorParts) mass += p.mass + p.GetResourceMass();
             return mass;
         }
 
@@ -316,7 +316,7 @@ namespace MuMech
         private static double EditorLastStageThrust(bool minimum)
         {
             double thrust = 0;
-            foreach (Part part in EditorLogic.fetch.ship.parts)
+            foreach (Part part in VesselExtensions.EditorParts)
             {
                 if (part.inverseStage != StageManager.LastStage) continue;
                 for (int i = 0; i < part.Modules.Count; i++)
