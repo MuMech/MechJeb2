@@ -17,7 +17,6 @@ namespace MechJebLib.ODE
         private const double MAX_FACTOR = 10;
         private const double MIN_FACTOR = 0.2;
         private const double SAFETY = 0.9;
-        private const int MAX_NAN_STEPS = 50;
 
         private double _beta = 0.2;
         private double _lastErrorNorm = 1e-4;
@@ -34,14 +33,25 @@ namespace MechJebLib.ODE
 
         private double _alpha => 1.0 / (ErrorEstimatorOrder + 1.0) - 0.75 * Beta;
 
-        protected override (double, double) Step(IVPFunc f)
+        // Every pass that doesn't accept the step shrinks it (geometrically) until it reaches the minimum step size, where
+        // it is accepted, throws, or ends the integration, and MaxEvals bounds the whole solve: so this always returns.
+        protected override bool Step(IVPFunc f)
         {
             bool previouslyRejected = false;
-            int nanSteps = 0;
 
             while (true)
             {
                 CancellationToken.ThrowIfCancellationRequested();
+
+                if (MaxEvals > 0 && Evals + Stages > MaxEvals)
+                {
+                    Status = IVPStatus.MaxEvalsExceeded;
+
+                    if (ThrowOnMaxEvals)
+                        throw new InvalidOperationException($"Maximum RHS evaluations exceeded at t={T}: {Evals} of {MaxEvals}");
+
+                    return false;
+                }
 
                 // every comparison below is false for a NaN step size, so this loop would never end
                 if (double.IsNaN(Habs))
@@ -50,14 +60,17 @@ namespace MechJebLib.ODE
                 double minStep = 10 * Abs(NextAfter(T, Direction * double.PositiveInfinity) - T);
                 minStep = Max(minStep, MinStep);
 
+                // FIXME? the way we allow a final step below minStep when we're snapping to tf might cause numerical
+                // issues in edge cases.  It might be better to let the solver take a full step and not actually enforce
+                // tf at all, and then backtrack with the interpolant in order to hit tf precisely.  I believe
+                // this is how DifferentialEquations.jl solves this problem a bit more robustly.
+                if (Snapping)
+                    minStep = Min(minStep, MaxStep);
+
                 if (Habs > MaxStep)
                     Habs = MaxStep;
 
-                // FIXME? the way we ignore minStep when we're snapping to tf might cause numerical issues in
-                // edge cases.  It might be better to let the solver take a full step and not actually enforce
-                // tf at all, and then backtrack with the interpolant in order to hit tf precisely.  I believe
-                // this is how DifferentialEquations.jl solves this problem a bit more robustly.
-                if (Habs < minStep && !Snapping)
+                if (Habs < minStep)
                 {
                     if (ThrowOnMinStep)
                         throw new InvalidOperationException(
@@ -65,27 +78,35 @@ namespace MechJebLib.ODE
                     Habs = minStep;
                 }
 
+                bool atMinStep = Habs <= minStep;
+
                 RKStep(f);
 
+                bool finite = Ynew.IsFinite() && Dynew.IsFinite();
+
+                // a fixed step size is always at the minimum
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (MinStep == MaxStep)
-                    return (Habs, Habs);
+                {
+                    HabsNext = Habs;
+                    return finite || StopNonFinite();
+                }
 
                 double errorNorm = ScaledErrorNorm();
 
-                // a step too large for the RHS is rejected like any other: Max(MIN_FACTOR, NaN) below would make the step size
-                // NaN.  If shrinking it doesn't help the state itself is NaN.
-                if (double.IsNaN(errorNorm))
+                // a step too large for the RHS is rejected like any other (Max(MIN_FACTOR, NaN) below would make the step
+                // size NaN).  Once the step can't shrink any further we must not hand a NaN on to the interpolant.
+                if (!finite || !IsFinite(errorNorm))
                 {
-                    if (++nanSteps > MAX_NAN_STEPS)
-                        throw new InvalidOperationException($"Error estimate is NaN at t={T}");
+                    if (atMinStep)
+                        return StopNonFinite();
+
                     Habs *= MIN_FACTOR;
                     previouslyRejected = true;
                     continue;
                 }
 
-                // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (errorNorm < 1 || (Habs == minStep && !ThrowOnMinStep))
+                if (errorNorm < 1 || (atMinStep && !ThrowOnMinStep))
                 {
                     double factor = errorNorm == 0
                         ? MAX_FACTOR
@@ -98,13 +119,24 @@ namespace MechJebLib.ODE
 
                     _lastErrorNorm = Max(errorNorm, 1e-4);
 
-                    return (Habs, Habs * factor);
+                    HabsNext = Habs * factor;
+                    return true;
                 }
 
                 Habs *= Max(MIN_FACTOR, SAFETY * Pow(errorNorm, -_alpha));
 
                 previouslyRejected = true;
             }
+        }
+
+        // the step is NaN or infinite even at the minimum step size, so there is nothing finite to accept
+        private bool StopNonFinite()
+        {
+            if (ThrowOnMinStep)
+                throw new InvalidOperationException($"RHS is not finite at the minimum step size at t={T}");
+
+            Status = IVPStatus.NonFiniteAtMinStep;
+            return false;
         }
 
         // https://github.com/scipy/scipy/blob/c374ca7fdfa32dd3817cbec0f1863e01640279eb/scipy/integrate/_ivp/common.py#L66-L121
@@ -134,6 +166,10 @@ namespace MechJebLib.ODE
             using var f1 = Vec.Rent(N);
             f(y1, t0 + h0 * direction, f1);
             double d2 = f1.Sub(f0).Div(scale).Nrm2() / h0;
+
+            // the trial step went somewhere the RHS is NaN: start small and let the step loop shrink it from there
+            if (!IsFinite(d2))
+                return h0;
 
             double h1;
             if (d1 <= 1e-15 && d2 <= 1e-15)

@@ -284,6 +284,32 @@ namespace MechJebLibTest.Primitives
             Assert.Equal(3.0, VecOps.Asum(x, 2));
         }
 
+        // ---------- IsFinite ----------
+
+        [Fact]
+        public void IsFinite_AllFinite_IsTrue()
+        {
+            double[] x = { 1.0, -2.0, double.MaxValue, double.Epsilon };
+            Assert.True(VecOps.IsFinite(x, 4));
+        }
+
+        [Theory]
+        [InlineData(double.NaN)]
+        [InlineData(double.PositiveInfinity)]
+        [InlineData(double.NegativeInfinity)]
+        public void IsFinite_NonFiniteElement_IsFalse(double bad)
+        {
+            double[] x = { 1.0, bad, 3.0 };
+            Assert.False(VecOps.IsFinite(x, 3));
+        }
+
+        [Fact]
+        public void IsFinite_StopsAtN()
+        {
+            double[] x = { 1.0, 2.0, double.NaN };
+            Assert.True(VecOps.IsFinite(x, 2));
+        }
+
         // ---------- Sum ----------
 
         [Fact]

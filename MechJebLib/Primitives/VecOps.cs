@@ -89,6 +89,15 @@ namespace MechJebLib.Primitives
             return s;
         }
 
+        // true when no element is NaN or ±Infinity
+        public static bool IsFinite(double[] x, int n)
+        {
+            for (int i = 0; i < n; i++)
+                if (double.IsNaN(x[i]) || double.IsInfinity(x[i]))
+                    return false;
+            return true;
+        }
+
         // Index of the element with largest |x[i]| (BLAS idamax — but 0-based here).
         // Returns -1 when n ≤ 0. On ties, returns the first occurrence.
         public static int Iamax(double[] x, int n)

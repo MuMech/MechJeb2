@@ -4,6 +4,7 @@
  */
 
 using System.Collections.Generic;
+using System.Threading;
 using MechJebLib.Functions;
 using MechJebLib.Interpolants;
 using MechJebLib.ODE;
@@ -69,8 +70,8 @@ namespace MechJebLib.PSG
 
         private VecInterpolant Integrate(Vec y0, Vec yf, Phase phase, double t0, double tf)
         {
-            _solver.ThrowOnMaxIter = true;
-            _solver.Maxiter = 2000;
+            _solver.ThrowOnMaxEvals = true;
+            _solver.MaxEvals = 12000;
             _solver.Rtol = 1e-9;
             _solver.Atol = 1e-9;
             _ode.Phase = phase;
@@ -145,9 +146,11 @@ namespace MechJebLib.PSG
             }
         }
 
-        public Solution InitialGuess(PhaseCollection phases, double incT, double targetOrbitalEnergy)
+        public Solution InitialGuess(PhaseCollection phases, double incT, double targetOrbitalEnergy,
+            CancellationToken cancellationToken = default)
         {
             _targetOrbitalEnergy = targetOrbitalEnergy;
+            _solver.CancellationToken = cancellationToken;
 
             V3 r0 = _problem.R0;
             // guess the initial launch direction

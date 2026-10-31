@@ -198,6 +198,9 @@ namespace MechJebLib.Primitives
         public int Iamax() => VecOps.Iamax(Data, Length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsFinite() => VecOps.IsFinite(Data, Length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vec LinComb1(Vec y0,
             double a1, Vec x1)
         {

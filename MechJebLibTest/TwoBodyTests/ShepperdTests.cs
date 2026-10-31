@@ -96,7 +96,7 @@ namespace MechJebLibTest.TwoBodyTests
         [MemberData(nameof(Seeds))]
         public void RandomComparedToDP5(int seed)
         {
-            var solver = new DP5 { Rtol = 1e-10, Atol = 1e-10, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
+            var solver = new DP5 { Rtol = 1e-10, Atol = 1e-10, Hmin = EPS, ThrowOnMaxEvals = true, MaxEvals = 12000 };
             var rng = new Random(seed);
 
             var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
@@ -148,7 +148,7 @@ namespace MechJebLibTest.TwoBodyTests
         [MemberData(nameof(Seeds))]
         public void RandomComparedToTsit5(int seed)
         {
-            var solver = new Tsit5 { Rtol = 1e-10, Atol = 1e-10, Hmin = EPS, ThrowOnMaxIter = true, Maxiter = 2000 };
+            var solver = new Tsit5 { Rtol = 1e-10, Atol = 1e-10, Hmin = EPS, ThrowOnMaxEvals = true, MaxEvals = 12000 };
             var rng = new Random(seed);
 
             var r0 = new V3(4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2, 4 * rng.NextDouble() - 2);
@@ -205,8 +205,8 @@ namespace MechJebLibTest.TwoBodyTests
                 Atol = 1e-6,
                 Rtol = 1e-4,
                 Hmin = EPS,
-                ThrowOnMaxIter = true,
-                Maxiter = 2000000
+                ThrowOnMaxEvals = true,
+                MaxEvals = 24000000
             };
             var rng = new Random(seed);
 
