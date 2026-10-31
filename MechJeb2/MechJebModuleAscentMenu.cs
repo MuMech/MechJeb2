@@ -440,67 +440,6 @@ namespace MuMech
             }
         }
 
-        protected override void WindowGUI(int windowID)
-        {
-            SetupButtonStyles();
-            GUILayout.BeginVertical();
-
-            UpdateStrings();
-            //PerformanceTestGUIElements();
-            VisibleSectionsGUIElements();
-            ShowTargetingGUIElements();
-
-            GUILayout.BeginVertical(GUI.skin.box);
-            GUILayout.BeginHorizontal();
-            _settingsMenu.Enabled = GUILayout.Toggle(_settingsMenu.Enabled, "Ascent Settings");
-
-            if (_ascentSettings.AscentType == AscentType.PSG)
-            {
-                Core.StageStats.RequestUpdate();
-                Core.StageStats.LiveSLT = true;
-                _psgSettingsMenu.Enabled = GUILayout.Toggle(_psgSettingsMenu.Enabled, "PSG Settings");
-            }
-
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
-
-            ShowStatusGUIElements();
-            ShowAutoWarpGUIElements();
-
-            if (_autopilot.Enabled)
-            {
-                GUIStyle statusStyle = autopilotStatusLevel switch
-                {
-                    MechJebModuleAscentBaseAutopilot.StatusLevel.ERROR   => GuiUtils.RedLabel,
-                    MechJebModuleAscentBaseAutopilot.StatusLevel.WARNING => GuiUtils.YellowLabel,
-                    _                                                    => GUI.skin.label
-                };
-                GUILayout.Label(autopilotStatus, statusStyle); //Autopilot status:
-            }
-            if (Core.DeactivateControl)
-                GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel36, GuiUtils.RedLabel); //CONTROL DISABLED (AVIONICS)
-
-            if (!Vessel.patchedConicsUnlocked() && _ascentSettings.AscentType != AscentType.PSG)
-            {
-                GUILayout.Label(CachedLocalizer.Instance
-                   .MechJebAscentLabel37); //"Warning: MechJeb is unable to circularize without an upgraded Tracking Station."
-            }
-
-            GUILayout.BeginHorizontal();
-            _ascentSettings.AscentType = (AscentType)GuiUtils.ComboBox.Box((int)_ascentSettings.AscentType, _ascentPathList, this);
-            GUILayout.EndHorizontal();
-
-            if (_ascentSettings.AscentType == AscentType.CLASSIC)
-                _classicPathMenu.Enabled =
-                    GUILayout.Toggle(_classicPathMenu.Enabled, CachedLocalizer.Instance.MechJebAscentCheckbox10); //Edit ascent path
-
-            RefreshRateGUI();
-
-            GUILayout.EndVertical();
-
-            base.WindowGUI(windowID);
-        }
-
         private string PhaseString(Solution solution, double t, int psgPhase)
         {
             int mjPhase = solution.MJPhase(psgPhase);
@@ -521,8 +460,6 @@ namespace MuMech
 
             return $"burn: {kspStage} {solution.Tgo(t, psgPhase):F1}s {solution.DV(t, psgPhase):F1}m/s ({excessDV:F1}m/s)";
         }
-
-        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(275), GUILayout.Height(30) };
 
         public override string GetName() => CachedLocalizer.Instance.MechJebAscentTitle; //"Ascent Guidance"
 
