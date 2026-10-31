@@ -288,7 +288,7 @@ namespace MuMech
         public double LiquidFuelAndOxidizerMass() => Vessel.TotalResourceMass("LiquidFuel") + Vessel.TotalResourceMass("Oxidizer");
 
         [ValueInfoItem("#MechJeb_MonopropellantMass", InfoItem.Category.Vessel, showInEditor = true, format = "F2",
-            units = "kg")] //Monopropellant mass
+            units = "t")] //Monopropellant mass
         public double MonoPropellantMass() => Vessel.TotalResourceMass("MonoPropellant");
 
         [ValueInfoItem("#MechJeb_TotalElectricCharge", InfoItem.Category.Vessel, showInEditor = true, format = ValueInfoItem.SI,
@@ -308,7 +308,7 @@ namespace MuMech
         {
             if (HighLogic.LoadedSceneIsEditor) return 1000 * EditorLastStageThrust(true);
 
-            return VesselState.ThrustMinimum;
+            return 1000 * VesselState.ThrustMinimum;
         }
 
         // Thrust of the engines in the editor's last stage, in kN: at full throttle, or at minimum (throttle-locked engines
@@ -382,7 +382,7 @@ namespace MuMech
         {
             double cost = 0;
             foreach (Part p in parts) cost += p.partInfo.cost;
-            return cost * 1000;
+            return cost;
         }
 
         [ValueInfoItem("#MechJeb_CrewCount", InfoItem.Category.Vessel)] //Crew count
@@ -616,7 +616,7 @@ namespace MuMech
         public string TargetEccentricity()
         {
             if (!Core.Target.NormalTargetExists) return "N/A";
-            return GuiUtils.TimeToDHMS(Core.Target.TargetOrbit.eccentricity);
+            return Core.Target.TargetOrbit.eccentricity.ToString("F3");
         }
 
         [ValueInfoItem("#MechJeb_TargetSMA", InfoItem.Category.Target)] //Target SMA

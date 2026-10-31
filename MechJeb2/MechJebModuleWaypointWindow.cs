@@ -822,7 +822,12 @@ namespace MuMech
             if (!_ap.Enabled) { _ap.CalculateTraction(); } // keep calculating traction just for displaying it
         }
 
-        internal List<MechJebWaypointRoute> BodyRoutes() => _routes.FindAll(r => r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+        internal List<MechJebWaypointRoute> BodyRoutes() => _routes.FindAll(IsShownRoute);
+
+        // a route of this body and mode; routes store the mode as "Rover" (the file and constructor default) while the enum
+        // name became "ROVER" in d04257e8, so the mode compares without case
+        private bool IsShownRoute(MechJebWaypointRoute r) =>
+            r.Body == Vessel.mainBody && string.Equals(r.Mode, Mode.ToString(), StringComparison.OrdinalIgnoreCase);
 
         /// <summary>Bumped whenever the saved routes change, so a view knows when to rebuild its list.</summary>
         internal static int RoutesVersion;
@@ -831,7 +836,7 @@ namespace MuMech
 
         internal void DeleteRoute(string name)
         {
-            _routes.RemoveAll(r => r.Name == name && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+            _routes.RemoveAll(r => r.Name == name && IsShownRoute(r));
             SaveRoutes();
             _saveIndex = -1;
         }
@@ -840,7 +845,7 @@ namespace MuMech
         {
             if (_saveName != "" && _ap.Waypoints.Count > 0)
             {
-                MechJebWaypointRoute old = _routes.Find(r => r.Name == _saveName && r.Body == Vessel.mainBody && r.Mode == Mode.ToString());
+                MechJebWaypointRoute old = _routes.Find(r => r.Name == _saveName && IsShownRoute(r));
                 var wps = new MechJebWaypointRoute(_saveName, Vessel.mainBody);
                 _ap.Waypoints.ForEach(wp => wps.Add(wp));
                 if (old == null)
