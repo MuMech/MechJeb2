@@ -62,6 +62,12 @@ namespace MechJebLib.Utils
             CancelToken = _cts.Token;
             // the task must not take the token, or a cancel before it starts would skip RunWrapped and leave the state in
             // Running forever.  Run sees the cancel through the CancelToken instead.
+            //
+            // LongRunning gives every job its own thread instead of a threadpool thread.  PSG can run for minutes and
+            // TransferCalculator fills the pool with ProcessorCount-1 multi-second work items, and Mono waits from 0.5s up
+            // to several seconds before adding pool threads, so pooled jobs could stall behind them.  The cost is a thread
+            // created per start, and Thread.Start waits for it on the calling (main) thread.  That impact should be 0-3 per
+            // tick and 0-100us or less of impact.
             _task = Task.Factory.StartNew(
                 _runWrapped,
                 o,
