@@ -44,48 +44,6 @@ namespace MuMech
             MoveByMeter(ref targetController.targetLongitude, distance, asl, o);
         }
 
-        public override void DoParametersGUI(Orbit o, double UT, MechJebModuleTargetController targetController)
-        {
-            double asl = o.referenceBody.TerrainAltitude(targetController.targetLatitude, targetController.targetLongitude);
-
-            GUILayout.BeginVertical();
-
-            if (!targetController.PositionTargetExists)
-            {
-                targetController.SetPositionTarget(o.referenceBody, targetLatitude, targetLongitude);
-            }
-
-            GUILayout.Label(Localizer.Format("#MechJeb_stationary_label1")); //Target longitude:
-
-            GUILayout.BeginHorizontal();
-            targetController.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
-
-            if (GUILayout.Button("◄"))
-            {
-                MoveByMeter(ref targetController.targetLongitude, -10, asl, o);
-            }
-
-            GUILayout.Label("10m");
-            if (GUILayout.Button("►"))
-            {
-                MoveByMeter(ref targetController.targetLongitude, 10, asl, o);
-            }
-
-            GUILayout.EndHorizontal();
-
-            if (targetController.targetBody != null)
-            {
-                GUILayout.Label(targetController.targetBody.GetExperimentBiomeSafe(targetController.targetLatitude, targetController.targetLongitude));
-            }
-
-            if (GUILayout.Button(Localizer.Format("#MechJeb_LandingGuidance_button2"))) targetController.PickPositionTargetOnMap(); //Pick target on map
-
-            targetLatitude = 0;
-            targetLongitude = targetController.targetLongitude;
-
-            GUILayout.EndVertical();
-        }
-
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double ut, MechJebModuleTargetController target)
         {
             double syncSMA = Math.Pow(o.referenceBody.gravParameter * Math.Pow(o.referenceBody.rotationPeriod / (2.0 * Math.PI), 2.0), 1.0 / 3.0);

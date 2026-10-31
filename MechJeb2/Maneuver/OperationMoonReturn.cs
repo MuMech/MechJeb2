@@ -21,13 +21,6 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool InclinationFlag;
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
-        {
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_return_label1"), Periapsis, "km"); //Approximate final periapsis:
-            GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°"); //Inclination
-            GUILayout.Label(Localizer.Format("#MechJeb_return_label2")); //Schedule the burn at the next return window.
-        }
-
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (o.referenceBody.referenceBody == null)

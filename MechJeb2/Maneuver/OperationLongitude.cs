@@ -16,13 +16,6 @@ namespace MuMech
 
         internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
-        {
-            _timeSelector.DoChooseTimeGUI();
-            GUILayout.Label(Localizer.Format("#MechJeb_la_label")); //New Surface Longitude after one orbit:
-            target.targetLongitude.DrawEditGUI(EditableAngle.Direction.EW);
-        }
-
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
