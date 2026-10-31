@@ -45,8 +45,9 @@ namespace MuMech
         public enum UiBackendType { Imgui, Kode }
 
         /// <summary>Which UI draws the windows a MechJebUiHost can draw. IMGUI draws everything else.</summary>
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int UiBackend = (int)UiBackendType.Imgui;
+        // saved under its own key: configs from before the new UI was the default say UiBackend = 0, which nobody chose
+        [Persistent(pass = (int)Pass.GLOBAL, name = "UiBackendChoice")]
+        public int UiBackend = (int)UiBackendType.Kode;
 
         public UiBackendType Backend => (UiBackendType)UiBackend;
 
