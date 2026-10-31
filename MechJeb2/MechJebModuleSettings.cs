@@ -142,10 +142,15 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GuiUtils.LayoutExpandWidth); //"UI Scale:"
-            int preset = Array.IndexOf(UiScalePresets, UIScale.Val);
-            int picked = GUILayout.SelectionGrid(preset, UiScaleNames, UiScaleNames.Length, GuiUtils.LayoutNoExpandWidth);
-            if (picked != preset) UIScale.Text = UiScaleNames[picked];
+            GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GuiUtils.LabelNoWrap, GuiUtils.LayoutExpandWidth); //"UI Scale:"
+            for (int i = 0; i < UiScalePresets.Length; i++)
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                bool current = UIScale.Val == UiScalePresets[i];
+                if (GUILayout.Toggle(current, UiScaleNames[i], GUI.skin.button, GuiUtils.LayoutNoExpandWidth) && !current)
+                    UIScale.Text = UiScaleNames[i];
+            }
+
             UIScale.Text = GUILayout.TextField(UIScale.Text, GuiUtils.LayoutWidth(60));
             GUILayout.EndHorizontal();
 
