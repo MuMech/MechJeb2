@@ -306,12 +306,17 @@ namespace MuMech.UI
             MiscViewKit.BoundButton(w, row, () => sideNames[(int)menu.windowSide], menu.CycleSide, null, true);
             KodeWindow.Label(row, "#MechJeb_MenuCol"); //Col
             KodeWindow.Button(row, "-", () => menu.columns = Math.Max(1, menu.columns - 1));
-            w.BoundLabel(row, "99", () =>
+            UIText count = w.BoundLabel(row, "99", () =>
             {
                 int c = menu.columns;
                 if (!numbers.TryGetValue(c, out string s)) numbers[c] = s = c.ToString();
                 return s;
             });
+            // a label's cell leaves room for longer text, which two digits don't need: just wide enough, centred between the buttons
+            count.tmpText.alignment = TextAlignmentOptions.Center;
+            GameObject cell = KodeWindow.CellOf(count);
+            var size = cell.GetComponent<LayoutElement>();
+            KodeWindow.Styled(cell, th => size.preferredWidth = TextMeasure.Measure("99", th).x + 2);
             KodeWindow.Button(row, "+", () => menu.columns++);
         }
     }
