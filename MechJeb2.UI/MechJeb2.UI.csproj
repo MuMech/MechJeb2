@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+      Optional uGUI front end for MechJeb2 (KodeUI + KodeKit, built entirely in code, no asset bundles).
+      Ships as GameData/MechJeb2/Plugins/MechJeb2.UI.dll; without it MechJeb2 runs on IMGUI as before.
+      KodeUI and KodeKit are compiled into this assembly (KSP binds assemblies by name, so a separate
+      KodeUI.dll could collide with another mod's copy). KodeKit (widgets, bindings, themes on top of
+      KodeUI) lives in KodeKit/ here; KodeUI/ is a copy of the sources of https://github.com/sarbian/KodeUI
+      at d8d1312, with only their UTF-8 BOMs removed.
+    -->
+
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <RootNamespace>MuMech.UI</RootNamespace>
+        <AssemblyName>MechJeb2.UI</AssemblyName>
+        <LangVersion>8</LangVersion>
+        <Nullable>disable</Nullable>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <NoWarn>$(NoWarn);CS0414;CS0649;CS0168;CS0219</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="src\**\*.cs" />
+        <Compile Include="KodeKit\**\*.cs" />
+        <Compile Include="KodeUI\**\*.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MechJeb2\MechJeb2.csproj" Private="false" />
+        <ProjectReference Include="..\MechJebLibBindings\MechJebLibBindings.csproj" Private="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Assembly-CSharp"><HintPath>$(KspData)/Managed/Assembly-CSharp.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="Assembly-CSharp-firstpass"><HintPath>$(KspData)/Managed/Assembly-CSharp-firstpass.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine"><HintPath>$(KspData)/Managed/UnityEngine.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine.CoreModule"><HintPath>$(KspData)/Managed/UnityEngine.CoreModule.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine.UI"><HintPath>$(KspData)/Managed/UnityEngine.UI.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine.UIModule"><HintPath>$(KspData)/Managed/UnityEngine.UIModule.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(KspData)/Managed/UnityEngine.IMGUIModule.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(KspData)/Managed/UnityEngine.TextRenderingModule.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(KspData)/Managed/UnityEngine.InputLegacyModule.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(KspData)/Managed/UnityEngine.ImageConversionModule.dll</HintPath><Private>False</Private></Reference>
+        <Reference Include="UnityEngine.Physics2DModule"><HintPath>$(KspData)/Managed/UnityEngine.Physics2DModule.dll</HintPath><Private>False</Private></Reference>
+    </ItemGroup>
+
+    <!-- same convention as MechJeb2's copy_build: copy into KSP only when the KSPDIR environment variable is set -->
+    <Target Name="MechJebUICopyBuild" AfterTargets="Build" Condition="'$(KSPDIR)' != '' And Exists('$(KSPDIR)')">
+        <Copy SourceFiles="$(TargetPath);$(TargetDir)$(TargetName).pdb" DestinationFolder="$(KSPDIR)\GameData\MechJeb2\Plugins" ContinueOnError="true" />
+    </Target>
+
+</Project>

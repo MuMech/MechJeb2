@@ -136,11 +136,13 @@ namespace MuMech
         private void MenuPosition()
         {
             GUILayout.BeginHorizontal();
+            GUILayout.Label(Localizer.Format("#MechJeb_MenuPos"), GuiUtils.LayoutNoExpandWidth); //Pos:
             if (GUILayout.Button(windowSide.ToString()))
             {
                 CycleSide();
             }
 
+            GUILayout.Label(Localizer.Format("#MechJeb_MenuCol"), GuiUtils.LayoutNoExpandWidth); //Col
             if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
             {
                 columns--;

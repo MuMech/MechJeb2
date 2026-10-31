@@ -19,6 +19,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble UIScale = 1.0;
 
+        /// <summary>The scales both Settings windows offer next to the UI Scale field.</summary>
+        public static readonly double[] UiScalePresets = { 0.75, 1, 1.25, 1.5, 2 };
+
+        public static readonly string[] UiScaleNames = Array.ConvertAll(UiScalePresets, p => p.ToString());
+
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool DontUseDropDownMenu;
 
@@ -40,14 +45,35 @@ namespace MuMech
         public enum UiBackendType { Imgui, Kode }
 
         /// <summary>Which UI draws the windows a MechJebUiHost can draw. IMGUI draws everything else.</summary>
-        [Persistent(pass = (int)Pass.GLOBAL)]
-        public int UiBackend = (int)UiBackendType.Imgui;
+        // saved under its own key: configs from before the new UI was the default say UiBackend = 0, which nobody chose
+        [Persistent(pass = (int)Pass.GLOBAL, name = "UiBackendChoice")]
+        public int UiBackend = (int)UiBackendType.Kode;
 
         public UiBackendType Backend => (UiBackendType)UiBackend;
 
         /// <summary>Opacity of the new UI's window backgrounds (0.3 to 1). IMGUI windows ignore it.</summary>
         [Persistent(pass = (int)Pass.GLOBAL)]
         public float UiOpacity = 0.85f;
+
+        // the new UI's look, set from its own Settings window; IMGUI ignores them
+        public enum UiSkinType { Classic, Flat, Glass, ZTheme }
+
+        /// <summary>New UI skin: Classic (stock sprites, tinted button roles), Flat (dark, flat), Glass (translucent HUD), ZTheme (the ZTheme mod's colours).</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int UiSkin = (int)UiSkinType.Flat;
+
+        /// <summary>New UI: tighter margins and rows, in every skin. A custom window's own Compact setting overrides it.</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool UiCompact = true;
+
+        /// <summary>New UI: the modern layout (steppers, switches, segmented choices...) instead of IMGUI's layout.</summary>
+        // a new key, like UiBackend's: configs from before it was the default say False, which nobody chose
+        [Persistent(pass = (int)Pass.GLOBAL, name = "UiModernLayoutChoice")]
+        public bool UiModernLayout = true;
+
+        /// <summary>New UI, modern layout: the section headers it adds to long windows.</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool UiSectionHeaders = true;
 
         /// <summary>Raised after skin, scale, backend or menu settings change, so another UI can follow them.</summary>
         public static event Action<MechJebModuleSettings> Changed;
@@ -118,7 +144,15 @@ namespace MuMech
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GuiUtils.LayoutExpandWidth); //"UI Scale:"
+            GUILayout.Label(Localizer.Format("#MechJeb_Settings_label2"), GuiUtils.LabelNoWrap, GuiUtils.LayoutExpandWidth); //"UI Scale:"
+            for (int i = 0; i < UiScalePresets.Length; i++)
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                bool current = UIScale.Val == UiScalePresets[i];
+                if (GUILayout.Toggle(current, UiScaleNames[i], GUI.skin.button, GuiUtils.LayoutNoExpandWidth) && !current)
+                    UIScale.Text = UiScaleNames[i];
+            }
+
             UIScale.Text = GUILayout.TextField(UIScale.Text, GuiUtils.LayoutWidth(60));
             GUILayout.EndHorizontal();
 
@@ -140,6 +174,7 @@ namespace MuMech
             if (ToolbarManager.ToolbarAvailable || Core.GetComputerModule<MechJebModuleMenu>().useAppLauncher)
                 ed.registry.Find(i => i.id == "Toggle:Menu.hideButton").DrawItem();
 
+            GUILayout.Label(Localizer.Format("#MechJeb_MenuHeader")); //Menu
             ed.registry.Find(i => i.id == "General:Menu.MenuPosition").DrawItem();
 
             ed.registry.Find(i => i.id == "Toggle:Settings.RssMode").DrawItem();
@@ -150,12 +185,12 @@ namespace MuMech
             // only offered when a second UI is installed
             if (MechJebUiHost.Current != null)
             {
-                bool kode = GUILayout.Toggle(Backend == UiBackendType.Kode, "Use the new UI for ported windows (experimental)");
+                bool kode = GUILayout.Toggle(Backend == UiBackendType.Kode, Localizer.Format("#MechJeb_NewUI_UseNewUI")); //Use the new UI for ported windows (experimental)
                 UiBackend = (int)(kode ? UiBackendType.Kode : UiBackendType.Imgui);
                 if (kode)
                 {
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("New UI opacity", GuiUtils.LayoutNoExpandWidth);
+                    GUILayout.Label(Localizer.Format("#MechJeb_NewUI_Opacity"), GuiUtils.LayoutNoExpandWidth); //New UI opacity
                     float opacity = GUILayout.HorizontalSlider(UiOpacity, 0.3f, 1f, GuiUtils.LayoutExpandWidth);
                     GUILayout.EndHorizontal();
                     // ReSharper disable once CompareOfFloatsByEqualityOperator

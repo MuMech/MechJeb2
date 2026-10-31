@@ -343,7 +343,10 @@ namespace MuMech
 
         private DateTime _lastRefresh = DateTime.MinValue;
         internal string vgo, heading, tgo, pitch, label26, label27, label28, n, label29, znorm, label30, launchTimer, autopilotStatus;
-        internal GUIStyle autopilotStatusStyle;
+
+        // the severity that goes with autopilotStatus; WindowGUI turns it into a style (GUI.skin only exists inside OnGUI,
+        // and MechJeb2.UI calls UpdateStrings outside it)
+        internal MechJebModuleAscentBaseAutopilot.StatusLevel autopilotStatusLevel;
         private TimeSpan _refreshInterval = TimeSpan.FromSeconds(0.1);
 
         [UsedImplicitly]
@@ -377,13 +380,8 @@ namespace MuMech
             if (_autopilot.TMinus > 3 * VesselState.DeltaT)
                 launchTimer += $": T-{GuiUtils.TimeToDHMS(_autopilot.TMinus, 1)}";
 
-            autopilotStatus = CachedLocalizer.Instance.MechJebAscentLabel35 + _autopilot.Status;
-            autopilotStatusStyle = _autopilot.StatusSeverity switch
-            {
-                MechJebModuleAscentBaseAutopilot.StatusLevel.ERROR   => GuiUtils.RedLabel,
-                MechJebModuleAscentBaseAutopilot.StatusLevel.WARNING => GuiUtils.YellowLabel,
-                _                                                    => GUI.skin.label
-            };
+            autopilotStatus      = CachedLocalizer.Instance.MechJebAscentLabel35 + _autopilot.Status;
+            autopilotStatusLevel = _autopilot.StatusSeverity;
             UpdatePhaseLines();
             Profiler.EndSample();
         }
@@ -448,7 +446,16 @@ namespace MuMech
             ShowStatusGUIElements();
             ShowAutoWarpGUIElements();
 
-            if (_autopilot.Enabled) GUILayout.Label(autopilotStatus, autopilotStatusStyle); //Autopilot status:
+            if (_autopilot.Enabled)
+            {
+                GUIStyle statusStyle = autopilotStatusLevel switch
+                {
+                    MechJebModuleAscentBaseAutopilot.StatusLevel.ERROR   => GuiUtils.RedLabel,
+                    MechJebModuleAscentBaseAutopilot.StatusLevel.WARNING => GuiUtils.YellowLabel,
+                    _                                                    => GUI.skin.label
+                };
+                GUILayout.Label(autopilotStatus, statusStyle); //Autopilot status:
+            }
             if (Core.DeactivateControl)
                 GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel36, GuiUtils.RedLabel); //CONTROL DISABLED (AVIONICS)
 
