@@ -23,31 +23,10 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_AutostageOnce", InfoItem.Category.Misc)] //Autostage Once
-        public void AutostageOnceItem()
-        {
-            if (Core.Staging.Enabled)
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_Utilities_label1",
-                    Core.Staging.AutostagingOnce
-                        ? Localizer.Format("#MechJeb_Utilities_label1_1")
-                        : " ")); //"Autostaging"<<1>>"Active" -------<<1>>" once ":""
-            }
-
-            if (!Core.Staging.Enabled && GUILayout.Button(Localizer.Format("#MechJeb_Utilities_button1"))) //"Autostage once"
-            {
-                Core.Staging.AutostageOnce(this);
-            }
-        }
+        public void AutostageOnceItem() { }
 
         [GeneralInfoItem("#MechJeb_Autostage", InfoItem.Category.Misc)] //Autostage
-        public void Autostage()
-        {
-            bool oldAutostage = Core.Staging.Users.Contains(this);
-            bool newAutostage = GUILayout.Toggle(oldAutostage, Localizer.Format("#MechJeb_Utilities_checkbox1")); //"Autostage"
-            if (newAutostage && !oldAutostage) Core.Staging.Users.Add(this);
-            if (!newAutostage && oldAutostage) Core.Staging.Users.Remove(this);
-            autostageSavedState = newAutostage;
-        }
+        public void Autostage() { }
 
         public override bool IsActive() => Core.Thrust.Limiter != MechJebModuleThrustController.LimitMode.NONE;
 

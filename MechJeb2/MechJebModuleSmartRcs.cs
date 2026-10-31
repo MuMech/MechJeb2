@@ -24,9 +24,7 @@ namespace MuMech
         public bool autoDisableSmartRCS = true;
 
         [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)] //Disable SmartRcs automatically
-        public void AutoDisableSmartRCS() =>
-            autoDisableSmartRCS =
-                GUILayout.Toggle(autoDisableSmartRCS, Localizer.Format("#MechJeb_SmartRcs_checkbox1 ")); //"Disable SmartRcs automatically"
+        public void AutoDisableSmartRCS() { } //"Disable SmartRcs automatically"
 
         protected void TargetButton(Target bt)
         {

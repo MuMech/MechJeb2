@@ -84,109 +84,16 @@ namespace MuMech
         public readonly EditableInt calcPrecision = 3;
 
         [GeneralInfoItem("#MechJeb_RCSBalancerInfo", InfoItem.Category.Thrust)] //RCS balancer info
-        public void RCSBalancerInfoItem()
-        {
-            GUILayout.BeginVertical();
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label1"),
-                (solverThread.CalculationTime * 1000).ToString("F0") + " ms"); //"Calculation time"
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label2"), solverThread.TaskCount); //"Pending tasks"
-
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label3"), solverThread.CacheSize); //"Cache size"
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label4"), solverThread.CacheHits); //"Cache hits"
-            GuiUtils.SimpleLabelInt(Localizer.Format("#MechJeb_RCSBalancerInfo_Label5"), solverThread.CacheMisses); //"Cache misses"
-
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label6"), comError.Value.ToSI() + "m"); //"CoM shift"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label7"), ComErrorThreshold.ToSI() + "m"); //"CoM recalc"
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label8"), MaxComError.ToSI() + "m"); //"Max CoM shift"
-
-            GuiUtils.SimpleLabel(Localizer.Format("#MechJeb_RCSBalancerInfo_Label9"), solverThread.StatusString); //"Status"
-
-            string error = solverThread.ErrorString;
-            if (!string.IsNullOrEmpty(error))
-            {
-                GUILayout.Label(error, GuiUtils.LayoutExpandWidth);
-            }
-
-            GUILayout.EndVertical();
-        }
+        public void RCSBalancerInfoItem() { }
 
         [GeneralInfoItem("#MechJeb_RCSThrusterStates", InfoItem.Category.Thrust)] //RCS thruster states
-        private void RCSThrusterStateInfoItem()
-        {
-            GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_RCSThrusterStates_Label1")); //"RCS thrusters states (scaled to 0-9)"
-
-            bool firstRcsModule = true;
-            string thrusterStates = "";
-            for (int index = 0; index < Vessel.parts.Count; index++)
-            {
-                Part p = Vessel.parts[index];
-                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
-                {
-                    if (!firstRcsModule)
-                    {
-                        thrusterStates += " ";
-                    }
-
-                    firstRcsModule = false;
-                    thrusterStates += $"({pm.thrusterPower * 9:F0}:";
-                    for (int i = 0; i < pm.thrustForces.Length; i++)
-                    {
-                        if (i != 0)
-                        {
-                            thrusterStates += ",";
-                        }
-
-                        thrusterStates += (pm.thrustForces[i] * 9).ToString("F0");
-                    }
-
-                    thrusterStates += ")";
-                }
-            }
-
-            GUILayout.Label(thrusterStates);
-            GUILayout.EndVertical();
-        }
+        private void RCSThrusterStateInfoItem() { }
 
         [GeneralInfoItem("#MechJeb_RCSPartThrottles", InfoItem.Category.Thrust)] //RCS part throttles
-        private void RCSPartThrottlesInfoItem()
-        {
-            GUILayout.BeginVertical();
-
-            bool firstRcsModule = true;
-            string thrusterStates = "";
-
-            for (int index = 0; index < Vessel.parts.Count; index++)
-            {
-                Part p = Vessel.parts[index];
-                foreach (ModuleRCS pm in p.Modules.OfType<ModuleRCS>())
-                {
-                    if (!firstRcsModule)
-                    {
-                        thrusterStates += " ";
-                    }
-
-                    firstRcsModule = false;
-                    thrusterStates += pm.thrusterPower.ToString("F1");
-                }
-            }
-
-            GUILayout.Label(thrusterStates);
-            GUILayout.EndVertical();
-        }
+        private void RCSPartThrottlesInfoItem() { }
 
         [GeneralInfoItem("#MechJeb_ControlVector", InfoItem.Category.Thrust)] //Control vector
-        private void ControlVectorInfoItem()
-        {
-            FlightCtrlState s = FlightInputHandler.state;
-
-            string xyz = $"{s.X:F2} {s.Y:F2} {s.Z:F2}";
-            string rpy = $"{s.roll:F2} {s.pitch:F2} {s.yaw:F2}";
-            GUILayout.BeginVertical();
-            GuiUtils.SimpleLabel("X/Y/Z", xyz);
-            GuiUtils.SimpleLabel("R/P/Y", rpy);
-            GUILayout.EndVertical();
-        }
+        private void ControlVectorInfoItem() { }
 
         public MechJebModuleRCSBalancer(MechJebCore core)
             : base(core)

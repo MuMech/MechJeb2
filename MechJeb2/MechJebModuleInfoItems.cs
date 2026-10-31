@@ -796,7 +796,7 @@ namespace MuMech
 
         // Leave this stub here until I figure out how to properly target in the new class
         [GeneralInfoItem("#MechJeb_StageStatsAll", InfoItem.Category.Vessel, showInEditor = true)] //Stage stats (all)
-        public void AllStageStats() => StageStatsHelper.AllStageStats();
+        public void AllStageStats() { }
 
         /// <summary>The stage stats state shared by the IMGUI item and MechJeb2.UI's table.</summary>
         internal MechJebStageStatsHelper StageStatsHelper => stageStatsHelper ??= new MechJebStageStatsHelper(this);
@@ -919,132 +919,19 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_DockingGuidance_velocity", InfoItem.Category.Target)] //Docking guidance: velocity
-        public void DockingGuidanceVelocity()
-        {
-            if (!Core.Target.NormalTargetExists)
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocityNA")); //"Target-relative velocity: (N/A)"
-                return;
-            }
-
-            Vector3d relVel = Core.Target.RelativeVelocity;
-            double relVelX = Vector3d.Dot(relVel, Vessel.GetTransform().right);
-            double relVelY = Vector3d.Dot(relVel, Vessel.GetTransform().forward);
-            double relVelZ = Vector3d.Dot(relVel, Vessel.GetTransform().up);
-            GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_velocity")); //"Target-relative velocity:"
-            GUILayout.Label("X: " + MuUtils.PadPositive(relVelX, "F2") + " m/s  [L/J]");
-            GUILayout.Label("Y: " + MuUtils.PadPositive(relVelY, "F2") + " m/s  [I/K]");
-            GUILayout.Label("Z: " + MuUtils.PadPositive(relVelZ, "F2") + " m/s  [H/N]");
-            GUILayout.EndVertical();
-        }
+        public void DockingGuidanceVelocity() { }
 
         [GeneralInfoItem("#MechJeb_DockingGuidanceAngularVelocity", InfoItem.Category.Target)] //Docking guidance: Angular velocity
-        public void DockingGuidanceAngularVelocity()
-        {
-            if (!(Core.Target.Target is Vessel))
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label2")); //"Target-relative Angular velocity: (N/A)"
-                return;
-            }
-
-            var target = (Vessel)Core.Target.Target;
-            Vector3d relw = Quaternion.Inverse(Vessel.ReferenceTransform.rotation) * (target.angularVelocity - Vessel.angularVelocity) *
-                Mathf.Rad2Deg;
-
-            GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label3")); //"Target-relative angular velocity:"
-            GUILayout.Label("P: " + MuUtils.PadPositive(relw.x, "F2") + " °/s");
-            GUILayout.Label("Y: " + MuUtils.PadPositive(relw.z, "F2") + " °/s");
-            GUILayout.Label("R: " + MuUtils.PadPositive(relw.y, "F2") + " °/s");
-            GUILayout.EndVertical();
-        }
+        public void DockingGuidanceAngularVelocity() { }
 
         [GeneralInfoItem("#MechJeb_DockingGuidancePosition", InfoItem.Category.Target)] //Docking guidance: position
-        public void DockingGuidancePosition()
-        {
-            if (!Core.Target.NormalTargetExists)
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label4")); //"Separation from target: (N/A)"
-                return;
-            }
-
-            Vector3d sep = Core.Target.RelativePosition;
-            double sepX = Vector3d.Dot(sep, Vessel.GetTransform().right);
-            double sepY = Vector3d.Dot(sep, Vessel.GetTransform().forward);
-            double sepZ = Vector3d.Dot(sep, Vessel.GetTransform().up);
-            GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label5")); //"Separation from target:"
-            GUILayout.Label("X: " + MuUtils.PadPositive(sepX, "F2") + " m  [L/J]");
-            GUILayout.Label("Y: " + MuUtils.PadPositive(sepY, "F2") + " m  [I/K]");
-            GUILayout.Label("Z: " + MuUtils.PadPositive(sepZ, "F2") + " m  [H/N]");
-            GUILayout.EndVertical();
-        }
+        public void DockingGuidancePosition() { }
 
         [GeneralInfoItem("#MechJeb_AllPlanetPhaseAngles", InfoItem.Category.Orbit)] //All planet phase angles
-        public void AllPlanetPhaseAngles()
-        {
-            Orbit o = Orbit;
-            while (o.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
-
-            GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label6"), GuiUtils.MiddleCenterLabel); //"Planet phase angles"
-
-            for (int i = 0; i < FlightGlobals.Bodies.Count; i++)
-            {
-                CelestialBody body = FlightGlobals.Bodies[i];
-                if (body == Planetarium.fetch.Sun)
-                {
-                    continue;
-                }
-
-                if (body.referenceBody != Planetarium.fetch.Sun)
-                {
-                    continue;
-                }
-
-                if (body.orbit == o)
-                {
-                    continue;
-                }
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(body.bodyName, GuiUtils.LayoutExpandWidth);
-                GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.Time).ToString("F2") + "º", GuiUtils.LayoutNoExpandWidth);
-                GUILayout.EndHorizontal();
-            }
-
-            GUILayout.EndVertical();
-        }
+        public void AllPlanetPhaseAngles() { }
 
         [GeneralInfoItem("#MechJeb_AllMoonPhaseAngles", InfoItem.Category.Orbit)] //All moon phase angles
-        public void AllMoonPhaseAngles()
-        {
-            GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_InfoItems_label7"), GuiUtils.MiddleCenterLabel); //"Moon phase angles"
-
-            if (Orbit.referenceBody != Planetarium.fetch.Sun)
-            {
-                Orbit o = Orbit;
-                while (o.referenceBody.referenceBody != Planetarium.fetch.Sun) o = o.referenceBody.orbit;
-
-                for (int i = 0; i < o.referenceBody.orbitingBodies.Count; i++)
-                {
-                    CelestialBody body = o.referenceBody.orbitingBodies[i];
-                    if (body.orbit == o)
-                    {
-                        continue;
-                    }
-
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label(body.bodyName, GuiUtils.LayoutExpandWidth);
-                    GUILayout.Label(o.PhaseAngle(body.orbit, VesselState.Time).ToString("F2") + "º", GuiUtils.LayoutNoExpandWidth);
-                    GUILayout.EndHorizontal();
-                }
-            }
-
-            GUILayout.EndVertical();
-        }
+        public void AllMoonPhaseAngles() { }
 
         [ValueInfoItem("#MechJeb_SurfaceBiome", InfoItem.Category.Misc, showInEditor = false)] //Surface Biome
         public string CurrentRawBiome()
@@ -1096,11 +983,7 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_LatLonClipbardCopy", InfoItem.Category.Misc, showInEditor = false)] //Lat/Lon/Alt Copy to Clipboard
-        public void LatLonClipbardCopy()
-        {
-            if (GUILayout.Button(Localizer.Format("#MechJeb_InfoItems_CopytoClipboard"))) //"Copy Lat/Lon/Alt to Clipboard"
-                CopyLatLonAltToClipboard();
-        }
+        public void LatLonClipbardCopy() { }
 
         // shared by the IMGUI item and the new UI
         internal void CopyLatLonAltToClipboard()
@@ -1134,16 +1017,7 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_PoolsStatus", InfoItem.Category.Misc, showInEditor = true)] //Pools Status
-        public void DebugString()
-        {
-            GUILayout.BeginVertical();
-            foreach (KeyValuePair<Type, PoolsStatus> pair in PoolsStatus.poolsInfo)
-            {
-                GuiUtils.SimpleLabel(PoolName(pair.Key), pair.Value.allocated + "/" + pair.Value.maxSize);
-            }
-
-            GUILayout.EndHorizontal();
-        }
+        public void DebugString() { }
 
         private static GUIStyle _separatorStyleField;
 
@@ -1164,6 +1038,6 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_Separator", InfoItem.Category.Misc, showInEditor = true)] //Separator
-        public void HorizontalSeparator() => GUILayout.Label("", _separatorStyle, GuiUtils.LayoutExpandWidth, GUILayout.Height(2));
+        public void HorizontalSeparator() { }
     }
 }

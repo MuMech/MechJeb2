@@ -124,11 +124,7 @@ namespace MuMech
         private Quaternion curAttitude = Quaternion.identity;
 
         [GeneralInfoItem("#MechJeb_DisableSmartACSAutomatically", InfoItem.Category.Misc)] //Disable SmartACS automatically
-        public void AutoDisableSmartASS() =>
-            autoDisableSmartASS = GUILayout.Toggle(autoDisableSmartASS,
-                Core.eduMode
-                    ? Localizer.Format("#MechJeb_SmartASS_checkbox1")
-                    : Localizer.Format("#MechJeb_SmartASS_checkbox2")); //"Disable SmartACS automatically":"Disable SmartASS automatically"
+        public void AutoDisableSmartASS() { } //"Disable SmartACS automatically":"Disable SmartASS automatically"
 
         public MechJebModuleSmartASS(MechJebCore core) : base(core) { }
 

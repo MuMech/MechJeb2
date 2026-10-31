@@ -133,33 +133,7 @@ namespace MuMech
         public readonly bool useAppLauncher = true; //Use AppLauncher
 
         [GeneralInfoItem("#MechJeb_MenuPosition", InfoItem.Category.Misc)] //Menu Position
-        private void MenuPosition()
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_MenuPos"), GuiUtils.LayoutNoExpandWidth); //Pos:
-            if (GUILayout.Button(windowSide.ToString()))
-            {
-                CycleSide();
-            }
-
-            GUILayout.Label(Localizer.Format("#MechJeb_MenuCol"), GuiUtils.LayoutNoExpandWidth); //Col
-            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
-            {
-                columns--;
-            }
-
-            GUILayout.Label(columns.ToString(), GuiUtils.LayoutNoExpandWidth);
-
-            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
-            {
-                columns++;
-            }
-
-            GUILayout.EndHorizontal();
-
-            if (columns < 1)
-                columns = 1;
-        }
+        private void MenuPosition() { }
 
         // shared by the IMGUI MenuPosition item and the new UI
         internal void CycleSide()

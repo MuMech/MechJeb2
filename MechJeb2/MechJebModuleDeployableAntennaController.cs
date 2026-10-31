@@ -11,12 +11,7 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_ToggleAntennas", InfoItem.Category.Misc, showInEditor = false)] //Toggle antennas
-        public void AntennaDeployButton()
-        {
-            AutoDeploy = GUILayout.Toggle(AutoDeploy, Localizer.Format("#MechJeb_Autodeployantennas")); //"Auto-deploy antennas"
-
-            if (GUILayout.Button(ButtonText)) ToggleDeploy();
-        }
+        public void AntennaDeployButton() { }
 
         protected override bool IsModules(ModuleDeployablePart p) => p is ModuleDeployableAntenna;
 

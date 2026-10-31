@@ -459,12 +459,7 @@ namespace MuMech
         public double MET => Time - Math.Max(LaunchTime, Vessel.launchTime);
 
         [GeneralInfoItem("#MechJeb_DebugString", InfoItem.Category.Misc, showInEditor = true)] //Debug String
-        public void DebugString()
-        {
-            GUILayout.BeginVertical();
-            GUILayout.Label(Message);
-            GUILayout.EndVertical();
-        }
+        public void DebugString() { }
 
         public override void OnStart(PartModule.StartState state) => GameEvents.onLaunch.Add(OnLaunch);
 
@@ -796,38 +791,10 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_RCSTranslation", InfoItem.Category.Vessel, showInEditor = true)] //RCS Translation
-        public void RCSTranslation()
-        {
-            GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_RCSTranslation")); //"RCS Translation"
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos", GuiUtils.LayoutExpandWidth); //
-            GUILayout.Label(MuUtils.PrettyPrint(RCSThrustAvailable.Positive), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Neg", GuiUtils.LayoutExpandWidth); //
-            GUILayout.Label(MuUtils.PrettyPrint(RCSThrustAvailable.Negative), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
-        }
+        public void RCSTranslation() { }
 
         [GeneralInfoItem("#MechJeb_RCSTorque", InfoItem.Category.Vessel, showInEditor = true)] //RCS Torque
-        public void RCSTorque()
-        {
-            GUILayout.BeginVertical();
-            GUILayout.Label(Localizer.Format("#MechJeb_RCSTorque")); //"RCS Torque"
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Pos", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(RCSTorqueAvailable.Positive), GuiUtils.LayoutNoExpandWidth);
-            //GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.positive), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Neg", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(RCSTorqueAvailable.Negative), GuiUtils.LayoutNoExpandWidth);
-            //GUILayout.Label(MuUtils.PrettyPrint(torqueRcs.negative), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
-        }
+        public void RCSTorque() { }
 
         private void CalculateVesselAeroForcesWithCache(Vessel v, out Vector3 farForce, Vector3d surfaceVelocity,
             double altitudeASL)
@@ -1185,48 +1152,7 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_Torque", InfoItem.Category.Vessel, showInEditor = true)] //Torque
-        public void TorqueCompare()
-        {
-            var reactionTorque = Vector3d.Max(TorqueReactionWheel.Positive, TorqueReactionWheel.Negative);
-            //var rcsTorque = Vector3d.Max(torqueRcs.positive, torqueRcs.negative);
-
-            var rcsTorqueMJ = Vector3d.Max(RCSTorqueAvailable.Positive, RCSTorqueAvailable.Negative);
-
-            var controlTorque = Vector3d.Max(TorqueControlSurface.Positive, TorqueControlSurface.Negative);
-            var gimbalTorque = Vector3d.Max(TorqueGimbal.Positive, TorqueGimbal.Negative);
-            var diffTorque = Vector3d.Max(_einfo.TorqueDifferentialThrottle.Positive, _einfo.TorqueDifferentialThrottle.Negative);
-            diffTorque.y = 0;
-            var othersTorque = Vector3d.Max(TorqueOthers.Positive, TorqueOthers.Negative);
-
-            GUILayout.Label("Torque sources", GuiUtils.LabelNoWrap);
-            GUILayout.BeginHorizontal();
-
-            GUILayout.BeginVertical();
-            GUILayout.Label("ReactionWheel", GuiUtils.LabelNoWrap);
-
-            GUILayout.Label("RCS", GuiUtils.LabelNoWrap);
-            //GUILayout.Label("RCS MJ", GuiUtils.LabelNoWrap);
-
-            GUILayout.Label("ControlSurface", GuiUtils.LabelNoWrap);
-            GUILayout.Label("Gimbal", GuiUtils.LabelNoWrap);
-            GUILayout.Label("Diff Throttle", GuiUtils.LabelNoWrap);
-            GUILayout.Label("Others (FAR)", GuiUtils.LabelNoWrap);
-            GUILayout.EndVertical();
-
-            GUILayout.BeginVertical();
-            GUILayout.Label(MuUtils.PrettyPrint(reactionTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
-            //GUILayout.Label(MuUtils.PrettyPrint(rcsTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
-
-            GUILayout.Label(MuUtils.PrettyPrint(rcsTorqueMJ), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
-
-            GUILayout.Label(MuUtils.PrettyPrint(controlTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(gimbalTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(diffTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(othersTorque), GuiUtils.LabelNoWrap, GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndVertical();
-
-            GUILayout.EndHorizontal();
-        }
+        public void TorqueCompare() { }
 
         private void UpdateResourceRequirements(EngineInfo einfo, IntakeInfo iinfo)
         {

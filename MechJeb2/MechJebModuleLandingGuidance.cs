@@ -53,38 +53,7 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_LandingPredictions", InfoItem.Category.Misc)] //Landing predictions
-        private void DrawGUITogglePredictions()
-        {
-            GUILayout.BeginVertical();
-
-            bool active = GUILayout.Toggle(_predictor.Enabled, Localizer.Format("#MechJeb_LandingGuidance_checkbox5")); //Show landing predictions
-            if (_predictor.Enabled != active)
-            {
-                if (active)
-                {
-                    _predictor.Users.Add(this);
-                }
-                else
-                {
-                    _predictor.Users.Remove(this);
-                }
-            }
-
-            if (_predictor.Enabled)
-            {
-                _predictor.makeAerobrakeNodes =
-                    GUILayout.Toggle(_predictor.makeAerobrakeNodes, Localizer.Format("#MechJeb_LandingGuidance_checkbox6")); //"Show aerobrake nodes"
-                _predictor.showTrajectory =
-                    GUILayout.Toggle(_predictor.showTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox7")); //Show trajectory
-                _predictor.worldTrajectory =
-                    GUILayout.Toggle(_predictor.worldTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox8")); //World trajectory
-                _predictor.camTrajectory =
-                    GUILayout.Toggle(_predictor.camTrajectory, Localizer.Format("#MechJeb_LandingGuidance_checkbox9")); //Camera trajectory (WIP)
-                DrawGUIPrediction();
-            }
-
-            GUILayout.EndVertical();
-        }
+        private void DrawGUITogglePredictions() { }
 
         private void DrawGUIPrediction()
         {

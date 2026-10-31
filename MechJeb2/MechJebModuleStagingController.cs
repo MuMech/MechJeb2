@@ -196,41 +196,7 @@ namespace MuMech
         internal readonly string _sLeadTime = $"{CachedLocalizer.Instance.MechJebAscentLeadTime}: ";
 
         [GeneralInfoItem("#MechJeb_AutostagingSettings", InfoItem.Category.Misc)] //Autostaging settings
-        public void AutostageSettingsInfoItem()
-        {
-            GUILayout.BeginVertical(GUI.skin.box);
-
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel42, AutostageLimit, width: 40); //"Stop at stage #"
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Delays: ");
-            GUILayout.Space(30);
-            GuiUtils.SimpleTextBox("pre: ", AutostagePreDelay, "s", 35, horizontalFraming: false);
-            GUILayout.FlexibleSpace();
-            GuiUtils.SimpleTextBox("post: ", AutostagePostDelay, "s", 35, horizontalFraming: false);
-            GUILayout.EndHorizontal();
-
-            ClampAutostageThrust();
-
-            GUILayout.Label(CachedLocalizer.Instance.MechJebAscentLabel38); //"Stage fairings when:"
-            GuiUtils.SimpleTextBox(_sFairingMinDynamicPressure, FairingMaxDynamicPressure, "kPa", 50); //"dynamic pressure"
-            GuiUtils.SimpleTextBox(_sFairingMinAltitude, FairingMinAltitude, "km", 50); //altitude
-            GuiUtils.SimpleTextBox(_sFairingMaxAerothermalFlux, FairingMaxAerothermalFlux, "W/m²", 50); //aerothermal flux
-
-            GUILayout.BeginHorizontal();
-            HotStaging = GUILayout.Toggle(HotStaging, CachedLocalizer.Instance.MechJebAscentHotStaging); //"Support hotstaging"
-            GUILayout.FlexibleSpace();
-            GuiUtils.SimpleTextBox(_sLeadTime, HotStagingLeadTime, "s", 35); //"lead time"
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            DropSolids = GUILayout.Toggle(DropSolids, CachedLocalizer.Instance.MechJebAscentDropSolids); //"Drop solids early"
-            GUILayout.FlexibleSpace();
-            GuiUtils.SimpleTextBox("", DropSolidsTwrPct, "% rocket accel", 35);
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical();
-        }
+        public void AutostageSettingsInfoItem() { }
 
         [ValueInfoItem("#MechJeb_Autostagingstatus", InfoItem.Category.Misc)] //Autostaging status
         public string AutostageStatus()
@@ -241,11 +207,7 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_ClampAutostageThrust", InfoItem.Category.Misc)] //Clamp Autostage Thrust
-        private void ClampAutostageThrust()
-        {
-            GuiUtils.SimpleTextBox(CachedLocalizer.Instance.MechJebAscentLabel44, ClampAutoStageThrustPct, "%", 50); //"Clamp AutoStage Thrust "
-            ClampAutostageThrustValue();
-        }
+        private void ClampAutostageThrust() { }
 
         /// <summary>Keep ClampAutoStageThrustPct in [0, 1] (done after each edit, by both UIs).</summary>
         internal void ClampAutostageThrustValue()

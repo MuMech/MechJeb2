@@ -615,9 +615,6 @@ namespace MuMech
 
         public string Text { get; private set; }
 
-        // a bold label per skin: custom windows draw with the compact skin or MechJeb's
-        private static readonly Dictionary<GUISkin, GUIStyle> _styles = new Dictionary<GUISkin, GUIStyle>();
-
         public HeaderInfoItem(string text = "")
             : base(new GeneralInfoItemAttribute("#MechJeb_WindowEd_HeaderItem", Category.Misc) { showInEditor = true }) //Header / separator
         {
@@ -638,33 +635,6 @@ namespace MuMech
         public override string ListName => Text.Length == 0
             ? Localizer.Format("#MechJeb_WindowEd_Separator")              //Separator
             : Localizer.Format("#MechJeb_WindowEd_HeaderListName", Text); //Header: <<1>>
-
-        public override void DrawItem()
-        {
-            if (Text.Length > 0)
-            {
-                if (!_styles.TryGetValue(GUI.skin, out GUIStyle style))
-                    _styles[GUI.skin] = style = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold };
-
-                GUILayout.Label(Text, style);
-            }
-            else
-            {
-                GUILayout.Space(3);
-            }
-
-            // a hairline across the window
-            Rect line = GUILayoutUtility.GetRect(1, 1, GuiUtils.LayoutExpandWidth);
-            if (Event.current.type == EventType.Repaint)
-            {
-                Color c = GUI.color;
-                GUI.color = new Color(c.r, c.g, c.b, c.a * 0.4f);
-                GUI.DrawTexture(line, Texture2D.whiteTexture);
-                GUI.color = c;
-            }
-
-            GUILayout.Space(3);
-        }
     }
 
     //A ValueInfoItem is an info item that shows the value of some field, or the return value of some method.
@@ -835,15 +805,6 @@ namespace MuMech
             cacheValidity = 0;
             UpdateItemCache();
         }
-
-        public override void DrawItem()
-        {
-            if (!externalRefresh) UpdateItemCache();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(_labelContent);
-            GUILayout.Label(stringValue, _widthOption);
-            GUILayout.EndHorizontal();
-        }
     }
 
     public class ActionInfoItem : InfoItem
@@ -866,11 +827,6 @@ namespace MuMech
         }
 
         public void Invoke() => action();
-
-        public override void DrawItem()
-        {
-            if (GUILayout.Button(_labelContent)) action();
-        }
     }
 
     public class ToggleInfoItem : InfoItem
@@ -939,17 +895,10 @@ namespace MuMech
             il.Emit(OpCodes.Ret);
             return dm.CreateDelegate(delegateType);
         }
-
-        public override void DrawItem()
-        {
-            bool currentValue = Value;
-
-            bool newValue = GUILayout.Toggle(currentValue, _labelContent);
-
-            if (newValue != currentValue) Value = newValue;
-        }
     }
 
+    // Its id is the method's name, which saved custom windows hold. MechJeb's own methods are empty: MechJeb2.UI builds those
+    // items by id, and the method only draws, in IMGUI, an item from another mod.
     public class GeneralInfoItem : InfoItem
     {
         private readonly Action draw;
@@ -1006,14 +955,6 @@ namespace MuMech
             else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
 
             Profiler.EndSample();
-        }
-
-        public override void DrawItem()
-        {
-            if (val != null)
-            {
-                GuiUtils.SimpleTextBox(_labelContent, val, rightLabel, width, expandWidth: expandWidth);
-            }
         }
     }
 
