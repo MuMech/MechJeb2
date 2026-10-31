@@ -295,9 +295,6 @@ namespace MuMech
             @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
 
         private Vector2 _scroll;
-        private GUIStyle _styleActive;
-        private GUIStyle _styleInactive;
-        private GUIStyle _styleQuicksave;
         internal string _titleAdd = "";
         internal string _saveName = "";
         internal bool _waitingForPick;
@@ -306,7 +303,6 @@ namespace MuMech
         internal enum Pages { WAYPOINTS, SETTINGS, ROUTES }
 
         private static MechJebRouteRenderer _renderer;
-        private Rect[] _waypointRects = Array.Empty<Rect>();
         internal int _lastIndex = -1;
         internal int _settingPageIndex;
 
@@ -596,8 +592,6 @@ namespace MuMech
             get => SelIndex;
             set => SelIndex = value;
         }
-
-        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(500), GUILayout.Height(400) };
 
         // ---- logic shared by the IMGUI window below and the uGUI view (MechJeb2.UI) ----
 
@@ -939,327 +933,6 @@ namespace MuMech
             }
         }
 
-        private void DrawPageWaypoints()
-        {
-            bool alt = GameSettings.MODIFIER_KEY.GetKey();
-            _scroll = GUILayout.BeginScrollView(_scroll);
-            if (_ap.Waypoints.Count > 0)
-            {
-                _waypointRects = new Rect[_ap.Waypoints.Count];
-                GUILayout.BeginVertical();
-                double eta = 0;
-                double dist = 0;
-                for (int i = 0; i < _ap.Waypoints.Count; i++)
-                {
-                    MechJebWaypoint wp = _ap.Waypoints[i];
-                    AccumulateStats(i, wp, ref eta, ref dist, out double maxSpeed, out float minSpeed);
-                    if (i == SelIndex) DrawSelectedMarker();
-
-                    string str =
-                        $"[{i + 1}] - {wp.GetNameWithCoords()} - R: {wp.Radius:F1} m\n       S: {minSpeed:F0} ~ {maxSpeed:F0} - D: {dist.ToSI(-1)}m - ETA: {GuiUtils.TimeToDHMS(eta)}";
-                    GUI.backgroundColor = i == _ap.WaypointIndex ? new Color(0.5f, 1f, 0.5f) : Color.white;
-                    if (GUILayout.Button(str, i == SelIndex ? _styleActive : wp.Quicksave ? _styleQuicksave : _styleInactive))
-                    {
-                        WaypointClicked(i, alt);
-                    }
-
-                    if (Event.current.type == EventType.Repaint)
-                    {
-                        _waypointRects[i] = GUILayoutUtility.GetLastRect();
-                        //if (i == ap.WaypointIndex) { Debug.Log(Event.current.type.ToString() + " - " + waypointRects[i].ToString() + " - " + scroll.ToString()); }
-                    }
-
-                    GUI.backgroundColor = Color.white;
-
-                    if (SelIndex > -1 && SelIndex == i)
-                    {
-                        GUILayout.BeginHorizontal();
-
-                        GUILayout.Label("  Radius: ", GuiUtils.LayoutNoExpandWidth);
-                        _tmpRadius = GUILayout.TextField(_tmpRadius, GuiUtils.LayoutWidth(50));
-                        float.TryParse(_tmpRadius, out wp.Radius);
-                        if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
-                        {
-                            RadiusToRest(i);
-                        }
-
-                        GUILayout.Label("- Speed: ", GuiUtils.LayoutNoExpandWidth);
-                        _tmpMinSpeed = GUILayout.TextField(_tmpMinSpeed, GuiUtils.LayoutWidth(40));
-                        float.TryParse(_tmpMinSpeed, out wp.MinSpeed);
-                        if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
-                        {
-                            MinSpeedToRest(i);
-                        }
-
-                        GUILayout.Label(" - ", GuiUtils.LayoutNoExpandWidth);
-                        _tmpMaxSpeed = GUILayout.TextField(_tmpMaxSpeed, GuiUtils.LayoutWidth(40));
-                        float.TryParse(_tmpMaxSpeed, out wp.MaxSpeed);
-                        if (GUILayout.Button("A", GuiUtils.LayoutNoExpandWidth))
-                        {
-                            MaxSpeedToRest(i);
-                        }
-
-                        GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("QS", wp.Quicksave ? _styleQuicksave : _styleInactive, GuiUtils.LayoutNoExpandWidth))
-                        {
-                            ToggleQuicksave(i, alt);
-                        }
-
-                        GUILayout.EndHorizontal();
-
-
-                        GUILayout.BeginHorizontal();
-
-                        GUILayout.Label("Lat ", GuiUtils.LayoutNoExpandWidth);
-                        _tmpLat = GUILayout.TextField(_tmpLat, GuiUtils.LayoutWidth(125));
-                        wp.Latitude = ParseCoord(_tmpLat);
-
-                        GUILayout.Label(" -  Lon ", GuiUtils.LayoutNoExpandWidth);
-                        _tmpLon = GUILayout.TextField(_tmpLon, GuiUtils.LayoutWidth(125));
-                        wp.Longitude = ParseCoord(_tmpLon, true);
-
-                        GUILayout.EndHorizontal();
-                    }
-                }
-
-                _titleAdd = "Distance: " + dist.ToSI(-1) + "m - ETA: " + GuiUtils.TimeToDHMS(eta);
-                GUILayout.EndVertical();
-            }
-            else
-            {
-                _titleAdd = "";
-            }
-
-            GUILayout.EndScrollView();
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(alt ? "Reverse" : !_waitingForPick ? "Add Waypoint" : "Abort Adding", GuiUtils.LayoutWidth(110)))
-            {
-                AddOrReverse(alt);
-            }
-
-            if (GUILayout.Button(alt ? "Clear" : "Remove", GuiUtils.LayoutWidth(65)))
-            {
-                RemoveOrClear(alt);
-            }
-
-            if (GUILayout.Button(alt ? "Top" : "Up", GuiUtils.LayoutWidth(57)))
-            {
-                MoveUp(alt);
-            }
-
-            if (GUILayout.Button(alt ? "Bottom" : "Down", GuiUtils.LayoutWidth(57)))
-            {
-                MoveDown(alt);
-            }
-
-            if (GUILayout.Button("Routes"))
-            {
-                ShowRoutesPage();
-            }
-
-            if (GUILayout.Button("Settings"))
-            {
-                ShowSettingsPage();
-            }
-
-            GUILayout.EndHorizontal();
-
-            if (SelIndex >= _ap.Waypoints.Count) { SelIndex = -1; }
-
-            if (SelIndex == -1 && _ap.WaypointIndex > -1 && _lastIndex != _ap.WaypointIndex && _waypointRects.Length > 0)
-            {
-                _scroll.y = _waypointRects[_ap.WaypointIndex].y - 160;
-            }
-
-            _lastIndex = _ap.WaypointIndex;
-        }
-
-        private void DrawPageSettings()
-        {
-            SettingsPageTick();
-            MechJebModuleCustomWindowEditor ed = Core.GetComputerModule<MechJebModuleCustomWindowEditor>();
-
-            _scroll = GUILayout.BeginScrollView(_scroll);
-
-            _settingPageIndex = GUILayout.SelectionGrid(_settingPageIndex, _settingPages, _settingPages.Length);
-
-            switch (_settingPageIndex)
-            {
-                case 0:
-                    GUILayout.BeginHorizontal();
-
-                    GUILayout.BeginVertical();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.hPIDp").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.hPIDi").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.hPIDd").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.terrainLookAhead").DrawItem();
-                    //					ed.registry.Find(i => i.id == "Value:RoverController.speedIntAcc").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.tractionLimit").DrawItem();
-                    ed.registry.Find(i => i.id == "Toggle:RoverController.LimitAcceleration").DrawItem();
-                    GUILayout.EndVertical();
-
-                    GUILayout.BeginVertical();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.sPIDp").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.sPIDi").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.sPIDd").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:RoverController.turnSpeed").DrawItem();
-                    ed.registry.Find(i => i.id == "Value:RoverController.traction").DrawItem();
-                    GUILayout.EndVertical();
-
-                    GUILayout.EndHorizontal();
-                    break;
-
-                case 1:
-                    GUILayout.BeginHorizontal();
-
-                    GUILayout.BeginVertical();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.MohoMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.EveMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.GillyMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.KerbinMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.MunMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.MinmusMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.DunaMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.IkeMapdist").DrawItem();
-                    GUILayout.EndVertical();
-
-                    GUILayout.BeginVertical();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.DresMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.JoolMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.LaytheMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.VallMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.TyloMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.BopMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.PolMapdist").DrawItem();
-                    ed.registry.Find(i => i.id == "Editable:WaypointWindow.EelooMapdist").DrawItem();
-                    GUILayout.EndVertical();
-
-                    GUILayout.EndHorizontal();
-                    break;
-            }
-
-            GUILayout.EndScrollView();
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Waypoints"))
-            {
-                ShowWaypointsPage();
-            }
-
-            if (GUILayout.Button("Routes"))
-            {
-                ShowRoutesPage();
-            }
-
-            if (GUILayout.Button("Help"))
-            {
-                ToggleHelpWindow();
-            }
-
-            GUILayout.EndHorizontal();
-        }
-
-        private void DrawPageRoutes()
-        {
-            bool alt = GameSettings.MODIFIER_KEY.GetKey();
-            _titleAdd = "Routes for " + Vessel.mainBody.bodyName;
-
-            _scroll = GUILayout.BeginScrollView(_scroll);
-            List<MechJebWaypointRoute> bodyWPs = BodyRoutes();
-            for (int i = 0; i < bodyWPs.Count; i++)
-            {
-                GUILayout.BeginHorizontal();
-                string str = bodyWPs[i].Name + " - " + bodyWPs[i].Stats;
-                if (GUILayout.Button(str, i == _saveIndex ? _styleActive : _styleInactive))
-                {
-                    RouteClicked(i);
-                }
-
-                if (i == _saveIndex)
-                {
-                    if (GUILayout.Button("Delete", GuiUtils.LayoutWidth(70)))
-                    {
-                        DeleteRoute(bodyWPs[i].Name);
-                    }
-                }
-
-                GUILayout.EndHorizontal();
-            }
-
-            GUILayout.EndScrollView();
-
-            GUILayout.BeginHorizontal();
-            _saveName = GUILayout.TextField(_saveName, GuiUtils.LayoutWidth(150));
-            if (GUILayout.Button("Save", GuiUtils.LayoutWidth(50)))
-            {
-                SaveCurrentRoute();
-            }
-
-            if (GUILayout.Button(alt ? "Add" : "Load", GuiUtils.LayoutWidth(50)))
-            {
-                LoadSelectedRoute(alt);
-            }
-
-            if (GUILayout.Button("Waypoints"))
-            {
-                ShowWaypointsPage();
-            }
-
-            if (GUILayout.Button("Settings"))
-            {
-                ShowSettingsPage();
-            }
-
-            GUILayout.EndHorizontal();
-        }
-
-        protected override void WindowGUI(int windowID)
-        {
-            if (GUI.Button(new Rect(WindowPos.width - 48, 0, 13, 20), "?", GuiUtils.YellowOnHover))
-            {
-                OpenPageHelp();
-            }
-
-            _styleInactive ??= new GUIStyle(GuiUtils.Skin != null ? GuiUtils.Skin.button : GuiUtils.DefaultSkin.button) { alignment = TextAnchor.UpperLeft };
-
-            if (_styleActive == null)
-            {
-                _styleActive = new GUIStyle(_styleInactive);
-                _styleActive.active.textColor =
-                    _styleActive.focused.textColor = _styleActive.hover.textColor = _styleActive.normal.textColor = Color.green;
-            } // for some reason MJ's skin sometimes isn't loaded at OnStart so this has to be done here
-
-            if (_styleQuicksave == null)
-            {
-                _styleQuicksave = new GUIStyle(_styleActive);
-                _styleQuicksave.active.textColor = _styleQuicksave.focused.textColor =
-                    _styleQuicksave.hover.textColor = _styleQuicksave.normal.textColor = Color.yellow;
-            }
-
-            bool alt = GameSettings.MODIFIER_KEY.GetKey();
-
-            switch (_showPage)
-            {
-                case Pages.WAYPOINTS:
-                    DrawPageWaypoints();
-                    break;
-                case Pages.SETTINGS:
-                    DrawPageSettings();
-                    break;
-                case Pages.ROUTES:
-                    DrawPageRoutes();
-                    break;
-            }
-
-            if (Event.current.type == EventType.Repaint)
-            {
-                ProcessWaypointPick(alt);
-            }
-
-            base.WindowGUI(windowID);
-        }
-
         public override void OnFixedUpdate()
         {
             if (Vessel.isActiveVessel && (_renderer == null || _renderer.AP != _ap)) { MechJebRouteRenderer.AttachToMapView(Core); }
@@ -1279,29 +952,11 @@ namespace MuMech
         public int SelTopic;
         public readonly string[] Topics = { "Rover Controller", "Waypoints", "Routes", "Settings" };
         internal string _selSubTopic = "";
-        private GUIStyle _btnActive;
-        private GUIStyle _btnInactive;
 
         internal void ToggleSubTopic(string title)
         {
             _selSubTopic = _selSubTopic != title ? title : "";
             WindowPos = new Rect(WindowPos.x, WindowPos.y, WindowPos.width, 0);
-        }
-
-        private void HelpTopic(string title, string text)
-        {
-            GUILayout.BeginVertical();
-            if (GUILayout.Button(title, _selSubTopic == title ? _btnActive : _btnInactive))
-            {
-                ToggleSubTopic(title);
-            }
-
-            if (_selSubTopic == title)
-            {
-                GUILayout.Label(text);
-            }
-
-            GUILayout.EndVertical();
         }
 
         public MechJebModuleWaypointHelpWindow(MechJebCore core) : base(core) { }
@@ -1395,23 +1050,6 @@ namespace MuMech
                         "These values define offsets for the route height in Mapview. Given how weird it's set up it can be that they are too high or too low so I added these for easier adjusting. Saved globally, I think.");
                     break;
             }
-        }
-
-        protected override void WindowGUI(int windowID)
-        {
-            _btnInactive ??= new GUIStyle(GuiUtils.Skin.button) { alignment = TextAnchor.MiddleLeft };
-
-            if (_btnActive == null)
-            {
-                _btnActive = new GUIStyle(_btnInactive);
-                _btnActive.active.textColor = _btnActive.hover.textColor = _btnActive.focused.textColor = _btnActive.normal.textColor = Color.green;
-            }
-
-            SelTopic = GUILayout.SelectionGrid(SelTopic, Topics, Topics.Length);
-
-            HelpContent(Topics[SelTopic], HelpTopic);
-
-            base.WindowGUI(windowID);
         }
     }
 
