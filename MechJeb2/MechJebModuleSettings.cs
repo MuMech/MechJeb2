@@ -42,15 +42,6 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool ShowAdvancedWindowSettings;
 
-        public enum UiBackendType { Imgui, Kode }
-
-        /// <summary>Which UI draws the windows a MechJebUiHost can draw. IMGUI draws everything else.</summary>
-        // saved under its own key: configs from before the new UI was the default say UiBackend = 0, which nobody chose
-        [Persistent(pass = (int)Pass.GLOBAL, name = "UiBackendChoice")]
-        public int UiBackend = (int)UiBackendType.Kode;
-
-        public UiBackendType Backend => (UiBackendType)UiBackend;
-
         /// <summary>Opacity of the new UI's window backgrounds (0.3 to 1). IMGUI windows ignore it.</summary>
         [Persistent(pass = (int)Pass.GLOBAL)]
         public float UiOpacity = 0.85f;
@@ -67,7 +58,7 @@ namespace MuMech
         public bool UiCompact = true;
 
         /// <summary>New UI: the modern layout (steppers, switches, segmented choices...) instead of IMGUI's layout.</summary>
-        // a new key, like UiBackend's: configs from before it was the default say False, which nobody chose
+        // a new key: configs from before it was the default say False, which nobody chose
         [Persistent(pass = (int)Pass.GLOBAL, name = "UiModernLayoutChoice")]
         public bool UiModernLayout = true;
 
@@ -75,7 +66,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool UiSectionHeaders = true;
 
-        /// <summary>Raised after skin, scale, backend or menu settings change, so another UI can follow them.</summary>
+        /// <summary>Raised after skin, scale or menu settings change, so another UI can follow them.</summary>
         public static event Action<MechJebModuleSettings> Changed;
 
         /// <summary>Push the settings to GuiUtils and notify listeners (used by kOS and by this window).</summary>
@@ -106,7 +97,7 @@ namespace MuMech
 
         protected override void WindowGUI(int windowID)
         {
-            int oldSkin = SkinId, oldBackend = UiBackend;
+            int oldSkin = SkinId;
             double oldScale = UIScale.Val;
             bool oldDropDown = DontUseDropDownMenu, oldAdvanced = ShowAdvancedWindowSettings;
 
@@ -182,30 +173,9 @@ namespace MuMech
             Core.Warp.activateSASOnWarp =
                 GUILayout.Toggle(Core.Warp.activateSASOnWarp, Localizer.Format("#MechJeb_Settings_checkbox2")); //"Activate SAS on Warp"
 
-            // only offered when a second UI is installed
-            if (MechJebUiHost.Current != null)
-            {
-                bool kode = GUILayout.Toggle(Backend == UiBackendType.Kode, Localizer.Format("#MechJeb_NewUI_UseNewUI")); //Use the new UI for ported windows (experimental)
-                UiBackend = (int)(kode ? UiBackendType.Kode : UiBackendType.Imgui);
-                if (kode)
-                {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label(Localizer.Format("#MechJeb_NewUI_Opacity"), GuiUtils.LayoutNoExpandWidth); //New UI opacity
-                    float opacity = GUILayout.HorizontalSlider(UiOpacity, 0.3f, 1f, GuiUtils.LayoutExpandWidth);
-                    GUILayout.EndHorizontal();
-                    // ReSharper disable once CompareOfFloatsByEqualityOperator
-                    if (opacity != UiOpacity)
-                    {
-                        UiOpacity = opacity;
-                        Dirty = true;
-                        Changed?.Invoke(this);
-                    }
-                }
-            }
-
             GUILayout.EndVertical();
 
-            if (oldSkin != SkinId || oldBackend != UiBackend || oldScale != UIScale.Val || oldDropDown != DontUseDropDownMenu ||
+            if (oldSkin != SkinId || oldScale != UIScale.Val || oldDropDown != DontUseDropDownMenu ||
                 oldAdvanced != ShowAdvancedWindowSettings)
             {
                 Dirty = true;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using KodeKit;
 using KodeUI;
+using KSP.Localization;
 using KSP.UI;
 using TMPro;
 using UnityEngine;
@@ -10,7 +11,7 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// Draws the ported MechJeb windows with KodeKit when Settings → "Use the new UI" is on.
+    /// Draws MechJeb's windows with KodeKit.
     /// Registers as MechJeb's IMechJebUiHost: MechJebCore.OnGUI then skips the windows drawn here, and its
     /// single click-through lock also covers them (KodeKit's own per-window locks are switched off).
     /// </summary>
@@ -42,8 +43,8 @@ namespace MuMech.UI
 
         readonly Dictionary<DisplayModule, KodeView> views = new Dictionary<DisplayModule, KodeView>();
 
-        // modules whose view threw while it was built: IMGUI draws their windows (OwnsWindow says no) until the views are
-        // made again (another vessel, a layout change)
+        // modules whose view threw while it was built: they have no window until the views are made again (another vessel,
+        // a layout change)
         readonly HashSet<DisplayModule> broken = new HashSet<DisplayModule>();
 
         // views whose per-frame update threw, logged once each; the other windows still update
@@ -51,8 +52,6 @@ namespace MuMech.UI
 
         MechJebCore core;
         MechJebModuleSettings settings;
-
-        bool Kode => settings != null && settings.Backend == MechJebModuleSettings.UiBackendType.Kode;
 
         void Start()
         {
@@ -76,7 +75,7 @@ namespace MuMech.UI
 
         // ---- IMechJebUiHost ----
 
-        public bool OwnsWindow(DisplayModule module) => Kode && module.Core == core && factories.ContainsKey(module.GetType()) && !broken.Contains(module);
+        public bool OwnsWindow(DisplayModule module) => module.Core == core && factories.ContainsKey(module.GetType());
 
         /// <summary>The live view of a module, if it has one (for tests and screenshots).</summary>
         public KodeView ViewOf(DisplayModule module) => views.TryGetValue(module, out KodeView v) ? v : null;
@@ -113,7 +112,7 @@ namespace MuMech.UI
 
             ImguiBlockHost.Skin = GuiUtils.Skin; // unported IMGUI bodies hosted in views use MechJeb's skin
             // MechJebCore.OnGUI's conditions
-            bool show = Kode && core.ShowGui &&
+            bool show = core.ShowGui &&
                 (HighLogic.LoadedSceneIsEditor || core.vessel == FlightGlobals.ActiveVessel && core.part.State != PartStates.DEAD);
 
             List<ComputerModule> modules = core.GetComputerModules<DisplayModule>();
@@ -162,8 +161,8 @@ namespace MuMech.UI
         }
 
         /// <summary>
-        /// Build a module's view. When the build throws, the half-built window is removed, the error logged, and the module
-        /// left to IMGUI, instead of a new half-built window every frame.
+        /// Build a module's view. When the build throws, the half-built window is removed and the player told, instead of a
+        /// new half-built window every frame.
         /// </summary>
         KodeView Build(DisplayModule m, Func<DisplayModule, KodeView> factory)
         {
@@ -180,8 +179,9 @@ namespace MuMech.UI
                 v?.Destroy();
                 views.Remove(m);
                 broken.Add(m);
-                Debug.LogError($"[MechJeb2.UI] the \"{m.GetName()}\" window could not be built; IMGUI draws it instead:");
+                Debug.LogError($"[MechJeb2.UI] the \"{m.GetName()}\" window could not be built:");
                 Debug.LogException(e);
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_NewUI_WindowFailed", m.GetName()), 10, ScreenMessageStyle.UPPER_CENTER);
                 return null;
             }
         }

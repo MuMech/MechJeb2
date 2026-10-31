@@ -50,6 +50,13 @@ namespace MuMech
                     Localizer.Format("#MechJeb_InstallCheckB_msg") + string.Join("\n", badPaths.ToArray()), "OK", false,
                     HighLogic.UISkin); //"Redundant MechJebMenuToolbar Installation""MechJebMenuToolbar is installed but this version of MechJeb2 already includes support for Blizzy78 Toolbar Plugin.\nPlease delete this dll:\n"
             }
+
+            if (AssemblyLoader.loadedAssemblies.All(a => a.assembly.GetName().Name != "MechJeb2.UI"))
+            {
+                PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), "InstallCheckerC",
+                    Localizer.Format("#MechJeb_InstallCheckC_title"), Localizer.Format("#MechJeb_InstallCheckC_msg"), "OK", false,
+                    HighLogic.UISkin); //"MechJeb2.UI is missing""MechJeb2.UI.dll is not in GameData/MechJeb2/Plugins."
+            }
         }
     }
 }

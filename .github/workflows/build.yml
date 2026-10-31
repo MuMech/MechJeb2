@@ -166,7 +166,7 @@ jobs:
           rm -f "$stage"/MechJeb2/Plugins/JetBrains.Annotations.* "$stage"/MechJeb2/Plugins/*.pdb
 
           # copy_build.sh carries on when a copy fails: check that every assembly MechJeb2 needs at runtime made it
-          for dll in MechJeb2 MechJebLib MechJebLibBindings alglib; do
+          for dll in MechJeb2 MechJeb2.UI MechJebLib MechJebLibBindings alglib; do
             test -f "$stage/MechJeb2/Plugins/$dll.dll" || { echo "::error::$dll.dll is missing from the package"; exit 1; }
           done
 
