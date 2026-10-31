@@ -97,6 +97,10 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Tgo(solution.T0, 0).ShouldEqual(156, 1e-6);
             solution.Tgo(solution.T0, 1).ShouldEqual(180, 1e-6);
 
+            // all fixed burn time stages with no coast, so no stage needs a precise shutdown
+            solution.OptimizeKSPStage().ShouldEqual(-1);
+            solution.TerminalKSPStage().ShouldEqual(3);
+
             solution.U(0).normalized.ShouldEqual(new V3(0.68052484128120905, 0.6317658413531414, 0.37115746267392064), 1e-3);
             solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
 

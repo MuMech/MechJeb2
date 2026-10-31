@@ -294,7 +294,15 @@ namespace MechJebLib.PSG
 
         public int TerminalMJPhase() => Phases[Phases.FindIndex(p => p.TerminalStage)].MJPhase;
 
-        public int OptimizeKSPStage() => Phases[Phases.FindIndex(p => p.PreciseShutdown)].KSPStage;
+        // -1 if no stage needs a precise shutdown (e.g. all fixed burn time stages with no coast)
+        public int OptimizeKSPStage()
+        {
+            for (int i = 0; i < Phases.Count; i++)
+                if (Phases[i].PreciseShutdown)
+                    return Phases[i].KSPStage;
+
+            return -1;
+        }
 
         public bool Unguided(double t)
         {

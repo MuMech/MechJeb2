@@ -208,6 +208,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Bt(3, 0).ShouldBeZero(1e-2);
 
             solution.TerminalKSPStage().ShouldEqual(4);
+            solution.OptimizeKSPStage().ShouldEqual(4);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
         }

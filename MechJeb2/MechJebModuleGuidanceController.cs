@@ -166,9 +166,10 @@ namespace MuMech
              * and without RCS cleanup).
              */
 
-            // this handles termination of thrust for final stages of "fixed" burntime rockets (due to residuals Tgo may go less than zero so we
-            // wait for natural termination of thrust).   no support for RCS terminal trim.
-            if (Solution.OptimizeKSPStage() < 0 && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.Time) <= 0 &&
+            // this handles termination of thrust for final stages of "fixed" burntime rockets, or any rocket where the terminal stage is not the
+            // precise shutdown stage and so never gets terminal guidance (due to residuals Tgo may go less than zero so we wait for natural
+            // termination of thrust).   no support for RCS terminal trim.
+            if (Solution.OptimizeKSPStage() != Solution.TerminalKSPStage() && Vessel.currentStage <= Solution.TerminalKSPStage() && Solution.Tgo(VesselState.Time) <= 0 &&
                 VesselState.ThrustAvailable == 0)
             {
                 Done();
