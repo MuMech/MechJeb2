@@ -31,9 +31,9 @@ namespace MuMech.AttitudeControllers
 
         public virtual void OnSave(ConfigNode local, ConfigNode type, ConfigNode global)
         {
-            if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.GLOBAL, null).CopyTo(global.AddNode(GetType().Name));
-            if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.TYPE, null).CopyTo(type.AddNode(GetType().Name));
-            if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.LOCAL, null).CopyTo(local.AddNode(GetType().Name));
+            if (global != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.GLOBAL, global.AddNode(GetType().Name));
+            if (type != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.TYPE, type.AddNode(GetType().Name));
+            if (local != null) ConfigNode.CreateConfigFromObject(this, (int)Pass.LOCAL, local.AddNode(GetType().Name));
         }
 
         public virtual void ResetConfig()
