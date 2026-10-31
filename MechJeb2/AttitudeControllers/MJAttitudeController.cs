@@ -95,6 +95,35 @@ namespace MuMech.AttitudeControllers
             base.OnSave(local, type, global);
         }
 
+        // The window edits copies of these values, and an edit reaches the controller here, as MechJeb2.UI's panel syncs
+        internal void ApplyUiValues()
+        {
+            if (!TfAutoTune)
+            {
+                if (_tfV.x != _uiTfX || _tfV.y != _uiTfY || _tfV.z != _uiTfZ)
+                {
+                    _tfV.x = _uiTfX;
+                    _tfV.y = _uiTfY;
+                    _tfV.z = _uiTfZ;
+                    SetPIDParameters();
+                }
+            }
+            else if (TfMin != _uiTfMin || TfMax != _uiTfMax)
+            {
+                TfMin = _uiTfMin;
+                TfMax = _uiTfMax;
+                SetPIDParameters();
+            }
+
+            if (KpFactor != _uiKpFactor || KiFactor != _uiKiFactor || KdFactor != _uiKdFactor)
+            {
+                KpFactor = _uiKpFactor;
+                KiFactor = _uiKiFactor;
+                KdFactor = _uiKdFactor;
+                SetPIDParameters();
+            }
+        }
+
         private void SetPIDParameters()
         {
             Vector3d invTf = (TfAutoTune ? _tfV : _defaultTfV).InvertNoNaN();
