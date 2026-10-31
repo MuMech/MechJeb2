@@ -281,6 +281,35 @@ namespace KodeKit
             return t;
         }
 
+        static Color Rgb(int rgb, float alpha = 1) => new Color((rgb >> 16 & 255) / 255f, (rgb >> 8 & 255) / 255f, (rgb & 255) / 255f, alpha);
+
+        /// <summary>Skin D, "ZTheme": the purple-tinted dark greys and the green of the ZTheme mod (github.com/zapSNH/ZTheme), read from its
+        /// textures: gen_panel_bg_meui, gen_panel_bg3, rect_round, TrackingStation_Button_Over and _Down, Green_Progress_full.</summary>
+        public static Theme ZTheme(Theme from)
+        {
+            Theme t = from.Copy("ZTheme");
+            var text = Rgb(0xDCDCE0);
+            Color edge = Rgb(0x38343C), panel = Rgb(0x201C24), deep = Rgb(0x18181C);
+            t.Text = text;
+            t.Dim = Rgb(0x9C9C9C);
+            t.Accent = Rgb(0x4CAC50);
+            t.AccentText = Rgb(0x141418);
+            t.Header = Rgb(0x808084);
+            t.Rule = Rgb(0x302C34);
+            t.Window = Rounded(5, panel, edge, text);
+            t.Button = Rounded(4, Rgb(0x4C4C50), edge, text, Rgb(0x686870), Rgb(0x2C2C34), Rgb(0x545458));
+            t.Field = Rounded(3, deep, Rgb(0x302C34), text);
+            t.Toggle = Rounded(3, deep, Rgb(0x5C5C64), text, null, null, Rgb(0x9C9C9C));
+            t.Check = new ElementStyle { Normal = Sprites.Tick, Tint = t.Accent };
+            t.Box = Rounded(4, Rgb(0x28242C), Rgb(0x302C34), text);
+            t.Tooltip = Rounded(4, Rgb(0x18181C, 0.97f), edge, text);
+            t.Primary = Rounded(4, t.Accent, t.Accent, t.AccentText, t.Accent * 1.12f, t.Accent * 0.85f);
+            t.Selected = t.Primary;
+            t.Danger = Rounded(4, new Color(0.71f, 0.28f, 0.23f, 0.15f), new Color(0.71f, 0.28f, 0.23f), new Color(1f, 0.54f, 0.48f),
+                new Color(0.71f, 0.28f, 0.23f, 0.28f));
+            return t;
+        }
+
         // ---- helpers for widgets ----
 
         public void ApplyText(TMP_Text text, Color? color = null)

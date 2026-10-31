@@ -252,8 +252,9 @@ namespace MuMech.UI
             if (skin == MechJebModuleSettings.UiSkinType.ClassicPlus) t = Theme.ClassicPlus(t);
             else if (skin == MechJebModuleSettings.UiSkinType.Flat) t = Theme.Flat(t);
             else if (skin == MechJebModuleSettings.UiSkinType.Glass) t = Theme.Glass(t);
+            else if (skin == MechJebModuleSettings.UiSkinType.ZTheme) t = Theme.ZTheme(t);
             // the drawn skins carry their colour in their sprites: the opacity goes in the tint's alpha only
-            if (skin == MechJebModuleSettings.UiSkinType.Flat || skin == MechJebModuleSettings.UiSkinType.Glass)
+            if (skin == MechJebModuleSettings.UiSkinType.Flat || skin == MechJebModuleSettings.UiSkinType.Glass || skin == MechJebModuleSettings.UiSkinType.ZTheme)
                 t.Window.Tint = new Color(1, 1, 1, opacity);
             return compact ? Theme.Compact(t) : t;
         }
