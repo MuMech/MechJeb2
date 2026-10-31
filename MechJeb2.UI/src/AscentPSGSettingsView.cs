@@ -26,10 +26,10 @@ namespace MuMech.UI
 
         bool hasStages;
 
-        // the logical plan WindowGUI rebuilt before drawing
+        // the flight plan is kept current by MechJebModuleAscentMenu.OnFixedUpdate; this window only shows it
         protected override void BeforeSync()
         {
-            hasStages = menu.UpdateLogicalPlan();
+            hasStages = menu.HasStages;
             stageCount = StageList?.Count ?? 0;
         }
 

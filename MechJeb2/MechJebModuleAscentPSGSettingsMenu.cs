@@ -1,7 +1,4 @@
 extern alias JetBrainsAnnotations;
-using System.Collections.Generic;
-using MechJebLib.FuelFlowSimulation;
-using MechJebLib.PSG;
 using MechJebLibBindings.PSG;
 using UnityEngine;
 
@@ -39,24 +36,9 @@ namespace MuMech
             }
         }
 
-        // Rebuilds the logical plan and requests a flight plan update; true when there are stages to show.
-        // Shared with the new UI, which calls it every frame the window is shown.
-        internal bool UpdateLogicalPlan()
-        {
-            List<FuelStats> vacStats = Core.StageStats.VacStats;
-
-            if (vacStats.Count > 0)
-            {
-                // FIXME: the LogicalPlan updates continuously which can flip the OptimizedStagesFlag which can flip the target conditions that
-                // the PSGSimulation uses.
-                // BUG: this is the only place the logicalplan is created, and this is inaccessible from kOS so this has to get fixed
-                Core.PSGSimulation.LogicalPlan = new PersistedLogicalPlan(LogicalPlan.GenerateLogicalPlan(Core.StageStats.VacStats, _ascentSettings.UnguidedStages, _ascentSettings.FixedStages, _ascentSettings.LastStage, Core.PSGSimulation.MinDeltaV, _ascentSettings.CoastStage, _ascentSettings.CoastLocation));
-
-                Core.PSGSimulation.RequestFlightPlanUpdate();
-            }
-
-            return vacStats.Count > 0;
-        }
+        // True when there are stages to show. The FlightPlan itself is kept current by MechJebModuleAscentMenu.OnFixedUpdate.
+        // Shared with the new UI.
+        internal bool HasStages => Core.StageStats.VacStats.Count > 0;
 
         internal void DrawFlightPlanStages() => Core.PSGSimulation.FlightPlan?.DrawStageGUI();
 
@@ -64,7 +46,7 @@ namespace MuMech
         {
             SetupButtonStyles();
 
-            if (UpdateLogicalPlan())
+            if (HasStages)
                 DrawFlightPlanStages();
 
             GUILayout.BeginVertical(GUI.skin.box);
