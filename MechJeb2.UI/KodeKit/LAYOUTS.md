@@ -15,7 +15,7 @@ The new UI's Settings window has three settings for this. All are saved globally
 
 | Setting | Field | Values | Effect |
 |---|---|---|---|
-| New UI skin | `UiSkin` | Classic, Classic+, Flat, Glass | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
+| New UI skin | `UiSkin` | Classic, Classic+, Flat, Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
 | Modern layout | `UiModernLayout` | off (default) / on | Views build with the widgets below instead of IMGUI's. Changing it rebuilds the open windows. |
 | Section headers | `UiSectionHeaders` | on (default) / off | The headers the modern layout adds to long windows (`KodeWindow.Header`). |
 
@@ -27,11 +27,11 @@ used to compare the three styles window by window, then dropped (2026-10-30).
 
 ## Skins
 
-`Theme.ClassicPlus`, `Theme.Flat` and `Theme.Glass` derive from the base theme (KSP's stock sprites, LiberationSans 13 px,
-MechJeb's row heights). Each sets the accent colour, the header colour, the hairline (`Rule`) colour, and the
-`Primary` / `Danger` / `Selected` button styles. Flat and Glass also replace every sprite with rounded boxes drawn in code
-(`Sprites.RoundedBox`, 9-sliced at the corner radius, cached per parameters). The window opacity setting goes into the
-window tint's alpha.
+`Theme.ClassicPlus`, `Theme.Flat`, `Theme.Glass` and `Theme.ZTheme` derive from the base theme (KSP's stock sprites,
+LiberationSans 13 px, MechJeb's row heights). Each sets the accent colour, the header colour, the hairline (`Rule`) colour,
+and the `Primary` / `Danger` / `Selected` button styles. Flat, Glass and ZTheme also replace every sprite with rounded boxes
+drawn in code (`Sprites.RoundedBox`, 9-sliced at the corner radius, cached per parameters). The window opacity setting goes
+into the window tint's alpha.
 
 **Classic**
 
@@ -55,6 +55,8 @@ window tint's alpha.
   (`Theme.TintRoles`).
 - **Flat**: solid dark panels with 4 to 7 px corners and one green accent.
 - **Glass**: translucent panels with cyan outlines, close to KSP's navball and map HUD.
+- **ZTheme**: purple-tinted dark greys and a green accent, the colours of the ZTheme mod (github.com/zapSNH/ZTheme). It
+  doesn't need that mod.
 
 ## Layouts
 
