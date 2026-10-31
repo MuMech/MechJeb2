@@ -872,6 +872,76 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution2.Vgo(0).ShouldEqual(8101.193073142621, 1e-3);
         }
 
+        // Re-solves from mid-flight after staging, so the new Problem has a different length/time/mass scale than the old
+        // solution (MassScale drops ~4.8x), which the warm start must convert between.
+        [Fact]
+        public void CircularCoastWithinStageResolveAfterStaging()
+        {
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
+            double rbody = 6.371e+6;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
+
+            Ascent ascent = Ascent.Builder()
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .AddCoast(32758.6353093992, 6384.144733613521, 0, 450, 3, 3, massContinuity: true)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
+
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+
+            psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            // just after the stage 4 burnout at ~148s
+            double t1 = 160;
+            double m1 = solution.M(t1);
+
+            Ascent ascent2 = Ascent.Builder()
+               .AddStage(m1, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .AddCoast(m1, 6384.144733613521, 0, 450, 3, 3, massContinuity: true)
+               .AddStage(m1, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, massContinuity: true)
+               .Initial(solution.R(t1), solution.V(t1), solution.U(t1).normalized, t1, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .OldSolution(solution)
+               .Build();
+
+            ascent2.Run();
+
+            Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+
+            (V3 rf, V3 vf) = solution2.TerminalStateVectors();
+
+            (double smaf, double eccf, double incf, double lanf, double _, double _, _) =
+                Astro.KeplerianFromStateVectors(mu, rf, vf);
+
+            psg2.PrimalFeasibility.ShouldBeZero(1e-5);
+            // ~0.33 when the warm start doesn't convert between the old and new scales
+            psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
+
+            solution2.Vgo(t1).ShouldEqual(solution.Vgo(t1), 1e-4);
+
+            double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
+            double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
+
+            perf.ShouldEqual(PeR, 1e-5);
+            aprf.ShouldEqual(ApR, 1e-5);
+            smaf.ShouldEqual(6556000, 1e-5);
+            eccf.ShouldEqual(0, 1e-5);
+            incf.ShouldEqual(incT, 1e-5);
+            lanf.ShouldEqual(Deg2Rad(270), 1e-2);
+        }
+
         // FIXME: this is also testing a pretty extreme elliptical orbit that this rocket technically can't reach,
         // which stresses out the discretization, so some tolerances are lower here.  Should probably use a rocket
         // with more burntime and less snappy upper stage for insertion.
