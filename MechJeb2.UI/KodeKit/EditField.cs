@@ -98,6 +98,7 @@ namespace KodeKit
             input.onDeselect.AddListener(_ => keyLock.Unlock());
             input.onEndEdit.AddListener(_ => keyLock.Unlock());
 
+            set = w.Edits(set);
             bool pushing = false;
             input.text = get();
             Fit(input.text);

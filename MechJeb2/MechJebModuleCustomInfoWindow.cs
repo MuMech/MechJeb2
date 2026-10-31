@@ -396,7 +396,7 @@ namespace MuMech
             foreach (MechJebModuleCustomInfoWindow window in Core.GetComputerModules<MechJebModuleCustomInfoWindow>())
             {
                 string name = typeof(MechJebModuleCustomInfoWindow).Name;
-                var windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.GLOBAL, null);
+                ConfigNode windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.GLOBAL, global.AddNode(name));
 
                 if (HighLogic.LoadedSceneIsEditor)
                     window.EnabledEditor = window.Enabled;
@@ -405,7 +405,6 @@ namespace MuMech
 
                 windowNode.AddValue("enabledFlight", window.EnabledFlight);
                 windowNode.AddValue("enabledEditor", window.EnabledEditor);
-                windowNode.CopyTo(global.AddNode(name));
                 window.Dirty = false;
             }
 

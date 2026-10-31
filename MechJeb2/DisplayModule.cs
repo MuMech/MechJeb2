@@ -11,6 +11,8 @@ namespace MuMech
         // false for sub-windows which are opened from another window instead of from the menu / toolbar
         public virtual bool ShowInMenu => true;
 
+        protected override bool SavesEnabled => true;
+
         public Rect WindowPos
         {
             get => !HighLogic.LoadedSceneIsEditor

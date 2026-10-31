@@ -167,6 +167,7 @@ namespace KodeKit
                 krt.anchoredPosition = new Vector2(on ? -2 : 2, 0);
             }
 
+            set = Edits(set);
             toggle.onValueChanged.AddListener(v =>
             {
                 set(v);
@@ -216,6 +217,7 @@ namespace KodeKit
                 krt.anchoredPosition = new Vector2(shown == 0 ? 2 : on ? -2 : 0, 0);
             }
 
+            set = Edits(set);
             go.GetComponent<ThirdsClick>().Clicked = i =>
             {
                 if (i == shown) return;
@@ -366,6 +368,7 @@ namespace KodeKit
                 cells = box;
             }
 
+            set = Edits(set);
             var buttons = new UIButton[items.Length];
             var bars = new Image[items.Length];
             for (int i = 0; i < items.Length; i++)
@@ -441,6 +444,7 @@ namespace KodeKit
             box.Horizontal().ControlChildSize(true, true).ChildForceExpand(false, true).Spacing(0).Padding(1);
             box.Finish();
 
+            add = Edits(add);
             double Step() => step() * (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ? 10 : 1);
             StepButton(box, "-", () => add(-Step()), repeat);
             TMP_InputField field = EditFields.Field(this, box, text, setText, width, valid);
@@ -482,6 +486,7 @@ namespace KodeKit
         /// </summary>
         public UIButton Chip(UIObject parent, string text, Func<bool> get, Action<bool> set, Color? dot = null)
         {
+            set = Edits(set);
             UIButton b = Button(parent, text, () => set(!get()));
             b.Padding(dot.HasValue ? 6 : 9, 9, 1, 1);
             b.Spacing(4);

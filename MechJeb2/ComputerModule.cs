@@ -40,6 +40,9 @@ namespace MuMech
 
         public int CompareTo(ComputerModule other) => other == null ? 1 : Priority.CompareTo(other.Priority);
 
+        // Autopilots switch their modules on and off all flight: only windows have an enabled state to save
+        protected virtual bool SavesEnabled => false;
+
         private bool _enabled;
 
         public bool Enabled
@@ -50,7 +53,7 @@ namespace MuMech
                 if (value == _enabled) return;
                 if (value && TechLocked) return;
 
-                Dirty = true;
+                if (SavesEnabled) Dirty = true;
                 _enabled = value;
 
                 if (_enabled)
