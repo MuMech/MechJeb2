@@ -56,6 +56,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int UiSkin = (int)UiSkinType.Classic;
 
+        /// <summary>New UI: tighter margins and rows, in every skin. A custom window's own Compact setting overrides it.</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public bool UiCompact = true;
+
         /// <summary>New UI: the modern layout (steppers, switches, segmented choices...) instead of IMGUI's layout.</summary>
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool UiModernLayout;

@@ -216,15 +216,14 @@ namespace MuMech.UI
         }
 
         /// <summary>
-        /// MechJeb skin → KodeKit theme: KSP's stock sprites at MechJeb's text size (MechJeb's DEFAULT and MECH_JEB1), tighter
-        /// for COMPACT, then the new UI's own skin on top (Classic, Flat, Glass, ZTheme).
+        /// The new UI's settings → KodeKit theme: KSP's stock sprites at MechJeb's text size, the new UI's own skin on top (Classic,
+        /// Flat, Glass, ZTheme), tighter with its Compact setting.
         /// </summary>
         void ApplyTheme()
         {
             if (settings == null) return;
             ApplyLayout();
-            Theme t = ThemeFor((MechJebModuleSettings.UiSkinType)settings.UiSkin, (GuiUtils.SkinType)settings.SkinId == GuiUtils.SkinType.COMPACT,
-                settings.UiOpacity);
+            Theme t = ThemeFor((MechJebModuleSettings.UiSkinType)settings.UiSkin, settings.UiCompact, settings.UiOpacity);
             string key = t.Name + "|" + Mathf.Clamp(settings.UiOpacity, 0.3f, 1f).ToString("F2");
             if (key == themeKey) return;
             themeKey = key;

@@ -122,6 +122,12 @@ namespace MuMech.UI
                 Changed();
             }, () => skins);
 
+            w.Toggle(r, "#MechJeb_NewUI_Compact", () => settings.UiCompact, v =>
+            {
+                settings.UiCompact = v;
+                Changed();
+            });
+
             w.Toggle(r, "#MechJeb_NewUI_ModernLayout", () => settings.UiModernLayout, v =>
             {
                 settings.UiModernLayout = v;

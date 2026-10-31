@@ -197,7 +197,15 @@ namespace MuMech.UI
             Layout flags = KodeWindow.Row(r);
             w.Toggle(flags, "#MechJeb_WindowEd_checkbox3", () => edited.IsOverlay, v => edited.IsOverlay = v); //Overlay
             w.Toggle(flags, "#MechJeb_WindowEd_checkbox4", () => edited.WindowLocked, v => edited.WindowLocked = v); //Locked
-            w.Toggle(flags, "#MechJeb_WindowEd_checkbox5", () => edited.IsCompact, v => edited.IsCompact = v); //Compact
+
+            // Compact: off, the new UI's global setting, or on, whichever that one is
+            Layout compact = KodeWindow.Row(r);
+            KodeWindow.Label(compact, "#MechJeb_WindowEd_checkbox5"); //Compact
+            string[] compactNames =
+            {
+                Localizer.Format("#MechJeb_NewUI_CompactOff"), Localizer.Format("#MechJeb_NewUI_CompactFollow"), Localizer.Format("#MechJeb_NewUI_CompactOn")
+            };
+            w.Switch3(compact, compactNames, () => (int)edited.Compact, v => edited.Compact = (MechJebModuleCustomInfoWindow.CompactMode)v);
 
             // Color: [x] Text [x] Background (exclusive), with the picker under them
             Layout color = KodeWindow.Row(r);

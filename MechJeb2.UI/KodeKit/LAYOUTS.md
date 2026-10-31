@@ -11,11 +11,12 @@ Skins and Segmented sections show all four.
 
 ## Settings
 
-The new UI's Settings window has three settings for this. All are saved globally (`MechJebModuleSettings`).
+The new UI's Settings window has four settings for this. All are saved globally (`MechJebModuleSettings`).
 
 | Setting | Field | Values | Effect |
 |---|---|---|---|
 | New UI skin | `UiSkin` | Classic, Flat, Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
+| Compact | `UiCompact` | on (default) / off | Tighter margins and rows, in every skin (`Theme.Compact`). MechJeb's IMGUI skin no longer decides this. A custom window's own Compact switch can follow it, or override it on or off. |
 | Modern layout | `UiModernLayout` | off (default) / on | Views build with the widgets below instead of IMGUI's. Changing it rebuilds the open windows. |
 | Section headers | `UiSectionHeaders` | on (default) / off | The headers the modern layout adds to long windows (`KodeWindow.Header`). |
 
@@ -211,6 +212,15 @@ of its label (proposal 4A, switch on the left), and a click on the label flips i
 
 ```csharp
 w.SwitchRow(parent, "#MechJeb_NodeEd_checkbox1", () => core.Node.Autowarp, v => core.Node.Autowarp = v);
+```
+
+### Switch3 (three positions)
+
+A switch with a knob at the left, middle or right, for a setting that can follow something else: off, follow, on. The position's
+name sits beside it, and a click on a third of the track moves the knob there. The right position takes the accent colour.
+
+```csharp
+w.Switch3(row, names, () => (int)edited.Compact, v => edited.Compact = (MechJebModuleCustomInfoWindow.CompactMode)v);
 ```
 
 ### Stepper

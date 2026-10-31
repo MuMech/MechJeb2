@@ -2,6 +2,7 @@ using System;
 using KodeUI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace KodeKit
@@ -187,6 +188,71 @@ namespace KodeKit
                 Look(Th);
             });
             return toggle;
+        }
+
+        /// <summary>
+        /// A switch with three positions: a pill track with a knob at the left, middle or right, and the position's name beside it.
+        /// A click on a third of the track moves the knob there. The right position is "on", in the accent colour.
+        /// </summary>
+        public Button Switch3(UIObject parent, string[] names, Func<int> get, Action<int> set)
+        {
+            GameObject go = Child(parent.transform, "Switch3", typeof(Image), typeof(Button), typeof(LayoutElement), typeof(ThirdsClick));
+            var le = go.GetComponent<LayoutElement>();
+            var track = go.GetComponent<Image>();
+            var button = go.GetComponent<Button>();
+            GameObject knobGo = Child(go.transform, "Knob", typeof(Image));
+            var knob = knobGo.GetComponent<Image>();
+            knob.sprite = Sprites.Circle;
+            knob.raycastTarget = false;
+            var krt = (RectTransform)knobGo.transform;
+            int shown = get();
+
+            void Look(Theme th)
+            {
+                bool on = shown == 2;
+                Paint(button, track, Sprites.Pill, on ? th.Accent : Alpha(th.Dim, 0.35f), Dimmed, Color.white, Pressed);
+                knob.color = on ? Color.white : Alpha(th.Text, 0.9f);
+                krt.anchorMin = krt.anchorMax = krt.pivot = new Vector2(shown * 0.5f, 0.5f);
+                krt.anchoredPosition = new Vector2(shown == 0 ? 2 : on ? -2 : 0, 0);
+            }
+
+            go.GetComponent<ThirdsClick>().Clicked = i =>
+            {
+                if (i == shown) return;
+                shown = i;
+                set(i);
+                Look(Th);
+            };
+            Styled(go, th =>
+            {
+                float h = Mathf.Round(th.FontSize + 1);
+                le.minWidth = le.preferredWidth = Mathf.Round(h * 2.7f);
+                le.minHeight = le.preferredHeight = h;
+                krt.sizeDelta = new Vector2(h - 4, h - 4);
+                Look(th);
+            });
+            syncs.Add(() =>
+            {
+                int v = get();
+                if (v == shown) return;
+                shown = v;
+                Look(Th);
+            });
+            BoundLabel(parent, () => names[shown]);
+            return button;
+        }
+
+        /// <summary>Tells which third of a control a click landed on, from the left.</summary>
+        sealed class ThirdsClick : MonoBehaviour, IPointerClickHandler
+        {
+            public Action<int> Clicked;
+
+            public void OnPointerClick(PointerEventData e)
+            {
+                var rt = (RectTransform)transform;
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rt, e.position, e.pressEventCamera, out Vector2 p))
+                    Clicked?.Invoke(Mathf.Clamp(Mathf.FloorToInt(3 * (p.x / rt.rect.width + rt.pivot.x)), 0, 2));
+            }
         }
 
         /// <summary>A switch on the left and its label (a click on the label flips it too).</summary>

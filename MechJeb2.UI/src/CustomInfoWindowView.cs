@@ -19,20 +19,25 @@ namespace MuMech.UI
         InfoItemWidgets widgets;
         InfoItem[] built;
         float nextRefresh;
-        bool builtCompact;
-        Theme compact;
-        int compactVersion = -1;
+        MechJebModuleCustomInfoWindow.CompactMode builtCompact;
+        Theme windowTheme;
+        int windowThemeVersion = -1;
 
-        Theme CompactTheme()
+        // the window's own "Compact", on or off whatever the new UI's global one is; null when it follows that, or the two agree
+        Theme WindowTheme()
         {
             Theme current = Theme.Current;
-            if (!window.isCompact || current == null || current.Name.StartsWith("Compact")) return null;
-            if (compactVersion != Theme.Version)
+            MechJebModuleCustomInfoWindow.CompactMode mode = window.Compact;
+            bool compact = mode == MechJebModuleCustomInfoWindow.CompactMode.On;
+            if (current == null || mode == MechJebModuleCustomInfoWindow.CompactMode.Follow || compact == current.Name.StartsWith("Compact"))
+                return null;
+            if (windowThemeVersion != Theme.Version)
             {
-                compact = Theme.Compact(current);
-                compactVersion = Theme.Version;
+                MechJebModuleSettings settings = window.Core.Settings;
+                windowTheme = KodeHost.ThemeFor((MechJebModuleSettings.UiSkinType)settings.UiSkin, compact, settings.UiOpacity);
+                windowThemeVersion = Theme.Version;
             }
-            return compact;
+            return windowTheme;
         }
 
         public CustomInfoWindowView(MechJebModuleCustomInfoWindow window) : base(window) => this.window = window;
@@ -46,9 +51,8 @@ namespace MuMech.UI
             built = window.items.ToArray();
             UIObject r = w.Root;
 
-            // the window's own "Compact" (IMGUI draws it with the compact skin whatever MechJeb's skin is)
-            builtCompact = window.isCompact;
-            w.Behaviour.ThemeOverride = CompactTheme;
+            builtCompact = window.Compact;
+            w.Behaviour.ThemeOverride = WindowTheme;
             w.Behaviour.Restyle(); // the frame and title bar were styled before the override existed
 
             // the title follows renames from the editor
@@ -82,7 +86,7 @@ namespace MuMech.UI
             });
 
             // IMGUI's window is 250 wide and wraps long values: same width for the rows (minus the window's side padding)
-            widgets = new InfoItemWidgets(w) { TextColor = () => window.text, RowWidth = MinWidth - 2 * Theme.Current.Padding };
+            widgets = new InfoItemWidgets(w) { TextColor = () => window.text, RowWidth = MinWidth - 2 * w.Behaviour.Theme.Padding };
             foreach (InfoItem item in built)
             {
                 if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
@@ -111,7 +115,7 @@ namespace MuMech.UI
 
         protected override void BeforeSync()
         {
-            if (Changed() || window.isCompact != builtCompact)
+            if (Changed() || window.Compact != builtCompact)
             {
                 RebuildRequested = true;
                 return;

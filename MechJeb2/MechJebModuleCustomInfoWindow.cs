@@ -32,6 +32,26 @@ namespace MuMech
             {
                 Dirty = isCompact != value;
                 isCompact = value;
+                if (value) isNotCompact = false;
+            }
+        }
+
+        // the new UI's three positions: a window with neither flag follows the global setting, which every window saved before
+        // this does. IMGUI only reads isCompact.
+        public enum CompactMode { Off, Follow, On }
+
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
+        public bool isNotCompact;
+
+        public CompactMode Compact
+        {
+            get => isCompact ? CompactMode.On : isNotCompact ? CompactMode.Off : CompactMode.Follow;
+            set
+            {
+                if (value == Compact) return;
+                isCompact = value == CompactMode.On;
+                isNotCompact = value == CompactMode.Off;
+                Dirty = true;
             }
         }
 

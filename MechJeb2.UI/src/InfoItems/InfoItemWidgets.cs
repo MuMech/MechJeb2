@@ -239,7 +239,7 @@ namespace MuMech.UI
                         Grow(s?.Length ?? 0);
                         return;
                     }
-                    Theme th = Theme.Current;
+                    Theme th = w.Behaviour.Theme; // the window's: a custom window can have its own Compact
                     float room = Mathf.Max(60, RowWidth - TextMeasure.Measure(item.localizedName, th).x - 12);
                     Vector2 natural = TextMeasure.Measure(s ?? "", th);
                     // the text fills its cell (no inner margin): it wraps only when it doesn't fit the room itself
