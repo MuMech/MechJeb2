@@ -69,6 +69,8 @@ namespace MuMech.UI
             MechJebUiHost.Unregister(this);
             MechJebModuleSettings.Changed -= OnSettingsChanged;
             DestroyViews();
+            // this closure would keep the host, and through it the vessel's MechJeb, in memory until the next scene's host
+            KodeWindow.TitleBarOnly = () => false;
         }
 
         // ---- IMechJebUiHost ----

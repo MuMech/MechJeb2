@@ -104,6 +104,9 @@ namespace KodeKit
             instance.blocks.Add(b);
         }
 
+        // this host dies with its scene: the static field would keep its blocks, and the views they draw, in memory until the next block
+        void OnDestroy() => instance = null;
+
         void OnGUI()
         {
             blocks.RemoveAll(b => !b.Alive);
