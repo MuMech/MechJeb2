@@ -4,10 +4,15 @@ using UnityEngine.UI;
 
 namespace KodeUI
 {
-    public class Window : LayoutPanel, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class Window : LayoutPanel
     {
-        private bool isDragging = false;
         private RectTransform canvasRectTransform;
+		Titlebar _titlebar;
+		public Titlebar titlebar
+		{
+			get { return _titlebar; }
+			private set { _titlebar = value; }
+		}
         
         public override void CreateUI()
         {
@@ -16,48 +21,25 @@ namespace KodeUI
             // Should be handled in UIObject with more Properties ? It would make moving to a new canvas easier ?
             Canvas canvas = GetComponentInParent<Canvas>();
             canvasRectTransform = canvas.GetComponent<RectTransform>();
-            
-            BackgroundColor(Color.white);
+
+			Add<Titlebar>(out _titlebar).Window(this).Finish();
         }
 
         public override void Style()
         {
             base.Style();
-            ImageLoader.SetupImage(BackGround,"KodeUI/Default/window");
+
+            BackGround.sprite = style.sprite;
+            BackGround.color = style.color ?? UnityEngine.Color.white;
+            BackGround.type = style.type ?? UnityEngine.UI.Image.Type.Sliced;
+
             Padding(4, 4, 0, 4);
         }
 
-        public virtual void OnDrag(PointerEventData eventData)
-        {
-            if (!isDragging) 
-                return;
-            
-            // TODO test  getting the event position  in the  window and in the canvas  and use that to move instead  of delta ?
-
-            // For our use case rectTransform.localPosition += eventData.delta works fine but this should solve the general case
-            Vector2 currentPos;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, eventData.position, eventData.pressEventCamera, out currentPos);
-            Vector2 previousPos;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRectTransform, eventData.position - eventData.delta, eventData.pressEventCamera, out previousPos);
-
-            Vector3 localDelta = currentPos - previousPos;
-            rectTransform.localPosition += localDelta;
-        }
-        
-        public virtual void OnBeginDrag(PointerEventData eventData)
-        {
-            if (eventData.pointerCurrentRaycast.gameObject == null)
-                return;
-
-            if (eventData.pointerCurrentRaycast.gameObject == gameObject)
-            {
-                isDragging = true;
-            }
-        }
-
-        public virtual void OnEndDrag(PointerEventData eventData)
-        {
-            isDragging = false;
-        }
+		public Window Title (string title)
+		{
+			titlebar.Title (title);
+			return this;
+		}
     }
 }

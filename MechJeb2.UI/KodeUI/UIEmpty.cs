@@ -14,5 +14,14 @@ namespace KodeUI
         public override void Style()
         {
         }
+
+		protected override string GetStylePath(bool isParent=false)
+		{
+			if (isParent) {
+				return GetParentStylePath ();
+			} else {
+				return base.GetStylePath(isParent);
+			}
+		}
     }
 }

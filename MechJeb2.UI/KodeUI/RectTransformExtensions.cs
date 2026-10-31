@@ -113,18 +113,21 @@ namespace KodeUI
                 {
                     source.anchorMin = new Vector2(0, 1);
                     source.anchorMax = new Vector2(1, 1);
+                    source.sizeDelta = source.sizeDelta.SetX(0);
                     break;
                 }
                 case (AnchorPresets.HorStretchMiddle):
                 {
                     source.anchorMin = new Vector2(0, 0.5f);
                     source.anchorMax = new Vector2(1, 0.5f);
+                    source.sizeDelta = source.sizeDelta.SetX(0);
                     break;
                 }
                 case (AnchorPresets.HorStretchBottom):
                 {
                     source.anchorMin = new Vector2(0, 0);
                     source.anchorMax = new Vector2(1, 0);
+                    source.sizeDelta = source.sizeDelta.SetX(0);
                     break;
                 }
  
@@ -132,18 +135,21 @@ namespace KodeUI
                 {
                     source.anchorMin = new Vector2(0, 0);
                     source.anchorMax = new Vector2(0, 1);
+                    source.sizeDelta = source.sizeDelta.SetY(0);
                     break;
                 }
                 case (AnchorPresets.VertStretchCenter):
                 {
                     source.anchorMin = new Vector2(0.5f, 0);
                     source.anchorMax = new Vector2(0.5f, 1);
+                    source.sizeDelta = source.sizeDelta.SetY(0);
                     break;
                 }
                 case (AnchorPresets.VertStretchRight):
                 {
                     source.anchorMin = new Vector2(1, 0);
                     source.anchorMax = new Vector2(1, 1);
+                    source.sizeDelta = source.sizeDelta.SetY(0);
                     break;
                 }
  
@@ -151,6 +157,7 @@ namespace KodeUI
                 {
                     source.anchorMin = new Vector2(0, 0);
                     source.anchorMax = new Vector2(1, 1);
+                    source.sizeDelta = Vector2.zero;
                     break;
                 }
             }

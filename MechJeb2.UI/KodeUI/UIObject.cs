@@ -27,6 +27,22 @@ namespace KodeUI
             }
         }
 
+        LayoutDebug layoutDebug;
+        public LayoutDebug LayoutDebug
+        {
+            get {
+                if (layoutDebug == null) {
+                    layoutDebug = GetComponent<LayoutDebug> ();
+                }
+                return layoutDebug;
+            }
+        }
+        public UIObject DebugLayout()
+        {
+            gameObject.AddComponent<LayoutDebug> ();
+            return this;
+        }
+
         private LayoutElement _layoutElement;
         public LayoutElement LayoutElement
         {
@@ -110,10 +126,21 @@ namespace KodeUI
         {
             return _canvasGroup != null;
         }
+
+        private ToggleGroup _toggleGroup;
+        public ToggleGroup toggleGroup { get { return _toggleGroup; } }
     
         public abstract void CreateUI();
 
         public abstract void Style();
+
+        public Style style { get; private set; }
+        private Skin _skin;
+        public Skin skin
+        {
+            get { return _skin; }
+            set { _skin = value; SetupStyle(); }
+        }
 
         public T Add<T>(string id = null) where T : UIObject
         {
@@ -131,15 +158,73 @@ namespace KodeUI
             return child;
         }
 
+        public void SetupStyle()
+        {
+            Skin skin = GetSkin ();
+            string stylePath = GetStylePath ();
+            style = skin[stylePath];
+            //Debug.Log($"[UIObject] SetupStyle {stylePath} {skin.ContainsStyle(stylePath)}");
+        }
+
+        public UIObject SetSkin(string skinName)
+        {
+            skin = Skin.GetSkin(skinName);
+            return this;
+        }
+
+        public UIObject SetSkin(Skin skin)
+        {
+            this.skin = skin;
+            return this;
+        }
+
+        protected UIObject GetParent()
+        {
+            if (rectTransform.parent) {
+                UIObject parent = rectTransform.parent.GetComponent<UIObject>();
+                return parent;
+            }
+            return null;
+        }
+
+        protected string GetParentStylePath()
+        {
+            if (skin == null) {
+                UIObject parent = GetParent ();
+                if (parent != null) {
+                    return parent.GetStylePath(true);
+                }
+            }
+            return "";
+        }
+
+        protected virtual string GetStylePath(bool isParent=false)
+        {
+            string path = GetParentStylePath ();
+            if (path.Length > 0) {
+                path = path + ".";
+            }
+            return path + gameObject.name;
+        }
+
         public UIObject Finish()
         {
             Style();
 
-            if (!rectTransform.parent)
-                return null;
-
-            UIObject parent = rectTransform.parent.GetComponent<UIObject>();
+            UIObject parent = GetParent ();
             return parent != null ? parent : this;
+        }
+
+        protected Skin GetSkin()
+        {
+            if (skin != null) {
+                return skin;
+            }
+            UIObject parent = GetParent ();
+            if (parent != null) {
+                return parent.GetSkin();
+            }
+            return Skin.defaultSkin;
         }
 
         public Vector2 GetParentSize ()
@@ -189,6 +274,7 @@ namespace KodeUI
         {
             rectTransform.anchorMin = min;
             rectTransform.anchorMax = max;
+            rectTransform.sizeDelta = Vector2.zero;
             return this;
         }
 
@@ -277,6 +363,14 @@ namespace KodeUI
             return this;
         }
 
+        public UIObject IgnoreLayout (bool ignore)
+        {
+            if (!LayoutElement)
+                gameObject.AddComponent<LayoutElement>();
+            LayoutElement.ignoreLayout = ignore;
+            return this;
+        }
+
         public UIObject FlexibleLayout(bool w, bool h)
         {
             return FlexibleLayout (w ? 1 : -1, h ? 1 : -1);
@@ -315,10 +409,69 @@ namespace KodeUI
             LayoutElement.preferredHeight = h;
             return this;
         }
+
+        public UIObject MinSize(float w, float h)
+        {
+            if (!LayoutElement)
+                gameObject.AddComponent<LayoutElement>();
+            LayoutElement.minWidth = w;
+            LayoutElement.minHeight = h;
+            return this;
+        }
+
+        public UIObject ToggleGroup(out ToggleGroup toggleGroup, bool allowOff = false)
+        {
+            ToggleGroup(allowOff);
+            toggleGroup = _toggleGroup;
+            return this;
+        }
+
+        public UIObject ToggleGroup(bool allowOff = false)
+        {
+            _toggleGroup = gameObject.AddComponent<ToggleGroup>();
+            _toggleGroup.allowSwitchOff = allowOff;
+            return this;
+        }
         
         public UIObject BlocksRaycasts(bool state)
         {
             CanvasGroup.blocksRaycasts = state;
+            return this;
+        }
+
+        public UIObject Transition(Selectable.Transition transition)
+        {
+            style.transition = transition;
+            return this;
+        }
+
+        public UIObject StateColors(ColorBlock colors)
+        {
+            style.stateColors = colors;
+            return this;
+        }
+
+        public UIObject StateSprites(SpriteState sprites)
+        {
+            style.stateSprites = sprites;
+            return this;
+        }
+
+        public UIObject Color (Color color)
+        {
+            style.color = color;
+            return this;
+        }
+
+        public UIObject Sprite (Sprite sprite)
+        {
+            style.sprite = sprite;
+            return this;
+        }
+
+        public UIObject SetActive (bool active)
+        {
+            gameObject.SetActive (active);
             return this;
         }
     }

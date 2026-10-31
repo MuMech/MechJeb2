@@ -83,11 +83,10 @@ namespace KodeUI
 			rectTransform.anchoredPosition = Vector2.zero;
 			
 			backGround = gameObject.AddComponent<Image>();
-			backGround.color = Color.clear;;
 
 			scrollRect = gameObject.AddComponent<ScrollRect>();
 
-			Add<Viewport>(out viewport).Anchor(AnchorPresets.StretchAll).SizeDelta(0, 0)
+			Add<Viewport>(out viewport, "Viewport").Anchor(AnchorPresets.StretchAll).SizeDelta(0, 0)
 				.Add<Layout>(out content, "Content")
 			.Finish();
 			Viewport = viewport;
@@ -97,6 +96,9 @@ namespace KodeUI
 		public override void Style()
 		{
 			base.Style();
+			backGround.sprite = style.sprite;
+			backGround.color = style.color ?? UnityEngine.Color.clear;
+			backGround.type = style.type ?? Image.Type.Sliced;
 		}
 
 		public ScrollView Background(Sprite sprite, Image.Type type =  Image.Type.Simple)

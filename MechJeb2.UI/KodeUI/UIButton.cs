@@ -5,60 +5,85 @@ using UnityEngine.UI;
 
 namespace KodeUI
 {
-    public class UIButton : Layout
+    public class UIButton : LayoutAnchor
     {
+        private Layout content;
         private UIText childText;
         private UIImage childImage;
-        private Button button;
+        protected Button button;
         private Image image;
+
+        public Layout Content { get { return content; } }
+        public UIText ChildText { get { return childText; } }
+        public UIImage ChildImage { get { return childImage; } }
+
+        public bool interactable
+        {
+            get { return button.interactable; }
+            set { button.interactable = value; }
+        }
 
         public override void CreateUI()
         {
-            Horizontal().ChildForceExpand(false, false).ControlChildSize(true, true).Pivot(PivotPresets.TopLeft);
-
-            // TODO UIButton (and UIToggle) seems to share the base of a UIPanel ? Use that as parent ?
+            base.CreateUI();
+            this.DoPreferredWidth(true)
+                .DoPreferredHeight(true)
+                .DoMinWidth(true)
+                .DoMinHeight(true)
+                .Add<Layout> (out content)
+                    .Horizontal()
+                    .Padding(3)
+                    .ChildForceExpand(false, false)
+                    .ControlChildSize(true, true)
+                    .Anchor(AnchorPresets.StretchAll)
+                    .SizeDelta(0, 0)
+                    .Finish();
 
             image = gameObject.AddComponent<Image>();
-            
-            image.color = Color.white;
 
             button = gameObject.AddComponent<Button>();
             button.targetGraphic = image;
-
-            ColorBlock colors = button.colors;
-            colors.highlightedColor = new Color(0.882f, 0f, 0.882f);
-            colors.pressedColor     = new Color(0.0f, 0.8f, 0.1f);
-            colors.disabledColor    = new Color(0f, 0f, 0f);
-            colors.normalColor      = Color.white;
-            button.colors = colors;
-            
         }
 
         public override void Style()
         {
-            ImageLoader.SetupImage(image,"KodeUI/Default/button_on");
-            Padding(3);
+
+            button.transition = style.transition ?? Selectable.Transition.ColorTint;
+            if (style.stateSprites.HasValue) {
+                button.spriteState = style.stateSprites.Value;
+            }
+            button.colors = style.stateColors ?? ColorBlock.defaultColorBlock;
+
+            image.sprite = style.sprite;
+            image.color = style.color ?? UnityEngine.Color.white;
+            image.type = style.type ?? UnityEngine.UI.Image.Type.Sliced;
         }
         
         public UIButton Text(string text)
         {
-			if (childText == null) {
-				Add<UIText>(out childText, "ButtonText").Text(text).Alignment(TextAlignmentOptions.Center).Anchor(AnchorPresets.StretchAll).Width(0).Height(0).Finish();
-			} else {
-				childText.Text(text);
-			}
+            if (childText == null) {
+                content.Add<UIText>(out childText, "ButtonText").Text(text).Alignment(TextAlignmentOptions.Center).Anchor(AnchorPresets.StretchAll).SizeDelta(0,0).FlexibleLayout(true, true).Finish();
+            } else {
+                childText.Text(text);
+            }
             return this;
         }
 
-		public UIButton Image(Sprite sprite)
-		{
-			if (childImage == null) {
-				Add<UIImage>(out childImage, "ButtomImage").Image(sprite).Anchor(AnchorPresets.StretchAll).Width(0).Height(0).Finish();
-			} else {
-				childImage.Image(sprite);
-			}
+        public UIButton Image(Sprite sprite)
+        {
+            if (childImage == null) {
+                content
+					.Add<UIImage>(out childImage, "ButtonImage")
+					.Image(sprite)
+					.Anchor(AnchorPresets.StretchAll)
+					.SizeDelta(0, 0)
+					.FlexibleLayout(true, true)
+					.Finish();
+            } else {
+                childImage.Image(sprite);
+            }
             return this;
-		}
+        }
 
         public UIButton OnClick(UnityAction action)
         {

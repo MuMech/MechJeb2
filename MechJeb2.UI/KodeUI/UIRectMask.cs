@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace KodeUI
 {
-    public class UIRectMask : Layout
+    public class UIRectMask : UIObject
     {
         public RectMask2D mask { get; private set; }
 
@@ -12,6 +12,10 @@ namespace KodeUI
         {
             Pivot(PivotPresets.TopLeft);
             mask = gameObject.AddComponent<RectMask2D>();
+        }
+
+        public override void Style()
+        {
         }
     }
 }

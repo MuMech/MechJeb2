@@ -79,6 +79,7 @@ namespace MuMech.UI
             }
             UIToggle t = parent.Add<UIToggle>();
             t.PreferredSize(16, 16).Finish();
+            t.CheckMark.Scale(0.625f);
             Toggle toggle = t.GetComponent<Toggle>();
             toggle.SetIsOnWithoutNotify(get());
             toggle.onValueChanged.AddListener(v => set(v));
@@ -292,11 +293,11 @@ namespace MuMech.UI
                 ss.target = bt;
                 if (engage) ss.Engage();
             }, true);
-            b.Padding(5, 5, 5, 5);
+            b.Content.Padding(5, 5, 5, 5);
             if (marker.HasValue)
             {
                 Sprites.Marker m = marker.Value;
-                b.Spacing(4);
+                b.Content.Spacing(4);
                 Image icon = KodeWindow.AddIcon(b, Sprites.NavballMarker(m), true);
                 icon.name = "Marker"; // keeps its navball colour when the tile is selected
                 var le = icon.GetComponent<LayoutElement>();

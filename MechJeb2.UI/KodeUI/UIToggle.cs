@@ -1,39 +1,78 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 namespace KodeUI
 {
-    public class UIToggle : UIToggleBase
+    public class UIToggle : UIObject
     {
-        private LayoutPanel checkMark;
-        private Image image;
+        protected UIImage checkMark;
+        protected Image image;
+        protected Toggle toggle;
+
+        public UIImage CheckMark { get { return checkMark; } }
+        public Image Image { get { return image; } }
+
+        public bool interactable
+        {
+            get { return toggle.interactable; }
+            set { toggle.interactable = value; }
+        }
+
+        public bool isOn
+        {
+            get { return toggle.isOn; }
+            set { toggle.isOn = value; }
+        }
 
         public override void CreateUI()
         {
-            base.CreateUI();
-            
+            Pivot(PivotPresets.MiddleCenter);
+            toggle = gameObject.AddComponent<Toggle>();
+
             image = gameObject.AddComponent<Image>();
             toggle.targetGraphic = image;
 
-            ColorBlock colors = toggle.colors;
-            colors.highlightedColor = Color.magenta;
-            colors.pressedColor     = new Color(0.0f, 0.8f, 0.1f);
-            colors.disabledColor    = Color.clear;
-            colors.normalColor      = Color.white;
-            toggle.colors = colors;
-            
-            Add<LayoutPanel>(out checkMark, "CheckMark").Anchor(AnchorPresets.StretchAll).Pivot(PivotPresets.MiddleCenter).Scale(0.625f).Finish();
-            toggle.graphic = checkMark.BackGround;
+            Add<UIImage>(out checkMark, "CheckMark").Anchor(AnchorPresets.StretchAll).Pivot(PivotPresets.MiddleCenter).SizeDelta(0, 0).Finish();
+            toggle.graphic = checkMark.image;
+        }
 
-            // TODO This should be handled in a parent class with some logic related to Stretch axis. In Finish ? Might need something similar with anchoredPosition
-            checkMark.rectTransform.sizeDelta = Vector2.zero;
+        public UIToggle OnValueChanged(UnityAction<bool> action)
+        {
+            toggle.onValueChanged.AddListener(action);
+            return this;
         }
 
         public override void Style()
         {
-            base.Style();
-            ImageLoader.SetupImage(image,"KodeUI/Default/toggle");
-            checkMark.Background("KodeUI/Default/toggle_on").BackgroundColor(Color.white);
+            image.sprite = style.sprite;
+            image.color = style.color ?? UnityEngine.Color.white;
+            image.type = style.type ?? UnityEngine.UI.Image.Type.Sliced;
+
+            toggle.colors = style.stateColors ?? ColorBlock.defaultColorBlock;
+            toggle.transition = style.transition ?? Selectable.Transition.ColorTint;
+            if (style.stateSprites.HasValue) {
+                toggle.spriteState = style.stateSprites.Value;
+            }
+
         }
+
+        public UIToggle SetIsOnWithoutNotify(bool on)
+        {
+            toggle.SetIsOnWithoutNotify(on);
+            return this;
+        }
+
+        public UIToggle Group(ToggleGroup group)
+        {
+            toggle.group = group;
+            return this;
+        }
+
+		public void OnPointerClick(PointerEventData eventData)
+		{
+			toggle.OnPointerClick (eventData);
+		}
     }
 }

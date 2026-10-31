@@ -11,8 +11,15 @@ namespace KodeUI
 
 		public static Sprite GetSprite(string name)
 		{
-			Sprite s = null;
+			if (String.IsNullOrEmpty (name)) {
+				return null;
+			}
+			Sprite s;
 			sprites.TryGetValue (name, out s);
+			Debug.Log ($"[SpriteLoader] GetSprite {name} {s}");
+			if (s == null) {
+				return null;
+			}
 			return Sprite.Instantiate(s);
 		}
 

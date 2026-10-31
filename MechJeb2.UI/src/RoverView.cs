@@ -130,7 +130,7 @@ namespace MuMech.UI
         public static UIButton StateButton(KodeWindow w, UIObject parent, string text, Action click, Func<bool> active, bool flexible = true)
         {
             UIButton b = KodeWindow.Button(parent, text, click, flexible);
-            b.ChildAlignment(TextAnchor.MiddleLeft);
+            b.Content.ChildAlignment(TextAnchor.MiddleLeft);
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.alignment = TextAlignmentOptions.Left;
             w.ToneText(label, () => active() ? KodeWindow.Tone.Good : KodeWindow.Tone.Normal, true);

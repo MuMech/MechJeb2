@@ -123,7 +123,7 @@ namespace KodeKit
             var img = b.GetComponent<Image>();
             Paint(b.GetComponent<Button>(), img, st.Normal, st.Tint, Color.white, new Color(0.92f, 0.92f, 0.92f), new Color(0.78f, 0.78f, 0.78f));
             foreach (TMP_Text label in b.GetComponentsInChildren<TMP_Text>(true)) th.ApplyText(label, st.TextColor);
-            foreach (Transform c in b.transform)
+            foreach (Transform c in b.Content.transform)
                 if (c.name == "Icon") c.GetComponent<Image>().color = st.TextColor;
         }
 
@@ -372,10 +372,10 @@ namespace KodeKit
             {
                 int k = i;
                 UIButton b = Button(cells, items[i], () => set(k));
-                if (s == ChoiceStyle.Pills) b.Padding(9, 9, 1, 1);
+                if (s == ChoiceStyle.Pills) b.Content.Padding(9, 9, 1, 1);
                 if (s == ChoiceStyle.Tabs)
                 {
-                    b.Padding(1, 1, 2, 4);
+                    b.Content.Padding(1, 1, 2, 4);
                     bars[i] = Overlay(b, "Underline", new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 2));
                 }
                 // a choice needs no flash: its new fill already says it happened
@@ -461,7 +461,7 @@ namespace KodeKit
         static UIButton StepButton(UIObject parent, string text, Action onClick, bool repeat)
         {
             UIButton b = repeat ? RepeatButton(parent, text, onClick) : Button(parent, text, onClick);
-            b.Padding(4, 4, 0, 0);
+            b.Content.Padding(4, 4, 0, 0);
             var le = b.GetComponent<LayoutElement>();
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             Styled(b.gameObject, th =>
@@ -483,8 +483,8 @@ namespace KodeKit
         public UIButton Chip(UIObject parent, string text, Func<bool> get, Action<bool> set, Color? dot = null)
         {
             UIButton b = Button(parent, text, () => set(!get()));
-            b.Padding(dot.HasValue ? 6 : 9, 9, 1, 1);
-            b.Spacing(4);
+            b.Content.Padding(dot.HasValue ? 6 : 9, 9, 1, 1);
+            b.Content.Spacing(4);
             UnityEngine.Object.Destroy(b.GetComponent<ClickFlash>());
             Image dotImg = null;
             if (dot.HasValue)
@@ -557,6 +557,7 @@ namespace KodeKit
                 p.BackGround.sprite = Sprites.Pill;
                 p.BackGround.type = Image.Type.Sliced;
                 p.BackGround.color = Alpha(c, 0.2f);
+                p.BackGround.enabled = true;
                 th.ApplyText(t.tmpText, c);
                 t.tmpText.fontSize = Mathf.Round(th.FontSize * 0.8f);
                 t.tmpText.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
@@ -587,6 +588,7 @@ namespace KodeKit
                 p.BackGround.sprite = Sprites.Rounded;
                 p.BackGround.type = Image.Type.Sliced;
                 p.BackGround.color = Alpha(c, 0.14f);
+                p.BackGround.enabled = true;
                 edge.color = c;
             }
 
@@ -900,9 +902,9 @@ namespace KodeKit
         static void FlatIcon(UIButton b, bool close)
         {
             UnityEngine.Object.Destroy(b.GetComponent<ClickFlash>());
-            b.Padding(2);
+            b.Content.Padding(2);
             var le = b.gameObject.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
-            Transform iconT = b.transform.Find("Icon");
+            Transform iconT = b.Content.transform.Find("Icon");
             Image icon = iconT != null ? iconT.GetComponent<Image>() : null;
             TMP_Text text = icon == null ? b.GetComponentInChildren<TMP_Text>() : null;
             Styled(b.gameObject, th =>
