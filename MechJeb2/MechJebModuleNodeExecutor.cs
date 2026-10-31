@@ -380,20 +380,22 @@ namespace MuMech
         // stock checks for maneuver termination, and probably never in principia (see SafeCurrentPrincipiaNode()).
         private double AngleFromNode()
         {
-            //Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
-            Vector3d fwd = VesselState.Forward;
             Vector3d dir = Vessel.patchedConicSolver.maneuverNodes[0].GetBurnVector(Orbit).normalized;
-            return SafeAcos(Vector3d.Dot(fwd, dir));
+            return SafeAcos(Vector3d.Dot(BurnAxis(), dir));
         }
 
         // This returns the angle to saved inertial direction (in radians).
         private double AngleFromDirection()
         {
-            //Vector3d fwd = Quaternion.FromToRotation(VesselState.forward, VesselState.thrustForward) * VesselState.forward;
-            Vector3d fwd = VesselState.Forward;
             Vector3d dir = _worldDirection.normalized;
-            return SafeAcos(Vector3d.Dot(fwd, dir));
+            return SafeAcos(Vector3d.Dot(BurnAxis(), dir));
         }
+
+        // The axis SetAttitude points at the burn (INERTIAL_COT): the thrust axis, or forward when differential throttle is
+        // on (the attitude controller ignores the thrust axis then) or no engine gives one. Measuring the angle from forward
+        // instead never reached the alignment tolerance when the thrust is off the forward axis.
+        private Vector3d BurnAxis() =>
+            Core.Thrust.DifferentialThrottle || VesselState.ThrustForward.sqrMagnitude < 0.5 ? VesselState.Forward : VesselState.ThrustForward;
 
         // This handles safely getting the current burning node in Principia without grabbing any subsequent node after
         // principia cleans it up for us.
