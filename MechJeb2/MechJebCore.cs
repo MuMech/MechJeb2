@@ -1017,14 +1017,14 @@ namespace MuMech
                 Profiler.BeginSample("MechJebCore.OnSave.type");
                 if (type != null && vessel != null)
                 {
-                    type.Save(MuUtils.GetTypeCfgPath(vessel.vesselName));
+                    ConfigNodeWriter.Save(type, MuUtils.GetTypeCfgPath(vessel.vesselName));
                 }
 
                 Profiler.EndSample();
                 Profiler.BeginSample("MechJebCore.OnSave.global");
                 if (global != null && _lastFocus == vessel)
                 {
-                    global.Save(MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
+                    ConfigNodeWriter.Save(global, MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
                 }
 
                 Profiler.EndSample();
