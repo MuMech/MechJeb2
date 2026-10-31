@@ -359,11 +359,12 @@ namespace MechJebLibTest.TwoBodyTests
             yield return new object[] { 1.0, 1.0, r, nan };
         }
 
-        // on a thread, so that a solve that never returns fails its test instead of hanging the whole run
+        // on a thread of its own, so that a solve that never returns fails its test instead of hanging the whole run, and the
+        // time limit doesn't run out waiting for a thread pool that the other tests are keeping busy
         private static void AssertFails(Action solve)
         {
             AggregateException e = Assert.Throws<AggregateException>(() =>
-                Assert.True(Task.Run(solve).Wait(TimeSpan.FromSeconds(30)), "Shepperd never returned"));
+                Assert.True(Task.Factory.StartNew(solve, TaskCreationOptions.LongRunning).Wait(TimeSpan.FromSeconds(30)), "Shepperd never returned"));
             Assert.IsType<InvalidOperationException>(e.InnerException);
         }
 

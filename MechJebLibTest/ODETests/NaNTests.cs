@@ -23,8 +23,10 @@ namespace MechJebLibTest.ODETests
             yield return new object[] { new Tsit5() };
         }
 
-        // on a thread, so that a solver that never returns fails its test instead of hanging the whole run
-        private static void Run(Action action) => Assert.True(Task.Run(action).Wait(TimeSpan.FromSeconds(30)), "the solver never returned");
+        // on a thread of its own, so that a solver that never returns fails its test instead of hanging the whole run, and the
+        // time limit doesn't run out waiting for a thread pool that the other tests are keeping busy
+        private static void Run(Action action) =>
+            Assert.True(Task.Factory.StartNew(action, TaskCreationOptions.LongRunning).Wait(TimeSpan.FromSeconds(30)), "the solver never returned");
 
         private static void AssertFails(Action action)
         {
