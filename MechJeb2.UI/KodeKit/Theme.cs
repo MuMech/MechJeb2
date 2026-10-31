@@ -79,9 +79,6 @@ namespace KodeKit
         /// <summary>Hairlines: the tabs' base line, separators.</summary>
         public Color Rule = new Color(1, 1, 1, 0.14f);
 
-        /// <summary>Primary and danger buttons without a style of their own are tinted (Classic+); off, they look plain, as in IMGUI (Classic).</summary>
-        public bool TintRoles;
-
         // the tinted role looks, made once per role and Button (Role is called on every restyle of every role button)
         ElementStyle[] tinted;
         ElementStyle tintedFrom;
@@ -92,7 +89,6 @@ namespace KodeKit
         {
             ElementStyle own = role == ButtonRole.Primary ? Primary : role == ButtonRole.Danger ? Danger : role == ButtonRole.Selected ? Selected : null;
             if (own != null || role == ButtonRole.Normal) return own ?? Button;
-            if (!TintRoles && role != ButtonRole.Selected) return Button;
             // a new array, not a cleared one: Copy() shares this one with the theme it was copied from
             if (tinted == null || tintedFrom != Button || tintedTint != Button.Tint)
             {
@@ -217,11 +213,10 @@ namespace KodeKit
             return t;
         }
 
-        /// <summary>Skin A, "Classic+": KSP's stock sprites, with section headers, an accent and button roles (tinted).</summary>
-        public static Theme ClassicPlus(Theme from)
+        /// <summary>Skin A, "Classic": KSP's stock sprites, with an accent and button roles (tinted).</summary>
+        public static Theme Classic(Theme from)
         {
-            Theme t = from.Copy("Classic+");
-            t.TintRoles = true;
+            Theme t = from.Copy("Classic");
             t.Accent = new Color(0.31f, 0.66f, 0.39f);
             t.AccentText = Color.white;
             t.Header = new Color(0.62f, 0.69f, 0.75f);

@@ -50,9 +50,9 @@ namespace MuMech
         public float UiOpacity = 0.85f;
 
         // the new UI's look, set from its own Settings window; IMGUI ignores them
-        public enum UiSkinType { Classic, ClassicPlus, Flat, Glass, ZTheme }
+        public enum UiSkinType { Classic, Flat, Glass, ZTheme }
 
-        /// <summary>New UI skin: Classic (IMGUI's look), Classic+ (stock sprites, tidied), Flat (dark, flat), Glass (translucent HUD), ZTheme (the ZTheme mod's colours).</summary>
+        /// <summary>New UI skin: Classic (stock sprites, tinted button roles), Flat (dark, flat), Glass (translucent HUD), ZTheme (the ZTheme mod's colours).</summary>
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int UiSkin = (int)UiSkinType.Classic;
 

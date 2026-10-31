@@ -217,7 +217,7 @@ namespace MuMech.UI
 
         /// <summary>
         /// MechJeb skin → KodeKit theme: KSP's stock sprites at MechJeb's text size (MechJeb's DEFAULT and MECH_JEB1), tighter
-        /// for COMPACT, then the new UI's own skin on top (Classic+, Flat, Glass).
+        /// for COMPACT, then the new UI's own skin on top (Classic, Flat, Glass, ZTheme).
         /// </summary>
         void ApplyTheme()
         {
@@ -249,7 +249,7 @@ namespace MuMech.UI
             // darker windows than KSP's grey sprite, at the user's opacity (Settings → "New UI opacity")
             opacity = Mathf.Clamp(opacity, 0.3f, 1f);
             t.Window.Tint = new Color(0.5f, 0.5f, 0.5f, opacity);
-            if (skin == MechJebModuleSettings.UiSkinType.ClassicPlus) t = Theme.ClassicPlus(t);
+            if (skin == MechJebModuleSettings.UiSkinType.Classic) t = Theme.Classic(t);
             else if (skin == MechJebModuleSettings.UiSkinType.Flat) t = Theme.Flat(t);
             else if (skin == MechJebModuleSettings.UiSkinType.Glass) t = Theme.Glass(t);
             else if (skin == MechJebModuleSettings.UiSkinType.ZTheme) t = Theme.ZTheme(t);

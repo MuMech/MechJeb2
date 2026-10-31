@@ -15,7 +15,7 @@ The new UI's Settings window has three settings for this. All are saved globally
 
 | Setting | Field | Values | Effect |
 |---|---|---|---|
-| New UI skin | `UiSkin` | Classic, Classic+, Flat, Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
+| New UI skin | `UiSkin` | Classic, Flat, Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
 | Modern layout | `UiModernLayout` | off (default) / on | Views build with the widgets below instead of IMGUI's. Changing it rebuilds the open windows. |
 | Section headers | `UiSectionHeaders` | on (default) / off | The headers the modern layout adds to long windows (`KodeWindow.Header`). |
 
@@ -27,7 +27,7 @@ used to compare the three styles window by window, then dropped (2026-10-30).
 
 ## Skins
 
-`Theme.ClassicPlus`, `Theme.Flat`, `Theme.Glass` and `Theme.ZTheme` derive from the base theme (KSP's stock sprites,
+`Theme.Classic`, `Theme.Flat`, `Theme.Glass` and `Theme.ZTheme` derive from the base theme (KSP's stock sprites,
 LiberationSans 13 px, MechJeb's row heights). Each sets the accent colour, the header colour, the hairline (`Rule`) colour,
 and the `Primary` / `Danger` / `Selected` button styles. Flat, Glass and ZTheme also replace every sprite with rounded boxes
 drawn in code (`Sprites.RoundedBox`, 9-sliced at the corner radius, cached per parameters). The window opacity setting goes
@@ -37,10 +37,6 @@ into the window tint's alpha.
 
 ![](doc/Classic_all.jpg)
 
-**Classic+**
-
-![](doc/ClassicPlus_all.jpg)
-
 **Flat**
 
 ![](doc/Flat_all.jpg)
@@ -49,10 +45,8 @@ into the window tint's alpha.
 
 ![](doc/Glass_all.jpg)
 
-- **Classic**: KSP's sprites, as close to IMGUI as possible. Main and destructive buttons stay plain, and selected choices
-  are green, as in IMGUI's selection grids.
-- **Classic+**: the same sprites, with its own accent colour. Main buttons are tinted blue and destructive ones red
-  (`Theme.TintRoles`).
+- **Classic**: KSP's sprites, with its own accent colour. Main buttons are tinted blue, destructive ones red, and selected
+  choices green, as in IMGUI's selection grids.
 - **Flat**: solid dark panels with 4 to 7 px corners and one green accent.
 - **Glass**: translucent panels with cyan outlines, close to KSP's navball and map HUD.
 - **ZTheme**: purple-tinted dark greys and a green accent, the colours of the ZTheme mod (github.com/zapSNH/ZTheme). It
@@ -180,9 +174,9 @@ bar.Primary("#MechJeb_Maneu_button1", () => CreateNodes(false));
 
 Each window shows the three styles, top to bottom: joined bar, underline tabs, wrapping pills.
 
-| Classic | Classic+ | Flat | Glass |
-|---|---|---|---|
-| ![](doc/Classic_Segmented.png) | ![](doc/ClassicPlus_Segmented.png) | ![](doc/Flat_Segmented.png) | ![](doc/Glass_Segmented.png) |
+| Classic | Flat | Glass |
+|---|---|---|
+| ![](doc/Classic_Segmented.png) | ![](doc/Flat_Segmented.png) | ![](doc/Glass_Segmented.png) |
 
 One control for "exactly one of these". It replaces SelectionGrid rows and sets of checkboxes that act as one choice.
 
@@ -261,9 +255,8 @@ w.Visible(GuidanceUi.Wrapped(bar, "#MechJeb_Docking_label2").gameObject, () => n
 ### Buttons by role
 
 `ButtonRole.Normal`, `Primary` (the main action), `Danger` (destructive) and `Selected` (a chosen option). Each role has
-its own style in Flat and Glass. Classic+ tints the stock button for each role. Classic tints it green for Selected only,
-and leaves Primary and Danger plain, as IMGUI does. Use `w.BindRole(button, () => role)` for a
-role that follows a state, such as a state button that turns Selected while its mode is on.
+its own style in Flat, Glass and ZTheme. Classic tints the stock button for each role. Use `w.BindRole(button, () => role)`
+for a role that follows a state, such as a state button that turns Selected while its mode is on.
 
 A fixed role (`Button(..., role)` or `KodeWindow.Role(button, role)`) only shows in the modern layout: the classic layout
 keeps IMGUI's plain buttons, so a view builds the same buttons in both. `BindRole` applies in both layouts.

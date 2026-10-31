@@ -115,7 +115,7 @@ namespace MuMech.UI
             // the new UI's look: its skin, and the modern layout (KodeHost rebuilds the windows when the layout changes)
             Layout skin = KodeWindow.Row(r);
             KodeWindow.Label(skin, "#MechJeb_NewUI_Skin");
-            string[] skins = Locs("#MechJeb_NewUI_SkinClassic", "#MechJeb_NewUI_SkinClassicPlus", "#MechJeb_NewUI_SkinFlat", "#MechJeb_NewUI_SkinGlass", "#MechJeb_NewUI_SkinZTheme");
+            string[] skins = Locs("#MechJeb_NewUI_SkinClassic", "#MechJeb_NewUI_SkinFlat", "#MechJeb_NewUI_SkinGlass", "#MechJeb_NewUI_SkinZTheme");
             new ComboBox(w, skin, () => settings.UiSkin, i =>
             {
                 settings.UiSkin = i;
