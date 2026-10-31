@@ -228,14 +228,16 @@ namespace MuMech
         internal void CreateNodes(bool execute, Orbit o, double ut)
         {
             List<ManeuverParameters> nodeList = CurrentOperation.MakeNodes(o, ut, Core.Target);
-            if (nodeList != null)
+
+            // the operation has an error to show: leave the nodes alone, and don't execute the ones that were already there
+            if (nodeList == null)
+                return;
+
+            if (!_createNode)
+                LastPlannerNode().RemoveSelf();
+            for (int i = 0; i < nodeList.Count; i++)
             {
-                if (!_createNode)
-                    LastPlannerNode().RemoveSelf();
-                for (int i = 0; i < nodeList.Count; i++)
-                {
-                    Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
-                }
+                Vessel.PlaceManeuverNode(o, nodeList[i].dV, nodeList[i].UT);
             }
 
             if (execute && Core.Node != null)
