@@ -59,55 +59,60 @@ namespace MuMech
         private static ProfilerMarker _newVacProfile = new ProfilerMarker("Vac");
         private static ProfilerMarker _newAtmoProfile = new ProfilerMarker("Atmo");
 
+        // the last failure logged: a failing simulation is retried every 100 ms (500 ms in the editor), so it is logged once
+        private string _lastFailure;
+
         private void GetResults()
         {
-            if (_vesselManagerAtmo.FuelFlowSimulation.IsStopped)
+            var atmo = _vesselManagerAtmo.FuelFlowSimulation;
+            var vac = _vesselManagerVac.FuelFlowSimulation;
+
+            // the two runs start together and are published together: the stage table reads both lists with one index
+            if (!atmo.IsStopped || !vac.IsStopped)
+                return;
+
+            if (atmo.IsCompleted && vac.IsCompleted)
             {
-                if (_vesselManagerAtmo.FuelFlowSimulation.IsCompleted)
-                {
-                    AtmoStats.Clear();
-                    foreach (FuelStats item in _vesselManagerAtmo.FuelFlowSimulation.Segments)
-                        AtmoStats.Add(item);
+                AtmoStats.Clear();
+                foreach (FuelStats item in atmo.Segments)
+                    AtmoStats.Add(item);
 
-                    AtmoT = _vesselManagerAtmo.T;
-                    AtmoR = _vesselManagerAtmo.R;
-                    AtmoV = _vesselManagerAtmo.V;
-                    AtmoU = _vesselManagerAtmo.U;
-                }
-                else
-                {
-                    Debug.Log("[MechJebModuleStageStats] atmo stats failed");
-                    if (_vesselManagerAtmo.FuelFlowSimulation.Exception != null)
-                        Debug.Log(_vesselManagerAtmo.FuelFlowSimulation.Exception);
-                }
+                AtmoT = _vesselManagerAtmo.T;
+                AtmoR = _vesselManagerAtmo.R;
+                AtmoV = _vesselManagerAtmo.V;
+                AtmoU = _vesselManagerAtmo.U;
 
-                if (!_vesselManagerAtmo.FuelFlowSimulation.TryMarkReady())
-                    throw new Exception("[MechJebModuleStageStats] Tried to mark a running atmo stage stats as ready.");
+                VacStats.Clear();
+                foreach (FuelStats item in vac.Segments)
+                    VacStats.Add(item);
+
+                VacT = _vesselManagerVac.T;
+                VacR = _vesselManagerVac.R;
+                VacV = _vesselManagerVac.V;
+                VacU = _vesselManagerVac.U;
+
+                _lastFailure = null;
+            }
+            else
+            {
+                // the previous stats would look current (after staging or an edit): no stats until a run works again, which
+                // the users already handle (no stages yet)
+                AtmoStats.Clear();
+                VacStats.Clear();
+
+                string failure = (atmo.IsCompleted ? "" : "atmo: " + (atmo.Exception?.ToString() ?? "no exception") + "\n") +
+                                 (vac.IsCompleted ? "" : "vac: " + (vac.Exception?.ToString() ?? "no exception"));
+                if (failure != _lastFailure)
+                {
+                    _lastFailure = failure;
+                    Debug.Log("[MechJebModuleStageStats] stats failed (logged once until it changes or works):\n" + failure);
+                }
             }
 
-            if (_vesselManagerVac.FuelFlowSimulation.IsStopped)
-            {
-                if (_vesselManagerVac.FuelFlowSimulation.IsCompleted)
-                {
-                    VacStats.Clear();
-                    foreach (FuelStats item in _vesselManagerVac.FuelFlowSimulation.Segments)
-                        VacStats.Add(item);
-
-                    VacT = _vesselManagerVac.T;
-                    VacR = _vesselManagerVac.R;
-                    VacV = _vesselManagerVac.V;
-                    VacU = _vesselManagerVac.U;
-                }
-                else
-                {
-                    Debug.Log("[MechJebModuleStageStats] vac stats failed");
-                    if (_vesselManagerVac.FuelFlowSimulation.Exception != null)
-                        Debug.Log(_vesselManagerVac.FuelFlowSimulation.Exception);
-                }
-
-                if (!_vesselManagerVac.FuelFlowSimulation.TryMarkReady())
-                    throw new Exception("[MechJebModuleStageStats] Tried to mark a running vac stage stats as ready.");
-            }
+            if (!atmo.TryMarkReady())
+                throw new Exception("[MechJebModuleStageStats] Tried to mark a running atmo stage stats as ready.");
+            if (!vac.TryMarkReady())
+                throw new Exception("[MechJebModuleStageStats] Tried to mark a running vac stage stats as ready.");
         }
 
         private void RunSimulation()

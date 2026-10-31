@@ -223,8 +223,22 @@ namespace MuMech
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                if (NewFailure(ex))
+                    Debug.LogException(ex);
             }
+        }
+
+        private string _lastFailure;
+
+        // true the first time a given failure is seen (the main thread and the simulation threads both report here): a failing
+        // simulation is retried every few milliseconds
+        private bool NewFailure(Exception ex)
+        {
+            string text = ex.ToString();
+            if (text == _lastFailure)
+                return false;
+            _lastFailure = text;
+            return true;
         }
 
         public override void OnUpdate() => MaintainAerobrakeNode();
@@ -234,15 +248,9 @@ namespace MuMech
             double altitudeOfPreviousPrediction = 0;
             double parachuteMultiplierForThisSimulation = parachuteSemiDeployMultiplier;
             if (addParachuteError)
-            {
-                errorSimulationRunning = true;
                 errorStopwatch.Start(); //starts a timer that times how long the simulation takes
-            }
             else
-            {
-                SimulationRunning = true;
                 stopwatch.Start(); //starts a timer that times how long the simulation takes
-            }
 
             Orbit patch = GetReenteringPatch() ?? Orbit;
             // Work out what the landing altitude was of the last prediction, and use that to pass into the next simulation
@@ -273,6 +281,13 @@ namespace MuMech
                 VesselState.LimitedMaxThrustAcceleration, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
                 Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
+
+            // running only once it is queued: an exception above (a part mid-decouple, a degenerate orbit) used to leave the
+            // flag set, and no simulation of that kind ever started again
+            if (addParachuteError)
+                errorSimulationRunning = true;
+            else
+                SimulationRunning = true;
 
             //Run the simulation in a separate thread
             ThreadPool.QueueUserWorkItem(RunSimulation, sim);
@@ -347,7 +362,15 @@ namespace MuMech
             {
                 //Debug.Log(string.Format("Exception in MechJebModuleLandingPredictions.RunSimulation\n{0}", ex.StackTrace));
                 //Debug.LogException(ex);
-                Dispatcher.InvokeAsync(() => Debug.LogException(ex));
+
+                // the run is over: let the next one start (the flags were only cleared at the end of a successful run)
+                if (sim.InputMultiplierHasError)
+                    errorSimulationRunning = false;
+                else
+                    SimulationRunning = false;
+
+                if (NewFailure(ex))
+                    Dispatcher.InvokeAsync(() => Debug.LogException(ex));
             }
             finally
             {

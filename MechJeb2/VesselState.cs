@@ -488,13 +488,28 @@ namespace MuMech
         //{
         //    gimbalExtDict[typeof(T)] = gimbalExtension;
         //}
+        // other mods' part modules and VesselState extensions: one that throws mustn't stop the whole vessel state
+        private readonly HashSet<string> _loggedPartCallFailures = new HashSet<string>();
+
+        // extensions that threw in this update, skipped for the rest of it: a broken one costs one exception per tick as before,
+        // not one per part or part module
+        private readonly List<Delegate> _failedExtensions = new List<Delegate>();
+
+        private void PartCallFailed(string call, Exception e)
+        {
+            if (!_loggedPartCallFailures.Add(call))
+                return;
+            Debug.LogError($"[MechJeb] VesselState: {call} threw (logged once; what it adds is left out):");
+            Debug.LogException(e);
+        }
+
         public bool Update()
         {
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (Time == Planetarium.GetUniversalTime())
                 return true;
 
-            if (Vessel.rootPart.rb == null)
+            if (Vessel.rootPart == null || Vessel.rootPart.rb == null)
                 return false; //if we try to update before rigidbodies exist we spam the console with NullPointerExceptions.
 
             UpdateVelocityAndCoM();
@@ -837,6 +852,7 @@ namespace MuMech
         // Loop over all the parts in the vessel and calculate some things.
         private void AnalyzeParts(EngineInfo einfo, IntakeInfo iinfo)
         {
+            _failedExtensions.Clear();
             Parachutes.Clear();
             ParachuteDeployed = false;
 
@@ -898,7 +914,17 @@ namespace MuMech
 
                 foreach (VesselStatePartExtension vspe in VesselStatePartExtensions)
                 {
-                    vspe(p);
+                    if (_failedExtensions.Count > 0 && _failedExtensions.Contains(vspe))
+                        continue;
+                    try
+                    {
+                        vspe(p);
+                    }
+                    catch (Exception e)
+                    {
+                        _failedExtensions.Add(vspe);
+                        PartCallFailed(vspe.Method.DeclaringType?.FullName + "." + vspe.Method.Name, e);
+                    }
                 }
 
                 _engines.Clear();
@@ -1011,16 +1037,36 @@ namespace MuMech
                             // All mod that supports it. Including FAR
                             case ITorqueProvider provider:
                                 {
-                                    provider.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
+                                    try
+                                    {
+                                        provider.GetPotentialTorque(out Vector3 pos, out Vector3 neg);
 
-                                    TorqueOthers.Add(pos);
-                                    TorqueOthers.Add(neg);
+                                        TorqueOthers.Add(pos);
+                                        TorqueOthers.Add(neg);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        PartCallFailed(provider.GetType().FullName + ".GetPotentialTorque", e);
+                                    }
+
                                     break;
                                 }
                         }
 
                     foreach (VesselStatePartModuleExtension vspme in VesselStatePartModuleExtensions)
-                        vspme(pm);
+                    {
+                        if (_failedExtensions.Count > 0 && _failedExtensions.Contains(vspme))
+                            continue;
+                        try
+                        {
+                            vspme(pm);
+                        }
+                        catch (Exception e)
+                        {
+                            _failedExtensions.Add(vspme);
+                            PartCallFailed(vspme.Method.DeclaringType?.FullName + "." + vspme.Method.Name, e);
+                        }
+                    }
                 }
 
                 foreach (ModuleEngines engine in _engines)

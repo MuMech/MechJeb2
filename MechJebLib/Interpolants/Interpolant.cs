@@ -122,7 +122,9 @@ namespace MechJebLib.Interpolants
                     hi = i - 1;
             }
 
-            return lo - 1; // lo is the hi value here
+            // lo is the hi value here; it is 0 only for a NaN x (CompareTo puts NaN below everything), whose value is then NaN
+            // rather than an exception
+            return lo > 0 ? lo - 1 : 0;
         }
 
         public T Evaluate(double x)
