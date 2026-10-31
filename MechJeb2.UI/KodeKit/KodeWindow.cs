@@ -108,6 +108,16 @@ namespace KodeKit
         /// <summary>Register a per-frame update for a custom widget.</summary>
         public void AddSync(Action sync) => syncs.Add(sync);
 
+        /// <summary>Called after the user changes a value through a widget, so the owner can persist it.</summary>
+        public Action Edited;
+
+        /// <summary>A widget's setter, which only runs on user input, that also reports the edit.</summary>
+        internal Action<T> Edits<T>(Action<T> set) => v =>
+        {
+            set(v);
+            Edited?.Invoke();
+        };
+
         HashSet<Action> failed; // the syncs that threw, so each is logged once
 
         /// <summary>
@@ -264,6 +274,7 @@ namespace KodeKit
             slider.minValue = min;
             slider.maxValue = max;
             slider.SetValueWithoutNotify(get());
+            set = Edits(set);
             slider.onValueChanged.AddListener(v => set(v));
             // thin track with a round handle: DefaultControls' 10 px bar and 20 px square handle are too heavy
             Image[] images = go.GetComponentsInChildren<Image>(true);
@@ -888,6 +899,7 @@ namespace KodeKit
             Toggle toggle = t.GetComponent<Toggle>();
             label.gameObject.AddComponent<ToggleLabelClick>().Toggle = toggle;
             toggle.SetIsOnWithoutNotify(get());
+            set = Edits(set);
             toggle.onValueChanged.AddListener(v => set(v));
 
             var box = t.GetComponent<Image>();
@@ -937,6 +949,7 @@ namespace KodeKit
         public void ArrowSelector(UIObject parent, Func<int> get, Action<int> set, Func<int> count, Func<string> label)
         {
             Layout row = Row(parent);
+            set = Edits(set);
             Button(row, "<", () =>
             {
                 int n = count();
@@ -959,11 +972,12 @@ namespace KodeKit
                 Segmented(parent, items, get, set);
                 return;
             }
+            Action<int> edited = Edits(set); // past the modern branch: Segmented reports its own edits
             var images = new Image[items.Length];
             for (int i = 0; i < items.Length; i++)
             {
                 int k = i;
-                UIButton b = Button(parent, items[i], () => set(k), true);
+                UIButton b = Button(parent, items[i], () => edited(k), true);
                 if (padding > 0) Padded(b, padding);
                 images[i] = b.GetComponent<Image>();
             }

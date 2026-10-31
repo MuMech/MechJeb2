@@ -35,7 +35,7 @@ namespace KodeKit
         public ComboBox(KodeWindow w, UIObject parent, Func<int> get, Action<int> set, Func<string[]> entries, bool flexible = true)
         {
             this.get = get;
-            this.set = set;
+            this.set = w.Edits(set);
             this.entries = entries;
             Button = KodeWindow.Button(parent, "", Toggle, flexible);
             label = Button.GetComponentInChildren<TMP_Text>();

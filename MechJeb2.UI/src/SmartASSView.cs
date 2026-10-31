@@ -81,6 +81,7 @@ namespace MuMech.UI
             t.PreferredSize(16, 16).Finish();
             Toggle toggle = t.GetComponent<Toggle>();
             toggle.SetIsOnWithoutNotify(get());
+            set = w.Edits(set);
             toggle.onValueChanged.AddListener(v => set(v));
             var box = t.GetComponent<Image>();
             var check = (Image)toggle.graphic;

@@ -46,6 +46,7 @@ namespace MuMech.UI
             var timer = System.Diagnostics.Stopwatch.StartNew();
             Window = new KodeWindow(canvas, Module.GetName(), MinWidth, Vector2.zero);
             Window.OnClose = () => Module.Enabled = false;
+            Window.Edited = () => Module.Dirty = true;
             BuildContents(Window);
             builtOverlay = Module.IsOverlay;
             if (builtOverlay) MakeOverlay();
