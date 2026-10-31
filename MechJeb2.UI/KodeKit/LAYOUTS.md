@@ -1,8 +1,8 @@
 # KodeKit layouts and widgets of the modern layout
 
-KodeKit's first widgets copy IMGUI: rows, panels, sections, scroll lists, toggles, arrow selectors. The new UI uses them
-by default, so its windows look and work like MechJeb's IMGUI windows. The **modern layout** adds the widgets and layouts below.
-Views use them only when the setting is on. Everything is built in code (no asset bundle), follows the theme, and makes no
+KodeKit's first widgets copy IMGUI: rows, panels, sections, scroll lists, toggles, arrow selectors. The classic layout uses
+them, so its windows look and work like MechJeb's IMGUI windows. The **modern layout**, the default, adds the widgets and layouts
+below. Views use them only when the setting is on. Everything is built in code (no asset bundle), follows the theme, and makes no
 garbage per frame once built.
 
 Screenshots come from the gallery test (`MechJeb2_UI/Spike15-Gallery`, run 2026-10-29: KSP 1.12.5, 1920×1080, at MechJeb's
@@ -17,7 +17,7 @@ The new UI's Settings window has four settings for this. All are saved globally 
 |---|---|---|---|
 | New UI skin | `UiSkin` | Classic, Flat, Glass, ZTheme | The look (see Skins). It applies to every new-UI window at once, without a rebuild. |
 | Compact | `UiCompact` | on (default) / off | Tighter margins and rows, in every skin (`Theme.Compact`). MechJeb's IMGUI skin no longer decides this. A custom window's own Compact switch can follow it, or override it on or off. |
-| Modern layout | `UiModernLayout` | off (default) / on | Views build with the widgets below instead of IMGUI's. Changing it rebuilds the open windows. |
+| Modern layout | `UiModernLayout` | on (default) / off | Views build with the widgets below instead of IMGUI's. Changing it rebuilds the open windows. |
 | Section headers | `UiSectionHeaders` | on (default) / off | The headers the modern layout adds to long windows (`KodeWindow.Header`). |
 
 `KodeHost` passes them to KodeKit's statics before it builds the windows: `KodeWindow.ModernLayout` and
