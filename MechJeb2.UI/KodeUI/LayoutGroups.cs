@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace KodeKit
+namespace KodeUI
 {
     /// <summary>
     /// Children in rows of <see cref="Columns"/> cells, all the same size: as wide as the widest child and as high as the

@@ -49,15 +49,11 @@ namespace KodeKit
     }
 
     /// <summary>
-    /// KodeUI's Window moves itself when its empty background is dragged, bypassing KodeKit's clamp, window lock and
-    /// position save (and doubling the movement when a DragHandle is on the same object). KodeKit windows drag through
-    /// DragHandle only.
+    /// A window's root. Not KodeUI's Window: that adds a Titlebar which moves the window itself, bypassing KodeKit's clamp,
+    /// window lock and position save. KodeKit windows have their own title row and drag through DragHandle only.
     /// </summary>
-    public class KodeRootWindow : Window
+    public class KodeRootWindow : LayoutPanel
     {
-        public override void OnBeginDrag(PointerEventData eventData) { }
-        public override void OnDrag(PointerEventData eventData) { }
-        public override void OnEndDrag(PointerEventData eventData) { }
     }
 
     /// <summary>Calls Click when the object is clicked (labels that act like buttons).</summary>
@@ -94,7 +90,7 @@ namespace KodeKit
     /// </summary>
     public partial class KodeWindow
     {
-        public Window Root;
+        public KodeRootWindow Root;
         readonly List<Action> syncs = new List<Action>();
 
         static Theme T => Theme.Current ?? SetDefaultTheme();
@@ -161,7 +157,7 @@ namespace KodeKit
             Root.rectTransform.anchoredPosition = new Vector2(pos.x, -pos.y);
 
             Behaviour = Root.gameObject.AddComponent<WindowBehaviour>();
-            Window root = Root;
+            KodeRootWindow root = Root;
             Styled(Root.gameObject, t =>
             {
                 t.Window.ApplyImage(root.BackGround);
@@ -207,7 +203,7 @@ namespace KodeKit
             var button = b.GetComponent<Button>();
             var img = b.GetComponent<Image>();
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
-            b.Padding(0);
+            b.Content.Padding(0);
             var le = b.gameObject.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
             Styled(b.gameObject, th =>
             {
@@ -398,6 +394,7 @@ namespace KodeKit
             box.Finish();
             box.BackGround.sprite = null;
             box.BackGround.color = ListBackground;
+            box.BackGround.enabled = true;
             return box;
         }
 
@@ -413,8 +410,8 @@ namespace KodeKit
             b.Text("").OnClick(() => onClick());
             b.FlexibleLayout(true, false);
             b.Finish();
-            b.Padding(8, 8, 2, 2);
-            b.ChildAlignment(TextAnchor.MiddleLeft);
+            b.Content.Padding(8, 8, 2, 2);
+            b.Content.ChildAlignment(TextAnchor.MiddleLeft);
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.alignment = TextAlignmentOptions.Left;
             SetText(label, text);
@@ -458,8 +455,8 @@ namespace KodeKit
         {
             UIButton b = ListRow(parent, text, onClick);
             b.FlexibleLayout(false, false);
-            b.Padding(2, 2, 1, 1);
-            b.ChildAlignment(TextAnchor.MiddleRight);
+            b.Content.Padding(2, 2, 1, 1);
+            b.Content.ChildAlignment(TextAnchor.MiddleRight);
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.alignment = TextAlignmentOptions.Right;
             Styled(b.gameObject, th =>
@@ -788,10 +785,10 @@ namespace KodeKit
             b.Text("").OnClick(() => onClick());
             if (flexible) b.FlexibleLayout(true, false);
             b.Finish();
-            b.Padding(6, 6, 1, 1);
-            // KodeUI's button lays its text out at preferred width from the left: centre it, so a wide button centres its label
-            // (not ChildForceExpand: that makes the layout group flexible and every button would stretch)
-            b.ChildAlignment(TextAnchor.MiddleCenter);
+            b.Content.Padding(6, 6, 1, 1);
+            // the text at its preferred width, not KodeUI's flexible one, so an icon stays beside it: a wide button centres the two
+            b.ChildText.FlexibleLayout(false, false);
+            b.Content.ChildAlignment(TextAnchor.MiddleCenter);
             TMP_Text label = b.GetComponentInChildren<TMP_Text>();
             label.alignment = TextAlignmentOptions.Center; // like GUILayout.Button
             SetText(label, text);
@@ -828,7 +825,7 @@ namespace KodeKit
         public static Image AddIcon(UIButton b, Sprite icon, bool before)
         {
             var go = new GameObject("Icon", typeof(RectTransform), typeof(Image), typeof(LayoutElement)) { layer = b.gameObject.layer };
-            go.transform.SetParent(b.transform, false);
+            go.transform.SetParent(b.Content.transform, false);
             if (before) go.transform.SetSiblingIndex(0);
             var img = go.GetComponent<Image>();
             img.sprite = icon;
@@ -846,7 +843,7 @@ namespace KodeKit
 
         public static UIButton Padded(UIButton b, int padding = 8)
         {
-            b.Padding(padding, padding, padding, padding);
+            b.Content.Padding(padding, padding, padding, padding);
             return b;
         }
 
@@ -894,6 +891,7 @@ namespace KodeKit
             Layout row = Row(parent);
             UIToggle t = row.Add<UIToggle>();
             t.PreferredSize(16, 16).Finish();
+            t.CheckMark.Scale(0.625f);
             UIText label = Label(row, text, true);
 
             Toggle toggle = t.GetComponent<Toggle>();

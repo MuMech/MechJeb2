@@ -6,7 +6,7 @@
       KodeUI and KodeKit are compiled into this assembly (KSP binds assemblies by name, so a separate
       KodeUI.dll could collide with another mod's copy). KodeKit (widgets, bindings, themes on top of
       KodeUI) lives in KodeKit/ here; KodeUI/ is a copy of the sources of https://github.com/sarbian/KodeUI
-      at d8d1312, with only their UTF-8 BOMs removed.
+      at 5fca133 (b178cd6 plus the parts moved from KodeKit, on its local branch kodekit-parts), with only their UTF-8 BOMs removed.
     -->
 
     <PropertyGroup>

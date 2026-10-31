@@ -46,22 +46,15 @@ namespace KodeKit
         {
             UIInputField f = parent.Add<UIInputField>();
             f.Finish();
-            f.PreferredSizeFitter(false, false);
             f.PreferredSize(width, 22);
 
-            Image bg = f.gameObject.AddComponent<Image>();
+            Image bg = f.GetComponent<Image>();
             TMP_InputField input = f.GetComponent<TMP_InputField>();
             input.targetGraphic = bg;
             input.onFocusSelectAll = true; // click a field and type to replace its value
             input.selectionColor = new Color(0.3f, 0.55f, 1f, 0.55f); // a visible selection on the dark field
 
-            // fixed-size field: drop KodeUI's inner layout groups so typing never relayouts the window
             var area = (RectTransform)f.transform.Find("Text Area");
-            foreach (var c in f.GetComponents<HorizontalOrVerticalLayoutGroup>()) UnityEngine.Object.DestroyImmediate(c);
-            foreach (var c in area.GetComponents<HorizontalOrVerticalLayoutGroup>()) UnityEngine.Object.DestroyImmediate(c);
-            foreach (var c in area.GetComponents<ContentSizeFitter>()) UnityEngine.Object.DestroyImmediate(c);
-            area.anchorMin = Vector2.zero;
-            area.anchorMax = Vector2.one;
             area.offsetMin = new Vector2(4, 1);
             area.offsetMax = new Vector2(-4, -1);
 

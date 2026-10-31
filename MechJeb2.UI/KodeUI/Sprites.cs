@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KodeKit
+namespace KodeUI
 {
     /// <summary>
     /// Small sprites drawn in code (no asset bundle): a checkbox frame and a tick, so toggles read clearly
@@ -11,33 +11,33 @@ namespace KodeKit
         static Sprite box, boxHover, tick;
 
         /// <summary>A square frame: light border, dark fill; 9-sliced so it scales to any size.</summary>
-        public static Sprite CheckBox => box ??= Box(new Color(0.72f, 0.72f, 0.72f, 1f), new Color(0.08f, 0.08f, 0.08f, 0.85f));
+        public static Sprite CheckBox => box ?? (box = Box(new Color(0.72f, 0.72f, 0.72f, 1f), new Color(0.08f, 0.08f, 0.08f, 0.85f)));
 
         /// <summary>CheckBox with a brighter border, for hover and press.</summary>
-        public static Sprite CheckBoxHover => boxHover ??= Box(new Color(1f, 1f, 1f, 1f), new Color(0.16f, 0.16f, 0.16f, 0.9f));
+        public static Sprite CheckBoxHover => boxHover ?? (boxHover = Box(new Color(1f, 1f, 1f, 1f), new Color(0.16f, 0.16f, 0.16f, 0.9f)));
 
         static Sprite outline;
 
         /// <summary>A white 2 px frame with a transparent inside (tint it); 9-sliced, like GUI.skin.box's border.</summary>
-        public static Sprite Outline => outline ??= Box(Color.white, new Color(1, 1, 1, 0));
+        public static Sprite Outline => outline ?? (outline = Box(Color.white, new Color(1, 1, 1, 0)));
 
         /// <summary>A white tick (tint it), drawn anti-aliased on a transparent square.</summary>
-        public static Sprite Tick => tick ??= MakeTick(32);
+        public static Sprite Tick => tick ?? (tick = MakeTick(32));
 
         static Sprite circle, caret;
 
         /// <summary>A white anti-aliased disc (slider handles).</summary>
-        public static Sprite Circle => circle ??= MakeShape(32, p => (p - new Vector2(0.5f, 0.5f)).magnitude - 0.44f);
+        public static Sprite Circle => circle ?? (circle = MakeShape(32, p => (p - new Vector2(0.5f, 0.5f)).magnitude - 0.44f));
 
         /// <summary>A white downward caret (combo boxes): KSP's fonts have no ▾.</summary>
-        public static Sprite Caret => caret ??= MakeShape(32, p =>
+        public static Sprite Caret => caret ?? (caret = MakeShape(32, p =>
         {
             // inside the triangle (0.12,0.72) (0.88,0.72) (0.5,0.28): negative distance
             float top = p.y - 0.72f;
             float left = Vector2.Dot(p - new Vector2(0.12f, 0.72f), new Vector2(-0.756f, -0.654f));
             float right = Vector2.Dot(p - new Vector2(0.88f, 0.72f), new Vector2(0.756f, -0.654f));
             return Mathf.Max(top, Mathf.Max(left, right));
-        });
+        }));
 
         // ---- skins: rounded boxes ----
 
@@ -77,13 +77,13 @@ namespace KodeKit
         static Sprite pill, pillOutline, rounded;
 
         /// <summary>A white pill (fully rounded ends), 9-sliced: switch tracks and chips (tint it).</summary>
-        public static Sprite Pill => pill ??= RoundedBox(9, 0, Color.white, Color.white);
+        public static Sprite Pill => pill ?? (pill = RoundedBox(9, 0, Color.white, Color.white));
 
         /// <summary>A white pill outline with a transparent inside (tint it).</summary>
-        public static Sprite PillOutline => pillOutline ??= RoundedBox(9, 1, new Color(1, 1, 1, 0), Color.white);
+        public static Sprite PillOutline => pillOutline ?? (pillOutline = RoundedBox(9, 1, new Color(1, 1, 1, 0), Color.white));
 
         /// <summary>A white box with 3 px rounded corners (tint it): status bars, flat icon buttons.</summary>
-        public static Sprite Rounded => rounded ??= RoundedBox(3, 0, Color.white, Color.white);
+        public static Sprite Rounded => rounded ?? (rounded = RoundedBox(3, 0, Color.white, Color.white));
 
         // ---- navball markers (white: tint them with the navball colours) ----
 
@@ -103,21 +103,34 @@ namespace KodeKit
             int i = (int)m;
             if (markers[i] != null) return markers[i];
             const float w = 0.09f; // stroke width
-            System.Func<Vector2, float> d = m switch
+            System.Func<Vector2, float> d;
+            switch (m)
             {
-                Marker.Prograde => p => Min(Ring(p, 0.5f, 0.45f, 0.2f, w), Seg(p, 0.5f, 0.66f, 0.5f, 0.9f, w), Seg(p, 0.1f, 0.45f, 0.3f, 0.45f, w),
-                    Seg(p, 0.7f, 0.45f, 0.9f, 0.45f, w)),
-                Marker.Retrograde => p => Min(Ring(p, 0.5f, 0.5f, 0.22f, w), Seg(p, 0.38f, 0.38f, 0.62f, 0.62f, w), Seg(p, 0.38f, 0.62f, 0.62f, 0.38f, w),
-                    Seg(p, 0.5f, 0.28f, 0.5f, 0.1f, w)),
-                Marker.Normal => p => Min(Mathf.Abs(TriangleSd(p, new Vector2(0.15f, 0.2f), new Vector2(0.85f, 0.2f), new Vector2(0.5f, 0.82f))) - w / 2,
-                    Dot(p, 0.5f, 0.42f, 0.06f)),
-                Marker.AntiNormal => p => Min(Mathf.Abs(TriangleSd(p, new Vector2(0.5f, 0.18f), new Vector2(0.85f, 0.8f), new Vector2(0.15f, 0.8f))) - w / 2,
-                    Seg(p, 0.5f, 0.45f, 0.5f, 0.65f, w)),
-                Marker.RadialOut => p => Min(Ring(p, 0.5f, 0.5f, 0.22f, w), Dot(p, 0.5f, 0.5f, 0.06f), Seg(p, 0.5f, 0.72f, 0.5f, 0.92f, w),
-                    Seg(p, 0.5f, 0.28f, 0.5f, 0.08f, w), Seg(p, 0.08f, 0.5f, 0.28f, 0.5f, w), Seg(p, 0.72f, 0.5f, 0.92f, 0.5f, w)),
-                _ => p => Min(Ring(p, 0.5f, 0.5f, 0.3f, w), Seg(p, 0.3f, 0.3f, 0.42f, 0.42f, w), Seg(p, 0.7f, 0.3f, 0.58f, 0.42f, w),
-                    Seg(p, 0.3f, 0.7f, 0.42f, 0.58f, w), Seg(p, 0.7f, 0.7f, 0.58f, 0.58f, w))
-            };
+                case Marker.Prograde:
+                    d = p => Min(Ring(p, 0.5f, 0.45f, 0.2f, w), Seg(p, 0.5f, 0.66f, 0.5f, 0.9f, w), Seg(p, 0.1f, 0.45f, 0.3f, 0.45f, w),
+                    Seg(p, 0.7f, 0.45f, 0.9f, 0.45f, w));
+                    break;
+                case Marker.Retrograde:
+                    d = p => Min(Ring(p, 0.5f, 0.5f, 0.22f, w), Seg(p, 0.38f, 0.38f, 0.62f, 0.62f, w), Seg(p, 0.38f, 0.62f, 0.62f, 0.38f, w),
+                    Seg(p, 0.5f, 0.28f, 0.5f, 0.1f, w));
+                    break;
+                case Marker.Normal:
+                    d = p => Min(Mathf.Abs(TriangleSd(p, new Vector2(0.15f, 0.2f), new Vector2(0.85f, 0.2f), new Vector2(0.5f, 0.82f))) - w / 2,
+                    Dot(p, 0.5f, 0.42f, 0.06f));
+                    break;
+                case Marker.AntiNormal:
+                    d = p => Min(Mathf.Abs(TriangleSd(p, new Vector2(0.5f, 0.18f), new Vector2(0.85f, 0.8f), new Vector2(0.15f, 0.8f))) - w / 2,
+                    Seg(p, 0.5f, 0.45f, 0.5f, 0.65f, w));
+                    break;
+                case Marker.RadialOut:
+                    d = p => Min(Ring(p, 0.5f, 0.5f, 0.22f, w), Dot(p, 0.5f, 0.5f, 0.06f), Seg(p, 0.5f, 0.72f, 0.5f, 0.92f, w),
+                    Seg(p, 0.5f, 0.28f, 0.5f, 0.08f, w), Seg(p, 0.08f, 0.5f, 0.28f, 0.5f, w), Seg(p, 0.72f, 0.5f, 0.92f, 0.5f, w));
+                    break;
+                default:
+                    d = p => Min(Ring(p, 0.5f, 0.5f, 0.3f, w), Seg(p, 0.3f, 0.3f, 0.42f, 0.42f, w), Seg(p, 0.7f, 0.3f, 0.58f, 0.42f, w),
+                    Seg(p, 0.3f, 0.7f, 0.42f, 0.58f, w), Seg(p, 0.7f, 0.7f, 0.58f, 0.58f, w));
+                    break;
+            }
             return markers[i] = MakeShape(48, d);
         }
 
@@ -126,21 +139,21 @@ namespace KodeKit
         static Sprite cross, chevronUp, chevronDown;
 
         /// <summary>An X (title-bar "close" button).</summary>
-        public static Sprite Cross => cross ??= MakeShape(32, p => Mathf.Min(Seg(p, 0.22f, 0.22f, 0.78f, 0.78f, 0.13f), Seg(p, 0.22f, 0.78f, 0.78f, 0.22f, 0.13f)));
+        public static Sprite Cross => cross ?? (cross = MakeShape(32, p => Mathf.Min(Seg(p, 0.22f, 0.22f, 0.78f, 0.78f, 0.13f), Seg(p, 0.22f, 0.78f, 0.78f, 0.22f, 0.13f))));
 
         /// <summary>A chevron pointing up (steppers, folded sections).</summary>
-        public static Sprite ChevronUp => chevronUp ??= MakeShape(32, p => Mathf.Min(Seg(p, 0.2f, 0.36f, 0.5f, 0.66f, 0.13f), Seg(p, 0.5f, 0.66f, 0.8f, 0.36f, 0.13f)));
+        public static Sprite ChevronUp => chevronUp ?? (chevronUp = MakeShape(32, p => Mathf.Min(Seg(p, 0.2f, 0.36f, 0.5f, 0.66f, 0.13f), Seg(p, 0.5f, 0.66f, 0.8f, 0.36f, 0.13f))));
 
         /// <summary>A chevron pointing down.</summary>
-        public static Sprite ChevronDown => chevronDown ??= MakeShape(32, p => Mathf.Min(Seg(p, 0.2f, 0.64f, 0.5f, 0.34f, 0.13f), Seg(p, 0.5f, 0.34f, 0.8f, 0.64f, 0.13f)));
+        public static Sprite ChevronDown => chevronDown ?? (chevronDown = MakeShape(32, p => Mathf.Min(Seg(p, 0.2f, 0.64f, 0.5f, 0.34f, 0.13f), Seg(p, 0.5f, 0.34f, 0.8f, 0.64f, 0.13f))));
 
         /// <summary>A pencil (title-bar "edit" button).</summary>
-        public static Sprite Edit => edit ??= MakeShape(32, p => Min(Seg(p, 0.3f, 0.3f, 0.78f, 0.78f, 0.16f),
-            Mathf.Abs(TriangleSd(p, new Vector2(0.12f, 0.12f), new Vector2(0.3f, 0.18f), new Vector2(0.18f, 0.3f))) - 0.05f));
+        public static Sprite Edit => edit ?? (edit = MakeShape(32, p => Min(Seg(p, 0.3f, 0.3f, 0.78f, 0.78f, 0.16f),
+            Mathf.Abs(TriangleSd(p, new Vector2(0.12f, 0.12f), new Vector2(0.3f, 0.18f), new Vector2(0.18f, 0.3f))) - 0.05f)));
 
         /// <summary>Two overlapping sheets (title-bar "copy" button).</summary>
-        public static Sprite Copy => copy ??= MakeShape(32, p => Mathf.Min(Mathf.Abs(BoxSd(p, new Vector2(0.4f, 0.4f), new Vector2(0.24f, 0.26f))) - 0.045f,
-            Mathf.Max(Mathf.Abs(BoxSd(p, new Vector2(0.6f, 0.6f), new Vector2(0.24f, 0.26f))) - 0.045f, -BoxSd(p, new Vector2(0.4f, 0.4f), new Vector2(0.29f, 0.31f)))));
+        public static Sprite Copy => copy ?? (copy = MakeShape(32, p => Mathf.Min(Mathf.Abs(BoxSd(p, new Vector2(0.4f, 0.4f), new Vector2(0.24f, 0.26f))) - 0.045f,
+            Mathf.Max(Mathf.Abs(BoxSd(p, new Vector2(0.6f, 0.6f), new Vector2(0.24f, 0.26f))) - 0.045f, -BoxSd(p, new Vector2(0.4f, 0.4f), new Vector2(0.29f, 0.31f))))));
 
         // stroke distances in unit coordinates (y up); negative inside the stroke
         static float Seg(Vector2 p, float ax, float ay, float bx, float by, float width) =>
@@ -175,8 +188,7 @@ namespace KodeKit
         static readonly Sprite[] arrows = new Sprite[4];
 
         /// <summary>
-        /// A white solid triangle pointing up, down, left or right (tint it): KSP's fonts have no ▲▼◄►, which IMGUI's
-        /// MechJeb windows draw with Unity's built-in font.
+        /// A white solid triangle pointing up, down, left or right (tint it): KSP's fonts have no ▲▼◄►.
         /// </summary>
         public static Sprite Arrow(Direction d)
         {
@@ -184,14 +196,23 @@ namespace KodeKit
             if (arrows[i] != null) return arrows[i];
             // an upward triangle (y up), turned for the other directions
             Vector2 a = new Vector2(0.14f, 0.24f), b = new Vector2(0.86f, 0.24f), c = new Vector2(0.5f, 0.80f);
-            System.Func<Vector2, Vector2> turn = d switch
+            System.Func<Vector2, Vector2> turn;
+            switch (d)
             {
-                Direction.Down => p => new Vector2(p.x, 1 - p.y),
+                case Direction.Down:
+                    turn = p => new Vector2(p.x, 1 - p.y);
+                    break;
                 // the point is mapped back into the upward triangle's frame: apex at x = 0.2 for left, 0.8 for right
-                Direction.Left => p => new Vector2(p.y, 1 - p.x),
-                Direction.Right => p => new Vector2(p.y, p.x),
-                _ => p => p
-            };
+                case Direction.Left:
+                    turn = p => new Vector2(p.y, 1 - p.x);
+                    break;
+                case Direction.Right:
+                    turn = p => new Vector2(p.y, p.x);
+                    break;
+                default:
+                    turn = p => p;
+                    break;
+            }
             return arrows[i] = MakeShape(32, p => Triangle(turn(p), a, b, c));
         }
 

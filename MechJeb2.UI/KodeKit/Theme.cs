@@ -23,6 +23,7 @@ namespace KodeKit
             img.sprite = Normal;
             img.type = Normal != null && Normal.border != Vector4.zero ? Type : Image.Type.Simple;
             img.color = Tint;
+            img.enabled = true; // a LayoutPanel turns its background off when it finishes without a sprite
         }
 
         public void ApplySelectable(Selectable s, Image img)

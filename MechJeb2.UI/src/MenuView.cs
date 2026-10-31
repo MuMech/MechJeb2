@@ -152,7 +152,7 @@ namespace MuMech.UI
             // the "MechJeb" button on the edge
             // "▲ MechJeb ▲": the arrows are sprites, KSP's fonts have no ▲▼
             button = KodeWindow.Button(r, "MechJeb", menu.ShowHideWindow);
-            button.Spacing(4);
+            button.Content.Spacing(4);
             arrowBefore = KodeWindow.AddIcon(button, Sprites.Arrow(Sprites.Direction.Up), true);
             arrowAfter = KodeWindow.AddIcon(button, Sprites.Arrow(Sprites.Direction.Up), false);
             shownArrow = -1;

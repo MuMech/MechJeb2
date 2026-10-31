@@ -195,7 +195,8 @@ namespace MuMech.UI
             row.Label = b.GetComponentInChildren<TMP_Text>();
             row.Background = b.GetComponent<Image>();
             // a fixed-size cell with no layout group, so the distance and ETA changing every frame don't relayout the list
-            foreach (HorizontalOrVerticalLayoutGroup g in b.GetComponents<HorizontalOrVerticalLayoutGroup>()) UnityEngine.Object.DestroyImmediate(g);
+            UnityEngine.Object.DestroyImmediate(b.Content.layoutGroup);
+            UnityEngine.Object.DestroyImmediate(b.GetComponent<AnchorLayoutGroup>());
             RectTransform lr = row.Label.rectTransform;
             lr.anchorMin = Vector2.zero;
             lr.anchorMax = Vector2.one;
