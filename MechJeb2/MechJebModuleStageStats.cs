@@ -119,9 +119,10 @@ namespace MuMech
             double staticPressureKpa = HighLogic.LoadedSceneIsEditor || !LiveSLT
                 ? simBody.atmosphere ? simBody.GetPressure(AltSLT) : 0
                 : Vessel.staticPressurekPa;
-            double atmDensity = (HighLogic.LoadedSceneIsEditor || !LiveSLT
+            // kg/m³: the engines divide by the sea level density themselves
+            double atmDensity = HighLogic.LoadedSceneIsEditor || !LiveSLT
                 ? simBody.GetDensity(simBody.GetPressure(AltSLT), simBody.GetTemperature(0))
-                : Vessel.atmDensity) / 1.225;
+                : Vessel.atmDensity;
             double mach = HighLogic.LoadedSceneIsEditor ? Mach : Vessel.mach;
 
             // XXX: we do a rebuild every time in the editor because apparently I don't know the right callbacks/magic to

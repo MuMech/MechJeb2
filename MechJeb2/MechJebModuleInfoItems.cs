@@ -868,9 +868,12 @@ namespace MuMech
 
             float vacTimeLeft = (float)stats.VacStats[stats.VacStats.Count - 1].DeltaTime;
             float atmoTimeLeft = (float)stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaTime;
-            float timeLeft = Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)FlightGlobals.getStaticPressure()));
 
-            return timeLeft;
+            // live, the atmosphere stats are already at the vessel's conditions, and in the editor at the chosen body and altitude.
+            // Blending those with vacuum would be wrong for a jet, whose vacuum time can be millions of seconds.
+            if (HighLogic.LoadedSceneIsEditor || stats.LiveSLT) return atmoTimeLeft;
+
+            return Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)(Vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres)));
         }
 
         [ValueInfoItem("#MechJeb_StageTimeCurrentThrottle", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)] //Stage time (current throttle)
