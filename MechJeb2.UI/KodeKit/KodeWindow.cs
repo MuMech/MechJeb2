@@ -463,6 +463,9 @@ namespace KodeKit
             {
                 th.ApplyText(label, th.Dim);
                 b.transform.Find("Separator").GetComponent<Image>().color = new Color(1, 1, 1, 0.25f);
+                // one line of the main font plus the padding, whatever the text: Δ and Σ come from a fallback font with a
+                // taller line, and headers sit side by side
+                b.LayoutElement.preferredHeight = TextMeasure.Measure("0", th).y + 2;
             });
             return b;
         }
