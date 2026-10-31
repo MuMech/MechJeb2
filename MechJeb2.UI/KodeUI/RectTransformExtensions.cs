@@ -1,4 +1,4 @@
-﻿// from https://answers.unity.com/questions/1225118/solution-set-ui-recttransform-anchor-presets-from.html
+// from https://answers.unity.com/questions/1225118/solution-set-ui-recttransform-anchor-presets-from.html
 
 using UnityEngine;
 

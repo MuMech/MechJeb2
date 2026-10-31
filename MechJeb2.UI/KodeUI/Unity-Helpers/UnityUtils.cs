@@ -1,4 +1,4 @@
-﻿// From https://github.com/mikecann/Unity-Helpers
+// From https://github.com/mikecann/Unity-Helpers
 
 using System;
 using System.Collections.Generic;

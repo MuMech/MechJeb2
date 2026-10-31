@@ -69,5 +69,6 @@ Live numbers that change every frame: prefer `CharText` (garbage-free formatting
 
 From the repository root: `dotnet build MechJeb2.UI/MechJeb2.UI.csproj -c Release`. A worktree needs
 `Directory.Build.props.user` (copy it from the main checkout). `KodeUI/` is a copy of the sources of
-https://github.com/sarbian/KodeUI (MIT, see `KodeUI/LICENSE.md`): change KodeUI there and copy it back.
+https://github.com/sarbian/KodeUI (MIT, see `KodeUI/LICENSE.md`): change KodeUI there and copy it back, without the
+UTF-8 BOMs its files have, which CI rejects.
 Don't set `KSPDIR` (it copies the build into KSP).
