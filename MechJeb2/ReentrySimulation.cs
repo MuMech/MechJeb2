@@ -175,13 +175,13 @@ namespace MuMech
             _referenceFrame.UpdateAtCurrentTime(initialOrbit.referenceBody);
             _orbitReenters = OrbitReenters(initialOrbit);
 
-            _startX = _initialOrbit.WorldBCIPositionAtUT(_startUT);
             // This calls some Unity function so it should be done outside the thread
             if (_orbitReenters)
             {
                 _startUT = ut;
                 _t = _startUT;
                 AdvanceToFreefallEnd(_initialOrbit);
+                _startX = _x;
             }
 
             _maxDragGees = 0;
