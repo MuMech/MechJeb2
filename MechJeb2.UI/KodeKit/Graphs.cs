@@ -97,7 +97,7 @@ namespace KodeKit
             Plot = Graphs.Surface(area, width, height, "Plot");
             if (NestedCanvas)
             {
-                // own canvas: redrawing the lines re-batches only the plot, not the whole appCanvas
+                // own canvas: redrawing the lines re-batches only the plot, not the whole root canvas
                 Plot.gameObject.AddComponent<Canvas>();
             }
             Plot.gameObject.AddComponent<RectMask2D>();

@@ -184,21 +184,21 @@ namespace KodeKit
             Open?.Close();
             Open = this;
 
-            Canvas app = UIMasterController.Instance.appCanvas;
-            var canvasRt = (RectTransform)app.transform;
+            Canvas root = Overlay.Root;
+            var canvasRt = (RectTransform)root.transform;
 
             // must be on the UI layer: UIMainCamera culls other layers (raycasts still work, so this fails silently)
-            popup = new GameObject("ComboPopup", typeof(RectTransform)) { layer = app.gameObject.layer };
+            popup = new GameObject("ComboPopup", typeof(RectTransform)) { layer = root.gameObject.layer };
             var rt = (RectTransform)popup.transform;
             rt.SetParent(canvasRt, false);
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = rt.offsetMax = Vector2.zero;
-            Overlay.Setup(popup.AddComponent<Canvas>(), app, 100);
+            Overlay.Setup(popup.AddComponent<Canvas>(), root, 100);
             popup.AddComponent<GraphicRaycaster>();
 
             // full-screen transparent blocker: a click outside the list closes without a change
-            Blocker = new GameObject("Blocker", typeof(RectTransform)) { layer = app.gameObject.layer };
+            Blocker = new GameObject("Blocker", typeof(RectTransform)) { layer = root.gameObject.layer };
             var brt = (RectTransform)Blocker.transform;
             brt.SetParent(rt, false);
             brt.anchorMin = Vector2.zero;

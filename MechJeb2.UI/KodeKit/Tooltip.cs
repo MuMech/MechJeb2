@@ -85,14 +85,14 @@ namespace KodeKit
 
         void Build()
         {
-            Canvas app = UIMasterController.Instance.appCanvas;
-            var root = new GameObject("TooltipCanvas", typeof(RectTransform)) { layer = app.gameObject.layer };
+            Canvas canvas = Overlay.Root;
+            var root = new GameObject("TooltipCanvas", typeof(RectTransform)) { layer = canvas.gameObject.layer };
             var rt = (RectTransform)root.transform;
-            rt.SetParent(app.transform, false);
+            rt.SetParent(canvas.transform, false);
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = rt.offsetMax = Vector2.zero;
-            Overlay.Setup(root.AddComponent<Canvas>(), app, 110); // above combo popups
+            Overlay.Setup(root.AddComponent<Canvas>(), canvas, 110); // above combo popups
 
             LayoutPanel p = UIKit.CreateUI<LayoutPanel>(rt, "Tooltip");
             p.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false).Padding(6, 6, 3, 3);
@@ -146,7 +146,7 @@ namespace KodeKit
 
             // below-right of the pointer, kept on screen
             var parent = (RectTransform)panel.parent;
-            Camera cam = UIMasterController.Instance.appCanvas.worldCamera;
+            Camera cam = Overlay.Root.worldCamera;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, pointer + new Vector2(12, -16), cam, out Vector2 local);
             Rect r = parent.rect;
             Vector2 size = panel.rect.size;
