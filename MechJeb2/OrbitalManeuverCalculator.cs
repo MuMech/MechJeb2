@@ -186,15 +186,10 @@ namespace MuMech
 
             TransferGeometry direction = prograde ? TransferGeometry.Prograde : TransferGeometry.Retrograde;
 
-            (V3 transferVi, V3 transferVf) =
-                Russell.Solve(o.referenceBody.gravParameter, ri, rf, dt, direction, 0, V3.Cross(ri, vi));
-
             if (offsetDistance != 0)
-            {
                 rf -= offsetDistance * V3.Cross(vf, rf).normalized;
-                (transferVi, transferVf) = Russell.Solve(o.referenceBody.gravParameter, ri, rf,
-                    dt, direction, 0, V3.Cross(ri, vi));
-            }
+
+            (V3 transferVi, V3 transferVf) = LambertSolver.Solve(o.referenceBody.gravParameter, ri, rf, dt, direction, V3.Cross(ri, vi));
 
             return ((transferVi - vi).V3ToWorld(), (vf - transferVf).V3ToWorld());
         }
@@ -254,8 +249,8 @@ namespace MuMech
             var ri = o.WorldBCIPositionAtUT(burnUT).ToV3();
             var vi = o.WorldOrbitalVelocityAtUT(burnUT).ToV3();
             var rf = (interceptTarget - o.referenceBody.position).ToV3();
-            (V3 velAfterBurn, _) = Russell.Solve(o.referenceBody.gravParameter, ri,
-                rf, collisionUT - burnUT, TransferGeometry.Prograde, 0, V3.Cross(ri, vi));
+            (V3 velAfterBurn, _) = LambertSolver.Solve(o.referenceBody.gravParameter, ri,
+                rf, collisionUT - burnUT, TransferGeometry.Prograde, V3.Cross(ri, vi));
 
             Vector3d deltaV = velAfterBurn.ToVector3d() - o.WorldOrbitalVelocityAtUT(burnUT);
             return deltaV;
