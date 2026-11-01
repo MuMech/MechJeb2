@@ -16,7 +16,8 @@ namespace MuMech.UI
     /// one decimated mesh per graph (rebuilt a few times a second, one per frame), a mesh for the stage markers, Y labels for the selected graph.
     /// The model work of WindowGUI (scales, background texture, sizes) runs in BeforeSync through the module's shared methods.
     /// Differences: the Y labels are evenly spaced (LineGraph's), the plot size changes by rebuilding the view, and the
-    /// graph is clipped to the plot instead of skipping the points outside it.
+    /// graph is clipped to the plot instead of skipping the points outside it. In the modern layout the plot fills the
+    /// window's width, and a drop-down in its corner picks the graph of the Y labels, not the column beside it.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleFlightRecorderGraph))]
     public class FlightRecorderGraphView : KodeView
@@ -228,15 +229,16 @@ namespace MuMech.UI
                 return;
             }
 
+            // the modern plot fills its row: the X scale and the size shown go by the width it has
+            if (KodeWindow.ModernLayout) g.width = Math.Max(g.width, Mathf.RoundToInt(graph.Plot.rect.width));
+
             curScaleX = g.CurrentScaleX(out float maxX);
             if (float.IsNaN(maxX) || maxX < 0) maxX = 0;
             graph.VisibleWidth = g.width * curScaleX;
             graph.DataMaxX = maxX;
             ScanStages();
 
-            int mask = 0;
-            for (int i = 0; i < MechJebModuleFlightRecorderGraph.graphInfos.Length; i++)
-                if (g.displayed[(int)MechJebModuleFlightRecorderGraph.graphInfos[i].Type]) mask |= 1 << i;
+            int mask = DisplayedMask();
             if (g.stages) mask |= 1 << 30;
 
             bool force = !curScaleX.Equals(lastScaleX) || g.downrange != lastDownrange || g.scaleIdx != lastScaleIdx || mask != lastMask;
@@ -273,15 +275,24 @@ namespace MuMech.UI
             if (yLabels.alpha != alpha) yLabels.alpha = alpha;
         }
 
+        // one bit per entry of graphInfos
+        int DisplayedMask()
+        {
+            int mask = 0;
+            for (int i = 0; i < MechJebModuleFlightRecorderGraph.graphInfos.Length; i++)
+                if (g.displayed[(int)MechJebModuleFlightRecorderGraph.graphInfos[i].Type]) mask |= 1 << i;
+            return mask;
+        }
+
         // GUI.color = the graph's colour around IMGUI's toggle tints the box and the text
         static void Colorize(KodeWindow w, Toggle toggle, Color color)
         {
             TMP_Text label = KodeWindow.LabelOf(toggle);
-            Graphic box = KodeWindow.ModernLayout ? null : toggle.targetGraphic;
+            Graphic box = toggle.targetGraphic;
             void Paint()
             {
                 label.color = color;
-                if (box != null) box.color = color;
+                box.color = color;
             }
             Paint();
             w.Behaviour.AddRestyle(Paint);
@@ -367,6 +378,8 @@ namespace MuMech.UI
 
         void Resize(int dh, int dv)
         {
+            // step from the width the plot has, which filling its row can have made larger than hSize's
+            if (dh != 0 && KodeWindow.ModernLayout) g.hSize = g.width / 128;
             g.hSize += dh;
             g.vSize += dv;
             g.ClampSizes();
@@ -432,11 +445,11 @@ namespace MuMech.UI
             return row;
         }
 
-        // the plot, and next to it which graph the Y labels belong to (both layouts)
+        // the plot and which graph the Y labels belong to (both layouts)
         void BuildPlot(KodeWindow w, UIObject r)
         {
-            // the plot, and next to it which graph the Y labels belong to
             Layout plotRow = KodeWindow.Row(r);
+            plotRow.Padding(0, 0, 5, 5);
             Layout left = plotRow.Add<Layout>("Plot");
             left.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             left.Finish();
@@ -457,6 +470,13 @@ namespace MuMech.UI
                 w.Visible(series.gameObject, () => g.displayed[(int)type]);
             }
 
+            if (KodeWindow.ModernLayout)
+            {
+                graph.Plot.GetComponent<LayoutElement>().flexibleWidth = 1;
+                BuildScaleCombo(w);
+                return;
+            }
+
             Layout scales = KodeWindow.Panel(plotRow);
             foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
             {
@@ -468,6 +488,47 @@ namespace MuMech.UI
                 Colorize(w, pick, info.Color);
                 w.Visible(pick, () => g.displayed[(int)type]);
             }
+        }
+
+        // ---- the modern layout's drop-down over the plot: the displayed graphs ----
+
+        readonly List<MechJebModuleFlightRecorderGraph.GraphInfo> scaleGraphs = new List<MechJebModuleFlightRecorderGraph.GraphInfo>();
+        string[] scaleNames;
+        int scaleNamesMask = -1;
+
+        // the combo box reads this every frame: a new array only when the displayed graphs change
+        string[] ScaleNames()
+        {
+            int mask = DisplayedMask();
+            if (mask == scaleNamesMask) return scaleNames;
+            scaleNamesMask = mask;
+
+            scaleGraphs.Clear();
+            foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
+                if (g.displayed[(int)info.Type]) scaleGraphs.Add(info);
+
+            scaleNames = new string[scaleGraphs.Count];
+            for (int i = 0; i < scaleNames.Length; i++)
+                scaleNames[i] = KodeWindow.Loc(scaleGraphs[i].ScaleLabel);
+            return scaleNames;
+        }
+
+        int ScalePosition()
+        {
+            for (int i = 0; i < scaleGraphs.Count; i++)
+                if ((int)scaleGraphs[i].Type == g.scaleIdx) return i;
+            return 0;
+        }
+
+        void BuildScaleCombo(KodeWindow w)
+        {
+            // over the plot, after the series: the Plot surface has no layout group, so a new selection stays out of the window's layout
+            Layout corner = KodeWindow.Row(graph.Plot.GetComponent<UIObject>());
+            corner.PreferredSizeFitter(true, true).Anchor(AnchorPresets.TopLeft).Pivot(PivotPresets.TopLeft);
+            corner.rectTransform.anchoredPosition = new Vector2(6, -6);
+            new ComboBox(w, corner, ScalePosition, i => g.scaleIdx = (int)scaleGraphs[i].Type, ScaleNames, false, i => scaleGraphs[i].Color);
+            w.Visible(corner.gameObject, () => ScaleNames().Length > 0);
+            w.Behaviour.AddRelocalize(() => scaleNamesMask = -1);
         }
     }
 }

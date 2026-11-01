@@ -21,6 +21,7 @@ namespace KodeKit
         readonly Func<int> get;
         readonly Action<int> set;
         readonly Func<string[]> entries;
+        readonly Func<int, Color> dots;
         public readonly UIButton Button;
         readonly TMP_Text label;
         GameObject popup;
@@ -32,11 +33,13 @@ namespace KodeKit
 
         static string Arrow(TMP_Text t) => t.font != null && t.font.HasCharacter('↓') ? "↓" : "v";
 
-        public ComboBox(KodeWindow w, UIObject parent, Func<int> get, Action<int> set, Func<string[]> entries, bool flexible = true)
+        /// <param name="dots">Each entry's colour, as a dot before its text in the button and the popup (the arrow selector shows the text alone).</param>
+        public ComboBox(KodeWindow w, UIObject parent, Func<int> get, Action<int> set, Func<string[]> entries, bool flexible = true, Func<int, Color> dots = null)
         {
             this.get = get;
             this.set = w.Edits(set);
             this.entries = entries;
+            this.dots = dots;
             Button = KodeWindow.Button(parent, "", Toggle, flexible);
             label = Button.GetComponentInChildren<TMP_Text>();
 
@@ -65,6 +68,9 @@ namespace KodeKit
                 caret.color = th.Text;
             });
 
+            Color dotColor = Color.white;
+            Image dot = dots != null ? Dot(Button, () => dotColor) : null;
+
             string shown = null;
             w.AddSync(() =>
             {
@@ -74,6 +80,9 @@ namespace KodeKit
                 if (s == shown) return;
                 shown = s;
                 Button.Text(s);
+                if (dot == null || e.Length == 0) return;
+                dotColor = dots(i);
+                dot.color = dotColor;
             });
 
             // close with the owning window
@@ -101,15 +110,22 @@ namespace KodeKit
                 // a flexible label in a row that doesn't stretch gets no width at all: size it for the widest entry
                 GameObject cell = KodeWindow.CellOf(current);
                 var le = cell.GetComponent<UnityEngine.UI.LayoutElement>() ?? cell.AddComponent<UnityEngine.UI.LayoutElement>();
+                string[] fitted = null;
                 void FitWidest()
                 {
+                    fitted = this.entries();
                     float widest = 0;
-                    foreach (string e in this.entries())
+                    foreach (string e in fitted)
                         widest = Mathf.Max(widest, TextMeasure.Measure(e ?? "", KodeWindow.ThemeOf(arrows.gameObject)).x);
                     le.minWidth = le.preferredWidth = widest + 8;
                 }
                 FitWidest();
                 w.Behaviour.AddRestyle(FitWidest);
+                // a list that changes comes as a new array
+                w.AddSync(() =>
+                {
+                    if (this.entries() != fitted) FitWidest();
+                });
             }
             KodeWindow.Button(arrows, ">", () =>
             {
@@ -140,6 +156,21 @@ namespace KodeKit
         {
             public ComboBox Combo;
             void OnDisable() => Combo?.Close();
+        }
+
+        // the chips' colour dot; the restyle that repaints icons reads its colour again
+        static Image Dot(UIButton b, Func<Color> color)
+        {
+            Image dot = KodeWindow.AddIcon(b, Sprites.Circle, true);
+            dot.name = "Dot";
+            var le = dot.GetComponent<LayoutElement>();
+            b.Content.Spacing(4);
+            KodeWindow.Styled(dot.gameObject, th =>
+            {
+                le.minWidth = le.preferredWidth = le.minHeight = le.preferredHeight = Mathf.Round(th.FontSize * 0.6f);
+                dot.color = color();
+            });
+            return dot;
         }
 
         void Toggle()
@@ -196,6 +227,12 @@ namespace KodeKit
                 UIButton b = KodeWindow.Button(panel, e[i], () => Select(k), true);
                 b.GetComponentInChildren<TMP_Text>().alignment = TextAlignmentOptions.Left;
                 if (Group != null) b.Content.Padding(14, 6, 1, 1);
+                if (dots != null)
+                {
+                    Color color = dots(i);
+                    Dot(b, () => color);
+                    b.Content.ChildAlignment(TextAnchor.MiddleLeft);
+                }
             }
             panel.gameObject.AddComponent<LayoutElement>().minWidth = ((RectTransform)Button.transform).rect.width;
 
