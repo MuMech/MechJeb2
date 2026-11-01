@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using KodeUI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace KodeKit
@@ -13,11 +15,13 @@ namespace KodeKit
     public class FieldKeyboardLock : MonoBehaviour
     {
         string lockId;
+        bool releasing;
         public bool Locked { get; private set; }
         public string LockId => lockId ??= "KodeKitField_" + GetInstanceID();
 
         public void Lock()
         {
+            releasing = false;
             if (Locked) return;
             InputLockManager.SetControlLock(ControlTypes.KEYBOARDINPUT, LockId);
             Locked = true;
@@ -25,9 +29,33 @@ namespace KodeKit
 
         public void Unlock()
         {
+            releasing = false;
             if (!Locked) return;
             InputLockManager.RemoveControlLock(LockId);
             Locked = false;
+        }
+
+        /// <summary>
+        /// Unlocks once the key that ended the edit is up. A field ends its edit when Escape goes down, and KSP opens its pause menu when
+        /// Escape comes up: unlocked at once, cancelling an edit also pauses the game.
+        /// </summary>
+        public void UnlockAfterKeys()
+        {
+            if (!isActiveAndEnabled)
+            {
+                Unlock();
+                return;
+            }
+            if (!Locked || releasing) return;
+            releasing = true;
+            StartCoroutine(UnlockWhenKeysUp());
+        }
+
+        IEnumerator UnlockWhenKeysUp()
+        {
+            do yield return null; // after this frame's Updates, so KSP has read the release under the lock
+            while (Input.GetKey(KeyCode.Escape) || Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.KeypadEnter));
+            if (releasing) Unlock();
         }
 
         void OnDisable() => Unlock();
@@ -53,6 +81,7 @@ namespace KodeKit
             input.targetGraphic = bg;
             input.onFocusSelectAll = true; // click a field and type to replace its value
             input.selectionColor = new Color(0.3f, 0.55f, 1f, 0.55f); // a visible selection on the dark field
+            input.caretWidth = 2; // TMP's 1 px is easy to miss, and under MSAA it falls across two screen pixels and turns grey
 
             var area = (RectTransform)f.transform.Find("Text Area");
             area.offsetMin = new Vector2(4, 1);
@@ -86,10 +115,40 @@ namespace KodeKit
                 Fit(input.text);
             });
 
+            // a frame in the accent while the field has the keyboard. Made on the first focus: most fields never get one. Not a sprite of
+            // the field's states: TMP_InputField shows a focused field as highlighted, its hover look
+            Image frame = null;
+            void ShowFocus(bool on)
+            {
+                if (frame == null)
+                {
+                    if (!on) return;
+                    var go = new GameObject("Focus", typeof(RectTransform), typeof(Image)) { layer = f.gameObject.layer };
+                    go.transform.SetParent(f.transform, false);
+                    var rt = (RectTransform)go.transform;
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = Vector2.one;
+                    rt.offsetMin = rt.offsetMax = Vector2.zero;
+                    frame = go.GetComponent<Image>();
+                    frame.sprite = Sprites.RoundedBox(3, 2, new Color(1, 1, 1, 0), Color.white);
+                    frame.type = Image.Type.Sliced;
+                    frame.raycastTarget = false;
+                }
+                frame.color = theme.Accent;
+                frame.enabled = on;
+            }
+
             var keyLock = f.gameObject.AddComponent<FieldKeyboardLock>();
             input.onSelect.AddListener(_ => keyLock.Lock());
-            input.onDeselect.AddListener(_ => keyLock.Unlock());
-            input.onEndEdit.AddListener(_ => keyLock.Unlock());
+            input.onDeselect.AddListener(_ => keyLock.UnlockAfterKeys());
+            input.onEndEdit.AddListener(_ =>
+            {
+                keyLock.UnlockAfterKeys();
+                // Enter and Escape end the edit but leave the field selected: it would keep its focused look, and the next
+                // click on it would select nothing new, so no onSelect and no keyboard lock
+                EventSystem events = EventSystem.current;
+                if (events != null && !events.alreadySelecting && events.currentSelectedGameObject == f.gameObject) events.SetSelectedGameObject(null);
+            });
 
             set = w.Edits(set);
             bool pushing = false;
@@ -117,6 +176,7 @@ namespace KodeKit
                 // select the whole value when the field gains focus, so typing replaces it
                 // (KSP's TMP ignores onFocusSelectAll; this runs after the click has placed the caret)
                 bool focused = input.isFocused;
+                if (focused != wasFocused) ShowFocus(focused);
                 if (focused && !wasFocused)
                 {
                     input.selectionAnchorPosition = 0;
