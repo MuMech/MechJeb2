@@ -665,8 +665,6 @@ namespace MechJebLib.Utils
             };
             var dbt = new Dual(segment.Bt);
 
-            bool singleControlVariable = indexes.Index(36) == indexes.Index(37);
-
             int[] idxs1 = { 24, 25, 36, 37, 38 };
 
             foreach (int k in idxs1)
@@ -682,10 +680,7 @@ namespace MechJebLib.Utils
 
                 ans = d0.M - d1.M - mdot * (h4 * d1.T + ha * d2.T);
 
-                if (singleControlVariable && (k == 36 || k == 37))
-                    jac[36] += ans.D;
-                else
-                    jac[k] = ans.D;
+                jac[k] = ans.D;
 
                 if (k < 38)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
@@ -694,19 +689,7 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = ans.M;
-
-            int lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs1)
-                if (jac[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jac[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jac, indexes);
 
             jac.Dispose();
             jac = Vec.Rent(NUM_VARS, true);
@@ -726,10 +709,7 @@ namespace MechJebLib.Utils
 
                 ans = d0.M - d2.M - mdot * (hb * d1.T + h4 * d2.T);
 
-                if (singleControlVariable && (k == 36 || k == 37))
-                    jac[36] += ans.D;
-                else
-                    jac[k] = ans.D;
+                jac[k] = ans.D;
 
                 if (k < 38)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
@@ -738,19 +718,7 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = ans.M;
-
-            lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs2)
-                if (jac[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jac[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jac, indexes);
 
             jac.Dispose();
             jac = Vec.Rent(NUM_VARS, true);
@@ -769,10 +737,7 @@ namespace MechJebLib.Utils
 
                 ans = d0.M - d3.M - mdot * h2 * (d1.T + d2.T);
 
-                if (singleControlVariable && (k == 36 || k == 37))
-                    jac[36] += ans.D;
-                else
-                    jac[k] = ans.D;
+                jac[k] = ans.D;
 
                 if (k < 38)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
@@ -781,19 +746,7 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = ans.M;
-
-            lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            foreach (int k in idxs3)
-                if (jac[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jac[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jac, indexes);
 
             jac.Dispose();
 
@@ -801,6 +754,41 @@ namespace MechJebLib.Utils
         }
 
         private const int NUM_VARS = 39;
+
+        // Appends one Jacobian row of a Gauss-Legendre segment, summing the partials of dual seeds that map to the same
+        // decision variable (the single mass of a coast phase, the single control and throttle of an unguided phase).
+        // The struct-of-arrays layout in PhaseProxy makes indexes.Index(k) non-decreasing in k, so those seeds are
+        // adjacent and the columns reach ALGLIB in increasing order.
+        private static void AppendSegmentRow(alglib.sparsematrix j, Vec jac, in GaussLegendreIndexes indexes)
+        {
+            alglib.sparseappendemptyrow(j);
+
+            int column = int.MinValue;
+            double sum = 0;
+
+            for (int k = 0; k < NUM_VARS; k++)
+            {
+                if (jac[k] == 0)
+                    continue;
+
+                int index = indexes.Index(k);
+
+                if (index == column)
+                {
+                    sum += jac[k];
+                    continue;
+                }
+
+                if (sum != 0)
+                    alglib.sparseappendelement(j, column, sum);
+
+                column = index;
+                sum = jac[k];
+            }
+
+            if (sum != 0)
+                alglib.sparseappendelement(j, column, sum);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ApplyGaussLegendreDynamics(double[] f, alglib.sparsematrix j, int ci, DynamicsCallback vDot, GaussLegendreSegment segment, GaussLegendreIndexes indexes, int n)
@@ -855,8 +843,6 @@ namespace MechJebLib.Utils
             GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2,
             GaussLegendreDualPoint d3)
         {
-            bool singleControlVariable = indexes.Index(36) == indexes.Index(37);
-
             using var jacX = Vec.Rent(NUM_VARS, true);
             using var jacY = Vec.Rent(NUM_VARS, true);
             using var jacZ = Vec.Rent(NUM_VARS, true);
@@ -876,42 +862,9 @@ namespace MechJebLib.Utils
 
                 ans = d0.V - d1.V + h4 * vDot(ref d1) + ha * vDot(ref d2);
 
-                if (singleControlVariable && (k == 28 || k == 29))
-                {
-                    jacX[28] += ans.D.x;
-                    jacY[28] += ans.D.y;
-                    jacZ[28] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 30 || k == 31))
-                {
-                    jacX[30] += ans.D.x;
-                    jacY[30] += ans.D.y;
-                    jacZ[30] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 32 || k == 33))
-                {
-                    jacX[32] += ans.D.x;
-                    jacY[32] += ans.D.y;
-                    jacZ[32] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 34 || k == 35))
-                {
-                    jacX[34] += ans.D.x;
-                    jacY[34] += ans.D.y;
-                    jacZ[34] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 36 || k == 37))
-                {
-                    jacX[36] += ans.D.x;
-                    jacY[36] += ans.D.y;
-                    jacZ[36] += ans.D.z;
-                }
-                else
-                {
-                    jacX[k] = ans.D.x;
-                    jacY[k] = ans.D.y;
-                    jacZ[k] = ans.D.z;
-                }
+                jacX[k] = ans.D.x;
+                jacY[k] = ans.D.y;
+                jacZ[k] = ans.D.z;
 
                 if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
@@ -920,49 +873,13 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = ans.M.x;
-
-            int lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacX[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacX[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacX, indexes);
 
             f[ci++] = ans.M.y;
-
-            lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacY[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacY[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacY, indexes);
 
             f[ci++] = ans.M.z;
-
-            lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacZ[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacZ[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacZ, indexes);
 
             return ci;
         }
@@ -972,8 +889,6 @@ namespace MechJebLib.Utils
             GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2,
             GaussLegendreDualPoint d3)
         {
-            bool singleControlVariable = indexes.Index(28) == indexes.Index(29);
-
             using var jacX = Vec.Rent(NUM_VARS, true);
             using var jacY = Vec.Rent(NUM_VARS, true);
             using var jacZ = Vec.Rent(NUM_VARS, true);
@@ -993,42 +908,9 @@ namespace MechJebLib.Utils
 
                 ans = d0.V - d2.V + hb * vDot(ref d1) + h4 * vDot(ref d2);
 
-                if (singleControlVariable && (k == 28 || k == 29))
-                {
-                    jacX[28] += ans.D.x;
-                    jacY[28] += ans.D.y;
-                    jacZ[28] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 30 || k == 31))
-                {
-                    jacX[30] += ans.D.x;
-                    jacY[30] += ans.D.y;
-                    jacZ[30] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 32 || k == 33))
-                {
-                    jacX[32] += ans.D.x;
-                    jacY[32] += ans.D.y;
-                    jacZ[32] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 34 || k == 35))
-                {
-                    jacX[34] += ans.D.x;
-                    jacY[34] += ans.D.y;
-                    jacZ[34] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 36 || k == 37))
-                {
-                    jacX[36] += ans.D.x;
-                    jacY[36] += ans.D.y;
-                    jacZ[36] += ans.D.z;
-                }
-                else
-                {
-                    jacX[k] = ans.D.x;
-                    jacY[k] = ans.D.y;
-                    jacZ[k] = ans.D.z;
-                }
+                jacX[k] = ans.D.x;
+                jacY[k] = ans.D.y;
+                jacZ[k] = ans.D.z;
 
                 if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
@@ -1037,49 +919,13 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = ans.M.x;
-
-            int lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacX[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacX[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacX, indexes);
 
             f[ci++] = ans.M.y;
-
-            lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacY[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacY[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacY, indexes);
 
             f[ci++] = ans.M.z;
-
-            lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacZ[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacZ[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacZ, indexes);
 
             return ci;
         }
@@ -1089,8 +935,6 @@ namespace MechJebLib.Utils
             GaussLegendreDualPoint d0, GaussLegendreDualPoint d1, GaussLegendreDualPoint d2,
             GaussLegendreDualPoint d3)
         {
-            bool singleControlVariable = indexes.Index(28) == indexes.Index(29);
-
             using var jacX = Vec.Rent(NUM_VARS, true);
             using var jacY = Vec.Rent(NUM_VARS, true);
             using var jacZ = Vec.Rent(NUM_VARS, true);
@@ -1109,42 +953,9 @@ namespace MechJebLib.Utils
 
                 ans = d0.V - d3.V + h2 * (vDot(ref d1) + vDot(ref d2));
 
-                if (singleControlVariable && (k == 28 || k == 29))
-                {
-                    jacX[28] += ans.D.x;
-                    jacY[28] += ans.D.y;
-                    jacZ[28] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 30 || k == 31))
-                {
-                    jacX[30] += ans.D.x;
-                    jacY[30] += ans.D.y;
-                    jacZ[30] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 32 || k == 33))
-                {
-                    jacX[32] += ans.D.x;
-                    jacY[32] += ans.D.y;
-                    jacZ[32] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 34 || k == 35))
-                {
-                    jacX[34] += ans.D.x;
-                    jacY[34] += ans.D.y;
-                    jacZ[34] += ans.D.z;
-                }
-                else if (singleControlVariable && (k == 36 || k == 37))
-                {
-                    jacX[36] += ans.D.x;
-                    jacY[36] += ans.D.y;
-                    jacZ[36] += ans.D.z;
-                }
-                else
-                {
-                    jacX[k] = ans.D.x;
-                    jacY[k] = ans.D.y;
-                    jacZ[k] = ans.D.z;
-                }
+                jacX[k] = ans.D.x;
+                jacY[k] = ans.D.y;
+                jacZ[k] = ans.D.z;
 
                 if (k < NUM_VARS - 1)
                     SetDual(k, ref d0, ref d1, ref d2, ref d3, 0);
@@ -1153,49 +964,13 @@ namespace MechJebLib.Utils
             }
 
             f[ci++] = ans.M.x;
-
-            int lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacX[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacX[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacX, indexes);
 
             f[ci++] = ans.M.y;
-
-            lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacY[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacY[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacY, indexes);
 
             f[ci++] = ans.M.z;
-
-            lastindex = -1;
-
-            alglib.sparseappendemptyrow(j);
-            for (int k = 0; k < NUM_VARS; k++)
-                if (jacZ[k] != 0)
-                {
-                    int index = indexes.Index(k);
-                    if (lastindex == index)
-                        continue;
-                    alglib.sparseappendelement(j, index, jacZ[k]);
-                    lastindex = index;
-                }
+            AppendSegmentRow(j, jacZ, indexes);
 
             return ci;
         }
