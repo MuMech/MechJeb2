@@ -1,6 +1,8 @@
 extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
+using MechJebLib.Functions;
+using MechJebLib.Primitives;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
@@ -76,6 +78,45 @@ namespace MuMech
         {
             double closingSpeed = Math.Max(0.01, Math.Min(distance / 100, maxClosingSpeed));
             return Math.Min(distance / closingSpeed, Orbit.period / 4);
+        }
+
+        //The cost of a Hohmann transfer between two circular orbits, and the lead angle of the target for it
+        private static (double cost, double lead) Hohmann(double mu, double radius1, double radius2)
+        {
+            (double dV1, double dV2, _, double lead) = Astro.HohmannTransferParameters(mu, new V3(radius1, 0, 0), new V3(radius2, 0, 0));
+            return (Math.Abs(dV1) + Math.Abs(dV2), lead);
+        }
+
+        //The radius of the orbit around the target's that brings the next window within maxOrbits, or NaN if it isn't a safe one.
+        //Below the target the phase angle closes, and above it it opens, so the two have opposite shares of a cycle left to go.
+        private double PhasingOrbitRadius(double maxOrbits)
+        {
+            double targetRadius = Core.Target.TargetOrbit.semiMajorAxis;
+            (_, double lead) = Hohmann(MainBody.gravParameter, Orbit.semiMajorAxis, targetRadius);
+            double closing = Clamp2Pi(Deg2Rad(Orbit.PhaseAngle(Core.Target.TargetOrbit, VesselState.Time)) - lead) / TAU;
+
+            bool low = Orbit.semiMajorAxis < targetRadius;
+            double radius = PhasingOrbitRadius(low, low ? closing : 1 - closing, maxOrbits);
+            if (MainBody.IsSafeOrbitRadius(radius)) return radius;
+
+            radius = PhasingOrbitRadius(!low, low ? 1 - closing : closing, maxOrbits);
+            return MainBody.IsSafeOrbitRadius(radius) ? radius : double.NaN;
+        }
+
+        //The full size at a whole cycle to go gets there in 0.8 maxOrbits. A smaller share needs a smaller, cheaper orbit.
+        private double PhasingOrbitRadius(bool low, double cycleToGo, double maxOrbits)
+        {
+            double axisRatio = Math.Pow(1 + 1.25 * Math.Max(cycleToGo, 0.02) / maxOrbits, 2.0 / 3.0);
+            return low ? Core.Target.TargetOrbit.semiMajorAxis / axisRatio : Core.Target.TargetOrbit.semiMajorAxis * axisRatio;
+        }
+
+        //Orbits of nearly the same size have a transfer at any time, which can cost far more than going to a phasing orbit and back.
+        private bool TooCostly(double cost, double phasingOrbitRadius)
+        {
+            double mu = MainBody.gravParameter;
+            if (cost <= 2 * Hohmann(mu, Orbit.semiMajorAxis, Core.Target.TargetOrbit.semiMajorAxis).cost)
+                return false;
+            return cost > 2 * Hohmann(mu, Orbit.semiMajorAxis, phasingOrbitRadius).cost;
         }
 
         public override void Drive(FlightCtrlState s)
@@ -210,14 +251,18 @@ namespace MuMech
             {
                 //We're not on an intercept course, but we have a circular orbit in the right plane.
 
-                (Vector3d hohmannDV, double hohmannUT, _, _) =
+                (Vector3d hohmannDV, double hohmannUT, Vector3d arrivalDV, _) =
                     OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.Time, coplanar: false);
 
                 double numPhasingOrbits = (hohmannUT - VesselState.Time) / Orbit.period;
 
                 double actualMaxPhasingOrbits = Math.Max(maxPhasingOrbits, 5); // ignore input values that are unreasonably small
 
-                if (numPhasingOrbits < actualMaxPhasingOrbits)
+                double phasingOrbitRadius = PhasingOrbitRadius(actualMaxPhasingOrbits);
+
+                //With no safe phasing orbit we can only wait for the window, however far it is.
+                if (double.IsNaN(phasingOrbitRadius)
+                    || (numPhasingOrbits < actualMaxPhasingOrbits && !TooCostly(hohmannDV.magnitude + arrivalDV.magnitude, phasingOrbitRadius)))
                 {
                     //It won't be too long until the intercept window. Plot a Hohmann transfer intercept.
                     Vessel.PlaceManeuverNode(Orbit, hohmannDV, hohmannUT);
@@ -228,40 +273,8 @@ namespace MuMech
                 else
                 {
                     //We are in a circular orbit in the right plane, but we aren't phasing quickly enough. Move to a better phasing orbit
-                    double axisRatio = Math.Pow(1 + 1.25 / actualMaxPhasingOrbits, 2.0 / 3.0);
-                    double lowPhasingRadius = Core.Target.TargetOrbit.semiMajorAxis / axisRatio;
-                    double highPhasingRadius = Core.Target.TargetOrbit.semiMajorAxis * axisRatio;
-
-                    bool useLowPhasingRadius = lowPhasingRadius > MainBody.Radius + MainBody.RealMaxAtmosphereAltitude() + 3000 &&
-                        Orbit.semiMajorAxis < Core.Target.TargetOrbit.semiMajorAxis;
-                    double phasingOrbitRadius = useLowPhasingRadius ? lowPhasingRadius : highPhasingRadius;
-
-                    if (Orbit.ApR < phasingOrbitRadius)
-                    {
-                        double UT1 = VesselState.Time + 15;
-                        Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(Orbit, UT1, phasingOrbitRadius);
-                        Vessel.PlaceManeuverNode(Orbit, dV1, UT1);
-                        Orbit transferOrbit = Vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
-                        double UT2 = transferOrbit.NextApoapsisTime(UT1);
-                        Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
-                        Vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
-                    }
-                    else if (Orbit.PeR > phasingOrbitRadius)
-                    {
-                        double UT1 = VesselState.Time + 15;
-                        Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(Orbit, UT1, phasingOrbitRadius);
-                        Vessel.PlaceManeuverNode(Orbit, dV1, UT1);
-                        Orbit transferOrbit = Vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
-                        double UT2 = transferOrbit.NextPeriapsisTime(UT1);
-                        Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
-                        Vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
-                    }
-                    else
-                    {
-                        double UT = Orbit.NextTimeOfRadius(VesselState.Time, phasingOrbitRadius);
-                        Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(Orbit, UT);
-                        Vessel.PlaceManeuverNode(Orbit, dV, UT);
-                    }
+                    foreach (ManeuverParameters maneuver in OrbitalManeuverCalculator.ManeuversToCircularOrbit(Orbit, VesselState.Time + 15, phasingOrbitRadius))
+                        Vessel.PlaceManeuverNode(Orbit, maneuver.dV, maneuver.UT);
 
                     status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"), maxPhasingOrbits.Text,
                         (phasingOrbitRadius - MainBody.Radius)
@@ -272,17 +285,34 @@ namespace MuMech
             {
                 //We're not on an intercept course. We're in the right plane, but our orbit isn't circular. Circularize.
 
+                double safeRadius = MainBody.SafeOrbitRadius();
+
                 bool circularizeAtPe;
                 if (Orbit.eccentricity > 1) circularizeAtPe = true;
                 else
-                    circularizeAtPe = Math.Abs(Orbit.PeR - Core.Target.TargetOrbit.semiMajorAxis) <
+                    circularizeAtPe = Orbit.PeR >= safeRadius && Math.Abs(Orbit.PeR - Core.Target.TargetOrbit.semiMajorAxis) <
                         Math.Abs(Orbit.ApR - Core.Target.TargetOrbit.semiMajorAxis);
 
                 double UT;
                 if (circularizeAtPe) UT = Math.Max(VesselState.Time, Orbit.NextPeriapsisTime(VesselState.Time));
                 else UT = Orbit.NextApoapsisTime(VesselState.Time);
 
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(Orbit, UT);
+                Vector3d dV;
+                if (Orbit.Radius(UT) >= safeRadius) dV = OrbitalManeuverCalculator.DeltaVToCircularize(Orbit, UT);
+                else if (VesselState.Radius >= safeRadius)
+                {
+                    //A hyperbola coming in too low: the circular orbit would be in the atmosphere or the terrain, so raise it first
+                    UT = VesselState.Time + 15;
+                    dV = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(Orbit, UT, safeRadius);
+                }
+                else
+                {
+                    status = Localizer.Format("#MechJeb_RZauto_orbitTooLow"); //"The orbit is too low to rendezvous from."
+                    ScreenMessages.PostScreenMessage(status, 5);
+                    Users.Clear();
+                    return;
+                }
+
                 Vessel.PlaceManeuverNode(Orbit, dV, UT);
 
                 status = Localizer.Format("#MechJeb_RZauto_statu8"); //"Circularizing."
