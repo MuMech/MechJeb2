@@ -201,7 +201,20 @@ namespace KodeKit
 
         // ---- z-order ----
 
-        public void BringToFront() => Rect.SetAsLastSibling();
+        /// <summary>Above the other windows, and below the PopupDialogs that share the canvas: the pause menu is one.</summary>
+        public void BringToFront()
+        {
+            Transform canvas = Rect.parent;
+            int top = canvas.childCount - 1;
+            for (int i = top; i >= 0; i--)
+            {
+                Transform child = canvas.GetChild(i);
+                if (child == Rect) continue;
+                if (child.GetComponent<PopupDialog>() == null) break;
+                top--;
+            }
+            Rect.SetSiblingIndex(top);
+        }
 
         static readonly List<RaycastResult> hits = new List<RaycastResult>();
 

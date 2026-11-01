@@ -112,7 +112,7 @@ namespace KodeKit
             blocks.RemoveAll(b => !b.Alive);
             if (blocks.Count == 0) return;
             if (Skin != null) GUI.skin = Skin;
-            Camera cam = UIMasterController.Instance.appCanvas.worldCamera;
+            Camera cam = Overlay.Root.worldCamera;
             for (int i = 0; i < blocks.Count; i++)
                 blocks[i].OnGUI(cam);
         }

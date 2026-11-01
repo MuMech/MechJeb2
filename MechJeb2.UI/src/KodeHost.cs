@@ -170,7 +170,7 @@ namespace MuMech.UI
             try
             {
                 v = factory(m);
-                v.Build(AppCanvas);
+                v.Build((RectTransform)Overlay.Root.transform);
                 views[m] = v;
                 return v;
             }
@@ -193,8 +193,6 @@ namespace MuMech.UI
                 return EditorLogic.fetch != null && EditorLogic.fetch.ship != null ? ((Vessel)null).GetMasterMechJeb() : null;
             return FlightGlobals.ready && FlightGlobals.ActiveVessel != null ? FlightGlobals.ActiveVessel.GetMasterMechJeb() : null;
         }
-
-        static RectTransform AppCanvas => (RectTransform)UIMasterController.Instance.appCanvas.transform;
 
         void OnSettingsChanged(MechJebModuleSettings s)
         {

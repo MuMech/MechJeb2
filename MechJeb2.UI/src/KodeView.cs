@@ -58,6 +58,7 @@ namespace MuMech.UI
             Vector4 v = StoredPosition;
             Window.Behaviour.SetImguiPosition(new Vector2(v.x, v.y), GuiUtils.Scale);
             Window.Behaviour.Moved = _ => StorePosition();
+            Window.Behaviour.BringToFront();
         }
 
         public void ApplyScale()
