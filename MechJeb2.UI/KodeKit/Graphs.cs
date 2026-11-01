@@ -123,7 +123,8 @@ namespace KodeKit
                 UIText t = KodeWindow.LiveLabel(labels.GetComponent<UIObject>(), "-000.0 k", false);
                 RectTransform cell = (RectTransform)t.transform.parent;
                 cell.anchorMin = cell.anchorMax = new Vector2(1, i / (labelCount - 1f));
-                cell.pivot = new Vector2(1, 0.5f);
+                // centred on its tick, an end label would stick out over the rows around the plot
+                cell.pivot = new Vector2(1, i == 0 ? 0 : i == labelCount - 1 ? 1 : 0.5f);
                 cell.anchoredPosition = new Vector2(-4, 0);
                 cell.sizeDelta = new Vector2(66, 18);
                 t.tmpText.alignment = TextAlignmentOptions.Right;
