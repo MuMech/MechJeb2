@@ -589,7 +589,7 @@ namespace MuMech
                 Profiler.BeginSample(module.ProfilerName);
                 try
                 {
-                    if (module.Enabled)
+                    if (module.Enabled || module.RunsWhileDisabled)
                     {
                         module.OnFixedUpdate();
                     }
@@ -1168,7 +1168,7 @@ namespace MuMech
                     Profiler.BeginSample(module.ProfilerName);
                     try
                     {
-                        if (module.Enabled) module.Drive(s);
+                        if (module.Enabled || module.RunsWhileDisabled) module.Drive(s);
                     }
                     catch (Exception e)
                     {

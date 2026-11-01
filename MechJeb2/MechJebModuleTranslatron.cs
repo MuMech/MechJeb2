@@ -119,6 +119,8 @@ namespace MuMech
             }
         }
 
+        protected internal override bool RunsWhileDisabled => true;
+
         public override void Drive(FlightCtrlState s)
         {
             // Fix the Translatron behavior which kill HS.

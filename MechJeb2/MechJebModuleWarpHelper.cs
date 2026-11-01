@@ -117,6 +117,8 @@ namespace MuMech
             Core.Warp.MinimumWarp(true);
         }
 
+        protected internal override bool RunsWhileDisabled => true;
+
         public override void OnFixedUpdate()
         {
             if (!warping) return;

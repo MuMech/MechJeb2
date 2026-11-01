@@ -336,6 +336,8 @@ namespace MuMech
             if (resetPID) { Core.Attitude.Controller.Reset(); }
         }
 
+        protected internal override bool RunsWhileDisabled => true;
+
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();

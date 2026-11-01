@@ -43,6 +43,10 @@ namespace MuMech
         // Autopilots switch their modules on and off all flight: only windows have an enabled state to save
         protected virtual bool SavesEnabled => false;
 
+        // A window module whose Enabled only means "window open" but whose state machine must keep running when it is closed
+        // (SmartASS smooth control, Translatron abort, Warp Helper). MechJebCore runs its OnFixedUpdate and Drive regardless of Enabled.
+        protected internal virtual bool RunsWhileDisabled => false;
+
         private bool _enabled;
 
         public bool Enabled
