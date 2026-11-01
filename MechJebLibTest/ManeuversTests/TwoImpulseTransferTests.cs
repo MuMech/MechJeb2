@@ -23,6 +23,54 @@ namespace MechJebLibTest.ManeuversTests
                 yield return new object[] { i };
         }
 
+        private static (V3 r, V3 v) Circular(double mu, double radius, double angle) =>
+            (new V3(radius * Cos(angle), radius * Sin(angle), 0), Sqrt(mu / radius) * new V3(-Sin(angle), Cos(angle), 0));
+
+        // the search can reach a transfer of nearly a whole revolution, whose ends are too close together for Russell
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(100)]
+        [InlineData(1000)]
+        [InlineData(10000)]
+        private void OrbitsOfNearlyTheSameSize(double radiusDifference)
+        {
+            const double MU = 3.5316e12;
+
+            for (int i = 0; i < 36; i++)
+            {
+                (V3 r1, V3 v1) = Circular(MU, 800e3, 0);
+                (V3 r2, V3 v2) = Circular(MU, 800e3 + radiusDifference, (i + 0.5) * 10 * Deg2Rad(1));
+
+                (V3 dv1, double dt1, V3 _, double dt2) = TwoImpulseTransfer.NextManeuver(MU, r1, v1, r2, v2, coplanar: false);
+
+                (V3 rburn, V3 vburn) = Shepperd.Solve(MU, dt1, r1, v1);
+                (V3 rarrival, V3 _) = Shepperd.Solve(MU, dt2 - dt1, rburn, vburn + dv1);
+                (V3 rtarget, V3 _) = Shepperd.Solve(MU, dt2, r2, v2);
+
+                Assert.True(dt1 > 0);
+                Assert.InRange((rarrival - rtarget).magnitude, 0, 1);
+            }
+        }
+
+        [Fact]
+        private void HyperbolicTarget()
+        {
+            const double MU = 3.5316e12;
+
+            (V3 r1, V3 v1) = Circular(MU, 800e3, 0);
+            (V3 r2, V3 v2) = Circular(MU, 900e3, 1);
+            v2 *= 1.6;
+
+            (V3 dv1, double dt1, V3 _, double dt2) = TwoImpulseTransfer.NextManeuver(MU, r1, v1, r2, v2, coplanar: false);
+
+            (V3 rburn, V3 vburn) = Shepperd.Solve(MU, dt1, r1, v1);
+            (V3 rarrival, V3 _) = Shepperd.Solve(MU, dt2 - dt1, rburn, vburn + dv1);
+            (V3 rtarget, V3 _) = Shepperd.Solve(MU, dt2, r2, v2);
+
+            Assert.InRange((rarrival - rtarget).magnitude, 0, 1);
+        }
+
         [Theory]
         [MemberData(nameof(Seeds))]
         private void HohmannTest(int seed)
