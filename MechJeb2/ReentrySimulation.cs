@@ -804,6 +804,7 @@ namespace MuMech
             {
                 if (Trajectory != null)
                     ListPool<AbsoluteVector>.Instance.Release(Trajectory);
+                Trajectory = null;
                 Exception = null;
                 _pool.Release(this);
             }
