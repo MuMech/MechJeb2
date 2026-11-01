@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Threading;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG;
@@ -35,6 +36,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
+            (psg.Objective == Optimizer.ObjectiveType.MIN_THRUST_ACCEL).ShouldBeTrue();
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Vgo(t0).ShouldEqual(2595.8963285782665, 1e-3);
             solution.Tgo(t0).ShouldEqual(610.08086261522431, 1e-3);
@@ -61,6 +63,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
                .AddStage(79699.9986022711, 15700.0014199451, 1500000.09246676, 310.000018173591, 0, 0, allowShutdown: true, ispCurrent: 285.387620615011, minThrottle: 0.0, massContinuity: true)
                .Initial(new V3(365592.912061998, -475862.737003702, -1017.92554628857), new V3(138.749920001822, 106.593409136045, 5.05460467277035E-06), new V3(0.608250428397881, -0.793743408918215, -0.00172494351863861), t0, MU, 600000)
                .SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false)
+               // the final MIN_THRUST_ACCEL stage runs close to the default timeout, which would fall back to the MIN_TIME solution
+               .OptimizerTimeout(Timeout.Infinite)
                .Build();
 
             ascent.Run();
@@ -68,6 +72,7 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
+            (psg.Objective == Optimizer.ObjectiveType.MIN_THRUST_ACCEL).ShouldBeTrue();
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Vgo(t0).ShouldEqual(3522.6470530283032, 1e-3);
             solution.Tgo(t0).ShouldEqual(472.31028465910936, 1e-3);

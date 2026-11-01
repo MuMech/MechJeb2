@@ -35,6 +35,8 @@ namespace MechJebLib.PSG
         public double Cost;
         public Solution? Solution;
 
+        public const int DEFAULT_TIMEOUT = 120_000; // milliseconds
+
         public int    K                   => 3 * N + 1;
         public int    N                   { get; set; } = 7;
         public int    Maxits              { get; set; } = 4000;
@@ -42,7 +44,7 @@ namespace MechJebLib.PSG
         public double Epsf                { get; set; } = 1e-9;
         public double Diffstep            { get; set; } = 1e-9;
         public double Stpmax              { get; set; } = 10;
-        public int    OptimizerTimeout    { get; set; } = 120_000; // milliseconds
+        public int    OptimizerTimeout    { get; set; } = DEFAULT_TIMEOUT; // milliseconds, per Run()
         public double ZeroCoastTime       { get; set; } = 1; // seconds, minimum coast of a burn-coast-burn with a nonzero first burn
         public double ZeroCoastMu         { get; set; } = 1e-6;
 

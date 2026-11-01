@@ -5,6 +5,7 @@
 
 using System.Linq;
 using System.Text;
+using System.Threading;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using MechJebLib.PSG.Terminal;
@@ -41,6 +42,7 @@ namespace MechJebLib.PSG
             private bool      _lanflag          { get; set; }
             private bool      _argpflag         { get; set; }
             private bool      _fixedBurnTime    { get; set; }
+            private int       _optimizerTimeout { get; set; } = Optimizer.DEFAULT_TIMEOUT;
             private Solution? _solution         { get; set; }
 
             public AscentBuilder AddStage(double m0, double mf, double thrust, double isp, int kspStage,
@@ -183,7 +185,7 @@ namespace MechJebLib.PSG
 
                 normalizedPhases.FixLastShutdownStage();
 
-                var ascent = new Ascent(problem, normalizedPhases, _solution, _fixedBurnTime);
+                var ascent = new Ascent(problem, normalizedPhases, _solution, _fixedBurnTime, _optimizerTimeout);
 
                 return ascent;
             }
@@ -205,6 +207,20 @@ namespace MechJebLib.PSG
                 _lanflag = lanflag;
                 _argpflag = argpflag;
 
+                return this;
+            }
+
+            /// <summary>
+            ///     Wall-clock limit on each optimizer run in milliseconds, or Timeout.Infinite.  A bootstrapping stage that times out
+            ///     falls back to the previous stage's solution, so results depend on machine speed unless this is disabled.
+            /// </summary>
+            public AscentBuilder OptimizerTimeout(int milliseconds)
+            {
+                PrintDebug($"[MechJebLib.AscentBuilder] OptimizerTimeout({milliseconds})");
+
+                Check.True(milliseconds > 0 || milliseconds == Timeout.Infinite, "optimizer timeout must be positive or Timeout.Infinite");
+
+                _optimizerTimeout = milliseconds;
                 return this;
             }
 
