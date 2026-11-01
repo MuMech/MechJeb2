@@ -14,8 +14,12 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
+                // the deorbit burn hands over at full throttle: without a prediction nothing else would close it, and the burn runs on
                 if (!Core.Landing.PredictionReady)
+                {
+                    Core.Thrust.ThrustOff();
                     return this;
+                }
 
                 // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
                 if (Core.Landing.DeployChutes)
