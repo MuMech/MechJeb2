@@ -1218,7 +1218,14 @@ namespace MuMech
 
                 for (int i = 0; i < _postDrawQueue.Count; i++)
                 {
-                    _postDrawQueue[i]();
+                    try
+                    {
+                        _postDrawQueue[i]();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException(e);
+                    }
                 }
             }
 

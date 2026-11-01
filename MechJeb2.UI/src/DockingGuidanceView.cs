@@ -25,7 +25,7 @@ namespace MuMech.UI
 
         MechJebCore Core => guidance.Core;
         MechJebModuleDockingAutopilot Ap => autopilot ??= Core.GetComputerModule<MechJebModuleDockingAutopilot>();
-        bool HasTarget => Core.Target != null && Core.Target.NormalTargetExists;
+        bool HasTarget => Core.Target != null && Core.Target.NormalTargetExists && Core.Target.Target.GetVessel() != null;
         bool ApEnabled => Ap != null && Ap.Enabled;
 
         // state refreshed by BeforeSync
@@ -102,7 +102,7 @@ namespace MuMech.UI
             TargetPortSelector(w, main);
 
             UIText warnTarget = GuidanceUi.Warning(w, main, "#MechJeb_Docking_label3");
-            w.Visible(warnTarget.gameObject, () => !(Core.Target.Target is ModuleDockingNode) && guidance.selectedTargetPort == null);
+            w.Visible(warnTarget.gameObject, () => !(Core.Target.Target is ModuleDockingNode));
 
             UIText warnAxis = GuidanceUi.Warning(w, main, "#MechJeb_Docking_label4");
             w.Visible(warnAxis.gameObject, () => noOnAxisNode);
@@ -160,7 +160,7 @@ namespace MuMech.UI
 
             Layout main = TargetGate(w, r);
 
-            bool NoTargetPort() => !(Core.Target.Target is ModuleDockingNode) && guidance.selectedTargetPort == null;
+            bool NoTargetPort() => !(Core.Target.Target is ModuleDockingNode);
             Layout problems = w.StatusBar(main, () => KodeWindow.Tone.Warn);
             w.Visible(problems.gameObject, () => noDockingPortControl || noOnAxisNode || NoTargetPort());
             w.Visible(GuidanceUi.Wrapped(problems, "#MechJeb_Docking_label2").gameObject, () => noDockingPortControl);
