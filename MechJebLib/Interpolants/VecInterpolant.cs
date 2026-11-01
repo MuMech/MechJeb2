@@ -17,6 +17,13 @@ namespace MechJebLib.Interpolants
 
         private static VecInterpolant New() => new VecInterpolant();
 
+        public VecInterpolant DeepCopy()
+        {
+            VecInterpolant dup = Rent();
+            dup.AppendDeepCopyOf(this);
+            return dup;
+        }
+
         public override void Dispose()
         {
             base.Dispose();

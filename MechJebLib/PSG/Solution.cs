@@ -14,6 +14,8 @@ using static System.Math;
 
 namespace MechJebLib.PSG
 {
+    // Evaluating a Solution updates its interpolants' lookup caches, so one Solution must never be used from two threads:
+    // give each thread its own DeepCopy().
     public class Solution : IDisposable
     {
         public double T0;
@@ -59,6 +61,16 @@ namespace MechJebLib.PSG
             double dvend = dvstart + phase.DeltaVFromMass(MBar(idx, interpolant.MinT), MBar(idx, interpolant.MaxT));
             _dvstart.Add(dvstart);
             _dvend.Add(dvend);
+        }
+
+        public Solution DeepCopy()
+        {
+            var dup = new Solution(Problem);
+            // T0 may have moved on since construction (guidance slides it forward while waiting on the pad)
+            dup.T0 = T0;
+            for (int i = 0; i < _interpolants.Count; i++)
+                dup.AddSegment(_interpolants[i].DeepCopy(), Phases[i]);
+            return dup;
         }
 
         // convert kerbal time to normalized time

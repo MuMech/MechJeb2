@@ -16,6 +16,13 @@ namespace MechJebLib.Interpolants
 
         private static DoubleInterpolant New() => new DoubleInterpolant();
 
+        public DoubleInterpolant DeepCopy()
+        {
+            DoubleInterpolant dup = Rent();
+            dup.AppendDeepCopyOf(this);
+            return dup;
+        }
+
         public override void Dispose()
         {
             base.Dispose();

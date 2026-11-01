@@ -69,6 +69,18 @@ namespace MechJebLib.Interpolants
             return yout;
         }
 
+        public override InterpolantNode<Vec> DeepCopy()
+        {
+            CubicHermiteVecNode node = _pool.Borrow();
+            node._t = _t;
+            node._invH = _invH;
+            node._c0 = _c0.Dup();
+            node._c1 = _c1.Dup();
+            node._c2 = _c2.Dup();
+            node._c3 = _c3.Dup();
+            return CopyBoundsTo(node);
+        }
+
         public override void Dispose()
         {
             _c0.Dispose();

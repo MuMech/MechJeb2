@@ -45,6 +45,7 @@ namespace MuMech
         public double StartCoast;
         public bool hasCoasted;
 
+        // guidance's private copy (the solver warm starts from its own), main thread only; T0 is the only field guidance mutates
         public Solution? Solution;
 
         public PSGStatus Status = PSGStatus.ENABLED;
