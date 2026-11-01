@@ -384,6 +384,9 @@ namespace MuMech
 
                     Core.Attitude.AttitudeTo(curAttitude, targetReference, this);
                 }
+
+                // AttitudeTo resets the axis control to all axes, so apply the Force toggles again
+                Core.Attitude.SetAxisControl(forcePitch, forceYaw, forceRol);
             }
         }
 
