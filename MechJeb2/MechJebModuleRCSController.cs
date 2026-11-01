@@ -97,7 +97,8 @@ namespace MuMech
 
         // When evaluating how fast RCS can accelerate and calculate a speed that available thrust should
         // be multiplied by that since the PID controller actual lower the used acceleration
-        public double rcsAccelFactor() => pid.Kp;
+        // Kp goes up as Tf comes down, and at 1 the law plans on all the thrust there is.
+        public double rcsAccelFactor() => Math.Min(pid.Kp, 0.5);
 
         // Whether the last command was at its limit on any axis.
         public bool Saturated => Math.Max(Math.Max(Math.Abs(lastAct.x), Math.Abs(lastAct.y)), Math.Abs(lastAct.z)) >= 1;

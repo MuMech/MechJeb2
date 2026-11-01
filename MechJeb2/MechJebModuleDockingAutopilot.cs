@@ -176,7 +176,7 @@ namespace MuMech
 
         private double FixSpeed(double s)
         {
-            if (speedLimit != 0)
+            if (speedLimit > 0)
             {
                 if (s > speedLimit) s = speedLimit;
                 if (s < -speedLimit) s = -speedLimit;
@@ -322,7 +322,11 @@ namespace MuMech
             //    latApproachSpeed *= relativeLateral / Math.Abs(latApproachSpeed);
 
 
+            // The limit is on the vessel's speed, and each axis keeping to it isn't enough for that.
             Vector3d adjustment = lateralMove + zApproachSpeed * zAxis;
+            if (speedLimit > 0 && adjustment.magnitude > speedLimit)
+                adjustment *= speedLimit / adjustment.magnitude;
+
             Core.RCS.SetTargetWorldVelocity(targetVel + adjustment);
             MechJebModuleDebugArrows.debugVector = adjustment;
             MechJebModuleDebugArrows.debugVector2 = -Core.Target.RelativePosition;
@@ -526,9 +530,10 @@ namespace MuMech
         private void UpdateLimits()
         {
             double clear = ownRadius + routeMargin;
-            targetSize = overrideTargetSize ? (float)overridenTargetSize.Val : (float)(frontReach + clear);
-            safeDistance = overrideSafeDistance ? (float)overridenSafeDistance.Val : (float)(sideReach + clear);
-            rearDistance = overrideSafeDistance ? (float)overridenSafeDistance.Val : (float)(rearReach + clear);
+            double overridenSafe = Math.Max(overridenSafeDistance.Val, 0);
+            targetSize = overrideTargetSize ? (float)Math.Max(overridenTargetSize.Val, 10) : (float)(frontReach + clear);
+            safeDistance = overrideSafeDistance ? (float)overridenSafe : (float)(sideReach + clear);
+            rearDistance = overrideSafeDistance ? (float)overridenSafe : (float)(rearReach + clear);
 
             // A vessel has no capture, and its position is the origin of its control part, inside it. So stop where docking would start.
             stopDistance = portTarget ? 0 : targetSize;
