@@ -57,9 +57,13 @@ namespace MuMech
         public double relativeLateral;
 
         private ITargetable lastTarget;
+        private Part referencePart;
+        private ModuleDockingNode referencePort;
 
         private const float dockingcorridorRadius = 1;
-        private double acquireRange = 0.25;
+        private double stopDistance = 0.25;
+        private double acquireRange;
+        private double captureRange;
 
         public Box3d vesselBoundingBox;
         public Box3d targetBoundingBox;
@@ -162,7 +166,7 @@ namespace MuMech
 
             Vector3d targetVel = TargetPointVelocity();
 
-            double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
+            double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - stopDistance, 0), -zAxis);
             double latApproachSpeed = MaxSpeedToAxis(lateralSep.magnitude, lateralSep);
 
             bool align = true;
@@ -227,7 +231,11 @@ namespace MuMech
                     timeToAxis = Math.Abs(lateralSep.magnitude / latApproachSpeed);
                     timeToTargetSize = Math.Abs(zSep / zApproachSpeed);
 
-                    if ((zSep <= lateralSep.magnitude * 10 || timeToTargetSize <= timeToAxis * 10) && timeToAxis > 0 && timeToTargetSize > 0)
+                    // The magnets are pulling by now and they turn the target for as long as they act, so unless we're too far off for the ports to
+                    // capture, slowing down only makes that worse.
+                    bool committed = zSep < acquireRange && lateralSep.magnitude < captureRange;
+
+                    if (!committed && (zSep <= lateralSep.magnitude * 10 || timeToTargetSize <= timeToAxis * 10) && timeToAxis > 0 && timeToTargetSize > 0)
                     {
                         zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
                     }
@@ -313,7 +321,7 @@ namespace MuMech
                     break;
 
                 case DockingStep.DOCKING:
-                    if (zSep < acquireRange)
+                    if (zSep < stopDistance)
                     {
                         EndDocking();
                     }
@@ -333,9 +341,23 @@ namespace MuMech
             }
         }
 
+        // Where this vessel meets the target: the node of the port it's controlled from. A port's reference transform is usually the part's
+        // origin, 28 cm behind the node on a Clamp-O-Tron, and KSP measures its acquire and capture ranges between the nodes.
+        private Vector3 DockingPoint()
+        {
+            Part part = Vessel.GetReferenceTransformPart();
+            if (part != referencePart)
+            {
+                referencePart = part;
+                referencePort = Vessel.GetReferenceDockingPort();
+            }
+
+            return referencePort != null ? referencePort.GetTransform().position : Vessel.GetTransform().position;
+        }
+
         private void UpdateDistance()
         {
-            Vector3d separation = Core.Target.RelativePosition;
+            Vector3d separation = DockingPoint() - Core.Target.Position;
             zAxis = Core.Target.DockingAxis.normalized;
             zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             lateralSep = Vector3d.Exclude(zAxis, separation);
@@ -362,10 +384,12 @@ namespace MuMech
                 else
                     safeDistance = (float)overridenSafeDistance.Val;
 
-                if (Core.Target.Target is ModuleDockingNode)
-                    acquireRange = ((ModuleDockingNode)Core.Target.Target).acquireRange * 0.5;
-                else
-                    acquireRange = 0.25;
+                // A port pulls the vessel in from its acquire range, so RCS has to stay on until it captures: stopping short leaves nothing to brake
+                // against the magnets, and they alone bring a 4 t vessel in at 50 cm/s. Docking ending the target ends the autopilot.
+                var port = Core.Target.Target as ModuleDockingNode;
+                stopDistance = port != null ? 0 : 0.25;
+                acquireRange = port != null ? port.acquireRange : 0;
+                captureRange = port != null ? port.captureRange : 0;
             }
             catch (Exception e)
             {

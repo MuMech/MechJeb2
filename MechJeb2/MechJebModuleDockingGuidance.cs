@@ -72,7 +72,7 @@ namespace MuMech
                 selectedTargetVessel = targetVessel;
             }
 
-            ModuleDockingNode referencePort = GetReferenceDockingPort();
+            ModuleDockingNode referencePort = Vessel.GetReferenceDockingPort();
             if (!targetVessel.loaded || targetVessel.packed)
                 return PortSelectorState.Unavailable;
 
@@ -115,31 +115,6 @@ namespace MuMech
                 return targetVessel;
 
             return Core.Target.Target?.GetVessel();
-        }
-
-        private ModuleDockingNode GetReferenceDockingPort()
-        {
-            Part referencePart = Vessel.GetReferenceTransformPart();
-            if (referencePart == null || Vessel.ReferenceTransform == null)
-                return null;
-
-            ModuleDockingNode referencePort = null;
-            double smallestAngle = 2;
-            foreach (ModuleDockingNode port in referencePart.Modules.OfType<ModuleDockingNode>())
-            {
-                Transform portTransform = port.GetTransform();
-                if (portTransform == null)
-                    continue;
-
-                double angle = Vector3d.Angle(portTransform.forward, Vessel.ReferenceTransform.up);
-                if (angle < smallestAngle)
-                {
-                    smallestAngle = angle;
-                    referencePort = port;
-                }
-            }
-
-            return referencePort;
         }
 
         private static bool IsAvailableTargetPort(ModuleDockingNode port) =>

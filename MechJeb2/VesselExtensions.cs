@@ -182,6 +182,32 @@ namespace MuMech
         public static double MaxResourceAmount(this Vessel vessel, string resourceName) =>
             vessel.MaxResourceAmount(PartResourceLibrary.Instance.GetDefinition(resourceName));
 
+        // The docking port the vessel is controlled from, if any.
+        public static ModuleDockingNode GetReferenceDockingPort(this Vessel vessel)
+        {
+            Part referencePart = vessel.GetReferenceTransformPart();
+            if (referencePart == null || vessel.ReferenceTransform == null)
+                return null;
+
+            ModuleDockingNode referencePort = null;
+            double smallestAngle = 2;
+            foreach (ModuleDockingNode port in referencePart.Modules.OfType<ModuleDockingNode>())
+            {
+                Transform portTransform = port.GetTransform();
+                if (portTransform == null)
+                    continue;
+
+                double angle = Vector3d.Angle(portTransform.forward, vessel.ReferenceTransform.up);
+                if (angle < smallestAngle)
+                {
+                    smallestAngle = angle;
+                    referencePort = port;
+                }
+            }
+
+            return referencePort;
+        }
+
         public static bool HasElectricCharge(this Vessel vessel)
         {
             if (vessel == null)
