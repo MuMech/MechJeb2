@@ -23,7 +23,6 @@ namespace MuMech.UI
                 { typeof(KosAttitudeController), (w, p, att) => BuildKos(new Panel<KosAttitudeController>(w, p, att)) },
                 { typeof(HybridController), (w, p, att) => BuildHybrid(new Panel<HybridController>(w, p, att)) },
                 { typeof(BetterController), (w, p, att) => BuildBetter(new Panel<BetterController>(w, p, att)) },
-                { typeof(LQRController), (w, p, att) => BuildLQR(new Panel<LQRController>(w, p, att)) },
             };
 
         // ---- number formatting without allocation (also used by the window's own readouts) ----
@@ -482,22 +481,6 @@ namespace MuMech.UI
             Cell(row, label, 100, true);
             p.Fld(row, vel, 56);
             p.Fld(row, pos, 56);
-        }
-
-        // ---- LQRController ----
-
-        static void BuildLQR(Panel<LQRController> p)
-        {
-            p.Edit("Smooth Torque", c => c.SmoothTorque, 50);
-            p.Vec("Position", c => c._current);
-            p.Vec("Desired", c => c._desired);
-            p.Vec("Error", c => c._error);
-            p.Vec("Velocity", c => c._velocity);
-            p.Vec("Mass", c => c._mass);
-            p.Vec("Actuation", c => c._actuation);
-            p.Vec("MOI", c => Moi(c._vessel));
-            p.Vec("Control Torque", c => c._controlTorque);
-            p.Vec("Applied Torque", c => c._targetTorque);
         }
     }
 }
