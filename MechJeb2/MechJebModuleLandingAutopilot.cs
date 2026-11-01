@@ -544,12 +544,6 @@ namespace MuMech
             return retVal;
         }
 
-        public void SetTargetKSC(MechJebCore controller)
-        {
-            Users.Add(controller);
-            Core.Target.SetPositionTarget(MainBody, MechJebModuleLandingGuidance.LandingSites[0].Latitude,
-                MechJebModuleLandingGuidance.LandingSites[0].Longitude);
-        }
     }
 
     //A descent speed policy that gives the max safe speed if our entire velocity were straight down

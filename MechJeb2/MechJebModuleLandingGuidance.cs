@@ -42,7 +42,14 @@ namespace MuMech
 
         public void SetAndLandTargetKSC()
         {
-            LandingSite ksc = LandingSites.First(x => x.Name == "KSC Pad");
+            int index = LandingSites.FindIndex(x => x.Name == "KSC Pad" && x.Body == MainBody);
+            if (index < 0)
+            {
+                ScreenMessages.PostScreenMessage("MechJeb: no KSC Pad landing site on " + MainBody.bodyName);
+                return;
+            }
+
+            LandingSite ksc = LandingSites[index];
             Core.Target.SetPositionTarget(MainBody, ksc.Latitude, ksc.Longitude);
             Core.Landing.LandAtPositionTarget(this);
         }
