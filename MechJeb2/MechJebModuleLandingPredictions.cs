@@ -177,6 +177,23 @@ namespace MuMech
 
             errorStopwatch.Stop();
             errorStopwatch.Reset();
+
+            ClearResults();
+        }
+
+        // a result from before the predictor was disabled says nothing about the vessel when it is enabled again
+        private void ClearResults()
+        {
+            lock (readyResults)
+            {
+                while (readyResults.Count > 0)
+                    ((ReentrySimulation.Result)readyResults.Dequeue()).Release();
+
+                result?.Release();
+                result = null;
+                errorResult?.Release();
+                errorResult = null;
+            }
         }
 
         public override void OnFixedUpdate()
