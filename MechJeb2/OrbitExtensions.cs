@@ -147,24 +147,36 @@ namespace MuMech
         //If a is hyperbolic, the examined interval is the next 100 units of mean anomaly.
         //This is quite a large segment of the hyperbolic arc. However, for extremely high
         //hyperbolic eccentricity it may not find the actual closest approach.
+        //The search stops where the patch of a ends by leaving the sphere of influence, meeting a body or hitting one:
+        //a isn't on this orbit after that.
         public static double NextClosestApproachTime(this Orbit a, Orbit b, double ut)
         {
             double closestApproachTime = ut;
             double closestApproachDistance = double.MaxValue;
             double minTime = ut;
             double interval = a.period;
-            if (a.eccentricity > 1)
+            if (a.eccentricity >= 1)
             {
                 interval = 100 / a.meanMotion; //this should be an interval of time that covers a large chunk of the hyperbolic arc
             }
 
+            bool patchEnds = a.patchEndTransition == Orbit.PatchTransitionType.ENCOUNTER || a.patchEndTransition == Orbit.PatchTransitionType.ESCAPE ||
+                a.patchEndTransition == Orbit.PatchTransitionType.IMPACT;
+            if (patchEnds && a.EndUT > ut) interval = Min(interval, a.EndUT - ut);
+
             double maxTime = ut + interval;
             const int NUM_DIVISIONS = 20;
+            const int MAX_FIRST_DIVISIONS = 1000;
+
+            //The first pass has to see every pass of the shorter orbit, or the refining can lock on to the wrong one.
+            double shorterPeriod = Min(a.period, b.period);
+            int firstDivisions = (int)Clamp(Ceiling(NUM_DIVISIONS * interval / shorterPeriod), NUM_DIVISIONS, MAX_FIRST_DIVISIONS);
 
             for (int iter = 0; iter < 8; iter++)
             {
-                double dt = (maxTime - minTime) / NUM_DIVISIONS;
-                for (int i = 0; i < NUM_DIVISIONS; i++)
+                int divisions = iter == 0 ? firstDivisions : NUM_DIVISIONS;
+                double dt = (maxTime - minTime) / divisions;
+                for (int i = 0; i < divisions; i++)
                 {
                     double t = minTime + i * dt;
                     double distance = a.Separation(b, t);
