@@ -170,6 +170,10 @@ namespace MuMech
             _predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
             _predictor.decelEndAltitudeASL = DecelerationEndAltitude();
             _predictor.parachuteSemiDeployMultiplier = _parachutePlan.Multiplier;
+            _predictor.maxOrbits = 0.5;
+            _predictor.noSkipToFreefall = false;
+            _predictor.deployChutes = DeployChutes;
+            _predictor.limitChutesStage = LimitChutesStage;
 
             // Consider lowering the langing gear
             {
