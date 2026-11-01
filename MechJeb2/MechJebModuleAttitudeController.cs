@@ -320,6 +320,7 @@ namespace MuMech
         public void AttitudeDeactivate()
         {
             Users.Clear();
+            AttitudeKillRot = false;
             _attitudeChanged = true;
         }
 
