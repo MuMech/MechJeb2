@@ -295,5 +295,54 @@ namespace MuMech.AttitudeControllers
                 LowPassFilter = newLowPassFilter;
             }
         }
+
+        // This is tightly coupled to the MJAttitudeController, and should not be used by other consumers.
+        private class PIDControllerV3
+        {
+            public Vector3d Kp, Ki, Kd, INTAccum, DerivativeAct, PropAct;
+            private readonly double _max;
+            private readonly double _min;
+
+            public PIDControllerV3(Vector3d kp, Vector3d ki, Vector3d kd, double max = double.MaxValue, double min = double.MinValue)
+            {
+                Kp = kp;
+                Ki = ki;
+                Kd = kd;
+                _max = max;
+                _min = min;
+                Reset();
+            }
+
+            public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d wlimit)
+            {
+                DerivativeAct = Vector3d.Scale(omega, Kd);
+                wlimit = Vector3d.Scale(wlimit, Kd);
+
+                // integral actíon + Anti Windup
+                INTAccum.x = Math.Abs(DerivativeAct.x) < 0.6 * _max ? INTAccum.x + error.x * Ki.x * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.x;
+                INTAccum.y = Math.Abs(DerivativeAct.y) < 0.6 * _max ? INTAccum.y + error.y * Ki.y * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.y;
+                INTAccum.z = Math.Abs(DerivativeAct.z) < 0.6 * _max ? INTAccum.z + error.z * Ki.z * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.z;
+
+                PropAct = Vector3d.Scale(error, Kp);
+
+                Vector3d action = PropAct + INTAccum;
+
+                // Clamp (propAct + intAccum) to limit the angular velocity:
+                action = new Vector3d(Math.Max(-wlimit.x, Math.Min(wlimit.x, action.x)),
+                    Math.Max(-wlimit.y, Math.Min(wlimit.y, action.y)),
+                    Math.Max(-wlimit.z, Math.Min(wlimit.z, action.z)));
+
+                // add. derivative action
+                action += DerivativeAct;
+
+                // action clamp
+                action = new Vector3d(Math.Max(_min, Math.Min(_max, action.x)),
+                    Math.Max(_min, Math.Min(_max, action.y)),
+                    Math.Max(_min, Math.Min(_max, action.z)));
+                return action;
+            }
+
+            public void Reset() => INTAccum = Vector3d.zero;
+        }
     }
 }

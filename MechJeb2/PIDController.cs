@@ -3,38 +3,39 @@ using MechJebLib.Control;
 
 namespace MuMech
 {
-    public class PIDController : IConfigNode
+    // Parallel-form gains and ConfigNode persistence for PIDLoop2s that run on the physics tick.
+    public abstract class PIDControllerBase : IConfigNode
     {
-        private double _prevError;
-        public double INTAccum, Kp, Ki, Kd;
+        public double Kp, Ki, Kd;
+        public double MinIntegral = double.MinValue;
+        public double MaxIntegral = double.MaxValue;
         private readonly double _max;
         private readonly double _min;
 
-        public PIDController(double kp = 0, double ki = 0, double kd = 0, double max = double.MaxValue, double min = double.MinValue)
+        protected PIDControllerBase(double kp, double ki, double kd, double max, double min)
         {
             Kp = kp;
             Ki = ki;
             Kd = kd;
             _max = max;
             _min = min;
-            Reset();
         }
 
-        public double Compute(double error)
+        protected void Configure(PIDLoop2 loop)
         {
-            INTAccum += error * TimeWarp.fixedDeltaTime;
-            double action = Kp * error + Ki * INTAccum + Kd * (error - _prevError) / TimeWarp.fixedDeltaTime;
-            double clamped = Math.Max(_min, Math.Min(_max, action));
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (clamped != action)
-                INTAccum -= error * TimeWarp.fixedDeltaTime;
-
-            _prevError = error;
-
-            return action;
+            loop.Ts = TimeWarp.fixedDeltaTime;
+            // Kp first: the Ki and Kd setters scale by the current K
+            loop.Kp = Kp;
+            loop.Ki = Ki;
+            loop.Kd = Kd;
+            // with Tf = Ts/2 the Tustin derivative is the plain difference Kd * (e - e1) / Ts, and it doesn't ring
+            loop.Tf = 0.5 * loop.Ts;
+            loop.MinOutput = _min;
+            loop.MaxOutput = _max;
+            loop.MinIntegral = MinIntegral;
+            loop.MaxIntegral = MaxIntegral;
+            loop.ConditionalIntegration = true;
         }
-
-        public void Reset() => _prevError = INTAccum = 0;
 
         public void Load(ConfigNode node)
         {
@@ -56,135 +57,54 @@ namespace MuMech
         }
     }
 
-    // Only P and I: this drives velocities, and for those the plant is a single integrator.
-    public class PIDControllerV2 : IConfigNode
+    public class PIDController : PIDControllerBase
     {
-        private Vector3d _intAccum;
-        private Vector3d _propAct;
-        public double Kp, Ki;
-        private readonly double _max;
-        private readonly double _min;
+        private readonly PIDLoop2 _loop = new PIDLoop2();
+
+        public PIDController(double kp = 0, double ki = 0, double kd = 0, double max = double.MaxValue, double min = double.MinValue)
+            : base(kp, ki, kd, max, min)
+        {
+        }
+
+        // the integral's share of the output
+        public double ITerm => _loop.ITerm;
+
+        public double Compute(double error)
+        {
+            Configure(_loop);
+            return _loop.Update(error, 0);
+        }
+
+        public void Reset() => _loop.Reset();
+    }
+
+    // Only P and I: this drives velocities, and for those the plant is a single integrator.
+    public class PIDControllerV2 : PIDControllerBase
+    {
+        private readonly PIDLoop2[] _loops = { new PIDLoop2(), new PIDLoop2(), new PIDLoop2() };
 
         public PIDControllerV2(double kp = 0, double ki = 0, double max = double.MaxValue, double min = double.MinValue)
+            : base(kp, ki, 0, max, min)
         {
-            Kp = kp;
-            Ki = ki;
-            _max = max;
-            _min = min;
-            Reset();
         }
 
         public Vector3d Compute(Vector3d error)
         {
-            _propAct = error * Kp;
-            Vector3d intStep = error * (Ki * TimeWarp.fixedDeltaTime);
+            var action = new Vector3d();
 
-            // integral action + Anti Windup
-            _intAccum.x = AntiWindup.Integrate(_intAccum.x, _propAct.x, intStep.x, _min, _max);
-            _intAccum.y = AntiWindup.Integrate(_intAccum.y, _propAct.y, intStep.y, _min, _max);
-            _intAccum.z = AntiWindup.Integrate(_intAccum.z, _propAct.z, intStep.z, _min, _max);
+            for (int i = 0; i < 3; i++)
+            {
+                Configure(_loops[i]);
+                action[i] = _loops[i].Update(error[i], 0);
+            }
 
-            Vector3d action = _propAct + _intAccum;
-
-            // action clamp
-            action = new Vector3d(Math.Max(_min, Math.Min(_max, action.x)),
-                Math.Max(_min, Math.Min(_max, action.y)),
-                Math.Max(_min, Math.Min(_max, action.z)));
             return action;
         }
 
-        public void Reset() => _intAccum = Vector3d.zero;
-
-        public void Load(ConfigNode node)
+        public void Reset()
         {
-            if (node.HasValue("Kp"))
-            {
-                Kp = Convert.ToDouble(node.GetValue("Kp"));
-            }
-
-            if (node.HasValue("Ki"))
-            {
-                Ki = Convert.ToDouble(node.GetValue("Ki"));
-            }
-        }
-
-        public void Save(ConfigNode node)
-        {
-            node.SetValue("Kp", Kp.ToString());
-            node.SetValue("Ki", Ki.ToString());
-        }
-    }
-
-    public class PIDControllerV3 : IConfigNode
-    {
-        public Vector3d Kp, Ki, Kd, INTAccum, DerivativeAct, PropAct;
-        private readonly double _max;
-        private readonly double _min;
-
-        public PIDControllerV3(Vector3d kp, Vector3d ki, Vector3d kd, double max = double.MaxValue, double min = double.MinValue)
-        {
-            Kp = kp;
-            Ki = ki;
-            Kd = kd;
-            _max = max;
-            _min = min;
-            Reset();
-        }
-
-        public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d wlimit)
-        {
-            DerivativeAct = Vector3d.Scale(omega, Kd);
-            wlimit = Vector3d.Scale(wlimit, Kd);
-
-            // integral actíon + Anti Windup
-            INTAccum.x = Math.Abs(DerivativeAct.x) < 0.6 * _max ? INTAccum.x + error.x * Ki.x * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.x;
-            INTAccum.y = Math.Abs(DerivativeAct.y) < 0.6 * _max ? INTAccum.y + error.y * Ki.y * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.y;
-            INTAccum.z = Math.Abs(DerivativeAct.z) < 0.6 * _max ? INTAccum.z + error.z * Ki.z * TimeWarp.fixedDeltaTime : 0.9 * INTAccum.z;
-
-            PropAct = Vector3d.Scale(error, Kp);
-
-            Vector3d action = PropAct + INTAccum;
-
-            // Clamp (propAct + intAccum) to limit the angular velocity:
-            action = new Vector3d(Math.Max(-wlimit.x, Math.Min(wlimit.x, action.x)),
-                Math.Max(-wlimit.y, Math.Min(wlimit.y, action.y)),
-                Math.Max(-wlimit.z, Math.Min(wlimit.z, action.z)));
-
-            // add. derivative action
-            action += DerivativeAct;
-
-            // action clamp
-            action = new Vector3d(Math.Max(_min, Math.Min(_max, action.x)),
-                Math.Max(_min, Math.Min(_max, action.y)),
-                Math.Max(_min, Math.Min(_max, action.z)));
-            return action;
-        }
-
-        public void Reset() => INTAccum = Vector3d.zero;
-
-        public void Load(ConfigNode node)
-        {
-            if (node.HasValue("Kp"))
-            {
-                Kp = ConfigNode.ParseVector3D(node.GetValue("Kp"));
-            }
-
-            if (node.HasValue("Ki"))
-            {
-                Ki = ConfigNode.ParseVector3D(node.GetValue("Ki"));
-            }
-
-            if (node.HasValue("Kd"))
-            {
-                Kd = ConfigNode.ParseVector3D(node.GetValue("Kd"));
-            }
-        }
-
-        public void Save(ConfigNode node)
-        {
-            node.SetValue("Kp", Kp.ToString());
-            node.SetValue("Ki", Ki.ToString());
-            node.SetValue("Kd", Kd.ToString());
+            foreach (PIDLoop2 loop in _loops)
+                loop.Reset();
         }
     }
 }
