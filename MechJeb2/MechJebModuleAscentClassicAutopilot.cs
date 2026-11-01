@@ -47,6 +47,7 @@ namespace MuMech
             Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
 
             if (_placedCircularizeNode) Core.Node.Abort();
+            if (_mode == AscentMode.COAST_TO_APOAPSIS) Core.Warp.MinimumWarp();
         }
 
         public double VerticalAscentEnd() => AscentSettings.AutoPath ? AscentSettings.AutoTurnStartAltitude : AscentSettings.TurnStartAltitude;
