@@ -259,7 +259,7 @@ namespace MuMech
 
             Vector3 dir = direction;
 
-            Vector3 up = !Enabled ? AttitudeWorldToReference(-Vessel.GetTransform().forward, reference) : AttitudeWorldToReference(AttitudeReferenceToWorld(AttitudeTarget * Vector3d.up, reference), reference);
+            Vector3 up = !Enabled ? AttitudeWorldToReference(-Vessel.GetTransform().forward, reference) : AttitudeWorldToReference(AttitudeReferenceToWorld(AttitudeTarget * Vector3d.up, AttitudeReference), reference);
             Vector3.OrthoNormalize(ref dir, ref up);
             AttitudeTo(QuaternionD.LookRotation(dir, up), reference, controller, axisCtrlRoll: killRollRotation);
             if (killRollRotation) { SetOmegaTarget(roll: 0); }
