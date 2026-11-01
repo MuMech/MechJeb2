@@ -100,6 +100,10 @@ namespace MuMech
 
         private Ascent? _ascent;
 
+        // The solver's own copy of the last converged solution, used to warm start the next solve; guidance flies a separate
+        // DeepCopy(). The worker thread reads it while a job runs, so the main thread only touches it between jobs.
+        private Solution? _solution;
+
         private MechJebModuleAscentSettings _ascentSettings => Core.AscentSettings;
 
         protected override void OnModuleEnabled()
@@ -110,13 +114,16 @@ namespace MuMech
             Staleness = LastInfeasibility = _lastTime = 0;
             LastFailureMessage = null;
             _ascent = null;
+            _solution = null;
             // FIXME: should throw and disable on no logicalplan or flightplan
         }
 
         protected override void OnModuleDisabled()
         {
             Debug.Log("Disabling PSG Simulation");
+            // a job that is still running keeps reading _solution, so the next enable must not hand it to another job
             _ascent = null;
+            _solution = null;
         }
 
         public override void OnStart(PartModule.StartState state) => GameEvents.onStageActivate.Add(HandleStageEvent);
@@ -153,7 +160,8 @@ namespace MuMech
 
                 if (psg.Success() && psg.Solution != null)
                 {
-                    Core.Guidance.SetSolution(psg.Solution);
+                    _solution = psg.Solution;
+                    Core.Guidance.SetSolution(psg.Solution.DeepCopy());
                     SuccessfulConverges += 1;
                     _lastTime = VesselState.Time;
                     Staleness = 0;
@@ -302,8 +310,12 @@ namespace MuMech
                     ascentBuilder.AerodynamicConstants(cd, aRef, rho0, qAlphaMax, qMax, h0, w);
                 }
 
-                if (Core.Guidance.Solution != null)
-                    ascentBuilder.OldSolution(Core.Guidance.Solution);
+                if (_solution != null && Core.Guidance.Solution != null)
+                {
+                    // guidance slides its copy's T0 forward while waiting on the pad, and the warm start has to begin at liftoff
+                    _solution.T0 = Core.Guidance.Solution.T0;
+                    ascentBuilder.OldSolution(_solution);
+                }
 
                 bool massContinuity = false;
 

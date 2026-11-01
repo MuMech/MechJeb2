@@ -9,6 +9,8 @@ using static MechJebLib.Utils.Statics;
 
 namespace MechJebLib.Interpolants
 {
+    // Evaluate() updates the FindIndex() cache, so one interpolant must never be evaluated from two threads: give each
+    // thread its own DeepCopy().
     public class Interpolant<T>
     {
         // list of interpolant frames
@@ -50,6 +52,13 @@ namespace MechJebLib.Interpolants
         }
 
         public void Clear() => Clear(this);
+
+        // appends a deep copy of every node of o, so the two interpolants share no pooled storage or lookup cache
+        protected void AppendDeepCopyOf(Interpolant<T> o)
+        {
+            foreach (InterpolantNode<T> n in o._nodes)
+                Append(n.DeepCopy(), n.LeftT, n.RightT);
+        }
 
         public void Append(InterpolantNode<T> n, double leftT, double rightT)
         {
@@ -150,6 +159,16 @@ namespace MechJebLib.Interpolants
         public double RightT;
 
         public abstract Typ Evaluate(double t);
+
+        // a copy with its own pooled storage, disposing either one leaves the other intact
+        public abstract InterpolantNode<Typ> DeepCopy();
+
+        protected TNode CopyBoundsTo<TNode>(TNode node) where TNode : InterpolantNode<Typ>
+        {
+            node.LeftT = LeftT;
+            node.RightT = RightT;
+            return node;
+        }
 
         public abstract void Dispose();
     }

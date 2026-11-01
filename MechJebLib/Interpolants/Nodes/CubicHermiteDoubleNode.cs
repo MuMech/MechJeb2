@@ -62,6 +62,8 @@ namespace MechJebLib.Interpolants
             return _c0 + s * (_c1 + s * (_c2 + s * _c3));
         }
 
+        public override InterpolantNode<double> DeepCopy() => CopyBoundsTo(RentPolynomial(_t, _invH, _c0, _c1, _c2, _c3));
+
         public override void Dispose() => _pool.Release(this);
 
         public override string ToString() =>

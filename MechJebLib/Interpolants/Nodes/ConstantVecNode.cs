@@ -45,6 +45,8 @@ namespace MechJebLib.Interpolants
             return yout;
         }
 
+        public override InterpolantNode<Vec> DeepCopy() => CopyBoundsTo(Rent(_y));
+
         public override void Dispose()
         {
             _y.Dispose();
