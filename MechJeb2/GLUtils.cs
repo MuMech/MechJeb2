@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using MechJebLib.Control;
+using MechJebLibBindings;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
@@ -146,6 +148,38 @@ namespace MuMech
             GL.End();
             GL.PopMatrix();
         }
+
+        // Each box of a shape, whose origin and axes are given in the world.
+        public static void DrawShape(VesselShape shape, Vector3d origin, Quaternion rotation, Color c)
+        {
+            GL.PushMatrix();
+            _material.SetPass(0);
+            GL.LoadOrtho();
+            GL.Begin(GL.LINES);
+            GL.Color(c);
+
+            for (int i = 0; i < shape.Count; i++)
+            {
+                Vector3d min = shape.Min(i).ToVector3d();
+                Vector3d max = shape.Max(i).ToVector3d();
+                for (int corner = 0; corner < 8; corner++)
+                    for (int axis = 1; axis <= 4; axis *= 2)
+                    {
+                        // once each: an edge joins a corner to the one with this axis's bit set
+                        if ((corner & axis) != 0)
+                            continue;
+
+                        GLVertex(origin + rotation * Corner(min, max, corner));
+                        GLVertex(origin + rotation * Corner(min, max, corner | axis));
+                    }
+            }
+
+            GL.End();
+            GL.PopMatrix();
+        }
+
+        private static Vector3d Corner(Vector3d min, Vector3d max, int corner) =>
+            new Vector3d((corner & 1) == 0 ? min.x : max.x, (corner & 2) == 0 ? min.y : max.y, (corner & 4) == 0 ? min.z : max.z);
 
         public static void DrawBoundingBox(CelestialBody mainBody, Vessel vessel, MechJebModuleDockingAutopilot.Box3d box, Color c)
         {

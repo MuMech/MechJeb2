@@ -1,7 +1,9 @@
 extern alias JetBrainsAnnotations;
 using System;
+using System.Collections.Generic;
 using KSP.Localization;
 using MechJebLib.Control;
+using MechJebLib.Primitives;
 using MechJebLibBindings;
 using UnityEngine;
 
@@ -36,14 +38,18 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool stopOnContact = true;
 
+        // How far off the docking axis the route passes the target, and how far in front of the port the approach starts.
         public float safeDistance = 10;
         public float targetSize = 5;
+
+        // How far behind the port the route crosses the axis.
+        public float rearDistance = 10;
 
         public bool drawBoundingBox;
 
         public enum DockingStep
         {
-            INIT, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
+            INIT, LEAVING_TARGET, WRONG_SIDE_BACKING_UP, WRONG_SIDE_LATERAL, WRONG_SIDE_SWITCHSIDE, BACKING_UP, MOVING_TO_START, DOCKING, OFF
         }
 
         public DockingStep dockingStep = DockingStep.OFF;
@@ -67,14 +73,31 @@ namespace MuMech
         private const float dockingcorridorRadius = 1;
         private const double alignedAngle = 5;
         private const double stoppedSpeed = 0.03;
+        private const double routeMargin = 2;
+        private const double leaveSpeed = 1;
+        private const int maxRetries = 3;
         private double stopDistance;
         private bool portTarget;
         private bool targetMeasured;
+        private bool ownMeasured;
+        private double ownRadius;
+        private double frontReach;
+        private double rearReach;
+        private double sideReach;
+        private int retries;
         private double acquireRange;
         private double captureRange;
 
         // At full thrust, with under a quarter of the acceleration that should give, for 3 s: something is holding the vessel.
         private readonly StuckDetector stuck = new StuckDetector(3, 0.25);
+
+        // Both around their docking points, the target's in the frame of its port, so a target that turns takes all of this with it.
+        private readonly VesselShape targetShape = new VesselShape();
+        private readonly VesselShape ownShape = new VesselShape();
+        private V3 routeSide;
+        private V3 exitPoint;
+
+        private readonly List<Vector3d> routeLine = new List<Vector3d>();
 
         public Box3d vesselBoundingBox;
         public Box3d targetBoundingBox;
@@ -91,10 +114,23 @@ namespace MuMech
                 Core.AddToPostDrawQueue(DrawBoundingBox);
 
                 GameEvents.onPartCouple.Add(OnPartCouple);
+                GameEvents.onVesselWasModified.Add(OnVesselWasModified);
             }
         }
 
-        public override void OnDestroy() => GameEvents.onPartCouple.Remove(OnPartCouple);
+        public override void OnDestroy()
+        {
+            GameEvents.onPartCouple.Remove(OnPartCouple);
+            GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+        }
+
+        private void OnVesselWasModified(Vessel modified)
+        {
+            if (modified == Vessel)
+                ownMeasured = false;
+            else if (Core.Target.Target != null && modified == Core.Target.Target.GetVessel())
+                targetMeasured = false;
+        }
 
         // Turn off docking AP on successful docking (in case other checks for successful docking fail)
         private void OnPartCouple(GameEvents.FromToAction<Part, Part> ev)
@@ -113,6 +149,9 @@ namespace MuMech
             Core.RCS.Users.Add(this);
             Core.Attitude.Users.Add(this);
             dockingStep = DockingStep.INIT;
+            ownMeasured = false;
+            targetMeasured = false;
+            retries = 0;
             stuck.Reset();
         }
 
@@ -164,7 +203,7 @@ namespace MuMech
                 return velocity;
 
             Vector3d spin = target.GetTransform().rotation * target.angularVelocity;
-            return velocity + Vector3d.Cross(spin, Core.Target.Position - target.CoM);
+            return velocity + Vector3d.Cross(spin, (Vector3d)DockingPoint() - target.CoM);
         }
 
         public override void Drive(FlightCtrlState s)
@@ -182,6 +221,7 @@ namespace MuMech
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - stopDistance, 0), -zAxis);
             double latApproachSpeed = MaxSpeedToAxis(lateralSep.magnitude, lateralSep);
+            Vector3d lateralMove = -lateralSep.normalized * latApproachSpeed;
 
             bool align = true;
 
@@ -190,49 +230,47 @@ namespace MuMech
 
             switch (dockingStep)
             {
-                case DockingStep.WRONG_SIDE_BACKING_UP:
-                    zApproachSpeed = MaxSpeedForDistance(safeDistance + zSep + 2.0, -zAxis);
-                    if (lateralSep.magnitude < safeDistance)
-                        latApproachSpeed *= -1;
-                    else if (lateralSep.magnitude < safeDistance * 2)
-                        latApproachSpeed = 0;
+                case DockingStep.LEAVING_TARGET:
+                    Vector3d toExit = ToExit();
+                    zApproachSpeed = 0;
+                    latApproachSpeed = Math.Min(MaxSpeedToAxis(toExit.magnitude, -toExit), leaveSpeed);
+                    lateralMove = toExit.normalized * latApproachSpeed;
+                    align = false;
+                    status = Localizer.Format("#MechJeb_Docking_status7", latApproachSpeed.ToString("F2")); //Moving clear of the target at <<1>> m/s
+                    break;
 
+                case DockingStep.WRONG_SIDE_BACKING_UP:
+                    zApproachSpeed = MaxSpeedForDistance(rearDistance + zSep + 2.0, -zAxis);
+                    latApproachSpeed = 0;
+                    lateralMove = Vector3d.zero;
                     align = false;
                     status = Localizer.Format("#MechJeb_Docking_status1", zApproachSpeed.ToString("F2"),
                         latApproachSpeed.ToString()); //"Backing up at " <<1>> " m/s before moving on target side (lat: "<<2>> " m/s)"
                     break;
 
                 case DockingStep.WRONG_SIDE_LATERAL:
-                    zApproachSpeed = 0;
-                    latApproachSpeed = -MaxSpeedForDistance(safeDistance - lateralSep.magnitude + 2.0, -lateralSep);
+                    zApproachSpeed = zSep > -rearDistance ? MaxSpeedToAxis(rearDistance + zSep, -zAxis) : 0;
+                    lateralMove = RouteMove(out latApproachSpeed);
                     status = Localizer.Format("#MechJeb_Docking_status2",
                         latApproachSpeed.ToString("F2")); //Moving away from docking axis at <<1>> m/s to avoid hitting target on backing up
                     break;
 
                 case DockingStep.WRONG_SIDE_SWITCHSIDE:
-                    zApproachSpeed = -MaxSpeedForDistance(-zSep + targetSize, -zAxis);
-                    if (lateralSep.magnitude < safeDistance)
-                        latApproachSpeed *= -1;
-                    else if (lateralSep.magnitude < safeDistance * 2)
-                        latApproachSpeed = 0;
-
+                    zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, zAxis);
+                    lateralMove = RouteMove(out latApproachSpeed);
                     status = Localizer.Format("#MechJeb_Docking_status3", zApproachSpeed.ToString("F2"),
                         latApproachSpeed.ToString()); //"Moving at <<1>> m/s to get on the correct side of the target. (lat: <<2>> m/s)"
                     break;
 
                 case DockingStep.BACKING_UP:
-                    if (lateralSep.magnitude < safeDistance)
-                        latApproachSpeed *= -1;
-                    else if (lateralSep.magnitude < safeDistance * 2)
-                        latApproachSpeed = 0;
-
-                    zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, -zAxis);
+                    zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, zAxis);
+                    lateralMove = Vector3d.zero;
                     align = false;
                     status = Localizer.Format("#MechJeb_Docking_status4", zApproachSpeed.ToString("F2")); //"Backing up at " +  + " m/s"
                     break;
 
                 case DockingStep.MOVING_TO_START:
-                    zApproachSpeed = zSep < safeDistance ? -MaxSpeedForDistance(Math.Max(zSep, 0), -zAxis) : 0;
+                    zApproachSpeed = zSep < targetSize + 1 ? -MaxSpeedToAxis(targetSize + 1 - zSep, zAxis) : 0;
 
                     status = Localizer.Format("#MechJeb_Docking_status5",
                         zApproachSpeed.ToString("F2")); //"Moving toward the starting point at " +  + " m/s."
@@ -273,7 +311,7 @@ namespace MuMech
             //    latApproachSpeed *= relativeLateral / Math.Abs(latApproachSpeed);
 
 
-            Vector3d adjustment = -lateralSep.normalized * latApproachSpeed + zApproachSpeed * zAxis;
+            Vector3d adjustment = lateralMove + zApproachSpeed * zAxis;
             Core.RCS.SetTargetWorldVelocity(targetVel + adjustment);
             MechJebModuleDebugArrows.debugVector = adjustment;
             MechJebModuleDebugArrows.debugVector2 = -Core.Target.RelativePosition;
@@ -300,33 +338,28 @@ namespace MuMech
                 return;
             }
 
+            UpdateDistance();
+
             // A new target has its own port, size and axis. KSP changes it too: past 200 m from the active vessel, a port becomes its vessel.
             if (dockingStep != DockingStep.INIT && Core.Target.Target != lastTarget)
-                dockingStep = DockingStep.INIT;
-
-            // A target out of physics range has no parts to measure.
-            Vessel targetVessel = Core.Target.Target.GetVessel();
-            if (dockingStep != DockingStep.INIT && !targetMeasured && targetVessel != null && targetVessel.loaded)
             {
-                targetBoundingBox = targetVessel.GetBoundingBox();
-                targetMeasured    = true;
+                targetMeasured = false;
+                dockingStep = DockingStep.INIT;
             }
 
-            // Check if overrides have changed
-            if (!overrideTargetSize)
-                targetSize = targetBoundingBox.size.magnitude;
-            else
-                targetSize = (float)overridenTargetSize.Val;
+            // A target out of physics range has no parts to measure, and parts come and go.
+            Vessel targetVessel = Core.Target.Target.GetVessel();
+            if (dockingStep != DockingStep.INIT && (!ownMeasured || (!targetMeasured && targetVessel != null && targetVessel.loaded)))
+                dockingStep = DockingStep.INIT;
 
-            if (!overrideSafeDistance)
-                safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
-            else
-                safeDistance = (float)overridenSafeDistance.Val;
+            UpdateLimits();
 
-            // A vessel has no capture, and its position is the origin of its control part, inside it. So stop where docking would start.
-            stopDistance = portTarget ? 0 : targetSize;
-
-            UpdateDistance();
+            // The axis of a turning target sweeps round the vessel, and past this the thrust can't hold it there.
+            if (dockingStep != DockingStep.INIT && targetVessel != null && TargetSpinsTooFast(targetVessel))
+            {
+                StopWithMessage("#MechJeb_Docking_spinning"); //Docking autopilot stopped: the target is spinning too fast to follow.
+                return;
+            }
 
             switch (dockingStep)
             {
@@ -334,19 +367,24 @@ namespace MuMech
                     InitDocking();
                     break;
 
+                case DockingStep.LEAVING_TARGET:
+                    if (ToExit().magnitude < dockingcorridorRadius)
+                        dockingStep = DockingStep.INIT;
+                    break;
+
                 case DockingStep.WRONG_SIDE_BACKING_UP:
-                    if (-zSep > safeDistance)
+                    if (-zSep > rearDistance)
                         dockingStep = DockingStep.WRONG_SIDE_LATERAL;
                     break;
 
                 case DockingStep.WRONG_SIDE_LATERAL:
-                    if (lateralSep.magnitude > safeDistance)
+                    if (ToRoute().magnitude < dockingcorridorRadius)
                         dockingStep = DockingStep.WRONG_SIDE_SWITCHSIDE;
                     break;
 
                 case DockingStep.WRONG_SIDE_SWITCHSIDE:
-                    if (zSep > 0)
-                        dockingStep = DockingStep.BACKING_UP;
+                    if (zSep > targetSize)
+                        dockingStep = DockingStep.MOVING_TO_START;
                     break;
 
                 case DockingStep.BACKING_UP:
@@ -360,7 +398,10 @@ namespace MuMech
                     break;
 
                 case DockingStep.DOCKING:
-                    if (zSep < stopDistance)
+                    // Off the docking axis at the port, on either side of its plane: this comes first, so a vessel that's slid past doesn't count as there.
+                    if (lateralSep.magnitude > dockingcorridorRadius && zSep < 1)
+                        Retry();
+                    else if (zSep < stopDistance)
                     {
                         // The speed law has run out by here, so this brakes what's left: RCS is off afterwards, and the target isn't far.
                         if (portTarget)
@@ -368,20 +409,135 @@ namespace MuMech
                         else if (Core.Target.RelativeVelocity.magnitude < stoppedSpeed)
                             StopWithMessage("#MechJeb_Docking_stoppedShort"); //Docking autopilot stopped short of the target: choose a docking port and start it again.
                     }
-                    // Added checks to make sure we're still good to dock.
-                    else if (lateralSep.magnitude > dockingcorridorRadius) // far from docking axis
-                    {
-                        if (zSep < 0) //we're behind the target
-                            dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
-                        else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
-                        {
-                            if (zSep < 1)
-                                dockingStep = DockingStep.MOVING_TO_START;
-                        }
-                    }
 
                     break;
             }
+        }
+
+        private void Retry()
+        {
+            if (++retries > maxRetries)
+                StopWithMessage("#MechJeb_Docking_gaveUp"); //Docking autopilot stopped: it couldn't stay on the docking axis.
+            else
+                dockingStep = DockingStep.INIT;
+        }
+
+        private bool TargetSpinsTooFast(Vessel targetVessel)
+        {
+            double spin = targetVessel.angularVelocity.magnitude;
+            double thrust = ThrustAcceleration(lateralSep);
+            return thrust > 0 && spin * spin * Core.Target.Distance > thrust / 2;
+        }
+
+        private V3 ToTargetFrame(Vector3d direction) => ((Vector3d)(Quaternion.Inverse(Core.Target.Transform.rotation) * direction)).ToV3();
+
+        private Vector3d FromTargetFrame(V3 direction) => Core.Target.Transform.rotation * direction.ToVector3d();
+
+        // From this vessel to where the route passes the target.
+        private Vector3d ToRoute() => FromTargetFrame(routeSide) * safeDistance - lateralSep;
+
+        private Vector3d ToExit() => FromTargetFrame(exitPoint) - ((Vector3d)DockingPoint() - Core.Target.Position);
+
+        // Holding a point with a slope, so that a target's turn or a knock doesn't flip a step in the command.
+        private Vector3d RouteMove(out double speed)
+        {
+            Vector3d toRoute = ToRoute();
+            speed = MaxSpeedToAxis(toRoute.magnitude, -toRoute);
+            return toRoute.normalized * speed;
+        }
+
+        private void MeasureShapes()
+        {
+            if (!ownMeasured)
+            {
+                Vessel.GetShape(ownShape, Vessel.ReferenceTransform, DockingPoint());
+                ownRadius = ownShape.Radius();
+                ownMeasured = true;
+            }
+
+            Vessel targetVessel = Core.Target.Target.GetVessel();
+            if (targetMeasured || targetVessel == null)
+                return;
+
+            targetShape.Clear();
+            frontReach = rearReach = sideReach = 0;
+            if (!targetVessel.loaded)
+                return;
+
+            targetVessel.GetShape(targetShape, Core.Target.Transform, Core.Target.Position);
+            V3 axis = ToTargetFrame(zAxis);
+            frontReach = targetShape.Reach(-axis);
+            rearReach = targetShape.Reach(axis);
+            targetMeasured = true;
+        }
+
+        // The distances the route flies at: past each side of the target by the most this vessel reaches from its own port, whichever way it's turned.
+        private void UpdateLimits()
+        {
+            double clear = ownRadius + routeMargin;
+            targetSize = overrideTargetSize ? (float)overridenTargetSize.Val : (float)(frontReach + clear);
+            safeDistance = overrideSafeDistance ? (float)overridenSafeDistance.Val : (float)(sideReach + clear);
+            rearDistance = overrideSafeDistance ? (float)overridenSafeDistance.Val : (float)(rearReach + clear);
+
+            // A vessel has no capture, and its position is the origin of its control part, inside it. So stop where docking would start.
+            stopDistance = portTarget ? 0 : targetSize;
+        }
+
+        // A vessel already past the target's reach on its side stays there. If not, it passes where the target reaches least far.
+        private void ChooseSide()
+        {
+            V3 axis = ToTargetFrame(zAxis);
+            V3 near = ToTargetFrame(lateralSep);
+            routeSide = near.safeNormalized;
+            sideReach = targetShape.Reach(routeSide);
+            UpdateLimits();
+            if (lateralSep.magnitude >= safeDistance)
+                return;
+
+            routeSide = targetShape.ShortestSide(axis, near);
+            sideReach = targetShape.Reach(routeSide);
+            UpdateLimits();
+        }
+
+        // Past the target's reach the legs of the route are clear by how they're measured, so the only one to check is the one that gets there.
+        private void StartRoute()
+        {
+            V3 axis = ToTargetFrame(zAxis);
+            V3 here = ToTargetFrame((Vector3d)DockingPoint() - Core.Target.Position);
+            double need = ownRadius + routeMargin;
+
+            if (zSep >= 0)
+            {
+                if (lateralSep.magnitude <= dockingcorridorRadius && IsAligned())
+                    dockingStep = DockingStep.DOCKING;
+                else if (zSep >= targetSize)
+                    dockingStep = DockingStep.MOVING_TO_START;
+                else if (targetShape.Blocks(here, here - axis * (targetSize - zSep), need))
+                    Leave(here, need);
+                else
+                    dockingStep = DockingStep.BACKING_UP;
+                return;
+            }
+
+            ChooseSide();
+            if (lateralSep.magnitude >= safeDistance)
+                dockingStep = DockingStep.WRONG_SIDE_SWITCHSIDE;
+            else if (-zSep >= rearDistance)
+                dockingStep = DockingStep.WRONG_SIDE_LATERAL;
+            else if (targetShape.Blocks(here, here + axis * (rearDistance + zSep), need))
+                Leave(here, need);
+            else
+                dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
+        }
+
+        private void Leave(V3 here, double need)
+        {
+            if (++retries > maxRetries)
+                StopWithMessage("#MechJeb_Docking_gaveUp"); //Docking autopilot stopped: it couldn't stay on the docking axis.
+            else if (targetShape.Exit(here, need, out exitPoint))
+                dockingStep = DockingStep.LEAVING_TARGET;
+            else
+                dockingStep = zSep < 0 ? DockingStep.WRONG_SIDE_LATERAL : DockingStep.BACKING_UP;
         }
 
         // Whether it faces the port. Turning swings a port about the CoM, by many metres on a long vessel, so that happens before closing in.
@@ -426,44 +582,15 @@ namespace MuMech
             {
                 vesselBoundingBox = Vessel.GetBoundingBox();
                 targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
-                targetMeasured    = lastTarget.GetVessel().loaded;
-
-                if (!overrideTargetSize)
-                    targetSize = targetBoundingBox.size.magnitude;
-                else
-                    targetSize = (float)overridenTargetSize.Val;
-
-                if (!overrideSafeDistance)
-                    safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
-                else
-                    safeDistance = (float)overridenSafeDistance.Val;
             }
             catch (Exception e)
             {
                 Print(e);
             }
 
-            if (zSep < 0) //we're behind the target
-            {
-                // If we're more than half our own bounding box size behind the target port then use wrong side behavior
-                // Still needs improvement. The reason for these changes is that to prevent wrong side behavior when our
-                // port slipped behind the target by a fractional amount. The result is that rather than avoiding the
-                // target ship we end up trying to pass right through it.
-                // What's really needed here is code that compares bounding box positions to determine if we just try to back up or change sides completely.
-                if (Math.Abs(zSep) > vesselBoundingBox.size.magnitude * 0.5f)
-                    dockingStep = DockingStep.WRONG_SIDE_BACKING_UP;
-                else
-                    dockingStep = DockingStep.BACKING_UP; // Just back straight up.
-            }
-            else if (lateralSep.magnitude > dockingcorridorRadius || !IsAligned()) // in front but far from docking axis, or facing the wrong way
-            {
-                if (zSep < targetSize)
-                    dockingStep = DockingStep.BACKING_UP;
-                else
-                    dockingStep = DockingStep.MOVING_TO_START;
-            }
-            else
-                dockingStep = DockingStep.DOCKING;
+            MeasureShapes();
+            UpdateLimits();
+            StartRoute();
         }
 
         // Whether a part of this vessel is against the target. KSP keeps each part's contacts for as long as they last.
@@ -507,16 +634,55 @@ namespace MuMech
         {
             if (drawBoundingBox && Vessel == FlightGlobals.ActiveVessel)
             {
-                vesselBoundingBox = Vessel.GetBoundingBox();
-                GLUtils.DrawBoundingBox(Vessel.mainBody, Vessel, vesselBoundingBox, Color.green);
+                GLUtils.DrawBoundingBox(Vessel.mainBody, Vessel, Vessel.GetBoundingBox(), Color.green);
 
-                if (Core.Target.Target != null)
+                Vessel targetVessel = Core.Target.Target?.GetVessel();
+                if (targetVessel != null)
+                    GLUtils.DrawBoundingBox(targetVessel.mainBody, targetVessel, targetVessel.GetBoundingBox(), Color.blue);
+
+                if (dockingStep != DockingStep.OFF && dockingStep != DockingStep.INIT && Core.Target.Target != null)
                 {
-                    Vessel targetVessel = Core.Target.Target.GetVessel();
-                    targetBoundingBox = targetVessel.GetBoundingBox();
-                    GLUtils.DrawBoundingBox(targetVessel.mainBody, targetVessel, targetBoundingBox, Color.blue);
+                    GLUtils.DrawShape(targetShape, Core.Target.Position, Core.Target.Transform.rotation, Color.cyan);
+                    GLUtils.DrawPath(Vessel.mainBody, RouteLine(), Color.yellow, false);
                 }
             }
+        }
+
+        // What's left of the route, from where the vessel is to the port.
+        private List<Vector3d> RouteLine()
+        {
+            Vector3d port = Core.Target.Position;
+            Vector3d rear = zAxis * rearDistance;
+            Vector3d start = port - zAxis * (targetSize + 1);
+            Vector3d side = FromTargetFrame(routeSide) * safeDistance;
+
+            routeLine.Clear();
+            routeLine.Add(DockingPoint());
+            switch (dockingStep)
+            {
+                case DockingStep.LEAVING_TARGET:
+                    routeLine.Add(port + FromTargetFrame(exitPoint));
+                    return routeLine;
+                case DockingStep.WRONG_SIDE_BACKING_UP:
+                    routeLine.Add(port + lateralSep + rear);
+                    routeLine.Add(port + side + rear);
+                    routeLine.Add(start + side);
+                    break;
+                case DockingStep.WRONG_SIDE_LATERAL:
+                    routeLine.Add(port + side + rear);
+                    routeLine.Add(start + side);
+                    break;
+                case DockingStep.WRONG_SIDE_SWITCHSIDE:
+                    routeLine.Add(start + side);
+                    break;
+                case DockingStep.BACKING_UP:
+                    routeLine.Add(start + lateralSep);
+                    break;
+            }
+
+            routeLine.Add(start);
+            routeLine.Add(port);
+            return routeLine;
         }
     }
 }
