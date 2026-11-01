@@ -274,7 +274,7 @@ namespace MuMech.AttitudeControllers
                         _posPID[i].SmoothOut = Clamp01(PosSmoothOut);
                         _posPID[i].MinOutput = -maxOmega;
                         _posPID[i].MaxOutput = maxOmega;
-                        _posPID[i].IntegralDeadband = PosDeadband * maxOmega;
+                        _posPID[i].IntegralDeadband = PosDeadband * (double.IsInfinity(maxOmega) ? _maxAlpha[i] * MaxStoppingTime : maxOmega);
                         _posPID[i].Clegg = PosClegg;
 
                         _targetOmega[i] = _posPID[i].Update(_desired[i], _current[i]);
