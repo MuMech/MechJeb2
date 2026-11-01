@@ -11,6 +11,8 @@ namespace KodeUI
         {
             Pivot(PivotPresets.TopLeft);
             tmpText = gameObject.AddComponent<TextMeshProUGUI>();
+            // TMP's glyph quads are tight: under MSAA their edges dim the stems of i and l
+            tmpText.extraPadding = true;
         }
 
         public override void Style()
