@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
+using MechJebLib.Control;
 using UnityEngine;
 
 namespace MuMech
@@ -122,11 +123,17 @@ namespace MuMech
         // v2 = u2 + 2 * a * d
         // initial speed v - final speed u = 0  - distance d
         // Maximum speed to brake in time = sqrt( 2 * a * d )
-        private double MaxSpeedForDistance(double distance, Vector3d axis)
+        private double MaxSpeedForDistance(double distance, Vector3d axis) => FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * BrakingAcceleration(axis)));
+
+        // The same for closing on the docking axis, with the gain limited near it. The separation is measured at one part, so it carries the
+        // vessel's bending, and it changes sign on the axis: a square root all the way down turns that bending into thrust reversals.
+        private double MaxSpeedToAxis(double distance, Vector3d axis) =>
+            FixSpeed(StoppingSpeed.GainLimited(distance, BrakingAcceleration(axis), Core.RCS.rcsPositionGain()));
+
+        private double BrakingAcceleration(Vector3d axis)
         {
             Vector3d localAxis = Vessel.ReferenceTransform.InverseTransformDirection(axis);
-            return FixSpeed(Math.Sqrt(2.0 * Math.Abs(distance) * VesselState.RCSThrustAvailable.GetMagnitude(localAxis) * Core.RCS.rcsAccelFactor() /
-                VesselState.Mass));
+            return VesselState.RCSThrustAvailable.GetMagnitude(localAxis) * Core.RCS.rcsAccelFactor() / VesselState.Mass;
         }
 
         // The velocity of the point we dock to, and not of the target's CoM: the docking magnets turn the target when the port's axis misses its CoM,
@@ -156,7 +163,7 @@ namespace MuMech
             Vector3d targetVel = TargetPointVelocity();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
-            double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
+            double latApproachSpeed = MaxSpeedToAxis(lateralSep.magnitude, lateralSep);
 
             bool align = true;
 
@@ -223,7 +230,6 @@ namespace MuMech
                     if ((zSep <= lateralSep.magnitude * 10 || timeToTargetSize <= timeToAxis * 10) && timeToAxis > 0 && timeToTargetSize > 0)
                     {
                         zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
-                        latApproachSpeed = FixSpeed(latApproachSpeed * 2);
                     }
 
                     status = Localizer.Format("#MechJeb_Docking_status6", zApproachSpeed.ToString("F2"),
