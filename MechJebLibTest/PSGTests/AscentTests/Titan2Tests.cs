@@ -404,6 +404,52 @@ namespace MechJebLibTest.PSGTests.AscentTests
             ClampPi(tanof).ShouldEqual(0.095809701921327317, 1e-2);
         }
 
+        // launches from 0.5 degrees north, so the guess is at 0.5 degrees inclination and the rocket has to dogleg slightly
+        [Fact]
+        public void Kepler3EllipticalEquatorial()
+        {
+            var r0 = new V3(6370757.411841836, 0, 55596.757660140334);
+            var v0 = new V3(0, 464.5630141793475, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
+            double rbody = 6.371e+6;
+            double incT = 0.0;
+            double mu = 3.986004418e+14;
+
+            Ascent ascent = Ascent.Builder()
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
+
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+
+            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                Astro.KeplerianFromStateVectors(mu, rf, vf);
+
+            solution.R(0).ShouldEqual(r0, 1e-7);
+            solution.V(0).ShouldEqual(v0, 1e-7);
+            solution.M(0).ShouldEqual(157355.487476332, 1e-7);
+
+            solution.Vgo(0).ShouldEqual(9297.8638266388862, 1e-3);
+            solution.U(0).normalized.ShouldEqual(new V3(0.76488059901505068, 0.63826715097728237, -0.087021337807001872), 1e-2);
+
+            psg.PrimalFeasibility.ShouldBeZero(1e-5);
+            smaf.ShouldEqual(8616510.99994895, 1e-6);
+            eccf.ShouldEqual(0.2391351905624024, 1e-6);
+            incf.ShouldBeZero(1e-7);
+            // the LAN is undefined for equatorial orbits, but the longitude of periapsis is not
+            Clamp2Pi(lanf + argpf).ShouldEqual(0.09276699518963305, 1e-2);
+            ClampPi(tanof).ShouldEqual(0.096644488139039988, 1e-2);
+        }
+
         [Fact]
         public void Kepler4Elliptical()
         {
@@ -601,6 +647,75 @@ namespace MechJebLibTest.PSGTests.AscentTests
             eccf.ShouldEqual(0, 1e-5);
             incf.ShouldEqual(incT, 1e-5);
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
+
+            Ascent ascent2 = Ascent.Builder()
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4, minThrottle: 0)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, minThrottle: 0)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .OldSolution(solution)
+               .Build();
+
+            ascent2.Run();
+
+            Optimizer psg2 = ascent2.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution2 = psg2.Solution ?? throw new Exception("null solution");
+
+            psg2.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg2.InitialPrimalFeasibility.ShouldBeZero(1e-3);
+        }
+
+        // launches from 0.5 degrees north, so the guess is at 0.5 degrees inclination and the rocket has to dogleg slightly
+        [Fact]
+        public void CircularEquatorial()
+        {
+            var r0 = new V3(6370757.411841836, 0, 55596.757660140334);
+            var v0 = new V3(0, 464.5630141793475, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 185e+3;
+            double rbody = 6.371e+6;
+            double incT = 0.0;
+            double mu = 3.986004418e+14;
+
+            Ascent ascent = Ascent.Builder()
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
+               .Build();
+
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+
+            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+
+            // the LAN is undefined for equatorial orbits
+            (double smaf, double eccf, double incf, double _, double _, double _, _) =
+                Astro.KeplerianFromStateVectors(mu, rf, vf);
+
+            solution.R(0).ShouldEqual(r0, 1e-7);
+            solution.V(0).ShouldEqual(v0, 1e-7);
+            solution.M(0).ShouldEqual(157355.487476332, 1e-7);
+
+            psg.PrimalFeasibility.ShouldBeZero(1e-5);
+            psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
+            solution.Vgo(0).ShouldEqual(8488.0759353442518, 1e-3);
+            solution.DV(0, 0).ShouldEqual(4034.1207312126335, 1e-3);
+            solution.DV(0, 1).ShouldEqual(4453.9552041316174, 1e-3);
+
+            solution.U(0).normalized.ShouldEqual(new V3(0.792248028862705, 0.60239243312017887, -0.097295515224028031), 1e-2);
+
+            double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
+            double perf = Astro.PeriapsisFromKeplerian(smaf, eccf);
+
+            perf.ShouldEqual(PeR, 1e-5);
+            aprf.ShouldEqual(ApR, 1e-5);
+            smaf.ShouldEqual(6556000, 1e-5);
+            eccf.ShouldEqual(0, 1e-5);
+            incf.ShouldBeZero(1e-7);
 
             Ascent ascent2 = Ascent.Builder()
                .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4, minThrottle: 0)
