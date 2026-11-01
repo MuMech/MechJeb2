@@ -85,6 +85,12 @@ namespace MechJebLibTest.PSGTests
         public void BadCoast(double mint, double maxt) =>
             Assert.Throws<ArgumentException>(() => Ascent.Builder().AddCoast(1000, 1000, mint, maxt, 0, 0));
 
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-2)]
+        public void BadOptimizerTimeout(int milliseconds) =>
+            Assert.Throws<ArgumentException>(() => Builder().OptimizerTimeout(milliseconds));
+
         [Fact]
         public void NewCoastAllowsNegativeTimes()
         {

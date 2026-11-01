@@ -6,7 +6,6 @@
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
 using static MechJebLib.Utils.AutoDiff;
-using static System.Math;
 
 namespace MechJebLib.PSG.Terminal
 {
@@ -20,7 +19,7 @@ namespace MechJebLib.PSG.Terminal
 
         public Kepler3(double smaT, double eccT, double incT)
         {
-            NumConstraints = 3;
+            NumConstraints = 2 + InclinationConstraints.NumConstraints(incT);
             _smaT = smaT;
             _eccT = eccT;
             _incT = incT;
@@ -37,7 +36,6 @@ namespace MechJebLib.PSG.Terminal
         public void Constraints(double[] x, (int, int, int) ri, (int, int, int) vi, double[] f, alglib.sparsematrix j, ref int ci)
         {
             double hTm = _hTm;
-            double incT = Abs(_incT);
             double energyT = _energyT;
 
             var rf = V3.CopyFromIndices(x, ri);
@@ -50,15 +48,13 @@ namespace MechJebLib.PSG.Terminal
 
             ci = ApplyScalarConstraintV3(f, j, ci, AngularVelocityMagnitudeConstraint, new[] { rf, vf }, new[] { ri, vi });
             ci = ApplyScalarConstraintV3(f, j, ci, OrbitalEnergyConstraint, new[] { rf, vf }, new[] { ri, vi });
-            ci = ApplyScalarConstraintV3(f, j, ci, InclinationConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = InclinationConstraints.Apply(_incT, rf, vf, ri, vi, f, j, ci);
 
             return;
 
             Dual AngularVelocityMagnitudeConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]).sqrMagnitude / (hTm * hTm) - 1.0;
 
             Dual OrbitalEnergyConstraint(DualV3[] p) => 0.5 * DualV3.Dot(p[1], p[1]) - 1.0 / p[0].magnitude - energyT;
-
-            Dual InclinationConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
         }
 
         public ITerminal GetFPA()

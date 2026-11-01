@@ -25,7 +25,7 @@ namespace MechJebLib.PSG.Terminal
             Check.PositiveFinite(vT, nameof(vT));
             Check.Finite(incT, nameof(incT));
 
-            NumConstraints = 4;
+            NumConstraints = 3 + InclinationConstraints.NumConstraints(incT);
             _gammaT = gammaT;
             _rT = rT;
             _vT = vT;
@@ -42,7 +42,6 @@ namespace MechJebLib.PSG.Terminal
         {
             double gammaT = _gammaT;
             double rT = _rT;
-            double incT = Abs(_incT);
             double vT = _vT;
 
             var rf = V3.CopyFromIndices(x, ri);
@@ -51,15 +50,13 @@ namespace MechJebLib.PSG.Terminal
             ci = ApplyScalarConstraintV3(f, j, ci, FlightPathAngleConstraint, new[] { rf, vf }, new[] { ri, vi });
             ci = ApplyScalarConstraintV3(f, j, ci, RadiusConstraint, new[] { rf }, new[] { ri });
             ci = ApplyScalarConstraintV3(f, j, ci, VelocityConstraint, new[] { vf }, new[] { vi });
-            ci = ApplyScalarConstraintV3(f, j, ci, InclinationConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = InclinationConstraints.Apply(_incT, rf, vf, ri, vi, f, j, ci);
 
             return;
 
             Dual FlightPathAngleConstraint(DualV3[] p) => DualV3.Dot(p[0], p[1]) / (rT * vT) - Sin(gammaT);
 
             Dual RadiusConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) / (rT * rT) - 1.0;
-
-            Dual InclinationConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]).normalized.z - Cos(incT);
 
             Dual VelocityConstraint(DualV3[] p) => DualV3.Dot(p[0], p[0]) / (vT * vT) - 1.0;
         }
