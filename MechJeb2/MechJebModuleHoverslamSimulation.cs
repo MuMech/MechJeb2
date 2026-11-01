@@ -231,7 +231,7 @@ namespace MuMech
                 LandingUT = _hoverslam.LandingUT;
                 FinalThrustAccel = _hoverslam.FinalThrustAccel;
                 MainBody.GetLatLngAltAtUT(LandingUT, LandingPosition, out Lat, out Lng, out _);
-                TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, true);
+                TerrainAltitude = MainBody.TerrainAltitude(Lat, Lng, !MainBody.ocean);
                 Slope = MainBody.GetPQSSlopeDegrees(Lat, Lng);
                 DeltaV = CalculateDeltaV(LandingCountdown - (IgnitionUT < VesselState.Time ? 0 : IgnitionCountdown));
             }
