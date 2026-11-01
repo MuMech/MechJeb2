@@ -32,7 +32,8 @@ namespace MuMech
         // high-level entry point; the GUI Warp button just calls this.
         public void StartWarp()
         {
-            warping = true;
+            // only start warping once the target is resolved, otherwise we would warp to the previous targetUT
+            bool valid = true;
 
             switch (warpTarget)
             {
@@ -42,15 +43,18 @@ namespace MuMech
 
                 case WarpTarget.Apoapsis:
                     if (Orbit.eccentricity < 1) targetUT = Orbit.NextApoapsisTime(VesselState.Time);
+                    else valid = false;
                     break;
 
                 case WarpTarget.SoI:
                     if (Orbit.patchEndTransition != Orbit.PatchTransitionType.FINAL) targetUT = Orbit.EndUT;
+                    else valid = false;
                     break;
 
                 case WarpTarget.Node:
                     if (Vessel.patchedConicsUnlocked() && Vessel.patchedConicSolver.maneuverNodes.Any())
                         targetUT = Vessel.patchedConicSolver.maneuverNodes[0].UT;
+                    else valid = false;
                     break;
 
                 case WarpTarget.Time:
@@ -64,7 +68,13 @@ namespace MuMech
                         if (Core.Target.TargetOrbit.referenceBody == Orbit.referenceBody)
                             reference = Orbit; // we orbit arround the same body
                         else
-                            reference = Orbit.referenceBody.orbit;
+                            reference = Orbit.referenceBody.orbit; // null when we orbit the Sun and the target does not
+                        if (reference == null)
+                        {
+                            valid = false;
+                            break;
+                        }
+
                         // From Kerbal Alarm Clock
                         double angleChangePerSec = 360 / Core.Target.TargetOrbit.period - 360 / reference.period;
                         double currentAngle = reference.PhaseAngle(Core.Target.TargetOrbit, VesselState.Time);
@@ -74,7 +84,15 @@ namespace MuMech
                         if (angleDigff < 0 && angleChangePerSec < 0)
                             angleDigff += 360;
                         double TimeToTarget = Math.Floor(Math.Abs(angleDigff / angleChangePerSec));
-                        targetUT = VesselState.Time + TimeToTarget;
+                        // equal periods: the phase angle never changes
+                        if (double.IsNaN(TimeToTarget) || double.IsInfinity(TimeToTarget))
+                            valid = false;
+                        else
+                            targetUT = VesselState.Time + TimeToTarget;
+                    }
+                    else
+                    {
+                        valid = false;
                     }
 
                     break;
@@ -87,7 +105,7 @@ namespace MuMech
                     }
                     catch
                     {
-                        warping = false;
+                        valid = false;
                     }
 
                     break;
@@ -99,7 +117,7 @@ namespace MuMech
                     }
                     catch
                     {
-                        warping = false;
+                        valid = false;
                     }
 
                     break;
@@ -108,6 +126,9 @@ namespace MuMech
                     targetUT = VesselState.Time;
                     break;
             }
+
+            if (valid)
+                warping = true;
         }
 
         // Stop warping and drop back to minimum (1x) warp.
