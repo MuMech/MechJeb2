@@ -46,9 +46,12 @@ env:
   DOTNET_NOLOGO: 1
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
   KEEP: 100 # dev pre-releases to keep
-  # The old Jenkins-based build reached this number; new dev builds continue counting up from here instead of
-  # restarting from GitHub's own per-workflow run number (which would also count PR and non-dev runs).
-  DEV_BUILD_FLOOR: 1716
+  # The number of a dev build is DEV_BUILD_BASE plus the commits on dev's first-parent line (one per merged PR) since
+  # DEV_BUILD_BASE_SHA. It only depends on the commit, so merges building side by side can not get the same number and a
+  # re-run gets its own back. It carries on from the old Jenkins-based build (which reached 1716) instead of restarting
+  # from GitHub's own per-workflow run number (which would also count PR and non-dev runs).
+  DEV_BUILD_BASE: 1791
+  DEV_BUILD_BASE_SHA: 16fc9bf7c51368c4cb7cf4061d49f67d67e2a86f
   # Range advertised in the dev builds' CKAN entries; matches the KSP version build.yml itself targets.
   KSP_VERSION_MIN: '1.12.0'
   KSP_VERSION_MAX: '1.12.90'
@@ -66,6 +69,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
+          fetch-depth: 0 # the dev build number counts commits, see DEV_BUILD_BASE
 
       # .editorconfig asks for UTF-8 without a BOM, but some IDE code paths still write one
       - name: Check for UTF-8 BOMs
@@ -95,16 +99,14 @@ jobs:
         id: meta
         env:
           VERSION: ${{ inputs.version }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           info=''
           if [ -n "$VERSION" ]; then
             label="$VERSION"
           elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/dev ]; then
             file_version=$(sed -n -E 's/.*AssemblyFileVersion\("([^"]*)"\).*/\1/p' MechJeb2/Properties/AssemblyInfo.cs)
-            # one past the highest build number of: DEV_BUILD_FLOOR, and any "dev-<version>-<build>" release already published
-            build=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
-              "([.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\")) | split(\"-\") | .[-1] | tonumber] + [$DEV_BUILD_FLOOR]) | max + 1")
+            commits=$(git rev-list --count --first-parent "$DEV_BUILD_BASE_SHA..HEAD")
+            build=$((DEV_BUILD_BASE + commits))
             label="dev-$file_version-$build"
             info="Dev #$build"
           else
@@ -206,6 +208,9 @@ jobs:
             }
 
   # Publishes every dev build as a public pre-release (dev-<AssemblyFileVersion>-<build>) and keeps the most recent ones.
+  # No concurrency group: a group holds one pending job, and the next job to queue cancels it, even when the pending job
+  # is the newer commit's (queue: max avoids that, but act refuses it: nektos/act#6095). So these jobs can overlap and
+  # finish in any order: each only writes its own release, and nothing here can assume that this build is the newest.
   publish-dev:
     needs: build
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
@@ -213,9 +218,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
-    concurrency:
-      group: publish-dev-release
-      cancel-in-progress: false
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }} # this job has no checkout, so gh can not get the repository from a git directory
@@ -241,9 +243,11 @@ jobs:
           title="Dev build ${LABEL#dev-}"
           intro="Automated build of the dev branch at ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}. Unstable: use a release for normal play."
 
-          # the previous dev build still published, if any (newest first, this run's own tag excluded in case of a re-run)
-          previous_tag=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
-            "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\")) | select(. != \"$tag\")] | sort_by(split(\"-\") | .[-1] | tonumber) | reverse | .[0] // empty")
+          # the previous dev build still published, if any: the closest one below this build, as newer ones may be out
+          # already (a re-run, or a build that took longer). A PR of a build that is not out yet is also listed here.
+          # No drafts: gh keeps a release as one while its zip uploads, and it has no tag to compare with until then.
+          previous_tag=$(gh release list --exclude-drafts --limit $((KEEP + 20)) --json tagName --jq \
+            "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\")) | select((split(\"-\") | .[-1] | tonumber) < ${tag##*-})] | sort_by(split(\"-\") | .[-1] | tonumber) | reverse | .[0] // empty")
 
           notes_file=$(mktemp)
           echo "$intro" > "$notes_file"
@@ -255,7 +259,12 @@ jobs:
               --jq .body >> "$notes_file"
           fi
 
-          if gh release view "$tag" > /dev/null 2>&1; then
+          if release_sha=$(gh release view "$tag" --json targetCommitish --jq .targetCommitish 2> /dev/null); then
+            # the number comes from the commit, so a release of another commit means that dev's history was rewritten
+            if [ "$release_sha" != "$GITHUB_SHA" ]; then
+              echo "::error::$tag is already the release of $release_sha: raise DEV_BUILD_BASE past it"
+              exit 1
+            fi
             # re-run of a job: replace the zip and refresh the notes
             gh release upload "$tag" "MechJeb2-$LABEL.zip" --clobber
             gh release edit "$tag" --notes-file "$notes_file"
@@ -267,7 +276,8 @@ jobs:
           # (the list must be longer than $KEEP, or the old builds are never seen)
           gh release list --limit $((KEEP + 20)) --json tagName --jq "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\"))] | sort_by(split(\"-\") | .[-1] | tonumber) | reverse | .[$KEEP:] | .[]" |
             while read -r old; do
-              gh release delete "$old" --cleanup-tag --yes
+              # another job may get there first. If this failed for some other reason, the next build tries again
+              gh release delete "$old" --cleanup-tag --yes || echo "::notice::$old was not deleted"
             done
 
   # Publishes a CKAN "repository" archive (see https://github.com/KSP-CKAN/CKAN/blob/master/Spec.md) listing every
@@ -281,6 +291,8 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
+    # A job waiting here can be cancelled by the next to queue. That shows on its run but loses nothing: the next job
+    # starts later, so it lists everything the cancelled one would have.
     concurrency:
       group: publish-ckan-dev-repo
       cancel-in-progress: false
@@ -295,7 +307,7 @@ jobs:
           mkdir -p "$repo_dir"
 
           # every dev build still published (see KEEP in publish-dev): each becomes one .ckan entry below
-          tags=$(gh release list --limit $((KEEP + 20)) --json tagName --jq \
+          tags=$(gh release list --exclude-drafts --limit $((KEEP + 20)) --json tagName --jq \
             "[.[].tagName | select(test(\"^dev-[0-9.]+-[0-9]+\$\"))] | .[]")
 
           for tag in $tags; do
