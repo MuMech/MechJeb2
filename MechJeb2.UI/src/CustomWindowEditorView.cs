@@ -197,6 +197,7 @@ namespace MuMech.UI
             Layout flags = KodeWindow.Row(r);
             w.Toggle(flags, "#MechJeb_WindowEd_checkbox3", () => edited.IsOverlay, v => edited.IsOverlay = v); //Overlay
             w.Toggle(flags, "#MechJeb_WindowEd_checkbox4", () => edited.WindowLocked, v => edited.WindowLocked = v); //Locked
+            Tooltips.Add(w.Toggle(flags, "#MechJeb_WindowEd_checkbox8", () => edited.ClickThrough, v => edited.ClickThrough = v).gameObject, "#MechJeb_WindowEd_checkbox8_tooltip"); //Click through
 
             // Compact: off, the new UI's global setting, or on, whichever that one is
             Layout compact = KodeWindow.Row(r);
