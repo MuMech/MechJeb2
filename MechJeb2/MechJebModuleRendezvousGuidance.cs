@@ -13,6 +13,8 @@ namespace MuMech
 
         internal readonly EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
 
+        private MechJebModuleRendezvousAutopilot Autopilot => Core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
+
         // Only a warning: the autopilot refuses this, but a player planning by hand may know better.
         internal bool OnTheGround
         {
@@ -49,6 +51,9 @@ namespace MuMech
             }
 
             List<ManeuverParameters> maneuvers = OrbitalManeuverCalculator.ManeuversToCircularOrbit(Orbit, VesselState.Time + leadTime, phasingOrbitRadius);
+            double earliestUT = Autopilot.EarliestBurnUT(maneuvers[0].dV.magnitude);
+            if (maneuvers[0].UT < earliestUT)
+                maneuvers = OrbitalManeuverCalculator.ManeuversToCircularOrbit(Orbit, earliestUT, phasingOrbitRadius);
 
             Vessel.RemoveAllManeuverNodes();
             foreach (ManeuverParameters maneuver in maneuvers)
@@ -62,16 +67,26 @@ namespace MuMech
         {
             (Vector3d dV, double UT, _, _) =
                 OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, VesselState.Time, coplanar: false);
+
+            double earliestUT = Autopilot.EarliestBurnUT(dV.magnitude);
+            if (UT < earliestUT)
+            {
+                (dV, UT, _, _) = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, earliestUT,
+                    fixedTime: true, coplanar: false);
+            }
+
             Vessel.RemoveAllManeuverNodes();
             Vessel.PlaceManeuverNode(Orbit, dV, UT);
         }
 
         internal void MatchVelocitiesAtClosestApproach()
         {
-            double UT = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, UT, Core.Target.TargetOrbit);
+            double closestApproachUT = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
+            Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, closestApproachUT, Core.Target.TargetOrbit);
             Vessel.RemoveAllManeuverNodes();
-            Vessel.PlaceManeuverNode(Orbit, dV, UT);
+
+            // A burn centered on the closest approach would end at it, which can be inside the target. Use the autopilot's stand-off.
+            Vessel.PlaceManeuverNode(Orbit, dV, Autopilot.BurnUTToStopAtDesiredDistance(closestApproachUT));
         }
 
         internal void GetCloser()
@@ -84,9 +99,10 @@ namespace MuMech
                 return;
             }
 
-            double closingTime = Core.GetComputerModule<MechJebModuleRendezvousAutopilot>().ClosingTime(distance);
-            double UT = VesselState.Time;
-            (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, closingTime, 10);
+            double closingTime = Autopilot.ClosingTime(distance);
+            (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, VesselState.Time, Core.Target.TargetOrbit, closingTime, 10);
+            double UT = Autopilot.EarliestBurnUT(dV.magnitude);
+            (dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, closingTime, 10);
             Vessel.RemoveAllManeuverNodes();
             Vessel.PlaceManeuverNode(Orbit, dV, UT);
         }

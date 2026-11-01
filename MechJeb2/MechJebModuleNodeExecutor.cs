@@ -82,6 +82,13 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(ut - VesselState.Time);
         }
 
+        // How long before a node a burn of this size needs the executor to be on it
+        public double BurnLeadTime(double dV)
+        {
+            BurnTime(dV, out double halfBurnTime, out double _);
+            return halfBurnTime + LeadTime;
+        }
+
         public void ExecuteOneNode(object controller)
         {
             Users.Add(controller);
