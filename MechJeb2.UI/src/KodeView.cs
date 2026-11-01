@@ -124,12 +124,28 @@ namespace MuMech.UI
             });
         }
 
+        /// <summary>The window lets the pointer through to what's under it. Only the editor can turn this off again.</summary>
+        protected virtual bool ClickThrough => false;
+
+        CanvasGroup clickThroughGroup;
+
+        void ApplyClickThrough()
+        {
+            if (clickThroughGroup == null)
+            {
+                if (!ClickThrough) return;
+                clickThroughGroup = Window.Root.gameObject.AddComponent<CanvasGroup>();
+            }
+            clickThroughGroup.blocksRaycasts = !ClickThrough;
+        }
+
         bool beforeSyncFailed;
 
         public void Sync()
         {
             if (Module.IsOverlay != builtOverlay) RebuildRequested = true;
             Window.Behaviour.Draggable = !Module.WindowLocked;
+            ApplyClickThrough();
             // when the view's own per-frame work throws, the window's bindings still run (each isolated by KodeWindow.Sync)
             try
             {

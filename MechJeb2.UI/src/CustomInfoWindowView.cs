@@ -46,6 +46,8 @@ namespace MuMech.UI
 
         protected override Color OverlayBackground => window.backgroundColor;
 
+        protected override bool ClickThrough => window.ClickThrough;
+
         protected override void BuildContents(KodeWindow w)
         {
             built = window.items.ToArray();
