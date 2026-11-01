@@ -107,6 +107,10 @@ namespace MuMech
         // be multiplied by that since the PID controller actual lower the used acceleration
         public double rcsAccelFactor() => pid.Kp;
 
+        // Speed per metre when closing on a position. It has to stay well under the vessel's first bending frequency: at most a tenth of it
+        // in rad/s, so this suits modes down to 0.5 Hz, and a higher Tf is the setting for a floppier vessel.
+        public double rcsPositionGain() => 0.3 / Math.Max(Tf, 0.02);
+
         protected override void OnModuleDisabled()
         {
             Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
