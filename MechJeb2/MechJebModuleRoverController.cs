@@ -131,8 +131,14 @@ namespace MuMech
             base.OnDestroy();
         }
 
-        public void OnVesselModified(Vessel v)
+        private bool _wheelbasesDirty = true;
+
+        public void OnVesselModified(Vessel v) => _wheelbasesDirty = true;
+
+        private void RebuildWheelbases()
         {
+            _wheelbasesDirty = false;
+
             // TODO : need to look into the new ModuleWheelSteering ModuleWheelMotor ModuleWheelBrakes ModuleWheelBase ModuleWheelSuspension and see what they could bring
 
             try
@@ -189,7 +195,15 @@ namespace MuMech
 
         public void CalculateTraction()
         {
-            if (wheelbases.Count == 0) { OnVesselModified(Vessel); }
+            if (_wheelbasesDirty)
+                RebuildWheelbases();
+
+            // no wheels (hovercraft, boat, all wheels lost) means no traction, not 0 / 0
+            if (wheelbases.Count == 0)
+            {
+                traction = 0;
+                return;
+            }
 
             traction = 0;
 
