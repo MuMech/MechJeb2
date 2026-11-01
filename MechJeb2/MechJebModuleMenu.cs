@@ -101,20 +101,21 @@ namespace MuMech
         {
             get
             {
+                float w = buttonSize.x, h = buttonSize.y;
                 switch (windowSide)
                 {
                     case WindowSide.LEFT:
-                        return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.ScaledScreenHeight, -100), WindowPos.width * windowProgr, 100, 25);
+                        return new Rect(Mathf.Clamp(windowVPos + 50 - w * 0.5f, -GuiUtils.ScaledScreenHeight, -w), WindowPos.width * windowProgr, w, h);
                     case WindowSide.RIGHT:
-                        return new Rect(Mathf.Clamp(windowVPos, -GuiUtils.ScaledScreenHeight, -100),
-                            GuiUtils.ScaledScreenWidth - 25 - WindowPos.width * windowProgr, 100, 25);
+                        return new Rect(Mathf.Clamp(windowVPos + 50 - w * 0.5f, -GuiUtils.ScaledScreenHeight, -w),
+                            GuiUtils.ScaledScreenWidth - h - WindowPos.width * windowProgr, w, h);
                     case WindowSide.TOP:
-                        return new Rect(Mathf.Clamp(GuiUtils.ScaledScreenWidth - windowHPos - 100, 0, GuiUtils.ScaledScreenWidth - 50),
-                            windowProgr * WindowPos.height, 100, 25);
+                        return new Rect(Mathf.Clamp(GuiUtils.ScaledScreenWidth - windowHPos - 50 - w * 0.5f, 0, GuiUtils.ScaledScreenWidth - w * 0.5f),
+                            windowProgr * WindowPos.height, w, h);
                     case WindowSide.BOTTOM:
                     default:
-                        return new Rect(Mathf.Clamp(GuiUtils.ScaledScreenWidth - windowHPos - 100, 0, GuiUtils.ScaledScreenWidth - 50),
-                            GuiUtils.ScaledScreenHeight - windowProgr * WindowPos.height - 25, 100, 25);
+                        return new Rect(Mathf.Clamp(GuiUtils.ScaledScreenWidth - windowHPos - 50 - w * 0.5f, 0, GuiUtils.ScaledScreenWidth - w * 0.5f),
+                            GuiUtils.ScaledScreenHeight - windowProgr * WindowPos.height - h, w, h);
                 }
             }
         }
@@ -152,6 +153,11 @@ namespace MuMech
                     break;
             }
         }
+
+        // the new UI reports the size of its button too: KSP's UI scale grows it, and IMGUI units don't include that scale
+        private Vector2 buttonSize = new Vector2(100, 25);
+
+        internal void SetButtonSize(float width, float height) => buttonSize = new Vector2(width, height);
 
         // the new UI reports the size of its panel in IMGUI units, which displayedPos and buttonPos use
         internal void SetMeasuredSize(float width, float height)

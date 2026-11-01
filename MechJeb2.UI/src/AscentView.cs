@@ -335,7 +335,7 @@ namespace MuMech.UI
             w.Visible(countdown.gameObject, () => Core.Node != null && Core.Node.Autowarp);
 
             UIText invalid = AscentUi.ToneText(box, "#MechJeb_Ascent_warnInvalidTarget", Tone.Caution, true); // Target must be in the same sphere of influence. (OrangeLabel)
-            invalid.tmpText.enableWordWrapping = true;
+            KodeWindow.WrapToWidth(invalid);
             w.Visible(invalid.gameObject, () => !anyPlaneControl && !targetExists && Core.Target.NormalTargetExists);
             UIText select = KodeWindow.Label(box, "#MechJeb_Ascent_label34"); //Select a target for a timed launch.
             w.Visible(select.gameObject, () => !anyPlaneControl && !targetExists && !Core.Target.NormalTargetExists);

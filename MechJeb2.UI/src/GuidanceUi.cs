@@ -14,15 +14,7 @@ namespace MuMech.UI
     internal static class GuidanceUi
     {
         /// <summary>A static text that wraps to the window width instead of widening the window.</summary>
-        public static UIText Wrapped(UIObject parent, string textOrKey)
-        {
-            UIText t = KodeWindow.Paragraph(parent, textOrKey);
-            var le = t.GetComponent<LayoutElement>() ?? t.gameObject.AddComponent<LayoutElement>();
-            le.minWidth = 0;
-            le.preferredWidth = 0;
-            le.flexibleWidth = 1;
-            return t;
-        }
+        public static UIText Wrapped(UIObject parent, string textOrKey) => KodeWindow.Paragraph(parent, textOrKey);
 
         /// <summary>The rendezvous windows' state: 0 = no target, 1 = target in another sphere of influence, 2 = usable target.</summary>
         public static int RendezvousMode(MechJebCore core, Orbit orbit)
