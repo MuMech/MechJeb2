@@ -9,7 +9,10 @@ namespace MuMech
 {
     public static class MathExtensions
     {
-        public static Vector3d Sign(this Vector3d vector) => new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
+        public static Vector3d Sign(this Vector3d vector) => new Vector3d(SignNoThrow(vector.x), SignNoThrow(vector.y), SignNoThrow(vector.z));
+
+        // Math.Sign throws on NaN, this returns 0
+        private static int SignNoThrow(double d) => d > 0 ? 1 : d < 0 ? -1 : 0;
 
         public static Vector3d Abs(this Vector3d vector) => new Vector3d(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
 

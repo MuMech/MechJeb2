@@ -199,7 +199,7 @@ namespace MuMech.AttitudeControllers
             var normVec = Vector3.Cross(Ac.RequestedAttitude * Vector3.forward, vesselTransform.up);
             QuaternionD targetDeRotated = QuaternionD.AngleAxis((float)turnAngle, normVec) * Ac.RequestedAttitude;
             float rollError = Vector3.Angle(vesselTransform.right, targetDeRotated * Vector3.right) *
-                Math.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
+                Mathf.Sign(Vector3.Dot(targetDeRotated * Vector3.right, vesselTransform.forward));
 
             // From here everything should use MOI order for Vectors (pitch, roll, yaw)
 
