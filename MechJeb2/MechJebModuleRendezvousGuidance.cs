@@ -83,8 +83,17 @@ namespace MuMech
 
         internal void GetCloser()
         {
+            // the range of the autopilot's close-in phase: from farther away this costs about a tenth of the distance in m/s
+            double distance = Core.Target.Distance;
+            if (distance >= VesselState.Radius / 25)
+            {
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZplan_tooFar"), 5);
+                return;
+            }
+
+            double closingTime = Core.GetComputerModule<MechJebModuleRendezvousAutopilot>().ClosingTime(distance);
             double UT = VesselState.Time;
-            (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, 100, 10);
+            (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, closingTime, 10);
             Vessel.RemoveAllManeuverNodes();
             Vessel.PlaceManeuverNode(Orbit, dV, UT);
         }

@@ -28,6 +28,14 @@ namespace MuMech
 
         protected override void OnModuleDisabled() => Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
 
+        //The time to close a distance at the closing speed limit. A zero-revolution intercept of about an orbit or more has only
+        //a huge, near radial solution, so this stops at a quarter of an orbit, and is faster than the limit when it does.
+        public double ClosingTime(double distance)
+        {
+            double closingSpeed = Math.Max(0.01, Math.Min(distance / 100, maxClosingSpeed));
+            return Math.Min(distance / closingSpeed, Orbit.period / 4);
+        }
+
         public override void Drive(FlightCtrlState s)
         {
             if (!Core.Target.NormalTargetExists)
@@ -52,9 +60,14 @@ namespace MuMech
             {
                 //If we have plotted a maneuver, execute it.
                 if (!Core.Node.Enabled) Core.Node.ExecuteAllNodes(this);
+                return;
             }
-            else if (Core.Target.Distance < desiredDistance * 1.05 + 2
-                     && Core.Target.RelativeVelocity.magnitude < 1)
+
+            double closestApproachUT = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
+            double closestApproachDistance = Orbit.Separation(Core.Target.TargetOrbit, closestApproachUT);
+
+            if (Core.Target.Distance < desiredDistance * 1.05 + 2
+                && Core.Target.RelativeVelocity.magnitude < 1)
             {
                 //finished
                 Users.Clear();
@@ -71,19 +84,21 @@ namespace MuMech
             }
             else if (Core.Target.Distance < VesselState.Radius / 25)
             {
-                if (Orbit.NextClosestApproachDistance(Core.Target.TargetOrbit, VesselState.Time) < desiredDistance
-                    && Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time) < VesselState.Time + 150)
+                double closingTime = ClosingTime(Core.Target.Distance);
+
+                //The margin keeps the intercept we plotted from looking too slow, so that it doesn't get plotted again.
+                if (closestApproachDistance < desiredDistance
+                    && closestApproachUT < VesselState.Time + Math.Max(150, closingTime * 1.25))
                 {
                     //We're close to the target, and on a course that will take us closer. Kill relvel at closest approach
-                    double UT = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
+                    double UT = closestApproachUT;
                     Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, UT, Core.Target.TargetOrbit);
 
                     //adjust burn time so as to come to rest at the desired distance from the target:
-                    double approachDistance = Orbit.Separation(Core.Target.TargetOrbit, UT);
                     double approachSpeed = (Orbit.WorldOrbitalVelocityAtUT(UT) - Core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT)).magnitude;
-                    if (approachDistance < desiredDistance)
+                    if (closestApproachDistance < desiredDistance)
                     {
-                        UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
+                        UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - closestApproachDistance * closestApproachDistance)) / approachSpeed;
                     }
 
                     //if coming in hot, stop early to avoid crashing:
@@ -96,31 +111,29 @@ namespace MuMech
                 else
                 {
                     //We're not far from the target. Close the distance
-                    double closingSpeed = Core.Target.Distance / 100;
-                    if (closingSpeed > maxClosingSpeed) closingSpeed = maxClosingSpeed;
-                    closingSpeed = Math.Max(0.01, closingSpeed);
-                    double closingTime = Core.Target.Distance / closingSpeed;
                     double UT = VesselState.Time + 15;
 
                     (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, closingTime);
                     Vessel.PlaceManeuverNode(Orbit, dV, UT);
 
-                    status = Localizer.Format("#MechJeb_RZauto_statu4"); //"Close to target: plotting intercept"
+                    //The time limit in ClosingTime can leave us above the closing speed limit: say so, or the setting looks ignored.
+                    status = Core.Target.Distance / closingTime > maxClosingSpeed * 1.001
+                        ? Localizer.Format("#MechJeb_RZauto_statu10") //"Close to target: plotting intercept above the max closing velocity, which would take too long"
+                        : Localizer.Format("#MechJeb_RZauto_statu4"); //"Close to target: plotting intercept"
                 }
             }
-            else if (Orbit.NextClosestApproachDistance(Core.Target.TargetOrbit, VesselState.Time) < Core.Target.TargetOrbit.semiMajorAxis / 25)
+            else if (closestApproachDistance < Core.Target.TargetOrbit.semiMajorAxis / 25)
             {
                 //We're not close to the target, but we're on an approximate intercept course.
                 //Kill relative velocities at closest approach
-                double UT = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
+                double UT = closestApproachUT;
                 Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, UT, Core.Target.TargetOrbit);
 
                 //adjust burn time so as to come to rest at the desired distance from the target:
-                double approachDistance = (Orbit.WorldPositionAtUT(UT) - Core.Target.TargetOrbit.WorldPositionAtUT(UT)).magnitude;
                 double approachSpeed = (Orbit.WorldOrbitalVelocityAtUT(UT) - Core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT)).magnitude;
-                if (approachDistance < desiredDistance)
+                if (closestApproachDistance < desiredDistance)
                 {
-                    UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
+                    UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - closestApproachDistance * closestApproachDistance)) / approachSpeed;
                 }
 
                 //if coming in hot, stop early to avoid crashing:
