@@ -24,7 +24,6 @@ namespace MuMech.UI
         static readonly System.Type[] ControllerTypes =
         {
             typeof(MJAttitudeController), typeof(KosAttitudeController), typeof(HybridController), typeof(BetterController),
-            typeof(LQRController),
         };
 
         MechJebModuleAttitudeController Attitude => adj.Core.Attitude;
