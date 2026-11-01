@@ -163,13 +163,15 @@ namespace MuMech
             // We work in local vessel coordinate
             Vector3d velocityDelta = Quaternion.Inverse(Vessel.GetTransform().rotation) * worldVelocityDelta;
 
+            // Inside the threshold the group stays on and gets no command: with it off the thrust available reads zero, so a speed law built on
+            // that commands nothing, the error stays inside the threshold, and the group never comes back. RCS attitude control goes with it too.
+            if (!Vessel.ActionGroups[KSPActionGroup.RCS])
+            {
+                Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+            }
+
             if (!conserveFuel || velocityDelta.magnitude > conserveThreshold)
             {
-                if (!Vessel.ActionGroups[KSPActionGroup.RCS])
-                {
-                    Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
-                }
-
                 var rcs = new Vector3d();
 
                 for (int i = 0; i < Vector6.Values.Length; i++)
@@ -198,13 +200,9 @@ namespace MuMech
                 s.Y = Mathf.Clamp((float)rcs.z, -1, 1); //note that z and
                 s.Z = Mathf.Clamp((float)rcs.y, -1, 1); //y must be swapped
             }
-            else if (conserveFuel)
+            else
             {
                 lastAct = Vector3d.zero;
-                if (Vessel.ActionGroups[KSPActionGroup.RCS])
-                {
-                    Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);
-                }
             }
 
             base.Drive(s);
