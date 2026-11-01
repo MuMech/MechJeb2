@@ -122,7 +122,7 @@ namespace MuMech
 
         private void DriveVerticalAscent()
         {
-            if (!IsVerticalAscent(VesselState.AltitudeTrue, VesselState.SpeedSurface)) _mode = AscentMode.GRAVITY_TURN;
+            if (!IsVerticalAscent(VesselState.AltitudeASL, VesselState.SpeedSurface)) _mode = AscentMode.GRAVITY_TURN;
             if (Orbit.ApA > AscentSettings.DesiredOrbitAltitude) _mode = AscentMode.COAST_TO_APOAPSIS;
 
             Core.Attitude.AttitudeToVerticalLaunch(
@@ -148,7 +148,7 @@ namespace MuMech
             }
 
             //if we've fallen below the turn start altitude, go back to vertical ascent
-            if (IsVerticalAscent(VesselState.AltitudeTrue, VesselState.SpeedSurface))
+            if (IsVerticalAscent(VesselState.AltitudeASL, VesselState.SpeedSurface))
             {
                 _mode = AscentMode.VERTICAL_ASCENT;
                 return;
