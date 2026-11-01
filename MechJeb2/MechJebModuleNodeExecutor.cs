@@ -360,6 +360,14 @@ namespace MuMech
         {
             if (AngleFromNode() < 0.5 * PI) return false;
 
+            // Only delete the node when the burn is done. If the vessel was knocked off the burn vector with dV left,
+            // abort and leave the node for the player.
+            if (_dvLeft >= VesselState.MaxThrustAcceleration)
+            {
+                Abort();
+                return true;
+            }
+
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
 
             node.RemoveSelf();
@@ -498,9 +506,13 @@ namespace MuMech
                     {
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time
+                        double delay = Core.Staging.AutostagePreDelay;
                         if (burnTime - lastStageBurnTime < Core.Staging.AutostagePreDelay && mjPhase != stats.VacStats.Count - 1)
-                            burnTime += Core.Staging.AutostagePreDelay - (burnTime - lastStageBurnTime);
-                        burnTime += Core.Staging.AutostagePreDelay;
+                            delay += Core.Staging.AutostagePreDelay - (burnTime - lastStageBurnTime);
+                        burnTime += delay;
+                        // the node is the middle of the burn: delays before it also move the ignition
+                        if (halfDvLeft > 0)
+                            halfBurnTime += delay;
                         lastStageBurnTime = burnTime;
                     }
 
