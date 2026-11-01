@@ -618,11 +618,14 @@ namespace MuMech
             // Group intakes by symmetry, and collect the information by intake.
             var groups = new List<List<ModuleResourceIntake>>();
             var groupIds = new Dictionary<ModuleResourceIntake, int>();
+            var visited = new HashSet<Part>();
             var data = new Dictionary<ModuleResourceIntake, VesselState.ResourceInfo.IntakeData>();
+            foreach (VesselState.ResourceInfo.IntakeData intakeData in info.Intakes)
+                data[intakeData.Intake] = intakeData;
+
             foreach (VesselState.ResourceInfo.IntakeData intakeData in info.Intakes)
             {
                 ModuleResourceIntake intake = intakeData.Intake;
-                data[intake] = intakeData;
                 if (groupIds.ContainsKey(intake)) { continue; }
 
                 // Create a group for this symmetry
@@ -638,14 +641,20 @@ namespace MuMech
                 while (stack.Count > 0)
                 {
                     Part part = stack.Pop();
-                    ModuleResourceIntake partIntake = part.Modules.OfType<ModuleResourceIntake>().FirstOrDefault();
-                    if (partIntake == null || groupIds.ContainsKey(partIntake))
+                    if (!visited.Add(part))
                     {
                         continue;
                     }
 
-                    groupIds[partIntake] = grpId;
-                    intakes.Add(partIntake);
+                    // Only the intakes of this resource: a part can hold several intakes, and the first one may be another resource
+                    foreach (PartModule module in part.Modules)
+                    {
+                        if (module is ModuleResourceIntake partIntake && data.ContainsKey(partIntake) && !groupIds.ContainsKey(partIntake))
+                        {
+                            groupIds[partIntake] = grpId;
+                            intakes.Add(partIntake);
+                        }
+                    }
 
                     foreach (Part sympart in part.symmetryCounterparts)
                     {
@@ -666,7 +675,7 @@ namespace MuMech
                 {
                     foreach (ModuleResourceIntake intake in grp)
                     {
-                        double airFlowThisIntake = data[intake].PredictedMassFlow;
+                        double airFlowThisIntake = data.TryGetValue(intake, out VesselState.ResourceInfo.IntakeData intakeData) ? intakeData.PredictedMassFlow : 0;
                         if (!intake.intakeEnabled)
                         {
                             intake.ToggleAction(param);
