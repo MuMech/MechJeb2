@@ -64,7 +64,7 @@ namespace MuMech
                     double currentError = Vector3d.Distance(Core.Target.GetPositionTargetPosition(), Core.Landing.LandingSite);
                     if (currentError > 1000)
                     {
-                        if (!VesselState.ParachuteDeployed &&
+                        if (!VesselState.ParachuteDeployed && VesselState.LimitedMaxThrustAcceleration > 0 &&
                             VesselState.DragAcceleration <=
                             0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
