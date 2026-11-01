@@ -847,11 +847,25 @@ namespace MuMech
             var engines = VesselState.EngineWrappers.Where(eng => !eng.Engine.throttleLocked).ToList();
             int n = engines.Count;
 
+            // Every early return gives the limits back: the engines left in the list would keep the last solution.
             if (nbEngines == 0)
+            {
+                DisableDifferentialThrottle();
                 return DifferentialThrottleStatus.ALL_ENGINES_OFF;
+            }
 
             if (nbEngines == 1 || n == 0)
+            {
+                DisableDifferentialThrottle();
                 return DifferentialThrottleStatus.MORE_ENGINES_REQUIRED;
+            }
+
+            // No variable torque or force: the matrix would be 0/0 and minqpsetquadraticterm would throw
+            if (torqueScale <= 0 || forceScale <= 0)
+            {
+                DisableDifferentialThrottle();
+                return DifferentialThrottleStatus.SOLVER_FAILED;
+            }
 
 
             double[,] a = new double[n, n];
@@ -887,7 +901,10 @@ namespace MuMech
             //UnityEngine.Debug.LogFormat("[DiffThrottle] t1: {0}, t2: {1}, t3: {2}", t1, t2 - t1, t3 - t2);
 
             if (x.Any(double.IsNaN))
+            {
+                DisableDifferentialThrottle();
                 return DifferentialThrottleStatus.SOLVER_FAILED;
+            }
 
             for (int i = 0; i < n; i++)
             {
