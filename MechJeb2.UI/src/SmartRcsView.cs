@@ -20,7 +20,7 @@ namespace MuMech.UI
 
         protected override void BeforeSync() => blocked = smart.RcsUsedByOtherModule();
 
-        bool NoTarget() => Core.Target == null || Core.Target.Target == null;
+        bool NoTarget() => Core.Target == null || !Core.Target.NormalTargetExists;
 
         protected override void BuildContents(KodeWindow w)
         {
