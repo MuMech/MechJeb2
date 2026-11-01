@@ -25,14 +25,15 @@ namespace MuMech
             obj.parts.Clear();
         }
 
-        public static SimulatedVessel Borrow(Vessel v, ReentrySimulation.SimCurves simCurves, double startTime, int limitChutesStage)
+        // dropStage: simulate what's left after that stage is activated, or -1 for the whole vessel
+        public static SimulatedVessel Borrow(Vessel v, ReentrySimulation.SimCurves simCurves, double startTime, int limitChutesStage, int dropStage = -1)
         {
             SimulatedVessel vessel = pool.Borrow();
-            vessel.Init(v, simCurves, startTime, limitChutesStage);
+            vessel.Init(v, simCurves, startTime, limitChutesStage, dropStage);
             return vessel;
         }
 
-        private void Init(Vessel v, ReentrySimulation.SimCurves _simCurves, double startTime, int limitChutesStage)
+        private void Init(Vessel v, ReentrySimulation.SimCurves _simCurves, double startTime, int limitChutesStage, int dropStage)
         {
             totalMass = 0;
 
@@ -46,6 +47,9 @@ namespace MuMech
 
             for (int i = 0; i < count; i++)
             {
+                if (dropStage >= 0 && oParts[i].IsDecoupledInStage(dropStage))
+                    continue;
+
                 SimulatedPart simulatedPart = null;
                 bool special = false;
                 for (int j = 0; j < oParts[i].Modules.Count; j++)
@@ -60,12 +64,14 @@ namespace MuMech
 
                 if (!special)
                 {
-                    simulatedPart = SimulatedPart.Borrow(oParts[i], simCurves);
+                    simulatedPart = SimulatedPart.Borrow(oParts[i], simCurves, dropStage);
                 }
 
                 parts.Add(simulatedPart);
                 totalMass += simulatedPart.totalMass;
             }
+
+            count = parts.Count;
         }
 
         public Vector3d Drag(Vector3d localVelocity, double dynamicPressurekPa, float mach)

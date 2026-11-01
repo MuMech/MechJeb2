@@ -164,6 +164,10 @@ namespace MuMech.UI
                 if (Core.Landing != null) Core.Landing.DeployChutes = v;
             });
             StageRow(w, p, "#MechJeb_LandingGuidance_label5", () => Core.Landing?.LimitChutesStage); //Stage Limit:
+            w.Toggle(p, "#MechJeb_LandingGuidance_jettison", () => Core.Landing != null && Core.Landing.JettisonBeforeEntry, v => //Jettison stage before entry
+            {
+                if (Core.Landing != null) Core.Landing.JettisonBeforeEntry = v;
+            });
             w.Toggle(p, "#MechJeb_LandingGuidance_checkbox4", () => Core.Landing != null && Core.Landing.RCSAdjustment, v => //Use RCS for small adjustment
             {
                 if (Core.Landing != null) Core.Landing.RCSAdjustment = v;
@@ -305,6 +309,10 @@ namespace MuMech.UI
             });
             Layout chutes = ModernStage(g, "#MechJeb_LandingGuidance_label5", () => Core.Landing?.LimitChutesStage); //Stage Limit:
             g.Dim(chutes.gameObject, null, () => Core.Landing == null || !Core.Landing.DeployChutes);
+            g.Switch("#MechJeb_LandingGuidance_jettison", () => Core.Landing != null && Core.Landing.JettisonBeforeEntry, v => //Jettison stage before entry
+            {
+                if (Core.Landing != null) Core.Landing.JettisonBeforeEntry = v;
+            });
             g.Switch("#MechJeb_LandingGuidance_checkbox4", () => Core.Landing != null && Core.Landing.RCSAdjustment, v => //Use RCS for small adjustment
             {
                 if (Core.Landing != null) Core.Landing.RCSAdjustment = v;

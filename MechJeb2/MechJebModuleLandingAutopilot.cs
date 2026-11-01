@@ -36,6 +36,15 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool RCSAdjustment = true;
 
+        // Drop the current stage just above the atmosphere, and aim for what will land, not what is flying now. For a capsule and its service stage.
+        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
+        public bool JettisonBeforeEntry = false;
+
+        private bool _stageToDrop;
+
+        // the jettison has to happen at normal speed
+        public bool NearJettison => _stageToDrop && VesselState.AltitudeASL < MainBody.RealMaxAtmosphereAltitude() + 30000;
+
         // This is used to adjust the height at which the parachutes semi deploy as a means of
         // targeting the landing in an atmosphere where it is not possible to control atitude
         // to perform course correction burns.
@@ -121,6 +130,7 @@ namespace MuMech
             Vessel.RemoveAllManeuverNodes(); // For the benefit of the landing predictions module
 
             _deployedGears = false;
+            _stageToDrop = JettisonBeforeEntry && MainBody.atmosphere;
 
             // Create a new parachute plan
             _parachutePlan = new ParachutePlan(this);
@@ -140,6 +150,7 @@ namespace MuMech
             Users.Add(controller);
 
             _deployedGears = false;
+            _stageToDrop = JettisonBeforeEntry && MainBody.atmosphere;
 
             // Create a new parachute plan
             _parachutePlan = new ParachutePlan(this);
@@ -167,6 +178,7 @@ namespace MuMech
 
             DescentSpeedPolicy = PickDescentSpeedPolicy();
 
+            _predictor.dropStage = _stageToDrop ? Vessel.currentStage - 1 : -1;
             _predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
             _predictor.decelEndAltitudeASL = DecelerationEndAltitude();
             _predictor.parachuteSemiDeployMultiplier = _parachutePlan.Multiplier;
@@ -186,6 +198,7 @@ namespace MuMech
             _vesselAverageDrag = VesselAverageDrag();
             base.OnFixedUpdate();
             DeployParachutes();
+            JettisonIfDue();
         }
 
         protected override void OnModuleEnabled()
@@ -344,6 +357,20 @@ namespace MuMech
             {
                 _parachutePlan.AddResult(Prediction);
             }
+        }
+
+        private void JettisonIfDue()
+        {
+            if (!_stageToDrop || Orbit.PeA > 0 || VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude() + 4000)
+                return;
+
+            // still burning towards the target, or not at normal speed yet
+            if (Core.Thrust.TargetThrottle > 0 || !MuUtils.PhysicsRunning())
+                return;
+
+            _stageToDrop = false;
+            _predictor.dropStage = -1;
+            KSP.UI.Screens.StageManager.ActivateNextStage();
         }
 
         private void DeployParachutes()

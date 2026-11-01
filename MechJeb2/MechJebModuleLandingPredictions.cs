@@ -109,6 +109,7 @@ namespace MuMech
 
         public IDescentSpeedPolicy descentSpeedPolicy = null; //simulate this descent speed policy
         public double parachuteSemiDeployMultiplier = 3; // this will get updated by the autopilot.
+        public int dropStage = -1; // this will get updated by the autopilot: predict what's left after this stage
         public bool runErrorSimulations = false; // This will be set by the autopilot to turn error simulations on or off.
 
         //internal data:
@@ -276,9 +277,9 @@ namespace MuMech
             //if (descentSpeedPolicy != null)
             //    print(vesselState.limitedMaxThrustAccel.ToString("F2") + " " + descentSpeedPolicy.MaxAllowedSpeed(vesselState.CoM - mainBody.position, vesselState.surfaceVelocity).ToString("F2"));
 
-            var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, patch.StartUT, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1);
+            var simVessel = SimulatedVessel.Borrow(Vessel, simCurves, patch.StartUT, Core.Landing.Enabled && deployChutes ? limitChutesStage : -1, dropStage);
             var sim = ReentrySimulation.Borrow(patch, patch.StartUT, simVessel, simCurves, descentSpeedPolicy, decelEndAltitudeASL,
-                VesselState.LimitedMaxThrustAcceleration, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
+                dropStage >= 0 ? 0 : VesselState.LimitedMaxThrustAcceleration, parachuteMultiplierForThisSimulation, altitudeOfPreviousPrediction, addParachuteError, dt,
                 Time.fixedDeltaTime, maxOrbits, noSkipToFreefall);
             //MechJebCore.print("Sim ran with dt=" + dt.ToString("F3"));
 
