@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using KSP.Localization;
 using KSP.UI.Screens;
 using UnityEngine;
 
@@ -71,8 +70,6 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public int columns = 2;
 
-        private const int colWidth = 200;
-
         public Rect displayedPos
         {
             get
@@ -122,8 +119,6 @@ namespace MuMech
             }
         }
 
-        public bool firstDraw = true;
-
         internal bool movingButton;
 
         [ToggleInfoItem("#MechJeb_HideMenuButton", InfoItem.Category.Misc), Persistent(pass = (int)Pass.GLOBAL)]
@@ -133,33 +128,7 @@ namespace MuMech
         public readonly bool useAppLauncher = true; //Use AppLauncher
 
         [GeneralInfoItem("#MechJeb_MenuPosition", InfoItem.Category.Misc)] //Menu Position
-        private void MenuPosition()
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_MenuPos"), GuiUtils.LayoutNoExpandWidth); //Pos:
-            if (GUILayout.Button(windowSide.ToString()))
-            {
-                CycleSide();
-            }
-
-            GUILayout.Label(Localizer.Format("#MechJeb_MenuCol"), GuiUtils.LayoutNoExpandWidth); //Col
-            if (GUILayout.Button("-", GuiUtils.LayoutNoExpandWidth))
-            {
-                columns--;
-            }
-
-            GUILayout.Label(columns.ToString(), GuiUtils.LayoutNoExpandWidth);
-
-            if (GUILayout.Button("+", GuiUtils.LayoutNoExpandWidth))
-            {
-                columns++;
-            }
-
-            GUILayout.EndHorizontal();
-
-            if (columns < 1)
-                columns = 1;
-        }
+        private void MenuPosition() { }
 
         // shared by the IMGUI MenuPosition item and the new UI
         internal void CycleSide()
@@ -202,62 +171,6 @@ namespace MuMech
         private IButton menuButton;
 
         private static ApplicationLauncherButton mjButton;
-
-        private static GUIStyle toggleInactive;
-        private static GUIStyle toggleActive;
-
-        protected override void WindowGUI(int windowID)
-        {
-            if (HideMenuButton && GUI.Button(new Rect(2, 2, 16, 16), ""))
-            {
-                ShowHideWindow();
-            }
-
-            if (toggleInactive == null)
-            {
-                toggleInactive = new GUIStyle(GUI.skin.toggle);
-                toggleInactive.normal.textColor = toggleInactive.onNormal.textColor = Color.white;
-
-                toggleActive = new GUIStyle(toggleInactive);
-                toggleActive.normal.textColor = toggleActive.onNormal.textColor = Color.green;
-            }
-
-            List<DisplayModule> displayModules = Core.GetDisplayModules(DisplayOrder.instance);
-            int i = 0;
-            int step = Mathf.CeilToInt((float)(displayModules.Count(d => d.ShowInMenu && !d.TechLocked && d.ShowInCurrentScene) + 1) / columns);
-
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
-
-            foreach (DisplayModule module in displayModules)
-            {
-                if (module.ShowInMenu && !module.TechLocked && module.ShowInCurrentScene)
-                {
-                    if (i == step)
-                    {
-                        GUILayout.EndVertical();
-                        GUILayout.BeginVertical();
-                        i = 0;
-                    }
-
-                    module.Enabled = GUILayout.Toggle(module.Enabled, module.GetName(), module.IsActive() ? toggleActive : toggleInactive);
-                    i++;
-                }
-            }
-
-            if (GUILayout.Button(Localizer.Format("#MechJeb_OnlineManualbutton"))) //"Online Manual"
-            {
-                Application.OpenURL("https://github.com/MuMech/MechJeb2/wiki");
-            }
-
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-
-            if (Core.someModuleAreLocked)
-                GUILayout.Label(
-                    Localizer.Format(
-                        "#MechJeb_ModuleAreLocked")); //"Some modules are disabled until you unlock the proper node in the R&D tree or upgrade the tracking station."
-        }
 
         public void SetupAppLauncher()
         {
@@ -558,61 +471,12 @@ namespace MuMech
             }
         }
 
-        public override void DrawGUI(bool inEditor)
-        {
-            AdvanceAnimation();
-
-            GUI.depth = -100;
-            GUI.SetNextControlName("MechJebOpen");
-            Matrix4x4 previousGuiMatrix = GUI.matrix;
-            if (windowSide == WindowSide.RIGHT || windowSide == WindowSide.LEFT)
-                GUI.matrix = GUI.matrix * Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(new Vector3(0, 0, -90)), Vector3.one);
-
-            if (!HideMenuButton && GUI.RepeatButton(buttonPos,
-                    (windowStat == WindowStat.HIDDEN) ^ (windowSide == WindowSide.TOP || windowSide == WindowSide.LEFT)
-                        ? "▲ MechJeb ▲"
-                        : "▼ MechJeb ▼"))
-            {
-                if (Event.current.button == 0)
-                {
-                    ShowHideWindow();
-                }
-                else if (!movingButton && Event.current.button == 1)
-                {
-                    movingButton = true;
-                }
-            }
-
-            GUI.matrix = previousGuiMatrix;
-
-            GUI.depth = -99;
-
-            if (windowStat != WindowStat.HIDDEN)
-            {
-                WindowPos = GUILayout.Window(GetType().FullName.GetHashCode(), displayedPos, WindowGUI, "MechJeb " + Core.version,
-                    GuiUtils.LayoutWidth(colWidth), GUILayout.Height(20));
-            }
-            else
-            {
-                WindowPos = new Rect(GuiUtils.ScaledScreenWidth, GuiUtils.ScaledScreenHeight, 0, 0); // make it small so the mouse can't hoover it
-            }
-
-            GUI.depth = -98;
-
-            if (firstDraw)
-            {
-                GUI.FocusControl("MechJebOpen");
-                firstDraw = false;
-            }
-        }
-
         public void ShowHideWindow()
         {
             if (windowStat == WindowStat.HIDDEN)
             {
                 windowStat = WindowStat.OPENING;
                 windowProgr = 0;
-                firstDraw = true;
             }
             else if (windowStat == WindowStat.NORMAL)
             {

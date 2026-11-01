@@ -342,10 +342,18 @@ namespace MuMech.UI
             Factor(p, "Ki = pid.Kp / (", c => c._uiKiFactor, " * Math.Sqrt(2) * Tf)");
             Factor(p, "#MechJeb_AttitudeController_PIDFactor1", c => c._uiDeadband, ""); //"Deadband = "
 
+            Factor(p, "#MechJeb_AttitudeController_label11", c => c.KWlimit, "%"); //"Maximum Relative Angular Velocity"
+            p.W.Slider(p.Parent, () => p.C != null ? (float)p.C.KWlimit.Val : 0, v =>
+            {
+                MJAttitudeController c = p.C;
+                if (c != null && Math.Round(Math.Abs(v - c.KWlimit), 3) > 0) c.KWlimit = Math.Round(v, 3);
+            }, 0, 1);
+
             p.Sync(c =>
             {
                 c.ClampFactors();
                 c.ClampDeadband();
+                c.ApplyUiValues();
             });
         }
 

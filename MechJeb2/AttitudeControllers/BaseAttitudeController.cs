@@ -54,10 +54,6 @@ namespace MuMech.AttitudeControllers
 
         public abstract void DrivePre(FlightCtrlState s, out Vector3d act, out Vector3d deltaEuler);
 
-        public virtual void GUI()
-        {
-        }
-
         public virtual void Reset(int i) => Reset();
     }
 }

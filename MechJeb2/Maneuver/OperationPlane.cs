@@ -15,8 +15,6 @@ namespace MuMech
 
         internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target) => _timeSelector.DoChooseTimeGUI();
-
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             // all the time references here are relative nodes, found below from the start time: the selector only says which one

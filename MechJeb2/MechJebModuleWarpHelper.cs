@@ -27,61 +27,6 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble phaseAngle = 0;
 
-        protected override void WindowGUI(int windowID)
-        {
-            GUILayout.BeginVertical();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label1"), GuiUtils.LayoutNoExpandWidth); //"Warp to: "
-            warpTarget = (WarpTarget)GuiUtils.ComboBox.Box((int)warpTarget, warpTargetStrings, this);
-            GUILayout.EndHorizontal();
-
-            if (warpTarget == WarpTarget.Time)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label2"), GuiUtils.LayoutExpandWidth); //"Warp for: "
-                timeOffset.Text = GUILayout.TextField(timeOffset.Text, GuiUtils.LayoutWidth(100));
-                GUILayout.EndHorizontal();
-            }
-            else if (warpTarget == WarpTarget.PhaseAngleT)
-            {
-                // I wonder if I should check for target that don't make sense
-                if (!Core.Target.NormalTargetExists)
-                    GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label3")); //"You need a target"
-                else
-                    GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label4"), phaseAngle, "º", 60); //"Phase Angle:"
-            }
-
-            GUILayout.BeginHorizontal();
-
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_WarpHelper_label5"), leadTime, ""); //"Lead time: "
-
-            if (warping)
-            {
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button1"))) //"Abort"
-                    AbortWarp();
-            }
-            else
-            {
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WarpHelper_button2"))) //"Warp"
-                    StartWarp();
-            }
-
-            GUILayout.EndHorizontal();
-
-            Core.Warp.useQuickWarpInfoItem();
-
-            if (warping)
-                GUILayout.Label(Localizer.Format("#MechJeb_WarpHelper_label6") + (leadTime > 0 ? GuiUtils.TimeToDHMS(leadTime) + " before " : "") +
-                    warpTargetStrings[(int)warpTarget] + "."); //"Warping to "
-
-            Core.Warp.ControlWarpButton();
-
-            GUILayout.EndVertical();
-
-            base.WindowGUI(windowID);
-        }
-
         // Resolve the target time for the current warpTarget setting and begin warping. OnFixedUpdate
         // then drives Core.Warp toward (targetUT - leadTime). Callable directly (e.g. from kOS) as the
         // high-level entry point; the GUI Warp button just calls this.
@@ -200,8 +145,6 @@ namespace MuMech
                 Core.Warp.WarpToUT(target);
             }
         }
-
-        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(240), GUILayout.Height(50) };
 
         public override bool IsActive() => warping;
 

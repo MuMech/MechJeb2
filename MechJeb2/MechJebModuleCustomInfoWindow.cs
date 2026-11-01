@@ -63,7 +63,6 @@ namespace MuMech
 
         public Texture2D background;
 
-        private GUISkin localSkin;
 
         private TimeSpan refreshInterval = TimeSpan.FromSeconds(0.1);
         private DateTime lastRefresh = DateTime.MinValue;
@@ -98,81 +97,6 @@ namespace MuMech
             lastRefresh = now;
         }
 
-        private void RefreshRateGUI()
-        {
-            int oldRate = refreshRate;
-            if (GuiUtils.ShowAdvancedWindowSettings)
-                GuiUtils.SimpleTextBox("Update Interval", refreshRate, "Hz");
-            if (oldRate != refreshRate)
-            {
-                refreshRate = Math.Max(refreshRate, 1);
-                UpdateRefreshRate();
-            }
-        }
-
-        protected override void WindowGUI(int windowID)
-        {
-            Profiler.BeginSample("MechJebModuleCustomInfoWindow.WindowGUI");
-
-            GUI.skin = isCompact ? GuiUtils.CompactSkin : GuiUtils.Skin;
-            GUI.contentColor = text;
-
-            // Only run the updater during the Layout pass, not the Repaint pass
-            if (Event.current.type == EventType.Layout)
-                UpdateWindowItems();
-
-            GUILayout.BeginVertical();
-
-            foreach (InfoItem item in items)
-            {
-                if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
-                    item.DrawItem();
-                else
-                    GUILayout.Label(item.localizedName); //
-            }
-
-            if (items.Count == 0)
-                GUILayout.Label(CachedLocalizer.Instance
-                   .MechJebWindowEdCustomInfoWindowLabel1); //Add items to this window with the custom window editor.
-
-            RefreshRateGUI();
-
-            GUILayout.EndVertical();
-
-            if (!IsOverlay && Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } editor &&
-                GUI.Button(new Rect(10, 0, 13, 20), "E", GuiUtils.YellowOnHover))
-            {
-                editor.Enabled = true;
-                editor.editedWindow = this;
-            }
-
-            if (!IsOverlay && GUI.Button(new Rect(25, 0, 13, 20), "C", GuiUtils.YellowOnHover))
-            {
-                MuUtils.SystemClipboard = ToSharingString();
-                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg1", GetName()), 3.0f,
-                    ScreenMessageStyle.UPPER_RIGHT); //Configuration of <<1>> window copied to clipboard.
-            }
-
-            base.WindowGUI(windowID);
-
-            Profiler.EndSample();
-        }
-
-        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(250), GUILayout.Height(30) };
-
-        public override void DrawGUI(bool inEditor)
-        {
-            Init();
-            if (IsOverlay)
-            {
-                GUI.skin = localSkin;
-            }
-
-            base.DrawGUI(inEditor);
-            if (IsOverlay)
-                GUI.skin = GuiUtils.Skin;
-        }
-
         public void Init()
         {
             if (!background)
@@ -180,13 +104,6 @@ namespace MuMech
                 background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
                 background.SetPixel(0, 0, backgroundColor);
                 background.Apply();
-            }
-
-            if (IsOverlay && !localSkin)
-            {
-                localSkin = Object.Instantiate(GuiUtils.TransparentSkin);
-                localSkin.window.normal.background = background;
-                localSkin.window.onNormal.background = background;
             }
         }
 
@@ -563,178 +480,6 @@ namespace MuMech
         /// <summary>The registry items of the selected category, sorted as the editor lists them.</summary>
         internal IEnumerable<InfoItem> ItemsOfCategory() => registry.Where(it => it.category == itemCategory).OrderBy(it => it.description);
 
-        public override void DrawGUI(bool inEditor)
-        {
-            Profiler.BeginSample("MechJebModuleCustomWindowEditor.DrawGUI");
-
-            base.DrawGUI(inEditor);
-
-            if (editingBackground)
-            {
-                if (editedWindow != null)
-                {
-                    editedWindow.Init();
-
-                    SetBackgroundColor(ColorPickerRGB.DrawGUI((int)WindowPos.xMax + 5, (int)WindowPos.yMin, editedWindow.backgroundColor));
-                }
-            }
-
-            if (editingText)
-            {
-                if (editedWindow != null)
-                {
-                    SetTextColor(ColorPickerRGB.DrawGUI((int)WindowPos.xMax + 5, (int)WindowPos.yMin, editedWindow.text));
-                }
-            }
-
-            Profiler.EndSample();
-        }
-
-        private Vector2 scrollPos, scrollPos2;
-
-        protected override void WindowGUI(int windowID)
-        {
-            Profiler.BeginSample("MechJebModuleCustomWindowEditor.WindowGUI");
-
-            GUILayout.BeginVertical();
-
-            if (editedWindow == null) editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
-
-            if (editedWindow == null)
-            {
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button1"))) AddNewWindow(); //New window
-            }
-            else
-            {
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button1"))) AddNewWindow(); //New window
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button2"))) RemoveCurrentWindow(); //Delete window
-                GUILayout.EndHorizontal();
-            }
-
-            if (editedWindow != null)
-            {
-                List<ComputerModule> allWindows = Core.GetComputerModules<MechJebModuleCustomInfoWindow>();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_Edtitle"), GuiUtils.LayoutNoExpandWidth); //Title:
-                int editedWindowIndex = allWindows.IndexOf(editedWindow);
-                editedWindowIndex = GuiUtils.ArrowSelector(editedWindowIndex, allWindows.Count, () =>
-                {
-                    string newTitle = GUILayout.TextField(editedWindow.title, GuiUtils.LayoutWidth(120), GuiUtils.LayoutNoExpandWidth);
-
-                    if (editedWindow.title != newTitle)
-                    {
-                        editedWindow.title = newTitle;
-                        editedWindow.Dirty = true;
-                    }
-                });
-                editedWindow = (MechJebModuleCustomInfoWindow)allWindows[editedWindowIndex];
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label1")); //Show in:
-                editedWindow.ShowInFlight =
-                    GUILayout.Toggle(editedWindow.ShowInFlight, Localizer.Format("#MechJeb_WindowEd_checkbox1"), GuiUtils.LayoutWidth(60)); //Flight
-                editedWindow.ShowInEditor = GUILayout.Toggle(editedWindow.ShowInEditor, Localizer.Format("#MechJeb_WindowEd_checkbox2")); //Editor
-                GUILayout.EndHorizontal();
-
-
-                GUILayout.BeginHorizontal();
-                editedWindow.IsOverlay = GUILayout.Toggle(editedWindow.IsOverlay, Localizer.Format("#MechJeb_WindowEd_checkbox3")); //Overlay
-                editedWindow.WindowLocked = GUILayout.Toggle(editedWindow.WindowLocked, Localizer.Format("#MechJeb_WindowEd_checkbox4")); //Locked
-                editedWindow.IsCompact = GUILayout.Toggle(editedWindow.IsCompact, Localizer.Format("#MechJeb_WindowEd_checkbox5")); //Compact
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label2")); //Color:
-                bool previous = editingText;
-
-                editingText = GUILayout.Toggle(editingText, Localizer.Format("#MechJeb_WindowEd_checkbox6")); //Text
-
-                if (editingText && editingText != previous)
-                    editingBackground = false;
-
-                previous = editingBackground;
-                editingBackground = GUILayout.Toggle(editingBackground, Localizer.Format("#MechJeb_WindowEd_checkbox7")); //Background
-
-                if (editingBackground && editingBackground != previous)
-                    editingText = false;
-
-                GUILayout.EndHorizontal();
-
-                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label3")); //Window contents (click to edit):
-
-                GUILayout.BeginVertical(GUILayout.Height(100));
-                scrollPos = GUILayout.BeginScrollView(scrollPos);
-                for (int i = 0; i < editedWindow.items.Count; i++)
-                {
-                    GUIStyle s = i == selectedItemIndex ? GuiUtils.YellowLabel : GUI.skin.label;
-                    if (GUILayout.Button(editedWindow.items[i].ListName, s)) selectedItemIndex = i; //
-                }
-
-                GUILayout.EndScrollView();
-                GUILayout.EndVertical();
-
-                GUILayout.BeginHorizontal();
-
-                if (!(selectedItemIndex >= 0 && selectedItemIndex < editedWindow.items.Count)) selectedItemIndex = -1;
-
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button3")) && selectedItemIndex != -1)
-                    RemoveSelectedItem(); //Remove
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button4")) && selectedItemIndex != -1) //"Move up"
-                    MoveSelectedItem(-1);
-
-                if (GUILayout.Button(Localizer.Format("#MechJeb_WindowEd_button5")) && selectedItemIndex != -1) //Move down
-                    MoveSelectedItem(1); // checks the bounds: the inline version threw on the last item
-
-                GUILayout.EndHorizontal();
-
-                HeaderInfoItem header = SelectedHeader();
-                if (header != null)
-                {
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_HeaderText"), GuiUtils.LayoutNoExpandWidth); //Header text:
-                    SetHeaderText(header, GUILayout.TextField(header.Text, GuiUtils.LayoutExpandWidth));
-                    GUILayout.EndHorizontal();
-                }
-
-                GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label4")); //Click an item to add it to the info window:
-
-                itemCategory = (InfoItem.Category)GuiUtils.ComboBox.Box((int)itemCategory, categories, this);
-
-                scrollPos2 = GUILayout.BeginScrollView(scrollPos2);
-                foreach (InfoItem item in registry.Where(it => it.category == itemCategory).OrderBy(it => it.description))
-                {
-                    if (GUILayout.Button(Localizer.Format(item.description), GuiUtils.YellowOnHover)) //
-                    {
-                        AddItem(item);
-                    }
-                }
-
-                GUILayout.EndScrollView();
-            }
-
-            GUILayout.Label(Localizer.Format("#MechJeb_WindowEd_label5"), GuiUtils.MiddleCenterLabel); //Window presets:
-
-            presetIndex = GuiUtils.ArrowSelector(presetIndex, CustomWindowPresets.presets.Length, () =>
-            {
-                if (GUILayout.Button(CustomWindowPresets.presets[presetIndex].name))
-                {
-                    MechJebModuleCustomInfoWindow newWindow = CreateWindowFromSharingString(CustomWindowPresets.presets[presetIndex].sharingString);
-                    if (newWindow != null) editedWindow = newWindow;
-                }
-            });
-
-            GUILayout.EndVertical();
-
-            base.WindowGUI(windowID);
-
-            Profiler.EndSample();
-        }
-
-        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(200), GUILayout.Height(540) };
-
         public override string GetName() => CachedLocalizer.Instance.MechJebWindowEdTitle; //Custom Window Editor
 
         public override string IconName() => "Custom Window Editor";
@@ -850,9 +595,6 @@ namespace MuMech
 
         public string Text { get; private set; }
 
-        // a bold label per skin: custom windows draw with the compact skin or MechJeb's
-        private static readonly Dictionary<GUISkin, GUIStyle> _styles = new Dictionary<GUISkin, GUIStyle>();
-
         public HeaderInfoItem(string text = "")
             : base(new GeneralInfoItemAttribute("#MechJeb_WindowEd_HeaderItem", Category.Misc) { showInEditor = true }) //Header / separator
         {
@@ -873,33 +615,6 @@ namespace MuMech
         public override string ListName => Text.Length == 0
             ? Localizer.Format("#MechJeb_WindowEd_Separator")              //Separator
             : Localizer.Format("#MechJeb_WindowEd_HeaderListName", Text); //Header: <<1>>
-
-        public override void DrawItem()
-        {
-            if (Text.Length > 0)
-            {
-                if (!_styles.TryGetValue(GUI.skin, out GUIStyle style))
-                    _styles[GUI.skin] = style = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold };
-
-                GUILayout.Label(Text, style);
-            }
-            else
-            {
-                GUILayout.Space(3);
-            }
-
-            // a hairline across the window
-            Rect line = GUILayoutUtility.GetRect(1, 1, GuiUtils.LayoutExpandWidth);
-            if (Event.current.type == EventType.Repaint)
-            {
-                Color c = GUI.color;
-                GUI.color = new Color(c.r, c.g, c.b, c.a * 0.4f);
-                GUI.DrawTexture(line, Texture2D.whiteTexture);
-                GUI.color = c;
-            }
-
-            GUILayout.Space(3);
-        }
     }
 
     //A ValueInfoItem is an info item that shows the value of some field, or the return value of some method.
@@ -925,8 +640,6 @@ namespace MuMech
         private int cacheValidity = -1;
         public bool externalRefresh;
 
-        private readonly GUILayoutOption[] _widthOption;
-        private readonly GUIContent _labelContent;
 
         // read access for another UI (MechJeb2.UI formats the value itself, without strings)
         public object Target => _obj;
@@ -962,7 +675,6 @@ namespace MuMech
             timeDecimalPlaces = attribute.timeDecimalPlaces;
             width = attribute.width;
 
-            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             _obj = obj;
             Member = member;
@@ -972,7 +684,6 @@ namespace MuMech
 
             getValue = _getterCache[member];
 
-            _widthOption = new[] { width > 0 ? GuiUtils.LayoutWidth(width) : GuiUtils.LayoutNoExpandWidth };
 
             Profiler.EndSample();
         }
@@ -1070,21 +781,11 @@ namespace MuMech
             cacheValidity = 0;
             UpdateItemCache();
         }
-
-        public override void DrawItem()
-        {
-            if (!externalRefresh) UpdateItemCache();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(_labelContent);
-            GUILayout.Label(stringValue, _widthOption);
-            GUILayout.EndHorizontal();
-        }
     }
 
     public class ActionInfoItem : InfoItem
     {
         private readonly Action action;
-        private readonly GUIContent _labelContent;
 
         public ActionInfoItem(object obj, MethodInfo method, ActionInfoItemAttribute attribute)
             : base(attribute)
@@ -1095,24 +796,17 @@ namespace MuMech
 
             action = (Action)Delegate.CreateDelegate(typeof(Action), obj, method);
 
-            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             Profiler.EndSample();
         }
 
         public void Invoke() => action();
-
-        public override void DrawItem()
-        {
-            if (GUILayout.Button(_labelContent)) action();
-        }
     }
 
     public class ToggleInfoItem : InfoItem
     {
         private readonly object obj;
         private readonly MemberInfo member;
-        private readonly GUIContent _labelContent;
 
         public ToggleInfoItem(object obj, MemberInfo member, ToggleInfoItemAttribute attribute)
             : base(attribute)
@@ -1124,7 +818,6 @@ namespace MuMech
             this.obj = obj;
             this.member = member;
 
-            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             Profiler.EndSample();
         }
@@ -1174,17 +867,10 @@ namespace MuMech
             il.Emit(OpCodes.Ret);
             return dm.CreateDelegate(delegateType);
         }
-
-        public override void DrawItem()
-        {
-            bool currentValue = Value;
-
-            bool newValue = GUILayout.Toggle(currentValue, _labelContent);
-
-            if (newValue != currentValue) Value = newValue;
-        }
     }
 
+    // Its id is the method's name, which saved custom windows hold. MechJeb's own methods are empty: MechJeb2.UI builds those
+    // items by id, and the method only draws, in IMGUI, an item from another mod.
     public class GeneralInfoItem : InfoItem
     {
         private readonly Action draw;
@@ -1222,7 +908,6 @@ namespace MuMech
         public readonly bool expandWidth;
         private readonly IEditable val;
         public IEditable Editable => val;
-        private readonly GUIContent _labelContent;
 
         public EditableInfoItem(object obj, MemberInfo member, EditableInfoItemAttribute attribute)
             : base(attribute)
@@ -1235,20 +920,11 @@ namespace MuMech
             width = attribute.width;
             expandWidth = attribute.expandWidth;
 
-            _labelContent = string.IsNullOrEmpty(localizedTooltip) ? new GUIContent(localizedName) : new GUIContent(localizedName, localizedTooltip);
 
             if (member is FieldInfo) val = (IEditable)((FieldInfo)member).GetValue(obj);
             else if (member is PropertyInfo) val = (IEditable)((PropertyInfo)member).GetValue(obj, new object[] { });
 
             Profiler.EndSample();
-        }
-
-        public override void DrawItem()
-        {
-            if (val != null)
-            {
-                GuiUtils.SimpleTextBox(_labelContent, val, rightLabel, width, expandWidth: expandWidth);
-            }
         }
     }
 

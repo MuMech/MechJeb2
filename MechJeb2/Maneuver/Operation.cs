@@ -38,7 +38,8 @@ namespace MuMech
 
         // Draw the parameter part of the Operation (ask for time, altitudes etc)
         // Input parameters are orbit and time parameters after the last maneuver and current target
-        public abstract void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target);
+        // MechJeb2.UI has a native panel for each of MechJeb's operations: this draws, in IMGUI, one from another mod
+        public virtual void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target) { }
 
         // Function called when create node is pressed; input parameters are orbit and time parameters after the last maneuver and current target
         // ManeuverParameters contain a single time and dV describing the node that should be executed

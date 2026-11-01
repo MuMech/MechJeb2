@@ -1,9 +1,9 @@
 namespace MuMech
 {
     /// <summary>
-    /// A second UI implementation (e.g. a uGUI one in another assembly) that draws some DisplayModule windows itself.
-    /// MechJebCore.OnGUI skips the windows a host owns, and its click-through lock also covers the host's windows,
-    /// so there is a single lock owner for both UIs.
+    /// The UI in another assembly (MechJeb2.UI) that draws MechJeb's windows. IMGUI only draws another mod's windows:
+    /// MechJebCore.OnGUI skips the rest, and its click-through lock also covers the host's windows, so there is a single
+    /// lock owner for both.
     /// </summary>
     public interface IMechJebUiHost
     {
@@ -25,7 +25,9 @@ namespace MuMech
             if (Current == host) Current = null;
         }
 
-        internal static bool Owns(DisplayModule module) => Current != null && Current.OwnsWindow(module);
+        // MechJeb's own windows, with or without a host: their IMGUI drawing code is gone
+        internal static bool Owns(DisplayModule module) =>
+            module.GetType().Assembly == typeof(DisplayModule).Assembly || Current != null && Current.OwnsWindow(module);
 
         internal static bool MouseOverHostWindow() => Current != null && Current.MouseOverWindow();
     }

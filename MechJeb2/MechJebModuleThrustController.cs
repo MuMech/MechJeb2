@@ -36,54 +36,31 @@ namespace MuMech
         public readonly EditableDouble MaxDynamicPressure = new EditableDouble(20000);
 
         [GeneralInfoItem("#MechJeb_LimittoMaxQ", InfoItem.Category.Thrust)] //Limit to Max Q
-        public void LimitToMaxDynamicPressureInfoItem()
-        {
-            GUIStyle s = Limiter == LimitMode.DYNAMIC_PRESSURE ? GuiUtils.GreenToggle : null;
-            GuiUtils.ToggledTextBox(ref LimitDynamicPressure, CachedLocalizer.Instance.MechJebAscentCheckbox11, MaxDynamicPressure, "Pa", s, 80);
-        }
+        public void LimitToMaxDynamicPressureInfoItem() { }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitToPreventOverheats;
 
         [GeneralInfoItem("#MechJeb_PreventEngineOverheats", InfoItem.Category.Thrust)] //Prevent engine overheats
-        public void LimitToPreventOverheatsInfoItem()
-        {
-            GUIStyle s = Limiter == LimitMode.TEMPERATURE ? GuiUtils.GreenToggle : GuiUtils.Skin.toggle;
-            LimitToPreventOverheats =
-                GUILayout.Toggle(LimitToPreventOverheats, CachedLocalizer.Instance.MechJebAscentCheckbox12, s); //"Prevent engine overheats"
-        }
+        public void LimitToPreventOverheatsInfoItem() { }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitToPreventFlameout;
 
         [GeneralInfoItem("#MechJeb_PreventJetFlameout", InfoItem.Category.Thrust)] //Prevent jet flameout
-        public void LimitToPreventFlameoutInfoItem()
-        {
-            GUIStyle s = Limiter == LimitMode.FLAMEOUT ? GuiUtils.GreenToggle : GuiUtils.Skin.toggle;
-            LimitToPreventFlameout =
-                GUILayout.Toggle(LimitToPreventFlameout, CachedLocalizer.Instance.MechJebAscentCheckbox13, s); //"Prevent jet flameout"
-        }
+        public void LimitToPreventFlameoutInfoItem() { }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool LimitToPreventUnstableIgnition;
 
         [GeneralInfoItem("#MechJeb_PreventUnstableIgnition", InfoItem.Category.Thrust)] //Prevent unstable ignition
-        public void LimitToPreventUnstableIgnitionInfoItem()
-        {
-            GUIStyle s = Limiter == LimitMode.UNSTABLE_IGNITION ? GuiUtils.GreenToggle : GuiUtils.Skin.toggle;
-            LimitToPreventUnstableIgnition =
-                GUILayout.Toggle(LimitToPreventUnstableIgnition, CachedLocalizer.Instance.MechJebAscentCheckbox14, s); //"Prevent unstable ignition"
-        }
+        public void LimitToPreventUnstableIgnitionInfoItem() { }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool AutoRCSUllaging = true;
 
         [GeneralInfoItem("#MechJeb_UseRCStoullage", InfoItem.Category.Thrust)] //Use RCS to ullage
-        public void AutoRCsUllageInfoItem()
-        {
-            GUIStyle s = Limiter == LimitMode.AUTO_RCS_ULLAGE ? GuiUtils.GreenToggle : GuiUtils.Skin.toggle;
-            AutoRCSUllaging = GUILayout.Toggle(AutoRCSUllaging, CachedLocalizer.Instance.MechJebAscentCheckbox15, s); //"Use RCS to ullage"
-        }
+        public void AutoRCsUllageInfoItem() { }
 
         // 5% safety margin on flameouts
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -99,12 +76,7 @@ namespace MuMech
         public readonly EditableDouble MaxAcceleration = 40;
 
         [GeneralInfoItem("#MechJeb_LimitAcceleration", InfoItem.Category.Thrust)] //Limit Acceleration
-        public void LimitAccelerationInfoItem()
-        {
-            GUIStyle s = Limiter == LimitMode.ACCELERATION ? GuiUtils.GreenToggle : null;
-            GuiUtils.ToggledTextBox(ref LimitAcceleration, CachedLocalizer.Instance.MechJebAscentCheckbox16, MaxAcceleration, "m/s²", s,
-                30); //"Limit acceleration to"
-        }
+        public void LimitAccelerationInfoItem() { }
 
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool LimitThrottle;
@@ -113,12 +85,7 @@ namespace MuMech
         public readonly EditableDoubleMult MaxThrottle = new EditableDoubleMult(1, 0.01);
 
         [GeneralInfoItem("#MechJeb_LimitThrottle", InfoItem.Category.Thrust)] //Limit throttle
-        public void LimitThrottleInfoItem()
-        {
-            GUIStyle s = Limiter == LimitMode.THROTTLE ? MaxThrottle > 0d ? GuiUtils.GreenToggle : GuiUtils.RedToggle : null;
-            GuiUtils.ToggledTextBox(ref LimitThrottle, CachedLocalizer.Instance.MechJebAscentCheckbox17, MaxThrottle, "%", s,
-                30); //"Limit throttle to"
-        }
+        public void LimitThrottleInfoItem() { }
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public bool LimiterMinThrottle;
@@ -126,35 +93,14 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult MinThrottle = new EditableDoubleMult(0.05, 0.01);
 
-        private static GUIContent _limiterMinThrottleContent;
-
         [GeneralInfoItem("#MechJeb_LowerThrottleLimit", InfoItem.Category.Thrust)] //Lower throttle limit
-        public void LimiterMinThrottleInfoItem()
-        {
-            // RF users should almost always have this set, "stock" users should almost always never have this set
-            bool warn = ReflectionUtils.IsLoadedRealFuels ? !LimiterMinThrottle || MinThrottle <= 0d : LimiterMinThrottle && MinThrottle > 0d;
-            GUIStyle s = Limiter == LimitMode.MIN_THROTTLE ? GuiUtils.GreenToggle : warn ? GuiUtils.YellowToggle : null;
-            _limiterMinThrottleContent ??= new GUIContent(CachedLocalizer.Instance.MechJebAscentCheckbox18,
-                Localizer.Format("#MechJeb_Ascent_checkbox18_tooltip"));
-            GuiUtils.ToggledTextBox(ref LimiterMinThrottle, _limiterMinThrottleContent, MinThrottle, "%", s, 30); //"Keep limited throttle over"
-        }
+        public void LimiterMinThrottleInfoItem() { }
 
         [UsedImplicitly, Persistent(pass = (int)Pass.TYPE)]
         public bool DifferentialThrottle;
 
         [GeneralInfoItem("#MechJeb_DifferentialThrottle", InfoItem.Category.Thrust)] //Differential throttle
-        public void DifferentialThrottleMenu()
-        {
-            bool oldDifferentialThrottle = Core.Thrust.DifferentialThrottle;
-            GUIStyle s = DifferentialThrottle && Vessel.LiftedOff()
-                ? Core.Thrust.DifferentialThrottleSuccess == DifferentialThrottleStatus.SUCCESS ? GuiUtils.GreenToggle : GuiUtils.YellowToggle
-                : GuiUtils.Skin.toggle;
-            DifferentialThrottle =
-                GUILayout.Toggle(DifferentialThrottle, CachedLocalizer.Instance.MechJebAscentCheckbox19, s); //"Differential throttle"
-
-            if (oldDifferentialThrottle && !Core.Thrust.DifferentialThrottle)
-                Core.Thrust.DisableDifferentialThrottle();
-        }
+        public void DifferentialThrottleMenu() { }
 
         public Vector3d DifferentialThrottleDemandedTorque;
 
@@ -176,25 +122,7 @@ namespace MuMech
         public readonly EditableDoubleMult ElectricThrottleHi = new EditableDoubleMult(0.15, 0.01);
 
         [GeneralInfoItem("#MechJeb_ElectricLimit", InfoItem.Category.Thrust)] //Electric limit
-        public void LimitElectricInfoItem()
-        {
-            GUILayout.BeginHorizontal();
-            GUIStyle s = GuiUtils.Skin.label;
-            if (Limiter == LimitMode.ELECTRIC)
-            {
-                s = ThrottleLimit < 0.001 ? GuiUtils.RedLabel : GuiUtils.YellowLabel;
-            }
-            else if (ElectricEngineRunning()) s = GuiUtils.GreenLabel;
-
-            ElectricThrottle =
-                GUILayout.Toggle(ElectricThrottle, CachedLocalizer.Instance.MechJebAscentCheckbox20, s,
-                    GuiUtils.LayoutWidth(110)); //"Electric limit Lo"
-            GuiUtils.SimpleTextField(ElectricThrottleLo, 30);
-            GUILayout.Label("% Hi", GuiUtils.ExpandWidth(false));
-            GuiUtils.SimpleTextField(ElectricThrottleHi, 30);
-            GUILayout.Label("%", GuiUtils.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-        }
+        public void LimitElectricInfoItem() { }
 
         public enum LimitMode
         {

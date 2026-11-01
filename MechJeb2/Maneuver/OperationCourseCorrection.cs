@@ -28,24 +28,6 @@ namespace MuMech
 
         internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
-        {
-            if (target.Target is CelestialBody)
-            {
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_approach_label1"), Periapsis, "km"); //Approximate final periapsis
-                GuiUtils.ToggledTextBox(ref InclinationFlag, "Inclination", Inclination, "°"); //Inclination
-            }
-            else
-            {
-                GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_approach_label2"), InterceptDistance, "m"); //Closest approach distance
-            }
-
-            if (target.Target is CelestialBody)
-                _timeSelector.DoChooseTimeGUI();
-            else
-                GUILayout.Label(Localizer.Format("#MechJeb_approach_label3")); //Schedule the burn to minimize the required ΔV.
-        }
-
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double ut, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)

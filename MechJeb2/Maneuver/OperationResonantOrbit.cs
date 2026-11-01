@@ -21,19 +21,6 @@ namespace MuMech
         internal readonly TimeSelector _timeSelector =
             new TimeSelector(new[] { TimeReference.APOAPSIS, TimeReference.PERIAPSIS, TimeReference.X_FROM_NOW, TimeReference.ALTITUDE });
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
-        {
-            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label1",
-                ResonanceNumerator.Val + "/" + ResonanceDenominator.Val)); //"Change your orbital period to <<1>> of your current orbital period"
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_resonant_label2"), GuiUtils.LayoutExpandWidth); //New orbital period ratio :
-            ResonanceNumerator.Text = GUILayout.TextField(ResonanceNumerator.Text, GuiUtils.LayoutWidth(30));
-            GUILayout.Label("/", GuiUtils.LayoutNoExpandWidth);
-            ResonanceDenominator.Text = GUILayout.TextField(ResonanceDenominator.Text, GuiUtils.LayoutWidth(30));
-            GUILayout.EndHorizontal();
-            _timeSelector.DoChooseTimeGUI();
-        }
-
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);

@@ -18,12 +18,6 @@ namespace MuMech
 
         internal static readonly TimeSelector _timeSelector = new TimeSelector(_timeReferences);
 
-        public override void DoParametersGUI(Orbit o, double universalTime, MechJebModuleTargetController target)
-        {
-            GuiUtils.SimpleTextBox(Localizer.Format("#MechJeb_intercept_label"), InterceptInterval); //Time after burn to intercept target:
-            _timeSelector.DoChooseTimeGUI();
-        }
-
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             if (!target.NormalTargetExists)

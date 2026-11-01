@@ -101,45 +101,7 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_RCSPid", InfoItem.Category.Thrust)] //RCS Pid
-        public void PIDGUI()
-        {
-            GUILayout.BeginVertical();
-            rcsManualPID = GUILayout.Toggle(rcsManualPID, "RCS Manual Pid");
-            if (rcsManualPID)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("P", GuiUtils.LayoutNoExpandWidth);
-                Kp.Text = GUILayout.TextField(Kp.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
-
-                GUILayout.Label("I", GuiUtils.LayoutNoExpandWidth);
-                Ki.Text = GUILayout.TextField(Ki.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
-
-                GUILayout.Label("D", GuiUtils.LayoutNoExpandWidth);
-                Kd.Text = GUILayout.TextField(Kd.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
-                GUILayout.EndHorizontal();
-            }
-            else
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Tf", GuiUtils.LayoutNoExpandWidth);
-                Tf.Text = GUILayout.TextField(Tf.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(40));
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("P", GuiUtils.LayoutNoExpandWidth);
-                GUILayout.Label(Kp.Val.ToString("F4"), GuiUtils.LayoutExpandWidth);
-
-                GUILayout.Label("I", GuiUtils.LayoutNoExpandWidth);
-                GUILayout.Label(Ki.Val.ToString("F4"), GuiUtils.LayoutExpandWidth);
-
-                GUILayout.Label("D", GuiUtils.LayoutNoExpandWidth);
-                GUILayout.Label(Kd.Val.ToString("F4"), GuiUtils.LayoutExpandWidth);
-                GUILayout.EndHorizontal();
-            }
-
-            GUILayout.EndVertical();
-            setPIDParameters();
-        }
+        public void PIDGUI() { }
 
         // When evaluating how fast RCS can accelerate and calculate a speed that available thrust should
         // be multiplied by that since the PID controller actual lower the used acceleration

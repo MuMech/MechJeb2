@@ -99,58 +99,5 @@ namespace MuMech.AttitudeControllers
             _lqr[i].Reset();
             _directionTracker.Reset(i);
         }
-
-        public override void GUI()
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Smooth Torque", GuiUtils.LayoutNoExpandWidth);
-            SmoothTorque.Text = GUILayout.TextField(SmoothTorque.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(50));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Position", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_current), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Desired", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_desired), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Error", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_error), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Velocity", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_velocity), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Mass", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_mass), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Actuation", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_actuation), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("MOI", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_vessel.MOI), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Control Torque", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_controlTorque), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Applied Torque", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_targetTorque), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-        }
     }
 }

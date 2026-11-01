@@ -18,77 +18,14 @@ namespace MuMech
 
         public Target target;
 
-        private static GUIStyle btNormal, btActive, btAuto;
-
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool autoDisableSmartRCS = true;
 
         [GeneralInfoItem("#MechJeb_DisableSmartRcsAutomatically", InfoItem.Category.Misc)] //Disable SmartRcs automatically
-        public void AutoDisableSmartRCS() =>
-            autoDisableSmartRCS =
-                GUILayout.Toggle(autoDisableSmartRCS, Localizer.Format("#MechJeb_SmartRcs_checkbox1 ")); //"Disable SmartRcs automatically"
-
-        protected void TargetButton(Target bt)
-        {
-            if (GUILayout.Button(TargetTexts[(int)bt], target == bt ? btActive : btNormal, GuiUtils.LayoutExpandWidth, GUILayout.ExpandHeight(true)))
-            {
-                target = bt;
-                Engage();
-            }
-        }
+        public void AutoDisableSmartRCS() { } //"Disable SmartRcs automatically"
 
         public MechJebModuleSmartRcs(MechJebCore core) : base(core)
         {
-        }
-
-        protected override void WindowGUI(int windowID)
-        {
-            if (btNormal == null)
-            {
-                btNormal = new GUIStyle(GUI.skin.button);
-                btNormal.normal.textColor = btNormal.focused.textColor = Color.white;
-                btNormal.hover.textColor = btNormal.active.textColor = Color.yellow;
-                btNormal.onNormal.textColor =
-                    btNormal.onFocused.textColor = btNormal.onHover.textColor = btNormal.onActive.textColor = Color.green;
-                btNormal.padding = new RectOffset(8, 8, 8, 8);
-
-                btActive = new GUIStyle(btNormal);
-                btActive.active = btActive.onActive;
-                btActive.normal = btActive.onNormal;
-                btActive.onFocused = btActive.focused;
-                btActive.hover = btActive.onHover;
-
-                btAuto = new GUIStyle(btNormal);
-                btAuto.normal.textColor = Color.red;
-                btAuto.onActive =
-                    btAuto.onFocused = btAuto.onHover = btAuto.onNormal = btAuto.active = btAuto.focused = btAuto.hover = btAuto.normal;
-            }
-
-            // Disable if RCS is used by an other module
-            if (RcsUsedByOtherModule())
-            {
-                GUILayout.Button(Localizer.Format("#MechJeb_SmartRcs_button3"), btAuto, GuiUtils.LayoutExpandWidth); //"AUTO"
-            }
-            else if (Core.Target.Target == null)
-            {
-                GUILayout.Label(Localizer.Format("#MechJeb_SmartRcs_label1")); //"Choose a target"
-            }
-            else
-            {
-                GUILayout.BeginVertical();
-
-                TargetButton(Target.OFF);
-                TargetButton(Target.ZERO_RVEL);
-                //TargetButton(Target.HOLD_RPOS);
-
-                GUILayout.EndVertical();
-            }
-
-            Core.RCS.rcsThrottle =
-                GUILayout.Toggle(Core.RCS.rcsThrottle, Localizer.Format("#MechJeb_SmartRcs_checkbox2")); //" RCS throttle when engines are offline"
-            Core.RCS.rcsForRotation =
-                GUILayout.Toggle(Core.RCS.rcsForRotation, Localizer.Format("#MechJeb_SmartRcs_checkbox3")); // " Use RCS for rotation"
-            base.WindowGUI(windowID);
         }
 
         // shared by the IMGUI window and the new UI: true when RCS is used by an other module (and then switches SmartRcs off if configured so)
@@ -133,8 +70,6 @@ namespace MuMech
                     break;
             }
         }
-
-        protected override GUILayoutOption[] WindowOptions() => new[] { GuiUtils.LayoutWidth(180), GUILayout.Height(100) };
 
         public override string GetName() => Localizer.Format("#MechJeb_SmartRcs_title"); //"SmartRcs"
 

@@ -13,12 +13,7 @@ namespace MuMech
         }
 
         [GeneralInfoItem("#MechJeb_ToggleSolarPanels", InfoItem.Category.Misc, showInEditor = false)] //Toggle solar panels
-        public void SolarPanelDeployButton()
-        {
-            AutoDeploy = GUILayout.Toggle(AutoDeploy, Localizer.Format("#MechJeb_SolarPanelDeployButton")); //"Auto-deploy solar panels"
-
-            if (GUILayout.Button(ButtonText)) ToggleDeploy();
-        }
+        public void SolarPanelDeployButton() { }
 
         protected override bool IsModules(ModuleDeployablePart p) => p is ModuleDeployableSolarPanel;
 

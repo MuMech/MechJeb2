@@ -1,7 +1,6 @@
 extern alias JetBrainsAnnotations;
 using System;
 using JetBrainsAnnotations::JetBrains.Annotations;
-using KSP.Localization;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
@@ -144,68 +143,6 @@ namespace MuMech.AttitudeControllers
                 if (Math.Abs(_actuation[i]) < EPSILON || double.IsNaN(_actuation[i]))
                     _actuation[i] = 0;
             }
-        }
-
-        public override void GUI()
-        {
-            UseInertia = GUILayout.Toggle(UseInertia, Localizer.Format("#MechJeb_HybridController_checkbox1")); //"useInertia"
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label1"), GuiUtils.LayoutNoExpandWidth); //"MaxStoppingTime"
-            MaxStoppingTime.Text = GUILayout.TextField(MaxStoppingTime.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            UseControlRange = GUILayout.Toggle(UseControlRange, Localizer.Format("#MechJeb_HybridController_checkbox2"),
-                GuiUtils.LayoutNoExpandWidth); //"RollControlRange"
-            RollControlRange.Text = GUILayout.TextField(RollControlRange.Text, GuiUtils.LayoutExpandWidth, GuiUtils.LayoutWidth(60));
-            GUILayout.EndHorizontal();
-
-            // Not used yet
-            //GuiUtils.SimpleTextBox("Maximum Relative Angular Velocity", kWlimit, "%");
-            //double tmp_kWlimit = kWlimit;
-            //tmp_kWlimit = (EditableDouble)GUILayout.HorizontalSlider((float)tmp_kWlimit, 0.0F, 1.0F);
-            //
-            //const int sliderPrecision = 3;
-            //if (Math.Round(Math.Abs(tmp_kWlimit - kWlimit), sliderPrecision) > 0)
-            //{
-            //    kWlimit.val = Math.Round(tmp_kWlimit, sliderPrecision);
-            //}
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label2"), GuiUtils.LayoutExpandWidth); //"Actuation"
-            GUILayout.Label(MuUtils.PrettyPrint(_actuation), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label3"), GuiUtils.LayoutExpandWidth); //"phiVector"
-            GUILayout.Label(MuUtils.PrettyPrint(_phiVector), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Omega", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_omega), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("MaxOmega", GuiUtils.LayoutExpandWidth);
-            GUILayout.Label(MuUtils.PrettyPrint(_maxOmega), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label4"), GuiUtils.LayoutExpandWidth); //"TargetTorque"
-            GUILayout.Label(MuUtils.PrettyPrint(_targetTorque), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label5"), GuiUtils.LayoutExpandWidth); //"ControlTorque"
-            GUILayout.Label(MuUtils.PrettyPrint(_controlTorque), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(Localizer.Format("#MechJeb_HybridController_label6"), GuiUtils.LayoutExpandWidth); //"Inertia"
-            GUILayout.Label("|" + Ac.Inertia.magnitude.ToString("F3") + "| " + MuUtils.PrettyPrint(Ac.Inertia), GuiUtils.LayoutNoExpandWidth);
-            GUILayout.EndHorizontal();
         }
     }
 }
