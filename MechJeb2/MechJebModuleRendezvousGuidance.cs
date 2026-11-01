@@ -27,15 +27,10 @@ namespace MuMech
 
         internal void AlignPlanes()
         {
-            double UT;
-            Vector3d dV;
-            if (Orbit.AscendingNodeExists(Core.Target.TargetOrbit))
+            if (!OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanes(Orbit, Core.Target.TargetOrbit, VesselState.Time, out Vector3d dV, out double UT))
             {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
-            }
-            else
-            {
-                dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZplan_noNode"), 5);
+                return;
             }
 
             Vessel.RemoveAllManeuverNodes();

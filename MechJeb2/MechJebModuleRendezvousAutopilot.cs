@@ -320,40 +320,20 @@ namespace MuMech
             else
             {
                 //We're not on an intercept course, and we're not in the right plane. Match planes
-                bool ascending;
-                if (Orbit.eccentricity < 1)
+                if (OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanes(Orbit, Core.Target.TargetOrbit, VesselState.Time, out Vector3d dV, out double UT))
                 {
-                    if (Orbit.TimeOfAscendingNode(Core.Target.TargetOrbit, VesselState.Time) <
-                        Orbit.TimeOfDescendingNode(Core.Target.TargetOrbit, VesselState.Time))
-                    {
-                        ascending = true;
-                    }
-                    else
-                    {
-                        ascending = false;
-                    }
+                    Vessel.PlaceManeuverNode(Orbit, dV, UT);
+
+                    status = Localizer.Format("#MechJeb_RZauto_statu9"); //"Matching planes."
                 }
                 else
                 {
-                    if (Orbit.AscendingNodeExists(Core.Target.TargetOrbit))
-                    {
-                        ascending = true;
-                    }
-                    else
-                    {
-                        ascending = false;
-                    }
+                    //Past both nodes of a hyperbola: only a closed orbit will reach another one
+                    UT = VesselState.Time + 15;
+                    Vessel.PlaceManeuverNode(Orbit, OrbitalManeuverCalculator.DeltaVToCircularize(Orbit, UT), UT);
+
+                    status = Localizer.Format("#MechJeb_RZauto_statu8"); //"Circularizing."
                 }
-
-                double UT;
-                Vector3d dV;
-                if (ascending)
-                    dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesAscending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
-                else dV = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanesDescending(Orbit, Core.Target.TargetOrbit, VesselState.Time, out UT);
-
-                Vessel.PlaceManeuverNode(Orbit, dV, UT);
-
-                status = Localizer.Format("#MechJeb_RZauto_statu9"); //"Matching planes."
             }
         }
     }
