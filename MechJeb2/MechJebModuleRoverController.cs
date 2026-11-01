@@ -480,10 +480,10 @@ namespace MuMech
             speedPID.MaxIntegral = Math.Abs(sPIDi) * 5;
             speedPID.MinIntegral = -speedPID.MaxIntegral;
 
-            if (lastETA + 0.2 < DateTime.Now.TimeOfDay.TotalSeconds)
+            if (lastETA + 0.2 < Time.realtimeSinceStartup)
             {
                 etaSpeed.Value = curSpeed;
-                lastETA = DateTime.Now.TimeOfDay.TotalSeconds;
+                lastETA = Time.realtimeSinceStartup;
             }
 
             if (!Core.GetComputerModule<MechJebModuleRoverWindow>().Enabled)
