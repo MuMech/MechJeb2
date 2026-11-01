@@ -218,7 +218,10 @@ namespace MuMech
 
             // Seems we are already landed ?
             if (endRadius > Orbit.ApR || Vessel.LandedOrSplashed)
+            {
                 StopLanding();
+                return Vector3d.zero;
+            }
 
             Vector3d orbitLandingPosition = Orbit.WorldBCIPositionAtUT(
                 Orbit.PeR < endRadius ? Orbit.NextTimeOfRadius(VesselState.Time, endRadius) : Orbit.NextPeriapsisTime(VesselState.Time)
