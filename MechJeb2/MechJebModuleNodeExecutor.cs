@@ -198,6 +198,10 @@ namespace MuMech
                 return;
             }
 
+            // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN
+            if (!ReflectionUtils.IsLoadedPrincipia)
+                UpdateDvLeft();
+
             _direction = NextDirection();
 
             // note that in principia after our node disappears this value will change to -1
