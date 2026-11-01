@@ -58,7 +58,7 @@ namespace MuMech
 
         public void SetActiveController(int i)
         {
-            ActiveController = i;
+            ActiveController = Math.Max(0, Math.Min(i, _controllers.Count - 1));
             Controller = _controllers[ActiveController];
             Controller.OnStart();
         }
