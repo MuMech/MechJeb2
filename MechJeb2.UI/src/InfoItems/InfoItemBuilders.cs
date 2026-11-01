@@ -343,17 +343,15 @@ namespace MuMech.UI
             Layout panel = KodeWindow.Panel(parent);
             w.Toggle(panel, "RCS Manual Pid", () => c.rcsManualPID, v => c.rcsManualPID = v);
 
-            // manual: P, I and D are fields
+            // manual: P and I are fields
             Layout manual = KodeWindow.Row(panel);
             w.Visible(manual.gameObject, () => c.rcsManualPID);
             KodeWindow.Label(manual, "P");
             EditUi.Field(w, manual, () => c.Kp, 60);
             KodeWindow.Label(manual, "I");
             EditUi.Field(w, manual, () => c.Ki, 60);
-            KodeWindow.Label(manual, "D");
-            EditUi.Field(w, manual, () => c.Kd, 60);
 
-            // automatic: Tf is a field, P, I and D are computed
+            // automatic: Tf is a field, P and I are computed
             Layout auto = KodeWindow.Panel(panel);
             w.Visible(auto.gameObject, () => !c.rcsManualPID);
             Layout tf = KodeWindow.Row(auto);
@@ -364,10 +362,8 @@ namespace MuMech.UI
             GuidanceUi.Live(w, pid, "0.0000", true, ct => ct.Append(c.Kp.Val, 4));
             KodeWindow.Label(pid, "I");
             GuidanceUi.Live(w, pid, "0.0000", true, ct => ct.Append(c.Ki.Val, 4));
-            KodeWindow.Label(pid, "D");
-            GuidanceUi.Live(w, pid, "0.0000", true, ct => ct.Append(c.Kd.Val, 4));
 
-            // the IMGUI item pushed the parameters into the PID controller on every draw. Manual mode only copies three
+            // the IMGUI item pushed the parameters into the PID controller on every draw. Manual mode only copies two
             // numbers. Automatic mode derives them from Tf and allocates (Tf = Math.Max(...), the fields' new texts), so it
             // runs when the item comes into view, the mode changes or Tf changes (Equals: a NaN Tf is not a change)
             bool pushed = false, pushedManual = false;
