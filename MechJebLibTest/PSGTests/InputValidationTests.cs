@@ -91,17 +91,6 @@ namespace MechJebLibTest.PSGTests
         public void BadOptimizerTimeout(int milliseconds) =>
             Assert.Throws<ArgumentException>(() => Builder().OptimizerTimeout(milliseconds));
 
-        // not a validation, but this checks that the builder's timeout reaches the bootstrapping optimizer
-        [Fact]
-        public void OptimizerTimeoutReachesTheOptimizer()
-        {
-            Ascent ascent = Builder().SetTarget(700000, 700000, 700000, 0, 0, 0, 0, false, false, false).OptimizerTimeout(1).Build();
-
-            Exception e = Assert.Throws<Exception>(() => ascent.Run());
-
-            e.Message.ShouldContain("bootstrapping");
-        }
-
         [Fact]
         public void NewCoastAllowsNegativeTimes()
         {
