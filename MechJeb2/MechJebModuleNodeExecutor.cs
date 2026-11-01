@@ -82,6 +82,22 @@ namespace MuMech
             return GuiUtils.TimeToDHMS(ut - VesselState.Time);
         }
 
+        // How long a half turn takes with the throttle closed, so without the engines' gimbals. The attitude controller
+        // turns at the higher of two seconds of its acceleration and a half turn in 120 s, which are its default limits.
+        public double FlipTime()
+        {
+            Vector3d torque = Vector3d.Max(VesselState.TorqueReactionWheel.Positive, VesselState.TorqueReactionWheel.Negative);
+            if (Vessel.ActionGroups[KSPActionGroup.RCS])
+                torque += Vector3d.Max(VesselState.RCSTorqueAvailable.Positive, VesselState.RCSTorqueAvailable.Negative);
+
+            double acceleration = Min(torque.x / VesselState.MoI.x, torque.z / VesselState.MoI.z);
+            if (acceleration <= 0)
+                return 0;
+
+            double rate = Max(2 * acceleration, PI / 120);
+            return PI / rate + rate / acceleration;
+        }
+
         // How long before a node a burn of this size needs the executor to be on it
         public double BurnLeadTime(double dV)
         {

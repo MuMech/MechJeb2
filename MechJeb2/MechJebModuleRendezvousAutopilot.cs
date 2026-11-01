@@ -44,8 +44,9 @@ namespace MuMech
             Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
         }
 
-        //The earliest time for the middle of a burn of this size: the node executor centers a burn on its node, and starts late otherwise.
-        public double EarliestBurnUT(double dV) => VesselState.Time + Math.Max(15, Core.Node.BurnLeadTime(dV));
+        //The earliest time for the middle of a burn of this size: the node executor centers a burn on its node, and only starts it
+        //once the vessel points the right way, so anything sooner starts late.
+        public double EarliestBurnUT(double dV) => VesselState.Time + Math.Max(15, Core.Node.FlipTime() + Core.Node.BurnLeadTime(dV));
 
         //When to center the burn that kills the relative velocity at a closest approach, to come to rest at the desired distance from the target.
         public double BurnUTToStopAtDesiredDistance(double closestApproachUT)
@@ -93,12 +94,13 @@ namespace MuMech
             if (problem != null) Stop(problem);
         }
 
-        //The time to close a distance at the closing speed limit. A zero-revolution intercept of about an orbit or more has only
-        //a huge, near radial solution, so this stops at a quarter of an orbit, and is faster than the limit when it does.
+        //The time to close a distance at the closing speed limit, and at least long enough to turn around and stop at the end. A
+        //zero-revolution intercept of about an orbit or more has only a huge, near radial solution, so this stops at a quarter of
+        //an orbit, and is faster than the limit when it does.
         public double ClosingTime(double distance)
         {
             double closingSpeed = Math.Max(0.01, Math.Min(distance / 100, maxClosingSpeed));
-            return Math.Min(distance / closingSpeed, Orbit.period / 4);
+            return Math.Min(Math.Max(distance / closingSpeed, 1.5 * Core.Node.FlipTime()), Orbit.period / 4);
         }
 
         //The cost of a Hohmann transfer between two circular orbits, and the lead angle of the target for it
