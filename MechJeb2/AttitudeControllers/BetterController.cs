@@ -206,7 +206,7 @@ namespace MuMech.AttitudeControllers
         {
             UpdatePredictionPI();
 
-            deltaEuler = _error * Mathf.Rad2Deg;
+            deltaEuler = Vector3d.Scale(_error, Ac.AxisControl) * Mathf.Rad2Deg;
 
             for (int i = 0; i < 3; i++)
                 if (Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
