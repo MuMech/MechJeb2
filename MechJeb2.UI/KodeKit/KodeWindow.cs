@@ -581,10 +581,16 @@ namespace KodeKit
         }
 
         /// <summary>A static text that wraps to the window width (help texts, long descriptions).</summary>
-        public static UIText Paragraph(UIObject parent, string text)
+        public static UIText Paragraph(UIObject parent, string text) => WrapToWidth(Label(parent, text, true));
+
+        /// <summary>A label wraps in the width its parent gives it: its text no longer widens the window, which it would on one line.</summary>
+        public static UIText WrapToWidth(UIText t)
         {
-            UIText t = Label(parent, text, true);
             t.tmpText.enableWordWrapping = true;
+            var le = t.GetComponent<LayoutElement>() ?? t.gameObject.AddComponent<LayoutElement>();
+            le.minWidth = 0;
+            le.preferredWidth = 0;
+            le.flexibleWidth = 1;
             return t;
         }
 

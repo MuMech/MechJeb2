@@ -195,10 +195,10 @@ namespace MuMech.UI
             box = KodeWindow.Box(r);
             AscentUi.SimpleBox(w, box, "#MechJeb_Ascent_label17", Psgs.LimitQa, "Pa-rad"); //Qα limit
             UIText clamped = AscentUi.ToneText(box, "Qα limit has been clamped to between 0 and 10000 Pa-rad", Tone.Bad, true);
-            clamped.tmpText.enableWordWrapping = true;
+            KodeWindow.WrapToWidth(clamped);
             w.Visible(clamped.gameObject, () => OutsideRecommended && (Psgs.LimitQa < 0 || Psgs.LimitQa > 10000));
             UIText recommended = AscentUi.ToneText(box, "#MechJeb_Ascent_label20", Tone.Warn, true); //Qα limit is recommended to be 1000 to 4000 Pa-rad
-            recommended.tmpText.enableWordWrapping = true;
+            KodeWindow.WrapToWidth(recommended);
             w.Visible(recommended.gameObject, () => OutsideRecommended && !(Psgs.LimitQa < 0 || Psgs.LimitQa > 10000));
 
             w.Toggle(box, "Draw Trajectory on Map", () => Core.Guidance.ShouldDrawTrajectory, v => Core.Guidance.ShouldDrawTrajectory = v);
