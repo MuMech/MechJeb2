@@ -387,10 +387,10 @@ namespace MuMech
 
             if (StabilityControl)
             {
-                Physics.Raycast(Vessel.CoM + VesselState.SurfaceVelocity * terrainLookAhead + VesselState.Up * 100, -VesselState.Up,
-                    out RaycastHit hit, 500,
-                    1 << 15, QueryTriggerInteraction.Ignore);
-                Vector3 norm = hit.normal;
+                bool terrainHit = Physics.Raycast(Vessel.CoM + VesselState.SurfaceVelocity * terrainLookAhead + VesselState.Up * 100,
+                    -VesselState.Up, out RaycastHit hit, 500, 1 << 15, QueryTriggerInteraction.Ignore);
+                // a miss (terrain not loaded ahead, a cliff edge, open water) leaves hit.normal at zero: use the local vertical instead
+                Vector3 norm = terrainHit ? hit.normal : (Vector3)VesselState.Up;
 
                 if (!Core.Attitude.Users.Contains(this))
                 {
@@ -403,6 +403,8 @@ namespace MuMech
                     VesselState.Forward * 4 - Vessel.transform.right * s.wheelSteer * Mathf.Sign(fSpeed)
                     : // and then add the steering
                     VesselState.SurfaceVelocity; // in the air so follow velocity
+                if (fwd.sqrMagnitude < 1e-6f)
+                    fwd = VesselState.Forward; // not moving: LookRotation would get a zero vector
                 Vector3.OrthoNormalize(ref norm, ref fwd);
                 var quat = Quaternion.LookRotation(fwd, norm);
 
