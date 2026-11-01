@@ -14,6 +14,18 @@ namespace MuMech
 
         public static readonly Direction[] Values = (Direction[])Enum.GetValues(typeof(Direction));
 
+        public static Direction Opposite(Direction direction) =>
+            direction switch
+            {
+                Direction.FORWARD => Direction.BACK,
+                Direction.BACK    => Direction.FORWARD,
+                Direction.UP      => Direction.DOWN,
+                Direction.DOWN    => Direction.UP,
+                Direction.RIGHT   => Direction.LEFT,
+                Direction.LEFT    => Direction.RIGHT,
+                _                 => direction
+            };
+
         [UsedImplicitly]
         public double Forward
         {

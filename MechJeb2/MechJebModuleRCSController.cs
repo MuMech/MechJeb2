@@ -11,7 +11,6 @@ namespace MuMech
         public readonly PIDControllerV2 pid;
         private Vector3d lastAct = Vector3d.zero;
         private Vector3d worldVelocityDelta = Vector3d.zero;
-        private Vector3d prev_worldVelocityDelta = Vector3d.zero;
 
         private enum ControlType
         {
@@ -40,9 +39,6 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble Ki = 0.07;
 
-        [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
-        public readonly EditableDouble Kd = 0.53;
-
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool rcsManualPID;
 
@@ -58,7 +54,7 @@ namespace MuMech
             : base(core)
         {
             Priority = 600;
-            pid = new PIDControllerV2(Kp, Ki, Kd, 1, -1);
+            pid = new PIDControllerV2(Kp, Ki, 1, -1);
         }
 
         protected override void OnModuleEnabled()
@@ -67,7 +63,6 @@ namespace MuMech
             pid.Reset();
             lastAct = Vector3d.zero;
             worldVelocityDelta = Vector3d.zero;
-            prev_worldVelocityDelta = Vector3d.zero;
             controlType = ControlType.VELOCITY_ERROR;
             base.OnModuleEnabled();
         }
@@ -82,7 +77,6 @@ namespace MuMech
         {
             if (rcsManualPID)
             {
-                pid.Kd = Kd;
                 pid.Kp = Kp;
                 pid.Ki = Ki;
             }
@@ -90,11 +84,9 @@ namespace MuMech
             {
                 Tf = Math.Max(Tf, 0.02);
 
-                pid.Kd = 0.53 / Tf;
-                pid.Kp = pid.Kd / (3 * Math.Sqrt(2) * Tf);
+                pid.Kp = 0.53 / (3 * Math.Sqrt(2) * Tf * Tf);
                 pid.Ki = pid.Kp / (12 * Math.Sqrt(2) * Tf);
 
-                Kd.Val = pid.Kd;
                 Kp.Val = pid.Kp;
                 Ki.Val = pid.Ki;
             }
@@ -126,11 +118,7 @@ namespace MuMech
         public void SetWorldVelocityError(Vector3d dv)
         {
             worldVelocityDelta = -dv;
-            if (controlType != ControlType.VELOCITY_ERROR)
-            {
-                prev_worldVelocityDelta = worldVelocityDelta;
-                controlType = ControlType.VELOCITY_ERROR;
-            }
+            controlType = ControlType.VELOCITY_ERROR;
         }
 
         public void SetTargetRelative(Vector3d vel)
@@ -185,7 +173,8 @@ namespace MuMech
                 {
                     Vector6.Direction dir = Vector6.Values[i];
                     double dirDv = Vector3d.Dot(velocityDelta, Vector6.Directions[(int)dir]);
-                    double dirAvail = VesselState.RCSThrustAvailable[dir];
+                    // removing an excess along dir takes a force along the opposite direction
+                    double dirAvail = VesselState.RCSThrustAvailable[Vector6.Opposite(dir)];
                     if (dirAvail > 0 && Math.Abs(dirDv) > 0.001)
                     {
                         double dirAction = dirDv / (dirAvail * TimeWarp.fixedDeltaTime / VesselState.Mass);
@@ -196,22 +185,7 @@ namespace MuMech
                     }
                 }
 
-                Vector3d omega = Vector3d.zero;
-
-                switch (controlType)
-                {
-                    case ControlType.TARGET_VELOCITY:
-                        omega = Quaternion.Inverse(Vessel.GetTransform().rotation) * (Vessel.acceleration - VesselState.GravityForce);
-                        break;
-
-                    case ControlType.VELOCITY_TARGET_REL:
-                    case ControlType.VELOCITY_ERROR:
-                        omega = (worldVelocityDelta - prev_worldVelocityDelta) / TimeWarp.fixedDeltaTime;
-                        prev_worldVelocityDelta = worldVelocityDelta;
-                        break;
-                }
-
-                rcs = pid.Compute(rcs, omega);
+                rcs = pid.Compute(rcs);
 
                 // Disabled the low pass filter for now. Was doing more harm than good
                 //rcs = lastAct + (rcs - lastAct) * (1 / ((Tf / TimeWarp.fixedDeltaTime) + 1));

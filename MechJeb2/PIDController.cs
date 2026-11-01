@@ -1,4 +1,5 @@
 using System;
+using MechJebLib.Control;
 
 namespace MuMech
 {
@@ -55,66 +56,35 @@ namespace MuMech
         }
     }
 
+    // Only P and I: this drives velocities, and for those the plant is a single integrator.
     public class PIDControllerV2 : IConfigNode
     {
         private Vector3d _intAccum;
-        private Vector3d _derivativeAct;
         private Vector3d _propAct;
-        public double Kp, Ki, Kd;
+        public double Kp, Ki;
         private readonly double _max;
         private readonly double _min;
 
-        public PIDControllerV2(double kp = 0, double ki = 0, double kd = 0, double max = double.MaxValue, double min = double.MinValue)
+        public PIDControllerV2(double kp = 0, double ki = 0, double max = double.MaxValue, double min = double.MinValue)
         {
             Kp = kp;
             Ki = ki;
-            Kd = kd;
             _max = max;
             _min = min;
             Reset();
         }
 
-        public Vector3d Compute(Vector3d error, Vector3d omega)
+        public Vector3d Compute(Vector3d error)
         {
-            _derivativeAct = omega * Kd;
-
-            // integral actíon + Anti Windup
-            _intAccum.x = Math.Abs(_derivativeAct.x) < 0.6 * _max ? _intAccum.x + error.x * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.x;
-            _intAccum.y = Math.Abs(_derivativeAct.y) < 0.6 * _max ? _intAccum.y + error.y * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.y;
-            _intAccum.z = Math.Abs(_derivativeAct.z) < 0.6 * _max ? _intAccum.z + error.z * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.z;
-
             _propAct = error * Kp;
+            Vector3d intStep = error * (Ki * TimeWarp.fixedDeltaTime);
 
-            Vector3d action = _propAct + _derivativeAct + _intAccum;
-
-            // action clamp
-            action = new Vector3d(Math.Max(_min, Math.Min(_max, action.x)),
-                Math.Max(_min, Math.Min(_max, action.y)),
-                Math.Max(_min, Math.Min(_max, action.z)));
-            return action;
-        }
-
-        public Vector3d Compute(Vector3d error, Vector3d omega, Vector3d wlimit)
-        {
-            _derivativeAct = omega * Kd;
-            wlimit *= Kd;
-
-            // integral actíon + Anti Windup
-            _intAccum.x = Math.Abs(_derivativeAct.x) < 0.6 * _max ? _intAccum.x + error.x * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.x;
-            _intAccum.y = Math.Abs(_derivativeAct.y) < 0.6 * _max ? _intAccum.y + error.y * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.y;
-            _intAccum.z = Math.Abs(_derivativeAct.z) < 0.6 * _max ? _intAccum.z + error.z * Ki * TimeWarp.fixedDeltaTime : 0.9 * _intAccum.z;
-
-            _propAct = error * Kp;
+            // integral action + Anti Windup
+            _intAccum.x = AntiWindup.Integrate(_intAccum.x, _propAct.x, intStep.x, _min, _max);
+            _intAccum.y = AntiWindup.Integrate(_intAccum.y, _propAct.y, intStep.y, _min, _max);
+            _intAccum.z = AntiWindup.Integrate(_intAccum.z, _propAct.z, intStep.z, _min, _max);
 
             Vector3d action = _propAct + _intAccum;
-
-            // Clamp (propAct + intAccum) to limit the angular velocity:
-            action = new Vector3d(Math.Max(-wlimit.x, Math.Min(wlimit.x, action.x)),
-                Math.Max(-wlimit.y, Math.Min(wlimit.y, action.y)),
-                Math.Max(-wlimit.z, Math.Min(wlimit.z, action.z)));
-
-            // add. derivative action
-            action += _derivativeAct;
 
             // action clamp
             action = new Vector3d(Math.Max(_min, Math.Min(_max, action.x)),
@@ -136,18 +106,12 @@ namespace MuMech
             {
                 Ki = Convert.ToDouble(node.GetValue("Ki"));
             }
-
-            if (node.HasValue("Kd"))
-            {
-                Kd = Convert.ToDouble(node.GetValue("Kd"));
-            }
         }
 
         public void Save(ConfigNode node)
         {
             node.SetValue("Kp", Kp.ToString());
             node.SetValue("Ki", Ki.ToString());
-            node.SetValue("Kd", Kd.ToString());
         }
     }
 
