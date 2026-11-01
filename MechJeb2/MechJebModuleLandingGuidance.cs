@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -75,8 +76,8 @@ namespace MuMech
                         continue;
                     }
 
-                    double.TryParse(lat, out double latitude);
-                    double.TryParse(lon, out double longitude);
+                    if (!double.TryParse(lat, NumberStyles.Float, CultureInfo.InvariantCulture, out double latitude)) continue;
+                    if (!double.TryParse(lon, NumberStyles.Float, CultureInfo.InvariantCulture, out double longitude)) continue;
 
                     string bodyName = site.GetValue("body");
                     CelestialBody body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;
@@ -152,8 +153,8 @@ namespace MuMech
                             continue;
                         }
 
-                        double.TryParse(lat, out double latitude);
-                        double.TryParse(lon, out double longitude);
+                        if (!double.TryParse(lat, NumberStyles.Float, CultureInfo.InvariantCulture, out double latitude)) continue;
+                        if (!double.TryParse(lon, NumberStyles.Float, CultureInfo.InvariantCulture, out double longitude)) continue;
 
                         if (LandingSites.All(p => p.Name != launchSiteName))
                         {
