@@ -124,6 +124,11 @@ namespace MuMech.UI
             Layout start = EditRow(w, main, "#MechJeb_Docking_label6", () => Ap?.overridenTargetSize, "m"); //"Start Distance"
             w.Visible(start.gameObject, () => Ap != null && Ap.overrideTargetSize);
 
+            w.Toggle(main, "#MechJeb_Docking_checkbox7", () => Ap != null && Ap.stopOnContact, v => //"Stop on contact"
+            {
+                if (Ap != null) Ap.stopOnContact = v;
+            });
+
             w.Toggle(main, "#MechJeb_Docking_checkbox5", () => Ap != null && Ap.drawBoundingBox, v => //"Draw Bounding Box"
             {
                 if (Ap != null) Ap.drawBoundingBox = v;
@@ -180,6 +185,10 @@ namespace MuMech.UI
             });
             Layout start = GridField(g, "#MechJeb_Docking_label6", () => Ap?.overridenTargetSize, "m"); //"Start Distance"
             g.Dim(start.gameObject, null, () => Ap == null || !Ap.overrideTargetSize);
+            g.Switch("#MechJeb_Docking_checkbox7", () => Ap != null && Ap.stopOnContact, v => //"Stop on contact"
+            {
+                if (Ap != null) Ap.stopOnContact = v;
+            });
             g.Switch("#MechJeb_Docking_checkbox6", () => Ap != null && Ap.forceRol, v => //"Force Roll :"
             {
                 if (Ap != null) Ap.forceRol = v;
