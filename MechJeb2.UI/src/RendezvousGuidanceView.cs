@@ -5,8 +5,8 @@ using KSP.Localization;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleRendezvousGuidance ("Rendezvous Planner") in KodeKit, row for row with its WindowGUI.
-    /// The maneuver planning actions are internal methods of the module, shared with the IMGUI window.
+    /// MechJebModuleRendezvousGuidance ("Rendezvous Planner") in KodeKit.
+    /// The maneuver planning actions are internal methods of the module.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleRendezvousGuidance))]
     public class RendezvousGuidanceView : KodeView
@@ -38,6 +38,9 @@ namespace MuMech.UI
             //"Select a target to rendezvous with.", "Rendezvous target must be in the same sphere of influence."
             Layout main = GuidanceUi.RendezvousGate(w, r, Mode, "#MechJeb_RZplan_label1", "#MechJeb_RZplan_label2");
             System.Func<bool> on = () => Mode() == 2;
+
+            UIText ground = GuidanceUi.Warning(w, main, "#MechJeb_RZplan_onGround"); //"The target or this vessel is on the ground: these maneuvers need both in orbit."
+            w.Visible(ground.gameObject, () => Mode() == 2 && guidance.OnTheGround);
 
             //Information readouts:
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(Core.Target.Name), on); //"Rendezvous target"

@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
+using UnityEngine;
 using static MechJebLib.Utils.Statics;
 
 namespace MuMech
@@ -20,13 +21,54 @@ namespace MuMech
 
         public string status = "";
 
+        //The physics ticks in a row that planning may fail before we give up: a failure can pass as the orbits move on.
+        private const int MAX_FAILED_TICKS = 50;
+        private int _failedTicks;
+
         protected override void OnModuleEnabled()
         {
+            status = "";
+            _failedTicks = 0;
+            if (Vessel.patchedConicsUnlocked() && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZauto_nodesRemoved"), 5);
             Vessel.RemoveAllManeuverNodes();
             if (!MuUtils.PhysicsRunning()) Core.Warp.MinimumWarp();
         }
 
-        protected override void OnModuleDisabled() => Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
+        protected override void OnModuleDisabled()
+        {
+            Core.Node.AutowarpInhibited = false;
+            Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
+        }
+
+        //Why the autopilot can't run for this target and vessel, or null if it can.
+        private string Problem()
+        {
+            if (!Core.Target.NormalTargetExists) return Localizer.Format("#MechJeb_RZauto_label1"); //"Select a target to rendezvous with."
+            if (Core.Target.Target is CelestialBody) return Localizer.Format("#MechJeb_RZauto_noBody"); //"The autopilot can't rendezvous with a body."
+            if (Core.Target.TargetOrbit.referenceBody != Orbit.referenceBody) return Localizer.Format("#MechJeb_RZauto_label2"); //"Rendezvous target must be in the same sphere of influence."
+
+            Vessel target = Core.Target.Target.GetVessel();
+            if (target != null && target.LandedOrSplashed) return Localizer.Format("#MechJeb_RZauto_landedTarget"); //"The autopilot needs a target in orbit."
+            if (Vessel.LandedOrSplashed || Vessel.situation == Vessel.Situations.PRELAUNCH) return Localizer.Format("#MechJeb_RZauto_landedVessel"); //"The autopilot can't run on the ground."
+
+            return null;
+        }
+
+        //The window may be closed, so the status alone isn't enough.
+        private void Stop(string reason)
+        {
+            status = reason;
+            ScreenMessages.PostScreenMessage(reason, 5);
+            Users.Clear();
+        }
+
+        //This one also runs during time warp, where Drive doesn't.
+        public override void OnFixedUpdate()
+        {
+            string problem = Problem();
+            if (problem != null) Stop(problem);
+        }
 
         //The time to close a distance at the closing speed limit. A zero-revolution intercept of about an orbit or more has only
         //a huge, near radial solution, so this stops at a quarter of an orbit, and is faster than the limit when it does.
@@ -38,13 +80,33 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
-            if (!Core.Target.NormalTargetExists)
+            string problem = Problem();
+            if (problem != null)
             {
-                Users.Clear();
+                Stop(problem);
                 return;
             }
 
-            Core.Node.Autowarp = Core.Node.Autowarp && Core.Target.Distance > 1000;
+            try
+            {
+                Rendezvous();
+                _failedTicks = 0;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+
+                //a plan that failed half way can leave a node that makes no sense alone
+                if (!Core.Node.Enabled) Vessel.RemoveAllManeuverNodes();
+
+                if (++_failedTicks >= MAX_FAILED_TICKS) Stop(Localizer.Format("#MechJeb_RZauto_failed", e.Message)); //"Stopped, the next burn can't be planned: <<1>>"
+            }
+        }
+
+        private void Rendezvous()
+        {
+            //The burns close to the target are better watched in real time
+            Core.Node.AutowarpInhibited = Core.Target.Distance <= 1000;
 
             //If we get within the target distance and then next maneuver node is still
             //far in the future, delete it and we will create a new one to match velocities immediately.
@@ -54,6 +116,7 @@ namespace MuMech
                 && Vessel.patchedConicSolver.maneuverNodes[0].UT > VesselState.Time + 1)
             {
                 Vessel.RemoveAllManeuverNodes();
+                Core.Node.Abort(); //it would carry on with the deleted node's direction
             }
 
             if (Vessel.patchedConicSolver.maneuverNodes.Count > 0)
