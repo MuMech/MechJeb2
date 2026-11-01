@@ -48,6 +48,11 @@ namespace MuMech
         // FIXME: that's a lie, its used all over the place.
         private CelestialBody _mainBody;
 
+        // read on the main thread in Init: the simulation thread can't touch Transforms, and these move under it
+        private Vector3  _bodyUp;
+        private Vector3d _sunFromBody;
+        private double   _reentryHeatScale;
+
         private double _maxThrustAccel;
 
         // This is the height of the ground at the point we think we will land. It is infact calculated by getting the height of the previous prediction. It is used to decide when the parachutes will be deployed.
@@ -169,6 +174,9 @@ namespace MuMech
             _decelRadius = _bodyRadius + decelEndAltitudeASL;
             _aerobrakedRadius = _bodyRadius + body.RealMaxAtmosphereAltitude();
             _mainBody = body;
+            _bodyUp = body.bodyTransform.up;
+            _sunFromBody = FlightGlobals.Bodies[0].position - body.position;
+            _reentryHeatScale = HighLogic.CurrentGame.Parameters.Difficulty.ReentryHeatScale;
             _maxThrustAccel = maxThrustAccel;
             _probableLandingSiteASL = probableLandingSiteASL;
             _probableLandingSiteRadius = probableLandingSiteASL + _bodyRadius;
@@ -644,7 +652,7 @@ namespace MuMech
                 return PhysicsGlobals.SpaceTemperature;
 
             Vector3 up = position.normalized;
-            float polarAngle = Mathf.Acos(Vector3.Dot(_mainBody.bodyTransform.up, up));
+            float polarAngle = Mathf.Acos(Vector3.Dot(_bodyUp, up));
             if (polarAngle > Mathf.PI * 0.5f)
             {
                 polarAngle = Mathf.PI - polarAngle;
@@ -652,8 +660,8 @@ namespace MuMech
 
             float time = (Mathf.PI * 0.5f - polarAngle) * Mathf.Rad2Deg;
 
-            Vector3 sunVector = (FlightGlobals.Bodies[0].position - position + _mainBody.position).normalized;
-            Vector3 bodyUp = _mainBody.bodyTransform.up;
+            Vector3 sunVector = (_sunFromBody - position).normalized;
+            Vector3 bodyUp = _bodyUp;
             float sunAxialDot = Vector3.Dot(sunVector, bodyUp);
             float bodyPolarAngle = Mathf.Acos(Vector3.Dot(bodyUp, up));
             float sunPolarAngle = Mathf.Acos(sunAxialDot);
@@ -699,7 +707,7 @@ namespace MuMech
                 newtonianTemperatureFactor = UtilMath.LerpUnclamped(newtonianTemperatureFactor, machTemperatureScalar, convectiveMachLerp);
             }
 
-            return newtonianTemperatureFactor * HighLogic.CurrentGame.Parameters.Difficulty.ReentryHeatScale * _mainBody.shockTemperatureMultiplier;
+            return newtonianTemperatureFactor * _reentryHeatScale * _mainBody.shockTemperatureMultiplier;
         }
 
         private double _nextLog;
