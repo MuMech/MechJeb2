@@ -129,6 +129,19 @@ namespace MuMech
                 VesselState.Mass));
         }
 
+        // The velocity of the point we dock to, and not of the target's CoM: the docking magnets turn the target when the port's axis misses its CoM,
+        // and the port then slides away from a vessel that's matching the CoM. The target's spin is mass-weighted, so its bending stays out of this.
+        private Vector3d TargetPointVelocity()
+        {
+            Vector3d velocity = Core.Target.TargetOrbit.GetVel();
+            Vessel target = Core.Target.Target.GetVessel();
+            if (target == null)
+                return velocity;
+
+            Vector3d spin = target.GetTransform().rotation * target.angularVelocity;
+            return velocity + Vector3d.Cross(spin, Core.Target.Position - target.CoM);
+        }
+
         public override void Drive(FlightCtrlState s)
         {
             if (!Core.Target.NormalTargetExists)
@@ -140,7 +153,7 @@ namespace MuMech
             if (dockingStep == DockingStep.OFF || dockingStep == DockingStep.INIT)
                 return;
 
-            Vector3d targetVel = Core.Target.TargetOrbit.GetVel();
+            Vector3d targetVel = TargetPointVelocity();
 
             double zApproachSpeed = MaxSpeedForDistance(Math.Max(zSep - acquireRange, 0), -zAxis);
             double latApproachSpeed = MaxSpeedForDistance(lateralSep.magnitude, -lateralSep); // TODO check if it should be +lateralSep
