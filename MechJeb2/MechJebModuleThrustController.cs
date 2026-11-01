@@ -112,6 +112,13 @@ namespace MuMech
         private readonly Dictionary<ModuleEngines, float> _thrustLimitsBeforeDifferentialThrottle =
             new Dictionary<ModuleEngines, float>();
 
+        // Buffers of the differential throttle solve, reused while the engine count stays the same
+        private readonly List<VesselState.EngineWrapper> _diffEngines = new List<VesselState.EngineWrapper>();
+        private double[,] _diffA = new double[0, 0];
+        private double[] _diffB = new double[0];
+        private double[] _diffBoundL = new double[0];
+        private double[] _diffBoundU = new double[0];
+
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool ElectricThrottle;
 
@@ -844,7 +851,14 @@ namespace MuMech
                 forceScale += VesselState.EngineWrappers[i].MaxVariableForce.magnitude * 10;
             }
 
-            var engines = VesselState.EngineWrappers.Where(eng => !eng.Engine.throttleLocked).ToList();
+            List<VesselState.EngineWrapper> engines = _diffEngines;
+            engines.Clear();
+            for (int i = 0; i < nbEngines; i++)
+            {
+                if (!VesselState.EngineWrappers[i].Engine.throttleLocked)
+                    engines.Add(VesselState.EngineWrappers[i]);
+            }
+
             int n = engines.Count;
 
             // Every early return gives the limits back: the engines left in the list would keep the last solution.
@@ -868,10 +882,18 @@ namespace MuMech
             }
 
 
-            double[,] a = new double[n, n];
-            double[] b = new double[n];
-            double[] boundL = new double[n];
-            double[] boundU = new double[n];
+            if (_diffB.Length != n)
+            {
+                _diffA = new double[n, n];
+                _diffB = new double[n];
+                _diffBoundL = new double[n];
+                _diffBoundU = new double[n];
+            }
+
+            double[,] a = _diffA;
+            double[] b = _diffB;
+            double[] boundL = _diffBoundL;
+            double[] boundU = _diffBoundU;
 
             for (int i = 0; i < n; i++)
             {
@@ -900,7 +922,7 @@ namespace MuMech
             //var t3 = stopwatch.ElapsedMilliseconds;
             //UnityEngine.Debug.LogFormat("[DiffThrottle] t1: {0}, t2: {1}, t3: {2}", t1, t2 - t1, t3 - t2);
 
-            if (x.Any(double.IsNaN))
+            if (HasNaN(x))
             {
                 DisableDifferentialThrottle();
                 return DifferentialThrottleStatus.SOLVER_FAILED;
@@ -915,6 +937,17 @@ namespace MuMech
             }
 
             return DifferentialThrottleStatus.SUCCESS;
+        }
+
+        private static bool HasNaN(double[] x)
+        {
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (double.IsNaN(x[i]))
+                    return true;
+            }
+
+            return false;
         }
 
         internal void DisableDifferentialThrottle() // internal: also called by the uGUI Utilities view (MechJeb2.UI)
