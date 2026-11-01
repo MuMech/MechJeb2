@@ -123,7 +123,7 @@ namespace MuMech
         private static bool IsDockedState(string state) =>
             state != null && (state.StartsWith("Docked", StringComparison.Ordinal) || state == "PreAttached");
 
-        private static bool ArePortsCompatible(ModuleDockingNode sourcePort, ModuleDockingNode targetPort)
+        internal static bool ArePortsCompatible(ModuleDockingNode sourcePort, ModuleDockingNode targetPort)
         {
             if (sourcePort == null || targetPort == null)
                 return false;

@@ -95,7 +95,8 @@ namespace MuMech
 
         public void UpdateDirectionTarget(Vector3d direction) => targetDirection = direction;
 
-        public bool NormalTargetExists => Target != null && (Target is Vessel || Target is CelestialBody || CanAlign);
+        // A destroyed Unity object isn't null to the interface.
+        public bool NormalTargetExists => Target != null && !(Target is UnityEngine.Object target && target == null) && (Target is Vessel || Target is CelestialBody || CanAlign);
 
         public bool PositionTargetExists => Target != null && (Target is PositionTarget || Target is Vessel) && !(Target is DirectionTarget);
 
