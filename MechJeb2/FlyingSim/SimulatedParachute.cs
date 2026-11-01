@@ -101,14 +101,6 @@ namespace MuMech
             //    Debug.Log("Parachute " + para.name + " parachuteDrag:" + this.parachuteDrag.ToString("F3") + " RealDrag:" + realDrag.ToString("F3") + " MinDrag:" + para.part.minimum_drag.ToString("F3") + " MaxDrag:" + para.part.maximum_drag.ToString("F3"));
         }
 
-        public override Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
-        {
-            if (state != ModuleParachute.deploymentStates.SEMIDEPLOYED && state != ModuleParachute.deploymentStates.DEPLOYED)
-                return base.Drag(vesselVelocity, dragFactor, mach);
-
-            return Vector3d.zero;
-        }
-
         // Consider activating, semi deploying or deploying a parachute, but do not actually make any changes. returns true if the state has changed
         public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
             double semiDeployMultiplier)
@@ -239,18 +231,21 @@ namespace MuMech
                     SetCubeWeight("PACKED", 1f);
                     SetCubeWeight("SEMIDEPLOYED", 0f);
                     SetCubeWeight("DEPLOYED", 0f);
+                    cubes.SetOcclusionMultiplier(1f);
                     break;
 
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     SetCubeWeight("PACKED", 1f - deployLevel);
                     SetCubeWeight("SEMIDEPLOYED", deployLevel);
                     SetCubeWeight("DEPLOYED", 0f);
+                    cubes.SetOcclusionMultiplier(0f);
                     break;
 
                 case ModuleParachute.deploymentStates.DEPLOYED:
                     SetCubeWeight("PACKED", 0f);
                     SetCubeWeight("SEMIDEPLOYED", 1f - deployLevel);
                     SetCubeWeight("DEPLOYED", deployLevel);
+                    cubes.SetOcclusionMultiplier(0f);
                     break;
             }
 
