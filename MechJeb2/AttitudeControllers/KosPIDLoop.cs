@@ -4,6 +4,8 @@ using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace MuMech.AttitudeControllers
 {
+    // These are tightly coupled to the Kos/Hybrid Controllers and should not be used by other consumers.
+    // (Consider it a private nested class)
     public class KosPIDLoop
     {
         public double Kp { get; set; }

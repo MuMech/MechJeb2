@@ -93,7 +93,8 @@ namespace MuMech
         // Speed PID D
         public readonly EditableDouble sPIDd = 0.001;
 
-        [ValueInfoItem("#MechJeb_SpeedIntAcc", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")] // Speed Int Acc
+        [ValueInfoItem("#MechJeb_SpeedIntAcc", InfoItem.Category.Rover, format = ValueInfoItem.SI)] // Speed Int Acc
+        // the integral's share of the wheel throttle
         public double speedIntAcc;
 
         [ValueInfoItem("#MechJeb_Traction", InfoItem.Category.Rover, format = "F0", units = "%")] // Traction
@@ -234,7 +235,7 @@ namespace MuMech
             curSpeed = Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Forward);
 
             CalculateTraction();
-            speedIntAcc = speedPID.INTAccum;
+            speedIntAcc = speedPID.ITerm;
 
             if (wp != null && wp.Body == Orbit.referenceBody)
             {
@@ -329,8 +330,6 @@ namespace MuMech
 
             if (ControlHeading)
             {
-                headingPID.INTAccum = Mathf.Clamp((float)headingPID.INTAccum, -1, 1);
-
                 double instantaneousHeading = VesselState.RotationVesselSurface.eulerAngles.y;
                 headingErr = Clamp180(instantaneousHeading - heading);
                 if (s.wheelSteer == s.wheelSteerTrim || FlightGlobals.ActiveVessel != Vessel)
@@ -354,8 +353,6 @@ namespace MuMech
             }
             else if (ControlSpeed)
             {
-                speedPID.INTAccum = Mathf.Clamp((float)speedPID.INTAccum, -5, 5);
-
                 speedErr = (WaypointIndex == -1 ? speed.Val : tgtSpeed) - Vector3d.Dot(VesselState.SurfaceVelocity, VesselState.Forward);
                 if (s.wheelThrottle == s.wheelThrottleTrim || FlightGlobals.ActiveVessel != Vessel)
                 {
@@ -480,6 +477,12 @@ namespace MuMech
             speedPID.Kp = sPIDp;
             speedPID.Ki = sPIDi;
             speedPID.Kd = sPIDd;
+
+            // the integral of the error is held to 1 deg*s for heading and 5 m for speed
+            headingPID.MaxIntegral = Math.Abs(hPIDi) * 1;
+            headingPID.MinIntegral = -headingPID.MaxIntegral;
+            speedPID.MaxIntegral = Math.Abs(sPIDi) * 5;
+            speedPID.MinIntegral = -speedPID.MaxIntegral;
 
             if (lastETA + 0.2 < DateTime.Now.TimeOfDay.TotalSeconds)
             {

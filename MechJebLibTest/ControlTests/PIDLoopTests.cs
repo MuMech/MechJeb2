@@ -236,5 +236,124 @@ namespace MechJebLibTest.ControlTests
             Assert.True(peakTime > 2.0 && peakTime < 3.0,
                 $"Peak time {peakTime:F2}s outside expected range [2.0s, 3.0s]. Expected ~2.38s");
         }
+
+        /// <summary>
+        ///     The RCS velocity loop: at a large error P alone saturates the output, and the integral must not wind up
+        ///     behind it.  Tracking anti-windup, with its time constant of Ti, does wind up.
+        /// </summary>
+        [Fact]
+        public void ConditionalIntegrationHoldsIntegralWhileSaturated()
+        {
+            const double TF = 1.0;
+            double kp = 0.53 / (3 * Sqrt(2) * TF * TF);
+            double ki = kp / (12 * Sqrt(2) * TF);
+
+            var conditional = new PIDLoop2
+            {
+                Kp = kp, Ki = ki, Ts = 0.02, MinOutput = -1, MaxOutput = 1, ConditionalIntegration = true
+            };
+            var tracking = new PIDLoop2 { Kp = kp, Ki = ki, Ts = 0.02, MinOutput = -1, MaxOutput = 1 };
+
+            for (int i = 0; i < 500; i++)
+            {
+                Assert.Equal(1.0, conditional.Update(20, 0), 12);
+                tracking.Update(20, 0);
+            }
+
+            Assert.Equal(0.0, conditional.ITerm, 12);
+            Assert.True(tracking.ITerm > 0.4, $"tracking ITerm {tracking.ITerm} should have wound up");
+        }
+
+        [Fact]
+        public void ConditionalIntegrationIntegratesInsideLimits()
+        {
+            var pid = new PIDLoop2 { Kp = 2.0, Ki = 1.0, Ts = 0.02, MinOutput = -10, MaxOutput = 10, ConditionalIntegration = true };
+
+            Assert.Equal(2.01, pid.Update(1, 0), 8);
+            Assert.Equal(2.03, pid.Update(1, 0), 8);
+            Assert.Equal(2.05, pid.Update(1, 0), 8);
+        }
+
+        [Fact]
+        public void IntegralLimits()
+        {
+            var pid = new PIDLoop2 { Kp = 2.0, Ki = 1.0, Ts = 0.02, MinIntegral = -0.05, MaxIntegral = 0.05 };
+
+            Assert.Equal(2.01, pid.Update(1, 0), 8);
+            Assert.Equal(2.03, pid.Update(1, 0), 8);
+            Assert.Equal(2.05, pid.Update(1, 0), 8);
+            Assert.Equal(2.05, pid.Update(1, 0), 8);
+            Assert.Equal(0.05, pid.ITerm, 12);
+
+            for (int i = 0; i < 100; i++)
+                pid.Update(-1, 0);
+
+            Assert.Equal(-0.05, pid.ITerm, 12);
+        }
+
+        /// <summary>
+        ///     With Td == 0 the derivative recursion has its pole at -1, so a DTerm left from an earlier Td must be
+        ///     dropped rather than flipping sign forever.
+        /// </summary>
+        [Fact]
+        public void DerivativeTurnedOffMidRun()
+        {
+            var pid = new PIDLoop2 { Kp = 1.0, Kd = 0.1, Ts = 0.02 };
+
+            for (int i = 0; i < 5; i++)
+                pid.Update(i, 0);
+
+            Assert.NotEqual(0.0, pid.DTerm);
+
+            pid.Kd = 0;
+
+            for (int i = 0; i < 5; i++)
+            {
+                Assert.Equal(5.0, pid.Update(5, 0), 12);
+                Assert.Equal(0.0, pid.DTerm);
+            }
+        }
+
+        [Fact]
+        public void IntegralOnly()
+        {
+            var pid = new PIDLoop2 { Kp = 0, Ki = 1.0, Ts = 0.02 };
+
+            Assert.Equal(1.0, pid.Ki, 12);
+            Assert.Equal(0.01, pid.Update(1, 0), 8);
+            Assert.Equal(0.03, pid.Update(1, 0), 8);
+            Assert.Equal(0.05, pid.Update(1, 0), 8);
+        }
+
+        [Fact]
+        public void DerivativeOnly()
+        {
+            var pid = new PIDLoop2 { Kp = 0, Kd = 0.1, Ts = 0.02 };
+            pid.Tf = 0.5 * pid.Ts;
+
+            Assert.Equal(0.1, pid.Kd, 12);
+            Assert.Equal(5.0, pid.Update(1, 0), 8);
+            Assert.Equal(0.0, pid.Update(1, 0), 8);
+        }
+
+        /// <summary>
+        ///     With Tf = Ts/2 the Tustin derivative's pole is at zero, and it is the plain difference Kd * (e - e1) / Ts.
+        /// </summary>
+        [Fact]
+        public void DerivativeWithHalfStepFilterIsPlainDifference()
+        {
+            var pid = new PIDLoop2 { Kp = 2.0, Ki = 0.1, Kd = 0.001, Ts = 0.02 };
+            pid.Tf = 0.5 * pid.Ts;
+
+            double[] errors = { 1, 1, 3, 3, 2 };
+            double e1 = 0;
+
+            foreach (double e in errors)
+            {
+                pid.Update(e, 0);
+                Assert.Equal(0.001 * (e - e1) / 0.02, pid.DTerm, 12);
+                e1 = e;
+            }
+        }
     }
 }

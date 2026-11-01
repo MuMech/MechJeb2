@@ -15,7 +15,8 @@ namespace MechJebLib.Control
     // 4. optional input and output deadbands
     // 5. optional low pass filtering of input and output
     // 6. optional Clegg integrator
-    // 7. optional output saturation and tracking anti-windup
+    // 7. optional output saturation with tracking or conditional-integration anti-windup
+    // 8. optional limits on the integral term
     //
     public class PIDLoop2 : IPIDLoop
     {
@@ -39,10 +40,13 @@ namespace MechJebLib.Control
         public double Ts { get; set; } = 0.02;
 
         // parallel form parameters
-        public double Kp { get => K;      set => K = value; } // TODO: rescale Ti and Td to keep Ki and Kd constant
-        public double Ki { get => K / Ti; set => Ti = K / value; }
-        public double Kd { get => Td * K; set => Td = value / K; }
-        public double Tf { get => Td / N; set => N = Td / value; }
+        public double Kp { get => K;           set => K = value; } // TODO: rescale Ti and Td to keep Ki and Kd constant
+        public double Ki { get => KScale / Ti; set => Ti = KScale / value; }
+        public double Kd { get => Td * KScale; set => Td = value / KScale; }
+        public double Tf { get => Td / N;      set => N = Td / value; }
+
+        // The standard form can't hold an integral or derivative gain with K == 0, so then Ti is 1/Ki and Td is Kd.
+        private double KScale => K == 0 ? 1 : K;
 
         // 2DOF PIDF parameters
         public double B { get; set; } = 1;
@@ -57,7 +61,14 @@ namespace MechJebLib.Control
         public double OutputDeadband       { get; set; }
         public double MinOutput            { get; set; } = double.MinValue;
         public double MaxOutput            { get; set; } = double.MaxValue;
+        public double MinIntegral          { get; set; } = double.MinValue;
+        public double MaxIntegral          { get; set; } = double.MaxValue;
         public bool   Clegg                { get; set; } // not recommended if integrator required to zero the setpoint
+
+        // Drop an integration step that would leave the output past a limit, instead of tracking the saturated output.
+        // Tracking unwinds with a time constant of Ti (or sqrt(Ti*Td)), which lets a slow integral wind up while P alone
+        // saturates the output.
+        public bool ConditionalIntegration { get; set; }
 
         public double Update(double r, double y)
         {
@@ -70,16 +81,26 @@ namespace MechJebLib.Control
 
             PTerm = K * ep;
 
+            // Trapezoidal/Tustin/Bilinear derivative term.  With Td == 0 its pole is at -1, so a DTerm left from an
+            // earlier Td would flip sign forever instead of decaying.
+            if (Td == 0)
+            {
+                DTerm = 0;
+            }
+            else
+            {
+                double den = 2 * Td + N * Ts;
+                DTerm = (2 * Td - N * Ts) / den * DTerm + 2 * N * KScale * Td / den * (ed - _ed1);
+            }
+
             if (Clegg && ei * ITerm < 0)
                 ITerm = 0;
 
-            // Trapezoidal/Tustin/Bilinear integrator term
-            double k = K == 0 ? 1 : K;
-            ITerm += 0.5 * k * Ts * (ei + _ei1) / Ti;
-
-            // Trapezoidal/Tustin/Bilinear derivative term
-            double den = 2 * Td + N * Ts;
-            DTerm = (2 * Td - N * Ts) / den * DTerm + 2 * N * K * Td / den * (ed - _ed1);
+            // Trapezoidal/Tustin/Bilinear integrator term.  A non-finite step (Ti == 0) is cleared below.
+            double step = 0.5 * KScale * Ts * (ei + _ei1) / Ti;
+            ITerm = ConditionalIntegration && IsFinite(step)
+                ? AntiWindup.Integrate(ITerm, PTerm + DTerm, step, MinOutput, MaxOutput)
+                : ITerm + step;
 
             // fix any NaNs saved into internal state (also fixes Ti == 0 case)
             if (!IsFinite(ITerm))
@@ -87,11 +108,13 @@ namespace MechJebLib.Control
             if (!IsFinite(DTerm))
                 DTerm = 0;
 
+            ITerm = Clamp(ITerm, MinIntegral, MaxIntegral);
+
             double z = ApplyDeadband(PTerm + ITerm + DTerm, OutputDeadband);
             double u = Clamp(z, MinOutput, MaxOutput);
 
-            // anti-windup
-            if (Ti != 0)
+            // tracking anti-windup
+            if (!ConditionalIntegration && Ti != 0)
             {
                 double tr = Td == 0 ? Ti : Sqrt(Ti * Td);
                 ITerm += Ts / tr * (u - z);

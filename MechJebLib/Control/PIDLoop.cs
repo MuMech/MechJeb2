@@ -8,6 +8,9 @@ using static System.Math;
 
 namespace MechJebLib.Control
 {
+    // NOTE: this class is probably an overly-clever experiment in implementing a PID as a biquad, but that makes
+    //       nonlinear features like anti-windup, clegg integrators, etc very difficult to implement.
+    // RECOMMENDED: use PIDLoop2 instead.
     public class PIDLoop : IPIDLoop
     {
         // internal state for PID filter
