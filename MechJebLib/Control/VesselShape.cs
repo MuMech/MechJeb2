@@ -65,15 +65,18 @@ namespace MechJebLib.Control
         /// <summary>How far the furthest corner of the shape is from the origin.</summary>
         public double Radius()
         {
-            double radius = 0;
+            double squared = 0;
             for (int i = 0; i < _min.Count; i++)
-                radius = Math.Max(radius, V3.Max(V3.Abs(_min[i]), V3.Abs(_max[i])).magnitude);
+                squared = Math.Max(squared, V3.Max(V3.Abs(_min[i]), V3.Abs(_max[i])).sqrMagnitude);
 
-            return radius;
+            return Math.Sqrt(squared);
         }
 
         /// <summary>The distance from a point to the nearest box: 0 inside one, and infinite with no boxes.</summary>
-        public double Distance(V3 point)
+        public double Distance(V3 point) => Math.Sqrt(SquaredDistance(point));
+
+        // the square of Distance, for loops that only compare distances
+        private double SquaredDistance(V3 point)
         {
             double squared = double.PositiveInfinity;
             for (int i = 0; i < _min.Count; i++)
@@ -82,18 +85,18 @@ namespace MechJebLib.Control
                 squared = Math.Min(squared, V3.Dot(outside, outside));
             }
 
-            return Math.Sqrt(squared);
+            return squared;
         }
 
         /// <summary>The closest a straight path comes to the shape.</summary>
         public double PathDistance(V3 from, V3 to)
         {
             double length = (to - from).magnitude;
-            double closest = Distance(from);
+            double closestSquared = SquaredDistance(from);
             for (double s = STEP; s < length; s += STEP)
-                closest = Math.Min(closest, Distance(from + (to - from) * (s / length)));
+                closestSquared = Math.Min(closestSquared, SquaredDistance(from + (to - from) * (s / length)));
 
-            return Math.Min(closest, Distance(to));
+            return Math.Sqrt(Math.Min(closestSquared, SquaredDistance(to)));
         }
 
         /// <summary>
@@ -144,6 +147,7 @@ namespace MechJebLib.Control
             if (Distance(from) >= need)
                 return false;
 
+            double needSquared = need * need;
             double farthest = need + from.magnitude + 2 * Radius();
             double bestScore = double.NegativeInfinity;
             bool found = false;
@@ -155,16 +159,16 @@ namespace MechJebLib.Control
                             continue;
 
                         V3 direction = new V3(x, y, z).normalized;
-                        double closest = double.PositiveInfinity;
+                        double closestSquared = double.PositiveInfinity;
                         for (double s = STEP; s <= farthest; s += STEP)
                         {
                             V3 point = from + direction * s;
-                            double distance = Distance(point);
-                            closest = Math.Min(closest, distance);
-                            if (distance < need)
+                            double squared = SquaredDistance(point);
+                            closestSquared = Math.Min(closestSquared, squared);
+                            if (squared < needSquared)
                                 continue;
 
-                            double score = closest - LENGTH_COST * s;
+                            double score = Math.Sqrt(closestSquared) - LENGTH_COST * s;
                             if (score > bestScore)
                             {
                                 bestScore = score;
