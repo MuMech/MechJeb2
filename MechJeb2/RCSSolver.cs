@@ -21,7 +21,7 @@ namespace MuMech
 
         private readonly int _hash;
 
-        public static void SetPrecision(int precision) => _precision = precision;
+        public static void SetPrecision(int precision) => _precision = Math.Max(1, precision); // Bucketize divides by it
 
         private float Bucketize(double d, int precision) => (float)Mathf.RoundToInt((float)d * precision) / precision;
 
@@ -240,8 +240,13 @@ namespace MuMech
                         if (sr.Generation != _generation)
                             continue;
 
-                        _results[sr.Key] = sr.Throttles;
                         _pending.Remove(sr.Key);
+
+                        // The solve threw: leave the key out of the cache so it is submitted again.
+                        if (sr.Throttles == null)
+                            continue;
+
+                        _results[sr.Key] = sr.Throttles;
                         if (sr.Key.Equals(key))
                         {
                             throttles = sr.Throttles;
@@ -276,10 +281,21 @@ namespace MuMech
                         DateTime start = DateTime.Now;
                         _isWorking = true;
 
-                        double[] throttles = _solver.Run(task.Thrusters, ((Vector3d)task.Direction).ToV3(), ((Vector3d)task.Rotation).ToV3(),
-                            task.TuningParams);
+                        double[] throttles = null; // stays null if the solve throws, so GetThrottles() can try that key again
+                        try
+                        {
+                            throttles = _solver.Run(task.Thrusters, ((Vector3d)task.Direction).ToV3(), ((Vector3d)task.Rotation).ToV3(),
+                                task.TuningParams);
+                        }
+                        catch (Exception e)
+                        {
+                            ErrorString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
+                        }
+                        finally
+                        {
+                            _isWorking = false;
+                        }
 
-                        _isWorking = false;
                         _resultsQueue.Enqueue(new SolverResult(task.Key, throttles, task.Generation));
 
                         _calculationTime.Value = (DateTime.Now - start).TotalSeconds;
