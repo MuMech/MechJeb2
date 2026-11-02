@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using MechJebLib.Control;
+using MechJebLib.Primitives;
+using MechJebLibBindings;
 using Smooth.Slinq;
 using Smooth.Slinq.Context;
 using UniLinq;
@@ -388,6 +391,36 @@ namespace MuMech
             box.size = new Vector3d(Math.Abs(box.center.x - maxBounds.x), Math.Abs(box.center.y - maxBounds.y), Math.Abs(box.center.z - maxBounds.z));
 
             return box;
+        }
+
+        // The parts of a vessel as one box each, in the axes of a frame and around a point. The transform's own conversion would carry a part's rescale.
+        public static void GetShape(this Vessel vessel, VesselShape shape, Transform frame, Vector3d origin)
+        {
+            Quaternion toFrame = Quaternion.Inverse(frame.rotation);
+            shape.Clear();
+            for (int i = 0; i < vessel.parts.Count; i++)
+            {
+                V3 min = V3.positiveinfinity;
+                V3 max = V3.negativeinfinity;
+                foreach (MeshFilter filter in vessel.parts[i].FindModelComponents<MeshFilter>())
+                {
+                    if (filter.sharedMesh == null || !filter.gameObject.activeInHierarchy)
+                        continue;
+
+                    Bounds bounds = filter.sharedMesh.bounds;
+                    for (int corner = 0; corner < 8; corner++)
+                    {
+                        var sign = new Vector3((corner & 1) * 2 - 1, (corner & 2) - 1, (corner & 4) / 2 - 1);
+                        Vector3d world = filter.transform.TransformPoint(bounds.center + Vector3.Scale(bounds.extents, sign));
+                        V3 point = ((Vector3d)(toFrame * (world - origin))).ToV3();
+                        min = V3.Min(min, point);
+                        max = V3.Max(max, point);
+                    }
+                }
+
+                if (min.x <= max.x)
+                    shape.Add(min, max);
+            }
         }
 
         // 0.90 added a building upgrade to unlock Orbit visualization and patched conics
