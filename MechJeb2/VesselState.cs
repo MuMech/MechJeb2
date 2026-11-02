@@ -422,6 +422,10 @@ namespace MuMech
         public double ThrustMinimum   => Vector3d.Dot(ThrustVectorMinThrottle, Forward);
         public double ThrustCurrent   => Vector3d.Dot(ThrustVectorLastFrame, Forward);
 
+        // Fraction of ThrustAvailable the engines produce at zero throttle, so thrust at throttle t is
+        // ThrustMinimum + (ThrustAvailable - ThrustMinimum) * t.  Zero when no thrust is available.
+        public double MinThrottle => ThrustAvailable > 0 ? Clamp(ThrustMinimum / ThrustAvailable, 0, 1) : 0;
+
         // Acceleration in the forward direction, for when dividing by mass is too complicated.
         public double MaxThrustAcceleration     => ThrustAvailable / Mass;
         public double MinThrustAcceleration     => ThrustMinimum / Mass;

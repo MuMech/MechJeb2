@@ -25,6 +25,10 @@ namespace MechJebLib.PSG
         // values closer to 1.
         public const double FUDGE_FACTOR = 100; // hardcoded scaling factor for the aero path constraints
 
+        // floor on the optimizer's throttle: letting the throttle reach zero at collocation points makes a burn degenerate
+        // with a coast, in particular the burn ahead of a coast-during (burn-coast-burn) coast
+        public const double CLAMPED_MINTHROTTLE = 0.05;
+
         public AscentProblem(Optimizer optimizer)
         {
             _optimizer = optimizer;
