@@ -113,13 +113,54 @@ namespace MuMech
             }
         }
 
-        public Vector3 Position => Transform.position;
+        public Vector3 Position => PositionD;
 
-        public float Distance => Vector3.Distance(Position, Vessel.GetTransform().position);
+        // A target on rails hasn't moved yet when FixedUpdate reads it, which puts its transform a tick of Krakensbane's frame velocity out: 78 m in
+        // a high orbit. The main body hasn't moved yet either, so only our own vessel is in the new frame: the target is placed and cached from it,
+        // with positions relative to the body. Cached per UT, as the rendezvous autopilot reads it several times a tick. It is right next to our
+        // vessel only: against the main body, as for a latitude, read Transform, which is out with the body.
+        public Vector3d PositionD
+        {
+            get
+            {
+                Vessel target = Target?.GetVessel();
+                if (target == null || !target.packed)
+                    return Transform.position;
+
+                double now = Planetarium.GetUniversalTime();
+                if (now != positionUT || Target != positionTarget)
+                {
+                    positionUT       = now;
+                    positionTarget   = Target;
+                    positionFromVessel = PackedOffset(target, now);
+                }
+
+                return Vessel.CoMD + positionFromVessel;
+            }
+        }
+
+        private double      positionUT = double.NaN;
+        private ITargetable positionTarget;
+        private Vector3d    positionFromVessel;
+
+        // On rails KSP puts a landed vessel's root at its saved latitude, longitude and altitude, and any other vessel's CoM on its orbit.
+        // The target point's offset from either is the same in the stale frame as in the new one.
+        private Vector3d PackedOffset(Vessel target, double ut)
+        {
+            if (target.LandedOrSplashed && target.mainBody == Vessel.mainBody)
+                return target.mainBody.GetWorldSurfacePosition(target.latitude, target.longitude, target.altitude) - target.mainBody.position
+                       - Vessel.orbit.getRelativePositionAtUT(ut).xzy
+                       + ((Vector3d)Transform.position - (Vector3d)target.vesselTransform.position);
+
+            return target.orbit.getPositionAtUT(ut) - Vessel.orbit.getPositionAtUT(ut)
+                   + ((Vector3d)Transform.position - target.GetWorldPos3D());
+        }
+
+        public float Distance => (float)Vector3d.Distance(PositionD, Vessel.GetTransform().position);
 
         public Vector3d RelativeVelocity => Vessel.orbit.GetVel() - TargetOrbit.GetVel();
 
-        public Vector3d RelativePosition => Vessel.GetTransform().position - Position;
+        public Vector3d RelativePosition => Vessel.GetTransform().position - PositionD;
 
         public Transform Transform => Target.GetTransform();
 
