@@ -285,7 +285,7 @@ namespace MuMech.UI
                     value.tmpText.text = s;
                 });
             }
-            if (fixedCell) Tooltips.Add(value.gameObject, () => value.tmpText.isTextTruncated ? fullText() : null);
+            if (fixedCell && ValueTooltips) Tooltips.Add(value.gameObject, () => value.tmpText.isTextTruncated ? fullText() : null);
         }
 
         /// <summary>
@@ -296,6 +296,9 @@ namespace MuMech.UI
 
         /// <summary>The window has a fixed width: value cells fill the room their label leaves and never resize the window.</summary>
         public bool FixedWidth;
+
+        /// <summary>Cut-off values show their whole text on hover; off for an overlay, which must not catch the pointer.</summary>
+        public bool ValueTooltips = true;
 
         void ApplyColor(TMP_Text t)
         {

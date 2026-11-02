@@ -97,7 +97,8 @@ namespace MuMech.UI
             builtFixed = window.WidthFixed;
             widgets = new InfoItemWidgets(w)
             {
-                TextColor = () => window.text, RowWidth = MinWidth - 2 * w.Behaviour.Theme.Padding, FixedWidth = builtFixed
+                TextColor = () => window.text, RowWidth = MinWidth - 2 * w.Behaviour.Theme.Padding, FixedWidth = builtFixed,
+                ValueTooltips = !window.IsOverlay // the view rebuilds when that changes
             };
             foreach (InfoItem item in built)
             {
