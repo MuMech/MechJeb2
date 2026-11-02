@@ -224,9 +224,12 @@ namespace MuMech.UI
                 if (wanted > size.preferredWidth) size.preferredWidth = wanted;
             }
 
+            // a value cut off with "..." in a fixed-width window shows its whole text on hover
+            System.Func<string> fullText;
             if (native != null)
             {
                 var ct = new CharText(value.tmpText);
+                fullText = ct.ToString;
                 refresh.Add(() =>
                 {
                     Grow(native(ct.Clear()));
@@ -236,6 +239,7 @@ namespace MuMech.UI
             else if (chars)
             {
                 var ct = new CharText(value.tmpText);
+                fullText = ct.ToString;
                 refresh.Add(() =>
                 {
                     Format(ct.Clear(), item, number());
@@ -247,6 +251,7 @@ namespace MuMech.UI
             {
                 // strings, and numbers MechJeb formats with a .NET format CharText doesn't do: MechJeb's own string
                 string shown = first;
+                fullText = () => shown;
                 // IMGUI keeps the window's width and wraps a long value (biomes, orbit summaries): when the row would be wider
                 // than RowWidth, the cell keeps the room left by the label and grows in height instead of widening the window
                 void Fit(string s)
@@ -280,6 +285,7 @@ namespace MuMech.UI
                     value.tmpText.text = s;
                 });
             }
+            if (fixedCell) Tooltips.Add(value.gameObject, () => value.tmpText.isTextTruncated ? fullText() : null);
         }
 
         /// <summary>
