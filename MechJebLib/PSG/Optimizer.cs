@@ -26,7 +26,14 @@ namespace MechJebLib.PSG
         private readonly alglib.ndimensional_sjac _constraintHandle;
         private alglib.minnlcstate _state = new alglib.minnlcstate();
 
-        public CancellationToken TimeoutToken;
+        /// <summary>
+        ///     External cancellation (e.g. the owning job being stopped).  Unlike the per-run timeout this aborts Run() with an
+        ///     OperationCanceledException instead of returning null.
+        /// </summary>
+        public CancellationToken CancellationToken { get; set; }
+
+        // the per-run timeout linked with CancellationToken, checked on every constraint evaluation
+        public CancellationToken RunToken;
 
         public int Iterations;
         public int TerminationType;
@@ -529,20 +536,24 @@ namespace MechJebLib.PSG
             foreach (Phase phase in Phases)
                 PrintDebug(phase.ToString());
 
+            using var runCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            runCts.CancelAfter(OptimizerTimeout);
+            RunToken = runCts.Token;
+
             try
             {
-                var tokenSource = new CancellationTokenSource();
-                tokenSource.CancelAfter(OptimizerTimeout);
-                TimeoutToken = tokenSource.Token;
                 Solution = UnSafeRun();
                 return Solution;
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (!CancellationToken.IsCancellationRequested)
             {
+                // timed out, return null so bootstrapping can fall back to the previous stage
             }
-            catch (alglib.alglibexception) when (TimeoutToken.IsCancellationRequested)
+            catch (alglib.alglibexception) when (RunToken.IsCancellationRequested)
             {
-                // ALGLIB rewraps the OperationCanceledException thrown from our callback as a "non-ALGLIB exception"
+                // ALGLIB rewraps the OperationCanceledException thrown from our callback as a "non-ALGLIB exception".  A
+                // timeout returns null, an external cancel aborts.
+                CancellationToken.ThrowIfCancellationRequested();
             }
             catch (alglib.alglibexception e)
             {

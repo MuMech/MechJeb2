@@ -49,7 +49,7 @@ namespace MechJebLib.PSG
 
             _firstPass = args.FirstPass;
 
-            _optimizer.TimeoutToken.ThrowIfCancellationRequested();
+            _optimizer.RunToken.ThrowIfCancellationRequested();
             _vars.WrapVars(x);
 
             int ci = 0;

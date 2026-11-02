@@ -121,14 +121,26 @@ namespace MuMech
         protected override void OnModuleDisabled()
         {
             Debug.Log("Disabling PSG Simulation");
-            // a job that is still running keeps reading _solution, so the next enable must not hand it to another job
-            _ascent = null;
+            CancelJob();
+            // a cancelled job can still be reading _solution until it stops, so the next enable must not hand it to another job
             _solution = null;
         }
 
         public override void OnStart(PartModule.StartState state) => GameEvents.onStageActivate.Add(HandleStageEvent);
 
-        public override void OnDestroy() => GameEvents.onStageActivate.Remove(HandleStageEvent);
+        public override void OnDestroy()
+        {
+            GameEvents.onStageActivate.Remove(HandleStageEvent);
+            CancelJob();
+        }
+
+        // Stops a running solve without blocking the main thread: the job throws at its next constraint evaluation, and since
+        // _ascent is dropped nothing reads its result.
+        private void CancelJob()
+        {
+            _ascent?.Cancel();
+            _ascent = null;
+        }
 
         private void HandleStageEvent(int data) => _blockOptimizerUntilTime = VesselState.Time + OptimizerPauseTime;
 
@@ -385,7 +397,6 @@ namespace MuMech
                 return;
             }
 
-            // TODO: wire up Cancellation and Timeouts
             if (!_ascent.TryStartJob())
                 throw new Exception("[MechJebModulePSGSimulation] could not start optimizer job");
 
