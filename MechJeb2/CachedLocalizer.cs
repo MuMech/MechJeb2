@@ -123,7 +123,7 @@ namespace MuMech
         public string MechJebInfoItemsLabel1;
 
         [NonSerialized]
-        public string MechJebInfoItemsShowEmpty, MechJebInfoItemsHideEmpty;
+        public string MechJebInfoItemsShowEmpty, MechJebInfoItemsHideEmpty, MechJebInfoItemsRcs, MechJebInfoItemsEngine;
 
         [NonSerialized]
         public string MechJebInfoItemsStatsColumn0,
@@ -280,6 +280,8 @@ namespace MuMech
 
             MechJebInfoItemsShowEmpty = Localizer.Format("#MechJeb_InfoItems_showEmpty");
             MechJebInfoItemsHideEmpty = Localizer.Format("#MechJeb_InfoItems_hideEmpty");
+            MechJebInfoItemsRcs       = Localizer.Format("#MechJeb_InfoItems_rcs");
+            MechJebInfoItemsEngine    = Localizer.Format("#MechJeb_InfoItems_engine");
 
             MechJebNavBallGuidanceBtn1 = Localizer.Format("#MechJeb_NavBallGuidance_btn1");
             MechJebNavBallGuidanceBtn2 = Localizer.Format("#MechJeb_NavBallGuidance_btn2");
