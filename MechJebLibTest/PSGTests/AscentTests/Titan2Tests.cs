@@ -649,8 +649,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             lanf.ShouldEqual(Deg2Rad(270), 1e-2);
 
             Ascent ascent2 = Ascent.Builder()
-               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4, minThrottle: 0)
-               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, minThrottle: 0)
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .OldSolution(solution)
@@ -718,8 +718,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             incf.ShouldBeZero(1e-7);
 
             Ascent ascent2 = Ascent.Builder()
-               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4, minThrottle: 0)
-               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3, minThrottle: 0)
+               .AddStage(157355.487476332, 40267.56108456338, 2340000, 301.817977905273, 4, 4)
+               .AddStage(32758.6353093992, 6384.144733613521, 456100.006103516, 315.000112652779, 3, 3)
                .Initial(r0, v0, r0.normalized, t0, mu, rbody)
                .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, false, false, false)
                .OldSolution(solution)

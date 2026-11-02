@@ -335,7 +335,8 @@ namespace MechJebLib.PSG
             return (_tmax[phase] - tbar) * _timeScale;
         }
 
-        public (V3, double) InertialGuidance(double t)
+        // engineMinThrottle is the fraction of available thrust the engines currently produce at zero KSP throttle
+        public (V3, double) InertialGuidance(double t, double engineMinThrottle)
         {
             double tBar = (t - T0) / _timeScale;
 
@@ -343,10 +344,10 @@ namespace MechJebLib.PSG
             var x = InterpolantLayout.CreateFrom(xRaw);
             V3 u0 = x.U.normalized;
 
-            double thrustPct = x.T;
             int phase = IndexForTbar(tBar);
-            double minThrottle = Phases[phase].MinThrottle;
-            double kspThrottle = minThrottle < 1.0 ? (thrustPct - minThrottle) / (1.0 - minThrottle) : 1.0;
+            // don't command less than the optimizer's throttle floor if the interpolant dips between collocation points
+            double thrustPct = Clamp(x.T, Phases[phase].MinThrottle, 1.0);
+            double kspThrottle = engineMinThrottle < 1.0 ? (thrustPct - engineMinThrottle) / (1.0 - engineMinThrottle) : 1.0;
 
             return (u0, Clamp(kspThrottle, 0.01, 1.0));
         }

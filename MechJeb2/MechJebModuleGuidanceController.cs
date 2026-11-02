@@ -375,7 +375,7 @@ namespace MuMech
             // lock the inertial heading at tgo < 2.0 for any staging event or terminal burnout
             // (2 seconds is to hopefully allow for variance due to residuals, it may be less)
             if (IsGrounded() || (idx >= 0 && Solution.Tgo(VesselState.Time, idx) > 2.0))
-                (_inertial, _throttle) = Solution.InertialGuidance(VesselState.Time);
+                (_inertial, _throttle) = Solution.InertialGuidance(VesselState.Time, VesselState.MinThrottle);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, _inertial);
 
