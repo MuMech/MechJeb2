@@ -291,9 +291,12 @@ namespace MuMech
             Core.Staging.AutostagePreDelay.Val = 0.0;
             Core.Staging.AutostagePostDelay.Val = 0.5;
             Core.Staging.AutostageLimit.Val = 0;
+            Core.Staging.FairingMaxDynamicPressureEnabled = true;
             Core.Staging.FairingMaxDynamicPressure.Val = 5000;
+            Core.Staging.FairingMinAltitudeEnabled = true;
             Core.Staging.FairingMinAltitude.Val = 50000;
             Core.Staging.ClampAutoStageThrustPct.Val = 0.99;
+            Core.Staging.FairingMaxAerothermalFluxEnabled = true;
             Core.Staging.FairingMaxAerothermalFlux.Val = 1135;
             Core.Staging.HotStaging = true;
             Core.Staging.HotStagingLeadTime.Val = 2.0;

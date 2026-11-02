@@ -27,8 +27,15 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableInt AutostageLimit = 0;
 
+        // each fairing jettison condition can be switched off, which skips that check entirely
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool FairingMaxDynamicPressureEnabled = true;
+
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMaxDynamicPressure = new EditableDoubleMult(5000, 1000);
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool FairingMinAltitudeEnabled = true;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMinAltitude = new EditableDoubleMult(50000, 1000);
@@ -37,6 +44,9 @@ namespace MuMech
         // the UI text box edits it as a percentage.
         [Persistent(pass = (int)Pass.TYPE)]
         public readonly EditableDoubleMult ClampAutoStageThrustPct = new EditableDoubleMult(0.99, 0.01);
+
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool FairingMaxAerothermalFluxEnabled = true;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult FairingMaxAerothermalFlux = new EditableDoubleMult(1135);
@@ -335,17 +345,17 @@ namespace MuMech
                 return false;
             }
 
-            if (Core.VesselState.DynamicPressure > FairingMaxDynamicPressure)
+            if (FairingMaxDynamicPressureEnabled && Core.VesselState.DynamicPressure > FairingMaxDynamicPressure)
             {
                 return true;
             }
 
-            if (Core.VesselState.AltitudeASL < FairingMinAltitude)
+            if (FairingMinAltitudeEnabled && Core.VesselState.AltitudeASL < FairingMinAltitude)
             {
                 return true;
             }
 
-            if (Core.VesselState.FreeMolecularAerothermalFlux > FairingMaxAerothermalFlux)
+            if (FairingMaxAerothermalFluxEnabled && Core.VesselState.FreeMolecularAerothermalFlux > FairingMaxAerothermalFlux)
             {
                 return true;
             }
