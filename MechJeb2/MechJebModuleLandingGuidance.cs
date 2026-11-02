@@ -48,7 +48,8 @@ namespace MuMech
 
         // LandingSites.cfg holds stock positions. The KSC keeps its size on a rescaled planet, so the latitude and longitude
         // of its buildings change with the scale, and KSCSwitcher moves them altogether. The game knows where they are.
-        private static void UseRealKscSites()
+        // A site is only updated from a vessel around its body, so call this again where a site is used.
+        public static void UseRealKscSites()
         {
             if (LandingSites == null)
                 return;
