@@ -463,7 +463,8 @@ namespace MuMech
             if (!targetVessel.loaded)
                 return;
 
-            targetVessel.GetShape(targetShape, Core.Target.Transform, Core.Target.Position);
+            // Around the port's own transform, in the same frame as the target's parts, even when the target is on rails and not moved yet this tick.
+            targetVessel.GetShape(targetShape, Core.Target.Transform, Core.Target.Transform.position);
             V3 axis = ToTargetFrame(zAxis);
             frontReach = targetShape.Reach(-axis);
             rearReach = targetShape.Reach(axis);
