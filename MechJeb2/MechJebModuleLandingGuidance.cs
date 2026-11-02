@@ -12,6 +12,9 @@ namespace MuMech
 {
     public class MechJebModuleLandingGuidance : DisplayModule
     {
+        private const string KSC_PAD_SITE = "KSC Pad";
+        private const string KSC_PAD_FACILITY = "LaunchPad";
+
         private MechJebModuleLandingPredictions _predictor;
         public static List<LandingSite> LandingSites;
 
@@ -32,6 +35,23 @@ namespace MuMech
 
             if (LandingSites == null && HighLogic.LoadedSceneIsFlight)
                 InitLandingSitesList();
+
+            if (LandingSites != null && HighLogic.LoadedSceneIsFlight)
+                UseRealKscPad();
+        }
+
+        // LandingSites.cfg holds the stock position. The KSC keeps its size on a rescaled planet, so the pad's latitude and
+        // longitude change with the scale, and KSCSwitcher moves it altogether. The game knows where its pad is.
+        private static void UseRealKscPad()
+        {
+            PSystemSetup.SpaceCenterFacility facility = PSystemSetup.Instance.GetSpaceCenterFacility(KSC_PAD_FACILITY);
+            PSystemSetup.SpaceCenterFacility.SpawnPoint pad = facility?.GetSpawnPoint(KSC_PAD_FACILITY);
+            int index = LandingSites.FindIndex(x => x.Name == KSC_PAD_SITE);
+
+            if (pad == null || !pad.latlonaltSet || facility.hostBody == null || index < 0)
+                return;
+
+            LandingSites[index] = new LandingSite { Name = KSC_PAD_SITE, Latitude = pad.latitude, Longitude = pad.longitude, Body = facility.hostBody };
         }
 
         internal void MoveByMeter(ref EditableAngle angle, double distance, double alt)
@@ -42,7 +62,8 @@ namespace MuMech
 
         public void SetAndLandTargetKSC()
         {
-            int index = LandingSites.FindIndex(x => x.Name == "KSC Pad" && x.Body == MainBody);
+            UseRealKscPad();
+            int index = LandingSites.FindIndex(x => x.Name == KSC_PAD_SITE && x.Body == MainBody);
             if (index < 0)
             {
                 ScreenMessages.PostScreenMessage("MechJeb: no KSC Pad landing site on " + MainBody.bodyName);
