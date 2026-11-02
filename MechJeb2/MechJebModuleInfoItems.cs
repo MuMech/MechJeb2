@@ -772,9 +772,6 @@ namespace MuMech
         public bool showISP = true;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        public bool liveSLT = true;
-
-        [Persistent(pass = (int)Pass.GLOBAL)]
         public float altSLTScale = 0;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -864,16 +861,11 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate();
 
-            if (stats.VacStats.Count == 0 || stats.AtmoStats.Count == 0) return 0;
+            if (stats.AtmoStats.Count == 0) return 0;
 
-            float vacTimeLeft = (float)stats.VacStats[stats.VacStats.Count - 1].DeltaTime;
-            float atmoTimeLeft = (float)stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaTime;
-
-            // live, the atmosphere stats are already at the vessel's conditions, and in the editor at the chosen body and altitude.
-            // Blending those with vacuum would be wrong for a jet, whose vacuum time can be millions of seconds.
-            if (HighLogic.LoadedSceneIsEditor || stats.LiveSLT) return atmoTimeLeft;
-
-            return Mathf.Lerp(vacTimeLeft, atmoTimeLeft, Mathf.Clamp01((float)(Vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres)));
+            // the atmosphere stats are already at the vessel's conditions (in the editor at the chosen body and altitude), so
+            // no blend with vacuum: that would be wrong for a jet, whose vacuum time can be millions of seconds.
+            return (float)stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaTime;
         }
 
         [ValueInfoItem("#MechJeb_StageTimeCurrentThrottle", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)] //Stage time (current throttle)

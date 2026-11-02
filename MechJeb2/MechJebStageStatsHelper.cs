@@ -17,7 +17,7 @@ namespace MuMech
     public class MechJebStageStatsHelper
     {
         private bool showStagedMass, showBurnedMass, showInitialMass, showFinalMass, showThrust, showVacInitialTWR, showAtmoInitialTWR;
-        private bool showAtmoMaxTWR, showVacMaxTWR, showAtmoDeltaV, showVacDeltaV, showTime, showISP, showEmpty, showRcs, timeSeconds, liveSLT;
+        private bool showAtmoMaxTWR, showVacMaxTWR, showAtmoDeltaV, showVacDeltaV, showTime, showISP, showEmpty, showRcs, timeSeconds;
         private bool showAtmoCumulativeDeltaV, showVacCumulativeDeltaV, showControllableMass, showRcsUllageTime;
         private int TWRBody;
         private float altSLTScale, machScale;
@@ -51,7 +51,6 @@ namespace MuMech
             showRcs = items.showRcs;
             showEmpty = items.showEmpty;
             timeSeconds = items.timeSeconds;
-            liveSLT = items.liveSLT;
             altSLTScale = items.altSLTScale;
             machScale = items.machScale;
             TWRBody = items.TWRBody;
@@ -80,7 +79,6 @@ namespace MuMech
         internal bool TimeSeconds => timeSeconds;
         internal bool ShowEmpty => showEmpty;
         internal bool ShowRcs => showRcs;
-        internal bool LiveSLT => liveSLT;
         internal int DisplayState => StageDisplayState;
         internal int TwrBody { get => TWRBody; set => TWRBody = infoItems.TWRBody = value; }
         internal float AltSLTScale { get => altSLTScale; set => altSLTScale = infoItems.altSLTScale = value; }
@@ -105,8 +103,6 @@ namespace MuMech
             SetVisibility(StageDisplayState);
         }
 
-        internal void ToggleLiveSLT() => liveSLT = infoItems.liveSLT = !liveSLT;
-
         /// <summary>Clicking a column header hides it and switches to the "Custom" display state.</summary>
         internal void HideColumn(StageData d)
         {
@@ -116,7 +112,7 @@ namespace MuMech
             SaveStageVisibility();
         }
 
-        /// <summary>Push the environment the stats are computed for (live SLT in flight; body, altitude and mach in the editor).</summary>
+        /// <summary>Push the environment the stats are computed for (the main body in flight; body, altitude and mach in the editor).</summary>
         internal void ApplyEnvironment()
         {
             if (HighLogic.LoadedSceneIsEditor)
@@ -126,10 +122,7 @@ namespace MuMech
                 stats.Mach = Math.Pow(machScale * 2, 3);
             }
             else
-            {
-                stats.LiveSLT = liveSLT;
                 stats.EditorBody = stats.MainBody;
-            }
         }
 
         internal double GeeASL => HighLogic.LoadedSceneIsEditor ? FlightGlobals.Bodies[TWRBody].GeeASL : stats.MainBody.GeeASL;

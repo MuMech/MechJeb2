@@ -60,7 +60,6 @@ namespace MuMech.UI
             Chip(chips, "s", () => h.TimeSeconds, h.ToggleTimeSeconds);
             Chip(chips, CachedLocalizer.Instance.MechJebInfoItemsShowEmpty, () => h.ShowEmpty, h.ToggleShowEmpty);
             Chip(chips, "RCS", () => h.ShowRcs, h.ToggleRcs);
-            if (!HighLogic.LoadedSceneIsEditor) Chip(chips, CachedLocalizer.Instance.MechJebInfoItemsButton5, () => h.LiveSLT, h.ToggleLiveSLT); //"Live SLT"
             w.Segmented(parent, MechJebStageStatsHelper.DisplayStateNames, () => h.DisplayState, i =>
             {
                 // the helper only cycles: step to the chosen set
@@ -86,11 +85,7 @@ namespace MuMech.UI
                 h.ToggleShowEmpty);
             ToolbarButton(bar, () => MechJebStageStatsHelper.DisplayStateNames[h.DisplayState], h.CycleDisplayState);
             ToolbarButton(bar, () => h.ShowRcs ? "RCS" : "Engine", h.ToggleRcs);
-            if (!HighLogic.LoadedSceneIsEditor)
-                ToolbarButton(bar, () => h.LiveSLT ? CachedLocalizer.Instance.MechJebInfoItemsButton5 : CachedLocalizer.Instance.MechJebInfoItemsButton6,
-                    h.ToggleLiveSLT); //"Live SLT" "0Alt SLT"
-            else
-                EditorEnvironment(parent);
+            if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
         }
 
         void ToolbarButton(UIObject parent, System.Func<string> text, System.Action onClick)

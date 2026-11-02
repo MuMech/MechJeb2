@@ -93,8 +93,6 @@ namespace MuMech.MechJebKos
                 "Show empty stages."));
             AddSuffix("TIMESECONDS", new SetSuffix<BooleanValue>(() => InfoItems.timeSeconds, v => InfoItems.timeSeconds = v,
                 "Show burn times in raw seconds rather than formatted time."));
-            AddSuffix("LIVESLT", new SetSuffix<BooleanValue>(() => InfoItems.liveSLT, v => InfoItems.liveSLT = v,
-                "Compute atmospheric stats at the current conditions (live) rather than at sea level."));
         }
 
         internal FuelStats GetVacFuelStats(int stage)
