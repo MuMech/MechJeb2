@@ -15,13 +15,15 @@ namespace MechJebLib.PSG
         private readonly VariableProxy _vars;
         private readonly Problem _problem;
         private readonly PhaseCollection _phases;
+        private readonly AscentProblem _ascentProblem;
 
-        public SolutionBuilder(int n, VariableProxy vars, Problem problem, PhaseCollection phases)
+        public SolutionBuilder(int n, VariableProxy vars, Problem problem, PhaseCollection phases, AscentProblem ascentProblem)
         {
             _n = n;
             _vars = vars;
             _problem = problem;
             _phases = phases.DeepCopy();
+            _ascentProblem = ascentProblem;
             AnalyzeStages();
         }
 
@@ -170,7 +172,7 @@ namespace MechJebLib.PSG
             var dy0Layout = new InterpolantLayout
             {
                 R = thisPhase.V[k + 1],
-                V = VDot(y0Layout, _problem, phase),
+                V = VDot(phase, y0Layout),
                 M = -phase.Mdot * y0Layout.T,
                 U = dy0U,
                 T = dyT
@@ -178,7 +180,7 @@ namespace MechJebLib.PSG
             var dy1Layout = new InterpolantLayout
             {
                 R = thisPhase.V[k + 2],
-                V = VDot(y1Layout, _problem, phase),
+                V = VDot(phase, y1Layout),
                 M = -phase.Mdot * y1Layout.T,
                 U = dy1U,
                 T = dyT
@@ -190,45 +192,7 @@ namespace MechJebLib.PSG
             dy1Layout.CopyTo(dy1);
         }
 
-        //TODO: this duplicates code with AscentProblem
-
-        private static V3 VDot(InterpolantLayout d, Problem problem, Phase phase)
-        {
-            double rho0CdAref = problem.Rho0CdAref;
-            double h0 = problem.H0;
-
-            return h0 > 0 && rho0CdAref > 0 ? VDotAtmo(d, problem, phase) : VDotVacuum(d, phase);
-        }
-
-        private static V3 VDotVacuum(InterpolantLayout d, Phase phase)
-        {
-            double vacThrust = phase.VacThrust;
-
-            double r3 = d.R.sqrMagnitude * d.R.magnitude;
-            return -d.R / r3 + vacThrust / d.M * d.U * d.T;
-        }
-
-        private static V3 VDotAtmo(InterpolantLayout d, Problem problem, Phase phase)
-        {
-            double rho0CdAref = problem.Rho0CdAref;
-            double rBody = problem.RBody;
-            double h0 = problem.H0;
-            double r0 = problem.R0.magnitude;
-            V3 w = problem.W;
-
-            double mdot = phase.Mdot;
-            double vexCurrent = phase.VexCurrent;
-            double vexVacuum = phase.VexVacuum;
-
-            double r = d.R.magnitude;
-            double r3 = d.R.sqrMagnitude * r;
-            V3 vr = d.V - V3.Cross(w, d.R);
-            double normAtmosphere = Exp(-(r - rBody) / h0);
-            double normAtmosphere2 = Exp(-(r - r0) / h0);
-            V3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
-            //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
-            double thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
-            return -d.R / r3 + thrust / d.M * d.U * d.T - drag / d.M;
-        }
+        // The NLP's dynamics evaluated with constant duals (the discarded derivative work is negligible here).
+        private V3 VDot(Phase phase, InterpolantLayout d) => _ascentProblem.VDot(phase, d.R, d.V, d.M, d.U, d.T).M;
     }
 }
