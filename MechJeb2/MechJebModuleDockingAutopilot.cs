@@ -113,17 +113,17 @@ namespace MuMech
                 Core.AddToPostDrawQueue(DrawBoundingBox);
 
                 GameEvents.onPartCouple.Add(OnPartCouple);
-                GameEvents.onVesselWasModified.Add(OnVesselWasModified);
+                GameEvents.onVesselWasModified.Add(OnAnyVesselModified);
             }
         }
 
         public override void OnDestroy()
         {
             GameEvents.onPartCouple.Remove(OnPartCouple);
-            GameEvents.onVesselWasModified.Remove(OnVesselWasModified);
+            GameEvents.onVesselWasModified.Remove(OnAnyVesselModified);
         }
 
-        private void OnVesselWasModified(Vessel modified)
+        private void OnAnyVesselModified(Vessel modified)
         {
             if (modified == Vessel)
                 ownMeasured = false;
