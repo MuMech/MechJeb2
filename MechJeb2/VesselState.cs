@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using MechJebLib.Control;
+using MechJebLib.Primitives;
 using MechJebLibBindings;
 using Smooth.Pools;
 using UnityEngine;
@@ -698,20 +700,23 @@ namespace MuMech
             MechJebModuleRCSBalancer rcsbal = Vessel.GetMasterMechJeb().Rcsbal;
             if (rcsbal.Enabled)
             {
-                Vector3d rot = Vector3d.zero;
                 foreach (Vector6.Direction dir6 in Vector6.Values)
                 {
                     Vector3d dir = Vector6.Directions[(int)dir6];
                     rcsbal.GetThrottles(dir, out double[] throttles, out IReadOnlyList<RCSSolver.Thruster> thrusters);
-                    if (throttles == null) continue;
 
-                    for (int j = 0; j < throttles.Length; j++)
+                    // While a direction is being solved the balancer leaves the
+                    // thrusters as they are, so that isn't a loss of thrust.
+                    bool solved = throttles.Length == thrusters.Count;
+
+                    for (int j = 0; j < thrusters.Count; j++)
                     {
-                        if (throttles[j] <= 0) continue;
+                        double throttle = solved ? throttles[j] : 1;
+                        if (throttle <= 0) continue;
 
-                        Vector3d force = thrusters[j].GetThrust(dir, rot);
-                        RCSThrustAvailable.Add(
-                            Vessel.GetTransform().InverseTransformDirection(dir * Vector3d.Dot(force * throttles[j], dir)));
+                        // The solver works in the vessel's frame, like dir.
+                        Vector3d force = thrusters[j].GetThrust(dir.ToV3(), V3.zero).ToVector3d();
+                        RCSThrustAvailable.Add(dir * Vector3d.Dot(force * throttle, dir));
                         // Are we missing an rcsTorqueAvailable calculation here?
                     }
                 }
@@ -757,7 +762,7 @@ namespace MuMech
 
                         Vector3d thrustDirection = rcs.useZaxis ? -t.forward : -t.up;
 
-                        float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f;
+                        float power = rcs.thrusterPower * rcs.thrustPercentage * 0.01f * (float)rcs.flowMult;
 
                         if (FlightInputHandler.fetch.precisionMode)
                         {
