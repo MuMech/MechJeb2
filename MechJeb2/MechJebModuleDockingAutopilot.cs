@@ -11,12 +11,12 @@ namespace MuMech
 {
     public class MechJebModuleDockingAutopilot : ComputerModule
     {
-        // Built when something reads it, and not on every tick.
-        public string status => statusKey == null ? "" : Localizer.Format(statusKey, statusFirst.ToString("F2"), statusSecond.ToString("F2"));
+        // Refreshed a few times a second, not on every tick. It has to stay a field: kRPC-MechJeb reads it by reflection.
+        public string status = "";
 
+        private const float statusInterval = 0.2f;
         private string statusKey;
-        private double statusFirst;
-        private double statusSecond;
+        private float nextStatus;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")]
         //Docking speed limit
@@ -158,6 +158,7 @@ namespace MuMech
             Core.RCS.Users.Add(this);
             Core.Attitude.Users.Add(this);
             dockingStep = DockingStep.INIT;
+            status = "";
             statusKey = null;
             ownMeasured = false;
             targetMeasured = false;
@@ -339,9 +340,12 @@ namespace MuMech
         // Speeds are shown as they are: which way they go is in the text.
         private void SetStatus(string key, double first, double second = 0)
         {
+            if (key == statusKey && Time.fixedTime < nextStatus)
+                return;
+
             statusKey = key;
-            statusFirst = Math.Abs(first);
-            statusSecond = Math.Abs(second);
+            nextStatus = Time.fixedTime + statusInterval;
+            status = Localizer.Format(key, Math.Abs(first).ToString("F2"), Math.Abs(second).ToString("F2"));
         }
 
         public override void OnFixedUpdate()
