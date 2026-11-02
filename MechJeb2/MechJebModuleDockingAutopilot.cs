@@ -11,7 +11,12 @@ namespace MuMech
 {
     public class MechJebModuleDockingAutopilot : ComputerModule
     {
+        // Refreshed a few times a second, not on every tick. It has to stay a field: kRPC-MechJeb reads it by reflection.
         public string status = "";
+
+        private const float statusInterval = 0.2f;
+        private string statusKey;
+        private float nextStatus;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")]
         //Docking speed limit
@@ -23,7 +28,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool forceRol = false;
 
-        [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")] //Docking speed limit
+        [EditableInfoItem("#MechJeb_Docking_checkbox3", InfoItem.Category.Thrust, rightLabel = "m")] //Safe Distance
         public EditableDouble overridenSafeDistance = 5;
 
         [Persistent(pass = (int)Pass.LOCAL)]
@@ -32,7 +37,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool overrideTargetSize = false;
 
-        [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")] //Docking speed limit
+        [EditableInfoItem("#MechJeb_Docking_label6", InfoItem.Category.Thrust, rightLabel = "m")] //Start Distance
         public EditableDouble overridenTargetSize = 10;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
@@ -63,8 +68,6 @@ namespace MuMech
         private Vector3d zAxis;
         public double zSep;
         public Vector3d lateralSep;
-        public double relativeZ;
-        public double relativeLateral;
 
         private ITargetable lastTarget;
         private ModuleDockingNode wantedPort;
@@ -155,6 +158,8 @@ namespace MuMech
             Core.RCS.Users.Add(this);
             Core.Attitude.Users.Add(this);
             dockingStep = DockingStep.INIT;
+            status = "";
+            statusKey = null;
             ownMeasured = false;
             targetMeasured = false;
             retries = 0;
@@ -247,7 +252,7 @@ namespace MuMech
                     latApproachSpeed = Math.Min(MaxSpeedToAxis(toExit.magnitude, -toExit), leaveSpeed);
                     lateralMove = toExit.normalized * latApproachSpeed;
                     align = false;
-                    status = Localizer.Format("#MechJeb_Docking_status7", latApproachSpeed.ToString("F2")); //Moving clear of the target at <<1>> m/s
+                    SetStatus("#MechJeb_Docking_status7", latApproachSpeed); //Moving clear of the target at <<1>> m/s
                     break;
 
                 case DockingStep.WRONG_SIDE_BACKING_UP:
@@ -255,36 +260,32 @@ namespace MuMech
                     latApproachSpeed = 0;
                     lateralMove = Vector3d.zero;
                     align = false;
-                    status = Localizer.Format("#MechJeb_Docking_status1", zApproachSpeed.ToString("F2"),
-                        latApproachSpeed.ToString()); //"Backing up at " <<1>> " m/s before moving on target side (lat: "<<2>> " m/s)"
+                    SetStatus("#MechJeb_Docking_status1", zApproachSpeed, latApproachSpeed); //"Backing up at " <<1>> " m/s before moving on target side (lat: "<<2>> " m/s)"
                     break;
 
                 case DockingStep.WRONG_SIDE_LATERAL:
                     zApproachSpeed = zSep > -rearDistance ? MaxSpeedToAxis(rearDistance + zSep, -zAxis) : 0;
                     lateralMove = RouteMove(out latApproachSpeed);
-                    status = Localizer.Format("#MechJeb_Docking_status2",
-                        latApproachSpeed.ToString("F2")); //Moving away from docking axis at <<1>> m/s to avoid hitting target on backing up
+                    SetStatus("#MechJeb_Docking_status2", latApproachSpeed); //Moving away from docking axis at <<1>> m/s to avoid hitting target on backing up
                     break;
 
                 case DockingStep.WRONG_SIDE_SWITCHSIDE:
                     zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, zAxis);
                     lateralMove = RouteMove(out latApproachSpeed);
-                    status = Localizer.Format("#MechJeb_Docking_status3", zApproachSpeed.ToString("F2"),
-                        latApproachSpeed.ToString()); //"Moving at <<1>> m/s to get on the correct side of the target. (lat: <<2>> m/s)"
+                    SetStatus("#MechJeb_Docking_status3", zApproachSpeed, latApproachSpeed); //"Moving at <<1>> m/s to get on the correct side of the target. (lat: <<2>> m/s)"
                     break;
 
                 case DockingStep.BACKING_UP:
                     zApproachSpeed = -MaxSpeedForDistance(1 + targetSize - zSep, zAxis);
                     lateralMove = Vector3d.zero;
                     align = false;
-                    status = Localizer.Format("#MechJeb_Docking_status4", zApproachSpeed.ToString("F2")); //"Backing up at " +  + " m/s"
+                    SetStatus("#MechJeb_Docking_status4", zApproachSpeed); //"Backing up at " +  + " m/s"
                     break;
 
                 case DockingStep.MOVING_TO_START:
                     zApproachSpeed = zSep < targetSize + 1 ? -MaxSpeedToAxis(targetSize + 1 - zSep, zAxis) : 0;
 
-                    status = Localizer.Format("#MechJeb_Docking_status5",
-                        zApproachSpeed.ToString("F2")); //"Moving toward the starting point at " +  + " m/s."
+                    SetStatus("#MechJeb_Docking_status5", zApproachSpeed); //"Moving toward the starting point at " +  + " m/s."
                     break;
 
                 case DockingStep.DOCKING:
@@ -295,13 +296,13 @@ namespace MuMech
                     // capture, slowing down only makes that worse.
                     bool committed = zSep < acquireRange && lateralSep.magnitude < captureRange;
 
-                    if (!committed && (zSep <= lateralSep.magnitude * 10 || timeToTargetSize <= timeToAxis * 10) && timeToAxis > 0 && timeToTargetSize > 0)
+                    if (!committed && (zSep <= lateralSep.magnitude * 10 || timeToTargetSize <= timeToAxis * 10) && timeToAxis > 0 && timeToTargetSize > 0 &&
+                        !double.IsInfinity(timeToAxis))
                     {
                         zApproachSpeed *= Math.Min(timeToTargetSize / timeToAxis, 1);
                     }
 
-                    status = Localizer.Format("#MechJeb_Docking_status6", zApproachSpeed.ToString("F2"),
-                        latApproachSpeed.ToString("F2")); //"Moving forward to dock at <<1>> / <<2>> m/s."
+                    SetStatus("#MechJeb_Docking_status6", zApproachSpeed, latApproachSpeed); //"Moving forward to dock at <<1>> / <<2>> m/s."
                     break;
             }
 
@@ -314,14 +315,6 @@ namespace MuMech
             else
                 Core.Attitude.AttitudeTo(Vector3d.back, AttitudeReference.TARGET_ORIENTATION, this);
 
-            // Purpose of of this section is to compensate for relative velocities because the docking code does poorly with very low speed limits
-            // And can't seem to keep up if relative velocities are greater than the speed limit.
-            //if (relativeZ > 0 && relativeZ > Math.Abs(zApproachSpeed))
-            //    zApproachSpeed *= relativeZ / Math.Abs(zApproachSpeed);
-            //if (relativeLateral > 0 && relativeLateral > Math.Abs(latApproachSpeed))
-            //    latApproachSpeed *= relativeLateral / Math.Abs(latApproachSpeed);
-
-
             // The limit is on the vessel's speed, and each axis keeping to it isn't enough for that.
             Vector3d adjustment = lateralMove + zApproachSpeed * zAxis;
             if (speedLimit > 0 && adjustment.magnitude > speedLimit)
@@ -329,7 +322,6 @@ namespace MuMech
 
             Core.RCS.SetTargetWorldVelocity(targetVel + adjustment);
             MechJebModuleDebugArrows.debugVector = adjustment;
-            MechJebModuleDebugArrows.debugVector2 = -Core.Target.RelativePosition;
 
             // Inside the acquire range the magnets are a force of their own, and the ports are meant to meet.
             bool inMagnets = Math.Abs(zSep) < acquireRange && lateralSep.magnitude < acquireRange;
@@ -343,6 +335,17 @@ namespace MuMech
             if (stuck.Update(velocityError.ToV3(), (VesselState.OrbitalVelocity - targetVel).ToV3(), ThrustAcceleration(velocityError), TimeWarp.fixedDeltaTime,
                     Core.RCS.Saturated && !inMagnets))
                 StopWithMessage("#MechJeb_Docking_stuck"); //Docking autopilot stopped: the vessel isn't moving as commanded, and may be against the target.
+        }
+
+        // Speeds are shown as they are: which way they go is in the text.
+        private void SetStatus(string key, double first, double second = 0)
+        {
+            if (key == statusKey && Time.fixedTime < nextStatus)
+                return;
+
+            statusKey = key;
+            nextStatus = Time.fixedTime + statusInterval;
+            status = Localizer.Format(key, Math.Abs(first).ToString("F2"), Math.Abs(second).ToString("F2"));
         }
 
         public override void OnFixedUpdate()
@@ -626,8 +629,6 @@ namespace MuMech
             zAxis = Core.Target.DockingAxis.normalized;
             zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             lateralSep = Vector3d.Exclude(zAxis, separation);
-            relativeZ = Vector3d.Dot(Core.Target.RelativeVelocity, zAxis);
-            relativeLateral = Vector3d.Dot(lateralSep, Core.Target.RelativeVelocity);
         }
 
         private void InitDocking()

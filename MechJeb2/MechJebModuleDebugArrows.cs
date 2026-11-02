@@ -74,7 +74,6 @@ namespace MuMech
         public static DebugArrow debugArrow2;
 
         public static Vector3d debugVector = Vector3d.one;
-        public static Vector3d debugVector2 = Vector3d.one;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble arrowsLength = new EditableDouble(4);
@@ -241,11 +240,6 @@ namespace MuMech
             debugArrow2.State(debugArrow2Active && Core.ShowGui);
             if (debugArrow2Active)
             {
-                //debugArrow2.Set(vessel.ReferenceTransform.position, debugVector2);
-                //
-                //debugArrow2.SetLength((float)debugVector2.magnitude);
-                //debugArrow2.SeeThrough(seeThrough);
-
                 Vector3d vector3d = VesselState.CoL - instantCoM + frameVel;
                 debugArrow2.Set(instantCoM, vector3d);
 
