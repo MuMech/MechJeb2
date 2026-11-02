@@ -47,7 +47,7 @@ namespace MechJebLib.PSG.Terminal
 
             return;
 
-            Dual EccVecMagnitudeConstraint(DualV3[] p) => (DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized).sqrMagnitude - eccT * eccT;
+            Dual EccVecMagnitudeConstraint(DualV3[] p) => (DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized).magnitude - eccT;
 
             DualV3 AngularMomentumConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]) - hT;
         }

@@ -319,6 +319,31 @@ namespace MechJebLib.Primitives
             }
         }
 
+        /// <summary>
+        ///     A right-handed orthonormal basis (p, q) of the nullspace of this vector.  Cross(p,q) should recover this vector.
+        /// </summary>
+        /// <remarks>
+        ///     This is the Householder reflection H = I - 2wwᵀ/wᵀw, w = n̂ + sign(n̂.z) ẑ, which maps n̂ onto ∓ẑ, so its
+        ///     x and y columns span the plane perpendicular to n̂.  It is discontinuous across n̂.z = 0, which is
+        ///     unavoidable since no basis can vary continuously over the whole sphere.
+        /// </remarks>
+        /// <exception cref="ArgumentException">If the vector is zero or has a NaN or infinite component.</exception>
+        public (V3 p, V3 q) nullspace
+        {
+            get
+            {
+                Check.NonZeroFinite(this, "vector");
+
+                V3 n = SafeNormalize(this);
+
+                double s = n.z >= 0 ? 1.0 : -1.0;
+                double a = -1.0 / (s + n.z);
+                double b = n.x * n.y * a;
+
+                return (new V3(1.0 + s * n.x * n.x * a, s * b, -s * n.x), new V3(b, s + n.y * n.y * a, -n.y));
+            }
+        }
+
         public V3 normalized
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
