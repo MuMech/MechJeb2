@@ -151,9 +151,12 @@ namespace MuMech.UI
             ClampAutostageThrust(w, box, s);
 
             KodeWindow.Label(box, "#MechJeb_Ascent_label38"); //"Stage fairings when:"
-            Field(w, box, s._sFairingMinDynamicPressure, s.FairingMaxDynamicPressure, "kPa", 50);
-            Field(w, box, s._sFairingMinAltitude, s.FairingMinAltitude, "km", 50);
-            Field(w, box, s._sFairingMaxAerothermalFlux, s.FairingMaxAerothermalFlux, "W/m²", 50);
+            ToggledField(w, box, s._sFairingMaxDynamicPressure.Trim(), () => s.FairingMaxDynamicPressureEnabled,
+                v => s.FairingMaxDynamicPressureEnabled = v, s.FairingMaxDynamicPressure, "kPa", 50, () => KodeWindow.Tone.Normal);
+            ToggledField(w, box, s._sFairingMinAltitude.Trim(), () => s.FairingMinAltitudeEnabled,
+                v => s.FairingMinAltitudeEnabled = v, s.FairingMinAltitude, "km", 50, () => KodeWindow.Tone.Normal);
+            ToggledField(w, box, s._sFairingMaxAerothermalFlux.Trim(), () => s.FairingMaxAerothermalFluxEnabled,
+                v => s.FairingMaxAerothermalFluxEnabled = v, s.FairingMaxAerothermalFlux, "W/m²", 50, () => KodeWindow.Tone.Normal);
 
             Layout hot = KodeWindow.Row(box);
             w.Toggle(hot, "#MechJeb_Ascent_hotStaging", () => s.HotStaging, v => s.HotStaging = v); //"Support hotstaging"
@@ -175,14 +178,6 @@ namespace MuMech.UI
             KodeWindow.Label(row, CachedLocalizer.Instance.MechJebAscentLabel44, true); //"Clamp AutoStage Thrust "
             EditFields.Field(w, row, () => s.ClampAutoStageThrustPct.Text, x => ModernRows.SetClamp(s, x), 50, () => s.ClampAutoStageThrustPct.IsParsed);
             KodeWindow.Label(row, "%");
-        }
-
-        static void Field(KodeWindow w, UIObject parent, string label, EditableDoubleMult ed, string unit, float width)
-        {
-            Layout row = KodeWindow.Row(parent);
-            KodeWindow.Label(row, label, true);
-            EditUi.Field(w, row, () => ed, width);
-            KodeWindow.Label(row, unit);
         }
 
         /// <summary>MechJebModuleThrustWindow.AutostageOnceItem: "Autostaging (active once)" or the "Autostage once" button.</summary>

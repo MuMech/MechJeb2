@@ -97,9 +97,12 @@ namespace MuMech.UI
                 () => s.ClampAutoStageThrustPct.IsParsed); //"Clamp AutoStage Thrust "
 
             g.Note("#MechJeb_Ascent_label38"); //"Stage fairings when:"
-            Field(g, s._sFairingMinDynamicPressure, s.FairingMaxDynamicPressure, "kPa", 50);
-            Field(g, s._sFairingMinAltitude, s.FairingMinAltitude, "km", 50);
-            Field(g, s._sFairingMaxAerothermalFlux, s.FairingMaxAerothermalFlux, "W/m²", 50);
+            Switch(g, s._sFairingMaxDynamicPressure.Trim(), () => s.FairingMaxDynamicPressureEnabled, v => s.FairingMaxDynamicPressureEnabled = v,
+                s.FairingMaxDynamicPressure, "kPa", 50);
+            Switch(g, s._sFairingMinAltitude.Trim(), () => s.FairingMinAltitudeEnabled, v => s.FairingMinAltitudeEnabled = v,
+                s.FairingMinAltitude, "km", 50);
+            Switch(g, s._sFairingMaxAerothermalFlux.Trim(), () => s.FairingMaxAerothermalFluxEnabled, v => s.FairingMaxAerothermalFluxEnabled = v,
+                s.FairingMaxAerothermalFlux, "W/m²", 50);
 
             Switch(g, "#MechJeb_Ascent_hotStaging", () => s.HotStaging, v => s.HotStaging = v); //"Support hotstaging"
             Layout lead = Field(g, s._sLeadTime.TrimEnd(':', ' '), s.HotStagingLeadTime, "s", 50);

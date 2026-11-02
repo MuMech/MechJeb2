@@ -57,7 +57,8 @@ namespace MuMech
             set
             {
                 TextConfig = value;
-                TextConfig = Regex.Replace(TextConfig, @"[^\d+-.]", ""); //throw away junk characters
+                // throw away junk characters, keeping e/E so scientific notation like "1e6" parses (it used to become "16")
+                TextConfig = Regex.Replace(TextConfig, @"[^\d+,\-.eE]", "");
                 Parsed = TryParseText(TextConfig, out double parsedValue);
                 if (Parsed) ValConfig = parsedValue;
             }

@@ -26,11 +26,20 @@ namespace MuMech.MechJebKos
                 "Seconds to wait after firing a stage."));
             AddSuffix("AUTOSTAGELIMIT", new SetSuffix<ScalarValue>(() => Module.AutostageLimit.Val, value => Module.AutostageLimit.Val = (int)value,
                 "Stop autostaging at this stage number."));
+            AddSuffix("FAIRINGMAXDYNAMICPRESSUREENABLED", new SetSuffix<BooleanValue>(() => Module.FairingMaxDynamicPressureEnabled,
+                value => Module.FairingMaxDynamicPressureEnabled = value,
+                "Whether the max dynamic pressure condition gates fairing deployment."));
             AddSuffix("FAIRINGMAXDYNAMICPRESSURE", new SetSuffix<ScalarValue>(() => Module.FairingMaxDynamicPressure.Val,
                 value => Module.FairingMaxDynamicPressure.Val = value,
                 "Max dynamic pressure in Pa for fairing deployment."));
+            AddSuffix("FAIRINGMINALTITUDEENABLED", new SetSuffix<BooleanValue>(() => Module.FairingMinAltitudeEnabled,
+                value => Module.FairingMinAltitudeEnabled = value,
+                "Whether the min altitude condition gates fairing deployment."));
             AddSuffix("FAIRINGMINALTITUDE", new SetSuffix<ScalarValue>(() => Module.FairingMinAltitude.Val, value => Module.FairingMinAltitude.Val = value,
                 "Min altitude in meters for fairing deployment."));
+            AddSuffix("FAIRINGMAXAEROTHERMALFLUXENABLED", new SetSuffix<BooleanValue>(() => Module.FairingMaxAerothermalFluxEnabled,
+                value => Module.FairingMaxAerothermalFluxEnabled = value,
+                "Whether the max aerothermal flux condition gates fairing deployment."));
             AddSuffix("FAIRINGMAXAEROTHERMALFLUX", new SetSuffix<ScalarValue>(() => Module.FairingMaxAerothermalFlux.Val,
                 value => Module.FairingMaxAerothermalFlux.Val = value,
                 "Max aerothermal flux in W/m^2 for fairing deployment."));
