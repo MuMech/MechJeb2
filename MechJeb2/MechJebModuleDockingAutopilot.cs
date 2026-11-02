@@ -74,6 +74,8 @@ namespace MuMech
         private const double alignedAngle = 5;
         private const double stoppedSpeed = 0.03;
         private const double routeMargin = 2;
+        private const double minStartCorridor = 0.25;
+        private const double startCorridorSlope = 30;
         private const double leaveSpeed = 1;
         private const int maxRetries = 3;
         private double stopDistance;
@@ -393,7 +395,7 @@ namespace MuMech
                     break;
 
                 case DockingStep.MOVING_TO_START:
-                    if (lateralSep.magnitude < dockingcorridorRadius && zSep >= targetSize && IsAligned())
+                    if (lateralSep.magnitude < StartCorridor() && zSep >= targetSize && IsAligned())
                         dockingStep = DockingStep.DOCKING;
                     break;
 
@@ -539,6 +541,9 @@ namespace MuMech
             else
                 dockingStep = zSep < 0 ? DockingStep.WRONG_SIDE_LATERAL : DockingStep.BACKING_UP;
         }
+
+        // Lateral closes with a time constant of about 3 s near the axis, so a short approach has to start closer to it to arrive inside the capture range.
+        private double StartCorridor() => Math.Min(Math.Max(zSep / startCorridorSlope, minStartCorridor), dockingcorridorRadius);
 
         // Whether it faces the port. Turning swings a port about the CoM, by many metres on a long vessel, so that happens before closing in.
         private bool IsAligned() => Vector3d.Angle(Vessel.GetTransform().up, zAxis) < alignedAngle;
