@@ -48,10 +48,23 @@ namespace MuMech
             PSystemSetup.SpaceCenterFacility.SpawnPoint pad = facility?.GetSpawnPoint(KSC_PAD_FACILITY);
             int index = LandingSites.FindIndex(x => x.Name == KSC_PAD_SITE);
 
-            if (pad == null || !pad.latlonaltSet || facility.hostBody == null || index < 0)
+            if (pad == null || facility.hostBody == null || index < 0)
                 return;
 
-            LandingSites[index] = new LandingSite { Name = KSC_PAD_SITE, Latitude = pad.latitude, Longitude = pad.longitude, Body = facility.hostBody };
+            double latitude = pad.latitude, longitude = pad.longitude;
+
+            // The game sets the spawn point when a scene goes through the KSC, and loading straight into a flight doesn't.
+            // The transform's float position is only precise near the origin, so only for a vessel around the same body.
+            if (!pad.latlonaltSet)
+            {
+                Transform spawn = facility.hostBody == FlightGlobals.currentMainBody ? pad.GetSpawnPointTransform() : null;
+                if (spawn == null)
+                    return;
+
+                facility.hostBody.GetLatLonAlt(spawn.position, out latitude, out longitude, out _);
+            }
+
+            LandingSites[index] = new LandingSite { Name = KSC_PAD_SITE, Latitude = latitude, Longitude = longitude, Body = facility.hostBody };
         }
 
         internal void MoveByMeter(ref EditableAngle angle, double distance, double alt)
