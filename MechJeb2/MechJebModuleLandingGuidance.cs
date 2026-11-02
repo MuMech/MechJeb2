@@ -53,15 +53,15 @@ namespace MuMech
 
             double latitude = pad.latitude, longitude = pad.longitude;
 
-            // The game sets the spawn point when a scene goes through the KSC, and loading straight into a flight doesn't.
-            // The transform's float position is only precise near the origin, so only for a vessel around the same body.
+            // The game sets the spawn point when a scene goes through the KSC. Loading straight into a flight doesn't, and
+            // doesn't build the pad's model either, so take the facility, a few metres from the spawn point. Its float
+            // position is only precise near the origin, so only for a vessel around the same body.
             if (!pad.latlonaltSet)
             {
-                Transform spawn = facility.hostBody == FlightGlobals.currentMainBody ? pad.GetSpawnPointTransform() : null;
-                if (spawn == null)
+                if (facility.facilityTransform == null || facility.hostBody != FlightGlobals.currentMainBody)
                     return;
 
-                facility.hostBody.GetLatLonAlt(spawn.position, out latitude, out longitude, out _);
+                facility.hostBody.GetLatLonAlt(facility.facilityTransform.position, out latitude, out longitude, out _);
             }
 
             LandingSites[index] = new LandingSite { Name = KSC_PAD_SITE, Latitude = latitude, Longitude = longitude, Body = facility.hostBody };
