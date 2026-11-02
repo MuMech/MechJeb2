@@ -69,6 +69,39 @@ namespace MuMech
             }
         }
 
+        // the new UI's width: Auto fits the values, Fixed keeps fixedWidth whatever they show. IMGUI ignores both.
+        public const int MIN_FIXED_WIDTH = 120, MAX_FIXED_WIDTH = 9999;
+
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
+        public bool widthFixed;
+
+        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
+        public int fixedWidth;
+
+        public bool WidthFixed
+        {
+            get => widthFixed;
+            set
+            {
+                if (widthFixed == value) return;
+                widthFixed = value;
+                Dirty = true;
+            }
+        }
+
+        /// <summary>The fixed width in pixels, 0 until the new UI first measures the window.</summary>
+        public int FixedWidth
+        {
+            get => fixedWidth;
+            set
+            {
+                value = Math.Max(MIN_FIXED_WIDTH, Math.Min(MAX_FIXED_WIDTH, value));
+                if (fixedWidth == value) return;
+                fixedWidth = value;
+                Dirty = true;
+            }
+        }
+
         [Persistent(pass = (int)Pass.GLOBAL)]
         public Color backgroundColor = new Color(0, 0, 0, 1);
 

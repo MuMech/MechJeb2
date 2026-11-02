@@ -190,18 +190,35 @@ namespace MuMech.UI
             ApplyColor(label.tmpText);
             ApplyColor(value.tmpText);
 
+            // a fixed-width window: the value takes the room the label leaves, on one line, and ends in "..." when it doesn't fit
+            bool fixedCell = FixedWidth && item.Width <= 0;
+            void FixCell()
+            {
+                size.minWidth = 0;
+                size.preferredWidth = 0;
+                size.flexibleWidth = 1;
+                label.GetComponent<LayoutElement>().flexibleWidth = 0; // or the label takes half the room
+                value.tmpText.enableWordWrapping = false;
+                value.tmpText.overflowMode = TextOverflowModes.Ellipsis;
+            }
+            if (fixedCell)
+            {
+                FixCell();
+                w.Behaviour.AddRestyle(FixCell);
+            }
+
             int widest = 0;
             // a theme change re-sizes the cell from its template: re-apply the grown width at once, measured in the new theme
             w.Behaviour.AddRestyle(() =>
             {
-                if (item.Width > 0 || widest == 0) return;
+                if (fixedCell || item.Width > 0 || widest == 0) return;
                 float wanted = TextMeasure.Measure(new string('0', widest), Theme.Current).x + 8;
                 if (wanted > size.preferredWidth) size.preferredWidth = wanted;
             });
             void Grow(int length)
             {
                 // the value cell only grows, so changing numbers never re-lay out the window
-                if (item.Width > 0 || length <= widest) return;
+                if (fixedCell || item.Width > 0 || length <= widest) return;
                 widest = length;
                 float wanted = TextMeasure.Measure(new string('0', length), Theme.Current).x + 8;
                 if (wanted > size.preferredWidth) size.preferredWidth = wanted;
@@ -234,6 +251,7 @@ namespace MuMech.UI
                 // than RowWidth, the cell keeps the room left by the label and grows in height instead of widening the window
                 void Fit(string s)
                 {
+                    if (fixedCell) return;
                     if (RowWidth <= 0 || item.Width > 0)
                     {
                         Grow(s?.Length ?? 0);
@@ -269,6 +287,9 @@ namespace MuMech.UI
         /// wrap instead of widening the window. 0 = no limit.
         /// </summary>
         public float RowWidth;
+
+        /// <summary>The window has a fixed width: value cells fill the room their label leaves and never resize the window.</summary>
+        public bool FixedWidth;
 
         void ApplyColor(TMP_Text t)
         {
