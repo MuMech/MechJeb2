@@ -47,11 +47,9 @@ namespace MuMech
         {
             Vessel.GetBoundingBox(true);
 
-            if (Core.Target.Target != null)
-            {
-                Vessel targetVessel = Core.Target.Target.GetVessel();
+            Vessel targetVessel = Core.Target.Target?.GetVessel();
+            if (targetVessel != null)
                 targetVessel.GetBoundingBox(true);
-            }
         }
 
         internal PortSelectorState UpdateTargetPortSelector()
@@ -101,6 +99,10 @@ namespace MuMech
             {
                 targetPortLabel = Localizer.Format("#MechJeb_Docking_targetPortSelect", targetPorts.Count);
             }
+            else if (referencePort == null)
+            {
+                targetPortLabel = Localizer.Format("#MechJeb_Docking_targetPortNoOwn"); //Control from a docking port to choose one
+            }
             else
             {
                 targetPortLabel = Localizer.Format("#MechJeb_Docking_targetPortNone");
@@ -128,8 +130,9 @@ namespace MuMech
             if (sourcePort == null || targetPort == null)
                 return false;
 
-            return ArePortsCompatible(sourcePort.nodeType, sourcePort.gendered, sourcePort.genderFemale, targetPort.nodeType,
-                targetPort.gendered, targetPort.genderFemale);
+            return sourcePort.snapRotation == targetPort.snapRotation && sourcePort.snapOffset == targetPort.snapOffset &&
+                   ArePortsCompatible(sourcePort.nodeType, sourcePort.gendered, sourcePort.genderFemale, targetPort.nodeType,
+                       targetPort.gendered, targetPort.genderFemale);
         }
 
         private static bool ArePortsCompatible(string sourceNodeType, bool sourceGendered, bool sourceFemale, string targetNodeType,

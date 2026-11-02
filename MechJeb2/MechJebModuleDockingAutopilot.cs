@@ -67,6 +67,7 @@ namespace MuMech
         public double relativeLateral;
 
         private ITargetable lastTarget;
+        private ModuleDockingNode wantedPort;
         private Transform referenceTransform;
         private ModuleDockingNode referencePort;
         private bool controlledFromPort;
@@ -80,6 +81,7 @@ namespace MuMech
         private const double leaveSpeed = 1;
         private const int maxRetries = 3;
         private const double captureTimeLimit = 30;
+        private const double portTargetRange = 190; // KSP makes a port's vessel the target past 200 m
         private double stopDistance;
         private bool portTarget;
         private bool targetMeasured;
@@ -157,6 +159,7 @@ namespace MuMech
             targetMeasured = false;
             retries = 0;
             timeInAcquireRange = 0;
+            wantedPort = Core.GetComputerModule<MechJebModuleDockingGuidance>().selectedTargetPort;
             rcsWasOn = Vessel.ActionGroups[KSPActionGroup.RCS];
             sasWasOn = Vessel.ActionGroups[KSPActionGroup.SAS];
             stuck.Reset();
@@ -169,7 +172,6 @@ namespace MuMech
             Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, rcsWasOn);
             Vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, sasWasOn);
             dockingStep = DockingStep.OFF;
-            drawBoundingBox = false;
         }
 
         private double FixSpeed(double s)
@@ -347,6 +349,13 @@ namespace MuMech
                 return;
             }
 
+            if (Core.Target.Target.GetVessel() == null)
+            {
+                StopWithMessage("#MechJeb_Docking_notAVessel"); //Docking autopilot stopped: the target isn't a vessel.
+                return;
+            }
+
+            RestoreWantedPort();
             UpdateDistance();
 
             if (controlledFromPort && referencePort == null)
@@ -358,6 +367,9 @@ namespace MuMech
             // A new target has its own port, size and axis. KSP changes it too: past 200 m from the active vessel, a port becomes its vessel.
             if (dockingStep != DockingStep.INIT && Core.Target.Target != lastTarget)
             {
+                if (lastTarget is ModuleDockingNode lastPort && Core.Target.Target.GetVessel() == lastPort.vessel)
+                    wantedPort = lastPort;
+
                 targetMeasured = false;
                 dockingStep = DockingStep.INIT;
             }
@@ -434,6 +446,22 @@ namespace MuMech
 
                     break;
             }
+        }
+
+        // The port the player picked comes back as the target once it can be one.
+        private void RestoreWantedPort()
+        {
+            if (wantedPort == null || Core.Target.Target != (ITargetable)wantedPort.vessel)
+            {
+                wantedPort = null;
+                return;
+            }
+
+            if (wantedPort.vessel.packed || Vector3d.Distance(Vessel.GetTransform().position, wantedPort.GetTransform().position) > portTargetRange)
+                return;
+
+            Core.GetComputerModule<MechJebModuleDockingGuidance>().SelectTargetPort(wantedPort);
+            wantedPort = null;
         }
 
         private void Retry()
