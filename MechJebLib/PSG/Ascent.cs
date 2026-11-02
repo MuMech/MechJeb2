@@ -30,7 +30,7 @@ namespace MechJebLib.PSG
         }
 
         private Optimizer NewOptimizer(Problem problem, PhaseCollection phases, ITerminal terminal, Optimizer.ObjectiveType objective) =>
-            new Optimizer(problem, phases, terminal, objective) { OptimizerTimeout = _optimizerTimeout };
+            new Optimizer(problem, phases, terminal, objective) { OptimizerTimeout = _optimizerTimeout, CancellationToken = CancelToken };
 
         private readonly Solution? _solution;
 
