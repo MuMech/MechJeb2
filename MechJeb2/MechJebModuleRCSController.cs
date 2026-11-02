@@ -99,6 +99,9 @@ namespace MuMech
         // be multiplied by that since the PID controller actual lower the used acceleration
         public double rcsAccelFactor() => pid.Kp;
 
+        // Whether the last command was at its limit on any axis.
+        public bool Saturated => Math.Max(Math.Max(Math.Abs(lastAct.x), Math.Abs(lastAct.y)), Math.Abs(lastAct.z)) >= 1;
+
         // Speed per metre when closing on a position. It has to stay well under the vessel's first bending frequency: at most a tenth of it
         // in rad/s, so this suits modes down to 0.5 Hz, and a higher Tf is the setting for a floppier vessel.
         public double rcsPositionGain() => 0.3 / Math.Max(Tf, 0.02);
@@ -197,6 +200,7 @@ namespace MuMech
             }
             else if (conserveFuel)
             {
+                lastAct = Vector3d.zero;
                 if (Vessel.ActionGroups[KSPActionGroup.RCS])
                 {
                     Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, false);

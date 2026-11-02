@@ -2,6 +2,7 @@ extern alias JetBrainsAnnotations;
 using System;
 using KSP.Localization;
 using MechJebLib.Control;
+using MechJebLibBindings;
 using UnityEngine;
 
 namespace MuMech
@@ -32,6 +33,9 @@ namespace MuMech
         [EditableInfoItem("#MechJeb_DockingSpeedLimit", InfoItem.Category.Thrust, rightLabel = "m/s")] //Docking speed limit
         public EditableDouble overridenTargetSize = 10;
 
+        [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
+        public bool stopOnContact = true;
+
         public float safeDistance = 10;
         public float targetSize = 5;
 
@@ -61,9 +65,16 @@ namespace MuMech
         private ModuleDockingNode referencePort;
 
         private const float dockingcorridorRadius = 1;
-        private double stopDistance = 0.25;
+        private const double alignedAngle = 5;
+        private const double stoppedSpeed = 0.03;
+        private double stopDistance;
+        private bool portTarget;
+        private bool targetMeasured;
         private double acquireRange;
         private double captureRange;
+
+        // At full thrust, with under a quarter of the acceleration that should give, for 3 s: something is holding the vessel.
+        private readonly StuckDetector stuck = new StuckDetector(3, 0.25);
 
         public Box3d vesselBoundingBox;
         public Box3d targetBoundingBox;
@@ -102,6 +113,7 @@ namespace MuMech
             Core.RCS.Users.Add(this);
             Core.Attitude.Users.Add(this);
             dockingStep = DockingStep.INIT;
+            stuck.Reset();
         }
 
         protected override void OnModuleDisabled()
@@ -134,10 +146,12 @@ namespace MuMech
         private double MaxSpeedToAxis(double distance, Vector3d axis) =>
             FixSpeed(StoppingSpeed.GainLimited(distance, BrakingAcceleration(axis), Core.RCS.rcsPositionGain()));
 
-        private double BrakingAcceleration(Vector3d axis)
+        private double BrakingAcceleration(Vector3d axis) => ThrustAcceleration(axis) * Core.RCS.rcsAccelFactor();
+
+        private double ThrustAcceleration(Vector3d axis)
         {
             Vector3d localAxis = Vessel.ReferenceTransform.InverseTransformDirection(axis);
-            return VesselState.RCSThrustAvailable.GetMagnitude(localAxis) * Core.RCS.rcsAccelFactor() / VesselState.Mass;
+            return VesselState.RCSThrustAvailable.GetMagnitude(localAxis) / VesselState.Mass;
         }
 
         // The velocity of the point we dock to, and not of the target's CoM: the docking magnets turn the target when the port's axis misses its CoM,
@@ -218,10 +232,7 @@ namespace MuMech
                     break;
 
                 case DockingStep.MOVING_TO_START:
-                    if (zSep < safeDistance)
-                        zApproachSpeed *= -1;
-                    else
-                        zApproachSpeed = 0;
+                    zApproachSpeed = zSep < safeDistance ? -MaxSpeedForDistance(Math.Max(zSep, 0), -zAxis) : 0;
 
                     status = Localizer.Format("#MechJeb_Docking_status5",
                         zApproachSpeed.ToString("F2")); //"Moving toward the starting point at " +  + " m/s."
@@ -266,6 +277,19 @@ namespace MuMech
             Core.RCS.SetTargetWorldVelocity(targetVel + adjustment);
             MechJebModuleDebugArrows.debugVector = adjustment;
             MechJebModuleDebugArrows.debugVector2 = -Core.Target.RelativePosition;
+
+            // Inside the acquire range the magnets are a force of their own, and the ports are meant to meet.
+            bool inMagnets = Math.Abs(zSep) < acquireRange && lateralSep.magnitude < acquireRange;
+            if (stopOnContact && !inMagnets && TouchingTarget())
+            {
+                StopWithMessage("#MechJeb_Docking_contact"); //Docking autopilot stopped: the vessel touched the target.
+                return;
+            }
+
+            Vector3d velocityError = targetVel + adjustment - VesselState.OrbitalVelocity;
+            if (stuck.Update(velocityError.ToV3(), (VesselState.OrbitalVelocity - targetVel).ToV3(), ThrustAcceleration(velocityError), TimeWarp.fixedDeltaTime,
+                    Core.RCS.Saturated && !inMagnets))
+                StopWithMessage("#MechJeb_Docking_stuck"); //Docking autopilot stopped: the vessel isn't moving as commanded, and may be against the target.
         }
 
         public override void OnFixedUpdate()
@@ -274,6 +298,18 @@ namespace MuMech
             {
                 EndDocking();
                 return;
+            }
+
+            // A new target has its own port, size and axis. KSP changes it too: past 200 m from the active vessel, a port becomes its vessel.
+            if (dockingStep != DockingStep.INIT && Core.Target.Target != lastTarget)
+                dockingStep = DockingStep.INIT;
+
+            // A target out of physics range has no parts to measure.
+            Vessel targetVessel = Core.Target.Target.GetVessel();
+            if (dockingStep != DockingStep.INIT && !targetMeasured && targetVessel != null && targetVessel.loaded)
+            {
+                targetBoundingBox = targetVessel.GetBoundingBox();
+                targetMeasured    = true;
             }
 
             // Check if overrides have changed
@@ -286,6 +322,9 @@ namespace MuMech
                 safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
             else
                 safeDistance = (float)overridenSafeDistance.Val;
+
+            // A vessel has no capture, and its position is the origin of its control part, inside it. So stop where docking would start.
+            stopDistance = portTarget ? 0 : targetSize;
 
             UpdateDistance();
 
@@ -316,14 +355,18 @@ namespace MuMech
                     break;
 
                 case DockingStep.MOVING_TO_START:
-                    if (lateralSep.magnitude < dockingcorridorRadius && zSep >= targetSize)
+                    if (lateralSep.magnitude < dockingcorridorRadius && zSep >= targetSize && IsAligned())
                         dockingStep = DockingStep.DOCKING;
                     break;
 
                 case DockingStep.DOCKING:
                     if (zSep < stopDistance)
                     {
-                        EndDocking();
+                        // The speed law has run out by here, so this brakes what's left: RCS is off afterwards, and the target isn't far.
+                        if (portTarget)
+                            EndDocking();
+                        else if (Core.Target.RelativeVelocity.magnitude < stoppedSpeed)
+                            StopWithMessage("#MechJeb_Docking_stoppedShort"); //Docking autopilot stopped short of the target: choose a docking port and start it again.
                     }
                     // Added checks to make sure we're still good to dock.
                     else if (lateralSep.magnitude > dockingcorridorRadius) // far from docking axis
@@ -340,6 +383,9 @@ namespace MuMech
                     break;
             }
         }
+
+        // Whether it faces the port. Turning swings a port about the CoM, by many metres on a long vessel, so that happens before closing in.
+        private bool IsAligned() => Vector3d.Angle(Vessel.GetTransform().up, zAxis) < alignedAngle;
 
         // Where this vessel meets the target: the node of the port it's controlled from. A port's reference transform is usually the part's
         // origin, 28 cm behind the node on a Clamp-O-Tron, and KSP measures its acquire and capture ranges between the nodes.
@@ -369,10 +415,18 @@ namespace MuMech
         {
             lastTarget = Core.Target.Target;
 
+            // A port pulls the vessel in from its acquire range, so RCS has to stay on until it captures: stopping short leaves nothing to brake
+            // against the magnets, and they alone bring a 4 t vessel in at 50 cm/s. Docking ending the target ends the autopilot.
+            var port = lastTarget as ModuleDockingNode;
+            portTarget   = port != null;
+            acquireRange = port != null ? port.acquireRange : 0;
+            captureRange = port != null ? port.captureRange : 0;
+
             try
             {
                 vesselBoundingBox = Vessel.GetBoundingBox();
                 targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
+                targetMeasured    = lastTarget.GetVessel().loaded;
 
                 if (!overrideTargetSize)
                     targetSize = targetBoundingBox.size.magnitude;
@@ -383,13 +437,6 @@ namespace MuMech
                     safeDistance = vesselBoundingBox.size.magnitude + targetSize + 0.5f;
                 else
                     safeDistance = (float)overridenSafeDistance.Val;
-
-                // A port pulls the vessel in from its acquire range, so RCS has to stay on until it captures: stopping short leaves nothing to brake
-                // against the magnets, and they alone bring a 4 t vessel in at 50 cm/s. Docking ending the target ends the autopilot.
-                var port = Core.Target.Target as ModuleDockingNode;
-                stopDistance = port != null ? 0 : 0.25;
-                acquireRange = port != null ? port.acquireRange : 0;
-                captureRange = port != null ? port.captureRange : 0;
             }
             catch (Exception e)
             {
@@ -408,7 +455,7 @@ namespace MuMech
                 else
                     dockingStep = DockingStep.BACKING_UP; // Just back straight up.
             }
-            else if (lateralSep.magnitude > dockingcorridorRadius) // in front but far from docking axis
+            else if (lateralSep.magnitude > dockingcorridorRadius || !IsAligned()) // in front but far from docking axis, or facing the wrong way
             {
                 if (zSep < targetSize)
                     dockingStep = DockingStep.BACKING_UP;
@@ -417,6 +464,36 @@ namespace MuMech
             }
             else
                 dockingStep = DockingStep.DOCKING;
+        }
+
+        // Whether a part of this vessel is against the target. KSP keeps each part's contacts for as long as they last.
+        private bool TouchingTarget()
+        {
+            Vessel targetVessel = Core.Target.Target.GetVessel();
+            for (int i = 0; i < Vessel.parts.Count; i++)
+            {
+                var contacts = Vessel.parts[i].currentCollisions;
+                for (int j = 0; j < contacts.Count; j++)
+                {
+                    Collider collider = contacts.KeyAt(j);
+                    if (collider == null)
+                        continue;
+
+                    Part other = FlightGlobals.GetPartUpwardsCached(collider.gameObject);
+                    if (other != null && other.vessel == targetVessel)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void StopWithMessage(string message)
+        {
+            if (Vessel.isActiveVessel)
+                ScreenMessages.PostScreenMessage(Localizer.Format(message), 8, ScreenMessageStyle.UPPER_CENTER);
+
+            EndDocking();
         }
 
         private void EndDocking()
