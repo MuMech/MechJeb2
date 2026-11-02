@@ -95,11 +95,7 @@ namespace MuMech.UI
             psg = Settings.AscentType == AscentType.PSG;
             optimize = psg && Settings.OptimizeStageFlag;
             landed = HasVessel && Core.vessel.LandedOrSplashed;
-            if (psg)
-            {
-                Core.StageStats.RequestUpdate();
-                Core.StageStats.LiveSLT = true;
-            }
+            if (psg) Core.StageStats.RequestUpdate();
 
             if (landed) menu.ResetLaunchWithoutTarget();
             anyPlaneControl = menu._launchingWithAnyPlaneControl;

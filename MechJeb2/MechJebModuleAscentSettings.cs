@@ -311,9 +311,6 @@ namespace MuMech
             ascentMenu._lastPSGSettingsEnabled = true;
             ascentMenu._lastSettingsMenuEnabled = true;
 
-            // live slt
-            Core.StageStats.LiveSLT = true;
-
             // long stats
             MechJebModuleInfoItems infoItems = Core.GetComputerModule<MechJebModuleInfoItems>();
             infoItems.StageDisplayState = 1;

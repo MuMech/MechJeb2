@@ -17,7 +17,6 @@ namespace MuMech
         public readonly bool DVLinearThrust = true;
 
         public CelestialBody EditorBody;
-        public bool LiveSLT = true;
         public double AltSLT = 0;
         public double Mach = 0;
 
@@ -119,16 +118,21 @@ namespace MuMech
         {
             using ProfilerMarker.AutoScope auto = _newRunSimulationProfile.Auto();
 
-            CelestialBody simBody = HighLogic.LoadedSceneIsEditor ? EditorBody : Vessel.mainBody;
-
-            double staticPressureKpa = HighLogic.LoadedSceneIsEditor || !LiveSLT
-                ? simBody.atmosphere ? simBody.GetPressure(AltSLT) : 0
-                : Vessel.staticPressurekPa;
-            // kg/m³: the engines divide by the sea level density themselves
-            double atmDensity = HighLogic.LoadedSceneIsEditor || !LiveSLT
-                ? simBody.GetDensity(simBody.GetPressure(AltSLT), simBody.GetTemperature(0))
-                : Vessel.atmDensity;
-            double mach = HighLogic.LoadedSceneIsEditor ? Mach : Vessel.mach;
+            // the atmo run's conditions: the chosen body, altitude and mach in the editor, the vessel's own in flight.
+            // atmDensity is in kg/m³: the engines divide by the sea level density themselves
+            double staticPressureKpa, atmDensity, mach;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                staticPressureKpa = EditorBody.atmosphere ? EditorBody.GetPressure(AltSLT) : 0;
+                atmDensity = EditorBody.GetDensity(EditorBody.GetPressure(AltSLT), EditorBody.GetTemperature(0));
+                mach = Mach;
+            }
+            else
+            {
+                staticPressureKpa = Vessel.staticPressurekPa;
+                atmDensity = Vessel.atmDensity;
+                mach = Vessel.mach;
+            }
 
             // XXX: we do a rebuild every time in the editor because apparently I don't know the right callbacks/magic to
             // make rebuilding only on reconfiguration work.
