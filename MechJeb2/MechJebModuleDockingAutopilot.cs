@@ -67,8 +67,9 @@ namespace MuMech
         public double relativeLateral;
 
         private ITargetable lastTarget;
-        private Part referencePart;
+        private Transform referenceTransform;
         private ModuleDockingNode referencePort;
+        private bool controlledFromPort;
 
         private const float dockingcorridorRadius = 1;
         private const double alignedAngle = 5;
@@ -78,6 +79,7 @@ namespace MuMech
         private const double startCorridorSlope = 30;
         private const double leaveSpeed = 1;
         private const int maxRetries = 3;
+        private const double captureTimeLimit = 30;
         private double stopDistance;
         private bool portTarget;
         private bool targetMeasured;
@@ -87,6 +89,9 @@ namespace MuMech
         private double rearReach;
         private double sideReach;
         private int retries;
+        private double timeInAcquireRange;
+        private bool rcsWasOn;
+        private bool sasWasOn;
         private double acquireRange;
         private double captureRange;
 
@@ -151,13 +156,18 @@ namespace MuMech
             ownMeasured = false;
             targetMeasured = false;
             retries = 0;
+            timeInAcquireRange = 0;
+            rcsWasOn = Vessel.ActionGroups[KSPActionGroup.RCS];
+            sasWasOn = Vessel.ActionGroups[KSPActionGroup.SAS];
             stuck.Reset();
         }
 
         protected override void OnModuleDisabled()
         {
             Core.RCS.Users.Remove(this);
-            Core.Attitude.AttitudeDeactivate();
+            Core.Attitude.Users.Remove(this);
+            Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, rcsWasOn);
+            Vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, sasWasOn);
             dockingStep = DockingStep.OFF;
             drawBoundingBox = false;
         }
@@ -339,6 +349,12 @@ namespace MuMech
 
             UpdateDistance();
 
+            if (controlledFromPort && referencePort == null)
+            {
+                StopWithMessage("#MechJeb_Docking_controlLost"); //Docking autopilot stopped: the vessel is no longer controlled from a docking port.
+                return;
+            }
+
             // A new target has its own port, size and axis. KSP changes it too: past 200 m from the active vessel, a port becomes its vessel.
             if (dockingStep != DockingStep.INIT && Core.Target.Target != lastTarget)
             {
@@ -392,11 +408,18 @@ namespace MuMech
                     break;
 
                 case DockingStep.MOVING_TO_START:
-                    if (lateralSep.magnitude < StartCorridor() && zSep >= targetSize && IsAligned())
+                    if (lateralSep.magnitude < StartCorridor() && zSep >= targetSize && IsAligned() && !PortsDisengaging())
                         dockingStep = DockingStep.DOCKING;
                     break;
 
                 case DockingStep.DOCKING:
+                    timeInAcquireRange = zSep < acquireRange && lateralSep.magnitude < acquireRange ? timeInAcquireRange + TimeWarp.fixedDeltaTime : 0;
+                    if (timeInAcquireRange > captureTimeLimit)
+                    {
+                        StopWithMessage("#MechJeb_Docking_noCapture"); //Docking autopilot stopped: the ports are together but didn't capture.
+                        break;
+                    }
+
                     // Off the docking axis at the port, on either side of its plane: this comes first, so a vessel that's slid past doesn't count as there.
                     if (lateralSep.magnitude > dockingcorridorRadius && zSep < 1)
                         Retry();
@@ -508,7 +531,7 @@ namespace MuMech
 
             if (zSep >= 0)
             {
-                if (lateralSep.magnitude <= dockingcorridorRadius && IsAligned())
+                if (lateralSep.magnitude <= dockingcorridorRadius && IsAligned() && !PortsDisengaging())
                     dockingStep = DockingStep.DOCKING;
                 else if (zSep >= targetSize)
                     dockingStep = DockingStep.MOVING_TO_START;
@@ -543,6 +566,10 @@ namespace MuMech
         // Lateral closes with a time constant of about 3 s near the axis, so a short approach has to start closer to it to arrive inside the capture range.
         private double StartCorridor() => Math.Min(Math.Max(zSep / startCorridorSlope, minStartCorridor), dockingcorridorRadius);
 
+        // Ports that have just undocked don't capture until they've been a metre apart (minDistanceToReEngage).
+        private bool PortsDisengaging() =>
+            (lastTarget is ModuleDockingNode port && port.state.Contains("Disengage")) || (referencePort != null && referencePort.state.Contains("Disengage"));
+
         // Whether it faces the port. Turning swings a port about the CoM, by many metres on a long vessel, so that happens before closing in.
         private bool IsAligned() => Vector3d.Angle(Vessel.GetTransform().up, zAxis) < alignedAngle;
 
@@ -550,11 +577,11 @@ namespace MuMech
         // origin, 28 cm behind the node on a Clamp-O-Tron, and KSP measures its acquire and capture ranges between the nodes.
         private Vector3 DockingPoint()
         {
-            Part part = Vessel.GetReferenceTransformPart();
-            if (part != referencePart)
+            if (Vessel.ReferenceTransform != referenceTransform)
             {
-                referencePart = part;
+                referenceTransform = Vessel.ReferenceTransform;
                 referencePort = Vessel.GetReferenceDockingPort();
+                ownMeasured = false;
             }
 
             return referencePort != null ? referencePort.GetTransform().position : Vessel.GetTransform().position;
@@ -580,6 +607,19 @@ namespace MuMech
             portTarget   = port != null;
             acquireRange = port != null ? port.acquireRange : 0;
             captureRange = port != null ? port.captureRange : 0;
+            controlledFromPort = referencePort != null;
+
+            if (port != null && port.state.Contains("Disabled"))
+            {
+                StopWithMessage("#MechJeb_Docking_portClosed"); //Docking autopilot stopped: the target port is closed.
+                return;
+            }
+
+            if (port != null && referencePort != null && !MechJebModuleDockingGuidance.ArePortsCompatible(referencePort, port))
+            {
+                StopWithMessage("#MechJeb_Docking_incompatible"); //Docking autopilot stopped: the ports can't dock with each other.
+                return;
+            }
 
             MeasureShapes();
             UpdateLimits();
@@ -611,9 +651,16 @@ namespace MuMech
         private void StopWithMessage(string message)
         {
             if (Vessel.isActiveVessel)
-                ScreenMessages.PostScreenMessage(Localizer.Format(message), 8, ScreenMessageStyle.UPPER_CENTER);
+            {
+                string speed = Localizer.Format("#MechJeb_Docking_relativeSpeed", Core.Target.RelativeVelocity.magnitude.ToString("F2")); //Relative speed <<1>> m/s.
+                ScreenMessages.PostScreenMessage(Localizer.Format(message) + "\n" + speed, 8, ScreenMessageStyle.UPPER_CENTER);
+            }
 
             EndDocking();
+
+            // Something went wrong close to the target, so this hands over a vessel that's holding still, and not one left tumbling from a hit.
+            Vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
+            Vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
         }
 
         private void EndDocking()
