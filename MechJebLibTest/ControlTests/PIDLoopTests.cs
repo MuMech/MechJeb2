@@ -274,6 +274,149 @@ namespace MechJebLibTest.ControlTests
             Assert.Equal(2.05, pid.Update(1, 0), 8);
         }
 
+        /// <summary>
+        ///     The step to 0.05 would pass the limit, so the integral holds at 0.03 and the output sits at the limit, not one
+        ///     step inside it.
+        /// </summary>
+        [Fact]
+        public void ConditionalIntegrationReachesTheLimit()
+        {
+            var pid = new PIDLoop2 { Kp = 2.0, Ki = 1.0, Ts = 0.02, MinOutput = -2.04, MaxOutput = 2.04, ConditionalIntegration = true };
+
+            Assert.Equal(2.01, pid.Update(1, 0), 8);
+            Assert.Equal(2.03, pid.Update(1, 0), 8);
+
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal(2.04, pid.Update(1, 0), 8);
+                Assert.Equal(0.03, pid.ITerm, 8);
+            }
+        }
+
+        /// <summary>
+        ///     P alone is past the limit before the deadband, but not after it, so the integral runs until the output
+        ///     itself saturates.
+        /// </summary>
+        [Fact]
+        public void ConditionalIntegrationSeesTheOutputDeadband()
+        {
+            var pid = new PIDLoop2
+            {
+                Kp = 2.0, Ki = 1.0, Ts = 0.02, MinOutput = -1.6, MaxOutput = 1.6, OutputDeadband = 0.5, ConditionalIntegration = true
+            };
+
+            Assert.Equal(1.51, pid.Update(1, 0), 8);
+            Assert.Equal(1.53, pid.Update(1, 0), 8);
+            Assert.Equal(1.55, pid.Update(1, 0), 8);
+            Assert.Equal(1.57, pid.Update(1, 0), 8);
+            Assert.Equal(1.59, pid.Update(1, 0), 8);
+
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.Equal(1.6, pid.Update(1, 0), 8);
+                Assert.Equal(0.09, pid.ITerm, 8);
+            }
+        }
+
+        /// <summary>
+        ///     The step to 0.05 would pass the output limit, but MaxIntegral cuts it to 0.04, which doesn't, so it's kept.
+        /// </summary>
+        [Fact]
+        public void ConditionalIntegrationSeesTheIntegralLimits()
+        {
+            var pid = new PIDLoop2
+            {
+                Kp = 2.0, Ki = 1.0, Ts = 0.02, MinOutput = -2.045, MaxOutput = 2.045, MinIntegral = -0.04, MaxIntegral = 0.04,
+                ConditionalIntegration = true
+            };
+
+            Assert.Equal(2.01, pid.Update(1, 0), 8);
+            Assert.Equal(2.03, pid.Update(1, 0), 8);
+
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal(2.04, pid.Update(1, 0), 8);
+                Assert.Equal(0.04, pid.ITerm, 8);
+            }
+        }
+
+        /// <summary>
+        ///     Velocity steps on the PIDLoop2 that PIDControllerV2 runs for MechJebModuleRCSController.
+        /// </summary>
+        [Theory]
+        [InlineData(0.3, 1.0)] // audit item CTRL-10: 7.3 cm/s of overshoot, and still 3 cm/s off after 20 s
+        [InlineData(0.1, 1.0)] // a long saturation, the integral would pass 1
+        [InlineData(1.0, 2.0)]
+        [InlineData(3.0, 5.0)] // the integral peaks near 0.5 here, so limiting it to the output range would never act
+        public void ConditionalIntegrationVelocityStepDoesNotOvershoot(double accel, double dv)
+        {
+            (double overshoot, double after20) = RcsVelocityStep(RcsLoop(true), accel, dv);
+
+            Assert.True(overshoot < 0.005, $"overshoot {overshoot} m/s");
+            Assert.True(Abs(after20) < 0.01, $"{after20} m/s left after 20 s");
+        }
+
+        [Fact]
+        public void ConditionalIntegrationWorksThroughTheThrustFloor()
+        {
+            // proportional alone is 3 %, under the 5 % ModuleRCS needs to fire, so only the integral can remove this error
+            (_, double after20) = RcsVelocityStep(RcsLoop(true), 1.0, 0.005);
+
+            Assert.True(Abs(after20) < 0.004, $"{after20} m/s left after 20 s");
+        }
+
+        /// <summary>
+        ///     Why PIDControllerBase sets ConditionalIntegration: P alone saturates this loop for the whole step, and
+        ///     tracking lets the integral relax toward the output limit with a time constant of Ti (17 s here).  All of it
+        ///     unwinds past zero: 2.6 cm/s, against none for conditional integration.
+        /// </summary>
+        [Fact]
+        public void TrackingVelocityStepOvershoots()
+        {
+            (double overshoot, _) = RcsVelocityStep(RcsLoop(false), 3.0, 5.0);
+
+            Assert.True(overshoot > 0.01, $"overshoot {overshoot} m/s");
+        }
+
+        /// <summary>
+        ///     MechJebModuleRCSController's loop at Tf 1, set up as PIDControllerBase.Configure sets it up (Kd is 0).
+        /// </summary>
+        private static PIDLoop2 RcsLoop(bool conditionalIntegration)
+        {
+            const double TF = 1.0;
+            double kp = 0.53 / (3 * Sqrt(2) * TF * TF);
+
+            // Kp first: the Ki setter scales by the current K
+            return new PIDLoop2
+            {
+                Ts = 0.02, Kp = kp, Ki = kp / (12 * Sqrt(2) * TF), MinOutput = -1, MaxOutput = 1,
+                ConditionalIntegration = conditionalIntegration
+            };
+        }
+
+        /// <summary>
+        ///     One rigid axis, with the error in ticks of full thrust, and ModuleRCS's 5 % floor and one tick of delay on
+        ///     the output.
+        /// </summary>
+        /// <returns>the largest velocity reached past zero, and the velocity after 20 s</returns>
+        private static (double overshoot, double after20) RcsVelocityStep(PIDLoop2 pid, double accel, double dv)
+        {
+            const int TICKS = 1000;
+
+            double v = dv, pending = 0, overshoot = 0;
+
+            for (int i = 0; i < TICKS; i++)
+            {
+                double applied = Abs(pending) < 0.05 ? 0 : pending;
+                pending = pid.Update(v / (accel * pid.Ts), 0);
+
+                v -= applied * accel * pid.Ts;
+                overshoot = Max(overshoot, -v);
+            }
+
+            return (overshoot, v);
+        }
+
         [Fact]
         public void IntegralLimits()
         {

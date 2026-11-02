@@ -64,11 +64,7 @@ namespace MechJebLib.Control
         public double MinIntegral          { get; set; } = double.MinValue;
         public double MaxIntegral          { get; set; } = double.MaxValue;
         public bool   Clegg                { get; set; } // not recommended if integrator required to zero the setpoint
-
-        // Drop an integration step that would leave the output past a limit, instead of tracking the saturated output.
-        // Tracking unwinds with a time constant of Ti (or sqrt(Ti*Td)), which lets a slow integral wind up while P alone
-        // saturates the output.
-        public bool ConditionalIntegration { get; set; }
+        public bool ConditionalIntegration { get; set; } // Drop the integration step whenever the output saturates
 
         public double Update(double r, double y)
         {
@@ -96,11 +92,10 @@ namespace MechJebLib.Control
             if (Clegg && ei * ITerm < 0)
                 ITerm = 0;
 
-            // Trapezoidal/Tustin/Bilinear integrator term.  A non-finite step (Ti == 0) is cleared below.
-            double step = 0.5 * KScale * Ts * (ei + _ei1) / Ti;
-            ITerm = ConditionalIntegration && IsFinite(step)
-                ? AntiWindup.Integrate(ITerm, PTerm + DTerm, step, MinOutput, MaxOutput)
-                : ITerm + step;
+            double iTerm1 = ITerm;
+
+            // Trapezoidal/Tustin/Bilinear integrator term
+            ITerm += 0.5 * KScale * Ts * (ei + _ei1) / Ti;
 
             // fix any NaNs saved into internal state (also fixes Ti == 0 case)
             if (!IsFinite(ITerm))
@@ -113,9 +108,16 @@ namespace MechJebLib.Control
             double z = ApplyDeadband(PTerm + ITerm + DTerm, OutputDeadband);
             double u = Clamp(z, MinOutput, MaxOutput);
 
-            // tracking anti-windup
-            if (!ConditionalIntegration && Ti != 0)
+            if (ConditionalIntegration)
             {
+                // conditional-integration anti-windup: a step that leaves the output saturated is dropped
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (u != z)
+                    ITerm = iTerm1;
+            }
+            else if (Ti != 0)
+            {
+                // tracking anti-windup
                 double tr = Td == 0 ? Ti : Sqrt(Ti * Td);
                 ITerm += Ts / tr * (u - z);
             }
