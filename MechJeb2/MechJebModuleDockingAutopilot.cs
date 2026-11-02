@@ -357,7 +357,7 @@ namespace MuMech
 
         private void UpdateDistance()
         {
-            Vector3d separation = DockingPoint() - Core.Target.Position;
+            Vector3d separation = DockingPoint() - Core.Target.PositionD;
             zAxis = Core.Target.DockingAxis.normalized;
             zSep = -Vector3d.Dot(separation, zAxis); //positive if we are in front of the target, negative if behind
             lateralSep = Vector3d.Exclude(zAxis, separation);
