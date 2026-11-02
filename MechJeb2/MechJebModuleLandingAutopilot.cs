@@ -130,7 +130,7 @@ namespace MuMech
             Vessel.RemoveAllManeuverNodes(); // For the benefit of the landing predictions module
 
             _deployedGears = false;
-            _stageToDrop = JettisonBeforeEntry && MainBody.atmosphere;
+            _stageToDrop = JettisonBeforeEntry && MainBody.atmosphere && NextStageDropsParts();
 
             // Create a new parachute plan
             _parachutePlan = new ParachutePlan(this);
@@ -150,7 +150,7 @@ namespace MuMech
             Users.Add(controller);
 
             _deployedGears = false;
-            _stageToDrop = JettisonBeforeEntry && MainBody.atmosphere;
+            _stageToDrop = JettisonBeforeEntry && MainBody.atmosphere && NextStageDropsParts();
 
             // Create a new parachute plan
             _parachutePlan = new ParachutePlan(this);
@@ -357,6 +357,20 @@ namespace MuMech
             {
                 _parachutePlan.AddResult(Prediction);
             }
+        }
+
+        // The next stage could be anything: firing one that separates nothing could open the parachutes above the atmosphere.
+        private bool NextStageDropsParts()
+        {
+            int stage = Vessel.currentStage - 1;
+            bool drops = false, stays = false;
+            foreach (Part p in Vessel.parts)
+            {
+                if (p.IsDecoupledInStage(stage)) drops = true;
+                else if (p.isControlSource != Vessel.ControlLevel.NONE) stays = true;
+            }
+
+            return drops && stays;
         }
 
         private void JettisonIfDue()
