@@ -29,10 +29,20 @@ namespace MechJebLib.PSG
         // with a coast, in particular the burn ahead of a coast-during (burn-coast-burn) coast
         public const double CLAMPED_MINTHROTTLE = 0.05;
 
+        // atmospheric (drag and back-pressure) dynamics instead of vacuum dynamics
+        private readonly bool _atmosphere;
+
+        // ambient pressure relative to the launch site, assuming pressure scales with density
+        private readonly double _invDensityR0;
+
         public AscentProblem(Optimizer optimizer)
         {
             _optimizer = optimizer;
             _vars = new VariableProxy(_optimizer.Problem, _optimizer.Phases, _optimizer.Terminal, _optimizer.N);
+
+            Problem problem = _optimizer.Problem;
+            _atmosphere = problem.H0 > 0 && problem.Rho0CdAref > 0;
+            _invDensityR0 = problem.H0 > 0 ? 1.0 / NormalizedDensity(problem.R0.magnitude, problem.RBody, problem.H0).M : 0;
         }
 
         public readonly struct ConstraintArgs
@@ -434,19 +444,9 @@ namespace MechJebLib.PSG
         private int DynamicConstraints(double[] f, alglib.sparsematrix j, int ci, int p)
         {
             PhaseProxy thisPhase = _vars[p];
+            Phase phase = _optimizer.Phases[p];
 
-            double mdot = _optimizer.Phases[p].Mdot;
-            double vacThrust = _optimizer.Phases[p].VacThrust;
-            double vexVacuum = _optimizer.Phases[p].VexVacuum;
-            double vexCurrent = _optimizer.Phases[p].VexCurrent;
-
-            double rho0CdAref = _optimizer.Problem.Rho0CdAref;
-            double rBody = _optimizer.Problem.RBody;
-            double h0 = _optimizer.Problem.H0;
-            V3 w = _optimizer.Problem.W;
-
-            // ambient pressure relative to the launch site, assuming pressure scales with density
-            double invDensityR0 = h0 > 0 ? 1.0 / NormalizedDensity(_optimizer.Problem.R0.magnitude, rBody, h0).M : 0;
+            double mdot = phase.Mdot;
 
             // dynamical constraints per phase
             for (int n = 0; n < _optimizer.N; n++)
@@ -570,10 +570,7 @@ namespace MechJebLib.PSG
                     BtIdx = thisPhase.BtIdx()
                 };
 
-                if (h0 > 0 && rho0CdAref > 0)
-                    ci = ApplyGaussLegendreDynamics(f, j, ci, VDotAtmo, point, indexes, _optimizer.N);
-                else
-                    ci = ApplyGaussLegendreDynamics(f, j, ci, VDotVacuum, point, indexes, _optimizer.N);
+                ci = ApplyGaussLegendreDynamics(f, j, ci, PointVDot, point, indexes, _optimizer.N);
 
                 if (!_optimizer.Phases[p].Coast)
                 {
@@ -590,24 +587,34 @@ namespace MechJebLib.PSG
 
             return ci;
 
-            DualV3 VDotVacuum(ref GaussLegendreDualPoint d)
-            {
-                Dual r3 = d.R.sqrMagnitude * d.R.magnitude;
-                return -d.R / r3 + vacThrust / d.M * d.U.forward * d.T;
-            }
+            DualV3 PointVDot(ref GaussLegendreDualPoint d) => VDot(phase, d.R, d.V, d.M, d.U.forward, d.T);
+        }
 
-            DualV3 VDotAtmo(ref GaussLegendreDualPoint d)
-            {
-                Dual r = d.R.magnitude;
-                Dual r3 = d.R.sqrMagnitude * r;
-                DualV3 vr = d.V - DualV3.Cross(w, d.R);
-                Dual normAtmosphere = NormalizedDensity(r, rBody, h0);
-                Dual normAtmosphere2 = normAtmosphere * invDensityR0;
-                DualV3 drag = 0.5 * rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
-                //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
-                Dual thrust = mdot * (vexCurrent + (vexVacuum - vexCurrent) * (1.0 - normAtmosphere2));
-                return -d.R / r3 + thrust / d.M * d.U.forward * d.T - drag / d.M;
-            }
+        // Vehicle acceleration (gravity + thrust - drag) in the given phase, with u the thrust direction and t the throttle.
+        // Shared with the SolutionBuilder, which evaluates it with constant duals for the Hermite derivatives so that the
+        // dense output uses exactly the dynamics that the NLP converged on.
+        public DualV3 VDot(Phase phase, DualV3 r, DualV3 v, Dual m, DualV3 u, Dual t) =>
+            _atmosphere ? VDotAtmo(phase, r, v, m, u, t) : VDotVacuum(phase, r, m, u, t);
+
+        private static DualV3 VDotVacuum(Phase phase, DualV3 r, Dual m, DualV3 u, Dual t)
+        {
+            Dual r3 = r.sqrMagnitude * r.magnitude;
+            return -r / r3 + phase.VacThrust / m * u * t;
+        }
+
+        private DualV3 VDotAtmo(Phase phase, DualV3 r, DualV3 v, Dual m, DualV3 u, Dual t)
+        {
+            Problem problem = _optimizer.Problem;
+
+            Dual rm = r.magnitude;
+            Dual r3 = r.sqrMagnitude * rm;
+            DualV3 vr = v - DualV3.Cross(problem.W, r);
+            Dual normAtmosphere = NormalizedDensity(rm, problem.RBody, problem.H0);
+            Dual normAtmosphere2 = normAtmosphere * _invDensityR0;
+            DualV3 drag = 0.5 * problem.Rho0CdAref * normAtmosphere * vr.sqrMagnitude * vr.normalized;
+            //T = ṁ [v_e_sl + (v_e_vac - v_e_sl)(1 - p_amb/p₀)]
+            Dual thrust = phase.Mdot * (phase.VexCurrent + (phase.VexVacuum - phase.VexCurrent) * (1.0 - normAtmosphere2));
+            return -r / r3 + thrust / m * u * t - drag / m;
         }
 
         private int ObjectiveFunction(double[] f, alglib.sparsematrix j, int ci)

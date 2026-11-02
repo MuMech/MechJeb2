@@ -526,7 +526,7 @@ namespace MechJebLib.PSG
             PrintDebug($"PrimalFeasibility: {PrimalFeasibility}");
 
             _vars.WrapVars(x);
-            Solution solution = new SolutionBuilder(N, _vars, Problem, Phases).Build();
+            Solution solution = new SolutionBuilder(N, _vars, Problem, Phases, _ascentProblem).Build();
 
             return solution;
         }
