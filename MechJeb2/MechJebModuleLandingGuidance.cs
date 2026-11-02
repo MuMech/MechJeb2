@@ -13,7 +13,13 @@ namespace MuMech
     public class MechJebModuleLandingGuidance : DisplayModule
     {
         private const string KSC_PAD_SITE = "KSC Pad";
-        private const string KSC_PAD_FACILITY = "LaunchPad";
+
+        // the sites of LandingSites.cfg that are KSC buildings: the game's facility, and the spawn point a vessel stands on
+        private static readonly (string Site, string Facility, string SpawnPoint)[] _kscSites =
+        {
+            (KSC_PAD_SITE, "LaunchPad", "LaunchPad"),
+            ("VAB", "VAB", null)
+        };
 
         private MechJebModuleLandingPredictions _predictor;
         public static List<LandingSite> LandingSites;
@@ -37,34 +43,51 @@ namespace MuMech
                 InitLandingSitesList();
 
             if (LandingSites != null && HighLogic.LoadedSceneIsFlight)
-                UseRealKscPad();
+                UseRealKscSites();
         }
 
-        // LandingSites.cfg holds the stock position. The KSC keeps its size on a rescaled planet, so the pad's latitude and
-        // longitude change with the scale, and KSCSwitcher moves it altogether. The game knows where its pad is.
-        private static void UseRealKscPad()
+        // LandingSites.cfg holds stock positions. The KSC keeps its size on a rescaled planet, so the latitude and longitude
+        // of its buildings change with the scale, and KSCSwitcher moves them altogether. The game knows where they are.
+        private static void UseRealKscSites()
         {
-            PSystemSetup.SpaceCenterFacility facility = PSystemSetup.Instance.GetSpaceCenterFacility(KSC_PAD_FACILITY);
-            PSystemSetup.SpaceCenterFacility.SpawnPoint pad = facility?.GetSpawnPoint(KSC_PAD_FACILITY);
-            int index = LandingSites.FindIndex(x => x.Name == KSC_PAD_SITE);
-
-            if (pad == null || facility.hostBody == null || index < 0)
+            if (LandingSites == null)
                 return;
 
-            double latitude = pad.latitude, longitude = pad.longitude;
-
-            // The game sets the spawn point when a scene goes through the KSC. Loading straight into a flight doesn't, and
-            // doesn't build the pad's model either, so take the facility, a few metres from the spawn point. Its float
-            // position is only precise near the origin, so only for a vessel around the same body.
-            if (!pad.latlonaltSet)
+            foreach ((string site, string facilityName, string spawnPointName) in _kscSites)
             {
-                if (facility.facilityTransform == null || facility.hostBody != FlightGlobals.currentMainBody)
-                    return;
+                PSystemSetup.SpaceCenterFacility facility = PSystemSetup.Instance.GetSpaceCenterFacility(facilityName);
+                int index = LandingSites.FindIndex(x => x.Name == site);
 
-                facility.hostBody.GetLatLonAlt(facility.facilityTransform.position, out latitude, out longitude, out _);
+                if (facility?.hostBody == null || index < 0 || !TryGetPosition(facility, spawnPointName, out double latitude, out double longitude))
+                    continue;
+
+                LandingSites[index] = new LandingSite { Name = site, Latitude = latitude, Longitude = longitude, Body = facility.hostBody };
+            }
+        }
+
+        private static bool TryGetPosition(PSystemSetup.SpaceCenterFacility facility, string spawnPointName, out double latitude,
+            out double longitude)
+        {
+            PSystemSetup.SpaceCenterFacility.SpawnPoint spawnPoint = spawnPointName != null ? facility.GetSpawnPoint(spawnPointName) : null;
+
+            if (spawnPoint != null && spawnPoint.latlonaltSet)
+            {
+                latitude  = spawnPoint.latitude;
+                longitude = spawnPoint.longitude;
+                return true;
             }
 
-            LandingSites[index] = new LandingSite { Name = KSC_PAD_SITE, Latitude = latitude, Longitude = longitude, Body = facility.hostBody };
+            // The game sets the spawn point when a scene goes through the KSC. Loading straight into a flight doesn't, and
+            // doesn't build the pad's model either, so take the facility, a few metres from the pad's spawn point. Its
+            // float position is only precise near the origin, so only for a vessel around the same body.
+            if (facility.facilityTransform == null || facility.hostBody != FlightGlobals.currentMainBody)
+            {
+                latitude = longitude = 0;
+                return false;
+            }
+
+            facility.hostBody.GetLatLonAlt(facility.facilityTransform.position, out latitude, out longitude, out _);
+            return true;
         }
 
         internal void MoveByMeter(ref EditableAngle angle, double distance, double alt)
@@ -75,7 +98,7 @@ namespace MuMech
 
         public void SetAndLandTargetKSC()
         {
-            UseRealKscPad();
+            UseRealKscSites();
             int index = LandingSites.FindIndex(x => x.Name == KSC_PAD_SITE && x.Body == MainBody);
             if (index < 0)
             {
