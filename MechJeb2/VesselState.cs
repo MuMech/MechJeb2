@@ -1284,7 +1284,7 @@ namespace MuMech
 
                 _atmP0 = (float)(vessel.staticPressurekPa * PhysicsGlobals.KpaToAtmospheres);
                 float alt1 = (float)(vessel.altitude + TimeWarp.fixedDeltaTime * vessel.verticalSpeed);
-                _atmP1 = (float)(FlightGlobals.getStaticPressure(alt1) * PhysicsGlobals.KpaToAtmospheres);
+                _atmP1 = (float)(FlightGlobals.getStaticPressure(alt1, vessel.mainBody) * PhysicsGlobals.KpaToAtmospheres);
             }
 
             public void CheckUllageStatus(ModuleEngines e)
@@ -1592,11 +1592,18 @@ namespace MuMech
                 float alt1 = (float)(vessel.altitude + dT * vessel.verticalSpeed);
 
                 double staticPressure1 = vessel.staticPressurekPa;
-                double staticPressure2 = FlightGlobals.getStaticPressure(alt1);
+                double staticPressure2 = FlightGlobals.getStaticPressure(alt1, vessel.mainBody);
 
                 // As with thrust, here too we should get the static pressure at the intake, not at the center of mass.
-                double atmDensity0 = FlightGlobals.getAtmDensity(staticPressure1, vessel.externalTemperature);
-                double atmDensity1 = FlightGlobals.getAtmDensity(staticPressure2, FlightGlobals.getExternalTemperature(alt1));
+                double atmDensity0 = FlightGlobals.getAtmDensity(staticPressure1, vessel.atmosphericTemperature, vessel.mainBody);
+
+                // match vessel.atmosphericTemperature, which the FlightIntegrator computes as GetFullTemperature(altitude, offset).  the
+                // latitude/sun offset barely changes over one timestep, so reuse the integrator's.  (don't use GetFullTemperature(Vector3d),
+                // in stock it returns only the offset, not the temperature.)
+                FlightIntegrator fi = vessel.FindVesselModuleImplementing<FlightIntegrator>();
+                double tempOffset = fi != null ? fi.atmosphereTemperatureOffset : 0;
+                double temperature1 = vessel.mainBody.atmosphere ? vessel.mainBody.GetFullTemperature(alt1, tempOffset) : 0;
+                double atmDensity1 = FlightGlobals.getAtmDensity(staticPressure2, temperature1, vessel.mainBody);
 
                 double v0SpeedOfSound = vessel.mainBody.GetSpeedOfSound(staticPressure1, atmDensity0);
                 double v1SpeedOfSound = vessel.mainBody.GetSpeedOfSound(staticPressure2, atmDensity1);
