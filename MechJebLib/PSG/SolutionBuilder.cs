@@ -73,6 +73,12 @@ namespace MechJebLib.PSG
 
             double ti = 0;
 
+            // scratch buffers, CubicHermiteVecNode.Rent copies out of them so they can be reused for every node
+            using var y0 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            using var dy0 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            using var y1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+            using var dy1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
+
             for (int p = 0; p < _phases.Count; p++)
             {
                 PhaseProxy thisPhase = _vars[p];
@@ -87,7 +93,7 @@ namespace MechJebLib.PSG
                     double t1 = ti + (n + _tau[1]) * h;
                     double t2 = ti + (n + _tau[2]) * h;
                     double t3 = ti + (n + 1) * h;
-                    (Vec y0, Vec dy0, Vec y1, Vec dy1) = InterpolantValues(n, h, p);
+                    InterpolantValues(n, h, p, y0, dy0, y1, dy1);
                     interpolant.Append(CubicHermiteVecNode.Rent(t1, t2 - t1, y0, dy0, y1, dy1), t0, t3);
                 }
 
@@ -101,17 +107,12 @@ namespace MechJebLib.PSG
             return solution;
         }
 
-        private (Vec y0, Vec dy0, Vec y1, Vec dy1) InterpolantValues(int n, double h, int p)
+        private void InterpolantValues(int n, double h, int p, Vec y0, Vec dy0, Vec y1, Vec dy1)
         {
             Phase phase = _phases[p];
             PhaseProxy thisPhase = _vars[p];
 
             int k = 3 * n;
-
-            var y0 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-            var dy0 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-            var y1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
-            var dy1 = Vec.Rent(InterpolantLayout.INTERPOLANT_LAYOUT_LEN);
 
             var y0Layout = new InterpolantLayout { R = thisPhase.R[k + 1], V = thisPhase.V[k + 1], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k + 1] };
             var y1Layout = new InterpolantLayout { R = thisPhase.R[k + 2], V = thisPhase.V[k + 2], M = phase.Coast ? thisPhase.M.First : thisPhase.M[k + 2] };
@@ -187,8 +188,6 @@ namespace MechJebLib.PSG
             dy0Layout.CopyTo(dy0);
             y1Layout.CopyTo(y1);
             dy1Layout.CopyTo(dy1);
-
-            return (y0, dy0, y1, dy1);
         }
 
         //TODO: this duplicates code with AscentProblem
