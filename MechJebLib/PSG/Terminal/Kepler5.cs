@@ -18,11 +18,14 @@ namespace MechJebLib.PSG.Terminal
         private readonly double _lanT;
         private readonly double _argpT;
         private readonly V3 _hT;
-        private readonly V3 _eT;
+        private readonly V3 _pT;
+        private readonly V3 _qT;
+        private readonly double _epT;
+        private readonly double _eqT;
 
         public Kepler5(double smaT, double eccT, double incT, double lanT, double argpT)
         {
-            NumConstraints = 6;
+            NumConstraints = 5;
             _smaT = smaT;
             _eccT = eccT;
             _incT = incT;
@@ -30,7 +33,11 @@ namespace MechJebLib.PSG.Terminal
             _argpT = argpT;
 
             _hT = Astro.HvecFromKeplerian(1.0, _smaT, _eccT, Abs(_incT), _lanT);
-            _eT = Astro.EvecFromKeplerian(_eccT, Abs(_incT), _lanT, _argpT);
+            V3 eT = Astro.EvecFromKeplerian(_eccT, Abs(_incT), _lanT, _argpT);
+
+            (_pT, _qT) = _hT.nullspace;
+            _epT = V3.Dot(eT, _pT);
+            _eqT = V3.Dot(eT, _qT);
         }
 
         public ITerminal Rescale(Scale scale)  => new Kepler5(_smaT / scale.LengthScale, _eccT, _incT, _lanT, _argpT);
@@ -42,19 +49,27 @@ namespace MechJebLib.PSG.Terminal
         public void Constraints(double[] x, (int, int, int) ri, (int, int, int) vi, double[] f, alglib.sparsematrix j, ref int ci)
         {
             V3 hT = _hT;
-            V3 eT = _eT;
+            V3 pT = _pT;
+            V3 qT = _qT;
+            double epT = _epT;
+            double eqT = _eqT;
 
             var rf = V3.CopyFromIndices(x, ri);
             var vf = V3.CopyFromIndices(x, vi);
 
             ci = ApplyVectorConstraintV3(f, j, ci, AngularMomentumConstraint, new[] { rf, vf }, new[] { ri, vi });
-            ci = ApplyVectorConstraintV3(f, j, ci, EccVecConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = ApplyScalarConstraintV3(f, j, ci, EccVecPConstraint, new[] { rf, vf }, new[] { ri, vi });
+            ci = ApplyScalarConstraintV3(f, j, ci, EccVecQConstraint, new[] { rf, vf }, new[] { ri, vi });
 
             return;
 
             DualV3 AngularMomentumConstraint(DualV3[] p) => DualV3.Cross(p[0], p[1]) - hT;
 
-            DualV3 EccVecConstraint(DualV3[] p) => DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized - eT;
+            Dual EccVecPConstraint(DualV3[] p) => DualV3.Dot(EccVec(p), pT) - epT;
+
+            Dual EccVecQConstraint(DualV3[] p) => DualV3.Dot(EccVec(p), qT) - eqT;
+
+            static DualV3 EccVec(DualV3[] p) => DualV3.Cross(p[1], DualV3.Cross(p[0], p[1])) - p[0].normalized;
         }
 
         /* doing FPA attachment on Kepler5 doesn't work since you wind up with a very different argp */
