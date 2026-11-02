@@ -422,7 +422,7 @@ namespace MuMech
         {
             if (Core.Target.Target != null && VesselState.AltitudeTrue < 1000.0)
             {
-                return GuiUtils.TimeToDHMS(GuiUtils.FromToETA(Vessel.CoM, Core.Target.Transform.position));
+                return GuiUtils.TimeToDHMS(GuiUtils.FromToETA(Vessel.CoM, Core.Target.Position));
             }
 
             if (!Core.Target.NormalTargetExists) return "N/A";
