@@ -619,8 +619,8 @@ namespace MuMech
 
             double atmosphericPressure = FlightGlobals.getStaticPressure(AltitudeASL, Vessel.mainBody);
             //if (atmosphericPressure < vessel.mainBody.atmosphereMultiplier * 1e-6) atmosphericPressure = 0;
-            double temperature = FlightGlobals.getExternalTemperature(AltitudeASL);
-            AtmosphericDensity = FlightGlobals.getAtmDensity(atmosphericPressure, temperature);
+            double temperature = FlightGlobals.getExternalTemperature(AltitudeASL, Vessel.mainBody);
+            AtmosphericDensity = FlightGlobals.getAtmDensity(atmosphericPressure, temperature, Vessel.mainBody);
             AtmosphericDensityInGrams = AtmosphericDensity * 1000;
 
             DynamicPressure = GetDynamicPressure();

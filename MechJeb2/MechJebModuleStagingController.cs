@@ -183,7 +183,7 @@ namespace MuMech
 
         protected override void OnModuleDisabled() => AutostagingOnce = false;
 
-        internal readonly string _sFairingMinDynamicPressure = $"  {CachedLocalizer.Instance.MechJebAscentLabel39} <";
+        internal readonly string _sFairingMaxDynamicPressure = $"  {CachedLocalizer.Instance.MechJebAscentLabel39} <";
         internal readonly string _sFairingMinAltitude = $"  {CachedLocalizer.Instance.MechJebAscentLabel40} >";
         internal readonly string _sFairingMaxAerothermalFlux = $"  {CachedLocalizer.Instance.MechJebAscentLabel41} <";
 

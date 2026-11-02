@@ -151,7 +151,7 @@ namespace MuMech.UI
             ClampAutostageThrust(w, box, s);
 
             KodeWindow.Label(box, "#MechJeb_Ascent_label38"); //"Stage fairings when:"
-            Field(w, box, s._sFairingMinDynamicPressure, s.FairingMaxDynamicPressure, "kPa", 50);
+            Field(w, box, s._sFairingMaxDynamicPressure, s.FairingMaxDynamicPressure, "kPa", 50);
             Field(w, box, s._sFairingMinAltitude, s.FairingMinAltitude, "km", 50);
             Field(w, box, s._sFairingMaxAerothermalFlux, s.FairingMaxAerothermalFlux, "W/m²", 50);
 
