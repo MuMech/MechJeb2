@@ -101,9 +101,6 @@ namespace MuMech
 
         private readonly List<Vector3d> routeLine = new List<Vector3d>();
 
-        public Box3d vesselBoundingBox;
-        public Box3d targetBoundingBox;
-
         public MechJebModuleDockingAutopilot(MechJebCore core)
             : base(core)
         {
@@ -582,16 +579,6 @@ namespace MuMech
             portTarget   = port != null;
             acquireRange = port != null ? port.acquireRange : 0;
             captureRange = port != null ? port.captureRange : 0;
-
-            try
-            {
-                vesselBoundingBox = Vessel.GetBoundingBox();
-                targetBoundingBox = lastTarget.GetVessel().GetBoundingBox();
-            }
-            catch (Exception e)
-            {
-                Print(e);
-            }
 
             MeasureShapes();
             UpdateLimits();
