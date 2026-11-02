@@ -52,14 +52,14 @@ namespace MuMech.UI
             Refresh();
         }
 
-        // modern layout: the on/off options as chips that show their state, the display set as one choice
+        // modern layout: the on/off options as switches side by side, the display set as one choice
         void ModernToolbar(UIObject parent)
         {
             KodeWindow.Header(parent, "#MechJeb_InfoItems_label1"); //"Stage stats"
-            Layout chips = KodeWindow.FlowWrap(parent, 4);
-            Chip(chips, "s", () => h.TimeSeconds, h.ToggleTimeSeconds);
-            Chip(chips, CachedLocalizer.Instance.MechJebInfoItemsShowEmpty, () => h.ShowEmpty, h.ToggleShowEmpty);
-            Chip(chips, "RCS", () => h.ShowRcs, h.ToggleRcs);
+            Layout switches = KodeWindow.FlowWrap(parent, 10);
+            Switch(switches, "#MechJeb_InfoItems_timeSeconds", () => h.TimeSeconds, h.ToggleTimeSeconds); //"Seconds"
+            Switch(switches, "#MechJeb_InfoItems_hideEmpty", () => !h.ShowEmpty, h.ToggleShowEmpty);   //"Hide 0"
+            Switch(switches, "#MechJeb_InfoItems_rcs", () => h.ShowRcs, h.ToggleRcs);                  //"RCS"
             w.Segmented(parent, MechJebStageStatsHelper.DisplayStateNames, () => h.DisplayState, i =>
             {
                 // the helper only cycles: step to the chosen set
@@ -69,8 +69,8 @@ namespace MuMech.UI
             if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
         }
 
-        void Chip(UIObject parent, string text, System.Func<bool> get, System.Action toggle) =>
-            w.Chip(parent, text, get, v =>
+        void Switch(UIObject parent, string text, System.Func<bool> get, System.Action toggle) =>
+            w.SwitchRow(parent, text, get, v =>
             {
                 if (v != get()) toggle();
                 Refresh();
@@ -84,7 +84,7 @@ namespace MuMech.UI
             ToolbarButton(bar, () => h.ShowEmpty ? CachedLocalizer.Instance.MechJebInfoItemsShowEmpty : CachedLocalizer.Instance.MechJebInfoItemsHideEmpty,
                 h.ToggleShowEmpty);
             ToolbarButton(bar, () => MechJebStageStatsHelper.DisplayStateNames[h.DisplayState], h.CycleDisplayState);
-            ToolbarButton(bar, () => h.ShowRcs ? "RCS" : "Engine", h.ToggleRcs);
+            ToolbarButton(bar, () => h.ShowRcs ? CachedLocalizer.Instance.MechJebInfoItemsRcs : CachedLocalizer.Instance.MechJebInfoItemsEngine, h.ToggleRcs);
             if (HighLogic.LoadedSceneIsEditor) EditorEnvironment(parent);
         }
 
