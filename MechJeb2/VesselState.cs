@@ -57,6 +57,9 @@ namespace MuMech
 
         private readonly List<ModuleEngines> _engines = new List<ModuleEngines>();
         private readonly List<ModuleGimbal> _gimbals = new List<ModuleGimbal>();
+        private readonly Vector6 _torqueWeightedExponentialResponseDelay6 = new Vector6();
+        private readonly Vector6 _torqueWeightedLinearResponseDelay6 = new Vector6();
+        private readonly Vector6 _torqueReactionSpeed6 = new Vector6();
         private readonly IntakeInfo _iinfo = new IntakeInfo();
         public readonly List<EngineWrapper> EngineWrappers = new List<EngineWrapper>();
 
@@ -731,8 +734,10 @@ namespace MuMech
 
             foreach (Part p in Vessel.parts)
             {
-                foreach (PartModule m in p.Modules)
+                PartModuleList rcsModules = p.Modules;
+                for (int mi = 0; mi < rcsModules.Count; mi++)
                 {
+                    PartModule m = rcsModules[mi];
                     var rcs = m as ModuleRCS;
 
                     if (rcs == null)
@@ -840,9 +845,12 @@ namespace MuMech
 
             TorqueAvailable = Vector3d.zero;
 
-            var torqueWeightedExponentialResponseDelay6 = new Vector6();
-            var torqueWeightedLinearResponseDelay6 = new Vector6();
-            var torqueReactionSpeed6 = new Vector6(); // FIXME: probably buggy + remove.
+            Vector6 torqueWeightedExponentialResponseDelay6 = _torqueWeightedExponentialResponseDelay6;
+            Vector6 torqueWeightedLinearResponseDelay6 = _torqueWeightedLinearResponseDelay6;
+            Vector6 torqueReactionSpeed6 = _torqueReactionSpeed6; // FIXME: probably buggy + remove.
+            torqueWeightedExponentialResponseDelay6.Reset();
+            torqueWeightedLinearResponseDelay6.Reset();
+            torqueReactionSpeed6.Reset();
 
             TorqueReactionWheel.Reset();
             TorqueControlSurface.Reset();
@@ -912,8 +920,10 @@ namespace MuMech
                 _engines.Clear();
                 _gimbals.Clear();
 
-                foreach (PartModule pm in p.Modules)
+                PartModuleList modules = p.Modules;
+                for (int mi = 0; mi < modules.Count; mi++)
                 {
+                    PartModule pm = modules[mi];
                     if (!pm.isEnabled)
                         continue;
 
