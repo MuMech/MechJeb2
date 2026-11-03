@@ -684,6 +684,10 @@ namespace MuMech
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return "Inf";
 
+            // from a thousand years, years with an SI prefix (ISO 80000-3's "a"): "398.6 Ma", not "398597826y 072d 00h 06m 54s"
+            double years = seconds / KSPUtil.dateTimeFormatter.Year;
+            if (Math.Abs(years) >= 1000) return years.ToSI() + "a";
+
             string ret = "";
             bool showSecondsDecimals = decimalPlaces > 0;
 

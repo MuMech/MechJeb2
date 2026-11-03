@@ -106,6 +106,9 @@ namespace KodeKit
         public CharText AppendDHMS(double seconds, int decimalPlaces, int hoursPerDay, int daysPerYear)
         {
             if (double.IsInfinity(seconds) || double.IsNaN(seconds)) return Append("Inf");
+            // GuiUtils.TimeToDHMS: from a thousand years, years with an SI prefix ("398.6 Ma")
+            double years = seconds / ((double)hoursPerDay * 3600 * daysPerYear);
+            if (Math.Abs(years) >= 1000) return AppendSI(years).Append('a');
             int start = len;
             if (seconds < 0)
             {
