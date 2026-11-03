@@ -475,6 +475,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(4, false).ShouldEqual(0);
             solution.IndexForKSPStage(3, false).ShouldEqual(1);
             solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+            solution.CoastFollows(0).ShouldBeFalse();
+            solution.CoastFollows(solution.EndTime(0)).ShouldBeFalse();
 
             smaf.ShouldEqual(8616511.1913318466, 1e-6);
             eccf.ShouldEqual(0.23913520746130185, 1e-6);
@@ -1039,8 +1041,8 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
-            // the coast picks up the PreciseShutdown flag, so this is the coast's KSP stage, not the booster's
-            solution.OptimizeKSPStage().ShouldEqual(3);
+            // the booster before the coast gets the precise shutdown, not the coast
+            solution.OptimizeKSPStage().ShouldEqual(4);
             solution.TerminalKSPStage().ShouldEqual(3);
             solution.TerminalMJPhase().ShouldEqual(3);
             solution.CoastKSPStage().ShouldEqual(3);

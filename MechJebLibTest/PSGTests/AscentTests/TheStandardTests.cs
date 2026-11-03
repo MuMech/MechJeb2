@@ -66,6 +66,12 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.IndexForKSPStage(0, false).ShouldEqual(3);
             solution.IndexForKSPStage(1, true).ShouldEqual(2);
 
+            // burn-burn-coast-burn: only the burn right before the coast (and the coast itself) are followed by the coast
+            solution.CoastFollows((solution.StartTime(0) + solution.EndTime(0)) / 2).ShouldBeFalse();
+            solution.CoastFollows((solution.StartTime(1) + solution.EndTime(1)) / 2).ShouldBeTrue();
+            solution.CoastFollows((solution.StartTime(2) + solution.EndTime(2)) / 2).ShouldBeTrue();
+            solution.CoastFollows((solution.StartTime(3) + solution.EndTime(3)) / 2).ShouldBeFalse();
+
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =

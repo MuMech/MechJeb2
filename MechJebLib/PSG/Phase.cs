@@ -45,7 +45,7 @@ namespace MechJebLib.PSG
         public double MinThrottle;
 
         // assigned in the solution for a stage which needs a precise shutdown.
-        // (AllowShutdown stages which the optimizer burns to completion do not get this tag)
+        // (AllowShutdown stages which the optimizer burns to completion do not get this tag, and coasts never do)
         public bool PreciseShutdown;
 
         // assigned in the solution for the 'top' of the rocket.
