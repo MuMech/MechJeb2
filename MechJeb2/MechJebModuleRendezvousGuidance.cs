@@ -1,4 +1,5 @@
 extern alias JetBrainsAnnotations;
+using System.Collections.Generic;
 using System.Linq;
 using KSP.Localization;
 using UnityEngine;
@@ -12,7 +13,17 @@ namespace MuMech
 
         internal readonly EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
 
-        // The maneuver planning actions, shared by the IMGUI window and the new UI view.
+        // Only a warning: the autopilot refuses this, but a player planning by hand may know better.
+        internal bool OnTheGround
+        {
+            get
+            {
+                Vessel target = Core.Target.Target?.GetVessel();
+                return Vessel.LandedOrSplashed || (target != null && target.LandedOrSplashed);
+            }
+        }
+
+        // The maneuver planning actions, called by the view.
 
         internal void AlignPlanes()
         {
@@ -36,34 +47,21 @@ namespace MuMech
             const double leadTime = 30;
             double phasingOrbitRadius = phasingOrbitAltitude + MainBody.Radius;
 
+            if (phasingOrbitRadius >= MainBody.sphereOfInfluence)
+            {
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZplan_outsideSOI"), 5);
+                return;
+            }
+
+            List<ManeuverParameters> maneuvers = OrbitalManeuverCalculator.ManeuversToCircularOrbit(Orbit, VesselState.Time + leadTime, phasingOrbitRadius);
+
             Vessel.RemoveAllManeuverNodes();
-            if (Orbit.ApR < phasingOrbitRadius)
-            {
-                double UT1 = VesselState.Time + leadTime;
-                Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(Orbit, UT1, phasingOrbitRadius);
-                Vessel.PlaceManeuverNode(Orbit, dV1, UT1);
-                Orbit transferOrbit = Vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
-                double UT2 = transferOrbit.NextApoapsisTime(UT1);
-                Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
-                Vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
-            }
-            else if (Orbit.PeR > phasingOrbitRadius)
-            {
-                double UT1 = VesselState.Time + leadTime;
-                Vector3d dV1 = OrbitalManeuverCalculator.DeltaVToChangePeriapsis(Orbit, UT1, phasingOrbitRadius);
-                Vessel.PlaceManeuverNode(Orbit, dV1, UT1);
-                Orbit transferOrbit = Vessel.patchedConicSolver.maneuverNodes[0].nextPatch;
-                double UT2 = transferOrbit.NextPeriapsisTime(UT1);
-                Vector3d dV2 = OrbitalManeuverCalculator.DeltaVToCircularize(transferOrbit, UT2);
-                Vessel.PlaceManeuverNode(transferOrbit, dV2, UT2);
-            }
-            else
-            {
-                double UT = Orbit.NextTimeOfRadius(VesselState.Time, phasingOrbitRadius);
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToCircularize(Orbit, UT);
-                Vessel.PlaceManeuverNode(Orbit, dV, UT);
-            }
+            foreach (ManeuverParameters maneuver in maneuvers)
+                Vessel.PlaceManeuverNode(Orbit, maneuver.dV, maneuver.UT);
         }
+
+        // Only a warning: a player can know that an orbit under the highest peak is clear where it goes.
+        internal bool PhasingOrbitIsSafe => MainBody.IsSafeOrbitRadius(phasingOrbitAltitude + MainBody.Radius);
 
         internal void InterceptWithHohmann()
         {

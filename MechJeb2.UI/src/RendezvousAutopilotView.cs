@@ -4,7 +4,7 @@ using KSP.Localization;
 
 namespace MuMech.UI
 {
-    /// <summary>MechJebModuleRendezvousAutopilotWindow ("Rendezvous Autopilot") in KodeKit, row for row with its WindowGUI.</summary>
+    /// <summary>MechJebModuleRendezvousAutopilotWindow ("Rendezvous Autopilot") in KodeKit.</summary>
     [KodeViewFor(typeof(MechJebModuleRendezvousAutopilotWindow))]
     public class RendezvousAutopilotView : KodeView
     {
@@ -20,14 +20,6 @@ namespace MuMech.UI
         MechJebModuleRendezvousAutopilot Autopilot => autopilot ??= Core.GetComputerModule<MechJebModuleRendezvousAutopilot>();
 
         int Mode() => GuidanceUi.RendezvousMode(Core, window.Orbit);
-
-        // the autopilot is released while the target is in another sphere of influence
-        protected override void BeforeSync()
-        {
-            MechJebModuleRendezvousAutopilot ap = Autopilot;
-            if (Mode() == 1 && ap != null && ap.Enabled)
-                ap.Users.Remove(window);
-        }
 
         protected override void BuildContents(KodeWindow w)
         {
@@ -52,7 +44,8 @@ namespace MuMech.UI
             w.Visible(warn.gameObject, () => Autopilot != null && Autopilot.maxPhasingOrbits < 5);
 
             UIText status = w.Wrap(w.BoundLabel(main, GuidanceUi.Format1("#MechJeb_RZauto_label7", () => Autopilot?.status), true)); //"Status: <<1>>"
-            w.Visible(status, () => Autopilot != null && Autopilot.Enabled);
+            // it stays after the autopilot stops: that's where the reason shows
+            w.Visible(status, () => Autopilot != null && !string.IsNullOrEmpty(Autopilot.status));
 
             NodeUi.AutowarpToggle(w, main, Core, "#MechJeb_RZauto_checkbox1"); //"Auto-warp"
         }

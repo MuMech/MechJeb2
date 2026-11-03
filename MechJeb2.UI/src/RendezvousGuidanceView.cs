@@ -5,8 +5,8 @@ using KSP.Localization;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleRendezvousGuidance ("Rendezvous Planner") in KodeKit, row for row with its WindowGUI.
-    /// The maneuver planning actions are internal methods of the module, shared with the IMGUI window.
+    /// MechJebModuleRendezvousGuidance ("Rendezvous Planner") in KodeKit.
+    /// The maneuver planning actions are internal methods of the module.
     /// </summary>
     [KodeViewFor(typeof(MechJebModuleRendezvousGuidance))]
     public class RendezvousGuidanceView : KodeView
@@ -39,6 +39,9 @@ namespace MuMech.UI
             Layout main = GuidanceUi.RendezvousGate(w, r, Mode, "#MechJeb_RZplan_label1", "#MechJeb_RZplan_label2");
             System.Func<bool> on = () => Mode() == 2;
 
+            UIText ground = GuidanceUi.Warning(w, main, "#MechJeb_RZplan_onGround"); //"The target or this vessel is on the ground: these maneuvers need both in orbit."
+            w.Visible(ground.gameObject, () => Mode() == 2 && guidance.OnTheGround);
+
             //Information readouts:
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label3", "Kerbin Station Alpha Mk2", ct => ct.Append(Core.Target.Name), on); //"Rendezvous target"
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label4", "-1.23 Mm x 123 Gm", ct => //"Target orbit"
@@ -63,6 +66,9 @@ namespace MuMech.UI
             EditFields.Field(w, orbit, () => guidance.phasingOrbitAltitude.Text, s => guidance.phasingOrbitAltitude.Text = s, 70,
                 () => guidance.phasingOrbitAltitude.IsParsed);
             KodeWindow.Label(orbit, "km");
+
+            UIText unsafeOrbit = GuidanceUi.Warning(w, main, "#MechJeb_RZplan_unsafeOrbit"); //"That altitude meets the atmosphere, the terrain, a moon or the edge of the sphere of influence."
+            w.Visible(unsafeOrbit.gameObject, () => Mode() == 2 && !guidance.PhasingOrbitIsSafe);
 
             KodeWindow.Button(main, "#MechJeb_RZplan_button3", guidance.InterceptWithHohmann); //"Intercept with Hohmann transfer"
             KodeWindow.Button(main, "#MechJeb_RZplan_button4", guidance.MatchVelocitiesAtClosestApproach); //"Match velocities at closest approach"
