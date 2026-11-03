@@ -208,6 +208,44 @@ namespace MuMech.UI
             };
             w.Switch3(compact, compactNames, () => (int)edited.Compact, v => edited.Compact = (MechJebModuleCustomInfoWindow.CompactMode)v);
 
+            // Width: Auto (fits the values) or Fixed, set with -10 -1 [field] px +1 +10 or the window's resize grip
+            Layout width = KodeWindow.Row(r);
+            Tooltips.Add(KodeWindow.Label(width, "#MechJeb_NewUI_Width", true).gameObject, "#MechJeb_NewUI_Width_tooltip"); //Width
+            string auto = Localizer.Format("#MechJeb_NewUI_WidthAuto"), fixedName = Localizer.Format("#MechJeb_NewUI_WidthFixed");
+            w.Switch(width, () => edited.WidthFixed, v => edited.WidthFixed = v);
+            w.BoundLabel(width, auto.Length > fixedName.Length ? auto : fixedName, () => edited.WidthFixed ? fixedName : auto);
+            void Nudge(int d)
+            {
+                edited.FixedWidth = (edited.FixedWidth > 0 ? edited.FixedWidth : 250) + d;
+                edited.WidthFixed = true;
+            }
+            KodeWindow.Button(width, "-10", () => Nudge(-10));
+            KodeWindow.Button(width, "-1", () => Nudge(-1));
+            // four digits at most (MAX_FIXED_WIDTH)
+            float digits = TextMeasure.Measure("0000", w.Behaviour.Theme).x + 10;
+            // the typed text stays until it is a width in range ("3" on the way to "320"); a nudge or the grip replaces it
+            string typed = null;
+            int seen = edited.FixedWidth;
+            EditFields.Field(w, width, () =>
+            {
+                if (edited.FixedWidth != seen)
+                {
+                    seen = edited.FixedWidth;
+                    typed = null;
+                }
+                return typed ?? (seen > 0 ? seen.ToString() : "");
+            }, s =>
+            {
+                typed = s;
+                if (!int.TryParse(s, out int v) || v < MechJebModuleCustomInfoWindow.MIN_FIXED_WIDTH || v > MechJebModuleCustomInfoWindow.MAX_FIXED_WIDTH)
+                    return;
+                edited.FixedWidth = seen = v;
+                edited.WidthFixed = true;
+            }, digits);
+            KodeWindow.Label(width, "px");
+            KodeWindow.Button(width, "+1", () => Nudge(1));
+            KodeWindow.Button(width, "+10", () => Nudge(10));
+
             // Color: [x] Text [x] Background (exclusive), with the picker under them
             Layout color = KodeWindow.Row(r);
             KodeWindow.Label(color, "#MechJeb_WindowEd_label2"); //Color:

@@ -190,13 +190,30 @@ namespace MuMech.UI
             ApplyColor(label.tmpText);
             ApplyColor(value.tmpText);
 
+            // a fixed-width window: the value takes the room the label leaves, on one line, and ends in "..." when it doesn't fit
+            bool fixedCell = FixedWidth && item.Width <= 0;
+            void FixCell()
+            {
+                size.minWidth = 0;
+                size.preferredWidth = 0;
+                size.flexibleWidth = 1;
+                label.GetComponent<LayoutElement>().flexibleWidth = 0; // or the label takes half the room
+                value.tmpText.enableWordWrapping = false;
+                value.tmpText.overflowMode = TextOverflowModes.Ellipsis;
+            }
+            if (fixedCell)
+            {
+                FixCell();
+                w.Behaviour.AddRestyle(FixCell);
+            }
+
             int widest = 0, recent = 0;
             float template = size.preferredWidth, shrinkAt = 0;
             void Apply() => size.preferredWidth = Mathf.Max(template, TextMeasure.Measure(new string('0', widest), Theme.Current).x + 8);
             // a theme change re-sizes the cell from its template: re-apply the grown width at once, measured in the new theme
             w.Behaviour.AddRestyle(() =>
             {
-                if (item.Width > 0) return;
+                if (fixedCell || item.Width > 0) return;
                 template = size.preferredWidth;
                 if (widest > 0) Apply();
             });
@@ -205,7 +222,7 @@ namespace MuMech.UI
                 // the value cell grows at once and shrinks back only to the widest value of the last ShrinkDelay seconds, so
                 // changing numbers don't re-lay out the window every frame, yet a value that was briefly very long (a period
                 // in millions of years as the orbit passes e = 1, #2447) doesn't keep the window wide for good
-                if (item.Width > 0) return;
+                if (fixedCell || item.Width > 0) return;
                 float now = Time.unscaledTime;
                 if (length > widest)
                 {
@@ -225,9 +242,12 @@ namespace MuMech.UI
                 recent = length;
             }
 
+            // a value cut off with "..." in a fixed-width window shows its whole text on hover
+            System.Func<string> fullText;
             if (native != null)
             {
                 var ct = new CharText(value.tmpText);
+                fullText = ct.ToString;
                 refresh.Add(() =>
                 {
                     Grow(native(ct.Clear()));
@@ -237,6 +257,7 @@ namespace MuMech.UI
             else if (chars)
             {
                 var ct = new CharText(value.tmpText);
+                fullText = ct.ToString;
                 refresh.Add(() =>
                 {
                     Format(ct.Clear(), item, number());
@@ -248,10 +269,12 @@ namespace MuMech.UI
             {
                 // strings, and numbers MechJeb formats with a .NET format CharText doesn't do: MechJeb's own string
                 string shown = first;
+                fullText = () => shown;
                 // IMGUI keeps the window's width and wraps a long value (biomes, orbit summaries): when the row would be wider
                 // than RowWidth, the cell keeps the room left by the label and grows in height instead of widening the window
                 void Fit(string s)
                 {
+                    if (fixedCell) return;
                     if (RowWidth <= 0 || item.Width > 0)
                     {
                         Grow(s?.Length ?? 0);
@@ -280,6 +303,7 @@ namespace MuMech.UI
                     value.tmpText.text = s;
                 });
             }
+            if (fixedCell && ValueTooltips) Tooltips.Add(value.gameObject, () => value.tmpText.isTextTruncated ? fullText() : null);
         }
 
         /// <summary>
@@ -290,6 +314,12 @@ namespace MuMech.UI
 
         /// <summary>Seconds a value cell keeps its width after its value got shorter.</summary>
         const float ShrinkDelay = 5;
+
+        /// <summary>The window has a fixed width: value cells fill the room their label leaves and never resize the window.</summary>
+        public bool FixedWidth;
+
+        /// <summary>Cut-off values show their whole text on hover; off for an overlay, which must not catch the pointer.</summary>
+        public bool ValueTooltips = true;
 
         void ApplyColor(TMP_Text t)
         {
