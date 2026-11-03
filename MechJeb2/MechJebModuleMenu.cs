@@ -454,10 +454,12 @@ namespace MuMech
         // the slide animation; shared by the IMGUI DrawGUI and the new UI
         internal void AdvanceAnimation()
         {
+            float time = Core.Settings.MenuAnimationTime;
+            float step = time > 0 ? Time.deltaTime / time : 1;
             switch (windowStat)
             {
                 case WindowStat.OPENING:
-                    windowProgr += Time.deltaTime;
+                    windowProgr += step;
                     if (windowProgr >= 1)
                     {
                         windowProgr = 1;
@@ -466,7 +468,7 @@ namespace MuMech
 
                     break;
                 case WindowStat.CLOSING:
-                    windowProgr -= Time.deltaTime;
+                    windowProgr -= step;
                     if (windowProgr <= 0)
                     {
                         windowProgr = 0;

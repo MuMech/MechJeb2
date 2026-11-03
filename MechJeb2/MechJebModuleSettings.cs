@@ -46,6 +46,10 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public float UiOpacity = 0.85f;
 
+        /// <summary>Seconds the MechJeb menu takes to slide open or closed (0 to 1; 0 shows it at once).</summary>
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public float MenuAnimationTime = 1f;
+
         // the new UI's look, set from its own Settings window; IMGUI ignores them
         public enum UiSkinType { Classic, Flat, Glass, ZTheme }
 
