@@ -1,5 +1,6 @@
 extern alias JetBrainsAnnotations;
 using System;
+using System.Collections.Generic;
 using KSP.Localization;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
@@ -43,6 +44,27 @@ namespace MuMech
             Core.Node.Abort(); //make sure we turn off node executor if we get disabled suddenly
         }
 
+        //The earliest time for the middle of a burn of this size: the node executor centers a burn on its node, and only starts it
+        //once the vessel points the right way, so anything sooner starts late.
+        public double EarliestBurnUT(double dV) => VesselState.Time + Math.Max(15, Core.Node.FlipTime() + Core.Node.BurnLeadTime(dV));
+
+        //When to center the burn that kills the relative velocity at a closest approach, to come to rest at the desired distance from the target.
+        public double BurnUTToStopAtDesiredDistance(double closestApproachUT)
+        {
+            double UT = closestApproachUT;
+            double approachDistance = Orbit.Separation(Core.Target.TargetOrbit, UT);
+            double approachSpeed = (Orbit.WorldOrbitalVelocityAtUT(UT) - Core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT)).magnitude;
+            if (approachDistance < desiredDistance)
+            {
+                UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - approachDistance * approachDistance)) / approachSpeed;
+            }
+
+            //if coming in hot, stop early to avoid crashing:
+            if (approachSpeed > 10) UT -= 1;
+
+            return UT;
+        }
+
         //Why the autopilot can't run for this target and vessel, or null if it can.
         private string Problem()
         {
@@ -72,12 +94,13 @@ namespace MuMech
             if (problem != null) Stop(problem);
         }
 
-        //The time to close a distance at the closing speed limit. A zero-revolution intercept of about an orbit or more has only
-        //a huge, near radial solution, so this stops at a quarter of an orbit, and is faster than the limit when it does.
+        //The time to close a distance at the closing speed limit, and at least long enough to turn around and stop at the end. A
+        //zero-revolution intercept of about an orbit or more has only a huge, near radial solution, so this stops at a quarter of
+        //an orbit, and is faster than the limit when it does.
         public double ClosingTime(double distance)
         {
             double closingSpeed = Math.Max(0.01, Math.Min(distance / 100, maxClosingSpeed));
-            return Math.Min(distance / closingSpeed, Orbit.period / 4);
+            return Math.Min(Math.Max(distance / closingSpeed, 1.5 * Core.Node.FlipTime()), Orbit.period / 4);
         }
 
         //The cost of a Hohmann transfer between two circular orbits, and the lead angle of the target for it
@@ -195,20 +218,8 @@ namespace MuMech
                     && closestApproachUT < VesselState.Time + Math.Max(150, closingTime * 1.25))
                 {
                     //We're close to the target, and on a course that will take us closer. Kill relvel at closest approach
-                    double UT = closestApproachUT;
-                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, UT, Core.Target.TargetOrbit);
-
-                    //adjust burn time so as to come to rest at the desired distance from the target:
-                    double approachSpeed = (Orbit.WorldOrbitalVelocityAtUT(UT) - Core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT)).magnitude;
-                    if (closestApproachDistance < desiredDistance)
-                    {
-                        UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - closestApproachDistance * closestApproachDistance)) / approachSpeed;
-                    }
-
-                    //if coming in hot, stop early to avoid crashing:
-                    if (approachSpeed > 10) UT -= 1;
-
-                    Vessel.PlaceManeuverNode(Orbit, dV, UT);
+                    Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, closestApproachUT, Core.Target.TargetOrbit);
+                    Vessel.PlaceManeuverNode(Orbit, dV, BurnUTToStopAtDesiredDistance(closestApproachUT));
 
                     status = Localizer.Format("#MechJeb_RZauto_statu3"); //"Planning to match velocities at closest approach."
                 }
@@ -218,6 +229,12 @@ namespace MuMech
                     double UT = VesselState.Time + 15;
 
                     (Vector3d dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, closingTime);
+                    if (UT < EarliestBurnUT(dV.magnitude))
+                    {
+                        UT = EarliestBurnUT(dV.magnitude);
+                        (dV, _) = OrbitalManeuverCalculator.DeltaVToInterceptAtTime(Orbit, UT, Core.Target.TargetOrbit, closingTime);
+                    }
+
                     Vessel.PlaceManeuverNode(Orbit, dV, UT);
 
                     //The time limit in ClosingTime can leave us above the closing speed limit: say so, or the setting looks ignored.
@@ -230,20 +247,8 @@ namespace MuMech
             {
                 //We're not close to the target, but we're on an approximate intercept course.
                 //Kill relative velocities at closest approach
-                double UT = closestApproachUT;
-                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, UT, Core.Target.TargetOrbit);
-
-                //adjust burn time so as to come to rest at the desired distance from the target:
-                double approachSpeed = (Orbit.WorldOrbitalVelocityAtUT(UT) - Core.Target.TargetOrbit.WorldOrbitalVelocityAtUT(UT)).magnitude;
-                if (closestApproachDistance < desiredDistance)
-                {
-                    UT -= Math.Sqrt(Math.Abs(desiredDistance * desiredDistance - closestApproachDistance * closestApproachDistance)) / approachSpeed;
-                }
-
-                //if coming in hot, stop early to avoid crashing:
-                if (approachSpeed > 10) UT -= 1;
-
-                Vessel.PlaceManeuverNode(Orbit, dV, UT);
+                Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, closestApproachUT, Core.Target.TargetOrbit);
+                Vessel.PlaceManeuverNode(Orbit, dV, BurnUTToStopAtDesiredDistance(closestApproachUT));
 
                 status = Localizer.Format("#MechJeb_RZauto_statu5"); //"On intercept course. Planning to match velocities at closest approach."
             }
@@ -265,6 +270,14 @@ namespace MuMech
                     || (numPhasingOrbits < actualMaxPhasingOrbits && !TooCostly(hohmannDV.magnitude + arrivalDV.magnitude, phasingOrbitRadius)))
                 {
                     //It won't be too long until the intercept window. Plot a Hohmann transfer intercept.
+                    //If it opens too soon to start the burn on time, take it as early as we can.
+                    double earliestUT = EarliestBurnUT(hohmannDV.magnitude);
+                    if (hohmannUT < earliestUT)
+                    {
+                        (hohmannDV, hohmannUT, _, _) = OrbitalManeuverCalculator.DeltaVAndTimeForHohmannTransfer(Orbit, Core.Target.TargetOrbit, earliestUT,
+                            fixedTime: true, coplanar: false);
+                    }
+
                     Vessel.PlaceManeuverNode(Orbit, hohmannDV, hohmannUT);
 
                     status = Localizer.Format("#MechJeb_RZauto_statu6",
@@ -273,7 +286,12 @@ namespace MuMech
                 else
                 {
                     //We are in a circular orbit in the right plane, but we aren't phasing quickly enough. Move to a better phasing orbit
-                    foreach (ManeuverParameters maneuver in OrbitalManeuverCalculator.ManeuversToCircularOrbit(Orbit, VesselState.Time + 15, phasingOrbitRadius))
+                    List<ManeuverParameters> maneuvers = OrbitalManeuverCalculator.ManeuversToCircularOrbit(Orbit, VesselState.Time + 15, phasingOrbitRadius);
+                    double earliestUT = EarliestBurnUT(maneuvers[0].dV.magnitude);
+                    if (maneuvers[0].UT < earliestUT)
+                        maneuvers = OrbitalManeuverCalculator.ManeuversToCircularOrbit(Orbit, earliestUT, phasingOrbitRadius);
+
+                    foreach (ManeuverParameters maneuver in maneuvers)
                         Vessel.PlaceManeuverNode(Orbit, maneuver.dV, maneuver.UT);
 
                     status = Localizer.Format("#MechJeb_RZauto_statu7", numPhasingOrbits.ToString("F1"), maxPhasingOrbits.Text,
@@ -320,7 +338,13 @@ namespace MuMech
             else
             {
                 //We're not on an intercept course, and we're not in the right plane. Match planes
-                if (OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanes(Orbit, Core.Target.TargetOrbit, VesselState.Time, out Vector3d dV, out double UT))
+                bool nodeAhead = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanes(Orbit, Core.Target.TargetOrbit, VesselState.Time, out Vector3d dV, out double UT);
+
+                //A node too close to start the burn on time: take the next one.
+                if (nodeAhead && UT < EarliestBurnUT(dV.magnitude))
+                    nodeAhead = OrbitalManeuverCalculator.DeltaVAndTimeToMatchPlanes(Orbit, Core.Target.TargetOrbit, EarliestBurnUT(dV.magnitude), out dV, out UT);
+
+                if (nodeAhead)
                 {
                     Vessel.PlaceManeuverNode(Orbit, dV, UT);
 
