@@ -1679,7 +1679,7 @@ namespace MuMech
             private double MassProvided(double vesselSpeed, Vector3d normVesselSpeed, double atmDensity, double staticPressure, float mach,
                 ModuleResourceIntake intake, Vector3d intakeFwd)
             {
-                if ((intake.checkForOxygen && !FlightGlobals.currentMainBody.atmosphereContainsOxygen) ||
+                if ((intake.checkForOxygen && !intake.part.vessel.mainBody.atmosphereContainsOxygen) ||
                     staticPressure < intake.kPaThreshold) // TODO : add the new test (the bool and maybe the attach node ?)
                 {
                     return 0;
