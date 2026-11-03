@@ -464,6 +464,7 @@ namespace MuMech
         {
             if (editedWindow == null) return;
 
+            editedWindow.OnDestroy(); // frees the window's background texture
             Core.RemoveComputerModule(editedWindow);
             editedWindow = Core.GetComputerModule<MechJebModuleCustomInfoWindow>();
         }
