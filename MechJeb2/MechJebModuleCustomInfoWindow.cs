@@ -559,11 +559,11 @@ namespace MuMech
 
         public MechJebModuleCustomInfoWindow CreateWindowFromSharingString(string sharingString)
         {
-            string[] lines = sharingString.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            if (lines[0] != "--- MechJeb Custom Window ---")
+            string[] lines = (sharingString ?? "").Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length == 0 || lines[0].Trim() != "--- MechJeb Custom Window ---")
             {
                 ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg2"), 3.0f,
-                    ScreenMessageStyle.UPPER_RIGHT); //"Pasted text wasn't a MechJeb custom window descriptor."
+                    ScreenMessageStyle.UPPER_RIGHT); //The clipboard doesn't hold a MechJeb custom window configuration.
                 return null;
             }
 

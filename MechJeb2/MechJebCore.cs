@@ -642,12 +642,6 @@ namespace MuMech
 
             Profiler.BeginSample("MechJebCore.Update");
 
-            if (Input.GetKeyDown(KeyCode.V) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
-            {
-                MechJebModuleCustomWindowEditor windowEditor = GetComputerModule<MechJebModuleCustomWindowEditor>();
-                if (windowEditor != null) windowEditor.CreateWindowFromSharingString(MuUtils.SystemClipboard);
-            }
-
             //periodically save settings in case we quit unexpectedly
             Profiler.BeginSample("MechJebCore.Update.OnSave");
             if (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel))
@@ -1211,11 +1205,20 @@ namespace MuMech
 
         private void OnShowGUI() => ShowGui = true;
 
-        private void OnHideGUI() => ShowGui = false;
+        private void OnHideGUI()
+        {
+            ShowGui = false;
+            if (_weLockedInputs) UnlockControl();
+        }
 
         private void OnGUI()
         {
-            if (!ShowGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready) return;
+            if (!ShowGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
+            {
+                // we no longer draw, so nothing can release the lock for us
+                if (_weLockedInputs) UnlockControl();
+                return;
+            }
 
             Profiler.BeginSample("MechJebCore.OnGUI");
 
@@ -1260,6 +1263,10 @@ namespace MuMech
                         Debug.LogException(e);
                     }
                 }
+            }
+            else if (_weLockedInputs)
+            {
+                UnlockControl();
             }
 
             Profiler.EndSample();
