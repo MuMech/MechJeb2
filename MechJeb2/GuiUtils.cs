@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using JetBrainsAnnotations::JetBrains.Annotations;
+using MechJebLib.Utils;
 using UnityEngine;
 using UnityEngine.Profiling;
 using Object = UnityEngine.Object;
@@ -67,7 +68,7 @@ namespace MuMech
         // parses display text into the stored (multiplied) value
         protected virtual bool TryParseText(string text, out double val)
         {
-            bool parsed = double.TryParse(text, out val);
+            bool parsed = NumberText.TryParseDouble(text, out val);
             val *= _multiplier;
             return parsed;
         }
@@ -138,7 +139,7 @@ namespace MuMech
         }
 
         protected override bool TryParseText(string text, out double val) =>
-            double.TryParse(text, out val) || GuiUtils.TryParseDHMS(text, out val);
+            NumberText.TryParseDouble(text, out val) || GuiUtils.TryParseDHMS(text, out val);
 
         public static implicit operator EditableTime(double x) => new EditableTime(x);
 
@@ -251,19 +252,8 @@ namespace MuMech
             {
                 TextConfig = value;
                 TextConfig = Regex.Replace(TextConfig, @"[^\d-,]", ""); //throw away junk characters
-                Val.Clear();
-
-                // supports "1,2,3" and "1-3"
-                foreach (string x in TextConfig.Split(','))
-                {
-                    string[] y = x.Split('-');
-
-                    if (!int.TryParse(y[0].Trim(), out int start)) continue;
-                    if (!int.TryParse(y[y.Length - 1].Trim(), out int end)) continue;
-
-                    for (int n = start; n <= end; n++)
-                        Val.Add(n);
-                }
+                // supports "1,2,3" and "1-3", a range is limited to NumberText.MAX_RANGE_LENGTH entries
+                NumberText.ParseIntList(TextConfig, Val);
             }
         }
     }
