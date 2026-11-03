@@ -12,7 +12,17 @@ namespace MuMech
 
         internal readonly EditableDoubleMult phasingOrbitAltitude = new EditableDoubleMult(200000, 1000);
 
-        // The maneuver planning actions, shared by the IMGUI window and the new UI view.
+        // Only a warning: the autopilot refuses this, but a player planning by hand may know better.
+        internal bool OnTheGround
+        {
+            get
+            {
+                Vessel target = Core.Target.Target?.GetVessel();
+                return Vessel.LandedOrSplashed || (target != null && target.LandedOrSplashed);
+            }
+        }
+
+        // The maneuver planning actions, called by the view.
 
         internal void AlignPlanes()
         {
