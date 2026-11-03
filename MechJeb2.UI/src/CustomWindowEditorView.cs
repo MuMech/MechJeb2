@@ -102,6 +102,12 @@ namespace MuMech.UI
             KodeWindow.Button(top, "#MechJeb_WindowEd_button1", ed.AddNewWindow, true); //New window
             if (Edited != null) KodeWindow.Button(top, "#MechJeb_WindowEd_button2", ed.RemoveCurrentWindow, true); //Delete window
 
+            // sharing: the edited window's configuration to the clipboard, or a new window from it
+            Layout share = KodeWindow.Row(r);
+            if (Edited != null)
+                Tooltips.Add(KodeWindow.Button(share, "#MechJeb_NewUI_ExportWindow", ExportEdited, true).gameObject, "#MechJeb_NewUI_ExportWindow_tooltip"); //Export
+            Tooltips.Add(KodeWindow.Button(share, "#MechJeb_NewUI_ImportWindow", ImportFromClipboard, true).gameObject, "#MechJeb_NewUI_ImportWindow_tooltip"); //Import
+
             if (Edited != null) BuildEditedWindow(w, r);
 
             if (KodeWindow.ModernLayout)
@@ -131,6 +137,19 @@ namespace MuMech.UI
                 preset.Text(CustomWindowPresets.presets[shownPreset].name);
             });
             KodeWindow.Button(presetRow, ">", () => ed.presetIndex = (ed.presetIndex + 1) % count);
+        }
+
+        void ExportEdited()
+        {
+            MuUtils.SystemClipboard = Edited.ToSharingString();
+            ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg1", Edited.GetName()), 3.0f,
+                ScreenMessageStyle.UPPER_RIGHT); //Configuration of <<1>> window copied to clipboard.
+        }
+
+        void ImportFromClipboard()
+        {
+            MechJebModuleCustomInfoWindow created = ed.CreateWindowFromSharingString(MuUtils.SystemClipboard);
+            if (created != null) ed.editedWindow = created;
         }
 
         void CreateFromPreset()

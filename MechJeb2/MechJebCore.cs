@@ -637,22 +637,6 @@ namespace MuMech
 
             Profiler.BeginSample("MechJebCore.Update");
 
-            if (Input.GetKeyDown(KeyCode.V) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-                && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
-                && (GuiUtils.MouseIsOverWindow(this) || MechJebUiHost.MouseOverHostWindow()))
-            {
-                try
-                {
-                    string clipboard = MuUtils.SystemClipboard;
-                    MechJebModuleCustomWindowEditor windowEditor = GetComputerModule<MechJebModuleCustomWindowEditor>();
-                    if (windowEditor != null && !string.IsNullOrWhiteSpace(clipboard)) windowEditor.CreateWindowFromSharingString(clipboard);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
-            }
-
             //periodically save settings in case we quit unexpectedly
             Profiler.BeginSample("MechJebCore.Update.OnSave");
             if (HighLogic.LoadedSceneIsEditor || (vessel != null && vessel.isActiveVessel))
