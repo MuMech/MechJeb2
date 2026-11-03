@@ -31,6 +31,20 @@ namespace MuMech.UI
             if (Mode() == 2) closestApproachTime = guidance.Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, guidance.VesselState.Time);
         }
 
+        // a burn that can't be computed says so, where it would otherwise only reach the log
+        static System.Action Plan(System.Action plan) => () =>
+        {
+            try
+            {
+                plan();
+            }
+            catch (System.Exception e)
+            {
+                UnityEngine.Debug.LogException(e);
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_RZplan_failed", e.Message), 5);
+            }
+        };
+
         protected override void BuildContents(KodeWindow w)
         {
             UIObject r = w.Root;
@@ -59,10 +73,10 @@ namespace MuMech.UI
                     .Append("m/s"), on);
 
             //Maneuver planning buttons:
-            KodeWindow.Button(main, "#MechJeb_RZplan_button1", guidance.AlignPlanes); //"Align Planes"
+            KodeWindow.Button(main, "#MechJeb_RZplan_button1", Plan(guidance.AlignPlanes)); //"Align Planes"
 
             Layout orbit = KodeWindow.Row(main);
-            KodeWindow.Button(orbit, "#MechJeb_RZplan_button2", guidance.EstablishNewOrbit, true); //"Establish new orbit at"
+            KodeWindow.Button(orbit, "#MechJeb_RZplan_button2", Plan(guidance.EstablishNewOrbit), true); //"Establish new orbit at"
             EditFields.Field(w, orbit, () => guidance.phasingOrbitAltitude.Text, s => guidance.phasingOrbitAltitude.Text = s, 70,
                 () => guidance.phasingOrbitAltitude.IsParsed);
             KodeWindow.Label(orbit, "km");
@@ -70,9 +84,9 @@ namespace MuMech.UI
             UIText unsafeOrbit = GuidanceUi.Warning(w, main, "#MechJeb_RZplan_unsafeOrbit"); //"That altitude meets the atmosphere, the terrain, a moon or the edge of the sphere of influence."
             w.Visible(unsafeOrbit.gameObject, () => Mode() == 2 && !guidance.PhasingOrbitIsSafe);
 
-            KodeWindow.Button(main, "#MechJeb_RZplan_button3", guidance.InterceptWithHohmann); //"Intercept with Hohmann transfer"
-            KodeWindow.Button(main, "#MechJeb_RZplan_button4", guidance.MatchVelocitiesAtClosestApproach); //"Match velocities at closest approach"
-            KodeWindow.Button(main, "#MechJeb_RZplan_button5", guidance.GetCloser); //"Get closer"
+            KodeWindow.Button(main, "#MechJeb_RZplan_button3", Plan(guidance.InterceptWithHohmann)); //"Intercept with Hohmann transfer"
+            KodeWindow.Button(main, "#MechJeb_RZplan_button4", Plan(guidance.MatchVelocitiesAtClosestApproach)); //"Match velocities at closest approach"
+            KodeWindow.Button(main, "#MechJeb_RZplan_button5", Plan(guidance.GetCloser)); //"Get closer"
             KodeWindow.Button(main, "#MechJeb_RZplan_button9", () => guidance.Vessel.RemoveAllManeuverNodes(), ButtonRole.Danger); //Remove ALL nodes
 
             Layout node = KodeWindow.Panel(main);

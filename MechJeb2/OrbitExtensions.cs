@@ -376,69 +376,19 @@ namespace MuMech
             return (360 - angleFromPe) * UtilMath.Deg2Rad;
         }
 
-        //Originally by Zool, revised by The_Duck
-        //Converts a true anomaly into an eccentric anomaly.
-        //For elliptical orbits this returns a value between 0 and 2pi
-        //For hyperbolic orbits the returned value can be any number.
-        //NOTE: For a hyperbolic orbit, if a true anomaly is requested that does not exist (a true anomaly
-        //past the true anomaly of the asymptote) then an ArgumentException is thrown
-        private static double GetEccentricAnomalyAtTrueAnomaly(this Orbit o, double trueAnomaly)
-        {
-            double ecc = o.eccentricity;
-            trueAnomaly = Clamp2Pi(trueAnomaly);
-
-            if (ecc < 1) //elliptical orbits
-            {
-                double cosE = (ecc + Cos(trueAnomaly)) / (1 + ecc * Cos(trueAnomaly));
-                double sinE = Sqrt(1 - cosE * cosE);
-                if (trueAnomaly > PI) sinE *= -1;
-
-                return Clamp2Pi(Atan2(sinE, cosE));
-            }
-
-            //hyperbolic orbits
-            double coshE = (ecc + Cos(trueAnomaly)) / (1 + ecc * Cos(trueAnomaly));
-            if (coshE < 1)
-                throw new ArgumentException("OrbitExtensions.GetEccentricAnomalyAtTrueAnomaly: True anomaly of " + trueAnomaly +
-                    " radians is not attained by orbit with eccentricity " + o.eccentricity);
-
-            double eanom = Acosh(coshE);
-            if (trueAnomaly > PI) eanom *= -1;
-
-            return eanom;
-        }
-
-        //Originally by Zool, revised by The_Duck
-        //Converts an eccentric anomaly into a mean anomaly.
-        //For an elliptical orbit, the returned value is between 0 and 2pi
-        //For a hyperbolic orbit, the returned value is any number
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static double GetMeanAnomalyAtEccentricAnomaly(this Orbit o, double eanom)
-        {
-            double e = o.eccentricity;
-            if (e < 1) //elliptical orbits
-            {
-                return Clamp2Pi(eanom - e * Sin(eanom));
-            }
-
-            //hyperbolic orbits
-            return e * Sinh(eanom) - eanom;
-        }
-
         //Converts a true anomaly into a mean anomaly (via the intermediate step of the eccentric anomaly)
         //For elliptical orbits, the output is between 0 and 2pi
         //For hyperbolic orbits, the output can be any number
         //NOTE: For a hyperbolic orbit, if a true anomaly is requested that does not exist (a true anomaly
-        //past the true anomaly of the asymptote) then an ArgumentException is thrown
+        //past the true anomaly of the asymptote) then the output is infinite
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double GetMeanAnomalyAtTrueAnomaly(this Orbit o, double tanom) =>
-            o.GetMeanAnomalyAtEccentricAnomaly(o.GetEccentricAnomalyAtTrueAnomaly(tanom));
+        public static double GetMeanAnomalyAtTrueAnomaly(this Orbit o, double tanom) => o.GetMeanAnomaly(o.GetEccentricAnomaly(tanom));
 
         //Returns the next time at which a will cross its ascending node with b.
         //For elliptical orbits this is a time between UT and UT + a.period.
         //For hyperbolic orbits this can be any time, including a time in the past if
         //the ascending node is in the past.
-        //NOTE: this function will throw an ArgumentException if a is a hyperbolic orbit and the "ascending node"
+        //NOTE: the time is infinite if a is a hyperbolic orbit and the "ascending node"
         //occurs at a true anomaly that a does not actually ever attain
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeOfAscendingNode(this Orbit a, Orbit b, double ut) => a.TimeOfTrueAnomaly(a.AscendingNodeTrueAnomaly(b), ut);
@@ -447,7 +397,7 @@ namespace MuMech
         //For elliptical orbits this is a time between UT and UT + a.period.
         //For hyperbolic orbits this can be any time, including a time in the past if
         //the descending node is in the past.
-        //NOTE: this function will throw an ArgumentException if a is a hyperbolic orbit and the "descending node"
+        //NOTE: the time is infinite if a is a hyperbolic orbit and the "descending node"
         //occurs at a true anomaly that a does not actually ever attain
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeOfDescendingNode(this Orbit a, Orbit b, double ut) => a.TimeOfTrueAnomaly(a.DescendingNodeTrueAnomaly(b), ut);
@@ -457,7 +407,7 @@ namespace MuMech
         //For elliptical orbits this is a time between UT and UT + o.period.
         //For hyperbolic orbits this can by any time, including a time in the past if the
         //ascending node is in the past.
-        //NOTE: this function will throw an ArgumentException if o is a hyperbolic orbit and the
+        //NOTE: the time is infinite if o is a hyperbolic orbit and the
         //"ascending node" occurs at a true anomaly that o does not actually ever attain.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeOfAscendingNodeEquatorial(this Orbit o, double ut) =>
@@ -468,7 +418,7 @@ namespace MuMech
         //For elliptical orbits this is a time between UT and UT + o.period.
         //For hyperbolic orbits this can by any time, including a time in the past if the
         //descending node is in the past.
-        //NOTE: this function will throw an ArgumentException if o is a hyperbolic orbit and the
+        //NOTE: the time is infinite if o is a hyperbolic orbit and the
         //"descending node" occurs at a true anomaly that o does not actually ever attain.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double TimeOfDescendingNodeEquatorial(this Orbit o, double ut) =>

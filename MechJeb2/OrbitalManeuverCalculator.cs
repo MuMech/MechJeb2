@@ -131,7 +131,7 @@ namespace MuMech
 
         //Computes the delta-V and time of a burn to match planes with the target orbit. The output burnUT
         //will be equal to the time of the first ascending node with respect to the target after the given UT.
-        //Throws an ArgumentException if o is hyperbolic and doesn't have an ascending node relative to the target.
+        //burnUT is infinite if o is hyperbolic and doesn't have an ascending node relative to the target, and can be before UT.
         public static Vector3d DeltaVAndTimeToMatchPlanesAscending(Orbit o, Orbit target, double UT, out double burnUT)
         {
             burnUT = o.TimeOfAscendingNode(target, UT);
@@ -143,7 +143,7 @@ namespace MuMech
 
         //Computes the delta-V and time of a burn to match planes with the target orbit. The output burnUT
         //will be equal to the time of the first descending node with respect to the target after the given UT.
-        //Throws an ArgumentException if o is hyperbolic and doesn't have a descending node relative to the target.
+        //burnUT is infinite if o is hyperbolic and doesn't have a descending node relative to the target, and can be before UT.
         public static Vector3d DeltaVAndTimeToMatchPlanesDescending(Orbit o, Orbit target, double UT, out double burnUT)
         {
             burnUT = o.TimeOfDescendingNode(target, UT);
@@ -151,6 +151,45 @@ namespace MuMech
             var actualHorizontalVelocity = Vector3d.Exclude(o.Up(burnUT), o.WorldOrbitalVelocityAtUT(burnUT));
             Vector3d desiredHorizontalVelocity = actualHorizontalVelocity.magnitude * desiredHorizontal;
             return desiredHorizontalVelocity - actualHorizontalVelocity;
+        }
+
+        //Computes the delta-V and time of a burn to match planes with the target orbit at a node after the given UT:
+        //the first one, unless the other costs at least a tenth less. Returns false if there is no node ahead,
+        //which is what a hyperbolic orbit past its nodes has.
+        public static bool DeltaVAndTimeToMatchPlanes(Orbit o, Orbit target, double UT, out Vector3d dV, out double burnUT)
+        {
+            bool Ahead(double nodeUT) => nodeUT >= UT && !double.IsInfinity(nodeUT);
+
+            bool ascendingAhead = o.AscendingNodeExists(target) && Ahead(o.TimeOfAscendingNode(target, UT));
+            bool descendingAhead = o.DescendingNodeExists(target) && Ahead(o.TimeOfDescendingNode(target, UT));
+
+            dV = Vector3d.zero;
+            burnUT = UT;
+            if (!ascendingAhead && !descendingAhead)
+                return false;
+
+            if (!descendingAhead)
+            {
+                dV = DeltaVAndTimeToMatchPlanesAscending(o, target, UT, out burnUT);
+                return true;
+            }
+
+            if (!ascendingAhead)
+            {
+                dV = DeltaVAndTimeToMatchPlanesDescending(o, target, UT, out burnUT);
+                return true;
+            }
+
+            Vector3d ascendingDV = DeltaVAndTimeToMatchPlanesAscending(o, target, UT, out double ascendingUT);
+            Vector3d descendingDV = DeltaVAndTimeToMatchPlanesDescending(o, target, UT, out double descendingUT);
+
+            bool ascendingFirst = ascendingUT < descendingUT;
+            bool useFirst = (ascendingFirst ? descendingDV : ascendingDV).magnitude >= 0.9 * (ascendingFirst ? ascendingDV : descendingDV).magnitude;
+            bool ascending = useFirst == ascendingFirst;
+
+            dV = ascending ? ascendingDV : descendingDV;
+            burnUT = ascending ? ascendingUT : descendingUT;
+            return true;
         }
 
         //Computes the time and dV of a Hohmann transfer injection burn such that at apoapsis the transfer
