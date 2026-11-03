@@ -207,21 +207,39 @@ namespace MuMech.UI
                 w.Behaviour.AddRestyle(FixCell);
             }
 
-            int widest = 0;
+            int widest = 0, recent = 0;
+            float template = size.preferredWidth, shrinkAt = 0;
+            void Apply() => size.preferredWidth = Mathf.Max(template, TextMeasure.Measure(new string('0', widest), Theme.Current).x + 8);
             // a theme change re-sizes the cell from its template: re-apply the grown width at once, measured in the new theme
             w.Behaviour.AddRestyle(() =>
             {
-                if (fixedCell || item.Width > 0 || widest == 0) return;
-                float wanted = TextMeasure.Measure(new string('0', widest), Theme.Current).x + 8;
-                if (wanted > size.preferredWidth) size.preferredWidth = wanted;
+                if (fixedCell || item.Width > 0) return;
+                template = size.preferredWidth;
+                if (widest > 0) Apply();
             });
             void Grow(int length)
             {
-                // the value cell only grows, so changing numbers never re-lay out the window
-                if (fixedCell || item.Width > 0 || length <= widest) return;
-                widest = length;
-                float wanted = TextMeasure.Measure(new string('0', length), Theme.Current).x + 8;
-                if (wanted > size.preferredWidth) size.preferredWidth = wanted;
+                // the value cell grows at once and shrinks back only to the widest value of the last ShrinkDelay seconds, so
+                // changing numbers don't re-lay out the window every frame, yet a value that was briefly very long (a period
+                // in millions of years as the orbit passes e = 1, #2447) doesn't keep the window wide for good
+                if (fixedCell || item.Width > 0) return;
+                float now = Time.unscaledTime;
+                if (length > widest)
+                {
+                    widest = recent = length;
+                    shrinkAt = now + ShrinkDelay;
+                    Apply();
+                    return;
+                }
+                recent = Math.Max(recent, length);
+                if (now < shrinkAt) return;
+                shrinkAt = now + ShrinkDelay;
+                if (recent < widest)
+                {
+                    widest = recent;
+                    Apply();
+                }
+                recent = length;
             }
 
             // a value cut off with "..." in a fixed-width window shows its whole text on hover
@@ -293,6 +311,9 @@ namespace MuMech.UI
         /// wrap instead of widening the window. 0 = no limit.
         /// </summary>
         public float RowWidth;
+
+        /// <summary>Seconds a value cell keeps its width after its value got shorter.</summary>
+        const float ShrinkDelay = 5;
 
         /// <summary>The window has a fixed width: value cells fill the room their label leaves and never resize the window.</summary>
         public bool FixedWidth;

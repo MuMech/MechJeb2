@@ -1,187 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
+using MechJebLib.Control;
+using MechJebLibBindings;
 using UnityEngine;
 
 namespace MuMech
 {
-    // This is where all the number-crunching occurs to output a set of throttles
-    // given a set of thrusters and the desired translation and rotation vectors.
-    public class RCSSolver
-    {
-        public class Thruster
-        {
-            private readonly Vector3 _pos;
-            private readonly Vector3[] _thrustDirections;
-
-            public Thruster(Vector3 pos, Vector3[] thrustDirections)
-            {
-                _pos = pos;
-                _thrustDirections = thrustDirections;
-            }
-
-            public Vector3 GetThrust(Vector3 direction, Vector3 rotation)
-            {
-                Vector3 force = Vector3.zero;
-                // The game appears to throttle a thruster based on the dot
-                // product of its thrust vector (normalized) and the
-                // direction vector (not normalized!).
-                foreach (Vector3 thrustDir in _thrustDirections)
-                {
-                    Vector3 torque = -Vector3.Cross(_pos, thrustDir);
-                    float translateThrottle = Vector3.Dot(direction, thrustDir);
-                    float rotateThrottle = Vector3.Dot(rotation, torque);
-                    float throttle = Mathf.Clamp01(translateThrottle + rotateThrottle);
-
-                    force += thrustDir * throttle;
-                }
-
-                return force;
-            }
-
-            public Vector3 GetTorque(Vector3 thrust) => -Vector3.Cross(_pos, thrust);
-        }
-
-        private double[,] _a;
-        private double[] _b;
-
-        private enum Params { TORQUE_X, TORQUE_Y, TORQUE_Z, TRANS_X, TRANS_Y, TRANS_Z, WASTE, FUDGE }
-
-        private readonly int _paramLength = Enum.GetValues(typeof(Params)).Length;
-
-        private void cost_func(double[] x, ref double func, object obj)
-        {
-            func = 0;
-            for (int attr = 0; attr < _b.Length; attr++)
-            {
-                double tmp = 0;
-                for (int row = 0; row < x.Length; row++)
-                {
-                    tmp += x[row] * _a[attr, row];
-                }
-
-                tmp -= _b[attr];
-                func += tmp * tmp;
-            }
-        }
-
-        public double[] Run(IReadOnlyList<Thruster> fullThrusters, Vector3 direction, Vector3 rotation, RCSSolverTuningParams tuning)
-        {
-            direction = direction.normalized;
-
-            int fullCount = fullThrusters.Count;
-            var thrusters = new List<Thruster>();
-            var thrustForces = new Vector3[fullCount];
-
-            // Initialize the matrix based on thruster directions.
-            for (int i = 0; i < fullCount; i++)
-            {
-                Thruster thruster = fullThrusters[i];
-                thrustForces[i] = thruster.GetThrust(direction, rotation);
-                if (thrustForces[i].magnitude > 0)
-                {
-                    thrusters.Add(thruster);
-                }
-            }
-
-            int count = thrusters.Count;
-
-            if (count == 0) return new double[fullCount]; // array of zeros
-
-            // We want to minimize torque (3 values), translation error (3 values),
-            // and any thrust that's wasted due to not being toward 'direction' (1
-            // value). We also have a value to make sure there's always -some-
-            // thrust.
-            _a = new double[_paramLength, count];
-            _b = new double[_paramLength];
-
-            for (int i = 0; i < _b.Length; i++)
-            {
-                _b[i] = 0;
-            }
-
-            _b[_b.Length - 1] = 0.001 * count;
-
-            double[] x = new double[count];
-            double[] bndl = new double[count];
-            double[] bndu = new double[count];
-
-            // Initialize the matrix based on thruster directions.
-            int tIdx = -1;
-            for (int i = 0; i < fullCount; i++)
-            {
-                Vector3 thrust = thrustForces[i];
-                if (thrust.magnitude == 0)
-                {
-                    continue;
-                }
-
-                Thruster thruster = thrusters[++tIdx];
-
-                Vector3 torque = thruster.GetTorque(thrust);
-                Vector3 thrustNorm = thrust.normalized;
-
-                Vector3 torqueErr = torque - rotation;
-                Vector3 transErr = thrustNorm - direction;
-
-                // Waste is a value from [0..2] indicating how much thrust is being
-                // wasted due to not being toward 'direction':
-                //     0: perfectly aligned with direction
-                //     1: perpendicular to direction
-                //     2: perfectly opposite direction
-                float waste = 1 - Vector3.Dot(thrustNorm, direction);
-
-                if (waste < tuning.WasteThreshold) waste = 0;
-
-                _a[(int)Params.TORQUE_X, tIdx] = torqueErr.x * tuning.FactorTorque;
-                _a[(int)Params.TORQUE_Y, tIdx] = torqueErr.y * tuning.FactorTorque;
-                _a[(int)Params.TORQUE_Z, tIdx] = torqueErr.z * tuning.FactorTorque;
-                _a[(int)Params.TRANS_X, tIdx] = transErr.x * tuning.FactorTranslate;
-                _a[(int)Params.TRANS_Y, tIdx] = transErr.y * tuning.FactorTranslate;
-                _a[(int)Params.TRANS_Z, tIdx] = transErr.z * tuning.FactorTranslate;
-                _a[(int)Params.WASTE, tIdx] = waste * tuning.FactorWaste;
-                _a[(int)Params.FUDGE, tIdx] = 0.001;
-                x[tIdx] = 1;
-                bndl[tIdx] = 0;
-                bndu[tIdx] = 1;
-            }
-
-            const double EPSG = 0.01;
-            const double EPSF = 0;
-            const double EPSX = 0;
-            const double DIFFSTEP = 1.0e-6;
-            const int MAXITS = 0;
-
-            alglib.minbleiccreatef(x, DIFFSTEP, out alglib.minbleicstate state);
-            alglib.minbleicsetbc(state, bndl, bndu);
-            alglib.minbleicsetcond(state, EPSG, EPSF, EPSX, MAXITS);
-            alglib.minbleicoptimize(state, cost_func, null, null);
-            alglib.minbleicresults(state, out double[] throttles, out alglib.minbleicreport _);
-
-            double m = throttles.Max();
-
-            if (m > 0)
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    throttles[i] /= m;
-                }
-            }
-
-            double[] fullThrottles = new double[fullCount];
-
-            int j = 0;
-            for (int i = 0; i < fullCount; i++)
-            {
-                fullThrottles[i] = thrustForces[i].magnitude == 0 ? 0 : throttles[j++];
-            }
-
-            return fullThrottles;
-        }
-    }
-
     // Recalculating throttles is expensive. This class is used as a key into a
     // dictionary of previously-calculated throttles.
     public class RCSSolverKey
@@ -195,7 +21,7 @@ namespace MuMech
 
         private readonly int _hash;
 
-        public static void SetPrecision(int precision) => _precision = precision;
+        public static void SetPrecision(int precision) => _precision = Math.Max(1, precision); // Bucketize divides by it
 
         private float Bucketize(double d, int precision) => (float)Mathf.RoundToInt((float)d * precision) / precision;
 
@@ -238,27 +64,6 @@ namespace MuMech
         public override int GetHashCode() => _hash;
 
         public override string ToString() => _hash.ToString("x6");
-    }
-
-    // Immutable so that a task on the solver thread can safely keep using the
-    // parameters it was submitted with after they've been replaced.
-    // Note that default(RCSSolverTuningParams) is all zeros; use Default instead.
-    public readonly struct RCSSolverTuningParams
-    {
-        public static readonly RCSSolverTuningParams Default = new RCSSolverTuningParams(0.25, 1, 0.005, 1);
-
-        public readonly double WasteThreshold;
-        public readonly double FactorTorque;
-        public readonly double FactorTranslate;
-        public readonly double FactorWaste;
-
-        public RCSSolverTuningParams(double wasteThreshold, double factorTorque, double factorTranslate, double factorWaste)
-        {
-            WasteThreshold = wasteThreshold;
-            FactorTorque = factorTorque;
-            FactorTranslate = factorTranslate;
-            FactorWaste = factorWaste;
-        }
     }
 
     public class RCSSolverThread
@@ -325,7 +130,7 @@ namespace MuMech
                     _isWorking = false;
 
                     _stopRunning = false;
-                    _t = new Thread(Run);
+                    _t = new Thread(Run) { IsBackground = true };
                     _t.Start();
                 }
             }
@@ -435,8 +240,13 @@ namespace MuMech
                         if (sr.Generation != _generation)
                             continue;
 
-                        _results[sr.Key] = sr.Throttles;
                         _pending.Remove(sr.Key);
+
+                        // The solve threw: leave the key out of the cache so it is submitted again.
+                        if (sr.Throttles == null)
+                            continue;
+
+                        _results[sr.Key] = sr.Throttles;
                         if (sr.Key.Equals(key))
                         {
                             throttles = sr.Throttles;
@@ -471,9 +281,21 @@ namespace MuMech
                         DateTime start = DateTime.Now;
                         _isWorking = true;
 
-                        double[] throttles = _solver.Run(task.Thrusters, task.Direction, task.Rotation, task.TuningParams);
+                        double[] throttles = null; // stays null if the solve throws, so GetThrottles() can try that key again
+                        try
+                        {
+                            throttles = _solver.Run(task.Thrusters, ((Vector3d)task.Direction).ToV3(), ((Vector3d)task.Rotation).ToV3(),
+                                task.TuningParams);
+                        }
+                        catch (Exception e)
+                        {
+                            ErrorString = e.Message + " ..[" + e.Source + "].. " + e.StackTrace;
+                        }
+                        finally
+                        {
+                            _isWorking = false;
+                        }
 
-                        _isWorking = false;
                         _resultsQueue.Enqueue(new SolverResult(task.Key, throttles, task.Generation));
 
                         _calculationTime.Value = (DateTime.Now - start).TotalSeconds;

@@ -272,7 +272,7 @@ namespace MuMech.UI
                             if (!(modules[j] is ModuleRCS pm)) continue;
                             if (!first) states.Append(' ');
                             first = false;
-                            states.Append('(').Append(pm.thrusterPower * 9, 0).Append(':');
+                            states.Append('(').Append(pm.flowMult * 9, 0).Append(':');
                             for (int k = 0; k < pm.thrustForces.Length; k++)
                             {
                                 if (k != 0) states.Append(',');
@@ -310,7 +310,7 @@ namespace MuMech.UI
                             if (!(modules[j] is ModuleRCS pm)) continue;
                             if (!first) throttles.Append(' ');
                             first = false;
-                            throttles.Append(pm.thrusterPower, 1);
+                            throttles.Append(pm.flowMult, 1);
                         }
                     }
                 }
