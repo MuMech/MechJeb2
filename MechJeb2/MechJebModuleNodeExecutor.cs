@@ -360,14 +360,6 @@ namespace MuMech
         {
             if (AngleFromNode() < 0.5 * PI) return false;
 
-            // Only delete the node when the burn is done. If the vessel was knocked off the burn vector with dV left,
-            // abort and leave the node for the player.
-            if (_dvLeft >= VesselState.MaxThrustAcceleration)
-            {
-                Abort();
-                return true;
-            }
-
             ManeuverNode node = Vessel.patchedConicSolver.maneuverNodes[0];
 
             node.RemoveSelf();
