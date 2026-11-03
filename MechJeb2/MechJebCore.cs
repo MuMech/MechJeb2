@@ -83,8 +83,8 @@ namespace MuMech
                 MechJebCore mj = vessel.GetMasterMechJeb();
                 if (mj == null) return;
 
-                if (value && !mj._deactivateControl)
-                    _controlledVessel.ctrlState.mainThrottle = _currentThrottle;
+                if (value && !mj._deactivateControl && mj._controlledVessel != null)
+                    mj._controlledVessel.ctrlState.mainThrottle = mj._currentThrottle;
 
                 mj._deactivateControl = value;
             }
@@ -222,7 +222,7 @@ namespace MuMech
 
                 if (moduleTranslatron is { TechLocked: false })
                 {
-                    Thrust.TransKillH = !Thrust.TransKillH;
+                    masterMechJeb.Thrust.TransKillH = !masterMechJeb.Thrust.TransKillH;
                 }
                 else
                 {
@@ -241,6 +241,9 @@ namespace MuMech
         public void OnAscentAPToggleAction(KSPActionParam param)
         {
             MechJebCore masterMechJeb = vessel.GetMasterMechJeb();
+
+            if (masterMechJeb == null)
+                return;
 
             MechJebModuleAscentBaseAutopilot autopilot = masterMechJeb.AscentSettings.AscentAutopilot;
             MechJebModuleAscentMenu ascentMenu = GetComputerModule<MechJebModuleAscentMenu>();
@@ -268,7 +271,7 @@ namespace MuMech
 
             if (moduleTranslatron is { TechLocked: false })
             {
-                if (Thrust.Users.Count > 1 && !Thrust.Users.Contains(moduleTranslatron))
+                if (masterMechJeb.Thrust.Users.Count > 1 && !masterMechJeb.Thrust.Users.Contains(moduleTranslatron))
                     return;
 
                 moduleTranslatron.SetMode(mode);
@@ -292,7 +295,7 @@ namespace MuMech
             MechJebModuleTranslatron moduleTranslatron = masterMechJeb.GetComputerModule<MechJebModuleTranslatron>();
 
             if (moduleTranslatron is { TechLocked: false })
-                Thrust.TransSpdAct = (relative ? Thrust.TransSpdAct : 0) + speed;
+                masterMechJeb.Thrust.TransSpdAct = (relative ? masterMechJeb.Thrust.TransSpdAct : 0) + speed;
             else
                 Debug.LogError("MechJeb couldn't find MechJebModuleTranslatron for translatron control via action group.");
         }
@@ -409,6 +412,7 @@ namespace MuMech
             _unorderedComputerModules.Clear();
             ClearModulesCache();
 
+            if (_controlledVessel != null) _controlledVessel.OnFlyByWire -= OnFlyByWire;
             if (vessel != null) vessel.OnFlyByWire -= OnFlyByWire;
             _controlledVessel = null;
 
@@ -1063,6 +1067,11 @@ namespace MuMech
                 {
                     Debug.LogError("MechJeb module " + module.GetType().Name + " threw an exception in OnDestroy: " + e);
                 }
+            }
+
+            if (_controlledVessel != null)
+            {
+                _controlledVessel.OnFlyByWire -= OnFlyByWire;
             }
 
             if (vessel != null)
