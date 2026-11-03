@@ -274,31 +274,25 @@ namespace MuMech
         public delegate void OnEvent();
 
         private readonly List<OnEvent> _events = new List<OnEvent>();
-        private readonly Dictionary<OnEvent, int> _eventIndex = new Dictionary<OnEvent, int>();
 
         public void Add(OnEvent evt)
         {
-            if (_eventIndex.ContainsKey(evt))
+            if (_events.Contains(evt))
                 return;
 
             _events.Add(evt);
-            _eventIndex.Add(evt, _events.Count - 1);
         }
 
         [UsedImplicitly]
         public void Remove(OnEvent evt)
         {
-            if (!_eventIndex.ContainsKey(evt))
-                return;
-
-            _events.RemoveAt(_eventIndex[evt]);
-            _eventIndex.Remove(evt);
+            // Search the list instead of caching indices: they go stale after any RemoveAt
+            _events.Remove(evt);
         }
 
         public void Clear()
         {
             _events.Clear();
-            _eventIndex.Clear();
         }
 
         public void Fire(bool reverse)
@@ -349,8 +343,14 @@ namespace MuMech
             _controlledModule.Enabled = false;
         }
 
-        public bool RecursiveUser(object user)
+        public bool RecursiveUser(object user) => RecursiveUser(user, new HashSet<UserPool>());
+
+        // visited stops the recursion if two modules use each other
+        private bool RecursiveUser(object user, HashSet<UserPool> visited)
         {
+            if (!visited.Add(this))
+                return false;
+
             if (Contains(user))
                 return true;
 
@@ -359,7 +359,7 @@ namespace MuMech
                 if (!(o is ComputerModule c) || c == _controlledModule)
                     continue;
 
-                if (c.Users.RecursiveUser(user))
+                if (c.Users.RecursiveUser(user, visited))
                     return true;
             }
 

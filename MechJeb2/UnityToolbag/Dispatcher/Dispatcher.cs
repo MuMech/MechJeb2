@@ -65,19 +65,31 @@ namespace UnityToolbag
                 return;
             }
 
-            bool hasRun = false;
+            using var done = new ManualResetEventSlim(false);
+            Exception error = null;
 
             InvokeAsync(() =>
             {
-                action();
-                hasRun = true;
+                try
+                {
+                    action();
+                }
+                catch (Exception e)
+                {
+                    error = e;
+                }
+                finally
+                {
+                    // Always release the caller, even if the action throws
+                    done.Set();
+                }
             });
 
-            // Lock until the action has run
-            while (!hasRun)
-            {
-                Thread.Sleep(5);
-            }
+            // Block until the action has run
+            done.Wait();
+
+            if (error != null)
+                throw new Exception("Exception in Dispatcher.Invoke action", error);
         }
 
         private void Awake()
@@ -106,11 +118,24 @@ namespace UnityToolbag
 
         private void Update()
         {
-            lock (_lockObject)
+            // Run the callbacks outside the lock so a callback that waits on a worker thread cannot deadlock
+            while (true)
             {
-                while (_actions.Count > 0)
+                Action action;
+                lock (_lockObject)
                 {
-                    ((Action)_actions.Dequeue())();
+                    if (_actions.Count == 0)
+                        break;
+                    action = (Action)_actions.Dequeue();
+                }
+
+                try
+                {
+                    action();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
                 }
             }
         }
