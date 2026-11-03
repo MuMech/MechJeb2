@@ -830,7 +830,16 @@ namespace MuMech
                 {
                     try
                     {
-                        global = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
+                        ConfigNode loaded = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
+                        if (loaded != null && (loaded.CountNodes > 0 || loaded.CountValues > 0))
+                        {
+                            global = loaded;
+                        }
+                        else
+                        {
+                            // Empty or unreadable file (for example a crash mid-write). A 0-byte file loads as an empty node, not null.
+                            generateDefaultWindows = true;
+                        }
                     }
                     catch (Exception e)
                     {
@@ -849,7 +858,7 @@ namespace MuMech
                 {
                     try
                     {
-                        type = ConfigNode.Load(typePath);
+                        type = ConfigNode.Load(typePath) ?? type;
                     }
                     catch (Exception e)
                     {
@@ -1017,7 +1026,15 @@ namespace MuMech
                 Profiler.BeginSample("MechJebCore.OnSave.type");
                 if (type != null && vessel != null)
                 {
-                    ConfigNodeWriter.Save(type, MuUtils.GetTypeCfgPath(vessel.vesselName));
+                    // Its own try: a bad type file name must not prevent the global save
+                    try
+                    {
+                        ConfigNodeWriter.Save(type, MuUtils.GetTypeCfgPath(vessel.vesselName));
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("MechJeb caught exception saving the vessel type settings: " + e);
+                    }
                 }
 
                 Profiler.EndSample();

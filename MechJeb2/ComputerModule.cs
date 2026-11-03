@@ -177,7 +177,8 @@ namespace MuMech
                     Profiler.EndSample();
                 }
 
-                Dirty = false;
+                // Only the global/type save writes the files: the sfs save (local only) must not hide pending file changes
+                if (global != null) Dirty = false;
             }
             catch (Exception e)
             {
