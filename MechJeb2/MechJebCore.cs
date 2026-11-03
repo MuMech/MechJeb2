@@ -831,13 +831,13 @@ namespace MuMech
                     try
                     {
                         ConfigNode loaded = ConfigNode.Load(MuUtils.GetCfgPath("mechjeb_settings_global.cfg"));
-                        if (loaded != null)
+                        if (loaded != null && (loaded.CountNodes > 0 || loaded.CountValues > 0))
                         {
                             global = loaded;
                         }
                         else
                         {
-                            // Empty or unreadable file (for example a crash mid-write)
+                            // Empty or unreadable file (for example a crash mid-write). A 0-byte file loads as an empty node, not null.
                             generateDefaultWindows = true;
                         }
                     }
