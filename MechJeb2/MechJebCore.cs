@@ -637,10 +637,20 @@ namespace MuMech
 
             Profiler.BeginSample("MechJebCore.Update");
 
-            if (Input.GetKeyDown(KeyCode.V) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+            if (Input.GetKeyDown(KeyCode.V) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                && (HighLogic.LoadedSceneIsEditor || vessel.isActiveVessel)
+                && (GuiUtils.MouseIsOverWindow(this) || MechJebUiHost.MouseOverHostWindow()))
             {
-                MechJebModuleCustomWindowEditor windowEditor = GetComputerModule<MechJebModuleCustomWindowEditor>();
-                if (windowEditor != null) windowEditor.CreateWindowFromSharingString(MuUtils.SystemClipboard);
+                try
+                {
+                    string clipboard = MuUtils.SystemClipboard;
+                    MechJebModuleCustomWindowEditor windowEditor = GetComputerModule<MechJebModuleCustomWindowEditor>();
+                    if (windowEditor != null && !string.IsNullOrWhiteSpace(clipboard)) windowEditor.CreateWindowFromSharingString(clipboard);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
 
             //periodically save settings in case we quit unexpectedly
@@ -1178,11 +1188,20 @@ namespace MuMech
 
         private void OnShowGUI() => ShowGui = true;
 
-        private void OnHideGUI() => ShowGui = false;
+        private void OnHideGUI()
+        {
+            ShowGui = false;
+            if (_weLockedInputs) UnlockControl();
+        }
 
         private void OnGUI()
         {
-            if (!ShowGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready) return;
+            if (!ShowGui || this != vessel.GetMasterMechJeb() || (!FlightGlobals.ready && HighLogic.LoadedSceneIsFlight) || !_ready)
+            {
+                // we no longer draw, so nothing can release the lock for us
+                if (_weLockedInputs) UnlockControl();
+                return;
+            }
 
             Profiler.BeginSample("MechJebCore.OnGUI");
 
@@ -1227,6 +1246,10 @@ namespace MuMech
                         Debug.LogException(e);
                     }
                 }
+            }
+            else if (_weLockedInputs)
+            {
+                UnlockControl();
             }
 
             Profiler.EndSample();
