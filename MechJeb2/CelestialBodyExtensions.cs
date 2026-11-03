@@ -84,16 +84,24 @@ namespace MuMech
             double latitude, double longitude,
             double sampleRadiusMeters = 50.0)
         {
-            double epsilon = sampleRadiusMeters / (body.Radius * Math.PI / 180.0);
-
-            double hN = body.TerrainAltitude(latitude + epsilon, longitude, true);
-            double hS = body.TerrainAltitude(latitude - epsilon, longitude, true);
-            double hE = body.TerrainAltitude(latitude, longitude + epsilon, true);
-            double hW = body.TerrainAltitude(latitude, longitude - epsilon, true);
-
             double metersPerDeg = body.Radius * Math.PI / 180.0;
-            double dhdx = (hE - hW) / (2.0 * epsilon * metersPerDeg);
-            double dhdy = (hN - hS) / (2.0 * epsilon * metersPerDeg);
+            double epsilon = sampleRadiusMeters / metersPerDeg;
+
+            // a degree of longitude is only cos(latitude) as long, so widen the longitude step to keep it sampleRadiusMeters
+            double cosLat = Math.Max(Math.Cos(latitude * Math.PI / 180.0), 0.01);
+            double epsilonLon = epsilon / cosLat;
+
+            // do not step past the poles, the actual north-south distance is used below
+            double latN = Math.Min(latitude + epsilon, 90.0);
+            double latS = Math.Max(latitude - epsilon, -90.0);
+
+            double hN = body.TerrainAltitude(latN, longitude, true);
+            double hS = body.TerrainAltitude(latS, longitude, true);
+            double hE = body.TerrainAltitude(latitude, longitude + epsilonLon, true);
+            double hW = body.TerrainAltitude(latitude, longitude - epsilonLon, true);
+
+            double dhdx = (hE - hW) / (2.0 * epsilonLon * metersPerDeg * cosLat);
+            double dhdy = latN > latS ? (hN - hS) / ((latN - latS) * metersPerDeg) : 0;
 
             return (float)(Math.Atan(Math.Sqrt(dhdx * dhdx + dhdy * dhdy)) * 180.0 / Math.PI);
         }
