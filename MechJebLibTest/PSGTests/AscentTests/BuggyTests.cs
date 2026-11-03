@@ -56,6 +56,18 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Tgo(solution.T0, 2).ShouldEqual(5.8270302676667614, 1e-6);
             solution.Tgo(solution.T0, 3).ShouldEqual(5.8270300015709351, 1e-6);
             solution.Tgo(solution.T0, 4).ShouldEqual(5.8270300015709351, 1e-6);
+
+            // the booster before the coast gets the precise shutdown, not the coast
+            solution.OptimizeKSPStage().ShouldEqual(4);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(3);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(2);
+            solution.IndexForKSPStage(2, false).ShouldEqual(2);
+            solution.IndexForKSPStage(1, false).ShouldEqual(3);
+            solution.IndexForKSPStage(0, false).ShouldEqual(4);
+            solution.IndexForKSPStage(3, true).ShouldEqual(1);
         }
 
         // A suborbital Thor that had convergence issues on the pad
@@ -90,6 +102,17 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            // all fixed burn time stages with no coast, so no stage needs a precise shutdown
+            solution.OptimizeKSPStage().ShouldEqual(-1);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(3, false).ShouldEqual(0);
+            solution.IndexForKSPStage(2, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, false).ShouldEqual(1);
+            solution.IndexForKSPStage(0, false).ShouldEqual(2);
+            solution.IndexForKSPStage(0, true).ShouldEqual(-1);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
@@ -144,6 +167,17 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(1);
+            solution.TerminalKSPStage().ShouldEqual(1);
+            solution.TerminalMJPhase().ShouldEqual(1);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(2, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, false).ShouldEqual(2);
+            solution.IndexForKSPStage(0, false).ShouldEqual(-1);
+            solution.IndexForKSPStage(1, true).ShouldEqual(-1);
         }
 
         // TODO: synch back up with PVG values
@@ -174,6 +208,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(1);
+            solution.TerminalKSPStage().ShouldEqual(1);
+            solution.TerminalMJPhase().ShouldEqual(1);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(2, false).ShouldEqual(0);
+            solution.IndexForKSPStage(1, false).ShouldEqual(1);
+            solution.IndexForKSPStage(0, false).ShouldEqual(-1);
+            solution.IndexForKSPStage(1, true).ShouldEqual(-1);
         }
 
         [Fact]
@@ -209,6 +252,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             solution.TerminalKSPStage().ShouldEqual(4);
             solution.OptimizeKSPStage().ShouldEqual(4);
+            solution.TerminalMJPhase().ShouldEqual(4);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(7, false).ShouldEqual(0);
+            solution.IndexForKSPStage(4, false).ShouldEqual(1);
+            solution.IndexForKSPStage(2, false).ShouldEqual(2);
+            solution.IndexForKSPStage(0, false).ShouldEqual(3);
+            solution.IndexForKSPStage(0, true).ShouldEqual(-1);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
         }
@@ -239,6 +289,17 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            // the booster before the coast gets the precise shutdown, not the coast
+            solution.OptimizeKSPStage().ShouldEqual(4);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(1);
+            solution.IndexForKSPStage(7, false).ShouldEqual(0);
+            solution.IndexForKSPStage(4, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, false).ShouldEqual(3);
+            solution.IndexForKSPStage(0, false).ShouldEqual(3);
+            solution.IndexForKSPStage(1, true).ShouldEqual(2);
 
             Ascent ascent2 = Ascent.Builder()
                .Initial(new V3(-3255967.18116409, -4547891.60302231, 3050610.57695918), new V3(331.637492561945, -237.428880310986, 7.25192369772431E-06), new V3(-0.511086312614353, -0.713789180806743, 0.478848457336426), 309907.485302214, 398600435436096, 6371000)
@@ -290,6 +351,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(1);
+            solution.TerminalKSPStage().ShouldEqual(1);
+            solution.TerminalMJPhase().ShouldEqual(1);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(5, false).ShouldEqual(0);
+            solution.IndexForKSPStage(4, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, false).ShouldEqual(2);
+            solution.IndexForKSPStage(0, false).ShouldEqual(-1);
+            solution.IndexForKSPStage(1, true).ShouldEqual(-1);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 

@@ -293,6 +293,16 @@ namespace MechJebLib.PSG
             return false;
         }
 
+        // true if we're in a coast, or the phase after the current one is a coast.  Unlike WillCoast this is false for a burn
+        // which is followed by other burns before the coast.
+        public bool CoastFollows(double t)
+        {
+            double tbar = (t - T0) / _timeScale;
+            int idx = IndexForTbar(tbar);
+
+            return Phases[idx].Coast || (idx + 1 < Phases.Count && Phases[idx + 1].Coast);
+        }
+
         public int CoastKSPStage()
         {
             for (int i = 0; i < Phases.Count; i++)
@@ -457,8 +467,9 @@ namespace MechJebLib.PSG
             {
                 int idx = IndexForTbar(tbar);
                 // back up to find an AllowShutdown stage if we've gone past the terminal time and
-                // hit a coast or a fixed burn time stage
-                while ((idx > 0 && !Phases[idx].AllowShutdown) || Phases[idx].Coast)
+                // hit a coast or a fixed burn time stage (the first phase may be a coast in a solution
+                // computed during the coast, so don't walk off the front)
+                while (idx > 0 && (!Phases[idx].AllowShutdown || Phases[idx].Coast))
                     idx--;
                 // go forward to the end of this multi-stage burn segment until we hit a coast or fixed stages
                 while (idx < Segments - 1 && Phases[idx].AllowShutdown && Phases[idx + 1].AllowShutdown && !Phases[idx + 1].Coast)

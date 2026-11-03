@@ -41,6 +41,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Vgo(t0).ShouldEqual(2595.8963285782665, 1e-3);
             solution.Tgo(t0).ShouldEqual(610.08086261522431, 1e-3);
 
+            solution.OptimizeKSPStage().ShouldEqual(0);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(0);
+            solution.IndexForKSPStage(0, false).ShouldEqual(0);
+            solution.IndexForKSPStage(0, true).ShouldEqual(1);
+
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, _, _, _, _) = Astro.KeplerianFromStateVectors(MU, rf, vf);
@@ -76,6 +83,13 @@ namespace MechJebLibTest.PSGTests.AscentTests
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Vgo(t0).ShouldEqual(3522.6470530283032, 1e-3);
             solution.Tgo(t0).ShouldEqual(472.31028465910936, 1e-3);
+
+            solution.OptimizeKSPStage().ShouldEqual(0);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(0);
+            solution.IndexForKSPStage(0, false).ShouldEqual(0);
+            solution.IndexForKSPStage(0, true).ShouldEqual(1);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 

@@ -78,6 +78,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Tgo(0).ShouldEqual(924.139, 1e-3);
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
+            solution.OptimizeKSPStage().ShouldEqual(1);
+            solution.TerminalKSPStage().ShouldEqual(1);
+            solution.TerminalMJPhase().ShouldEqual(1);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(2, false).ShouldEqual(2);
+            solution.IndexForKSPStage(1, false).ShouldEqual(3);
+            solution.IndexForKSPStage(1, true).ShouldEqual(-1);
+
             //solution.U(0).normalized.ShouldEqual(new V3(0.69734975209707417, 0.6074944955387559, 0.38033374967291772), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
@@ -166,6 +176,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             solution.Tgo(0).ShouldEqual(1600.5671186447382, 5e-2);
             solution.Vgo(0).ShouldEqual(11121.768749617131, 1e-3);
+
+            solution.OptimizeKSPStage().ShouldEqual(1);
+            solution.TerminalKSPStage().ShouldEqual(1);
+            solution.TerminalMJPhase().ShouldEqual(1);
+            solution.CoastKSPStage().ShouldEqual(1);
+            solution.IndexForKSPStage(2, false).ShouldEqual(0);
+            solution.IndexForKSPStage(1, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, true).ShouldEqual(2);
 
             (double pitch, double heading) = Astro.ECIToPitchHeading(r0, solution.U(0));
             Rad2Deg(pitch).ShouldEqual(83.373269308213963, 5e-2);

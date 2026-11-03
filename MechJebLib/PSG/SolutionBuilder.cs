@@ -47,7 +47,9 @@ namespace MechJebLib.PSG
                 // is this is a prunable stage (negligible propellant use after we can prune)
                 bool prunableStage = pruningStages && bt < 1e-3;
 
-                if (phase.AllowShutdown && !prunableStage)
+                // coasts are AllowShutdown, but there's no engine to shut down precisely, so they must not take the flag
+                // from the burn before them
+                if (phase.AllowShutdown && !phase.Coast && !prunableStage)
                     optimizedShutdownIndex = p;
 
                 phase.PreciseShutdown = false;
