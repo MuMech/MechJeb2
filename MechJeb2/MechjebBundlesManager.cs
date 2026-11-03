@@ -25,8 +25,11 @@ namespace MuMech
         private IEnumerator Start()
         {
             // We do this in MainMenu because something is going on in that scene that kills anything loaded with a bundle
-            if (diffuseAmbient)
+            if (diffuseAmbient && diffuseAmbientIgnoreZ && comboBoxBackground)
+            {
                 MechJebCore.Print("Shaders already loaded");
+                yield break;
+            }
 
             MechJebCore.Print("Loading Shaders Bundles");
 

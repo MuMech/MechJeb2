@@ -901,6 +901,7 @@ namespace MuMech
                 // Remove any currently loaded custom windows
                 while (GetComputerModule<MechJebModuleCustomInfoWindow>() is { } win)
                 {
+                    win.OnDestroy(); // frees the window's background texture
                     RemoveComputerModule(win);
                 }
 
