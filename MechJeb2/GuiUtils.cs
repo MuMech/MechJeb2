@@ -762,7 +762,11 @@ namespace MuMech
             double a = (position - from).magnitude;
             double b = (position - to).magnitude;
             double c = Vector3d.Distance(from, to);
-            double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
+            double denominator = 2 * a * b;
+            if (denominator <= 0)
+                return 0;
+            // rounding can push the cosine just outside [-1, 1]
+            double ang = Math.Acos(MathExtensions.Clamp((a * a + b * b - c * c) / denominator, -1, 1));
             return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
 
