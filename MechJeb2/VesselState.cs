@@ -90,6 +90,7 @@ namespace MuMech
         //FARCalculateVesselAeroForces(vessel,out farForce,out farTorque,surfaceVelocity,altitudeASL);
         private Vector3 _lastFarForce;
         private Vector3d _lastSurfaceVelocity;
+        private bool _farForceCacheInvalid = true; // set when the vessel changed, the cached force is of another configuration
 
         [ValueInfoItem("#MechJeb_Altitude_ASL", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Altitude (ASL)
         public double AltitudeASL;
@@ -466,6 +467,10 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DebugString", InfoItem.Category.Misc, showInEditor = true)] //Debug String
         public void DebugString() { }
 
+        public override void OnVesselWasModified(Vessel v) => _farForceCacheInvalid = true;
+
+        public override void OnVesselStandardModification(Vessel v) => _farForceCacheInvalid = true;
+
         public override void OnStart(PartModule.StartState state) => GameEvents.onLaunch.Add(OnLaunch);
 
         public override void OnDestroy() => GameEvents.onLaunch.Remove(OnLaunch);
@@ -808,15 +813,17 @@ namespace MuMech
             double altitudeASL)
         {
             float aoa = Vector3.Angle(v.rootPart.transform.TransformDirection(Vector3.up), surfaceVelocity);
-            if ((_lastSurfaceVelocity - surfaceVelocity).sqrMagnitude > D_VELOCITY_SQR_THRESHOLD
+            if (_farForceCacheInvalid
+                || (_lastSurfaceVelocity - surfaceVelocity).sqrMagnitude > D_VELOCITY_SQR_THRESHOLD
                 || Math.Abs(altitudeASL - _lastAltitudeAsl) > D_ALTITUDE_THRESHOLD
-                || (surfaceVelocity.sqrMagnitude > D_VELOCITY_SQR_MIN_THRESHOLD && aoa - _lastAoA > F_AO_A_THRESHOLD))
+                || (surfaceVelocity.sqrMagnitude > D_VELOCITY_SQR_MIN_THRESHOLD && Math.Abs(aoa - _lastAoA) > F_AO_A_THRESHOLD))
             {
                 FARCalculateVesselAeroForces.Call(v, out farForce, out _, surfaceVelocity, altitudeASL);
                 _lastSurfaceVelocity = surfaceVelocity;
                 _lastAltitudeAsl = altitudeASL;
                 _lastAoA = aoa;
                 _lastFarForce = farForce;
+                _farForceCacheInvalid = false;
             }
             else
             {
@@ -964,8 +971,8 @@ namespace MuMech
                                     {
                                         float effectiveActuatorDelay = (float)Clamp(50 - surface.actuatorSpeed / surface.ctrlSurfaceRange, 0, 50);
 
-                                        torqueWeightedExponentialResponseDelay6.Positive = effectiveActuatorDelay * ctrlTorquePos.Abs();
-                                        torqueWeightedExponentialResponseDelay6.Negative = effectiveActuatorDelay * ctrlTorqueNeg.Abs();
+                                        torqueWeightedExponentialResponseDelay6.Positive += effectiveActuatorDelay * ctrlTorquePos.Abs();
+                                        torqueWeightedExponentialResponseDelay6.Negative += effectiveActuatorDelay * ctrlTorqueNeg.Abs();
                                     }
                                     else
                                     {
@@ -973,8 +980,8 @@ namespace MuMech
                                         // XXX: this should probably be tweakable
                                         float effectiveActuatorDelay = (float)Clamp(50 - 10 * surface.actuatorSpeed / surface.ctrlSurfaceRange, 0, 50);
 
-                                        torqueWeightedLinearResponseDelay6.Positive = effectiveActuatorDelay * ctrlTorquePos.Abs();
-                                        torqueWeightedLinearResponseDelay6.Negative = effectiveActuatorDelay * ctrlTorqueNeg.Abs();
+                                        torqueWeightedLinearResponseDelay6.Positive += effectiveActuatorDelay * ctrlTorquePos.Abs();
+                                        torqueWeightedLinearResponseDelay6.Negative += effectiveActuatorDelay * ctrlTorqueNeg.Abs();
                                     }
 
                                     torqueReactionSpeed6.Add(Mathf.Abs(surface.ctrlSurfaceRange) / surface.actuatorSpeed *
