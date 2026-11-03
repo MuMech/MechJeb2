@@ -9,7 +9,10 @@ namespace MuMech
 {
     public static class MathExtensions
     {
-        public static Vector3d Sign(this Vector3d vector) => new Vector3d(Math.Sign(vector.x), Math.Sign(vector.y), Math.Sign(vector.z));
+        public static Vector3d Sign(this Vector3d vector) => new Vector3d(SignNoThrow(vector.x), SignNoThrow(vector.y), SignNoThrow(vector.z));
+
+        // Math.Sign throws on NaN, this returns 0
+        private static int SignNoThrow(double d) => d > 0 ? 1 : d < 0 ? -1 : 0;
 
         public static Vector3d Abs(this Vector3d vector) => new Vector3d(Math.Abs(vector.x), Math.Abs(vector.y), Math.Abs(vector.z));
 
@@ -58,7 +61,7 @@ namespace MuMech
             if (v1.magnitude == 0 || v2.magnitude == 0)
                 return double.NaN;
 
-            double angle = Clamp360(Math.Acos(Vector3d.Dot(v1.normalized, v2.normalized)) * UtilMath.Rad2Deg);
+            double angle = Clamp360(Math.Acos(Clamp(Vector3d.Dot(v1.normalized, v2.normalized), -1, 1)) * UtilMath.Rad2Deg);
             if (Vector3d.Dot(Vector3d.Cross(v1, v2), planeNormal) < 0)
                 return -angle;
             return angle;
@@ -200,6 +203,7 @@ namespace MuMech
             }
         }
 
+        // Same convention as UnityEngine.Quaternion.Euler and EulerAngles above: rotate z, then x, then y (q = qy * qx * qz).
         public static QuaternionD Euler(double x, double y, double z)
         {
             x = Deg2Rad(x);
@@ -213,7 +217,7 @@ namespace MuMech
             double cz = Math.Cos(z * 0.5);
             double sz = Math.Sin(z * 0.5);
 
-            var q = new QuaternionD { w = cz * cx * cy + sz * sx * sy, x = cz * sx * cy - sz * cx * sy, y = cz * cx * sy + sz * sx * cy, z = sz * cx * cy - cz * sx * sy };
+            var q = new QuaternionD { w = cy * cx * cz + sy * sx * sz, x = cy * sx * cz + sy * cx * sz, y = sy * cx * cz - cy * sx * sz, z = cy * cx * sz - sy * sx * cz };
 
             return q;
         }
@@ -255,7 +259,9 @@ namespace MuMech
         {
             t = Clamp01(t);
 
-            double dot = Vector3d.Dot(a.normalized, b.normalized);
+            // The formulas below assume a unit start vector, the magnitudes are interpolated separately
+            Vector3d ua = a.normalized;
+            double dot = Vector3d.Dot(ua, b.normalized);
 
             // If the vectors are very close, just lerp and normalize
             if (dot > 0.9999999999)
@@ -281,15 +287,15 @@ namespace MuMech
                 double sinHalfTheta = Math.Sin(Mathf.PI * t);
                 double cosHalfTheta = Math.Cos(Mathf.PI * t);
 
-                Vector3d result = a * cosHalfTheta + perpendicular * sinHalfTheta;
+                Vector3d result = ua * cosHalfTheta + perpendicular * sinHalfTheta;
                 return result.normalized * Lerp(a.magnitude, b.magnitude, t);
             }
 
             // Normal case: perform the spherical interpolation
             dot = Clamp(dot, -1.0f, 1.0f);
             double theta = Math.Acos(dot) * t;
-            Vector3d relativeVec = (b - a * dot).normalized;
-            Vector3d newDirection = a * Math.Cos(theta) + relativeVec * Math.Sin(theta);
+            Vector3d relativeVec = (b.normalized - ua * dot).normalized;
+            Vector3d newDirection = ua * Math.Cos(theta) + relativeVec * Math.Sin(theta);
             double newMagnitude = Lerp(a.magnitude, b.magnitude, t);
 
             return newDirection.normalized * newMagnitude;

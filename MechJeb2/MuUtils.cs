@@ -70,7 +70,7 @@ namespace MuMech
                 }
                 else
                 {
-                    ret.argumentOfPeriapsis = Math.Acos(cosArgumentOfPeriapsis);
+                    ret.argumentOfPeriapsis = Math.Acos(cosArgumentOfPeriapsis) * UtilMath.Rad2Deg;
                 }
             }
 
