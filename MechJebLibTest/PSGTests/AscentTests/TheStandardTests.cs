@@ -56,6 +56,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Tgo(solution.T0, 2).ShouldEqual(234.78752267826667, 1e-3);
             solution.Tgo(solution.T0, 3).ShouldBePositive();
 
+            solution.OptimizeKSPStage().ShouldEqual(1);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(1);
+            solution.IndexForKSPStage(3, false).ShouldEqual(0);
+            solution.IndexForKSPStage(2, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, false).ShouldEqual(1);
+            solution.IndexForKSPStage(0, false).ShouldEqual(3);
+            solution.IndexForKSPStage(1, true).ShouldEqual(2);
+
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
 
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
@@ -115,6 +125,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Tgo(solution.T0, 1).ShouldBePositive();
             solution.Tgo(solution.T0, 2).ShouldEqual(221.93374918746366, 1e-2);
             solution.Tgo(solution.T0, 3).ShouldBePositive();
+
+            solution.OptimizeKSPStage().ShouldEqual(1);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(1);
+            solution.IndexForKSPStage(3, false).ShouldEqual(0);
+            solution.IndexForKSPStage(2, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, false).ShouldEqual(1);
+            solution.IndexForKSPStage(0, false).ShouldEqual(3);
+            solution.IndexForKSPStage(1, true).ShouldEqual(2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
@@ -186,6 +206,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Tgo(solution.T0, 2).ShouldEqual(135.22924418942029, 1e-2);
             solution.Tgo(solution.T0, 3).ShouldBePositive();
 
+            solution.OptimizeKSPStage().ShouldEqual(1);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(1);
+            solution.IndexForKSPStage(3, false).ShouldEqual(0);
+            solution.IndexForKSPStage(2, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, false).ShouldEqual(1);
+            solution.IndexForKSPStage(0, false).ShouldEqual(3);
+            solution.IndexForKSPStage(1, true).ShouldEqual(2);
+
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
             (V3 rf, V3 vf) = solution.TerminalStateVectors();
@@ -254,6 +284,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Tgo(solution.T0, 1).ShouldBePositive();
             solution.Tgo(solution.T0, 2).ShouldEqual(130.80357401545331, 1e-2);
             solution.Tgo(solution.T0, 3).ShouldBePositive();
+
+            solution.OptimizeKSPStage().ShouldEqual(0);
+            solution.TerminalKSPStage().ShouldEqual(0);
+            solution.TerminalMJPhase().ShouldEqual(0);
+            solution.CoastKSPStage().ShouldEqual(1);
+            solution.IndexForKSPStage(3, false).ShouldEqual(0);
+            solution.IndexForKSPStage(2, false).ShouldEqual(1);
+            solution.IndexForKSPStage(1, false).ShouldEqual(1);
+            solution.IndexForKSPStage(0, false).ShouldEqual(3);
+            solution.IndexForKSPStage(1, true).ShouldEqual(2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 

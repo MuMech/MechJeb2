@@ -52,6 +52,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             smaf.ShouldEqual(8616511.1913318466, 1e-5);
             eccf.ShouldEqual(0.23913520746130185, 1e-5);
             incf.ShouldEqual(incT, 1e-5);
@@ -100,6 +109,11 @@ namespace MechJebLibTest.PSGTests.AscentTests
             // all fixed burn time stages with no coast, so no stage needs a precise shutdown
             solution.OptimizeKSPStage().ShouldEqual(-1);
             solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
 
             solution.U(0).normalized.ShouldEqual(new V3(0.68052484128120905, 0.6317658413531414, 0.37115746267392064), 1e-3);
             solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
@@ -150,6 +164,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             smaf.ShouldEqual(8616511.1913318466, 1e-6);
             eccf.ShouldEqual(0.23913520746130185, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
@@ -197,6 +220,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.Vgo(0).ShouldEqual(9369.7098971395462, 1e-3);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            // all fixed burn time stages with no coast, so no stage needs a precise shutdown
+            solution.OptimizeKSPStage().ShouldEqual(-1);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             smaf.ShouldEqual(8614160.805091612, 1e-6);
             eccf.ShouldEqual(0.23892760440170616, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
@@ -238,6 +271,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (_, double gammaT) = Astro.FPATargetFromApsides(PeR, ApR, AttR, mu);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             gammaT.ShouldBePositive();
             rf.magnitude.ShouldEqual(AttR, 1e-6);
             Astro.FlightPathAngle(rf, vf).ShouldEqual(gammaT, 1e-6);
@@ -278,6 +320,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (_, double gammaT) = Astro.FPATargetFromApsides(PeR, ApR, AttR, mu);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             gammaT.ShouldBePositive();
             rf.magnitude.ShouldEqual(AttR, 1e-6);
             Astro.FlightPathAngle(rf, vf).ShouldEqual(gammaT, 1e-6);
@@ -318,6 +369,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (_, _, double incf, _, _, _, _) = Astro.KeplerianFromStateVectors(mu, rf, vf);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            // all fixed burn time stages with no coast, so no stage needs a precise shutdown
+            solution.OptimizeKSPStage().ShouldEqual(-1);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             rf.magnitude.ShouldEqual(AttR, 1e-6);
             Astro.FlightPathAngle(rf, vf).ShouldEqual(fpaT, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
@@ -353,6 +414,16 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (_, _, double incf, double lanf, _, _, _) = Astro.KeplerianFromStateVectors(mu, rf, vf);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            // all fixed burn time stages with no coast, so no stage needs a precise shutdown
+            solution.OptimizeKSPStage().ShouldEqual(-1);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             rf.magnitude.ShouldEqual(AttR, 1e-6);
             Astro.FlightPathAngle(rf, vf).ShouldEqual(fpaT, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
@@ -396,6 +467,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.U(0).normalized.ShouldEqual(new V3(0.67311315112262493, 0.64198533000545521, 0.36711513431559445), 1e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             smaf.ShouldEqual(8616511.1913318466, 1e-6);
             eccf.ShouldEqual(0.23913520746130185, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
@@ -442,6 +522,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.U(0).normalized.ShouldEqual(new V3(0.76488059901505068, 0.63826715097728237, -0.087021337807001872), 1e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             smaf.ShouldEqual(8616510.99994895, 1e-6);
             eccf.ShouldEqual(0.2391351905624024, 1e-6);
             incf.ShouldBeZero(1e-7);
@@ -487,6 +576,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.U(0).normalized.ShouldEqual(new V3(0.67311315112262493, 0.64198533000545521, 0.36711513431559445), 1e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             smaf.ShouldEqual(8616511.1913318466, 1e-6);
             eccf.ShouldEqual(0.23913520746130185, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
@@ -532,6 +630,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.U(0).normalized.ShouldEqual(new V3(0.67311315112262493, 0.64198533000545521, 0.36711513431559445), 1e-2);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             smaf.ShouldEqual(8616511.1913318466, 1e-6);
             eccf.ShouldEqual(0.23913520746130185, 1e-6);
             incf.ShouldEqual(incT, 1e-6);
@@ -632,6 +739,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             solution.Vgo(0).ShouldEqual(8518.1366714811684, 1e-3);
             solution.DV(0, 0).ShouldEqual(4034.1207426276151, 1e-3);
             solution.DV(0, 1).ShouldEqual(4483.5493109058016, 1e-3);
@@ -702,6 +818,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             solution.Vgo(0).ShouldEqual(8488.0759353442518, 1e-3);
             solution.DV(0, 0).ShouldEqual(4034.1207312126335, 1e-3);
             solution.DV(0, 1).ShouldEqual(4453.9552041316174, 1e-3);
@@ -768,6 +893,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
             solution.M(0).ShouldEqual(157355.487476332, 1e-7);
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(4);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(-1);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(-1);
+
             solution.Vgo(0).ShouldEqual(8562.0125605993326, 1e-3);
 
             solution.U(0).normalized.ShouldEqual(new V3(0.71091349069509358, 0.58674209774568975, 0.38773150436958898), 1e-2);
@@ -819,6 +953,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(3);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(2);
+            solution.IndexForKSPStage(3, true).ShouldEqual(1);
+
             solution.Vgo(0).ShouldEqual(8474.9669267192712, 1e-3);
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
@@ -896,6 +1039,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
+            // the coast picks up the PreciseShutdown flag, so this is the coast's KSP stage, not the booster's
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(3);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(2);
+            solution.IndexForKSPStage(3, true).ShouldEqual(1);
+
             solution.U(0).normalized.ShouldEqual(new V3(0.70743037652982543, 0.59217914188368692, 0.38583173311790908), 1e-2);
 
             double aprf = Astro.ApoapsisFromKeplerian(smaf, eccf);
@@ -946,6 +1098,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(3);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(2);
 
             solution.Tgo(solution.T0, 0).ShouldEqual(148.10238013870301, 1e-2);
             solution.Tgo(solution.T0, 1).ShouldEqual(153.53757758636579, 1e-2);
@@ -1016,6 +1176,14 @@ namespace MechJebLibTest.PSGTests.AscentTests
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(3);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(2);
 
             // just after the stage 4 burnout at ~148s
             double t1 = 160;
@@ -1097,6 +1265,15 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
             psg.InitialPrimalFeasibility.ShouldBeLessThan(1.0);
+
+            solution.OptimizeKSPStage().ShouldEqual(3);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(3);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(1);
+            solution.IndexForKSPStage(3, true).ShouldEqual(2);
+
             solution.Vgo(0).ShouldEqual(10266.9402237592, 1e-3);
 
             solution.Tgo(solution.T0, 0).ShouldBePositive();
