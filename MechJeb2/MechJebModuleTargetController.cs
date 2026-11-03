@@ -53,7 +53,7 @@ namespace MuMech
             targetLatitude = latitude;
             targetLongitude = longitude;
 
-            Set(new PositionTarget(string.Format(GetPositionTargetString(), latitude, longitude)));
+            Set(new PositionTarget(Coordinates.ToStringDMS(latitude, longitude, true)));
         }
 
         [ValueInfoItem("#MechJeb_Targetcoordinates", InfoItem.Category.Target)] //Target coordinates
