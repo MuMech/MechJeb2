@@ -6,7 +6,8 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class MechJebModuleSmartASS : DisplayModule
+    // The attitude logic: it runs all flight, with its window (MechJebModuleSmartASSWindow) open or closed
+    public class MechJebModuleSmartASS : ComputerModule
     {
         public enum Mode
         {
@@ -124,7 +125,7 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_DisableSmartACSAutomatically", InfoItem.Category.Misc)] //Disable SmartACS automatically
         public void AutoDisableSmartASS() { } //"Disable SmartACS automatically":"Disable SmartASS automatically"
 
-        public MechJebModuleSmartASS(MechJebCore core) : base(core) { }
+        public MechJebModuleSmartASS(MechJebCore core) : base(core) => Enabled = true;
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
         {
@@ -336,8 +337,6 @@ namespace MuMech
             if (resetPID) { Core.Attitude.Controller.Reset(); }
         }
 
-        protected internal override bool RunsWhileDisabled => true;
-
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
@@ -387,13 +386,5 @@ namespace MuMech
                     Core.Attitude.AttitudeTo(curAttitude, targetReference, this);
                 }
             }
-        }
-
-        public override string GetName() =>
-            Core.eduMode
-                ? Localizer.Format("#MechJeb_SmartACS_title")
-                : Localizer.Format("#MechJeb_SmartASS_title"); //"Smart A.C.S.":"Smart A.S.S."
-
-        public override string IconName() => Core.eduMode ? "Smart A.C.S." : "Smart A.S.S.";
-    }
+        }    }
 }

@@ -10,12 +10,12 @@ namespace MuMech.UI
     /// MechJebModuleTranslatron ("Translatron") in KodeKit, row for row with its WindowGUI.
     /// While an other module drives the throttle controller the window only shows the red "auto" button.
     /// </summary>
-    [KodeViewFor(typeof(MechJebModuleTranslatron))]
+    [KodeViewFor(typeof(MechJebModuleTranslatronWindow))]
     public class TranslatronView : KodeView
     {
         readonly MechJebModuleTranslatron tr;
 
-        public TranslatronView(MechJebModuleTranslatron tr) : base(tr) => this.tr = tr;
+        public TranslatronView(MechJebModuleTranslatronWindow window) : base(window) => tr = window.Translatron;
 
         protected override float MinWidth => 130;
 

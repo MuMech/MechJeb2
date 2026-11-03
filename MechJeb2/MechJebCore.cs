@@ -589,7 +589,7 @@ namespace MuMech
                 Profiler.BeginSample(module.ProfilerName);
                 try
                 {
-                    if (module.Enabled || module.RunsWhileDisabled)
+                    if (module.Enabled)
                     {
                         module.OnFixedUpdate();
                     }
@@ -789,6 +789,11 @@ namespace MuMech
             Spinup = GetComputerModule<MechJebModuleSpinupController>();
             Hoverslam = GetComputerModule<MechJebModuleHoverslamSimulation>();
             SmartASS = GetComputerModule<MechJebModuleSmartASS>();
+
+            // a window goes with its logic module when a blacklist removed that one
+            foreach (DisplayModule window in GetComputerModules<DisplayModule>().ToList())
+                if (window.LogicModuleName != null && GetComputerModule(window.LogicModuleName) == null)
+                    RemoveComputerModule(window);
         }
 
         public override void OnLoad(ConfigNode sfsNode)
@@ -921,6 +926,12 @@ namespace MuMech
                         ConfigNode moduleLocal = local.HasNode(moduleTypeName) ? local.GetNode(moduleTypeName) : null;
                         ConfigNode moduleType = type.HasNode(moduleTypeName) ? type.GetNode(moduleTypeName) : null;
                         ConfigNode moduleGlobal = global.HasNode(moduleTypeName) ? global.GetNode(moduleTypeName) : null;
+
+                        // a window split from its logic module: until it saved its own settings, they are in that module's node
+                        string logicName = (module as DisplayModule)?.LogicModuleName;
+                        if (logicName != null && moduleGlobal == null && global.HasNode(logicName))
+                            moduleGlobal = global.GetNode(logicName);
+
                         module.OnLoad(moduleLocal, moduleType, moduleGlobal);
 
                         // R&D gating always comes from the part cfg (and its MM patches), not the saved vessel/craft, so
@@ -928,6 +939,9 @@ namespace MuMech
                         if (_partSettings != null)
                         {
                             ConfigNode partModuleLocal = partLocal != null && partLocal.HasNode(moduleTypeName) ? partLocal.GetNode(moduleTypeName) : null;
+                            // the part cfg and its MM patches gate a split window under its logic module's name
+                            if (partModuleLocal == null && logicName != null && partLocal != null && partLocal.HasNode(logicName))
+                                partModuleLocal = partLocal.GetNode(logicName);
                             module.unlockParts = partModuleLocal?.GetValue("unlockParts") ?? "";
                             module.unlockTechs = partModuleLocal?.GetValue("unlockTechs") ?? "";
                         }
@@ -1168,7 +1182,7 @@ namespace MuMech
                     Profiler.BeginSample(module.ProfilerName);
                     try
                     {
-                        if (module.Enabled || module.RunsWhileDisabled) module.Drive(s);
+                        if (module.Enabled) module.Drive(s);
                     }
                     catch (Exception e)
                     {
