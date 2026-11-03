@@ -45,7 +45,8 @@ namespace MuMech.UI
             else ClassicToolbar(parent);
 
             grid = KodeWindow.Row(parent);
-            grid.Spacing(0);
+            // columns at the top: a row's default centres them, so one shorter than the others would sit half a row lower
+            grid.Spacing(0).ChildAlignment(TextAnchor.UpperLeft);
             foreach (StageData d in MechJebStageStatsHelper.Columns)
                 columns.Add(BuildColumn(d));
 
@@ -209,8 +210,8 @@ namespace MuMech.UI
             long shape = Shape();
             if (shape != builtShape || rows != builtRows)
             {
-                builtShape = shape;
-                builtRows = rows;
+                // TMP set up under an inactive parent misses Awake: build the cells once the window is shown
+                if (!grid.gameObject.activeInHierarchy) return;
                 foreach (Column c in columns)
                 {
                     bool visible = c.Id == StageData.KSPStage || h.IsVisible(c.Id);
@@ -231,6 +232,9 @@ namespace MuMech.UI
                         if (c.Cells[i].gameObject.activeSelf != on) c.Cells[i].gameObject.SetActive(on);
                     }
                 }
+                // only once every column has its cells: a rebuild that threw half way is tried again at the next refresh
+                builtShape = shape;
+                builtRows = rows;
             }
 
             // the modern layout highlights the stage that burns now and dims the units
