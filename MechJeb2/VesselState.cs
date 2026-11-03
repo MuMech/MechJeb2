@@ -1388,65 +1388,70 @@ namespace MuMech
                     currentMinThrust = currentMaxThrust;
                 }
 
-                // Reset gimbals to default rotation
-                foreach (ModuleGimbal gimbal in gimbals)
+                try
                 {
-                    if (gimbal.gimbalLock)
-                        continue;
-
-                    for (int i = 0; i < gimbal.gimbalTransforms.Count; i++)
+                    // Reset gimbals to default rotation
+                    foreach (ModuleGimbal gimbal in gimbals)
                     {
-                        Transform gimbalTransform = gimbal.gimbalTransforms[i];
-                        _rotSave.Add(new KeyValuePair<Transform, Quaternion>(gimbalTransform, gimbalTransform.localRotation));
-                        gimbalTransform.localRotation = gimbal.initRots[i];
-                    }
-                }
+                        if (gimbal.gimbalLock)
+                            continue;
 
-                for (int i = 0; i < e.thrustTransforms.Count; i++)
+                        for (int i = 0; i < gimbal.gimbalTransforms.Count; i++)
+                        {
+                            Transform gimbalTransform = gimbal.gimbalTransforms[i];
+                            _rotSave.Add(new KeyValuePair<Transform, Quaternion>(gimbalTransform, gimbalTransform.localRotation));
+                            gimbalTransform.localRotation = gimbal.initRots[i];
+                        }
+                    }
+
+                    for (int i = 0; i < e.thrustTransforms.Count; i++)
+                    {
+                        Transform transform = e.thrustTransforms[i];
+                        // The rotation makes a +z vector point in the direction that molecules are ejected
+                        // from the engine.  The resulting thrust force is in the opposite direction.
+                        Vector3d thrustDirectionVector = -transform.forward;
+
+                        float thrustTransformMultiplier = e.thrustTransformMultipliers[i];
+                        double tCurrentThrust = eCurrentThrust * thrustTransformMultiplier;
+                        double tMaxThrust = eMaxThrust * thrustTransformMultiplier;
+
+                        ThrustCurrent += tCurrentThrust * thrustDirectionVector;
+                        ThrustMax += tMaxThrust * thrustDirectionVector;
+                        ThrustMin += eMinThrust * thrustDirectionVector * thrustTransformMultiplier;
+
+                        // CoT (and hence ThrustForward, the neutral trim axis) is weighted by max thrust, not
+                        // current thrust, so the axis is a fixed property of the airframe, otherwise e.g. diff throttle
+                        // would wind up pushing its own setpoint around.  Do not design rockets which have a neutral
+                        // trim axis that is significantly different at minthrottle than maxthrottle.
+                        cot += tMaxThrust * (Vector3d)transform.position;
+                        // DoT is the actual current direction of thrust.
+                        dot -= tCurrentThrust * thrustDirectionVector;
+                        coTWeightSum += tMaxThrust;
+
+                        Quaternion inverseVesselRot = e.part.vessel.ReferenceTransform.rotation.Inverse();
+                        Vector3d thrustDir = inverseVesselRot * thrustDirectionVector;
+                        Vector3d pos = inverseVesselRot * (transform.position - _com);
+
+                        maxVariableForce += (currentMaxThrust - currentMinThrust) * thrustDir * thrustTransformMultiplier;
+                        constantForce += currentMinThrust * thrustDir * thrustTransformMultiplier;
+                        maxVariableTorque += (currentMaxThrust - currentMinThrust) * thrustTransformMultiplier * Vector3d.Cross(pos, thrustDir);
+                        constantTorque += currentMinThrust * thrustTransformMultiplier * Vector3d.Cross(pos, thrustDir);
+
+                        if (!e.throttleLocked)
+                        {
+                            TorqueDifferentialThrottle.Add(Vector3d.Cross(pos, thrustDir) * (float)(maxThrust - minThrust) * thrustTransformMultiplier);
+                        }
+                    }
+
+                    enginesWrappers.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
+                }
+                finally
                 {
-                    Transform transform = e.thrustTransforms[i];
-                    // The rotation makes a +z vector point in the direction that molecules are ejected
-                    // from the engine.  The resulting thrust force is in the opposite direction.
-                    Vector3d thrustDirectionVector = -transform.forward;
-
-                    float thrustTransformMultiplier = e.thrustTransformMultipliers[i];
-                    double tCurrentThrust = eCurrentThrust * thrustTransformMultiplier;
-                    double tMaxThrust = eMaxThrust * thrustTransformMultiplier;
-
-                    ThrustCurrent += tCurrentThrust * thrustDirectionVector;
-                    ThrustMax += tMaxThrust * thrustDirectionVector;
-                    ThrustMin += eMinThrust * thrustDirectionVector * thrustTransformMultiplier;
-
-                    // CoT (and hence ThrustForward, the neutral trim axis) is weighted by max thrust, not
-                    // current thrust, so the axis is a fixed property of the airframe, otherwise e.g. diff throttle
-                    // would wind up pushing its own setpoint around.  Do not design rockets which have a neutral
-                    // trim axis that is significantly different at minthrottle than maxthrottle.
-                    cot += tMaxThrust * (Vector3d)transform.position;
-                    // DoT is the actual current direction of thrust.
-                    dot -= tCurrentThrust * thrustDirectionVector;
-                    coTWeightSum += tMaxThrust;
-
-                    Quaternion inverseVesselRot = e.part.vessel.ReferenceTransform.rotation.Inverse();
-                    Vector3d thrustDir = inverseVesselRot * thrustDirectionVector;
-                    Vector3d pos = inverseVesselRot * (transform.position - _com);
-
-                    maxVariableForce += (currentMaxThrust - currentMinThrust) * thrustDir * thrustTransformMultiplier;
-                    constantForce += currentMinThrust * thrustDir * thrustTransformMultiplier;
-                    maxVariableTorque += (currentMaxThrust - currentMinThrust) * thrustTransformMultiplier * Vector3d.Cross(pos, thrustDir);
-                    constantTorque += currentMinThrust * thrustTransformMultiplier * Vector3d.Cross(pos, thrustDir);
-
-                    if (!e.throttleLocked)
-                    {
-                        TorqueDifferentialThrottle.Add(Vector3d.Cross(pos, thrustDir) * (float)(maxThrust - minThrust) * thrustTransformMultiplier);
-                    }
+                    // Restore gimbals rotation, in reverse in case two gimbals share a transform
+                    for (int i = _rotSave.Count - 1; i >= 0; i--)
+                        _rotSave[i].Key.localRotation = _rotSave[i].Value;
+                    _rotSave.Clear();
                 }
-
-                enginesWrappers.Add(new EngineWrapper(e, maxVariableForce, constantTorque, maxVariableTorque));
-
-                // Restore gimbals rotation, in reverse in case two gimbals share a transform
-                for (int i = _rotSave.Count - 1; i >= 0; i--)
-                    _rotSave[i].Key.localRotation = _rotSave[i].Value;
-                _rotSave.Clear();
 
                 if (e.useEngineResponseTime)
                 {
