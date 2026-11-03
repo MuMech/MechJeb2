@@ -5,6 +5,7 @@
 
 using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static System.Math;
 
 namespace MechJebLib.PSG
@@ -67,8 +68,8 @@ namespace MechJebLib.PSG
             if (optimizedShutdownIndex >= 0)
                 _phases[optimizedShutdownIndex].PreciseShutdown = true;
 
-            if (terminalStageIndex >= 0)
-                _phases[terminalStageIndex].TerminalStage = true;
+            Check.True(terminalStageIndex >= 0, "no terminal stage found");
+            _phases[terminalStageIndex].TerminalStage = true;
         }
 
         public Solution Build()

@@ -9,6 +9,7 @@ using System.Text;
 using MechJebLib.Functions;
 using MechJebLib.Interpolants;
 using MechJebLib.Primitives;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -312,9 +313,18 @@ namespace MechJebLib.PSG
             return -1;
         }
 
-        public int TerminalKSPStage() => Phases[Phases.FindIndex(p => p.TerminalStage)].KSPStage;
+        public int TerminalKSPStage() => Phases[TerminalIndex()].KSPStage;
 
-        public int TerminalMJPhase() => Phases[Phases.FindIndex(p => p.TerminalStage)].MJPhase;
+        public int TerminalMJPhase() => Phases[TerminalIndex()].MJPhase;
+
+        // SolutionBuilder.AnalyzeStages always flags a terminal stage, so a Solution without one is a bug
+        // (AscentGuesser solutions skip AnalyzeStages and must not be asked)
+        private int TerminalIndex()
+        {
+            int idx = Phases.FindIndex(p => p.TerminalStage);
+            Check.True(idx >= 0, "Solution has no terminal stage");
+            return idx;
+        }
 
         // -1 if no stage needs a precise shutdown (e.g. all fixed burn time stages with no coast)
         public int OptimizeKSPStage()

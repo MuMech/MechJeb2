@@ -127,6 +127,61 @@ namespace MechJebLibTest.PSGTests.AscentTests
             tanof.ShouldBeZeroRadians(1e-5);
         }
 
+        // all fixed burn time stages with a coast between them: the coast is AllowShutdown but must not take the PreciseShutdown
+        // flag, so there is still no precise shutdown stage and the guidance controller's fixed burntime termination applies.
+        [Fact]
+        public void FlightPathAngle3EnergyEllipticalCoast()
+        {
+            var r0 = new V3(5593203.65707947, 0, 3050526.81522927);
+            var v0 = new V3(0, 407.862893197274, 0);
+            double t0 = 0;
+            double PeR = 6.371e+6 + 185e+3;
+            double ApR = 6.371e+6 + 4306022;
+            double rbody = 6.371e+6;
+            double incT = Deg2Rad(28.608);
+            double mu = 3.986004418e+14;
+
+            Ascent ascent = Ascent.Builder()
+               .AddStage(153180, 35248.993172173155, 2194400, 296, 4, 4, allowShutdown: false)
+               .AddCoast(31980, 31980, 0, 450, 3, 3)
+               .AddStage(31980, 6125.823788668185, 443700, 315, 3, 3, allowShutdown: false)
+               .Initial(r0, v0, r0.normalized, t0, mu, rbody)
+               .SetTarget(PeR, ApR, PeR, incT, Deg2Rad(270), 0, 0, true, false, false)
+               .Build();
+
+            ascent.Run();
+
+            Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
+            using Solution solution = psg.Solution ?? throw new Exception("null solution");
+
+            psg.PrimalFeasibility.ShouldBeZero(1e-5);
+
+            solution.OptimizeKSPStage().ShouldEqual(-1);
+            solution.TerminalKSPStage().ShouldEqual(3);
+            solution.TerminalMJPhase().ShouldEqual(3);
+            solution.CoastKSPStage().ShouldEqual(3);
+            solution.IndexForKSPStage(4, false).ShouldEqual(0);
+            solution.IndexForKSPStage(3, false).ShouldEqual(2);
+            solution.IndexForKSPStage(3, true).ShouldEqual(1);
+
+            solution.Tgo(solution.T0, 0).ShouldEqual(156, 1e-6);
+            solution.Tgo(solution.T0, 1).ShouldEqual(43.991685211719087, 1e-2);
+            solution.Tgo(solution.T0, 2).ShouldEqual(180, 1e-6);
+            solution.Vgo(0).ShouldEqual(9369.7101019898018, 1e-3);
+
+            (V3 rf, V3 vf) = solution.TerminalStateVectors();
+
+            (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
+                Astro.KeplerianFromStateVectors(mu, rf, vf);
+
+            smaf.ShouldEqual(8716713.6265901383, 1e-5);
+            eccf.ShouldEqual(0.24788168100301983, 1e-5);
+            incf.ShouldEqual(incT, 1e-5);
+            lanf.ShouldEqual(Deg2Rad(270), 1e-2);
+            argpf.ShouldEqual(1.7884827346201035, 1e-2);
+            tanof.ShouldBeZeroRadians(1e-5);
+        }
+
         [Fact]
         public void FlightPathAngle5Elliptical()
         {
