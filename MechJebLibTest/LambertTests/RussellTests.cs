@@ -95,8 +95,16 @@ namespace MechJebLibTest.LambertTests
 
             if (NearSingularity(r0, rfShepperd))
             {
-                Logger.Print($"skipping, too close to r1 == r2: {Sqrt(0.5) - Sqrt(r0.magnitude * rfShepperd.magnitude + V3.Dot(r0, rfShepperd)) / (r0.magnitude + rfShepperd.magnitude):E2}");
-                Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfShepperd, dt, TransferGeometry.Prograde, h: h));
+                // outside the domain of Russell (2022) zero-rev is only refused with strict, and multi-rev always is
+                Logger.Print($"too close to r1 == r2: {Sqrt(0.5) - Sqrt(r0.magnitude * rfShepperd.magnitude + V3.Dot(r0, rfShepperd)) / (r0.magnitude + rfShepperd.magnitude):E2}");
+                Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfShepperd, dt, TransferGeometry.Prograde, h: h, strict: true));
+
+                (V3 viNear, V3 vfNear) = Russell.Solve(1.0, r0, rfShepperd, dt, TransferGeometry.Prograde, h: h);
+                viNear.ShouldEqual(v0, tol);
+                vfNear.ShouldEqual(vfShepperd, tol);
+
+                if (period > 0)
+                    Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rfShepperd, dt + period, TransferGeometry.Prograde, 1, h));
                 return;
             }
 
@@ -319,7 +327,7 @@ namespace MechJebLibTest.LambertTests
             double dt = tofByHohmann * PI * Pow(0.5 * (r0.magnitude + rf.magnitude), 1.5);
 
             // the exact half-rev uses h even without the band around it
-            (V3 vi, V3 vf, _, _, double tau, bool halfRev) = Russell.SolveWithState(1.0, r0, rf, dt, direction, nrev, h, 50, 0.0, out _);
+            (V3 vi, V3 vf, _, _, double tau, bool halfRev) = Russell.SolveWithState(1.0, r0, rf, dt, direction, nrev, h, 50, 0.0, false, out _);
             Assert.Equal(0.0, tau);
             Assert.True(halfRev);
             CheckTransfer(r0, rf, dt, vi, vf, 1e-10);
@@ -358,10 +366,10 @@ namespace MechJebLibTest.LambertTests
 
             // r2 on either side of the half-rev in the plane of h is exact, where the Lagrange coefficients miss by about 1e-3
             V3 rf = 2.0 * r0.magnitude * (-Cos(delta) * r0.normalized + Sin(delta) * tHat);
-            (V3 vi, V3 vf, _, _, _, bool halfRev) = Russell.SolveWithState(1.0, r0, rf, dt, direction, 0, h, 50, 1e-12, out _);
+            (V3 vi, V3 vf, _, _, _, bool halfRev) = Russell.SolveWithState(1.0, r0, rf, dt, direction, 0, h, 50, 1e-12, false, out _);
             Assert.True(halfRev);
             CheckTransfer(r0, rf, dt, vi, vf, 1e-10);
-            Assert.False(Russell.SolveWithState(1.0, r0, rf, dt, direction, 0, h, 50, 0.0, out _).halfRev);
+            Assert.False(Russell.SolveWithState(1.0, r0, rf, dt, direction, 0, h, 50, 0.0, false, out _).halfRev);
 
             // r2 out of the plane of h misses by about the angle from the half-rev
             V3 rfOut = 2.0 * r0.magnitude * (-Cos(delta) * r0.normalized + Sin(delta) * hHat);
@@ -587,7 +595,7 @@ namespace MechJebLibTest.LambertTests
             foreach ((double tau, double tofbyS, int nrev) in DomainSamples(20000, multiRev))
             {
                 (V3 r0, V3 rf, TransferGeometry direction, double S) = GeometryFromTau(tau);
-                (_, _, double k, _, double tauSolved, _) = Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, 0.0, out _);
+                (_, _, double k, _, double tauSolved, _) = Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, 0.0, false, out _);
 
                 double guess;
                 if (nrev == 0)
@@ -661,7 +669,7 @@ namespace MechJebLibTest.LambertTests
                 foreach ((double tau, double tofbyS, int nrev) in DomainSamples(20000, multiRev))
                 {
                     (V3 r0, V3 rf, TransferGeometry direction, double S) = GeometryFromTau(tau);
-                    Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, 0.0, out int iters);
+                    Russell.SolveWithState(1.0, r0, rf, tofbyS * S, direction, nrev, null, 50, 0.0, false, out int iters);
                     iterations.Add(iters);
                 }
 
@@ -684,7 +692,7 @@ namespace MechJebLibTest.LambertTests
                 if (NearSingularity(r0, rf))
                     continue;
 
-                Russell.SolveWithState(1.0, r0, rf, dt, geometry, nrev, null, 50, 0.0, out int iters);
+                Russell.SolveWithState(1.0, r0, rf, dt, geometry, nrev, null, 50, 0.0, false, out int iters);
                 typical.Add(iters);
             }
 
@@ -713,27 +721,193 @@ namespace MechJebLibTest.LambertTests
                 Russell.Solve(1.0, new DualV3(r0, V3.zero), new DualV3(rfHalfRev, V3.zero), new Dual(1.0, 1.0), TransferGeometry.Prograde, h: new V3(0, 0, 1)));
             Russell.Solve(1.0, r0, rfHalfRev, 1.0, TransferGeometry.Prograde, h: new V3(0, 0, 1));
 
-            // too close to the r1 == r2 singularity
-            var rf = new V3(Cos(1e-4), Sin(1e-4), 0);
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 1.0));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.LongWay));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.ShortWay, 1));
+            // zero (teleportation), negative and NaN times of flight, with or without strict (CheckDebug throws first in debug
+            // builds)
+            foreach (double badTof in new[] { 0.0, -1.0, double.NaN })
+            {
+                Assert.ThrowsAny<Exception>(() => Russell.Solve(1.0, r0, new V3(0, 1, 0), badTof));
+                Assert.ThrowsAny<Exception>(() => Russell.Solve(1.0, r0, new V3(1e-6, 1, 0), badTof, TransferGeometry.LongWay));
+            }
 
-            // zero-rev time of flight too small
+            // too close to the r1 == r2 singularity, which is only refused with strict for zero-rev
+            var rf = new V3(Cos(1e-4), Sin(1e-4), 0);
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 1.0, strict: true));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.LongWay, strict: true));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.ShortWay, 1));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.ShortWay, -1));
+            (V3 vi, V3 vf) = Russell.Solve(1.0, r0, rf, 1.0);
+            CheckTransfer(r0, rf, 1.0, vi, vf, 1e-6);
+            (vi, vf) = Russell.Solve(1.0, r0, rf, 10.0, TransferGeometry.LongWay);
+            CheckTransfer(r0, rf, 10.0, vi, vf, 1e-6);
+
+            // zero-rev time of flight too small, which is only refused with strict
             rf = new V3(0, 1, 0);
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1)));
-            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, -1), TransferGeometry.LongWay));
-            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, 1));
-            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, -1), TransferGeometry.LongWay);
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1), strict: true));
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, -1), TransferGeometry.LongWay, strict: true));
+            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, 1), strict: true);
+            Russell.Solve(1.0, r0, rf, 1.1e-3 * ParabolicTof(r0, rf, -1), TransferGeometry.LongWay, strict: true);
+            (vi, vf) = Russell.Solve(1.0, r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1));
+            CheckTransfer(r0, rf, 0.9e-3 * ParabolicTof(r0, rf, 1), vi, vf, 1e-6);
+        }
+
+        // Close-in rendezvous arcs in long period orbits (MechJeb2 PR #2464), in SI units.  The chord is under 1e-3 of the
+        // radius, which is outside the domain of Russell (2022).  The miss allows for a few ulps of the radius.
+        [Theory]
+        [InlineData(1.1723328e18, 13.6e9, 200, 100)]
+        [InlineData(1.1723328e18, 13.6e9, 1000, 100)]
+        [InlineData(1.1723328e18, 13.6e9, 100e3, 1000)]
+        [InlineData(3.5316e12, 33e6, 500, 100)]
+        [InlineData(3.5316e12, 47e6, 5000, 100)]
+        [InlineData(1.1723328e18, 13.6e9, 0.1, 0.1)]
+        [InlineData(1.1723328e18, 13.6e9, 100, 1e-4)]
+        [InlineData(3.5316e12, 700e3, 100, 1e-4)]
+        private void CloseRendezvousInLongPeriodOrbits(double mu, double radius, double sep, double tof)
+        {
+            // the target is sep ahead of the chaser on the same circular orbit
+            double n = Sqrt(mu / (radius * radius * radius));
+            var r1 = new V3(radius, 0, 0);
+            var v1 = new V3(0, radius * n, 0);
+            double angle = sep / radius + n * tof;
+            V3 r2 = radius * new V3(Cos(angle), Sin(angle), 0);
+            V3 h = V3.Cross(r1, v1);
+
+            Assert.Throws<ArgumentException>(() => Russell.Solve(mu, r1, r2, tof, TransferGeometry.Prograde, h: h, strict: true));
+
+            (V3 vi, V3 vf, _, _, _, _) = Russell.SolveWithState(mu, r1, r2, tof, TransferGeometry.Prograde, 0, h, 50, 0.0, false, out int iters);
+            Assert.True(iters <= 2, $"iterations {iters}");
+
+            (V3 rf, V3 vfShepperd) = Shepperd.Solve(mu, tof, r1, vi);
+            double miss = (rf - r2).magnitude;
+            Assert.True(miss < Max(1e-6 * sep, 1e-15 * radius), $"miss {miss} m");
+            Assert.True((vfShepperd - vf).magnitude < 1e-9 * sep / tof, $"vf miss {(vfShepperd - vf).magnitude} m/s");
+
+            // the closing speed is close to sep / tof for times of flight much shorter than the period
+            double closing = (vi - v1).magnitude;
+            Assert.True(Abs(closing - sep / tof) < 1e-3 * sep / tof, $"closing speed {closing} m/s");
+        }
+
+        // Close-in arcs with along-track, radial and out of plane offsets of the target from a circular or eccentric orbit,
+        // with times of flight from 1e-12 to 1e-2 of the period.  The chords are from 1e-12 to 1e-3 of the radius, which are
+        // outside the domain of Russell (2022) except for the largest.  Only the short way, since the long way for these
+        // dives almost radially through periapsis, where Shepperd cannot check it.
+        [Fact]
+        private void CloseInArcs()
+        {
+            var iterations = new List<int>();
+            double worst = 0;
+
+            foreach (double ecc in new[] { 0.0, 0.05 })
+            foreach (double logS in new double[] { -12, -10, -8, -6, -4, -3 })
+            foreach (int sgn in new[] { 1, -1 })
+            foreach (double dr in new[] { 0.0, 1e-6, -1e-6, 1e-4 })
+            foreach (double dz in new[] { 0.0, 1e-6 })
+            foreach (double logF in new double[] { -12, -9, -6, -4, -3, -2 })
+            {
+                var r0 = new V3(1, 0, 0);
+                var v0 = new V3(0, Sqrt(1 + ecc), 0);
+                double period = 2 * PI * Pow(1 - ecc, -1.5);
+                double dt = Pow(10, logF) * period;
+
+                // the target on a circular orbit
+                double s = sgn * Pow(10, logS);
+                var rt0 = new V3((1 + dr) * Cos(s), (1 + dr) * Sin(s), dz);
+                V3 vt0 = Sqrt(1 / rt0.magnitude) * V3.Cross(new V3(0, 0, 1), rt0).normalized;
+                (V3 rf, _) = Shepperd.Solve(1.0, dt, rt0, vt0);
+
+                (V3 vi, V3 vf, _, _, _, _) = Russell.SolveWithState(1.0, r0, rf, dt, TransferGeometry.ShortWay, 0, null, 50, 0.0, false, out int iters);
+                iterations.Add(iters);
+
+                (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, vi);
+                double chord = (rf - r0).magnitude;
+                double miss = (rfShepperd - rf).magnitude;
+                worst = Max(worst, miss / chord);
+                Assert.True(miss < 1e-6 * chord + 1e-15, $"ecc {ecc} logS {logS} sgn {sgn} dr {dr} dz {dz} logF {logF}: miss / chord {miss / chord}");
+                Assert.True((vfShepperd - vf).magnitude < 1e-6 * Max(1, vf.magnitude));
+            }
+
+            Logger.Print($"worst miss / chord {worst:E2}");
+            LogIterations("close-in arcs", iterations);
+            Assert.True(iterations.Max() <= 2);
+        }
+
+        // below the minimum time of flight of Russell (2022), down to 1e-16 times the parabolic time of flight.  The fast
+        // long way solutions dive almost radially through periapsis, where Shepperd cannot check them.
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        private void RandomTinyTimeOfFlightComparedToGooding(int seed)
+        {
+            double tol = 1e-9;
+
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            int direction = random.Next(2) == 0 ? 1 : -1;
+            double dt = ParabolicTof(r0, rf, direction) * Pow(10, -3.1 - 12.9 * random.NextDouble());
+
+            // avoid inherent singularity at nearly collinear ri, rf
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.99998)
+                return;
+
+            // relax tolerance for nearly collinear
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
+                tol = 2e-3;
+
+            Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, dt, Geometry(direction), strict: true));
+
+            (V3 vi1, V3 vf1, _, _, _, _) = Russell.SolveWithState(1.0, r0, rf, dt, Geometry(direction), 0, null, 50, 0.0, false, out int iters);
+            Assert.True(iters <= 2, $"iterations {iters}");
+
+            (V3 vi2, V3 vf2) = Gooding.Solve(1.0, r0, rf, dt, Geometry(direction));
+            vi1.ShouldEqual(vi2, tol);
+            vf1.ShouldEqual(vf2, tol);
+        }
+
+        // long way transfers which go almost all the way around (theta close to 2 pi), with chords from 1e-4 down to 1e-8
+        // of the radius.  These are close to k = -sqrt(2), where k + sqrt(2) is computed from p.
+        [Theory]
+        [InlineData(1e-4, 0.0)]
+        [InlineData(1e-6, 0.0)]
+        [InlineData(1e-8, 0.0)]
+        [InlineData(1e-6, 1e-6)]
+        [InlineData(1e-8, 1e-6)]
+        [InlineData(1e-6, 1e-4)]
+        private void LongWayNearFullRevolution(double angle, double dr)
+        {
+            var r0 = new V3(1, 0, 0);
+            V3 rf = (1 + dr) * new V3(Cos(angle), Sin(angle), 0);
+            double chord = (rf - r0).magnitude;
+            var iterations = new List<int>();
+
+            foreach (double f in new[] { 0.3, 0.5, 0.99, 1.001, 1.5, 3.0 })
+            {
+                double dt = f * 2 * PI;
+
+                Assert.Throws<ArgumentException>(() => Russell.Solve(1.0, r0, rf, dt, TransferGeometry.LongWay, strict: true));
+
+                (V3 vi, V3 vf, _, _, _, _) = Russell.SolveWithState(1.0, r0, rf, dt, TransferGeometry.LongWay, 0, null, 50, 0.0, false, out int iters);
+                iterations.Add(iters);
+
+                (V3 rfShepperd, V3 vfShepperd) = Shepperd.Solve(1.0, dt, r0, vi);
+                double miss = (rfShepperd - rf).magnitude;
+                Assert.True(miss < 1e-4 * chord, $"f {f}: miss / chord {miss / chord}");
+                vfShepperd.ShouldEqual(vf, 1e-6);
+
+                // the long way around
+                Assert.True(V3.Cross(r0, vi).z < 0);
+            }
+
+            LogIterations($"angle {angle} dr {dr}", iterations);
+            Assert.True(iterations.Max() <= 12);
         }
 
         // central differences of the V3 solver along the direction of the dual parts
         private static void CheckDualAgainstFiniteDifferences(V3 r0, V3 rf, double dt, TransferGeometry direction, int n, V3 dr0, V3 drf, double ddt,
-            double tol)
+            double tol, double? step = null)
         {
             (DualV3 vi, DualV3 vf) = Russell.Solve(1.0, new DualV3(r0, dr0), new DualV3(rf, drf), new Dual(dt, ddt), direction, n);
 
-            double h = 1e-6 * Min(1.0, dt);
+            double h = step ?? 1e-6 * Min(1.0, dt);
             (V3 viPlus, V3 vfPlus) = Russell.Solve(1.0, r0 + h * dr0, rf + h * drf, dt + h * ddt, direction, n);
             (V3 viMinus, V3 vfMinus) = Russell.Solve(1.0, r0 - h * dr0, rf - h * drf, dt - h * ddt, direction, n);
 
@@ -805,6 +979,48 @@ namespace MechJebLibTest.LambertTests
                 return;
 
             CheckDualAgainstFiniteDifferences(r0, rf, dt, Geometry(direction), 0, dr0, drf, ddt, 1e-5);
+        }
+
+        // below the minimum time of flight of Russell (2022), where p is tiny and its derivative is of p instead of k.  The
+        // steps are powers of two along dyadic directions so that the perturbed positions are exact.
+        [Theory]
+        [MemberData(nameof(Seeds))]
+        private void DualTinyTimeOfFlightMatchesFiniteDifferences(int seed)
+        {
+            var random = new Random(seed);
+
+            var r0 = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var rf = new V3(4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2, 4 * random.NextDouble() - 2);
+            var dr0 = new V3(0.25, -0.75, 0.125);
+            var drf = new V3(-0.375, 0.5, 0.625);
+            int direction = random.Next(2) == 0 ? 1 : -1;
+            double dt = ParabolicTof(r0, rf, direction) * Pow(10, -3.1 - 8.9 * random.NextDouble());
+
+            if (Abs(V3.Dot(r0.normalized, rf.normalized)) > 0.999)
+                return;
+
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, Geometry(direction), 0, dr0, drf, 0.25 * dt, 1e-5, Pow(2, -30));
+        }
+
+        // outside the domain of Russell (2022) close to the r1 == r2 singularity.  The steps are much smaller than the chord,
+        // and are powers of two along dyadic directions so that the perturbed positions are exact.
+        [Theory]
+        [InlineData(1e-5, 1e-7, 1e-4, 1)]
+        [InlineData(1e-7, 0.0, 1e-6, 1)]
+        [InlineData(1e-5, 1e-7, 1.5 * 2 * PI, -1)]
+        [InlineData(1e-6, 0.0, 0.5 * 2 * PI, -1)]
+        private void DualNearSingularityMatchesFiniteDifferences(double angle, double dr, double dt, int direction)
+        {
+            var r0 = new V3(1, 0, 0);
+            V3 rf = (1 + dr) * new V3(Cos(angle), Sin(angle), 1e-3 * angle);
+            var dr0 = new V3(0.25, -0.75, 0.125);
+            var drf = new V3(-0.375, 0.5, 0.625);
+            double ddt = 0.25 * dt;
+
+            Assert.Throws<ArgumentException>(() =>
+                Russell.Solve(1.0, new DualV3(r0, dr0), new DualV3(rf, drf), new Dual(dt, ddt), Geometry(direction), strict: true));
+
+            CheckDualAgainstFiniteDifferences(r0, rf, dt, Geometry(direction), 0, dr0, drf, ddt, 1e-5, Pow(2, Round(Log(1e-4 * angle, 2))));
         }
     }
 }
