@@ -67,6 +67,9 @@ namespace MuMech.UI
                 () => guidance.phasingOrbitAltitude.IsParsed);
             KodeWindow.Label(orbit, "km");
 
+            UIText unsafeOrbit = GuidanceUi.Warning(w, main, "#MechJeb_RZplan_unsafeOrbit"); //"That altitude meets the atmosphere, the terrain, a moon or the edge of the sphere of influence."
+            w.Visible(unsafeOrbit.gameObject, () => Mode() == 2 && !guidance.PhasingOrbitIsSafe);
+
             KodeWindow.Button(main, "#MechJeb_RZplan_button3", guidance.InterceptWithHohmann); //"Intercept with Hohmann transfer"
             KodeWindow.Button(main, "#MechJeb_RZplan_button4", guidance.MatchVelocitiesAtClosestApproach); //"Match velocities at closest approach"
             KodeWindow.Button(main, "#MechJeb_RZplan_button5", guidance.GetCloser); //"Get closer"

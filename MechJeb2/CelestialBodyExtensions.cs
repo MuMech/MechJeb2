@@ -48,6 +48,28 @@ namespace MuMech
 
         public static double RealMaxAtmosphereAltitude(this CelestialBody body) => !body.atmosphere ? 0 : body.atmosphereDepth;
 
+        // The radius of the lowest circular orbit clear of the atmosphere and the highest terrain
+        public static double SafeOrbitRadius(this CelestialBody body)
+        {
+            double terrain = body.pqsController != null ? Math.Max(body.pqsController.mapMaxHeight, body.pqsController.radiusMax - body.Radius) : 0;
+            return body.Radius + Math.Max(body.RealMaxAtmosphereAltitude(), terrain) + 3000;
+        }
+
+        // Whether a circular orbit of this radius also stays well inside the sphere of influence and away from the moons
+        public static bool IsSafeOrbitRadius(this CelestialBody body, double radius)
+        {
+            if (radius < body.SafeOrbitRadius() || radius > 0.9 * body.sphereOfInfluence)
+                return false;
+
+            foreach (CelestialBody moon in body.orbitingBodies)
+            {
+                if (radius > moon.orbit.PeR - moon.sphereOfInfluence && radius < moon.orbit.ApR + moon.sphereOfInfluence)
+                    return false;
+            }
+
+            return true;
+        }
+
         public static double AltitudeForPressure(this CelestialBody body, double pressure)
         {
             if (!body.atmosphere)
