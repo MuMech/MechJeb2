@@ -63,6 +63,7 @@ namespace MuMech
 
         private Vessel _controlledVessel; //keep track of which vessel we've added our onFlyByWire callback to
         public string version = "";
+        private static string _cachedVersion;
         private bool _deactivateControl;
         private float _currentThrottle; // To maintain throttle when controls deactivated
 
@@ -727,19 +728,24 @@ namespace MuMech
                 }
             }
 
-            var assembly = Assembly.GetExecutingAssembly();
-            var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            if (_cachedVersion == null)
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
 
-            // Mono compiler is stupid and use AssemblyVersion for the AssemblyFileVersion
-            // So we use an other field to store the dev build number ...
-            Attribute[] attributes = Attribute.GetCustomAttributes(assembly, typeof(AssemblyInformationalVersionAttribute));
-            string devVersion = "";
-            if (attributes.Length > 0)
-                devVersion = ((AssemblyInformationalVersionAttribute)attributes[0]).InformationalVersion;
+                // Mono compiler is stupid and use AssemblyVersion for the AssemblyFileVersion
+                // So we use an other field to store the dev build number ...
+                Attribute[] attributes = Attribute.GetCustomAttributes(assembly, typeof(AssemblyInformationalVersionAttribute));
+                string devVersion = "";
+                if (attributes.Length > 0)
+                    devVersion = ((AssemblyInformationalVersionAttribute)attributes[0]).InformationalVersion;
 
-            version = devVersion == ""
-                ? $"{fileVersionInfo.FileMajorPart}.{fileVersionInfo.FileMinorPart}.{fileVersionInfo.FileBuildPart}"
-                : devVersion;
+                _cachedVersion = devVersion == ""
+                    ? $"{fileVersionInfo.FileMajorPart}.{fileVersionInfo.FileMinorPart}.{fileVersionInfo.FileBuildPart}"
+                    : devVersion;
+            }
+
+            version = _cachedVersion;
 
             if (HighLogic.LoadedSceneIsEditor || HighLogic.LoadedSceneIsFlight)
                 Print("Loading Mechjeb " + version);
