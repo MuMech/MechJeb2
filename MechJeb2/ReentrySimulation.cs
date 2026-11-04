@@ -1038,6 +1038,6 @@ namespace MuMech
             return absolute.Radius * _referenceBody.GetSurfaceNVector(absolute.Latitude, unrotatedLongitude);
         }
 
-        public double Latitude(Vector3d vector3d) => UtilMath.Rad2Deg * Math.Asin(Vector3d.Dot(vector3d.normalized, _lat90AtStart));
+        public double Latitude(Vector3d vector3d) => UtilMath.Rad2Deg * SafeAsin(Vector3d.Dot(vector3d.normalized, _lat90AtStart));
     }
 }

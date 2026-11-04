@@ -429,7 +429,7 @@ namespace MechJebLib.Functions
         public static (double pitch, double heading) ECIToPitchHeading(V3 r, V3 v)
         {
             V3 enu = ECIToENU(r, v).normalized;
-            return (Asin(enu.z), Clamp2Pi(Atan2(enu.x, enu.y)));
+            return (SafeAsin(enu.z), Clamp2Pi(Atan2(enu.x, enu.y)));
         }
 
         /// <summary>
