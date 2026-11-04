@@ -759,11 +759,11 @@ namespace MuMech
             }
         }
 
-        /// <summary>"Remove" the selected waypoint; with Alt, "Clear" all.</summary>
-        internal void RemoveOrClear(bool alt)
+        /// <summary>"Remove" the selected waypoint, or "Clear" all of them.</summary>
+        internal void RemoveOrClear(bool clear)
         {
             if (_ap.Waypoints.Count <= 0) return;
-            if (alt)
+            if (clear)
             {
                 _ap.WaypointIndex = -1;
                 _ap.Waypoints.Clear();
@@ -1059,8 +1059,8 @@ namespace MuMech
                     add("Adding Waypoints", "Adds a new waypoint to the route at the end or before the currently selected waypoint, " +
                         "simply click the terrain or somewhere on the body in Mapview." +
                         "\n\nAlt clicking will reverse the route for easier going back and holding Alt while clicking the terrain or body in Mapview will allow to add more waypoints without having to click the button again.");
-                    add("Removing Waypoints", "Removes the currently selected waypoint." +
-                        "\n\nAlt clicking will remove all waypoints.");
+                    add("Removing Waypoints", "'Remove' removes the currently selected waypoint." +
+                        "\n\n'Clear' removes all waypoints.");
                     add("Reordering Waypoints",
                         "'Up' and 'Down' will move the selected waypoint up or down in the list, Alt clicking will move it to the top or bottom respectively.");
                     add("Waypoint Radius",

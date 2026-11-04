@@ -155,7 +155,8 @@ namespace MuMech.UI
 
             Layout buttons = KodeWindow.Row(page);
             RoverUi.DynButton(w, buttons, () => Alt ? "Reverse" : !m._waitingForPick ? "Add Waypoint" : "Abort Adding", () => m.AddOrReverse(Alt), 110);
-            RoverUi.DynButton(w, buttons, () => Alt ? "Clear" : "Remove", () => m.RemoveOrClear(Alt), 65);
+            KodeWindow.Button(buttons, "Remove", () => m.RemoveOrClear(false)).PreferredWidth(65);
+            KodeWindow.Button(buttons, "Clear", () => m.RemoveOrClear(true)).PreferredWidth(50);
             RoverUi.DynButton(w, buttons, () => Alt ? "Top" : "Up", () => m.MoveUp(Alt), 57);
             RoverUi.DynButton(w, buttons, () => Alt ? "Bottom" : "Down", () => m.MoveDown(Alt), 57);
             KodeWindow.Button(buttons, "Routes", m.ShowRoutesPage, true);
