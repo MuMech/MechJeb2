@@ -62,6 +62,23 @@ namespace MuMech
             Update();
         }
 
+        /// <summary>A copy that shares nothing with the original, for the saved routes.</summary>
+        public MechJebWaypoint Clone() => new MechJebWaypoint(this);
+
+        private MechJebWaypoint(MechJebWaypoint other)
+        {
+            Latitude = other.Latitude;
+            Longitude = other.Longitude;
+            Altitude = other.Altitude;
+            Position = other.Position;
+            Radius = other.Radius;
+            Name = other.Name;
+            Target = other.Target;
+            MinSpeed = other.MinSpeed;
+            MaxSpeed = other.MaxSpeed;
+            Quicksave = other.Quicksave;
+        }
+
         public MechJebWaypoint(ConfigNode node)
         {
             if (node.HasValue("Latitude")) { double.TryParse(node.GetValue("Latitude"), out Latitude); }
@@ -837,7 +854,7 @@ namespace MuMech
             {
                 MechJebWaypointRoute old = _routes.Find(r => r.Name == saveName && IsShownRoute(r));
                 var wps = new MechJebWaypointRoute(saveName, Vessel.mainBody);
-                _ap.Waypoints.ForEach(wp => wps.Add(wp));
+                _ap.Waypoints.ForEach(wp => wps.Add(wp.Clone()));
                 if (old == null)
                 {
                     _routes.Add(wps);
@@ -865,7 +882,7 @@ namespace MuMech
                     _ap.Waypoints.Clear();
                 }
 
-                bodyRoutes[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp));
+                bodyRoutes[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp.Clone()));
             }
         }
 
