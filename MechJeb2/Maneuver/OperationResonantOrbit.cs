@@ -23,8 +23,20 @@ namespace MuMech
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
+            if (ResonanceNumerator.Val <= 0 || ResonanceDenominator.Val <= 0)
+                throw new OperationException(Localizer.Format("#MechJeb_resonant_Exception1")); //the period ratio needs two numbers above zero.
+
+            if (o.eccentricity >= 1)
+                throw new OperationException(Localizer.Format("#MechJeb_resonant_Exception2")); //a hyperbolic orbit has no period.
+
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-            Vector3d dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, ut, (double)ResonanceNumerator.Val / ResonanceDenominator.Val);
+            double f  = (double)ResonanceNumerator.Val / ResonanceDenominator.Val;
+
+            // An orbit through the burn point can't have a semi-major axis below half the burn radius
+            if (2 * OrbitalManeuverCalculator.ResonantOrbitSemiMajorAxis(o, f) <= o.Radius(ut))
+                throw new OperationException(Localizer.Format("#MechJeb_resonant_Exception3")); //this period is too short for an orbit through the burn point.
+
+            Vector3d dV = OrbitalManeuverCalculator.DeltaVToResonantOrbit(o, ut, f);
 
             return new List<ManeuverParameters> { new ManeuverParameters(dV, ut) };
         }

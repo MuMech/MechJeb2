@@ -338,25 +338,13 @@ namespace MuMech
             };
         }
 
-        // Compute the delta-V of the burn at the givent time required to enter an orbit with a period of (resonanceDivider-1)/resonanceDivider of the starting orbit period
-        public static Vector3d DeltaVToResonantOrbit(Orbit o, double UT, double f)
-        {
-            double a = o.ApR;
-            double p = o.PeR;
+        // Computes the delta-V of the burn at the given time required to enter an orbit whose period is f times the starting orbit's period.
+        // The period depends only on the semi-major axis, so this works wherever the burn is.
+        public static Vector3d DeltaVToResonantOrbit(Orbit o, double UT, double f) =>
+            DeltaVForSemiMajorAxis(o, UT, ResonantOrbitSemiMajorAxis(o, f));
 
-            // Thanks wolframAlpha for the Math
-            // x = (a^3 f^2 + 3 a^2 f^2 p + 3 a f^2 p^2 + f^2 p^3)^(1/3)-a
-            double x = Pow(
-                Pow(a, 3) * Pow(f, 2) + 3 * Pow(a, 2) * Pow(f, 2) * p + 3 * a * Pow(f, 2) * Pow(p, 2) +
-                Pow(f, 2) * Pow(p, 3), 1d / 3) - a;
-
-            if (x < 0)
-                return Vector3d.zero;
-
-            if (f > 1)
-                return DeltaVToChangeApoapsis(o, UT, x);
-            return DeltaVToChangePeriapsis(o, UT, x);
-        }
+        // The semi-major axis of the orbit whose period is f times the starting orbit's period
+        public static double ResonantOrbitSemiMajorAxis(Orbit o, double f) => Pow(f, 2d / 3) * o.semiMajorAxis;
 
         // Compute the angular distance between two points on a unit sphere
         public static double Distance(double lat_a, double long_a, double lat_b, double long_b)
