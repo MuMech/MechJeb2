@@ -31,6 +31,9 @@ namespace KodeKit
         public RectTransform PopupList => list;
         public GameObject Blocker { get; private set; }
 
+        /// <summary>The open list's scroll view when it is too tall for the screen (null otherwise).</summary>
+        public ScrollRect Scroll { get; private set; }
+
         static string Arrow(TMP_Text t) => t.font != null && t.font.HasCharacter('↓') ? "↓" : "v";
 
         /// <param name="dots">Each entry's colour, as a dot before its text in the button and the popup (the arrow selector shows the text alone).</param>
@@ -217,6 +220,7 @@ namespace KodeKit
             panel.gameObject.AddComponent<WindowBehaviour>(); // click-through lock while hovered
 
             string[] e = entries();
+            var rows = new UIButton[e.Length];
             string lastGroup = null;
             for (int i = 0; i < e.Length; i++)
             {
@@ -224,7 +228,7 @@ namespace KodeKit
                 if (g != null && g != lastGroup) KodeWindow.Header(panel, g, true);
                 lastGroup = g;
                 int k = i;
-                UIButton b = KodeWindow.Button(panel, e[i], () => Select(k), true);
+                UIButton b = rows[i] = KodeWindow.Button(panel, e[i], () => Select(k), true);
                 b.GetComponentInChildren<TMP_Text>().alignment = TextAlignmentOptions.Left;
                 if (Group != null) b.Content.Padding(14, 6, 1, 1);
                 if (dots != null)
@@ -241,7 +245,53 @@ namespace KodeKit
             list.localScale = new Vector3(scale, scale, 1);
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(list);
+            float maxHeight = MaxListHeight() / scale;
+            if (list.rect.height > maxHeight) ScrollRows(panel, maxHeight, rows);
             PlaceUnderButton();
+        }
+
+        /// <summary>
+        /// The tallest list that fits on screen, in canvas units: the room below the button or above it, whichever is larger
+        /// (PlaceUnderButton flips the list above when it does not fit below).
+        /// </summary>
+        float MaxListHeight()
+        {
+            var corners = new Vector3[4];
+            ((RectTransform)Button.transform).GetWorldCorners(corners); // 0 = bottom-left, 1 = top-left
+            var parent = (RectTransform)list.parent;
+            Rect p = parent.rect;
+            float below = parent.InverseTransformPoint(corners[0]).y - p.yMin;
+            float above = p.yMax - parent.InverseTransformPoint(corners[1]).y;
+            const float margin = 8;
+            return Mathf.Max(Mathf.Max(below, above) - margin, Mathf.Min(200, p.height));
+        }
+
+        /// <summary>
+        /// A list too tall for the screen (a planet pack's bodies, #1583): its rows move into a scroll view of the given
+        /// height, as wide as the rows were, scrolled to the selected entry.
+        /// </summary>
+        void ScrollRows(LayoutPanel panel, float height, UIButton[] rows)
+        {
+            float width = list.rect.width;
+            var children = new List<Transform>();
+            foreach (Transform t in panel.transform) children.Add(t);
+
+            ScrollView sv = KodeWindow.ScrollList(panel, height, out Layout content, 1);
+            sv.BackgroundColor(Color.clear); // the panel already has the window look
+            var le = sv.GetComponent<LayoutElement>() ?? sv.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = width + 12; // ScrollRect reports no width of its own; 12 = the scrollbar's room
+            foreach (Transform t in children) t.SetParent(content.transform, false);
+            Scroll = sv.ScrollRect;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(list);
+
+            int selected = get();
+            if (selected < 0 || selected >= rows.Length) return;
+            var row = (RectTransform)rows[selected].transform;
+            RectTransform c = content.rectTransform;
+            float viewport = sv.ScrollRect.viewport.rect.height;
+            float top = -(row.localPosition.y + row.rect.yMax); // from the content's top, which is its pivot
+            float y = Mathf.Clamp(top - (viewport - row.rect.height) / 2, 0, Mathf.Max(0, c.rect.height - viewport));
+            c.anchoredPosition = new Vector2(c.anchoredPosition.x, y);
         }
 
         void PlaceUnderButton()
@@ -277,6 +327,7 @@ namespace KodeKit
             popup = null;
             list = null;
             Blocker = null;
+            Scroll = null;
             if (Open == this) Open = null;
         }
 
