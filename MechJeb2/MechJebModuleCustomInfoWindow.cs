@@ -30,8 +30,9 @@ namespace MuMech
             get => isCompact;
             set
             {
-                Dirty = isCompact != value;
+                if (isCompact == value) return;
                 isCompact = value;
+                Dirty = true;
                 if (value) isNotCompact = false;
             }
         }
