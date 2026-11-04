@@ -165,7 +165,7 @@ namespace MuMech
             // traversed by a hypothetical vessel that was in a circular orbit for the same time.
 
             // markVector is the position of the mark, as it was at the time the mark was made.
-            CelestialBody markBody = FlightGlobals.Bodies[MarkBodyIndex];
+            CelestialBody markBody = MarkCelestialBody;
             Vector3d markVector = markBody.GetSurfaceNVector(MarkLatitude, MarkLongitude - TimeSinceMark * 360.0 / markBody.rotationPeriod);
             Vector3d vesselVector = VesselState.CoM - markBody.transform.position;
             double traversedAngle = Vector3d.Angle(markVector, vesselVector);
@@ -192,20 +192,23 @@ namespace MuMech
         [UsedImplicitly, Persistent(pass = (int)Pass.LOCAL)]
         public int MarkBodyIndex = 1;
 
+        // A saved index can be out of range after the planet pack changed: use the current body then
+        private CelestialBody MarkCelestialBody =>
+            MarkBodyIndex >= 0 && MarkBodyIndex < FlightGlobals.Bodies.Count ? FlightGlobals.Bodies[MarkBodyIndex] : MainBody;
+
         [ValueInfoItem("#MechJeb_MarkBody", InfoItem.Category.Recorder)] //Mark body
-        public string MarkBody() => FlightGlobals.Bodies[MarkBodyIndex].bodyName;
+        public string MarkBody() => MarkCelestialBody.bodyName;
 
         [ValueInfoItem("#MechJeb_DistanceFromMark", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")] //Distance from mark
         public double DistanceFromMark() =>
             Vector3d.Distance(VesselState.CoM,
-                FlightGlobals.Bodies[MarkBodyIndex].GetWorldSurfacePosition(MarkLatitude, MarkLongitude, MarkAltitude) -
-                FlightGlobals.Bodies[MarkBodyIndex].position);
+                MarkCelestialBody.GetWorldSurfacePosition(MarkLatitude, MarkLongitude, MarkAltitude) - MarkCelestialBody.position);
 
         [UsedImplicitly, ValueInfoItem("#MechJeb_DownrangeDistance", InfoItem.Category.Recorder, format = ValueInfoItem.SI, units = "m")]
         //Downrange distance
         public double GroundDistanceFromMark()
         {
-            CelestialBody markBody = FlightGlobals.Bodies[MarkBodyIndex];
+            CelestialBody markBody = MarkCelestialBody;
             Vector3d markVector = markBody.GetSurfaceNVector(MarkLatitude, MarkLongitude);
             Vector3d vesselVector = VesselState.CoM - markBody.transform.position;
             return markBody.Radius * Vector3d.Angle(markVector, vesselVector) * UtilMath.Deg2Rad;
