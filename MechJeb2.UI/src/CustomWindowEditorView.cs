@@ -162,6 +162,7 @@ namespace MuMech.UI
         static void TitleField(KodeWindow w, UIObject parent, MechJebModuleCustomInfoWindow edited) =>
             EditFields.Field(w, parent, () => edited.title, s =>
             {
+                s = MuUtils.SanitizeConfigText(s);
                 if (edited.title == s) return;
                 edited.title = s;
                 edited.Dirty = true;

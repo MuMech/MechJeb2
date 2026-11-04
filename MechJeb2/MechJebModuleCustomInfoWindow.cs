@@ -384,6 +384,8 @@ namespace MuMech
             {
                 string name = typeof(MechJebModuleCustomInfoWindow).Name;
                 ConfigNode windowNode = ConfigNode.CreateConfigFromObject(window, (int)Pass.GLOBAL, global.AddNode(name));
+                // a title from a pasted sharing string or the text field must not break the file
+                windowNode.SetValue("title", MuUtils.SanitizeConfigText(window.title));
 
                 if (HighLogic.LoadedSceneIsEditor)
                     window.EnabledEditor = window.Enabled;
@@ -695,9 +697,8 @@ namespace MuMech
 
         public void SetText(string text)
         {
-            // one line in the sharing string, and a value ConfigNode reads back whole (no braces, no "//" comment)
-            text = (text ?? "").Replace('\n', ' ').Replace('\r', ' ').Replace("{", "").Replace("}", "");
-            while (text.Contains("//")) text = text.Replace("//", "/");
+            // one line in the sharing string, and a value ConfigNode reads back whole
+            text = MuUtils.SanitizeConfigText(text);
             Text = text;
             id   = ID_PREFIX + text;
         }
