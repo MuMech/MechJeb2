@@ -166,7 +166,7 @@ namespace MuMech.MechJebKos
             AddSuffix("TARGETMEANANOMALY", new Suffix<StringValue>(() => Module.TargetMeanAnomaly(),
                 "Target Mean Anomaly."));
             AddSuffix("TARGETTRUELONGITUDE", new Suffix<StringValue>(() => Module.TargetTrueLongitude(),
-                "Target Mean Anomaly."));
+                "Target True Longitude."));
             AddSuffix("SYNODICPERIOD", new Suffix<StringValue>(() => Module.SynodicPeriod(),
                 "Synodic period."));
             AddSuffix("PHASEANGLE", new Suffix<StringValue>(() => Module.PhaseAngle(),
