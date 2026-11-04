@@ -7,7 +7,8 @@ using UnityEngine;
 
 namespace MuMech
 {
-    public class MechJebModuleWarpHelper : DisplayModule
+    // The warp to an event: it runs all flight, with its window (MechJebModuleWarpHelperWindow) open or closed
+    public class MechJebModuleWarpHelper : ComputerModule
     {
         public enum WarpTarget { Periapsis, Apoapsis, Node, SoI, Time, PhaseAngleT, HoverslamBurn, AtmosphericEntry }
 
@@ -167,12 +168,6 @@ namespace MuMech
             }
         }
 
-        public override bool IsActive() => warping;
-
-        public override string GetName() => Localizer.Format("#MechJeb_WarpHelper_title"); //"Warp Helper"
-
-        public override string IconName() => "Warp Helper";
-
-        public MechJebModuleWarpHelper(MechJebCore core) : base(core) { }
+        public MechJebModuleWarpHelper(MechJebCore core) : base(core) => Enabled = true;
     }
 }

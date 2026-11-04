@@ -9,10 +9,10 @@ using static MuMech.MechJebModuleSmartASS;
 namespace MuMech.UI
 {
     /// <summary>
-    /// MechJebModuleSmartASS in KodeKit, row for row with its WindowGUI. The module keeps the state and the Engage logic;
+    /// MechJebModuleSmartASSWindow in KodeKit, row for row with its WindowGUI. MechJebModuleSmartASS keeps the state and the Engage logic;
     /// the "other autopilot is using the attitude controller" check and the per-frame side effects are shared methods on the module.
     /// </summary>
-    [KodeViewFor(typeof(MechJebModuleSmartASS))]
+    [KodeViewFor(typeof(MechJebModuleSmartASSWindow))]
     public class SmartASSView : KodeView
     {
         readonly MechJebModuleSmartASS ss;
@@ -20,7 +20,7 @@ namespace MuMech.UI
         // the result of ss.OtherUsersControlAttitude() for this frame (it has side effects, so it runs once, in BeforeSync)
         bool otherUsers;
 
-        public SmartASSView(MechJebModuleSmartASS ss) : base(ss) => this.ss = ss;
+        public SmartASSView(MechJebModuleSmartASSWindow window) : base(window) => ss = window.Core.SmartASS;
 
         protected override float MinWidth => 180;
 

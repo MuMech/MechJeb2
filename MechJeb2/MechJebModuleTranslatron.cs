@@ -8,7 +8,8 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    public class MechJebModuleTranslatron : DisplayModule
+    // The Translatron logic and its abort sequence: they run all flight, with the window (MechJebModuleTranslatronWindow) open or closed
+    public class MechJebModuleTranslatron : ComputerModule
     {
         //protected static string[] trans_texts = { "OFF", "KEEP\nOBT", "KEEP\nSURF", "KEEP\nVERT" };
 
@@ -32,11 +33,7 @@ namespace MuMech
         public EditableDouble trans_spd = new EditableDouble(0);
 
 
-        public MechJebModuleTranslatron(MechJebCore core) : base(core) { }
-
-        public override string GetName() => Localizer.Format("#MechJeb_Translatron_title");
-
-        public override string IconName() => "Translatron";
+        public MechJebModuleTranslatron(MechJebCore core) : base(core) => Enabled = true;
 
         public void SetMode(MechJebModuleThrustController.TMode newMode)
         {
@@ -45,7 +42,6 @@ namespace MuMech
             if (Core.Thrust.Tmode != oldMode)
             {
                 Core.Thrust.TransSpdAct = Convert.ToInt16(trans_spd);
-                WindowPos = new Rect(WindowPos.x, WindowPos.y, 10, 10);
                 if (Core.Thrust.Tmode == MechJebModuleThrustController.TMode.OFF)
                 {
                     Core.Thrust.Users.Remove(this);

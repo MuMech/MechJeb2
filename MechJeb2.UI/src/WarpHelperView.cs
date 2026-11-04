@@ -7,12 +7,12 @@ namespace MuMech.UI
     /// <summary>
     /// MechJebModuleWarpHelper ("Warp Helper") in KodeKit, row for row with its WindowGUI.
     /// </summary>
-    [KodeViewFor(typeof(MechJebModuleWarpHelper))]
+    [KodeViewFor(typeof(MechJebModuleWarpHelperWindow))]
     public class WarpHelperView : KodeView
     {
         readonly MechJebModuleWarpHelper helper;
 
-        public WarpHelperView(MechJebModuleWarpHelper helper) : base(helper) => this.helper = helper;
+        public WarpHelperView(MechJebModuleWarpHelperWindow window) : base(window) => helper = window.Helper;
 
         protected override float MinWidth => 240;
 

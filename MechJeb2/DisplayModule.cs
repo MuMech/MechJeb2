@@ -13,6 +13,14 @@ namespace MuMech
 
         protected override bool SavesEnabled => true;
 
+        // A window split from the module that does its work (SmartASS, Translatron, Warp Helper): that module's type name.
+        // MechJebCore loads the window's settings from that module's node until the window has its own (they were saved there
+        // before the split), gates it with that module's part cfg entry, and removes it when that module is blacklisted.
+        public virtual string LogicModuleName => null;
+
+        // the module whose controller users make the window's menu entry show as active
+        protected virtual ComputerModule ActiveUser => this;
+
         public Rect WindowPos
         {
             get => !HighLogic.LoadedSceneIsEditor
@@ -283,7 +291,7 @@ namespace MuMech
                 ComputerModule m = _makesActive[i];
                 if (m == null) continue;
 
-                if (active |= m.Users.RecursiveUser(this))
+                if (active |= m.Users.RecursiveUser(ActiveUser))
                     break;
             }
 
