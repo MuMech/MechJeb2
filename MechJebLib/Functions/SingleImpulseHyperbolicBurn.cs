@@ -30,6 +30,10 @@ namespace MechJebLib.Functions
         /// <returns name="dt">Coasting time on the parking orbit from the reference to the burn.</returns>
         public static ( V3 vNeg, V3 vPos, V3 r, double dt) Solve(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false, double rtol = 1e-6)
         {
+            // a zero v-infinity has no direction: the maths would go NaN and Math.Sign would throw an ArithmeticException
+            if (!vInf.IsFinite() || vInf.sqrMagnitude == 0)
+                throw new ArgumentException($"SingleImpulseHyperbolicBurn needs a finite, non-zero v-infinity: {vInf}");
+
             // FIXME: the paper calls for adjusting nearly-circular orbits but never defines what that means, ecc < 0.1 is a guess.
             return Astro.EccFromStateVectors(mu, r0, v0) < 0.1 ? SolveOptimized(mu, r0, v0, vInf, debug, rtol) : SolveAnalytic(mu, r0, v0, vInf, 0, debug);
         }
@@ -39,8 +43,33 @@ namespace MechJebLib.Functions
         /// </summary>
         private static ( V3 vNeg, V3 vPos, V3 r, double dt) SolveOptimized(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false, double rtol = 1e-6)
         {
-            // FIXME: it isn't entirely clear what this bracket should be
-            (double rot, _) = BrentMin.Solve(Func, -PI / 2, PI / 2, null, rtol);
+            // FIXME: it isn't entirely clear what this bracket should be.
+            // The cost over it needn't have one minimum, which can make Brent run out of iterations: scan it coarsely first, and
+            // search only around the best sample, which is kept if the search still fails.
+            const int SAMPLES = 12;
+            const double STEP = PI / SAMPLES;
+            int best = 0;
+            double bestCost = double.PositiveInfinity;
+            for (int i = 0; i <= SAMPLES; i++)
+            {
+                double cost = Func(-PI / 2 + i * STEP, null);
+                if (cost < bestCost)
+                {
+                    bestCost = cost;
+                    best = i;
+                }
+            }
+
+            double rot = -PI / 2 + best * STEP;
+            try
+            {
+                (rot, _) = BrentMin.Solve(Func, Max(-PI / 2, rot - STEP), Min(PI / 2, rot + STEP), null, rtol);
+            }
+            catch (TimeoutException)
+            {
+                // keep the best sample
+            }
+
             return SolveAnalytic(mu, r0, v0, vInf, rot, debug);
 
             double Func(double testrot, object? o)
@@ -134,8 +163,8 @@ namespace MechJebLib.Functions
                 r1Hat = Q3.AngleAxis(-rot, h0Hat) * r1Hat;
             }
 
-            // true anomaly of r1 on the parking orbit
-            double nu10 = Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r1Hat))) * SafeAcos(V3.Dot(rp0Hat, r1Hat));
+            // true anomaly of r1 on the parking orbit (atan2 gives pi, not 0, for a burn exactly opposite the periapsis)
+            double nu10 = Atan2(V3.Dot(h0Hat, V3.Cross(rp0Hat, r1Hat)), V3.Dot(rp0Hat, r1Hat));
 
             // length of the position vector of the burn on the parking orbit
             double r1 = p0 / (1 + ecc0 * Cos(nu10));
@@ -187,7 +216,7 @@ namespace MechJebLib.Functions
 
             // compute nu of the reference position on the parking orbit
             V3 r0Hat = r0 / r0.magnitude;
-            double nu0 = Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat))) * SafeAcos(V3.Dot(rp0Hat, r0Hat));
+            double nu0 = Atan2(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat)), V3.Dot(rp0Hat, r0Hat));
 
             // mean angular motion of the parking orbit (rad/time)
             double n = 1 / Sqrt(a0 * a0 * a0 / mu);
@@ -209,9 +238,11 @@ namespace MechJebLib.Functions
             }
 
             // coast time on the parking orbit
+            // a round-off negative for a burn at the reference position is that position, not a full period later
+            double period = 2 * PI / n;
             double dt = (m1 - m0) / n;
             if (dt < 0)
-                dt += 2 * PI / n;
+                dt = dt > -1e-9 * period ? 0 : dt + period;
 
             if (debug)
                 Print("[MechJeb] singleImpulseHyperbolicBurn vNeg = " + vNeg + " vPos = " + vPos + " r = " + r + " dt = " + dt);
