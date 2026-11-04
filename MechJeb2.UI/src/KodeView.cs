@@ -41,19 +41,22 @@ namespace MuMech.UI
         /// <summary>The last Build's cost in ms: creating the window's contents, and the canvas update that lays it out (for tests).</summary>
         public static double LastContentsMs, LastCanvasMs;
 
+        // timestamps rather than a Stopwatch object: no allocation per build for numbers only tests read
+        static double MsSince(long start) => (System.Diagnostics.Stopwatch.GetTimestamp() - start) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+
         public void Build(RectTransform canvas)
         {
-            var timer = System.Diagnostics.Stopwatch.StartNew();
+            long start = System.Diagnostics.Stopwatch.GetTimestamp();
             Window = new KodeWindow(canvas, Module.GetName(), MinWidth, Vector2.zero);
             Window.OnClose = () => Module.Enabled = false;
             Window.Edited = () => Module.Dirty = true;
             BuildContents(Window);
             builtOverlay = Module.IsOverlay;
             if (builtOverlay) MakeOverlay();
-            LastContentsMs = timer.Elapsed.TotalMilliseconds;
-            timer.Restart();
+            LastContentsMs = MsSince(start);
+            start = System.Diagnostics.Stopwatch.GetTimestamp();
             Canvas.ForceUpdateCanvases();
-            LastCanvasMs = timer.Elapsed.TotalMilliseconds;
+            LastCanvasMs = MsSince(start);
             ApplyScale();
             Vector4 v = StoredPosition;
             Window.Behaviour.SetImguiPosition(new Vector2(v.x, v.y), GuiUtils.Scale);
