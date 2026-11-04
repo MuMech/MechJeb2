@@ -13,6 +13,11 @@ namespace MuMech
         [Persistent(pass = (int)Pass.GLOBAL)]
         public bool Autowarp = true;
 
+        // set by an autopilot that wants no warp for now, without changing the player's setting
+        public bool AutowarpInhibited;
+
+        private bool _autowarp => Autowarp && !AutowarpInhibited;
+
         // how many seconds before a burn to end warp (and start ullaging in RO)
         [Persistent(pass = (int)Pass.GLOBAL)]
         public readonly EditableDouble LeadTime = new EditableDouble(3);
@@ -233,7 +238,7 @@ namespace MuMech
                 return States.LEAD;
 
             // if we're not warping at all, just constantly align to the burn
-            if (!Autowarp)
+            if (!_autowarp)
                 return States.ALIGNING;
 
             // if we keep within the warp alignment tolerance just warp all the way to IDLE
@@ -284,7 +289,7 @@ namespace MuMech
 
         private void TickAligning()
         {
-            if (Autowarp && !MuUtils.PhysicsRunning())
+            if (_autowarp && !MuUtils.PhysicsRunning())
             {
                 Core.Warp.MinimumWarp();
                 return;

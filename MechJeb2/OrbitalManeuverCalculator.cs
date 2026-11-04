@@ -186,15 +186,10 @@ namespace MuMech
 
             TransferGeometry direction = prograde ? TransferGeometry.Prograde : TransferGeometry.Retrograde;
 
-            (V3 transferVi, V3 transferVf) =
-                Russell.Solve(o.referenceBody.gravParameter, ri, rf, dt, direction, 0, V3.Cross(ri, vi));
-
             if (offsetDistance != 0)
-            {
                 rf -= offsetDistance * V3.Cross(vf, rf).normalized;
-                (transferVi, transferVf) = Russell.Solve(o.referenceBody.gravParameter, ri, rf,
-                    dt, direction, 0, V3.Cross(ri, vi));
-            }
+
+            (V3 transferVi, V3 transferVf) = Russell.Solve(o.referenceBody.gravParameter, ri, rf, dt, direction, 0, V3.Cross(ri, vi));
 
             return ((transferVi - vi).V3ToWorld(), (vf - transferVf).V3ToWorld());
         }
@@ -282,6 +277,27 @@ namespace MuMech
         //between a given orbit and a target.
         public static Vector3d DeltaVToMatchVelocities(Orbit o, double UT, Orbit target) =>
             target.WorldOrbitalVelocityAtUT(UT) - o.WorldOrbitalVelocityAtUT(UT);
+
+        // Computes the one or two burns, the first at or after a given UT, that reach a circular orbit of a given radius.
+        // Nothing is plotted here, so a failure leaves the player's nodes alone.
+        public static List<ManeuverParameters> ManeuversToCircularOrbit(Orbit o, double UT, double radius)
+        {
+            if (o.ApR >= radius && o.PeR <= radius)
+            {
+                double burnUT = o.NextTimeOfRadius(UT, radius);
+                return new List<ManeuverParameters> { new ManeuverParameters(DeltaVToCircularize(o, burnUT), burnUT) };
+            }
+
+            bool raise = o.ApR < radius;
+            Vector3d dV1 = raise ? DeltaVToChangeApoapsis(o, UT, radius) : DeltaVToChangePeriapsis(o, UT, radius);
+            Orbit transferOrbit = o.PerturbedOrbit(UT, dV1);
+            double UT2 = raise ? transferOrbit.NextApoapsisTime(UT) : transferOrbit.NextPeriapsisTime(UT);
+
+            return new List<ManeuverParameters>
+            {
+                new ManeuverParameters(dV1, UT), new ManeuverParameters(DeltaVToCircularize(transferOrbit, UT2), UT2)
+            };
+        }
 
         // Compute the delta-V of the burn at the givent time required to enter an orbit with a period of (resonanceDivider-1)/resonanceDivider of the starting orbit period
         public static Vector3d DeltaVToResonantOrbit(Orbit o, double UT, double f)
