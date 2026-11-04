@@ -273,7 +273,11 @@ namespace MuMech
             sw.Stop();
             Print($"Registered {registry.Count} info items:  value:{_valueInfoItemStopwatch.ElapsedMilliseconds} ms action:{_actionInfoItemStopwatch.ElapsedMilliseconds} ms  toggle:{_toggleInfoItemStopwatch.ElapsedMilliseconds} ms  general:{_generalInfoItemStopwatch.ElapsedMilliseconds} ms  editable:{_editableInfoItemStopwatch.ElapsedMilliseconds} ms  total:{sw.ElapsedMilliseconds} ms");
 
-            if (global == null) return;
+            if (global == null)
+            {
+                Profiler.EndSample();
+                return;
+            }
 
             // Saved windows reference info-item ids from an older MechJeb; drop them and let
             // MechJebCore regenerate the default windows instead of loading orphaned ones.
