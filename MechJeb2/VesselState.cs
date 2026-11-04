@@ -614,7 +614,7 @@ namespace MuMech
 
             // Displacement Angle, angle between surface velocity and the ship-nose vector (KSP "up" vector) -- ignores roll of the craft (0 to 180 degrees)
             double tempAoD = UtilMath.Rad2Deg *
-                Math.Acos(Clamp(Vector3.Dot(Vessel.ReferenceTransform.up, SurfaceVelocity.normalized), -1, 1));
+                SafeAcos(Vector3.Dot(Vessel.ReferenceTransform.up, SurfaceVelocity.normalized));
             AoD = double.IsNaN(tempAoD) || SpeedSurface < 0.01 ? 0 : tempAoD;
 
             // Fix Unity Left-Handed NEU eulerAngles to Right-Handed NED

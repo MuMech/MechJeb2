@@ -434,7 +434,7 @@ namespace MuMech
                 double a = (Vessel.mainBody.transform.position - Vessel.transform.position).magnitude;
                 double b = (Vessel.mainBody.transform.position - Core.Target.Transform.position).magnitude;
                 double c = Vector3d.Distance(Vessel.transform.position, Core.Target.Position);
-                double ang = Math.Acos((a * a + b * b - c * c) / (2f * a * b));
+                double ang = SafeAcos((a * a + b * b - c * c) / (2f * a * b));
                 return GuiUtils.TimeToDHMS(ang * Vessel.mainBody.Radius / VesselState.SpeedSurfaceHorizontal);
             }
 

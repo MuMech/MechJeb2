@@ -75,7 +75,7 @@ namespace MuMech.AttitudeControllers
             double roll = ea[2] * UtilMath.Deg2Rad;
 
             // law of cosines for the "distance" of the miss in radians
-            _phiTotal = Math.Acos(Clamp(Math.Cos(pitch) * Math.Cos(yaw), -1, 1));
+            _phiTotal = SafeAcos(Math.Cos(pitch) * Math.Cos(yaw));
 
             // this is the initial direction of the great circle route of the requested transform
             // (pitch is latitude, yaw is -longitude, and we are "navigating" from 0,0)
