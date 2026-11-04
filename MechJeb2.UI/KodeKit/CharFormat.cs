@@ -111,11 +111,13 @@ namespace KodeKit
             double years = seconds / ((double)hoursPerDay * 3600 * daysPerYear);
             if (Math.Abs(years) >= 1000) return AppendSI(years).Append('a');
             int start = len;
-            if (seconds < 0)
-            {
-                Append('-');
-                seconds = -seconds;
-            }
+            bool negative = seconds < 0;
+            seconds = Math.Abs(seconds);
+            // round to the decimals shown before splitting into units: 239.97 s is "4m 00.0s", not "3m 60.0s"
+            if (decimalPlaces > 0)
+                seconds = (double)Math.Round((decimal)seconds, Math.Min(decimalPlaces, 9), MidpointRounding.AwayFromZero);
+            // no "-00.0s" for a value that rounds to zero
+            if (negative && (decimalPlaces > 0 ? seconds > 0 : seconds >= 1)) Append('-');
             long year = (long)hoursPerDay * 3600 * daysPerYear, day = (long)hoursPerDay * 3600;
             long y = (long)(seconds / year);
             long d = (long)(seconds % year / day);
@@ -131,7 +133,7 @@ namespace KodeKit
             // GuiUtils.TimeToDHMS tests the remaining seconds (always < 60 here), so decimals always show when asked
             if (decimalPlaces > 0)
             {
-                if (Math.Round(s, decimalPlaces) < 10) Append('0'); // GuiUtils uses "00.0" here
+                if (s < 10) Append('0'); // GuiUtils uses "00.0" here; s is already rounded
                 Append(s, decimalPlaces);
             }
             else Pad((long)s, any ? 2 : 1);
