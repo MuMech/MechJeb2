@@ -119,11 +119,32 @@ namespace MuMech
             debugArrow2 = null;
         }
 
+        private static void HideAll()
+        {
+            comSphere?.State(false);
+            colSphere?.State(false);
+            cotSphere?.State(false);
+            srfVelocityArrow?.State(false);
+            obtVelocityArrow?.State(false);
+            dotArrow?.State(false);
+            forwardArrow?.State(false);
+            requestedAttitudeArrow?.State(false);
+            debugArrow?.State(false);
+            debugArrow2?.State(false);
+        }
+
         // TODO : I should probably use an array and an enum to lower code dup ...
         public override void OnUpdate()
         {
             if (Vessel != FlightGlobals.ActiveVessel)
+            {
+                // The objects are shared and only the active vessel's module drives them: if that vessel has no
+                // MechJeb, nothing else would hide them (a switch to a vessel with one is handled by its own module)
+                if (FlightGlobals.ActiveVessel.GetMasterMechJeb() == null)
+                    HideAll();
+
                 return;
+            }
 
             // Each object is created the first time its option is enabled
             if (comSphereActive)
