@@ -183,36 +183,30 @@ namespace MuMech.UI
             w.AddSync(() =>
             {
                 if (!HasVessel) return;
-                try
+                // no catch: KodeWindow.Sync logs a failure once, and the picture keeps its last state
+                MechJebModuleAscentClassicPathMenu.PathSignature now = menu.CurrentPathSignature();
+                if (!haveSignature || !now.Equals(signature))
                 {
-                    MechJebModuleAscentClassicPathMenu.PathSignature now = menu.CurrentPathSignature();
-                    if (!haveSignature || !now.Equals(signature))
-                    {
-                        haveSignature = true;
-                        signature = now;
-                        menu.ComputePathPoints(PictureWidth, PictureHeight, pathSource.Points);
-                        path.SetVerticesDirty();
-                    }
-
-                    // the trajectory shares the path's scale (meters per pixel); redraw when it grew or the scale changed
-                    double end = now.EndAltitude;
-                    int count = trajectorySource.Count;
-                    MechJebModuleFlightRecorder rec = menu.Recorder;
-                    double down = count > 0 ? rec.History[count - 1].DownRange : 0;
-                    if (count != lastCount || !end.Equals(lastEnd) || !down.Equals(lastDown) || rec.History != lastHistory)
-                    {
-                        lastCount = count;
-                        lastEnd = end;
-                        lastDown = down;
-                        lastHistory = rec.History;
-                        trajectory.XMax = PictureWidth * end / PictureHeight;
-                        trajectory.YMax = end;
-                        trajectory.SetVerticesDirty();
-                    }
+                    haveSignature = true;
+                    signature = now;
+                    menu.ComputePathPoints(PictureWidth, PictureHeight, pathSource.Points);
+                    path.SetVerticesDirty();
                 }
-                catch (Exception)
+
+                // the trajectory shares the path's scale (meters per pixel); redraw when it grew or the scale changed
+                double end = now.EndAltitude;
+                int count = trajectorySource.Count;
+                MechJebModuleFlightRecorder rec = menu.Recorder;
+                double down = count > 0 ? rec.History[count - 1].DownRange : 0;
+                if (count != lastCount || !end.Equals(lastEnd) || !down.Equals(lastDown) || rec.History != lastHistory)
                 {
-                    // never throw from a binding: the picture keeps its last state
+                    lastCount = count;
+                    lastEnd = end;
+                    lastDown = down;
+                    lastHistory = rec.History;
+                    trajectory.XMax = PictureWidth * end / PictureHeight;
+                    trajectory.YMax = end;
+                    trajectory.SetVerticesDirty();
                 }
             });
         }

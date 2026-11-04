@@ -37,14 +37,9 @@ namespace MuMech.UI
         {
             if (planner.PlannerNodeCount() == 0) planner.CreateNodeMode = true;
             if (!HasVessel) return;
-            try
-            {
-                planner.GetOrbitAndUT(out Orbit o, out double ut);
-                planner.CurrentOperation.ViewUpdate(o, ut, Core.Target);
-            }
-            catch (Exception)
-            {
-            } // like WindowGUI around DoParametersGUI
+            // no catch: KodeView logs a BeforeSync failure once and the bindings still run
+            planner.GetOrbitAndUT(out Orbit o, out double ut);
+            planner.CurrentOperation.ViewUpdate(o, ut, Core.Target);
         }
 
         // ManeuverPlanner's bindings must not throw without a node executor
