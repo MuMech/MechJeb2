@@ -22,6 +22,11 @@ namespace KodeKit
         float measured = -1;
         static readonly Vector3[] corners = new Vector3[4];
 
+        // a draw that threw is skipped for a second, then tried again; it is logged once
+        const float RetryDelay = 1;
+        bool logged, skipping;
+        float retryAt = -1;
+
         public float Height => size.preferredHeight;
         public bool Visible => placeholder != null && placeholder.gameObject.activeInHierarchy;
 
@@ -52,9 +57,13 @@ namespace KodeKit
         internal void OnGUI(Camera cam)
         {
             if (!placeholder.gameObject.activeInHierarchy) return;
+            // decided on Layout and kept for the frame's other events, which must see the same controls
+            if (Event.current.type == EventType.Layout) skipping = Time.unscaledTime < retryAt;
+            if (skipping) return;
             if (!layout)
             {
-                draw();
+                try { draw(); }
+                catch (Exception e) when (!(e is ExitGUIException)) { Failed(e); }
                 return;
             }
 
@@ -69,20 +78,41 @@ namespace KodeKit
 
             var area = new Rect(bl.x / scale, (Screen.height - tr.y) / scale, placeholder.rect.width, 10000);
             GUILayout.BeginArea(area);
-            GUILayout.BeginVertical();
-            draw();
-            GUILayout.EndVertical();
-            if (Event.current.type == EventType.Repaint)
+            try
             {
-                float h = GUILayoutUtility.GetLastRect().height;
-                if (Mathf.Abs(h - measured) > 0.5f)
+                GUILayout.BeginVertical();
+                bool drawn = false;
+                try
                 {
-                    measured = h;
-                    size.preferredHeight = h; // relayout only when the IMGUI content changes height
+                    draw();
+                    drawn = true;
+                }
+                catch (Exception e) when (!(e is ExitGUIException)) { Failed(e); }
+                finally { GUILayout.EndVertical(); }
+                if (drawn && Event.current.type == EventType.Repaint)
+                {
+                    float h = GUILayoutUtility.GetLastRect().height;
+                    if (Mathf.Abs(h - measured) > 0.5f)
+                    {
+                        measured = h;
+                        size.preferredHeight = h; // relayout only when the IMGUI content changes height
+                    }
                 }
             }
-            GUILayout.EndArea();
-            GUI.matrix = old;
+            finally
+            {
+                // closed even when the draw throws, so MechJeb's other OnGUI does not inherit an open area
+                GUILayout.EndArea();
+                GUI.matrix = old;
+            }
+        }
+
+        void Failed(Exception e)
+        {
+            retryAt = Time.unscaledTime + RetryDelay;
+            if (logged) return;
+            logged = true;
+            Debug.LogError($"[KodeKit] an IMGUI block could not be drawn (skipped for {RetryDelay} s, then retried; logged once): {e}");
         }
     }
 
