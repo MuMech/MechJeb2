@@ -573,9 +573,13 @@ namespace MuMech
             return string.Format(CultureInfo.InvariantCulture, "{0} {1}° {2}' {3:F3}\"", ew, h, m, s);
         }
 
-        internal static double ParseCoord(string latLon, bool isLongitute = false)
+        /// <summary>Parse a latitude or longitude as the edit fields show it; false (and 0) when the text is not a coordinate.</summary>
+        internal static bool TryParseCoord(string latLon, bool isLongitute, out double value)
         {
-            Match match = _coordRegex.Match(latLon);
+            value = 0;
+            Match match = _coordRegex.Match(latLon ?? "");
+            if (!match.Success) return false;
+
             int range = isLongitute ? 180 : 90;
 
             float nsew = 1;
@@ -591,7 +595,7 @@ namespace MuMech
             }
 
             float h = 0;
-            if (match.Groups[2] != null) { float.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out h); }
+            if (!float.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out h) || float.IsInfinity(h)) return false;
 
             if (h < 0)
             {
@@ -600,18 +604,23 @@ namespace MuMech
             }
 
             float m = 0;
-            if (match.Groups[3] != null) { float.TryParse(match.Groups[3].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out m); }
+            if (match.Groups[3].Success && !float.TryParse(match.Groups[3].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out m)) return false;
 
             float s = 0;
-            if (match.Groups[4] != null) { float.TryParse(match.Groups[4].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out s); }
+            if (match.Groups[4].Success && !float.TryParse(match.Groups[4].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out s)) return false;
 
             h = (h + m / 60 + s / 3600) * nsew;
+            if (float.IsNaN(h) || float.IsInfinity(h)) return false;
+
+            // the loops below never end on a huge value
+            h %= range * 2;
 
             while (h > range) { h -= range * 2; }
 
             while (h < -range) { h += range * 2; }
 
-            return h;
+            value = h;
+            return true;
         }
 
         private int SortRoutes(MechJebWaypointRoute a, MechJebWaypointRoute b)
