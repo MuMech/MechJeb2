@@ -112,13 +112,13 @@ namespace MuMech
         public Texture2D background;
 
 
-        private TimeSpan refreshInterval = TimeSpan.FromSeconds(0.1);
-        private DateTime lastRefresh = DateTime.MinValue;
+        private float refreshInterval = 0.1f;
+        private float lastRefresh = float.NegativeInfinity;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
         public EditableInt refreshRate = 10;
 
-        public void UpdateRefreshRate() => refreshInterval = TimeSpan.FromSeconds(1d / refreshRate);
+        public void UpdateRefreshRate() => refreshInterval = (float)(1d / refreshRate);
 
         public override void OnDestroy()
         {
@@ -137,7 +137,7 @@ namespace MuMech
 
         public virtual void UpdateWindowItems()
         {
-            DateTime now = DateTime.Now;
+            float now = Time.realtimeSinceStartup;
             if (now - lastRefresh < refreshInterval) return;
             foreach (InfoItem item in items)
                 if (HighLogic.LoadedSceneIsEditor ? item.showInEditor : item.showInFlight)
