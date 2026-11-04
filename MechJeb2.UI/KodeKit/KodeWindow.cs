@@ -814,10 +814,6 @@ namespace KodeKit
             return b;
         }
 
-        /// <summary>
-        /// IMGUI's big state buttons: a GUIStyle with padding 8 on every side (SmartASS, SmartRcs, Translatron), so the
-        /// button is the text's height plus 16.
-        /// </summary>
         /// <summary>A button showing only a sprite (e.g. <see cref="Sprites.Arrow"/>), sized like a one-character button.</summary>
         public static UIButton IconButton(UIObject parent, Sprite icon, Action onClick)
         {
@@ -850,6 +846,10 @@ namespace KodeKit
             return img;
         }
 
+        /// <summary>
+        /// IMGUI's big state buttons: a GUIStyle with padding 8 on every side (SmartASS, SmartRcs, Translatron), so the
+        /// button is the text's height plus 16.
+        /// </summary>
         public static UIButton Padded(UIButton b, int padding = 8)
         {
             b.Content.Padding(padding, padding, padding, padding);

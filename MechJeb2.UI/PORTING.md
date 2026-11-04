@@ -62,7 +62,8 @@ Live numbers that change every frame: prefer `CharText` (garbage-free formatting
 - Bindings run every frame, even while their row is hidden: getters must not throw (null vessel, no target, no
   maneuver nodes, `patchedConicSolver == null`, editor scene where `Vessel` is null). Guard them.
 - Don't allocate per frame in getters (string concatenation, `Localizer.Format`, LINQ): cache by value.
-- Create everything in `BuildContents`; never create UI objects in syncs.
+- Create everything in `BuildContents`, or from a pool that a sync grows and reuses (the waypoint rows, the custom
+  window editor's lists, `LabelValueRows`, the stage stats cells): never create UI objects in a sync without one.
 
 ## Building
 

@@ -25,13 +25,6 @@ namespace MuMech.UI
             return Predictor != null && Predictor.Enabled && r != null && r.Outcome == outcome;
         }
 
-        static double Clamp180(double x)
-        {
-            x %= 360;
-            if (x < 0) x += 360;
-            return x > 180 ? x - 360 : x;
-        }
-
         double resultBiomeLat = double.NaN, resultBiomeLon = double.NaN;
         CelestialBody resultBiomeBody;
         string resultBiome = "";
@@ -81,7 +74,7 @@ namespace MuMech.UI
             {
                 ReentrySimulation.Result res = Result;
                 double lat = res.EndPosition.Latitude;
-                double lon = Clamp180(res.EndPosition.Longitude);
+                double lon = MechJebLib.Utils.Statics.Clamp180(res.EndPosition.Longitude);
                 ct.AppendDMS(lat).Append(lat > 0 ? " N" : " S").Append(", ").AppendDMS(lon).Append(lon > 0 ? " E" : " W")
                     .Append("\nASL:").AppendSI(res.EndASL).Append('m');
             }, isLanded);

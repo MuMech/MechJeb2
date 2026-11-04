@@ -168,13 +168,7 @@ namespace MuMech.UI
             return scaleText;
         }
 
-        static readonly Dictionary<int, string> numbers = new Dictionary<int, string>();
-
-        static string Number(int n)
-        {
-            if (!numbers.TryGetValue(n, out string s)) numbers[n] = s = n.ToString();
-            return s;
-        }
+        static string Number(int n) => InfoText.Int(n);
 
         // ---- the plot ----
 

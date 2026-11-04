@@ -57,13 +57,14 @@ namespace KodeKit
             if (Math.Abs(v) * pow10[decimals] >= 9.2e18) return Append(v.ToString("F" + decimals));
             if (v < 0)
             {
-                // .NET Framework prints -0.001 as "0.00", not "-0.00"
+                // ToString prints -0.001 as "0.00", not "-0.00" (KSP's Mono, checked in game)
                 if (Math.Round(-(decimal)v, decimals, MidpointRounding.AwayFromZero) > 0) Append('-');
                 v = -v;
             }
 
-            // round through decimal: (decimal)double keeps 15 significant digits, like .NET Framework's ToString("F"),
-            // so 1.005 -> "1.01" exactly as MechJeb's strings show it
+            // round through decimal: (decimal)double keeps 15 significant digits, so 1.005 -> "1.01" as KSP's Mono
+            // ToString("F2") prints it. A value 1 ulp under a rounding edge can still differ: Mono prints
+            // -0.0049999999999999949 as "0.00" at F2, this gives "-0.01" (the only one of 455 edge cases tried)
             long n =(long)(Math.Round((decimal)v, decimals, MidpointRounding.AwayFromZero) * (decimal)pow10[decimals]);
             long ip = n / (long)pow10[decimals];
             long fp = n % (long)pow10[decimals];

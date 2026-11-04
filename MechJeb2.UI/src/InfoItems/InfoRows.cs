@@ -10,11 +10,21 @@ namespace MuMech.UI
     /// <summary>Formatting that MechJeb's strings do (MuUtils.PadPositive / PrettyPrint) into a CharText, without allocating.</summary>
     internal static class InfoText
     {
+        static readonly Dictionary<int, string> ints = new Dictionary<int, string>();
+
+        /// <summary>An int's text, made once per value (column counts, small indices): no string per frame.</summary>
+        public static string Int(int n)
+        {
+            if (!ints.TryGetValue(n, out string s)) ints[n] = s = n.ToString();
+            return s;
+        }
+
         /// <summary>MuUtils.PadPositive(v, "F" + decimals): a leading space unless the number starts with '-'.</summary>
         public static CharText PadPositive(this CharText ct, double v, int decimals)
         {
-            // CharText prints '-' only when the rounded value is not zero (like .NET Framework's ToString("F"))
-            bool negative = v < 0 && -v >= 0.5 * Math.Pow(10, -decimals);
+            // the rule CharText.Append uses to print '-': the value rounded through decimal is not zero. Beyond decimal's
+            // range CharText formats with ToString, which always prints the '-'.
+            bool negative = v < 0 && (v <= -1e15 || Math.Round(-(decimal)v, decimals, MidpointRounding.AwayFromZero) > 0);
             if (!negative) ct.Append(' ');
             return ct.Append(v, decimals);
         }

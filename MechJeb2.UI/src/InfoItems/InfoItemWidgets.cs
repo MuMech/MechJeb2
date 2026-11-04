@@ -336,7 +336,6 @@ namespace MuMech.UI
             });
         }
 
-        /// <summary>The formats CharText reproduces exactly (see ValueInfoItem.GetStringValue).</summary>
         /// <summary>
         /// Items whose member returns a string MechJeb builds from numbers, written from those numbers without garbage. Same
         /// text as ValueInfoItem's ("{value} {units}", so a trailing space when there are no units). Returns the length of
@@ -376,6 +375,7 @@ namespace MuMech.UI
             return null;
         }
 
+        /// <summary>The formats CharText reproduces exactly (see ValueInfoItem.GetStringValue).</summary>
         static bool Formattable(ValueInfoItem item, out int decimals)
         {
             decimals = 0;

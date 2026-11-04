@@ -4,11 +4,6 @@ using UnityEngine;
 namespace MuMech.UI
 {
     /// <summary>
-    /// A KodeKit window for one DisplayModule. The module stays the source of truth for open/closed (Enabled),
-    /// position (WindowVector in flight, WindowVectorEditor in the editor, in IMGUI units / GuiUtils.Scale),
-    /// window lock and persistence; the view only draws it.
-    /// </summary>
-    /// <summary>
     /// Marks a KodeView as the new-UI window of a DisplayModule type. The view needs a public constructor
     /// taking that module; KodeHost finds every marked view by reflection.
     /// </summary>
@@ -19,6 +14,11 @@ namespace MuMech.UI
         public KodeViewForAttribute(System.Type module) => Module = module;
     }
 
+    /// <summary>
+    /// A KodeKit window for one DisplayModule. The module stays the source of truth for open/closed (Enabled),
+    /// position (WindowVector in flight, WindowVectorEditor in the editor, in IMGUI units / GuiUtils.Scale),
+    /// window lock and persistence; the view only draws it.
+    /// </summary>
     public abstract class KodeView
     {
         public readonly DisplayModule Module;
