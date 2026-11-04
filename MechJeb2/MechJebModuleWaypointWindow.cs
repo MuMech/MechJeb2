@@ -236,6 +236,9 @@ namespace MuMech
         internal MechJebModuleRoverController _ap;
         internal static readonly List<MechJebWaypointRoute> _routes = new List<MechJebWaypointRoute>();
 
+        // routes of a body that is not installed any more, kept as read so that saving does not drop them
+        private static readonly List<ConfigNode> _unresolvedRoutes = new List<ConfigNode>();
+
         [EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
         // Moho Mapdist
         public readonly EditableDouble MohoMapdist = 5000;
@@ -392,10 +395,18 @@ namespace MuMech
             if (wps.HasNode("Waypoints"))
             {
                 _routes.Clear();
+                _unresolvedRoutes.Clear();
                 RoutesVersion++;
                 foreach (ConfigNode cn in wps.GetNodes("Waypoints"))
                 {
-                    _routes.Add(new MechJebWaypointRoute(cn));
+                    var route = new MechJebWaypointRoute(cn);
+                    if (route.Body == null)
+                    {
+                        _unresolvedRoutes.Add(cn);
+                        continue;
+                    }
+
+                    _routes.Add(route);
                 }
 
                 _routes.Sort(SortRoutes);
@@ -413,6 +424,11 @@ namespace MuMech
                 {
                     cn.AddNode(r.ToConfigNode());
                 }
+            }
+
+            foreach (ConfigNode unresolved in _unresolvedRoutes)
+            {
+                cn.AddNode(unresolved);
             }
 
             cn.Save(MuUtils.GetCfgPath("mechjeb_routes.cfg"));
