@@ -295,8 +295,22 @@ namespace MuMech
 
         public void Destroy()
         {
-            if (gameObject != null)
-                Object.Destroy(gameObject);
+            if (gameObject == null)
+                return;
+
+            // Destroying the GameObject leaves the instantiated meshes and materials behind
+            DestroyMeshAndMaterial(haft, _haftMeshRenderer);
+            DestroyMeshAndMaterial(cone, _coneMeshRenderer);
+            Object.Destroy(gameObject);
+        }
+
+        internal static void DestroyMeshAndMaterial(GameObject go, MeshRenderer renderer)
+        {
+            if (go != null && go.TryGetComponent(out MeshFilter filter) && filter.sharedMesh != null)
+                Object.Destroy(filter.sharedMesh);
+
+            if (renderer != null && renderer.sharedMaterial != null)
+                Object.Destroy(renderer.sharedMaterial);
         }
 
         public void SeeThrough(bool state)
@@ -587,7 +601,14 @@ namespace MuMech
             ApplyShader();
         }
 
-        public void Destroy() => Object.Destroy(gameObject);
+        public void Destroy()
+        {
+            if (gameObject == null)
+                return;
+
+            DebugArrow.DestroyMeshAndMaterial(gameObject, _meshRenderer);
+            Object.Destroy(gameObject);
+        }
 
         public void Set(Vector3d position) => gameObject.transform.position = position;
 
