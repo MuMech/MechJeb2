@@ -28,7 +28,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool forceRol = false;
 
-        [EditableInfoItem("#MechJeb_Docking_checkbox3", InfoItem.Category.Thrust, rightLabel = "m")] //Safe Distance
+        [Persistent(pass = (int)Pass.LOCAL), EditableInfoItem("#MechJeb_Docking_checkbox3", InfoItem.Category.Thrust, rightLabel = "m")] //Safe Distance
         public EditableDouble overridenSafeDistance = 5;
 
         [Persistent(pass = (int)Pass.LOCAL)]
@@ -37,7 +37,7 @@ namespace MuMech
         [Persistent(pass = (int)Pass.LOCAL)]
         public bool overrideTargetSize = false;
 
-        [EditableInfoItem("#MechJeb_Docking_label6", InfoItem.Category.Thrust, rightLabel = "m")] //Start Distance
+        [Persistent(pass = (int)Pass.LOCAL), EditableInfoItem("#MechJeb_Docking_label6", InfoItem.Category.Thrust, rightLabel = "m")] //Start Distance
         public EditableDouble overridenTargetSize = 10;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]

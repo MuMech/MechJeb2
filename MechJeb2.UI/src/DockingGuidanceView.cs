@@ -63,8 +63,9 @@ namespace MuMech.UI
                 if (ap.overridenTargetSize < 10)
                     ap.overridenTargetSize = 10;
 
+                // 0 means no limit, so a negative value must not fall to 0
                 if (ap.speedLimit < 0)
-                    ap.speedLimit = 0;
+                    ap.speedLimit = 0.1;
 
                 if (ap.Enabled)
                 {
