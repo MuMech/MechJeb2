@@ -198,10 +198,25 @@ namespace MuMech
             }
         }
 
+        // The buttons outlive the menu that created them, so their handlers look the master MechJeb up when they run.
+        // It is null when the active vessel has no running MechJeb, or outside the flight and editor scenes.
+        private static MechJebCore ActiveMasterMechJeb()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+                return ((Vessel)null).GetMasterMechJeb();
+
+            return HighLogic.LoadedSceneIsFlight ? FlightGlobals.ActiveVessel.GetMasterMechJeb() : null;
+        }
+
         public void ShowHideMasterWindow()
         {
-            MechJebModuleMenu mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetComputerModule<MechJebModuleMenu>();
-            mod.ShowHideWindow();
+            MechJebCore mj = ActiveMasterMechJeb();
+            if (mj == null)
+                return;
+
+            MechJebModuleMenu mod = mj.GetComputerModule<MechJebModuleMenu>();
+            if (mod != null)
+                mod.ShowHideWindow();
         }
 
         public void SetupToolBarButtons()
@@ -251,7 +266,11 @@ namespace MuMech
                     button.button.ToolTip = "MechJeb " + module.GetName();
                     button.button.OnClick += b =>
                     {
-                        DisplayModule mod = FlightGlobals.ActiveVessel.GetMasterMechJeb().GetDisplayModules(DisplayOrder.instance)
+                        MechJebCore mj = ActiveMasterMechJeb();
+                        if (mj == null)
+                            return;
+
+                        DisplayModule mod = mj.GetDisplayModules(DisplayOrder.instance)
                            .FirstOrDefault(m => m == module);
                         if (mod != null)
                         {
