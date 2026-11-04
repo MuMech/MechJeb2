@@ -159,8 +159,6 @@ namespace MuMech
 
             if (MinSpeed > 0 && MaxSpeed > 0 && MinSpeed > MaxSpeed)
                 MinSpeed = MaxSpeed;
-            else if (MinSpeed > 0 && MaxSpeed > 0 && MaxSpeed < MinSpeed)
-                MaxSpeed = MinSpeed;
         }
     }
 
