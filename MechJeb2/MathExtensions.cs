@@ -190,7 +190,7 @@ namespace MuMech
             }
             else
             {
-                double pitch = Math.Asin(2.0 * test / unit);
+                double pitch = SafeAsin(2.0 * test / unit);
                 double yaw = Math.Atan2(2.0 * (q.x * q.z + q.w * q.y), sqw - sqx - sqy + sqz);
                 double roll = Math.Atan2(2.0 * (q.x * q.y + q.w * q.z), sqw - sqx + sqy - sqz);
 

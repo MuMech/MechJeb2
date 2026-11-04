@@ -471,7 +471,7 @@ namespace MechJebLib.Maneuvers
                 // the margin is because the inclination at the limit is degenerate (the two b-plane solutions merge), and
                 // because rotating the plane moves the soi entry point which moves v-infinity a bit.
                 (_, _, rsoi2, vsoi2, _, _, _, _, _) = EvaluateTrajectory(x2);
-                double decl = Asin(Abs(IncomingAsymptote(1.0, rsoi2, vsoi2).z));
+                double decl = SafeAsin(Abs(IncomingAsymptote(1.0, rsoi2, vsoi2).z));
                 double cosIncMax = Cos(Min(decl + INC_CLAMP_MARGIN, PI / 2));
                 if (Abs(_cosInc) > cosIncMax)
                 {

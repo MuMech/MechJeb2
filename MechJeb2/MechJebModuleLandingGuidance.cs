@@ -184,7 +184,7 @@ namespace MuMech
                     Vector3d pos = ConfigNode.ParseVector3D(radialPos).normalized;
                     CelestialBody body = FlightGlobals.Bodies.Find(b => b.bodyName == bodyName);
 
-                    double latitude = Math.Asin(pos.y) * UtilMath.Rad2Deg;
+                    double latitude = SafeAsin(pos.y) * UtilMath.Rad2Deg;
                     double longitude = Math.Atan2(pos.z, pos.x) * UtilMath.Rad2Deg;
 
                     if (body != null && LandingSites.All(p => p.Name != launchSiteName))
