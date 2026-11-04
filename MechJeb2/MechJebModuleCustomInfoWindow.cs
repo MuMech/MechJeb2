@@ -234,6 +234,11 @@ namespace MuMech
         // regenerate the default windows after every module has finished loading.
         public bool RegenerateDefaultWindows { get; private set; }
 
+        // The windows of a stale version are kept in the global file under this node, so that regenerating the defaults
+        // does not delete the player's own windows. One generation is kept: the next stale load replaces it.
+        private const string BACKUP_NODE = "CustomWindowsBackup";
+        private ConfigNode _backup;
+
         internal static readonly string[] categories = Enum.GetNames(typeof(InfoItem.Category));
         internal int presetIndex;
 
@@ -279,6 +284,9 @@ namespace MuMech
                 return;
             }
 
+            if (global.HasNode(BACKUP_NODE))
+                _backup = global.GetNode(BACKUP_NODE).CreateCopy();
+
             // Saved windows reference info-item ids from an older MechJeb; drop them and let
             // MechJebCore regenerate the default windows instead of loading orphaned ones.
             //
@@ -290,6 +298,15 @@ namespace MuMech
             // bumped version is actually persisted.
             if (!global.HasValue("CustomWindowsVersion") || CustomWindowsVersion < CUSTOM_WINDOWS_VERSION)
             {
+                ConfigNode[] oldWindows = global.GetNodes(typeof(MechJebModuleCustomInfoWindow).Name);
+                if (oldWindows.Length > 0)
+                {
+                    _backup = new ConfigNode(BACKUP_NODE);
+                    _backup.AddValue("FromVersion", global.GetValue("CustomWindowsVersion") ?? "-1");
+                    foreach (ConfigNode oldWindow in oldWindows)
+                        _backup.AddNode(oldWindow.CreateCopy());
+                }
+
                 CustomWindowsVersion = CUSTOM_WINDOWS_VERSION;
                 RegenerateDefaultWindows = true;
                 Profiler.EndSample();
@@ -400,6 +417,9 @@ namespace MuMech
                 windowNode.AddValue("enabledEditor", window.EnabledEditor);
                 window.Dirty = false;
             }
+
+            if (_backup != null)
+                global.AddNode(_backup.CreateCopy());
 
             Profiler.EndSample();
         }
