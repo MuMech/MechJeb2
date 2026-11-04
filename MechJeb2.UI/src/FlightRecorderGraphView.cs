@@ -200,6 +200,10 @@ namespace MuMech.UI
         {
             if (Rec == null || g.Vessel == null) return; // the recorder only exists in flight
 
+            // a saved index can be out of range
+            if (g.scaleIdx < 0 || g.scaleIdx >= MechJebModuleFlightRecorderGraph.typeCount)
+                g.scaleIdx = 0;
+
             g.UpdateBackground();
 
             // the graph used for the scale labels must be a displayed one
