@@ -139,7 +139,7 @@ namespace MechJebLib.Primitives
             V2 nb = b / magB;
 
             double magnitude = magA + t * (magB - magA);
-            double dot = Clamp(Dot(na, nb), -1.0, 1.0);
+            double dot = Dot(na, nb);
 
             // nearly parallel: the arc is ill conditioned here and the chord is accurate to O(theta^2)
             if (dot > 1.0 - 1e-12)
@@ -148,7 +148,7 @@ namespace MechJebLib.Primitives
             // antiparallel: the direction of rotation is not unique, so pick counter-clockwise deterministically
             V2 perp = dot < -1.0 + 1e-12 ? na.orthonormal : (nb - dot * na).normalized;
 
-            double theta = Acos(dot) * t;
+            double theta = SafeAcos(dot) * t;
 
             return (Cos(theta) * na + Sin(theta) * perp) * magnitude;
         }

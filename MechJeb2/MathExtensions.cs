@@ -61,7 +61,7 @@ namespace MuMech
             if (v1.magnitude == 0 || v2.magnitude == 0)
                 return double.NaN;
 
-            double angle = Clamp360(Math.Acos(Clamp(Vector3d.Dot(v1.normalized, v2.normalized), -1, 1)) * UtilMath.Rad2Deg);
+            double angle = Clamp360(SafeAcos(Vector3d.Dot(v1.normalized, v2.normalized)) * UtilMath.Rad2Deg);
             if (Vector3d.Dot(Vector3d.Cross(v1, v2), planeNormal) < 0)
                 return -angle;
             return angle;
@@ -292,8 +292,7 @@ namespace MuMech
             }
 
             // Normal case: perform the spherical interpolation
-            dot = Clamp(dot, -1.0f, 1.0f);
-            double theta = Math.Acos(dot) * t;
+            double theta = SafeAcos(dot) * t;
             Vector3d relativeVec = (b.normalized - ua * dot).normalized;
             Vector3d newDirection = ua * Math.Cos(theta) + relativeVec * Math.Sin(theta);
             double newMagnitude = Lerp(a.magnitude, b.magnitude, t);

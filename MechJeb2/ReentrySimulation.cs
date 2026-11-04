@@ -652,7 +652,7 @@ namespace MuMech
                 return PhysicsGlobals.SpaceTemperature;
 
             Vector3 up = position.normalized;
-            float polarAngle = Mathf.Acos(Vector3.Dot(_bodyUp, up));
+            float polarAngle = (float)SafeAcos(Vector3.Dot(_bodyUp, up));
             if (polarAngle > Mathf.PI * 0.5f)
             {
                 polarAngle = Mathf.PI - polarAngle;
@@ -663,8 +663,8 @@ namespace MuMech
             Vector3 sunVector = (_sunFromBody - position).normalized;
             Vector3 bodyUp = _bodyUp;
             float sunAxialDot = Vector3.Dot(sunVector, bodyUp);
-            float bodyPolarAngle = Mathf.Acos(Vector3.Dot(bodyUp, up));
-            float sunPolarAngle = Mathf.Acos(sunAxialDot);
+            float bodyPolarAngle = (float)SafeAcos(Vector3.Dot(bodyUp, up));
+            float sunPolarAngle = (float)SafeAcos(sunAxialDot);
             float sunBodyMaxDot = (1.0f + Mathf.Cos(sunPolarAngle - bodyPolarAngle)) * 0.5f;
             float sunBodyMinDot = (1.0f + Mathf.Cos(sunPolarAngle + bodyPolarAngle)) * 0.5f;
             float sunDotCorrected = (1.0f + Vector3.Dot(sunVector,

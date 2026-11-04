@@ -755,8 +755,7 @@ namespace MuMech
             double denominator = 2 * a * b;
             if (denominator <= 0)
                 return 0;
-            // rounding can push the cosine just outside [-1, 1]
-            double ang = Math.Acos(MathExtensions.Clamp((a * a + b * b - c * c) / denominator, -1, 1));
+            double ang = SafeAcos((a * a + b * b - c * c) / denominator);
             return ang * FlightGlobals.ActiveVessel.mainBody.Radius;
         }
 
