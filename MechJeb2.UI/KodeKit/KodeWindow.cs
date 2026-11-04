@@ -139,17 +139,9 @@ namespace KodeKit
             }
         }
 
-        /// <summary>Give each window its own nested Canvas so a dirty text only re-batches that window.</summary>
-        public static bool CanvasPerWindow;
-
         public KodeWindow(RectTransform canvas, string title, float minWidth, Vector2 pos)
         {
             Root = UIKit.CreateUI<KodeRootWindow>(canvas, title);
-            if (CanvasPerWindow)
-            {
-                Root.gameObject.AddComponent<Canvas>();
-                Root.gameObject.AddComponent<GraphicRaycaster>();
-            }
             Root.Vertical().ControlChildSize(true, true).ChildForceExpand(false, false);
             Root.PreferredSizeFitter(true, true).Anchor(AnchorPresets.TopLeft).Pivot(PivotPresets.TopLeft);
             Root.Finish();
@@ -676,12 +668,6 @@ namespace KodeKit
         }
 
         /// <summary>
-        /// Put live labels and input fields in fixed-size boxes with no layout group, so a text change
-        /// stops LayoutRebuilder.MarkLayoutForRebuild at the widget instead of rebuilding the whole window.
-        /// </summary>
-        public static bool IsolateLayout = true;
-
-        /// <summary>
         /// A layout cell of fixed height (and fixed or flexible width) whose child text does not drive layout.
         /// Size it from a template string as wide as the widest expected value; it re-sizes on theme change.
         /// </summary>
@@ -745,7 +731,9 @@ namespace KodeKit
 
         public UIText BoundLabel(UIObject parent, Func<string> value, bool flexible = false)
         {
-            UIText t = IsolateLayout ? IsolatedLabel(parent, value(), flexible) : Label(parent, value(), flexible);
+            // a fixed-size box with no layout group: a text change stops LayoutRebuilder.MarkLayoutForRebuild at the
+            // label instead of rebuilding the whole window
+            UIText t = IsolatedLabel(parent, value(), flexible);
             string last = t.tmpText.text;
             syncs.Add(() =>
             {
@@ -925,27 +913,6 @@ namespace KodeKit
             });
             if (green != null) ToneText(label, () => green() ? Tone.Good : Tone.Normal);
             return toggle;
-        }
-
-        public TMP_InputField Field(UIObject parent, Ed ed, float width) =>
-            EditFields.Field(this, parent, () => ed.Text, s => ed.Text = s, width);
-
-        /// <summary>GuiUtils.ToggledTextBox: [x] label [field] unit</summary>
-        public void ToggledTextBox(UIObject parent, string text, Func<bool> get, Action<bool> set, Ed ed, string unit, float width, Func<bool> green = null)
-        {
-            Layout row = Row(parent);
-            Toggle(row, text, get, set, green);
-            Field(row, ed, width);
-            if (!string.IsNullOrEmpty(unit)) Label(row, unit);
-        }
-
-        /// <summary>GuiUtils.SimpleTextBox: label [field] unit</summary>
-        public void SimpleTextBox(UIObject parent, string left, Ed ed, string unit, float width, bool horizontalFraming = true)
-        {
-            UIObject row = horizontalFraming ? Row(parent) : parent;
-            if (!string.IsNullOrEmpty(left)) Label(row, left);
-            Field(row, ed, width);
-            if (!string.IsNullOrEmpty(unit)) Label(row, unit);
         }
 
         /// <summary>GuiUtils.ArrowSelector: [&lt;] label [&gt;]</summary>
