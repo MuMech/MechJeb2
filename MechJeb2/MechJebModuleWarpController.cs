@@ -20,6 +20,7 @@ namespace MuMech
         private double warpIncreaseAttemptTime;
 
         private int lastAskedIndex;
+        private float _lastPausedMessageTime = float.NegativeInfinity;
 
         public double warpToUT   { get; private set; }
         public bool   WarpPaused { get; private set; }
@@ -82,10 +83,17 @@ namespace MuMech
                     Part.vessel.ActionGroups.SetGroup(KSPActionGroup.SAS, true);
 
                 lastAskedIndex = rateIndex;
-                if (WarpPaused)
+                // Pausing stops MJ from raising the warp. Slowing down is always allowed, so autopilots that need to
+                // stop warping (node executor, landing) still work.
+                if (WarpPaused && rateIndex >= TimeWarp.CurrentRateIndex)
                 {
-                    ScreenMessages.PostScreenMessage(
-                        Localizer.Format("#MechJeb_WarpHelper_scrmsg")); //"MJ : Warp paused - resume in the Warp Helper menu"
+                    // the autopilots ask every tick, do not flood the screen
+                    if (Time.realtimeSinceStartup - _lastPausedMessageTime > 5f)
+                    {
+                        _lastPausedMessageTime = Time.realtimeSinceStartup;
+                        ScreenMessages.PostScreenMessage(
+                            Localizer.Format("#MechJeb_WarpHelper_scrmsg")); //"MJ : Warp paused - resume in the Warp Helper menu"
+                    }
                 }
                 else
                 {
