@@ -28,6 +28,12 @@ namespace MuMech
         public float MaxSpeed;
         public bool Quicksave;
 
+        // the PQS height query is the costly part of Update and the terrain does not move: ask again only when the spot changes
+        private CelestialBody _terrainBody;
+        private double _terrainLat = double.NaN;
+        private double _terrainLon = double.NaN;
+        private double _terrainAlt;
+
         public CelestialBody Body => Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody;
 
         public MechJebWaypoint(double latitude, double longitude, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0,
@@ -134,7 +140,17 @@ namespace MuMech
         {
             if (Target is null)
             {
-                Position = Body.GetWorldSurfacePosition(Latitude, Longitude, Body.TerrainAltitude(Latitude, Longitude));
+                CelestialBody body = Body;
+                if (body != _terrainBody || Latitude != _terrainLat || Longitude != _terrainLon)
+                {
+                    _terrainAlt = body.TerrainAltitude(Latitude, Longitude);
+                    _terrainBody = body;
+                    _terrainLat = Latitude;
+                    _terrainLon = Longitude;
+                }
+
+                // the world position still changes every tick (body rotation, floating origin), only the height is cached
+                Position = body.GetWorldSurfacePosition(Latitude, Longitude, _terrainAlt);
                 if (Vector3d.Distance(Position, FlightGlobals.ActiveVessel.CoM) < 200)
                 {
                     Vector3d dir = (Position - Body.position).normalized;
