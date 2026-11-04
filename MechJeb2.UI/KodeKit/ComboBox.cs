@@ -282,6 +282,9 @@ namespace KodeKit
             le.preferredWidth = width + 12; // ScrollRect reports no width of its own; 12 = the scrollbar's room
             foreach (Transform t in children) t.SetParent(content.transform, false);
             Scroll = sv.ScrollRect;
+            // the content first: the list's rebuild stops at the viewport, which is no layout element, so the rows would
+            // have no positions yet and the content no height
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content.rectTransform);
             LayoutRebuilder.ForceRebuildLayoutImmediate(list);
 
             int selected = get();
