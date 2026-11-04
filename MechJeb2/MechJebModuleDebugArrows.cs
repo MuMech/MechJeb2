@@ -86,38 +86,36 @@ namespace MuMech
         public override void OnDestroy()
         {
             // Dirty cleanup. I m spending too much time on this already
-            if (comSphere == null)
-                return;
-
-            comSphere.Destroy();
+            // The objects are created when an option is first enabled, so any of them can be null
+            comSphere?.Destroy();
             comSphere = null;
 
-            colSphere.Destroy();
+            colSphere?.Destroy();
             colSphere = null;
-            cotSphere.Destroy();
+            cotSphere?.Destroy();
             cotSphere = null;
 
-            srfVelocityArrow.Destroy();
+            srfVelocityArrow?.Destroy();
             srfVelocityArrow = null;
 
-            obtVelocityArrow.Destroy();
+            obtVelocityArrow?.Destroy();
             obtVelocityArrow = null;
 
-            dotArrow.Destroy();
+            dotArrow?.Destroy();
             dotArrow = null;
 
-            forwardArrow.Destroy();
+            forwardArrow?.Destroy();
             forwardArrow = null;
             //avgForwardArrow.Destroy();
             //avgForwardArrow = null;
 
-            requestedAttitudeArrow.Destroy();
+            requestedAttitudeArrow?.Destroy();
             requestedAttitudeArrow = null;
 
-            debugArrow.Destroy();
+            debugArrow?.Destroy();
             debugArrow = null;
 
-            debugArrow2.Destroy();
+            debugArrow2?.Destroy();
             debugArrow2 = null;
         }
 
@@ -127,27 +125,29 @@ namespace MuMech
             if (Vessel != FlightGlobals.ActiveVessel)
                 return;
 
-            if (comSphere == null)
-            {
-                comSphere = new DebugIcoSphere(XKCDColors.BloodRed, true);
+            // Each object is created the first time its option is enabled
+            if (comSphereActive)
+                comSphere ??= new DebugIcoSphere(XKCDColors.BloodRed, true);
+            if (colSphereActive)
+                colSphere ??= new DebugIcoSphere(XKCDColors.Teal, true);
+            if (cotSphereActive)
+                cotSphere ??= new DebugIcoSphere(XKCDColors.PurplePink, true);
 
-                colSphere = new DebugIcoSphere(XKCDColors.Teal, true);
-                cotSphere = new DebugIcoSphere(XKCDColors.PurplePink, true);
-
-                srfVelocityArrow = new DebugArrow(Color.green);
-                obtVelocityArrow = new DebugArrow(Color.red);
-
-                dotArrow = new DebugArrow(XKCDColors.PurplePink);
-
-                forwardArrow = new DebugArrow(XKCDColors.ElectricBlue);
-                //avgForwardArrow = new DebugArrow(Color.blue);
-
-                requestedAttitudeArrow = new DebugArrow(Color.gray);
-
-                debugArrow = new DebugArrow(XKCDColors.Fuchsia);
-                debugArrow2 = new DebugArrow(XKCDColors.LightBlue);
-            }
-
+            if (srfVelocityArrowActive)
+                srfVelocityArrow ??= new DebugArrow(Color.green);
+            if (obtVelocityArrowActive)
+                obtVelocityArrow ??= new DebugArrow(Color.red);
+            if (dotArrowActive)
+                dotArrow ??= new DebugArrow(XKCDColors.PurplePink);
+            if (forwardArrowActive)
+                forwardArrow ??= new DebugArrow(XKCDColors.ElectricBlue);
+            //avgForwardArrow = new DebugArrow(Color.blue);
+            if (requestedAttitudeArrowActive)
+                requestedAttitudeArrow ??= new DebugArrow(Color.gray);
+            if (debugArrowActive)
+                debugArrow ??= new DebugArrow(XKCDColors.Fuchsia);
+            if (debugArrow2Active)
+                debugArrow2 ??= new DebugArrow(XKCDColors.LightBlue);
 
             Vector3d frameVel =
                 (VesselState.OrbitalVelocity - Krakensbane.GetFrameVelocity() - Vessel.orbit.GetRotFrameVel(Vessel.orbit.referenceBody).xzy) *
@@ -158,28 +158,28 @@ namespace MuMech
                 ? instantCoM
                 : (Vector3d)Vessel.ReferenceTransform.position;
 
-            comSphere.State(comSphereActive && Core.ShowGui);
+            comSphere?.State(comSphereActive && Core.ShowGui);
             if (comSphereActive)
             {
                 comSphere.Set(instantCoM);
                 comSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            colSphere.State(colSphereActive && VesselState.CoLWeightSum > 0 && Core.ShowGui);
+            colSphere?.State(colSphereActive && VesselState.CoLWeightSum > 0 && Core.ShowGui);
             if (colSphereActive)
             {
                 colSphere.Set(VesselState.CoL + frameVel);
                 colSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            cotSphere.State(cotSphereActive && VesselState.CoTWeightSum > 0 && Core.ShowGui);
+            cotSphere?.State(cotSphereActive && VesselState.CoTWeightSum > 0 && Core.ShowGui);
             if (cotSphereActive)
             {
                 cotSphere.Set(VesselState.CoT + frameVel);
                 cotSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            srfVelocityArrow.State(srfVelocityArrowActive && Core.ShowGui);
+            srfVelocityArrow?.State(srfVelocityArrowActive && Core.ShowGui);
             if (srfVelocityArrowActive)
             {
                 srfVelocityArrow.Set(arrowPos, Vessel.srf_velocity);
@@ -187,7 +187,7 @@ namespace MuMech
                 srfVelocityArrow.SeeThrough(seeThrough);
             }
 
-            obtVelocityArrow.State(obtVelocityArrowActive && Core.ShowGui);
+            obtVelocityArrow?.State(obtVelocityArrowActive && Core.ShowGui);
             if (obtVelocityArrowActive)
             {
                 obtVelocityArrow.Set(arrowPos, Vessel.obt_velocity);
@@ -195,7 +195,7 @@ namespace MuMech
                 obtVelocityArrow.SeeThrough(seeThrough);
             }
 
-            dotArrow.State(dotArrowActive && VesselState.ThrustCurrent > 0 && Core.ShowGui);
+            dotArrow?.State(dotArrowActive && VesselState.ThrustCurrent > 0 && Core.ShowGui);
             if (dotArrowActive)
             {
                 dotArrow.Set(VesselState.CoT + frameVel, VesselState.DoT);
@@ -203,7 +203,7 @@ namespace MuMech
                 dotArrow.SeeThrough(seeThrough);
             }
 
-            forwardArrow.State(forwardArrowActive && Core.ShowGui);
+            forwardArrow?.State(forwardArrowActive && Core.ShowGui);
             if (forwardArrowActive)
             {
                 forwardArrow.Set(arrowPos, Vessel.GetTransform().up);
@@ -221,7 +221,7 @@ namespace MuMech
             }
             */
 
-            requestedAttitudeArrow.State(requestedAttitudeArrowActive && Core.Attitude.Enabled && Core.ShowGui);
+            requestedAttitudeArrow?.State(requestedAttitudeArrowActive && Core.Attitude.Enabled && Core.ShowGui);
             if (requestedAttitudeArrowActive && Core.Attitude.Enabled)
             {
                 requestedAttitudeArrow.Set(arrowPos, Core.Attitude.RequestedAttitude);
@@ -229,7 +229,7 @@ namespace MuMech
                 requestedAttitudeArrow.SeeThrough(seeThrough);
             }
 
-            debugArrow.State(debugArrowActive && Core.ShowGui);
+            debugArrow?.State(debugArrowActive && Core.ShowGui);
             if (debugArrowActive)
             {
                 debugArrow.Set(Vessel.ReferenceTransform.position, debugVector);
@@ -237,7 +237,7 @@ namespace MuMech
                 debugArrow.SeeThrough(seeThrough);
             }
 
-            debugArrow2.State(debugArrow2Active && Core.ShowGui);
+            debugArrow2?.State(debugArrow2Active && Core.ShowGui);
             if (debugArrow2Active)
             {
                 Vector3d vector3d = VesselState.CoL - instantCoM + frameVel;
