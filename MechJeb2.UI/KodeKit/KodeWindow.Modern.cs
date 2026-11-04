@@ -899,7 +899,7 @@ namespace KodeKit
             UIButton b = IconButton(TitleRow, icon, onClick);
             FlatIcon(b, false);
             b.transform.SetSiblingIndex(CloseButton.transform.GetSiblingIndex());
-            if (!string.IsNullOrEmpty(tooltip)) Tooltips.Add(b.gameObject, Loc(tooltip));
+            if (!string.IsNullOrEmpty(tooltip)) Tooltips.Add(b.gameObject, tooltip); // a '#key' is localized when shown
             return b;
         }
 

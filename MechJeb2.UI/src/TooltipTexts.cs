@@ -9,12 +9,18 @@ namespace MuMech.UI
     /// </summary>
     public static class TooltipTexts
     {
-        // looked up when a widget is built: cache the answer, found or not
+        // looked up when a tooltip shows: cache the answer, found or not, for the current language
         static readonly Dictionary<string, string> cache = new Dictionary<string, string>();
+        static string cacheLanguage;
 
         public static string For(string key)
         {
             if (string.IsNullOrEmpty(key) || key[0] != '#') return null;
+            if (cacheLanguage != Localizer.CurrentLanguage)
+            {
+                cache.Clear();
+                cacheLanguage = Localizer.CurrentLanguage;
+            }
             if (cache.TryGetValue(key, out string t)) return t;
             if (!Localizer.TryGetStringByTag(key + "_tooltip", out t)) t = null;
             cache[key] = t;
