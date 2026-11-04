@@ -600,7 +600,7 @@ namespace MuMech
             return string.Compare(a.Name, b.Name, true);
         }
 
-        public MechJebWaypoint SelectedWaypoint() => SelIndex > -1 ? _ap.Waypoints[SelIndex] : null;
+        public MechJebWaypoint SelectedWaypoint() => SelIndex > -1 && SelIndex < _ap.Waypoints.Count ? _ap.Waypoints[SelIndex] : null;
 
         public int SelectedWaypointIndex
         {
@@ -734,7 +734,7 @@ namespace MuMech
                 _ap.WaypointIndex = -1;
                 _ap.Waypoints.Clear();
             }
-            else if (SelIndex >= 0)
+            else if (SelIndex >= 0 && SelIndex < _ap.Waypoints.Count)
             {
                 _ap.Waypoints.RemoveAt(SelIndex);
                 if (_ap.WaypointIndex > SelIndex) { _ap.WaypointIndex--; }
@@ -880,6 +880,7 @@ namespace MuMech
                 {
                     _ap.WaypointIndex = -1;
                     _ap.Waypoints.Clear();
+                    SelIndex = -1;
                 }
 
                 bodyRoutes[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp.Clone()));
@@ -1199,7 +1200,7 @@ namespace MuMech
                     _currPath.gameObject.layer = _nextPath.gameObject.layer = MapView.MapIsEnabled ? 9 : 0;
 
                 int sel = AP.Core.GetComputerModule<MechJebModuleWaypointWindow>().SelIndex;
-                _selWp.enabled = sel > -1 && !MapView.MapIsEnabled;
+                _selWp.enabled = sel > -1 && sel < AP.Waypoints.Count && !MapView.MapIsEnabled;
                 if (_selWp.enabled)
                 {
                     float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Waypoints[sel].Position) / 600f + 0.1f;
