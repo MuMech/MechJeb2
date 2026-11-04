@@ -45,11 +45,33 @@ namespace MuMech
             BOTTOM
         }
 
-        private struct Button
+        private class Button
         {
             public IButton button;
             public string texturePath;
             public string texturePathActive;
+
+            private bool? _visible;
+            private string _texture;
+
+            // Every IButton property write is a reflection call that allocates: only write what changed
+            public void SetVisible(bool visible)
+            {
+                if (_visible == visible)
+                    return;
+
+                _visible = visible;
+                button.Visible = visible;
+            }
+
+            public void SetTexture(string path)
+            {
+                if (_texture == path)
+                    return;
+
+                _texture = path;
+                button.TexturePath = path;
+            }
         }
 
         [Persistent(pass = (int)Pass.GLOBAL)]
@@ -283,8 +305,8 @@ namespace MuMech
                     button = toolbarButtons[module];
                 }
 
-                button.button.Visible = module.ShowInCurrentScene;
-                button.button.TexturePath = module.IsActive() ? button.texturePathActive : button.texturePath;
+                button.SetVisible(module.ShowInCurrentScene);
+                button.SetTexture(module.IsActive() ? button.texturePathActive : button.texturePath);
             }
 
             // create toolbar buttons for features
@@ -382,15 +404,10 @@ namespace MuMech
 
             button.button.ToolTip = tooltip;
             button.button.OnClick += onClick;
-            featureButtons.Add(() =>
-            {
-                button.button.TexturePath = isActive()
-                    ? button.texturePathActive
-                    : button.texturePath;
-            }, button);
+            featureButtons.Add(() => button.SetTexture(isActive() ? button.texturePathActive : button.texturePath), button);
 
-            button.button.Visible = module.ShowInCurrentScene;
-            button.button.TexturePath = button.texturePath;
+            button.SetVisible(module.ShowInCurrentScene);
+            button.SetTexture(button.texturePath);
         }
 
         public void SetupMainToolbarButton()
