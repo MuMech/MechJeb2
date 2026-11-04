@@ -289,11 +289,7 @@ namespace MuMech.AttitudeControllers
 
         internal void SetLowPassFilter(bool newLowPassFilter)
         {
-            if (LowPassFilter != newLowPassFilter)
-            {
-                SetPIDParameters();
-                LowPassFilter = newLowPassFilter;
-            }
+            LowPassFilter = newLowPassFilter;
         }
 
         // This is tightly coupled to the MJAttitudeController, and should not be used by other consumers.

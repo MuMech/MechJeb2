@@ -372,10 +372,6 @@ namespace MuMech
                 {
                     float act = (float)speedPID.Compute(speedErr);
                     s.wheelThrottle = Mathf.Clamp(act, -1f, 1f);
-                    if (curSpeed < 0 && s.wheelThrottle < 0) { s.wheelThrottle = 0; } // don't go backwards
-
-                    if (Mathf.Sign(act) + Mathf.Sign(s.wheelThrottle) == 0) { s.wheelThrottle = Mathf.Clamp(act, -1f, 1f); }
-
                     if (speedErr < -1 && StabilityControl && Mathf.Sign(s.wheelThrottle) + Math.Sign(curSpeed) == 0)
                     {
                         brake = true;
@@ -500,10 +496,10 @@ namespace MuMech
             speedPID.MaxIntegral = Math.Abs(sPIDi) * 5;
             speedPID.MinIntegral = -speedPID.MaxIntegral;
 
-            if (lastETA + 0.2 < DateTime.Now.TimeOfDay.TotalSeconds)
+            if (lastETA + 0.2 < Time.realtimeSinceStartup)
             {
                 etaSpeed.Value = curSpeed;
-                lastETA = DateTime.Now.TimeOfDay.TotalSeconds;
+                lastETA = Time.realtimeSinceStartup;
             }
 
             if (!Core.GetComputerModule<MechJebModuleRoverWindow>().Enabled)

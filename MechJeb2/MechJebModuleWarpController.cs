@@ -34,23 +34,6 @@ namespace MuMech
         [GeneralInfoItem("#MechJeb_MJWarpControl", InfoItem.Category.Misc)] //MJ Warp Control
         public void ControlWarpButton() { }
 
-        public override void OnUpdate()
-        {
-            if (!WarpPaused && lastAskedIndex > 0 && lastAskedIndex != TimeWarp.CurrentRateIndex)
-            {
-                // Rate limited by the altitude so we should not care
-                if (!Vessel.LandedOrSplashed && TimeWarp.WarpMode == TimeWarp.Modes.HIGH &&
-                    TimeWarp.CurrentRateIndex == TimeWarp.fetch.GetMaxRateForAltitude(Vessel.altitude, Vessel.mainBody))
-                    return;
-
-                //print("Warppause : lastAskedIndex=" + lastAskedIndex + " CurrentRateIndex=" + TimeWarp.CurrentRateIndex + " WarpMode=" + TimeWarp.WarpMode + " MaxCurrentRate=" + TimeWarp.fetch.GetMaxRateForAltitude(vessel.altitude, vessel.mainBody));
-                WarpPaused = false;
-                //PauseWarp();
-
-                //ScreenMessages.PostScreenMessage("MJ : Warp canceled by user or an other mod");
-            }
-        }
-
         public override void OnFixedUpdate()
         {
             if (warpToUT > 0)

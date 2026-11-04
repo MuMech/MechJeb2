@@ -358,7 +358,6 @@ namespace MuMech
                     if (Core.Attitude.AttitudeError >= 2 && (useGimbal || (useDiffThrottle && Core.Thrust.DifferentialThrottle)))
                     {
                         _transPrevThrust = TargetThrottle = 0.1F;
-                        Print(" targetThrottle = 0.1F");
                     }
                     else
                     {
