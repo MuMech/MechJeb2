@@ -227,8 +227,38 @@ namespace MuMech.UI
             Theme t = ThemeFor((MechJebModuleSettings.UiSkinType)settings.UiSkin, settings.UiCompact, settings.UiOpacity);
             string key = t.Name + "|" + Mathf.Clamp(settings.UiOpacity, 0.3f, 1f).ToString("F2");
             if (key == themeKey) return;
+            bool opacityOnly = Theme.Current != null && t.Name == themeName;
             themeKey = key;
-            Theme.Set(t);
+            themeName = t.Name;
+            if (opacityOnly) SetOpacity(t.Window.Tint.a);
+            else Theme.Set(t);
+        }
+
+        string themeName;
+
+        /// <summary>
+        /// The opacity slider: only the window backgrounds' alpha changes, so it is written to them and to the themes they
+        /// use, instead of a new theme that restyles every widget of every window at each drag event.
+        /// </summary>
+        void SetOpacity(float alpha)
+        {
+            SetWindowAlpha(Theme.Current, alpha);
+            foreach (KodeView v in views.Values)
+            {
+                KodeRootWindow root = v.Window?.Root;
+                if (root == null) continue;
+                // a custom window can have its own theme (its Compact setting): ThemeFor gave it the same alpha
+                Theme th = KodeWindow.ThemeOf(root.gameObject);
+                SetWindowAlpha(th, alpha);
+                if (root.BackGround != null) root.BackGround.color = th.Window.Tint;
+            }
+        }
+
+        static void SetWindowAlpha(Theme t, float alpha)
+        {
+            Color c = t.Window.Tint;
+            c.a = alpha;
+            t.Window.Tint = c;
         }
 
         /// <summary>The theme of a new UI skin, at MechJeb's COMPACT or normal spacing and a window opacity (also for tests).</summary>
