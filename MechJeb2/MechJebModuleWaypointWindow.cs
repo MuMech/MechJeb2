@@ -90,7 +90,7 @@ namespace MuMech
                 cn.AddValue("Target", Target.id);
             }
 
-            if (Name != "") { cn.AddValue("Name", Name); }
+            if (Name != "") { cn.AddValue("Name", MuUtils.SanitizeConfigText(Name)); }
 
             cn.AddValue("Latitude", Latitude);
             cn.AddValue("Longitude", Longitude);
@@ -161,7 +161,7 @@ namespace MuMech
         public ConfigNode ToConfigNode()
         {
             var cn = new ConfigNode("Waypoints");
-            cn.AddValue("Name", Name);
+            cn.AddValue("Name", MuUtils.SanitizeConfigText(Name));
             cn.AddValue("Body", Body.bodyName);
             cn.AddValue("Mode", Mode);
             ForEach(wp => cn.AddNode(wp.ToConfigNode()));
@@ -184,7 +184,7 @@ namespace MuMech
 
         public MechJebWaypointRoute(string name = "", CelestialBody body = null, string mode = "Rover")
         {
-            Name = name;
+            Name = MuUtils.SanitizeConfigText(name);
             Body = body != null ? body : FlightGlobals.currentMainBody;
             Mode = mode;
         }
@@ -832,10 +832,11 @@ namespace MuMech
 
         internal void SaveCurrentRoute()
         {
-            if (_saveName != "" && _ap.Waypoints.Count > 0)
+            string saveName = MuUtils.SanitizeConfigText(_saveName);
+            if (saveName != "" && _ap.Waypoints.Count > 0)
             {
-                MechJebWaypointRoute old = _routes.Find(r => r.Name == _saveName && IsShownRoute(r));
-                var wps = new MechJebWaypointRoute(_saveName, Vessel.mainBody);
+                MechJebWaypointRoute old = _routes.Find(r => r.Name == saveName && IsShownRoute(r));
+                var wps = new MechJebWaypointRoute(saveName, Vessel.mainBody);
                 _ap.Waypoints.ForEach(wp => wps.Add(wp));
                 if (old == null)
                 {

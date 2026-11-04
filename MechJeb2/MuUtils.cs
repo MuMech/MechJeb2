@@ -15,6 +15,17 @@ namespace MuMech
         // saved on Linux/macOS can't produce files that break Windows/Proton.
         public static string SanitizeFileName(string name) => KSPUtil.SanitizeString(name, '_', true);
 
+        /// <summary>
+        /// Text that a ConfigNode file reads back whole: one line, no braces (the parser treats them structurally) and no "//"
+        /// (it starts a comment). For titles and names the player types or imports.
+        /// </summary>
+        public static string SanitizeConfigText(string text)
+        {
+            text = (text ?? "").Replace('\n', ' ').Replace('\r', ' ').Replace("{", "").Replace("}", "");
+            while (text.Contains("//")) text = text.Replace("//", "/");
+            return text;
+        }
+
         public static string GetTypeCfgPath(string vesselName) => GetCfgPath("mechjeb_settings_type_" + SanitizeFileName(vesselName) + ".cfg");
 
         // Duplicates the KSP.IO.File.Exist style API where it creates the directory if it doesn't exist
