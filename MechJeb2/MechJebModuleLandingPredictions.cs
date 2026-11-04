@@ -178,6 +178,23 @@ namespace MuMech
 
             errorStopwatch.Stop();
             errorStopwatch.Reset();
+
+            ClearResults();
+        }
+
+        // a result from before the predictor was disabled says nothing about the vessel when it is enabled again
+        private void ClearResults()
+        {
+            lock (readyResults)
+            {
+                while (readyResults.Count > 0)
+                    ((ReentrySimulation.Result)readyResults.Dequeue()).Release();
+
+                result?.Release();
+                result = null;
+                errorResult?.Release();
+                errorResult = null;
+            }
         }
 
         public override void OnFixedUpdate()
@@ -318,7 +335,7 @@ namespace MuMech
                     errorStopwatch.Reset();
 
                     //set the delay before the next simulation
-                    millisecondsBetweenErrorSimulations = Math.Min(Math.Max(4 * millisecondsToCompletion, 400), 5);
+                    millisecondsBetweenErrorSimulations = Math.Max(Math.Min(4 * millisecondsToCompletion, 2000), 400);
                     // Note that we are going to run the simulations with error in less often that the real simulations
 
                     //start the stopwatch that will count off this delay
@@ -333,7 +350,7 @@ namespace MuMech
                     stopwatch.Reset();
 
                     //set the delay before the next simulation
-                    millisecondsBetweenSimulations = Math.Min(Math.Max(2 * millisecondsToCompletion, 200), 5);
+                    millisecondsBetweenSimulations = Math.Max(Math.Min(2 * millisecondsToCompletion, 1000), 200);
                     lastSimTime = millisecondsToCompletion * 0.001;
                     lastSimSteps = newResult.Steps;
                     // Do not wait for too long before running another simulation, but also give the processor a rest.
