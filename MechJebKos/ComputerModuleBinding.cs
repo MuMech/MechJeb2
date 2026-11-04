@@ -24,7 +24,7 @@ namespace MuMech.MechJebKos
         // the Core (and Module) deliberately re-evaluate on every call since the core can update dynamically
         protected MechJebCore Core => _core() ?? throw new KOSException("MechJeb is not available on this vessel.");
 
-        protected T Module => Core.GetComputerModule<T>();
+        protected T Module => Core.GetComputerModule<T>() ?? throw new KOSException($"MechJeb module {typeof(T).Name} is not available on this vessel.");
 
         protected abstract void InitializeSuffixes();
 

@@ -36,9 +36,10 @@ namespace MuMech.MechJebKos
             AddSuffix("THROTTLETWR", new Suffix<ScalarValue>(() => Module.ThrottleTWR(),
                 "Throttle TWR."));
             AddSuffix("ATMOSPHERICPRESSUREKPA", new Suffix<ScalarValue>(() => Module.AtmosphericPressurekPa(),
-                "Atmospheric pressure (Pa)"));
-            AddSuffix("ATMOSPHERICPRESSURE", new Suffix<ScalarValue>(() => Module.AtmosphericPressure(),
-                "Atmospheric pressure."));
+                "Atmospheric pressure (kPa)."));
+            // ATMOSPHERICPRESSURE is the old name, kept for existing scripts
+            AddSuffix(new[] { "ATMOSPHERICPRESSUREATM", "ATMOSPHERICPRESSURE" }, new Suffix<ScalarValue>(() => Module.AtmosphericPressure(),
+                "Atmospheric pressure (atm)."));
             AddSuffix("GETCOORDINATESTRING", new Suffix<StringValue>(() => Module.GetCoordinateString(),
                 "Coordinates."));
             AddSuffix("MEANANOMALY", new Suffix<ScalarValue>(() => Module.MeanAnomaly(),
@@ -164,7 +165,7 @@ namespace MuMech.MechJebKos
             AddSuffix("TARGETMEANANOMALY", new Suffix<StringValue>(() => Module.TargetMeanAnomaly(),
                 "Target Mean Anomaly."));
             AddSuffix("TARGETTRUELONGITUDE", new Suffix<StringValue>(() => Module.TargetTrueLongitude(),
-                "Target Mean Anomaly."));
+                "Target True Longitude."));
             AddSuffix("SYNODICPERIOD", new Suffix<StringValue>(() => Module.SynodicPeriod(),
                 "Synodic period."));
             AddSuffix("PHASEANGLE", new Suffix<StringValue>(() => Module.PhaseAngle(),

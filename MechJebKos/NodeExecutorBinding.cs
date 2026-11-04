@@ -53,14 +53,23 @@ namespace MuMech.MechJebKos
         private void SetEnabled(bool enabled)
         {
             if (enabled)
-                Module.ExecuteOneNode(this);
+            {
+                // ExecuteOneNode / ExecuteAllNodes force Mode, so pick the one matching the current MODE.
+                if (Module.Mode == MechJebModuleNodeExecutor.Modes.ALL_NODES)
+                    Module.ExecuteAllNodes(this);
+                else
+                    Module.ExecuteOneNode(this);
+            }
             else
                 Module.Abort();
         }
 
         private static MechJebModuleNodeExecutor.Modes ParseMode(StringValue value)
         {
-            if (Enum.TryParse(value.ToString(), true, out MechJebModuleNodeExecutor.Modes mode))
+            string name = value.ToString();
+            // Enum.TryParse also accepts numbers ("7"), so only accept the names.
+            if (Enum.TryParse(name, true, out MechJebModuleNodeExecutor.Modes mode) && Enum.IsDefined(typeof(MechJebModuleNodeExecutor.Modes), mode) &&
+                !char.IsDigit(name.Trim()[0]))
                 return mode;
             throw new KOSException($"Invalid node executor mode '{value}'. Expected ONE_NODE or ALL_NODES.");
         }
