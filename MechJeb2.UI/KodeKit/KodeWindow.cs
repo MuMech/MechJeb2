@@ -9,8 +9,11 @@ using UnityEngine.UI;
 
 namespace KodeKit
 {
-    /// <summary>A short highlight after a click, so an action with no visible result still shows it happened.</summary>
-    public class ClickFlash : MonoBehaviour, IPointerClickHandler
+    /// <summary>
+    /// A short highlight after a click, so an action with no visible result still shows it happened. Disabled between
+    /// flashes, so the hundreds of idle buttons of the open windows cost no Update call: the button's onClick starts it.
+    /// </summary>
+    public class ClickFlash : MonoBehaviour
     {
         public Image Target;
         public static Color FlashColor = new Color(0.55f, 1f, 0.55f, 1f);
@@ -18,16 +21,32 @@ namespace KodeKit
         float start = -1;
         Color baseColor, written;
 
-        public void OnPointerClick(PointerEventData e)
+        /// <summary>Adds a flash to the button, started by its onClick, so a click of a disabled button shows none.</summary>
+        public static ClickFlash Add(Button button, Image target)
         {
-            if (Target == null) return;
+            var flash = button.gameObject.AddComponent<ClickFlash>();
+            flash.Target = target;
+            flash.enabled = false;
+            // a view may destroy the flash (segmented bars, chips): the listener stays on the button
+            button.onClick.AddListener(() => { if (flash != null) flash.Flash(); });
+            return flash;
+        }
+
+        public void Flash()
+        {
+            if (Target == null || !gameObject.activeInHierarchy) return;
             if (start < 0) written = baseColor = Target.color;
             start = Time.unscaledTime;
+            enabled = true;
         }
 
         void Update()
         {
-            if (start < 0) return;
+            if (start < 0)
+            {
+                enabled = false;
+                return;
+            }
             // repainted since the last frame (a selection turning green, a role change): fade back to the new colour
             if (Target.color != written) baseColor = Target.color;
             float t = (Time.unscaledTime - start) / Duration;
@@ -35,6 +54,7 @@ namespace KodeKit
             {
                 Target.color = baseColor;
                 start = -1;
+                enabled = false;
                 return;
             }
             Target.color = written = Color.Lerp(FlashColor, baseColor, t * t);
@@ -815,7 +835,7 @@ namespace KodeKit
             SetText(label, text);
             var button = b.GetComponent<Button>();
             var img = b.GetComponent<Image>();
-            b.gameObject.AddComponent<ClickFlash>().Target = img;
+            ClickFlash.Add(button, img);
             var buttonLe = b.gameObject.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
             Styled(b.gameObject, th =>
             {
