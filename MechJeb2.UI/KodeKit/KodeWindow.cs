@@ -63,21 +63,33 @@ namespace KodeKit
         public void OnPointerClick(PointerEventData e) => Click?.Invoke();
     }
 
-    /// <summary>Hold-to-repeat behaviour for GUILayout.RepeatButton parity (fires at once, then every 0.2 s).</summary>
+    /// <summary>
+    /// Hold-to-repeat behaviour for GUILayout.RepeatButton parity: fires on the press, then every 0.2 s while held. The
+    /// first action runs from the press itself, so a press and release in the same frame (a tap, a low frame rate) still
+    /// counts. Real time, so it repeats at the same rate in time warp.
+    /// </summary>
     public class RepeatTrigger : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
     {
         public Action Action;
+        const float Interval = 0.2f;
         bool held;
         float next;
 
-        public void OnPointerDown(PointerEventData e) { held = true; next = 0; }
+        public void OnPointerDown(PointerEventData e)
+        {
+            held = true;
+            next = Time.unscaledTime + Interval;
+            Action?.Invoke();
+        }
+
         public void OnPointerUp(PointerEventData e) => held = false;
         public void OnPointerExit(PointerEventData e) => held = false;
+        void OnDisable() => held = false;
 
         void Update()
         {
-            if (!held || Time.time < next) return;
-            next = Time.time + 0.2f;
+            if (!held || Time.unscaledTime < next) return;
+            next = Time.unscaledTime + Interval;
             Action?.Invoke();
         }
     }
