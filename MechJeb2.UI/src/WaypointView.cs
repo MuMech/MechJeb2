@@ -49,7 +49,7 @@ namespace MuMech.UI
         List<MechJebWaypointRoute> shownRoutes = new List<MechJebWaypointRoute>();
         int routesVersion = -1;
         CelestialBody routesBody;
-        string routesMode;
+        MechJebModuleWaypointWindow.WaypointMode? routesMode;
         float nextRouteRefresh;
 
         ScrollView settingsScroll;
@@ -380,7 +380,7 @@ namespace MuMech.UI
         void UpdateRoutesPage()
         {
             CelestialBody body = m.Vessel.mainBody;
-            string mode = m.Mode.ToString();
+            MechJebModuleWaypointWindow.WaypointMode mode = m.Mode;
             bool rebuilt = routesVersion != MechJebModuleWaypointWindow.RoutesVersion || routesBody != body || routesMode != mode;
             // the routes' stats follow their waypoints (a target's position moves): refresh the texts now and then
             if (rebuilt || Time.unscaledTime >= nextRouteRefresh)

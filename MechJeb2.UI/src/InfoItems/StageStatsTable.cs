@@ -194,8 +194,10 @@ namespace MuMech.UI
         long Shape()
         {
             long s = h.ShowRcs ? 1 : 0;
-            foreach (StageData d in MechJebStageStatsHelper.Columns)
-                s = s * 2 + (h.IsVisible(d) ? 1 : 0);
+            // by index: a foreach over the IReadOnlyList would box its enumerator at each refresh
+            IReadOnlyList<StageData> all = MechJebStageStatsHelper.Columns;
+            for (int i = 0; i < all.Count; i++)
+                s = s * 2 + (h.IsVisible(all[i]) ? 1 : 0);
             return s;
         }
 
