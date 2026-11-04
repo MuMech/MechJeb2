@@ -53,7 +53,13 @@ namespace MuMech.MechJebKos
         private void SetEnabled(bool enabled)
         {
             if (enabled)
-                Module.ExecuteOneNode(this);
+            {
+                // ExecuteOneNode / ExecuteAllNodes force Mode, so pick the one matching the current MODE.
+                if (Module.Mode == MechJebModuleNodeExecutor.Modes.ALL_NODES)
+                    Module.ExecuteAllNodes(this);
+                else
+                    Module.ExecuteOneNode(this);
+            }
             else
                 Module.Abort();
         }
