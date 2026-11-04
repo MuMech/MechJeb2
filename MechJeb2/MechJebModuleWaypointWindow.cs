@@ -313,6 +313,7 @@ namespace MuMech
 
         private const string COORD_REG_EX =
             @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
+        private static readonly Regex _coordRegex = new Regex(COORD_REG_EX, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         internal string _titleAdd = "";
         internal string _saveName = "";
         internal bool _waitingForPick;
@@ -566,7 +567,7 @@ namespace MuMech
 
         internal static double ParseCoord(string latLon, bool isLongitute = false)
         {
-            Match match = new Regex(COORD_REG_EX, RegexOptions.IgnoreCase).Match(latLon);
+            Match match = _coordRegex.Match(latLon);
             int range = isLongitute ? 180 : 90;
 
             float nsew = 1;
