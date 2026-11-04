@@ -485,7 +485,7 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_PeriapsisInTargetSoI", InfoItem.Category.Misc)] //Periapsis in target SoI
         public string PeriapsisInTargetSOI()
         {
-            if (!Core.Target.NormalTargetExists) return "N/A";
+            if (!Core.Target.NormalTargetExists || !(Vessel.targetObject is CelestialBody targetBody)) return "N/A";
 
             Orbit o;
             if (Vessel.patchedConicsUnlocked() && Vessel.patchedConicSolver.maneuverNodes.Count > 0)
@@ -498,7 +498,7 @@ namespace MuMech
                 o = Vessel.orbit;
             }
 
-            while (o != null && o.referenceBody != (CelestialBody)Vessel.targetObject)
+            while (o != null && o.referenceBody != targetBody)
                 o = o.nextPatch;
 
             if (o == null) return "N/A";
