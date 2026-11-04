@@ -24,6 +24,16 @@ namespace MuMech
         private float deployLevel;
         public bool deploying;
 
+        // stock plays the animations at these speeds, so they aren't durations
+        private double semiDeployDuration;
+        private double fullDeployDuration;
+
+        // which way the canopy faces along the airflow, see Drag
+        private float canopySign;
+
+        // stock's minAirPressureToOpen is in atm, and the simulation's pressure in kPa
+        private const double ATM_PER_KPA = 0.00986923;
+
         private bool willDeploy;
 
         private static readonly Pool<SimulatedParachute> pool = new Pool<SimulatedParachute>(Create, Reset);
@@ -58,6 +68,9 @@ namespace MuMech
         {
             para = mp;
             state = mp.deploymentState;
+            semiDeployDuration = mp.Anim[mp.semiDeployedAnimation].length / mp.semiDeploymentSpeed;
+            fullDeployDuration = mp.Anim[mp.fullyDeployedAnimation].length / mp.deploymentSpeed;
+            canopySign = mp.invertCanopy ? 1f : -1f;
 
             willDeploy = limitChutesStage != -1 && para.part.inverseStage >= limitChutesStage;
 
@@ -69,14 +82,14 @@ namespace MuMech
             {
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     if (mp.Anim.isPlaying)
-                        timeSinceDeployment = mp.Anim[mp.semiDeployedAnimation].time;
+                        timeSinceDeployment = mp.Anim[mp.semiDeployedAnimation].normalizedTime * semiDeployDuration;
                     else
                         timeSinceDeployment = 10000000;
                     break;
 
                 case ModuleParachute.deploymentStates.DEPLOYED:
                     if (mp.Anim.isPlaying)
-                        timeSinceDeployment = mp.Anim[mp.fullyDeployedAnimation].time;
+                        timeSinceDeployment = mp.Anim[mp.fullyDeployedAnimation].normalizedTime * fullDeployDuration;
                     else
                         timeSinceDeployment = 10000000;
                     break;
@@ -101,6 +114,19 @@ namespace MuMech
             //    Debug.Log("Parachute " + para.name + " parachuteDrag:" + this.parachuteDrag.ToString("F3") + " RealDrag:" + realDrag.ToString("F3") + " MinDrag:" + para.part.minimum_drag.ToString("F3") + " MaxDrag:" + para.part.maximum_drag.ToString("F3"));
         }
 
+        // Stock turns the canopy into the airflow and rotates the drag vector with it before reading the cube (ModuleParachute.LateUpdate,
+        // DragCubeList.SetDrag), so an open parachute reads the side faces of its cube: 52.6 m2 instead of 115 for the big one.
+        public override Vector3d Drag(Vector3d vesselVelocity, double dragFactor, float mach)
+        {
+            if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED || state == ModuleParachute.deploymentStates.DEPLOYED)
+            {
+                Vector3 dragDirection = -(vesselToPart * vesselVelocity).normalized;
+                cubes.SetDragVectorRotation(Quaternion.LookRotation(canopySign * dragDirection));
+            }
+
+            return base.Drag(vesselVelocity, dragFactor, mach);
+        }
+
         // Consider activating, semi deploying or deploying a parachute, but do not actually make any changes. returns true if the state has changed
         public override bool SimulateAndRollback(double altATGL, double altASL, double endASL, double pressure, double shockTemp, double time,
             double semiDeployMultiplier)
@@ -119,14 +145,14 @@ namespace MuMech
 
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
-                    if (pressure >= para.minAirPressureToOpen)
+                    if (pressure * ATM_PER_KPA >= para.minAirPressureToOpen)
                     {
                         stateChanged = true;
                     }
 
                     break;
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
-                    if (altATGL < para.deployAltitude)
+                    if (altATGL < para.deployAltitude && time - openningTime >= semiDeployDuration)
                     {
                         stateChanged = true;
                     }
@@ -152,7 +178,7 @@ namespace MuMech
                         //activatedAGL = altATGL;
                         //activatedASL = altASL;
                         // Immediately check to see if the parachute should be semi deployed, rather than waiting for another iteration.
-                        if (pressure >= para.minAirPressureToOpen)
+                        if (pressure * ATM_PER_KPA >= para.minAirPressureToOpen)
                         {
                             state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                             openningTime = time;
@@ -164,7 +190,7 @@ namespace MuMech
 
                     break;
                 case ModuleParachute.deploymentStates.ACTIVE:
-                    if (pressure >= para.minAirPressureToOpen)
+                    if (pressure * ATM_PER_KPA >= para.minAirPressureToOpen)
                     {
                         state = ModuleParachute.deploymentStates.SEMIDEPLOYED;
                         openningTime = time;
@@ -175,7 +201,7 @@ namespace MuMech
 
                     break;
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
-                    if (altATGL < para.deployAltitude)
+                    if (altATGL < para.deployAltitude && time - openningTime >= semiDeployDuration)
                     {
                         state = ModuleParachute.deploymentStates.DEPLOYED;
                         openningTime = time;
@@ -192,11 +218,11 @@ namespace MuMech
             // Depending on the state that we are in consider if we are part way through a deployment.
             if (state == ModuleParachute.deploymentStates.SEMIDEPLOYED)
             {
-                normalizedTime = (float)Math.Min((time - openningTime) / para.semiDeploymentSpeed, 1);
+                normalizedTime = (float)Math.Min((time - openningTime) / semiDeployDuration, 1);
             }
             else if (state == ModuleParachute.deploymentStates.DEPLOYED)
             {
-                normalizedTime = (float)Math.Min((time - openningTime) / para.deploymentSpeed, 1);
+                normalizedTime = (float)Math.Min((time - openningTime) / fullDeployDuration, 1);
             }
             else
             {
@@ -231,21 +257,20 @@ namespace MuMech
                     SetCubeWeight("PACKED", 1f);
                     SetCubeWeight("SEMIDEPLOYED", 0f);
                     SetCubeWeight("DEPLOYED", 0f);
-                    cubes.SetOcclusionMultiplier(1f);
                     break;
 
                 case ModuleParachute.deploymentStates.SEMIDEPLOYED:
                     SetCubeWeight("PACKED", 1f - deployLevel);
                     SetCubeWeight("SEMIDEPLOYED", deployLevel);
                     SetCubeWeight("DEPLOYED", 0f);
-                    cubes.SetOcclusionMultiplier(0f);
+                    ApplyCubeWeightsWithoutOcclusion();
                     break;
 
                 case ModuleParachute.deploymentStates.DEPLOYED:
                     SetCubeWeight("PACKED", 0f);
                     SetCubeWeight("SEMIDEPLOYED", 1f - deployLevel);
                     SetCubeWeight("DEPLOYED", deployLevel);
-                    cubes.SetOcclusionMultiplier(0f);
+                    ApplyCubeWeightsWithoutOcclusion();
                     break;
             }
 

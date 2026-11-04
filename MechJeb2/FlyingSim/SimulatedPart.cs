@@ -16,7 +16,7 @@ namespace MuMech
 
         private ReentrySimulation.SimCurves simCurves;
 
-        private QuaternionD vesselToPart;
+        protected QuaternionD vesselToPart;
         private QuaternionD partToVessel;
 
         private static readonly Pool<SimulatedPart> pool = new Pool<SimulatedPart>(Create, Reset);
@@ -247,6 +247,31 @@ namespace MuMech
                 dest.Area[i] = source.Area[i];
                 dest.Depth[i] = source.Depth[i];
                 dest.DragModifiers[i] = source.DragModifiers[i];
+            }
+        }
+
+        // DragCubeList.SetDragWeights does nothing after its first run unless ForceUpdate asks, and ForceUpdate flags the live neighbours,
+        // which isn't for the simulation's thread. So this writes the weighted faces itself, with no occlusion, as a deployed parachute has.
+        protected void ApplyCubeWeightsWithoutOcclusion()
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                float area = 0, drag = 0, depth = 0, weight = 0;
+                foreach (DragCube cube in cubes.Cubes)
+                {
+                    area += cube.Area[i] * cube.Weight;
+                    drag += cube.Drag[i] * cube.Weight;
+                    depth += cube.Depth[i] * cube.Weight;
+                    weight += cube.Weight;
+                }
+
+                if (weight <= 0)
+                    continue;
+
+                cubes.WeightedArea[i] = area / weight;
+                cubes.WeightedDrag[i] = drag / weight;
+                cubes.WeightedDepth[i] = depth / weight;
+                cubes.AreaOccluded[i] = area / weight;
             }
         }
 
