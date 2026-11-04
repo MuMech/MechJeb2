@@ -198,6 +198,10 @@ namespace MuMech
                 return;
             }
 
+            // keep the dV used for the ignition time current while warping and aligning, not just in LEAD and BURN
+            if (!ReflectionUtils.IsLoadedPrincipia)
+                UpdateDvLeft();
+
             _direction = NextDirection();
 
             // note that in principia after our node disappears this value will change to -1
@@ -494,9 +498,13 @@ namespace MuMech
                     {
                         // We staged again before autostagePreDelay is elapsed.
                         // Add the remaining wait time
+                        double delay = Core.Staging.AutostagePreDelay;
                         if (burnTime - lastStageBurnTime < Core.Staging.AutostagePreDelay && mjPhase != stats.VacStats.Count - 1)
-                            burnTime += Core.Staging.AutostagePreDelay - (burnTime - lastStageBurnTime);
-                        burnTime += Core.Staging.AutostagePreDelay;
+                            delay += Core.Staging.AutostagePreDelay - (burnTime - lastStageBurnTime);
+                        burnTime += delay;
+                        // the node is the middle of the burn: delays before it also move the ignition
+                        if (halfDvLeft > 0)
+                            halfBurnTime += delay;
                         lastStageBurnTime = burnTime;
                     }
 
