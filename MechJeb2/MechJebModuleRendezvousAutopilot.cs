@@ -190,7 +190,7 @@ namespace MuMech
                 return;
             }
 
-            double closestApproachUT = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
+            double closestApproachUT = Orbit.MinimumSeparationTime(Core.Target.TargetOrbit, VesselState.Time);
             double closestApproachDistance = Orbit.Separation(Core.Target.TargetOrbit, closestApproachUT);
 
             if (Core.Target.Distance < desiredDistance * 1.05 + 2
