@@ -49,9 +49,21 @@ using static System.Math;
  *   the second and third derivatives in the series for large k (Algorithm 1 of Russell
  *   2019), which are wrong in Lambert.jl (ivLam has the same error in the series for the
  *   second derivative).
- * - Added the domain limits of Russell (2022): the geometry must not be too close to the
- *   r1 == r2 singularity, and the zero-rev time of flight must be at least 1e-3 times the
- *   parabolic time of flight.  Solutions outside these limits are inaccurate.
+ * - The domain limits of Russell (2022) are the edges of the interpolation tables: |tau|
+ *   within 1e-7 of sqrt(2)/2, which is the r1 == r2 singularity (a chord under about 1e-3 of
+ *   the radius), or a zero-rev time of flight under 1e-3 times the parabolic time of flight.
+ *   ivLam refuses to solve outside them, which here is optional (strict).  Otherwise zero-rev
+ *   is solved outside them, with initial guesses from the asymptotic forms of the time of
+ *   flight instead of the tables, bounds on p instead of k when iterating on p, and
+ *   1 - sqrt(2) |tau| from the chord, since from tau it is lost to roundoff.  Close to
+ *   theta = 2 pi on the long way k + sqrt(2) is also computed from p, and the velocities use
+ *   the exact difference of the positions instead of the cancelling Lagrange coefficients.
+ *   This solves close-in rendezvous arcs down to chords of about 1e-12 of the radius, and
+ *   times of flight down to 1e-16 times the parabolic time of flight, in a few iterations.
+ *   Multi-rev is always refused close to the r1 == r2 singularity, since its branches
+ *   collapse into a band of width ~(1 - sqrt(2) |tau|) against k = +-sqrt(2), which the
+ *   bracketing at k_bottom cannot resolve.  Inside the domain the results are unchanged.
+ *   Only zero, negative and NaN times of flight and identical positions are always refused.
  * - Close to the half-rev, where the transfer plane is undefined or swamped by roundoff, the
  *   plane comes from the prograde/retrograde axis h, and the velocities come from a radial
  *   and transverse split of the Lagrange coefficients which is not singular.  Lambert.jl and
@@ -60,7 +72,10 @@ using static System.Math;
  * The first-order partial derivatives of the velocities with respect to the positions and
  * time of flight are computed by differentiating the converged root-solve of Lambert's
  * equation (Russell 2022, Eqs. 16 and 17), using derivatives of the vercosine
- * formulation (Russell 2019, Eqs. 25-29 and Algorithm 2) derived for this port.
+ * formulation (Russell 2019, Eqs. 25-29 and Algorithm 2) derived for this port.  For small p
+ * the root-solve is differentiated with respect to p instead of k, like the iteration, since
+ * dp from dk cancels to about EPS / p (which is O(1) below about 1e-7 times the parabolic time
+ * of flight).
  */
 
 // ReSharper disable InconsistentNaming
@@ -115,7 +130,7 @@ namespace MechJebLib.Lambert
         /// <param name="mu">Gravitational parameter (mu)</param>
         /// <param name="r1">Initial position vector</param>
         /// <param name="r2">Final position vector</param>
-        /// <param name="tof">Time of flight between both positions, must be positive (and at least 1e-3 times the parabolic time for nrev = 0)</param>
+        /// <param name="tof">Time of flight between both positions, must be positive (and with strict, at least 1e-3 times the parabolic time for nrev = 0)</param>
         /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
         /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
         /// <param name="h">Axis to use for prograde/retrograde, and for the transfer plane close to a half-rev (does not need to be normalized)</param>
@@ -124,12 +139,17 @@ namespace MechJebLib.Lambert
         ///     Angle in radians (at most about 0.1) from a half-rev inside which the transfer plane comes from h instead of
         ///     r1 x r2.  Inside it the solution misses r2 by up to about this angle times |r2|, when r2 is out of the plane of h.
         /// </param>
+        /// <param name="strict">
+        ///     Throw outside the domain of Russell (2022), like ivLam: positions within 1e-7 in tau of the r1 == r2 singularity
+        ///     (a chord shorter than about 1e-3 of the radius), or a zero-rev time of flight under 1e-3 times the parabolic
+        ///     time of flight.
+        /// </param>
         /// <returns>The initial (v1) and final (v2) velocity vectors</returns>
         public static (V3 v1, V3 v2) Solve(double mu, V3 r1, V3 r2, double tof,
             TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null, int numiter = 50,
-            double halfRevAngle = HALF_REV_ANGLE)
+            double halfRevAngle = HALF_REV_ANGLE, bool strict = false)
         {
-            (V3 v1, V3 v2, _, _, _, _) = SolveWithState(mu, r1, r2, tof, direction, nrev, h, numiter, halfRevAngle, out _);
+            (V3 v1, V3 v2, _, _, _, _) = SolveWithState(mu, r1, r2, tof, direction, nrev, h, numiter, halfRevAngle, strict, out _);
             return (v1, v2);
         }
 
@@ -142,19 +162,20 @@ namespace MechJebLib.Lambert
         /// <param name="mu">Gravitational parameter (mu)</param>
         /// <param name="r1">Initial position vector</param>
         /// <param name="r2">Final position vector</param>
-        /// <param name="tof">Time of flight between both positions, must be positive (and at least 1e-3 times the parabolic time for nrev = 0)</param>
+        /// <param name="tof">Time of flight between both positions, must be positive (and with strict, at least 1e-3 times the parabolic time for nrev = 0)</param>
         /// <param name="direction">Which of the two Lambert arcs to solve for (see <see cref="TransferGeometry" />)</param>
         /// <param name="nrev">Number of full revolutions (+ long-period, - short-period for nrev != 0)</param>
         /// <param name="h">Axis to use for prograde/retrograde, and for the transfer plane close to a half-rev (does not need to be normalized)</param>
         /// <param name="numiter">Maximum number of iterations</param>
         /// <param name="halfRevAngle">Angle in radians (at most about 0.1) from a half-rev inside which the transfer plane comes from h</param>
+        /// <param name="strict">Throw outside the domain of Russell (2022), like ivLam (see the other overload)</param>
         /// <returns>The initial (v1) and final (v2) velocity vectors, with derivatives along the dual parts of the inputs</returns>
         public static (DualV3 v1, DualV3 v2) Solve(double mu, DualV3 r1, DualV3 r2, Dual tof,
             TransferGeometry direction = TransferGeometry.ShortWay, int nrev = 0, V3? h = null, int numiter = 50,
-            double halfRevAngle = HALF_REV_ANGLE)
+            double halfRevAngle = HALF_REV_ANGLE, bool strict = false)
         {
             (V3 v1, V3 v2, double k, double p, double tau, bool halfRev) =
-                SolveWithState(mu, r1.M, r2.M, tof.M, direction, nrev, h, numiter, halfRevAngle, out _);
+                SolveWithState(mu, r1.M, r2.M, tof.M, direction, nrev, h, numiter, halfRevAngle, strict, out _);
 
             // the transfer plane from h jumps with out of plane motion of r1 or r2
             if (halfRev)
@@ -173,10 +194,25 @@ namespace MechJebLib.Lambert
             double dq = dr1m * r2m + r1m * dr2m + V3.Dot(r1.D, r2.M) + V3.Dot(r1.M, r2.D);
             double dtau = dq / (2.0 * sigma * sigma * tau) - tau * dsigma / sigma;
 
-            // implicit derivative of the converged k from Lambert's equation F = S L(k, tau) - tof = 0 (Russell 2022, Eq. 16)
-            (double L, double Lk, double Ltau) = TofPartials(k, p, tau, Abs(nrev));
-            double dk = -(S * Ltau * dtau + L * dS - tof.D) / (S * Lk);
-            double dp = -tau * dk - k * dtau;
+            // close to theta = 2 pi on the long way W is from p, like in SolveWithState
+            double oneMs2tau = nrev == 0 && tau < 0.0 && SQRT2 / 2 + tau < TAU_MARGIN
+                ? OneMinusSqrt2AbsTau((r2.M - r1.M).magnitude, sigma, -tau)
+                : 0.0;
+
+            // implicit derivative of the converged k from Lambert's equation F = S L(k, tau) - tof = 0 (Russell 2022, Eq. 16).
+            // For small p it is of p instead, like the iteration, since dp = -tau dk - k dtau cancels to about EPS / p
+            // (L_p = -L_k / tau).
+            (double L, double Lk, double Ltau, double LtauP) = TofPartials(k, p, tau, Abs(nrev), oneMs2tau);
+            double dp;
+            if (nrev == 0 && p < LITTLE_P)
+            {
+                dp = (S * LtauP * dtau + L * dS - tof.D) * tau / (S * Lk);
+            }
+            else
+            {
+                double dk = -(S * Ltau * dtau + L * dS - tof.D) / (S * Lk);
+                dp = -tau * dk - k * dtau;
+            }
 
             // derivatives of the velocities from the Lagrange coefficients (Russell 2019, Algorithm 2 and Russell 2022, Eq. 17)
             double a1 = sigma / r1m;
@@ -202,7 +238,7 @@ namespace MechJebLib.Lambert
         ///     the velocities, whether the transfer plane came from h close to the half-rev, and the number of iterations taken.
         /// </summary>
         internal static (V3 v1, V3 v2, double k, double p, double tau, bool halfRev) SolveWithState(double mu, V3 r1, V3 r2, double tof,
-            TransferGeometry direction, int nrev, V3? h, int numiter, double halfRevAngle, out int iterations)
+            TransferGeometry direction, int nrev, V3? h, int numiter, double halfRevAngle, bool strict, out int iterations)
         {
             CheckDebug.PositiveFinite(mu);
             CheckDebug.PositiveFinite(tof);
@@ -219,6 +255,11 @@ namespace MechJebLib.Lambert
             V3 r2Hat = r2 / lRef;
             double r2Norm = r2Hat.magnitude;
             double tofHat = tof / tRef;
+
+            // CheckDebug is compiled out of release builds, and without strict nothing else stops zero (teleportation),
+            // negative or NaN times of flight
+            if (!(tofHat > 0.0))
+                throw new ArgumentException("Russell's Lambert solver requires a positive time of flight");
 
             // The transfer angle measured around h is in [0, pi] when (r1 x r2) . h >= 0, so prograde and retrograde just
             // pick the short way or long way (Russell 2019, Eq. 1).
@@ -252,8 +293,17 @@ namespace MechJebLib.Lambert
                 abstau = Sqrt(r1r2 * onePctheta) / r1pr2;
             }
 
-            if (SQRT2 / 2 - abstau < TAU_MARGIN)
+            // Russell (2022) refuses geometries this close to the r1 == r2 singularity, which is the edge of the interpolation
+            // tables.  For zero-rev the solution is still well conditioned in p (see the initial guess below), but the
+            // multi-rev branches collapse into a band of width ~(1 - sqrt(2) |tau|) against k = +-sqrt(2), which the bracketing
+            // on kBottom cannot resolve, so multi-rev always keeps the limit.
+            bool tauTooClose = SQRT2 / 2 - abstau < TAU_MARGIN;
+            if ((strict || !zeroRev) && tauTooClose)
                 throw new ArgumentException("Russell's Lambert solver requires initial and final positions which are not too close to each other");
+
+            // tau rounds to sqrt(2)/2 for chords below about 1e-8 of the radius, so only identical positions are refused
+            if (r1Hat == r2Hat)
+                throw new ArgumentException("Russell's Lambert solver requires initial and final positions which are distinct");
 
             // The Lambert equation is still solvable at the half-rev, but r1 x r2 does not define the transfer plane there and
             // roundoff swamps it close by, so within halfRevAngle (compared to sin(pi - theta)) h is used for the plane.  The
@@ -283,8 +333,17 @@ namespace MechJebLib.Lambert
             double S = r1pr2 * Sqrt(r1pr2);
             double tofbyS = tofHat / S;
 
-            if (zeroRev && tofbyS < MIN_TOF_OVER_TP * Sqrt(1.0 - SQRT2 * tau) * (tau + SQRT2) / 3.0)
+            // Russell (2022) refuses zero-rev times of flight this small, which is the edge of the interpolation tables
+            bool tofTooSmall = zeroRev && tofbyS < MIN_TOF_OVER_TP * Sqrt(1.0 - SQRT2 * tau) * (tau + SQRT2) / 3.0;
+            if (strict && tofTooSmall)
                 throw new ArgumentException("Russell's Lambert solver requires a time of flight of at least 1e-3 times the parabolic time of flight");
+
+            // Outside the domain of the interpolation tables (only zero-rev gets here) the guess and the bounds on the
+            // iteration are extended, and inside it they are unchanged.
+            bool outsideDomain = tauTooClose || tofTooSmall;
+
+            // 1 - sqrt(2) |tau| from the chord, since from tau it is lost to roundoff for chords under about 1e-8 of the radius
+            double oneMs2tau = outsideDomain ? OneMinusSqrt2AbsTau((r2 - r1).magnitude / lRef, r1pr2, abstau) : 0.0;
 
             // Root-solve log(T)-log(T*) for very large time of flight
             bool hugeTof = tofbyS > HUGE_TOF;
@@ -300,12 +359,43 @@ namespace MechJebLib.Lambert
             else
                 kRight = SQRT2 - K_MARGIN;
 
+            // see LongWayNearSingularityGuess
+            double pLongWay = tauTooClose && tau < 0.0 && tofbyS > 0.25 * PI ? LongWayNearSingularityGuess(oneMs2tau, tofbyS) : double.MaxValue;
+
             double k;
-            if (zeroRev)
+            double p = 0.0;
+            bool guessP = false;
+            if (zeroRev && outsideDomain && tau > 0.0 && tofbyS * tofbyS < LITTLE_P * tau2)
+            {
+                // Short way solutions with small p, which are all the fast ones and the ones close to the r1 == r2
+                // singularity (where p ~ 1 - sqrt(2) tau unless the time of flight is huge).  TOF/S = sqrt(p) (tau + p W),
+                // and p W is small compared to tau.  The guess is in p, since k = (1 - p) / tau is too close to 1 / tau to
+                // resolve p.
+                p = tofbyS * tofbyS / tau2;
+                k = (1.0 - p) / tau;
+                guessP = true;
+            }
+            else if (zeroRev && pLongWay < LITTLE_P)
+            {
+                // Long way solutions close to theta = 2 pi, which are within 1 - sqrt(2) |tau| of k = -sqrt(2) unless the
+                // time of flight is short.  The guess is in p, since k does not resolve its distance from -sqrt(2).
+                p = pLongWay;
+                k = (1.0 - p) / tau;
+                guessP = true;
+            }
+            else if (zeroRev && tofTooSmall && tau < 0.0)
+            {
+                // Fast long way hyperbolas, where tau + p W ~ 1/k so TOF/S ~ sqrt(1 - k tau) / k.  Newton steps from the edge
+                // of the tables only grow k by about 2.5 times per iteration.
+                double L2 = tofbyS * tofbyS;
+                k = (-tau + Sqrt(tau2 + 4.0 * L2)) / (2.0 * L2);
+            }
+            else if (zeroRev)
             {
                 k = RussellGuess.ZeroRev(tau, tofbyS);
 
-                // defensive, the interpolation should always produce a finite guess
+                // defensive, the interpolation should always produce a finite guess (outside the domain the tables are
+                // evaluated at their edges, and very close to the singularity 1 - sqrt(2) tau may round to zero)
                 if (!IsFinite(k))
                     k = 0.0;
             }
@@ -327,17 +417,32 @@ namespace MechJebLib.Lambert
             }
 
             // The multi-rev guess is always strictly on the requested branch, and can be accurate much closer to the far end
-            // of the branch than K_BUMP_INIT, so it is only kept away from the double root at kBottom.
-            if (zeroRev)
-                k = Clamp(k, kLeft + K_BUMP_INIT, kRight - K_BUMP_INIT);
-            else if (nrev > 0)
-                k = Clamp(k, kLeft + K_BUMP_INIT, kRight);
-            else
-                k = Clamp(k, kLeft, kRight - K_BUMP_INIT);
-            double p = 1.0 - k * tau;
+            // of the branch than K_BUMP_INIT, so it is only kept away from the double root at kBottom.  A guess in p is
+            // already strictly inside 0 < p < LITTLE_P, and K_BUMP_INIT would keep it from p ~ 0.
+            if (!guessP)
+            {
+                if (zeroRev)
+                    k = Clamp(k, kLeft + K_BUMP_INIT, kRight - K_BUMP_INIT);
+                else if (nrev > 0)
+                    k = Clamp(k, kLeft + K_BUMP_INIT, kRight);
+                else
+                    k = Clamp(k, kLeft, kRight - K_BUMP_INIT);
+
+                p = 1.0 - k * tau;
+            }
 
             // iterate on p instead of k when p is small (only happens for zero-rev)
             bool iterateOnP = zeroRev && p < LITTLE_P;
+
+            // Outside the domain, when iterating on p the bounds on k are applied to p (p > 0 for the short way, and
+            // p > 1 - sqrt(2) |tau| for the long way), and the convergence test is relative to p, since p can be much smaller
+            // than LITTLE_P.  For the short way kRight is K_MARGIN from p = 0, which keeps p from the solution for times of
+            // flight under about 1e-7 S.  For the long way the solution is close to k = -sqrt(2), where k + sqrt(2) is
+            // computed from p and 1 - sqrt(2) |tau| to keep the relative precision of W, instead of from k, which would leave
+            // a relative error in the time of flight of EPS / (1 - sqrt(2) |tau|).  1 - sqrt(2) |tau| is from the chord, since
+            // from tau it is lost to roundoff for chords under about 1e-8.
+            bool pBounds = outsideDomain && iterateOnP;
+            double pMin = tau < 0.0 ? oneMs2tau : 0.0;
 
             // for multi-rev, if the TOF curve slope says we are on the other branch then bump back towards the requested branch
             double signBump = zeroRev ? 0.0 : nrev > 0 ? BOTTOM_BUMP : -BOTTOM_BUMP;
@@ -364,7 +469,12 @@ namespace MechJebLib.Lambert
                 }
                 else
                 {
-                    (double W0, double W1, double W2, double W3) = GetW(k, nabs);
+                    double W0, W1, W2, W3;
+                    if (pBounds && tau < 0.0)
+                        (W0, W1, W2, W3) = GetWLongWay(p, oneMs2tau, abstau);
+                    else
+                        (W0, W1, W2, W3) = GetW(k, nabs);
+
                     (F0, F1, F2, F3) = TofDerivs(p, tau, tau2, tau3, tofbyS, logTofbyS, W0, W1, W2, W3, hugeTof);
                     relF0 = hugeTof ? F0 : F0 / tofbyS;
                 }
@@ -397,12 +507,17 @@ namespace MechJebLib.Lambert
                 }
 
                 // steps which violate the bounds go most of the way to the bound from the last step
-                if (k < kLeft)
+                if (pBounds && !(p > pMin))
+                {
+                    p = (1.0 - K_BUMP_WEIGHT) * pLast + K_BUMP_WEIGHT * pMin;
+                    k = (1.0 - p) / tau;
+                }
+                else if (!(pBounds && tau < 0.0) && k < kLeft)
                 {
                     k = (1.0 - K_BUMP_WEIGHT) * kLast + K_BUMP_WEIGHT * kLeft;
                     p = 1.0 - k * tau;
                 }
-                else if (k > kRight)
+                else if (!pBounds && k > kRight)
                 {
                     k = (1.0 - K_BUMP_WEIGHT) * kLast + K_BUMP_WEIGHT * kRight;
                     p = 1.0 - k * tau;
@@ -416,7 +531,7 @@ namespace MechJebLib.Lambert
 
                 // stop when the third order term of a full correction no longer changes the iteration variable, and
                 // make sure we are not stuck on a steep cliff near a boundary.
-                if (info == 0 && Abs(dv3) / Max(SQRT_EPS, Abs(compVal)) < EPS && Abs(relF0) < 1.0)
+                if (info == 0 && Abs(dv3) / (pBounds ? p : Max(SQRT_EPS, Abs(compVal))) < EPS && Abs(relF0) < 1.0)
                 {
                     converged = true;
                     break;
@@ -463,8 +578,19 @@ namespace MechJebLib.Lambert
                 double g = S * tau * Sqrt(p);
                 double gdot = 1.0 - pr12 / r2Norm;
 
-                v1 = (r2Hat - f * r1Hat) / g;
-                v2 = (gdot * r2Hat - r1Hat) / g;
+                if (outsideDomain)
+                {
+                    // f and gdot are close to 1 when p is small, so r2Hat - f r1Hat cancels to about EPS / chord.  The
+                    // difference of the positions is exact (Sterbenz), so it is used for the chord instead.
+                    V3 dr = (r2 - r1) / lRef;
+                    v1 = (dr + pr12 * r1Hat) / g;
+                    v2 = (dr - pr12 / r2Norm * r2Hat) / g;
+                }
+                else
+                {
+                    v1 = (r2Hat - f * r1Hat) / g;
+                    v2 = (gdot * r2Hat - r1Hat) / g;
+                }
             }
 
             double vScale = lRef / tRef;
@@ -477,7 +603,34 @@ namespace MechJebLib.Lambert
         ///     the role of the Stumpff functions in the vercosine formulation.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static (double W, double dW1, double dW2, double dW3) GetW(double k, int nabs)
+        internal static (double W, double dW1, double dW2, double dW3) GetW(double k, int nabs) => GetW(k, nabs, k + SQRT2, 2.0 - k * k);
+
+        /// <summary>
+        ///     1 - sqrt(2) |tau| = c^2 / (sigma^2 (1 + sqrt(2) |tau|)) from the chord c and sigma = r1 + r2 (in the same units),
+        ///     which is precise close to the r1 == r2 singularity, unlike 1 - sqrt(2) |tau| from tau.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double OneMinusSqrt2AbsTau(double chord, double sigma, double abstau) =>
+            chord * chord / (sigma * sigma * (1.0 + SQRT2 * abstau));
+
+        /// <summary>
+        ///     W(k) and its derivatives for zero-rev close to k = -sqrt(2) (the long way close to theta = 2 pi), from
+        ///     k + sqrt(2) = (p - (1 - sqrt(2) |tau|)) / |tau|.  From k this loses its relative precision, which leaves a relative
+        ///     error in W of about EPS / (1 - sqrt(2) |tau|).
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static (double W, double dW1, double dW2, double dW3) GetWLongWay(double p, double oneMs2tau, double abstau)
+        {
+            double kps2 = (p - oneMs2tau) / abstau;
+            return GetW(kps2 - SQRT2, 0, kps2, (2.0 * SQRT2 - kps2) * kps2);
+        }
+
+        /// <summary>
+        ///     W(k) and its derivatives, given kps2 = k + sqrt(2) and m = 2 - k^2, which lose precision close to k = -sqrt(2)
+        ///     when computed from k.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static (double W, double dW1, double dW2, double dW3) GetW(double k, int nabs, double kps2, double m)
         {
             double k2 = k * k;
             double nu = k - SQRT2;
@@ -487,7 +640,6 @@ namespace MechJebLib.Lambert
             if (k2 > ZERO_BAND * ZERO_BAND && nabs == 0 && Abs(nu) < PARABOLA_BAND)
                 return GetWParabola(nu);
 
-            double m = 2.0 - k2;
             double onebym = 1.0 / m;
             double tnpp = twoPiN + PI;
 
@@ -505,9 +657,9 @@ namespace MechJebLib.Lambert
                     0.1657281518405971 * tnpp * k4 - 0.4 * k5 + 0.09667475524034829 * tnpp * k6 -
                     8.0 / 35.0 * k7 + 0.05437954982269591 * tnpp * k8;
             }
-            else if (k2 <= 2.0)
+            else if (m >= 0.0)
             {
-                // ellipse
+                // ellipse (m is the same test as k2 <= 2, except when m is from kps2 and k rounds to -sqrt(2))
                 double k2m1 = k2 - 1.0;
                 if (k > 0.0)
                 {
@@ -515,7 +667,6 @@ namespace MechJebLib.Lambert
                 }
                 else
                 {
-                    double kps2 = k + SQRT2;
                     if (kps2 < K_CLOSE_MSQRT2)
                     {
                         // series in k + sqrt(2) for smoothness near k = -sqrt(2)
@@ -676,13 +827,13 @@ namespace MechJebLib.Lambert
 
         /// <summary>
         ///     The normalized time of flight L = T/S = sqrt(p) (tau + pW) and its partial derivatives with respect to k (at
-        ///     fixed tau) and tau (at fixed k), at the converged solution.
+        ///     fixed tau) and tau (at fixed k, and at fixed p), at the converged solution.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static (double L, double Lk, double Ltau) TofPartials(double k, double p, double tau, int nabs)
+        private static (double L, double Lk, double Ltau, double LtauP) TofPartials(double k, double p, double tau, int nabs, double oneMs2tau)
         {
             double sqrtp = Sqrt(p);
-            double L, Lk, Ltau;
+            double L, Lk, Ltau, LtauP;
 
             if (nabs == 0 && k > BIG_K)
             {
@@ -695,17 +846,21 @@ namespace MechJebLib.Lambert
                 double t2 = -3.0 * LN2 + 6.0 * lnka + 5.0;
                 double Ztau = -t2 * ka2 * ka2 - t1 * ka2;
                 Ltau = -k * L / (2.0 * p) + sqrtp * Ztau;
+                LtauP = Ltau - Lk * k / tau;
             }
             else
             {
-                (double W0, double W1, _, _) = GetW(k, nabs);
+                (double W0, double W1, _, _) = oneMs2tau > 0.0 ? GetWLongWay(p, oneMs2tau, -tau) : GetW(k, nabs);
                 double Z = tau + p * W0;
                 L = sqrtp * Z;
                 Lk = (-3.0 * p * tau * W0 + 2.0 * p * p * W1 - tau * tau) / (2.0 * sqrtp);
                 Ltau = -k * Z / (2.0 * sqrtp) + sqrtp * (1.0 - k * W0);
+
+                // at fixed p, where k = (1 - p) / tau, which is Ltau - Lk k / tau without the cancellation of its 1 / sqrt(p) terms
+                LtauP = sqrtp * (1.0 - p * W1 * k / tau);
             }
 
-            return (L, Lk, Ltau);
+            return (L, Lk, Ltau, LtauP);
         }
 
         /// <summary>
@@ -737,6 +892,19 @@ namespace MechJebLib.Lambert
                 return (3, dv1, dv2, 0.0);
 
             return (0, dv1, dv2, dv3);
+        }
+
+        /// <summary>
+        ///     Initial guess for p for zero-rev long way transfers close to the r1 == r2 singularity (theta close to 2 pi), with
+        ///     TOF/S > pi / 4.  Close to k = -sqrt(2), m = 2 - k^2 ~ 4 (p - eps) where eps = 1 - sqrt(2) |tau|, and the leading
+        ///     term of W is 2 pi / m^1.5, so TOF/S = sqrt(p) (tau + p W) ~ (pi / 4) (p / (p - eps))^1.5.  The guess is relatively
+        ///     accurate when p is close to eps, and it is large when it is not (TOF/S close to pi / 4).
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double LongWayNearSingularityGuess(double oneMs2tau, double tofbyS)
+        {
+            double q = Pow(4.0 * tofbyS / PI, 2.0 / 3.0);
+            return oneMs2tau * q / (q - 1.0);
         }
 
         /// <summary>
