@@ -73,7 +73,25 @@ namespace MuMech
         // We shouldn't try to use an ErrorPrediction until this is true.
         private bool _errorPredictionReady => _errorPrediction is { Outcome: ReentrySimulation.Outcome.LANDED };
 
-        private double _landingAltitude // The altitude above sea level of the terrain at the landing site
+        private double _landingAltitudeTime = -1;
+        private double _landingAltitudeCached;
+
+        // read about ten times per tick, and each read queries the terrain
+        private double _landingAltitude
+        {
+            get
+            {
+                if (_landingAltitudeTime != Time.fixedTime)
+                {
+                    _landingAltitudeCached = ComputeLandingAltitude;
+                    _landingAltitudeTime = Time.fixedTime;
+                }
+
+                return _landingAltitudeCached;
+            }
+        }
+
+        private double ComputeLandingAltitude // The altitude above sea level of the terrain at the landing site
         {
             get
             {
@@ -179,7 +197,7 @@ namespace MuMech
             DescentSpeedPolicy = PickDescentSpeedPolicy();
 
             _predictor.dropStage = _stageToDrop ? Vessel.currentStage - 1 : -1;
-            _predictor.descentSpeedPolicy = PickDescentSpeedPolicy(); //create a separate IDescentSpeedPolicy object for the simulation
+            _predictor.descentSpeedPolicy = DescentSpeedPolicy; // immutable, so the simulation can share it
             _predictor.decelEndAltitudeASL = DecelerationEndAltitude();
             _predictor.parachuteSemiDeployMultiplier = _parachutePlan.Multiplier;
             _predictor.maxOrbits = 0.5;
