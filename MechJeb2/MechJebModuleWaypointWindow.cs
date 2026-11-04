@@ -28,6 +28,17 @@ namespace MuMech
         public float MaxSpeed;
         public bool Quicksave;
 
+        // The PQS height query is the costly part of Update: it is cached, and asked again when the spot changes or when the
+        // vessel's distance to the waypoint has halved or doubled since the last query. The distance check is there because the
+        // height is not the same seen from far and near: PQSMod_FlattenArea and PQSMod_MapDecal (KSC, launch sites, anomalies)
+        // only apply when their quad is active.
+        private const double TERRAIN_REFRESH_MIN_DIST = 500;
+        private CelestialBody _terrainBody;
+        private double _terrainLat = double.NaN;
+        private double _terrainLon = double.NaN;
+        private double _terrainDist = double.NaN;
+        private double _terrainAlt;
+
         public CelestialBody Body => Target != null ? Target.mainBody : FlightGlobals.ActiveVessel.mainBody;
 
         public MechJebWaypoint(double latitude, double longitude, float radius = DEFAULT_RADIUS, string name = "", float minSpeed = 0,
@@ -134,7 +145,22 @@ namespace MuMech
         {
             if (Target is null)
             {
-                Position = Body.GetWorldSurfacePosition(Latitude, Longitude, Body.TerrainAltitude(Latitude, Longitude));
+                CelestialBody body = Body;
+                bool spotChanged = body != _terrainBody || Latitude != _terrainLat || Longitude != _terrainLon;
+
+                // the world position still changes every tick (body rotation, floating origin), only the height is cached
+                Position = body.GetWorldSurfacePosition(Latitude, Longitude, _terrainAlt);
+                double dist = Math.Max(Vector3d.Distance(Position, FlightGlobals.ActiveVessel.CoM), TERRAIN_REFRESH_MIN_DIST);
+                if (spotChanged || dist < 0.5 * _terrainDist || dist > 2 * _terrainDist)
+                {
+                    _terrainAlt = body.TerrainAltitude(Latitude, Longitude);
+                    _terrainBody = body;
+                    _terrainLat = Latitude;
+                    _terrainLon = Longitude;
+                    Position = body.GetWorldSurfacePosition(Latitude, Longitude, _terrainAlt);
+                    _terrainDist = Math.Max(Vector3d.Distance(Position, FlightGlobals.ActiveVessel.CoM), TERRAIN_REFRESH_MIN_DIST);
+                }
+
                 if (Vector3d.Distance(Position, FlightGlobals.ActiveVessel.CoM) < 200)
                 {
                     Vector3d dir = (Position - Body.position).normalized;
