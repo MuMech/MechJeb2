@@ -686,17 +686,20 @@ namespace MuMech
                 string[] units = { "y", "d", "h", "m", "s" };
                 long[] intervals = { KSPUtil.dateTimeFormatter.Year, KSPUtil.dateTimeFormatter.Day, 3600, 60, 1 };
 
-                if (seconds < 0)
-                {
-                    ret += "-";
-                    seconds *= -1;
-                }
+                bool negative = seconds < 0;
+                seconds = Math.Abs(seconds);
+                // round to the decimals shown before splitting into units: 239.97 s is "4m 00.0s", not "3m 60.0s"
+                if (showSecondsDecimals)
+                    seconds = (double)Math.Round((decimal)seconds, Math.Min(decimalPlaces, 9), MidpointRounding.AwayFromZero);
+                // no "-00.0s" for a value that rounds to zero
+                if (negative && (showSecondsDecimals ? seconds > 0 : seconds >= 1)) ret += "-";
 
                 for (int i = 0; i < units.Length; i++)
                 {
                     long n = (long)(seconds / intervals[i]);
                     bool first = ret.Length < 2;
-                    if (!first || n != 0 || (i == units.Length - 1 && ret == ""))
+                    // the seconds always show when nothing else did, after a "-" too ("-00.5s", not "-")
+                    if (!first || n != 0 || i == units.Length - 1)
                     {
                         if (!first) ret += " ";
 
