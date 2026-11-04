@@ -102,7 +102,7 @@ namespace MuMech
 
         [EditableInfoItem("#MechJeb_TractionBrakeLimit", InfoItem.Category.Rover), Persistent(pass = (int)Pass.TYPE)]
         // Traction Brake Limit
-        public EditableDouble tractionLimit = 75;
+        public readonly EditableDouble tractionLimit = 75;
 
         public readonly List<(PartModule, BaseField)> wheelbases = new List<(PartModule, BaseField)>();
 
@@ -466,7 +466,9 @@ namespace MuMech
                 }
             }
 
-            tractionLimit = (double)Mathf.Clamp((float)tractionLimit, 0, 100);
+            // set the value, not a new object: the Traction Brake Limit field edits this one
+            double brakeLimit = Math.Max(0, Math.Min(100, tractionLimit.Val));
+            if (brakeLimit != tractionLimit.Val) tractionLimit.Val = brakeLimit;
             Vessel.ActionGroups.SetGroup(KSPActionGroup.Brakes,
                 brake && (StabilityControl && (ControlHeading || ControlSpeed) ? traction >= tractionLimit : true));
             // only let go of the brake when losing traction if the AP is driving, otherwise assume the player knows when to let go of it
