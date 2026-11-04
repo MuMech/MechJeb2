@@ -241,7 +241,7 @@ namespace MuMech
 
         public double DurationStep => (MaxTransferTime - MinTransferTime) / MaxDurationSamples;
 
-        public double DurationFromIndex(int index) =>MinTransferTime + index * (MaxTransferTime - MinTransferTime) / MaxDurationSamples;
+        public double DurationFromIndex(int index) => MinTransferTime + index * DurationStep;
 
         public double DateFromIndex(int index) => MinDepartureTime + index * (MaxDepartureTime - MinDepartureTime) / DateSamples;
 
