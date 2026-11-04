@@ -39,7 +39,7 @@ namespace MuMech
 
         private const double DEFAULT_MIN_ON_TIME = 0.50;
 
-        [EditableInfoItem("#MechJeb_HoverslamPWMPulseWidth", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamPWMTimeWidth_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //PWM time width
+        [EditableInfoItem("#MechJeb_HoverslamPWMPulseWidth", InfoItem.Category.Hoverslam, width = 50, rightLabel = "s", expandWidth = true, tooltip = "#MechJeb_HoverslamPWMPulseWidth_tooltip"), Persistent(pass = (int)(Pass.GLOBAL | Pass.TYPE))] //PWM time width
         public readonly EditableDouble PWMPulseWidth = new EditableDouble(DEFAULT_MIN_ON_TIME);
 
         protected override void OnModuleEnabled()
