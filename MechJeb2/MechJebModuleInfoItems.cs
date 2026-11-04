@@ -175,13 +175,6 @@ namespace MuMech
                         continue;
                     }
 
-                    // Find our distance from the vessel's center of mass, in
-                    // world coordinates.
-                    Vector3 pos = p.Rigidbody.worldCenterOfMass - VesselState.CoM;
-
-                    // Translate to the vessel's reference frame.
-                    pos = Quaternion.Inverse(Vessel.GetTransform().rotation) * pos;
-
                     for (int i = 0; i < pm.thrustForces.Length; i++)
                     {
                         float force = pm.thrustForces[i];
