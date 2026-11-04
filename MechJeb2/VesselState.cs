@@ -148,8 +148,8 @@ namespace MuMech
         [ValueInfoItem("Drag Acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Drag Acceleration
         public double DragAcceleration; // wind relative drag acceleration
 
-        [ValueInfoItem("Drag Force", InfoItem.Category.Vessel, format = "F3", units = "kN")] //Drag Force
-        public double DragForce; // wind relative drag force
+        [ValueInfoItem("Drag Force", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", scale = 1000)] //Drag Force
+        public double DragForce; // wind relative drag force, in kN
 
         [ValueInfoItem("#MechJeb_DragCoefficient", InfoItem.Category.Vessel, format = "F2")] //Drag Coefficient
         public double DragCoefficient;
@@ -191,8 +191,8 @@ namespace MuMech
         [ValueInfoItem("Lift Acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Lift Acceleration
         public double LiftAcceleration; // wind relative Lift acceleration
 
-        [ValueInfoItem("Lift Force", InfoItem.Category.Vessel, format = "F3", units = "kN")] //Lift Force
-        public double LiftForce; // wind relative Lift force
+        [ValueInfoItem("Lift Force", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "N", scale = 1000)] //Lift Force
+        public double LiftForce; // wind relative Lift force, in kN
 
         [ValueInfoItem("#MechJeb_LocalGravity", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "m/s²")] //Local gravity
         public double LocalGravity; //magnitude of gravityForce
