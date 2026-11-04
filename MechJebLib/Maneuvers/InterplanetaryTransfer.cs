@@ -339,7 +339,11 @@ namespace MechJebLib.Maneuvers
                 throw new Exception(e.msg, e);
             }
 
-            Print($"dv: {sol.dv * _sourceScale.VelocityScale} dt1: {sol.dt1 * _sourceScale.TimeScale} dt2: {sol.dt2 * _sourceScale.TimeScale}, dt3: {sol.dt3 * _helioScale.TimeScale}");
+            // the same bound RunOptimizer calls significantly infeasible: past it, the plan doesn't reach the target as asked
+            if (!(sol.err <= 1e-4))
+                throw new ConvergenceException($"InterplanetaryTransfer: no transfer meets the constraints, constraint error {sol.err:G3}");
+
+            Print($"dv:{sol.dv * _sourceScale.VelocityScale} dt1: {sol.dt1 * _sourceScale.TimeScale} dt2: {sol.dt2 * _sourceScale.TimeScale}, dt3: {sol.dt3 * _helioScale.TimeScale}");
             return (sol.dv * _sourceScale.VelocityScale, sol.dt1 * _sourceScale.TimeScale, sol.dt2 * _sourceScale.TimeScale, sol.dt3 * _helioScale.TimeScale);
         }
 

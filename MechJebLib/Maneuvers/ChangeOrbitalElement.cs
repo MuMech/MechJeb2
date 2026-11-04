@@ -113,6 +113,8 @@ namespace MechJebLib.Maneuvers
                 throw new ArgumentException("bad v in ChangeOrbitalElement");
 
             const int MAXITS = 1000;
+            // relative, or absolute for the eccentricity: the solves that converge are within 1e-9
+            const double MAX_ERROR = 1e-6;
 
             const int NVARIABLES = 2;
             const int NEQUALITYCONSTRAINTS = 1;
@@ -168,6 +170,20 @@ namespace MechJebLib.Maneuvers
                 if (ogrep.badgradsuspected || ogrep.nonc0suspected || ogrep.nonc1suspected)
                     throw new Exception("alglib optguard caught an error, i should report better on errors now");
             }
+
+            // a positive termination type includes stopping at the iteration limit: check that the orbit has the element asked for
+            V3 qf = q + new V3(x2[0], x2[1], 0);
+            double achieved = type switch
+            {
+                Type.PERIAPSIS => Astro.PeriapsisFromStateVectors(1.0, p, qf),
+                Type.APOAPSIS  => Astro.ApoapsisFromStateVectors(1.0, p, qf),
+                Type.SMA       => Astro.SmaFromStateVectors(1.0, p, qf),
+                _              => Astro.EccFromStateVectors(1.0, p, qf)
+            };
+            double tolerance = type == Type.ECC ? MAX_ERROR : MAX_ERROR * Math.Abs(args.Value);
+            if (!(Math.Abs(achieved - args.Value) <= tolerance))
+                throw new ConvergenceException(
+                    $"ChangeOrbitalElement.DeltaV({mu}, {r}, {v}, {value}, {type}): reached {achieved} for {args.Value} in scaled units (termination type {rep2.terminationtype})");
 
             return rot * new V3(x2[0], x2[1], 0) * scale.VelocityScale;
         }

@@ -118,6 +118,9 @@ namespace MechJebLib.Maneuvers
         private const int NUM_EQUALITY_CONSTRAINTS = 5;
         private const int NUM_INEQUALITY_CONSTRAINTS = 1;
         private const int MAXITS = 500;
+
+        // in the scaled units of the constraints, as InterplanetaryTransfer's "significantly infeasible"
+        private const double MAX_CONSTRAINT_ERROR = 1e-4;
         private const int NVARIABLES = 7;
 
         public (V3 dv, double dt1, double dt2) Maneuver(double mu0, V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi, double tsoi, double peR, double dt = double.NaN, double inc = double.NaN)
@@ -229,6 +232,17 @@ namespace MechJebLib.Maneuvers
             bool decideOnError = longError > 1e-10 || shortError > 1e-10;
 
             bool pickShort = decideOnError ? shortError < longError : shortCost < longCost;
+
+            // the least-bad point of an infeasible request isn't a plan for it (e.g. an inclination the arrival can't reach): check the
+            // picked branch's equality constraints, the periapsis, the inclination when one is asked for, and the SOI patch. The
+            // inequality, arriving inbound, is left out: a periapsis at the SOI only grazes it.
+            _direction = pickShort ? TransferGeometry.ShortWay : TransferGeometry.LongWay;
+            NLPFunction(pickShort ? x1 : x2, fi, jac);
+            double error = 0;
+            for (int i = 1; i <= NUM_EQUALITY_CONSTRAINTS; i++)
+                error = Max(error, Abs(fi[i]));
+            if (!(error <= MAX_CONSTRAINT_ERROR))
+                throw new ConvergenceException($"FineTuneClosestApproachToCelestial: the periapsis and inclination can't be met, constraint error {error:G3}");
 
             if (pickShort)
             {
