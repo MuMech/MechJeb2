@@ -96,11 +96,11 @@ namespace MuMech.UI
 
             Layout shift = KodeWindow.Row(edit);
             KodeWindow.Label(shift, "#MechJeb_NodeEd_Label6", true); //"Shift time"
-            KodeWindow.Button(shift, "-o", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT - ed.node.patch.period));
-            KodeWindow.Button(shift, "-", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT - ed.timeOffset));
+            KodeWindow.Button(shift, "-o", () => ed.ShiftNodeOrbits(-1));
+            KodeWindow.Button(shift, "-", () => ed.ShiftNode(-ed.timeOffset));
             EditUi.Field(w, shift, () => ed.timeOffset, 100);
-            KodeWindow.Button(shift, "+", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT + ed.timeOffset));
-            KodeWindow.Button(shift, "+o", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT + ed.node.patch.period));
+            KodeWindow.Button(shift, "+", () => ed.ShiftNode(ed.timeOffset));
+            KodeWindow.Button(shift, "+o", () => ed.ShiftNodeOrbits(1));
 
             Layout snap = KodeWindow.Row(edit);
             KodeWindow.Button(snap, "#MechJeb_NodeEd_button3", ed.SnapNode, true); //"Snap node to"
@@ -202,11 +202,11 @@ namespace MuMech.UI
             KodeWindow.Header(edit, "#MechJeb_NewUI_Time"); //Time
             Layout shift = KodeWindow.Row(edit);
             KodeWindow.Label(shift, "#MechJeb_NodeEd_Label6", true); //"Shift time"
-            KodeWindow.Button(shift, "-o", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT - ed.node.patch.period));
+            KodeWindow.Button(shift, "-o", () => ed.ShiftNodeOrbits(-1));
             // the field is the shift; − and + move the node by it
-            w.Stepper(shift, () => ed.timeOffset.Text, s => ed.timeOffset.Text = s, d => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT + d),
+            w.Stepper(shift, () => ed.timeOffset.Text, s => ed.timeOffset.Text = s, ed.ShiftNode,
                 () => ed.timeOffset, 90);
-            KodeWindow.Button(shift, "+o", () => ed.node.UpdateNode(ed.node.DeltaV, ed.node.UT + ed.node.patch.period));
+            KodeWindow.Button(shift, "+o", () => ed.ShiftNodeOrbits(1));
 
             Layout snap = KodeWindow.Row(edit);
             KodeWindow.Button(snap, "#MechJeb_NodeEd_button3", ed.SnapNode); //"Snap node to"
