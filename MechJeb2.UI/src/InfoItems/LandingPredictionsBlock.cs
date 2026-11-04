@@ -19,6 +19,24 @@ namespace MuMech.UI
         CelestialBody Body => Core.vessel != null ? Core.vessel.mainBody : null;
         ReentrySimulation.Result Result => Predictor?.Result;
 
+        // the aerobrake orbit of the shown result: made once per prediction, not every frame
+        ReentrySimulation.Result aeroResult;
+        double aeroEndUT;
+        Orbit aeroOrbit;
+
+        Orbit AeroBrakeOrbit(ReentrySimulation.Result res)
+        {
+            // results are pooled, so the same object can come back with a new prediction: its end time tells them apart
+            if (aeroOrbit == null || res != aeroResult || res.EndUT != aeroEndUT)
+            {
+                aeroOrbit = res.AeroBrakeOrbit();
+                aeroResult = res;
+                aeroEndUT = res.EndUT;
+            }
+
+            return aeroOrbit;
+        }
+
         bool PredictionIs(ReentrySimulation.Outcome outcome)
         {
             ReentrySimulation.Result r = Result;
@@ -106,8 +124,7 @@ namespace MuMech.UI
             var p15 = new GuidanceUi.Parts("#MechJeb_LandingGuidance_Label15");
             GuidanceUi.Live(w, aero, p15.Pre + "1.23", false, ct =>
             {
-                // the orbit is rebuilt from the result each frame, as the IMGUI window does
-                Orbit o = Result.AeroBrakeOrbit();
+                Orbit o = AeroBrakeOrbit(Result);
                 if (o.eccentricity > 1) ct.Append(p15.Pre).Append(o.eccentricity, 2);
                 else ct.AppendSI(o.PeA, 3).Append("m x ").AppendSI(o.ApA, 3).Append('m');
             }, isAero);
