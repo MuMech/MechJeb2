@@ -235,7 +235,10 @@ namespace MuMech
 
             // Seems we are already landed ?
             if (endRadius > Orbit.ApR || Vessel.LandedOrSplashed)
+            {
                 StopLanding();
+                return Vector3d.zero;
+            }
 
             Vector3d orbitLandingPosition = Orbit.WorldBCIPositionAtUT(
                 Orbit.PeR < endRadius ? Orbit.NextTimeOfRadius(VesselState.Time, endRadius) : Orbit.NextPeriapsisTime(VesselState.Time)
@@ -586,12 +589,6 @@ namespace MuMech
             return retVal;
         }
 
-        public void SetTargetKSC(MechJebCore controller)
-        {
-            Users.Add(controller);
-            Core.Target.SetPositionTarget(MainBody, MechJebModuleLandingGuidance.LandingSites[0].Latitude,
-                MechJebModuleLandingGuidance.LandingSites[0].Longitude);
-        }
     }
 
     //A descent speed policy that gives the max safe speed if our entire velocity were straight down

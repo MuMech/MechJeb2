@@ -69,6 +69,9 @@ namespace MuMech
 
                 Vector3d deltaV = Core.Landing.ComputeCourseCorrection(true);
 
+                // it can stop the landing
+                if (!Core.Landing.Enabled) return null;
+
                 Status = Localizer.Format("#MechJeb_LandingGuidance_Status3",
                     deltaV.magnitude.ToString("F1")); //"Performing course correction of about " +  + " m/s"
 

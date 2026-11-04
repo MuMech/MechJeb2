@@ -55,6 +55,10 @@ namespace MuMech
                 Vector3d desiredThrustVector = -VesselState.SurfaceVelocity.normalized;
 
                 Vector3d courseCorrection = Core.Landing.ComputeCourseCorrection(false);
+
+                // it can stop the landing
+                if (!Core.Landing.Enabled) return null;
+
                 double correctionAngle = courseCorrection.magnitude / (2.0 * VesselState.LimitedMaxThrustAcceleration);
                 correctionAngle = Math.Min(0.1, correctionAngle);
                 desiredThrustVector = (desiredThrustVector + correctionAngle * courseCorrection.normalized).normalized;

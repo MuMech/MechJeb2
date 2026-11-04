@@ -20,6 +20,9 @@ namespace MuMech
 
                 Vector3d deltaV = Core.Landing.ComputeCourseCorrection(true);
 
+                // it can stop the landing
+                if (!Core.Landing.Enabled) return null;
+
                 if (!Core.Landing.RCSAdjustment) return this;
 
                 if (deltaV.magnitude > 3)

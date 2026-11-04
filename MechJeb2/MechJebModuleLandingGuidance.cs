@@ -1,6 +1,7 @@
 extern alias JetBrainsAnnotations;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -41,7 +42,14 @@ namespace MuMech
 
         public void SetAndLandTargetKSC()
         {
-            LandingSite ksc = LandingSites.First(x => x.Name == "KSC Pad");
+            int index = LandingSites.FindIndex(x => x.Name == "KSC Pad" && x.Body == MainBody);
+            if (index < 0)
+            {
+                ScreenMessages.PostScreenMessage("MechJeb: no KSC Pad landing site on " + MainBody.bodyName);
+                return;
+            }
+
+            LandingSite ksc = LandingSites[index];
             Core.Target.SetPositionTarget(MainBody, ksc.Latitude, ksc.Longitude);
             Core.Landing.LandAtPositionTarget(this);
         }
@@ -75,8 +83,8 @@ namespace MuMech
                         continue;
                     }
 
-                    double.TryParse(lat, out double latitude);
-                    double.TryParse(lon, out double longitude);
+                    if (!double.TryParse(lat, NumberStyles.Float, CultureInfo.InvariantCulture, out double latitude)) continue;
+                    if (!double.TryParse(lon, NumberStyles.Float, CultureInfo.InvariantCulture, out double longitude)) continue;
 
                     string bodyName = site.GetValue("body");
                     CelestialBody body = bodyName != null ? FlightGlobals.Bodies.Find(b => b.bodyName == bodyName) : Planetarium.fetch.Home;
@@ -152,8 +160,8 @@ namespace MuMech
                             continue;
                         }
 
-                        double.TryParse(lat, out double latitude);
-                        double.TryParse(lon, out double longitude);
+                        if (!double.TryParse(lat, NumberStyles.Float, CultureInfo.InvariantCulture, out double latitude)) continue;
+                        if (!double.TryParse(lon, NumberStyles.Float, CultureInfo.InvariantCulture, out double longitude)) continue;
 
                         if (LandingSites.All(p => p.Name != launchSiteName))
                         {
