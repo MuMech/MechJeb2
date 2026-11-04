@@ -289,7 +289,8 @@ namespace MuMech
             _coneMeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _coneMeshRenderer.receiveShadows = false;
 
-            SeeThrough(seeThrough);
+            this.seeThrough = seeThrough;
+            ApplyShader();
         }
 
         public void Destroy()
@@ -303,9 +304,19 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _coneMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
-                _haftMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+                ApplyShader();
             }
+        }
+
+        // The field starts at the constructor's value, so the first shader has to be applied there. The bundle's shaders can be null if it failed to load.
+        private void ApplyShader()
+        {
+            Shader shader = seeThrough ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+            if (shader == null)
+                return;
+
+            _coneMeshRenderer.material.shader = shader;
+            _haftMeshRenderer.material.shader = shader;
         }
 
         public void SetLength(float length)
@@ -572,7 +583,8 @@ namespace MuMech
             _meshRenderer.receiveShadows = false;
 
             SetRadius(0.09f);
-            SeeThrough(seeThrough);
+            this.seeThrough = seeThrough;
+            ApplyShader();
         }
 
         public void Destroy() => Object.Destroy(gameObject);
@@ -598,8 +610,15 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _meshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+                ApplyShader();
             }
+        }
+
+        private void ApplyShader()
+        {
+            Shader shader = seeThrough ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+            if (shader != null)
+                _meshRenderer.material.shader = shader;
         }
 
         private static GameObject CreateIcoSphere(float radius, int recursionLevel = 3)
