@@ -548,6 +548,15 @@ namespace MuMech
             return (1 - maxTempRatio) / TEMP_SAFETY_MARGIN;
         }
 
+        // Buffers of OptimizeIntakes
+        private readonly List<List<ModuleResourceIntake>> _intakeGroups = new List<List<ModuleResourceIntake>>();
+        private readonly Dictionary<ModuleResourceIntake, int> _intakeGroupIds = new Dictionary<ModuleResourceIntake, int>();
+        private readonly HashSet<Part> _intakeVisited = new HashSet<Part>();
+        private readonly Dictionary<ModuleResourceIntake, VesselState.ResourceInfo.IntakeData> _intakeData =
+            new Dictionary<ModuleResourceIntake, VesselState.ResourceInfo.IntakeData>();
+        private readonly Stack<Part> _intakeStack = new Stack<Part>();
+        private readonly List<int> _intakeOrder = new List<int>();
+
         private float FlameoutSafetyThrottle()
         {
             float throttle = 1;
@@ -623,40 +632,60 @@ namespace MuMech
             // Even just point (1) means we want to solve knapsack.
 
             // Group intakes by symmetry, and collect the information by intake.
-            var groups = new List<List<ModuleResourceIntake>>();
-            var groupIds = new Dictionary<ModuleResourceIntake, int>();
-            var data = new Dictionary<ModuleResourceIntake, VesselState.ResourceInfo.IntakeData>();
+            // The containers are fields, cleared here, so the 50 Hz call allocates nothing once they have grown
+            List<List<ModuleResourceIntake>> groups = _intakeGroups;
+            Dictionary<ModuleResourceIntake, int> groupIds = _intakeGroupIds;
+            HashSet<Part> visited = _intakeVisited;
+            Dictionary<ModuleResourceIntake, VesselState.ResourceInfo.IntakeData> data = _intakeData;
+            Stack<Part> stack = _intakeStack;
+            int groupCount = 0;
+            groupIds.Clear();
+            visited.Clear();
+            data.Clear();
+            stack.Clear();
+            foreach (VesselState.ResourceInfo.IntakeData intakeData in info.Intakes)
+                data[intakeData.Intake] = intakeData;
+
             foreach (VesselState.ResourceInfo.IntakeData intakeData in info.Intakes)
             {
                 ModuleResourceIntake intake = intakeData.Intake;
-                data[intake] = intakeData;
                 if (groupIds.ContainsKey(intake)) { continue; }
 
                 // Create a group for this symmetry
-                int grpId = groups.Count;
-                var intakes = new List<ModuleResourceIntake>();
-                groups.Add(intakes);
+                int grpId = groupCount++;
+                if (grpId == groups.Count)
+                    groups.Add(new List<ModuleResourceIntake>());
+
+                List<ModuleResourceIntake> intakes = groups[grpId];
+                intakes.Clear();
 
                 // In DFS order, get all the symmetric parts.
                 // We can't rely on symmetryCounterparts; see issue #52 by tavert:
                 // https://github.com/MuMech/MechJeb2/issues/52
-                var stack = new Stack<Part>();
                 stack.Push(intake.part);
                 while (stack.Count > 0)
                 {
                     Part part = stack.Pop();
-                    ModuleResourceIntake partIntake = part.Modules.OfType<ModuleResourceIntake>().FirstOrDefault();
-                    if (partIntake == null || groupIds.ContainsKey(partIntake))
+                    if (!visited.Add(part))
                     {
                         continue;
                     }
 
-                    groupIds[partIntake] = grpId;
-                    intakes.Add(partIntake);
-
-                    foreach (Part sympart in part.symmetryCounterparts)
+                    // Only the intakes of this resource: a part can hold several intakes, and the first one may be another resource
+                    PartModuleList modules = part.Modules;
+                    for (int i = 0; i < modules.Count; i++)
                     {
-                        stack.Push(sympart);
+                        if (modules[i] is ModuleResourceIntake partIntake && data.ContainsKey(partIntake) && !groupIds.ContainsKey(partIntake))
+                        {
+                            groupIds[partIntake] = grpId;
+                            intakes.Add(partIntake);
+                        }
+                    }
+
+                    List<Part> counterparts = part.symmetryCounterparts;
+                    for (int i = 0; i < counterparts.Count; i++)
+                    {
+                        stack.Push(counterparts[i]);
                     }
                 }
             }
@@ -667,13 +696,25 @@ namespace MuMech
             double airFlowSoFar = 0;
             var param = new KSPActionParam(KSPActionGroup.None,
                 KSPActionType.Activate);
-            foreach (List<ModuleResourceIntake> grp in groups.OrderBy(grp => grp.Count))
+            // Stable insertion sort on the group size, so we always open the same intakes
+            List<int> order = _intakeOrder;
+            order.Clear();
+            for (int g = 0; g < groupCount; g++)
             {
+                int pos = order.Count;
+                while (pos > 0 && groups[order[pos - 1]].Count > groups[g].Count)
+                    pos--;
+                order.Insert(pos, g);
+            }
+
+            for (int o = 0; o < order.Count; o++)
+            {
+                List<ModuleResourceIntake> grp = groups[order[o]];
                 if (airFlowSoFar < requiredFlow)
                 {
                     foreach (ModuleResourceIntake intake in grp)
                     {
-                        double airFlowThisIntake = data[intake].PredictedMassFlow;
+                        double airFlowThisIntake = data.TryGetValue(intake, out VesselState.ResourceInfo.IntakeData intakeData) ? intakeData.PredictedMassFlow : 0;
                         if (!intake.intakeEnabled)
                         {
                             intake.ToggleAction(param);
