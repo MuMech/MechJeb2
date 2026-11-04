@@ -159,7 +159,7 @@ namespace MuMech
         //Steering losses
         public double SteeringLosses;
 
-        [ValueInfoItem("#MechJeb_PhaseAngleFromMark", InfoItem.Category.Recorder, format = "F2", units = "º")] //Phase angle from mark
+        [ValueInfoItem("#MechJeb_PhaseAngleFromMark", InfoItem.Category.Recorder, format = "F2", units = "°")] //Phase angle from mark
         public double PhaseAngleFromMark()
         {
             // "Phase angle from mark" is the difference between the angle traversed by the vessel, and the angle

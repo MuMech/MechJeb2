@@ -104,7 +104,7 @@ namespace MuMech.UI
             UIText title = KodeWindow.Label(panel, planets ? "#MechJeb_InfoItems_label6" : "#MechJeb_InfoItems_label7", true); //"Planet phase angles" "Moon phase angles"
             title.tmpText.alignment = TextAlignmentOptions.Center;
 
-            var rows = new LabelValueRows(panel, "-360.00º");
+            var rows = new LabelValueRows(panel, "-360.00°");
             MechJebCore core = items.Core;
             w.AddSync(() =>
             {
@@ -133,7 +133,7 @@ namespace MuMech.UI
                 CelestialBody body = bodies[i];
                 if (body == sun || body.referenceBody != sun || body.orbit == o) continue;
 
-                rows.Add(body.bodyName).Append(o.PhaseAngle(body.orbit, ut), 2).Append("º");
+                rows.Add(body.bodyName).Append(o.PhaseAngle(body.orbit, ut), 2).Append("°");
             }
         }
 
@@ -151,7 +151,7 @@ namespace MuMech.UI
                 CelestialBody body = moons[i];
                 if (body.orbit == o) continue;
 
-                rows.Add(body.bodyName).Append(o.PhaseAngle(body.orbit, ut), 2).Append("º");
+                rows.Add(body.bodyName).Append(o.PhaseAngle(body.orbit, ut), 2).Append("°");
             }
         }
 

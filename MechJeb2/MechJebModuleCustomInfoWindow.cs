@@ -273,7 +273,11 @@ namespace MuMech
             sw.Stop();
             Print($"Registered {registry.Count} info items:  value:{_valueInfoItemStopwatch.ElapsedMilliseconds} ms action:{_actionInfoItemStopwatch.ElapsedMilliseconds} ms  toggle:{_toggleInfoItemStopwatch.ElapsedMilliseconds} ms  general:{_generalInfoItemStopwatch.ElapsedMilliseconds} ms  editable:{_editableInfoItemStopwatch.ElapsedMilliseconds} ms  total:{sw.ElapsedMilliseconds} ms");
 
-            if (global == null) return;
+            if (global == null)
+            {
+                Profiler.EndSample();
+                return;
+            }
 
             // Saved windows reference info-item ids from an older MechJeb; drop them and let
             // MechJebCore regenerate the default windows instead of loading orphaned ones.
@@ -839,7 +843,7 @@ namespace MuMech
 
             if (value is string) return $"{(string)value} {units}";
 
-            if (value is int) return $"{(int)value} {units}";
+            if (value is int || value is long || value is bool) return $"{value} {units}";
 
             double doubleValue = -999;
             if (value is double) doubleValue = (double)value;
@@ -848,6 +852,7 @@ namespace MuMech
             else if (value is Vector3d) doubleValue = ((Vector3d)value).magnitude;
             else if (value is Vector3) doubleValue = ((Vector3)value).magnitude;
             else if (value is EditableDouble) doubleValue = (EditableDouble)value;
+            else if (value is IConvertible) doubleValue = Convert.ToDouble(value); // the other numeric types
 
             if (format == TIME) return GuiUtils.TimeToDHMS(doubleValue, timeDecimalPlaces);
             if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);

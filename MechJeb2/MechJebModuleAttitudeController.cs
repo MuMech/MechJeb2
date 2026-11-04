@@ -36,7 +36,7 @@ namespace MuMech
         private readonly bool _attitudeRCSControl = true;
 
         [Persistent(pass = (int)Pass.GLOBAL)]
-        [ValueInfoItem("#MechJeb_SteeringError", InfoItem.Category.Vessel, format = "F1", units = "º")]
+        [ValueInfoItem("#MechJeb_SteeringError", InfoItem.Category.Vessel, format = "F1", units = "°")]
         //Steering error
         public readonly MovingAverage SteeringError = new MovingAverage();
 

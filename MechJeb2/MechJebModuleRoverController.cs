@@ -162,7 +162,7 @@ namespace MuMech
             catch (Exception) { }
         }
 
-        [ValueInfoItem("#MechJeb_Headingerror", InfoItem.Category.Rover, format = "F1", units = "º")] // Heading error
+        [ValueInfoItem("#MechJeb_Headingerror", InfoItem.Category.Rover, format = "F1", units = "°")] // Heading error
         public double headingErr;
 
         [ValueInfoItem("#MechJeb_Speederror", InfoItem.Category.Rover, format = ValueInfoItem.SI, units = "m/s")] // Speed error

@@ -30,7 +30,7 @@ namespace MuMech.UI
             menu.ForcePsgThrustLimits();
         }
 
-        // "º (x.x°)" after the AoA field, formatted when the tenth changes
+        // "° (x.x°)" after the AoA field, formatted when the tenth changes
         long aoaKey = long.MinValue;
         string aoaText;
 
@@ -41,7 +41,7 @@ namespace MuMech.UI
             if (key != aoaKey || aoaText == null)
             {
                 aoaKey = key;
-                aoaText = $"º ({v:F1}°)";
+                aoaText = $"° ({v:F1}°)";
             }
 
             return aoaText;
@@ -73,8 +73,8 @@ namespace MuMech.UI
             w.Toggle(box, "#MechJeb_Ascent_checkbox2", () => Settings.ForceRoll, v => Settings.ForceRoll = v); //Force Roll
             Layout roll = KodeWindow.Row(box);
             KodeWindow.Space(roll, 15);
-            AscentUi.SimpleBox(w, roll, menu._climbString, Settings.VerticalRoll, "º", 30, false); //climb
-            AscentUi.SimpleBox(w, roll, menu._turnString, Settings.TurnRoll, "º", 30, false); //turn
+            AscentUi.SimpleBox(w, roll, menu._climbString, Settings.VerticalRoll, "°", 30, false); //climb
+            AscentUi.SimpleBox(w, roll, menu._turnString, Settings.TurnRoll, "°", 30, false); //turn
             AscentUi.SimpleBox(w, roll, "Alt: ", Settings.RollAltitude, "m", 30, false);
             w.Visible(roll.gameObject, () => Settings.ForceRoll);
 
@@ -85,7 +85,7 @@ namespace MuMech.UI
             w.Toggle(limit, "#MechJeb_Ascent_checkbox3", () => Settings.LimitAoA, v => Settings.LimitAoA = v,
                 () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
             EditUi.Field(w, limit, Settings.MaxAoA, 30);
-            w.BoundLabel(limit, "º (99.9°)", CurrentMaxAoA);
+            w.BoundLabel(limit, "° (99.9°)", CurrentMaxAoA);
 
             Layout fadeout = KodeWindow.Row(aoa);
             KodeWindow.Space(fadeout, 25);
@@ -133,18 +133,18 @@ namespace MuMech.UI
             g = w.Group(r, "#MechJeb_NewUI_Steering"); //Steering
             KodeWindow.PropertyGrid steer = w.Properties(g);
             ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox2", () => Settings.ForceRoll, v => Settings.ForceRoll = v); //Force Roll
-            Layout climb = ModernRows.Field(steer, menu._climbString, Settings.VerticalRoll, "º", 50); //climb
-            Layout turn = ModernRows.Field(steer, menu._turnString, Settings.TurnRoll, "º", 50); //turn
+            Layout climb = ModernRows.Field(steer, menu._climbString, Settings.VerticalRoll, "°", 50); //climb
+            Layout turn = ModernRows.Field(steer, menu._turnString, Settings.TurnRoll, "°", 50); //turn
             Layout alt = ModernRows.Field(steer, "Alt: ", Settings.RollAltitude, "m", 50);
             foreach (Layout row in new[] { climb, turn, alt })
                 w.Visible(row.gameObject, () => Settings.ForceRoll);
 
-            // [switch] Limit AoA to [max] º (x.x°): the unit cell shows the current limit
+            // [switch] Limit AoA to [max] ° (x.x°): the unit cell shows the current limit
             Layout aoa = ModernRows.Switch(steer, "#MechJeb_Ascent_checkbox3", () => Settings.LimitAoA, v => Settings.LimitAoA = v,
                 tone: () => Settings.LimitingAoA ? Tone.Good : Tone.Normal); //Limit AoA to
             TMPro.TMP_InputField maxAoA = EditFields.Field(w, aoa, () => Settings.MaxAoA.Text, s => Settings.MaxAoA.Text = s, 50,
                 () => Settings.MaxAoA.IsParsed);
-            UIText current = w.BoundLabel(aoa, "º (99.9°)", CurrentMaxAoA);
+            UIText current = w.BoundLabel(aoa, "° (99.9°)", CurrentMaxAoA);
             steer.Dim(maxAoA.gameObject, KodeWindow.CellOf(current), () => !Settings.LimitAoA);
             Layout fadeout = ModernRows.Field(steer, "#MechJeb_Ascent_label24", Settings.AOALimitFadeoutPressure, "Pa", 60); //Dynamic Pressure Fadeout
             w.Visible(aoa.gameObject, () => !psg);

@@ -44,7 +44,7 @@ namespace MuMech.UI
                 KodeWindow.Button(heading, "+", () => Ap.heading.Val += Alt ? 5 : 1).PreferredWidth(18);
             }
 
-            RoverUi.ValueRow(w, r, ed, "Value:RoverController.headingErr", () => Ap?.headingErr ?? 0, "-180.0 º");
+            RoverUi.ValueRow(w, r, ed, "Value:RoverController.headingErr", () => Ap?.headingErr ?? 0, "-180.0 °");
             RoverUi.ToggleRow(w, r, ed, "Toggle:RoverController.ControlSpeed", () => Ap != null && Ap.ControlSpeed);
             Layout speed = KodeWindow.ModernLayout
                 ? RoverUi.StepperRow(w, r, ed, "Editable:RoverController.speed", d => Ap.speed.Val += d)

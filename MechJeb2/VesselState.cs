@@ -101,20 +101,20 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_Altitude_true", InfoItem.Category.Surface, format = ValueInfoItem.SI, siSigFigs = 6, units = "m")] //Altitude (true)
         public double AltitudeTrue;
 
-        [ValueInfoItem("#MechJeb_AngleToPrograde", InfoItem.Category.Orbit, format = "F2", units = "º")] //Angle to prograde
+        [ValueInfoItem("#MechJeb_AngleToPrograde", InfoItem.Category.Orbit, format = "F2", units = "°")] //Angle to prograde
         public double AngleToPrograde;
 
         public Vector3d AngularMomentum;
 
         public Vector3d AngularVelocity;
 
-        [ValueInfoItem("#MechJeb_AngleOfAttack", InfoItem.Category.Misc, format = "F2", units = "º")] //Angle of Attack
+        [ValueInfoItem("#MechJeb_AngleOfAttack", InfoItem.Category.Misc, format = "F2", units = "°")] //Angle of Attack
         public double AoA;
 
-        [ValueInfoItem("#MechJeb_DisplacementAngle", InfoItem.Category.Misc, format = "F2", units = "º")] //Displacement Angle
+        [ValueInfoItem("#MechJeb_DisplacementAngle", InfoItem.Category.Misc, format = "F2", units = "°")] //Displacement Angle
         public double AoD;
 
-        [ValueInfoItem("#MechJeb_AngleOfSideslip", InfoItem.Category.Misc, format = "F2", units = "º")] //Angle of Sideslip
+        [ValueInfoItem("#MechJeb_AngleOfSideslip", InfoItem.Category.Misc, format = "F2", units = "°")] //Angle of Sideslip
         public double AoS;
 
         // Product of the drag surface area, drag coefficient and the physics multipliers
@@ -148,7 +148,7 @@ namespace MuMech
         [ValueInfoItem("Drag Acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Drag Acceleration
         public double DragAcceleration; // wind relative drag acceleration
 
-        [ValueInfoItem("Drag Force", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kN")] //Drag Force
+        [ValueInfoItem("Drag Force", InfoItem.Category.Vessel, format = "F3", units = "kN")] //Drag Force
         public double DragForce; // wind relative drag force
 
         [ValueInfoItem("#MechJeb_DragCoefficient", InfoItem.Category.Vessel, format = "F2")] //Drag Coefficient
@@ -165,7 +165,7 @@ namespace MuMech
 
         public Vector3d GravityForce;
 
-        [ValueInfoItem("#MechJeb_Heading", InfoItem.Category.Surface, format = "F1", units = "º")] //Heading
+        [ValueInfoItem("#MechJeb_Heading", InfoItem.Category.Surface, format = "F1", units = "°")] //Heading
         public double Heading;
 
         public Vector3d HorizontalOrbit; //unit vector in the direction of horizontal component of orbit velocity
@@ -191,7 +191,7 @@ namespace MuMech
         [ValueInfoItem("Lift Acceleration", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Lift Acceleration
         public double LiftAcceleration; // wind relative Lift acceleration
 
-        [ValueInfoItem("Lift Force", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "kN")] //Lift Force
+        [ValueInfoItem("Lift Force", InfoItem.Category.Vessel, format = "F3", units = "kN")] //Lift Force
         public double LiftForce; // wind relative Lift force
 
         [ValueInfoItem("#MechJeb_LocalGravity", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "m/s²")] //Local gravity
@@ -220,13 +220,13 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_Apoapsis", InfoItem.Category.Orbit, units = "m", format = ValueInfoItem.SI, siSigFigs = 6, category = InfoItem.Category.Orbit)] //Apoapsis
         public double OrbitApA;
 
-        [ValueInfoItem("#MechJeb_ArgumentOfPeriapsis", InfoItem.Category.Orbit, format = "F1", units = "º")] //Argument of periapsis
+        [ValueInfoItem("#MechJeb_ArgumentOfPeriapsis", InfoItem.Category.Orbit, format = "F1", units = "°")] //Argument of periapsis
         public double OrbitArgumentOfPeriapsis;
 
         [ValueInfoItem("#MechJeb_Eccentricity", InfoItem.Category.Orbit, format = "F3")] //Eccentricity
         public double OrbitEccentricity;
 
-        [ValueInfoItem("#MechJeb_Inclination", InfoItem.Category.Orbit, format = "F3", units = "º")] //Inclination
+        [ValueInfoItem("#MechJeb_Inclination", InfoItem.Category.Orbit, format = "F3", units = "°")] //Inclination
         public double OrbitInclination;
 
         [ValueInfoItem("#MechJeb_LAN", InfoItem.Category.Orbit, format = ValueInfoItem.ANGLE)] //LAN
@@ -249,7 +249,7 @@ namespace MuMech
 
         public bool ParachuteDeployed;
 
-        [ValueInfoItem("#MechJeb_Pitch", InfoItem.Category.Surface, format = "F1", units = "º")] //Pitch
+        [ValueInfoItem("#MechJeb_Pitch", InfoItem.Category.Surface, format = "F1", units = "°")] //Pitch
         public double Pitch;
 
         [ValueInfoItem("#MechJeb_PureDrag", InfoItem.Category.Vessel, format = ValueInfoItem.SI, units = "m/s²")] //Pure Drag
@@ -269,7 +269,7 @@ namespace MuMech
 
         public bool RCSThrust;
 
-        [ValueInfoItem("#MechJeb_Roll", InfoItem.Category.Surface, format = "F1", units = "º")] //Roll
+        [ValueInfoItem("#MechJeb_Roll", InfoItem.Category.Surface, format = "F1", units = "°")] //Roll
         public double Roll;
 
         public Vector3d RootPartPosition;

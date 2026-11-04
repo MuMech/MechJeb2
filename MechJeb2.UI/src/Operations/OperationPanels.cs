@@ -81,7 +81,7 @@ namespace MuMech.UI
         static void Inclination(OpContext c)
         {
             var op = (OperationInclination)c.Op;
-            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_inclination_label", () => op.NewInc, "º"); //New inclination:
+            OpUi.LabeledField(c.W, c.Panel, "#MechJeb_inclination_label", () => op.NewInc, "°"); //New inclination:
             OpUi.TimeSelectorRows(c.W, c.Panel, OperationInclination._timeSelector);
         }
 
