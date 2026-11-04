@@ -136,8 +136,11 @@ namespace MuMech
 
         /// <summary>
         /// The number shown in column d for the stage at position row of Stages, and how UpdateStageDisplayInfo formats it:
-        /// decimals ≥ 0 → "F{decimals}" + unit; -1 → a time (F2 + "s" with TimeSeconds, else DHMS with 1 decimal) + unit.
+        /// decimals ≥ 0 → "F{decimals}" + unit; -1 → a time (F2 + "s" with TimeSeconds, else DHMS with 1 decimal) + unit;
+        /// SI (-2) → ToSI() + unit.
         /// </summary>
+        internal const int SI = -2;
+
         internal double Value(StageData d, int row, double geeASL, out int decimals, out string unit)
         {
             int index = stages[row];
@@ -164,8 +167,8 @@ namespace MuMech
                     decimals = 3; unit = " t   ";
                     return _burnedMass(index);
                 case StageData.Thrust:
-                    decimals = 3; unit = " kN   ";
-                    return _thrust(index);
+                    decimals = SI; unit = "N   ";
+                    return 1000 * _thrust(index);
                 case StageData.VacInitialTWR: return _vacStartTWR(index, geeASL);
                 case StageData.VacMaxTWR: return _vacEndTWR(index, geeASL);
                 case StageData.AtmoInitialTWR: return _atmoStartTWR(index, geeASL);
@@ -333,7 +336,7 @@ namespace MuMech
                 if (stageVisibility[StageData.StagedMass]) stageDisplayInfo[StageData.StagedMass].Add($"{stats.AtmoStats[index].StagedMass:F3} t   ");
                 if (stageVisibility[StageData.BurnedMass])
                     stageDisplayInfo[StageData.BurnedMass].Add($"{_burnedMass(index):F3} t   ");
-                if (stageVisibility[StageData.Thrust]) stageDisplayInfo[StageData.Thrust].Add($"{_thrust(index):F3} kN   ");
+                if (stageVisibility[StageData.Thrust]) stageDisplayInfo[StageData.Thrust].Add($"{(1000 * _thrust(index)).ToSI()}N   ");
                 if (stageVisibility[StageData.VacInitialTWR])
                     stageDisplayInfo[StageData.VacInitialTWR].Add($"{_vacStartTWR(index, geeASL):F2}   ");
                 if (stageVisibility[StageData.VacMaxTWR]) stageDisplayInfo[StageData.VacMaxTWR].Add($"{_vacEndTWR(index, geeASL):F2}   ");

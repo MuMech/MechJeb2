@@ -250,6 +250,7 @@ namespace MuMech.UI
                     double v = h.Value(c.Id, row, gee, out int decimals, out string unit);
                     CharText ct = c.Chars[row].Clear();
                     if (decimals >= 0) ct.Append(v, decimals);
+                    else if (decimals == MechJebStageStatsHelper.SI) ct.AppendSI(v);
                     else if (h.TimeSeconds) ct.Append(v, 2).Append('s');
                     else
                     {
