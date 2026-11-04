@@ -20,10 +20,10 @@ namespace MuMech
             ShowInEditor = true;
 
             if (toolbarButtons == null)
-                toolbarButtons = new Dictionary<DisplayModule, Button>();
+                toolbarButtons = new Dictionary<string, Button>();
 
             if (featureButtons == null)
-                featureButtons = new Dictionary<Action, Button>();
+                featureButtons = new Dictionary<string, Button>();
         }
 
         public override bool ShowInMenu => false;
@@ -50,6 +50,7 @@ namespace MuMech
             public IButton button;
             public string texturePath;
             public string texturePathActive;
+            public Func<bool> isActive; // feature buttons only
 
             private bool? _visible;
             private string _texture;
@@ -192,11 +193,12 @@ namespace MuMech
         // If the Toolbar is loaded and we don't want to display the big menu button
         public bool HideMenuButton => (ToolbarManager.ToolbarAvailable || useAppLauncher) && hideButton;
 
-        private static Dictionary<DisplayModule, Button> toolbarButtons;
-        private static Dictionary<Action, Button> featureButtons;
+        // Keyed by the button id: the menu of the active vessel changes, the buttons do not
+        private static Dictionary<string, Button> toolbarButtons;
+        private static Dictionary<string, Button> featureButtons;
         private const string Qmark = "MechJeb2/Icons/QMark";
 
-        private IButton menuButton;
+        private static IButton menuButton;
 
         private static ApplicationLauncherButton mjButton;
 
@@ -250,12 +252,11 @@ namespace MuMech
 
             foreach (DisplayModule module in Core.GetDisplayModules(DisplayOrder.instance).Where(m => m.ShowInMenu && !m.TechLocked))
             {
-                Button button;
-                if (!toolbarButtons.ContainsKey(module))
+                string name = GetCleanName(module.IconName());
+
+                if (!toolbarButtons.TryGetValue(name, out Button button))
                 {
                     Debug.Log("Create button for module " + module.GetName());
-
-                    string name = GetCleanName(module.IconName());
 
                     string TexturePath = "MechJeb2/Icons/" + name;
                     string TexturePathActive = TexturePath + "_active";
@@ -283,7 +284,7 @@ namespace MuMech
                         button.texturePathActive = TexturePathActive;
                     }
 
-                    toolbarButtons[module] = button;
+                    toolbarButtons[name] = button;
 
                     button.button.ToolTip = "MechJeb " + module.GetName();
                     button.button.OnClick += b =>
@@ -292,17 +293,14 @@ namespace MuMech
                         if (mj == null)
                             return;
 
+                        // the module that made the button belongs to the vessel that was active then
                         DisplayModule mod = mj.GetDisplayModules(DisplayOrder.instance)
-                           .FirstOrDefault(m => m == module);
+                           .FirstOrDefault(m => m.ShowInMenu && GetCleanName(m.IconName()) == name);
                         if (mod != null)
                         {
                             mod.Enabled = !mod.Enabled;
                         }
                     };
-                }
-                else
-                {
-                    button = toolbarButtons[module];
                 }
 
                 button.SetVisible(module.ShowInCurrentScene);
@@ -315,19 +313,24 @@ namespace MuMech
                 MechJebModuleManeuverPlanner maneuverPlannerModule = Core.GetComputerModule<MechJebModuleManeuverPlanner>();
                 if (!HighLogic.LoadedSceneIsEditor && maneuverPlannerModule != null && !maneuverPlannerModule.TechLocked)
                 {
+                    // The handlers run for whichever vessel is active, not the one this menu belongs to
                     CreateFeatureButton(maneuverPlannerModule, "Exec_Node", "MechJeb Execute Next Node", b =>
                     {
-                        if (Vessel.patchedConicSolver.maneuverNodes.Count > 0 && Core.Node != null)
+                        MechJebCore mj = ActiveMasterMechJeb();
+                        if (mj == null)
+                            return;
+
+                        if (mj.vessel.patchedConicSolver.maneuverNodes.Count > 0 && mj.Node != null)
                         {
-                            if (Core.Node.Enabled)
+                            if (mj.Node.Enabled)
                             {
-                                Core.Node.Abort();
+                                mj.Node.Abort();
                             }
                             else
                             {
-                                if (Vessel.patchedConicSolver.maneuverNodes[0].DeltaV.magnitude > 0.0001)
+                                if (mj.vessel.patchedConicSolver.maneuverNodes[0].DeltaV.magnitude > 0.0001)
                                 {
-                                    Core.Node.ExecuteOneNode(maneuverPlannerModule);
+                                    mj.Node.ExecuteOneNode(mj.GetComputerModule<MechJebModuleManeuverPlanner>());
                                 }
                                 else
                                 {
@@ -339,30 +342,48 @@ namespace MuMech
                         {
                             ScreenMessages.PostScreenMessage("No maneuver nodes", 2f);
                         }
-                    }, () => Vessel.patchedConicSolver.maneuverNodes.Count > 0 && Core.Node != null && Core.Node.Enabled);
+                    }, () =>
+                    {
+                        MechJebCore mj = ActiveMasterMechJeb();
+                        return mj != null && mj.vessel.patchedConicSolver.maneuverNodes.Count > 0 && mj.Node != null && mj.Node.Enabled;
+                    });
 
                     CreateFeatureButton(maneuverPlannerModule, "Autostage_Once", "MechJeb Autostage Once", b =>
                     {
-                        MechJebModuleThrustWindow w = Core.GetComputerModule<MechJebModuleThrustWindow>();
+                        MechJebCore mj = ActiveMasterMechJeb();
+                        if (mj == null)
+                            return;
 
-                        if (Core.Staging.Enabled && Core.Staging.AutostagingOnce)
+                        MechJebModuleThrustWindow w = mj.GetComputerModule<MechJebModuleThrustWindow>();
+
+                        if (mj.Staging.Enabled && mj.Staging.AutostagingOnce)
                         {
-                            if (Core.Staging.Users.Contains(w))
+                            if (mj.Staging.Users.Contains(w))
                             {
-                                Core.Staging.Users.Remove(w);
+                                mj.Staging.Users.Remove(w);
                                 w.autostageSavedState = false;
                             }
                         }
                         else
                         {
-                            Core.Staging.AutostageOnce(w);
+                            mj.Staging.AutostageOnce(w);
                         }
-                    }, () => Core.Staging.Enabled && Core.Staging.AutostagingOnce);
+                    }, () =>
+                    {
+                        MechJebCore mj = ActiveMasterMechJeb();
+                        return mj != null && mj.Staging.Enabled && mj.Staging.AutostagingOnce;
+                    });
 
                     CreateFeatureButton(maneuverPlannerModule, "Auto_Warp", "MechJeb Auto-warp", b =>
                     {
-                        Core.Node.Autowarp = !Core.Node.Autowarp;
-                    }, () => Core.Node.Autowarp);
+                        MechJebCore mj = ActiveMasterMechJeb();
+                        if (mj != null)
+                            mj.Node.Autowarp = !mj.Node.Autowarp;
+                    }, () =>
+                    {
+                        MechJebCore mj = ActiveMasterMechJeb();
+                        return mj != null && mj.Node.Autowarp;
+                    });
                 }
             }
         }
@@ -404,7 +425,8 @@ namespace MuMech
 
             button.button.ToolTip = tooltip;
             button.button.OnClick += onClick;
-            featureButtons.Add(() => button.SetTexture(isActive() ? button.texturePathActive : button.texturePath), button);
+            button.isActive = isActive;
+            featureButtons[nameId] = button;
 
             button.SetVisible(module.ShowInCurrentScene);
             button.SetTexture(button.texturePath);
@@ -426,11 +448,22 @@ namespace MuMech
             menuButton.Visible = true;
         }
 
-        private string GetCleanName(string name)
+        private static readonly Dictionary<string, string> _cleanNames = new Dictionary<string, string>();
+        private static Regex _invalidChars;
+
+        // Cached: it runs for every module on every update
+        private static string GetCleanName(string name)
         {
-            string regexSearch = " .:" + new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            var r = new Regex($"[{Regex.Escape(regexSearch)}]");
-            return r.Replace(name, "_");
+            if (_cleanNames.TryGetValue(name, out string clean))
+                return clean;
+
+            if (_invalidChars == null)
+            {
+                string regexSearch = " .:" + new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+                _invalidChars = new Regex($"[{Regex.Escape(regexSearch)}]");
+            }
+
+            return _cleanNames[name] = _invalidChars.Replace(name, "_");
         }
 
         public override void OnLoad(ConfigNode local, ConfigNode type, ConfigNode global)
@@ -483,6 +516,7 @@ namespace MuMech
                 if (menuButton != null)
                 {
                     menuButton.Destroy();
+                    menuButton = null;
                 }
             }
         }
@@ -557,9 +591,9 @@ namespace MuMech
             }
 
             // update feature buttons
-            foreach (KeyValuePair<Action, Button> b in featureButtons)
+            foreach (Button b in featureButtons.Values)
             {
-                b.Key();
+                b.SetTexture(b.isActive() ? b.texturePathActive : b.texturePath);
             }
         }
 
