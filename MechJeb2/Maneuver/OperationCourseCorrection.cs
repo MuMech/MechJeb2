@@ -92,6 +92,10 @@ namespace MuMech
                     ut = _timeSelector.ComputeManeuverTime(o, ut, target);
                 }
 
+                // the solver coasts from the burn to the end of the patch, the encounter
+                if (!(ut < o.EndUT))
+                    throw new OperationException(Localizer.Format("#MechJeb_approach_Exception3")); //the burn would be after the encounter with the target.
+
                 double dt = _timeSelector.TimeReference == TimeReference.COMPUTED ? double.NaN : 0;
                 double inc = InclinationFlag ? Inclination.Val : double.NaN;
 

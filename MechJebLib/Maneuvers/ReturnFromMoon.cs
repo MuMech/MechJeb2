@@ -9,6 +9,7 @@ using MechJebLib.Functions;
 using MechJebLib.Lambert;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
+using MechJebLib.Utils;
 using static MechJebLib.Utils.Statics;
 using static System.Math;
 
@@ -182,6 +183,14 @@ namespace MechJebLib.Maneuvers
         {
             Print(
                 $"ReturnFromMoon.Maneuver({centralMu}, {moonMu}, new V3({moonR0}), new V3({moonV0}), {moonSOI}, new V3({r0}), new V3({v0}), {peR}, {inc})");
+            Check.PositiveFinite(centralMu);
+            Check.PositiveFinite(moonMu);
+            Check.Finite(moonR0);
+            Check.Finite(moonV0);
+            Check.PositiveFinite(moonSOI);
+            Check.Finite(r0);
+            Check.Finite(v0);
+            Check.PositiveFinite(peR); // the planet's length scale comes from it
 
             var moonScale = Scale.Create(moonMu, Sqrt(r0.magnitude * moonSOI));
             var planetScale = Scale.Create(centralMu, Sqrt(peR * moonR0.magnitude));

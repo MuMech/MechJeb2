@@ -124,7 +124,8 @@ namespace MuMech
         {
             (V3 r, V3 v) = o.RightHandedStateVectorsAtUT(ut);
 
-            V3 dv = Simple.DeltaVToChangeInclination(r, v, Deg2Rad(newInclination));
+            // as the comment above says: the sign picks the burn, so 200 must be -160
+            V3 dv = Simple.DeltaVToChangeInclination(r, v, Deg2Rad(Clamp180(newInclination)));
 
             return dv.V3ToWorld();
         }

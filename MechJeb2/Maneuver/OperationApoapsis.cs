@@ -2,6 +2,7 @@ extern alias JetBrainsAnnotations;
 using System.Collections.Generic;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
+using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
@@ -21,7 +22,16 @@ namespace MuMech
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
-            Vector3d deltaV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, ut, NewApA + o.referenceBody.Radius);
+
+            // below minus the radius is a hyperbolic orbit, which is fine; between that and the burn there's no such orbit
+            double newApR = NewApA + o.referenceBody.Radius;
+            if (newApR >= 0 && newApR < o.Radius(ut))
+            {
+                throw new OperationException(Localizer.Format("#MechJeb_Ap_Exception",
+                    (o.Radius(ut) - o.referenceBody.Radius).ToSI() + "m")); //new apoapsis cannot be lower than the altitude of the burn (<<1>>)
+            }
+
+            Vector3d deltaV = OrbitalManeuverCalculator.DeltaVToChangeApoapsis(o, ut, newApR);
 
             return new List<ManeuverParameters> { new ManeuverParameters(deltaV, ut) };
         }

@@ -182,7 +182,8 @@ namespace MechJebLib.Maneuvers
 
         public static V3 ChangeApoapsis(double mu, V3 r, V3 v, double apR, bool optguard = false)
         {
-            if (!Statics.IsFinite(apR) || (apR > 0 && apR < r.magnitude))
+            // 0 is no orbit, and the constraint divides by it
+            if (!Statics.IsFinite(apR) || (apR >= 0 && apR < r.magnitude))
                 throw new ArgumentException($"Bad apoapsis in ChangeOrbitalElement = {apR}");
 
             return DeltaV(mu, r, v, apR, Type.APOAPSIS, optguard);
