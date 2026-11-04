@@ -313,7 +313,7 @@ namespace MuMech.UI
             foreach (InfoItem item in ed.ItemsOfCategory())
             {
                 InfoItem add = item;
-                KodeWindow.ListRow(registry, Localizer.Format(item.description), () => ed.AddItem(add));
+                KodeWindow.ListRow(registry, item.localizedDescription, () => ed.AddItem(add));
             }
         }
 

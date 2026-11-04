@@ -232,6 +232,7 @@ namespace MuMech
             base.OnLoad(local, type, global);
 
             registry.Clear();
+            _categoryItems = null;
             editedWindow = null;
             RegenerateDefaultWindows = false;
 
@@ -527,7 +528,20 @@ namespace MuMech
         }
 
         /// <summary>The registry items of the selected category, sorted as the editor lists them.</summary>
-        internal IEnumerable<InfoItem> ItemsOfCategory() => registry.Where(it => it.category == itemCategory).OrderBy(it => it.description);
+        internal IEnumerable<InfoItem> ItemsOfCategory()
+        {
+            // the registry only changes in OnLoad, so the sorted list is kept per category
+            if (_categoryItems == null || _categoryItemsFor != itemCategory)
+            {
+                _categoryItems    = registry.Where(it => it.category == itemCategory).OrderBy(it => it.localizedDescription).ToList();
+                _categoryItemsFor = itemCategory;
+            }
+
+            return _categoryItems;
+        }
+
+        private List<InfoItem> _categoryItems;
+        private InfoItem.Category _categoryItemsFor;
 
         public override string GetName() => CachedLocalizer.Instance.MechJebWindowEdTitle; //Custom Window Editor
 
@@ -584,6 +598,7 @@ namespace MuMech
         public readonly string localizedName;
         public readonly string localizedTooltip;
         public readonly string description;
+        public readonly string localizedDescription;
         public readonly bool showInEditor;
         public readonly bool showInFlight;
 
@@ -614,6 +629,7 @@ namespace MuMech
             localizedTooltip = string.IsNullOrEmpty(attribute.tooltip) ? "" : Localizer.Format(attribute.tooltip);
             category = attribute.category;
             description = attribute.description;
+            localizedDescription = Localizer.Format(description);
             showInEditor = attribute.showInEditor;
             showInFlight = attribute.showInFlight;
         }
@@ -625,7 +641,7 @@ namespace MuMech
         public virtual InfoItem ForWindow() => this;
 
         /// <summary>The name in the editor's list of a window's contents.</summary>
-        public virtual string ListName => Localizer.Format(description);
+        public virtual string ListName => localizedDescription;
 
         /// <summary>The item a saved id names: the registry's, or a new header with the text the id holds.</summary>
         public static InfoItem Find(List<InfoItem> registry, string id)
@@ -819,7 +835,9 @@ namespace MuMech
             if (frameCount != cacheValidity)
             {
                 object value = getValue(_obj);
-                stringValue = Localizer.Format(GetStringValue(value));
+                // only a string can be a localization tag; a number would just cost a failed lookup
+                string s = GetStringValue(value);
+                stringValue = value is string ? Localizer.Format(s) : s;
                 cacheValidity = frameCount;
             }
         }
