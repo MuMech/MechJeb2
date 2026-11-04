@@ -761,38 +761,41 @@ namespace MuMech
             SelIndex = -1;
         }
 
+        /// <summary>Insert a waypoint before index; WaypointIndex keeps naming the same waypoint.</summary>
+        internal void InsertWaypoint(int index, MechJebWaypoint wp)
+        {
+            _ap.Waypoints.Insert(index, wp);
+            if (_ap.WaypointIndex >= index) { _ap.WaypointIndex++; }
+        }
+
+        /// <summary>Move the waypoint at from to the position to; WaypointIndex keeps naming the same waypoint.</summary>
+        internal void MoveWaypoint(int from, int to)
+        {
+            MechJebWaypoint t = _ap.Waypoints[from];
+            _ap.Waypoints.RemoveAt(from);
+            _ap.Waypoints.Insert(to, t);
+            int cur = _ap.WaypointIndex;
+            if (cur == from) { _ap.WaypointIndex = to; }
+            else if (from < cur && cur <= to) { _ap.WaypointIndex--; }
+            else if (to <= cur && cur < from) { _ap.WaypointIndex++; }
+        }
+
         /// <summary>"Up"; with Alt, "Top".</summary>
         internal void MoveUp(bool alt)
         {
             if (!(SelIndex > 0 && SelIndex < _ap.Waypoints.Count && _ap.Waypoints.Count >= 2)) return;
-            if (alt)
-            {
-                MechJebWaypoint t = _ap.Waypoints[SelIndex];
-                _ap.Waypoints.RemoveAt(SelIndex);
-                _ap.Waypoints.Insert(0, t);
-                SelIndex = 0;
-            }
-            else
-            {
-                _ap.Waypoints.Swap(SelIndex, --SelIndex);
-            }
+            int to = alt ? 0 : SelIndex - 1;
+            MoveWaypoint(SelIndex, to);
+            SelIndex = to;
         }
 
         /// <summary>"Down"; with Alt, "Bottom".</summary>
         internal void MoveDown(bool alt)
         {
             if (!(SelIndex >= 0 && SelIndex < _ap.Waypoints.Count - 1 && _ap.Waypoints.Count >= 2)) return;
-            if (alt)
-            {
-                MechJebWaypoint t = _ap.Waypoints[SelIndex];
-                _ap.Waypoints.RemoveAt(SelIndex);
-                _ap.Waypoints.Add(t);
-                SelIndex = _ap.Waypoints.Count - 1;
-            }
-            else
-            {
-                _ap.Waypoints.Swap(SelIndex, ++SelIndex);
-            }
+            int to = alt ? _ap.Waypoints.Count - 1 : SelIndex + 1;
+            MoveWaypoint(SelIndex, to);
+            SelIndex = to;
         }
 
         internal void ShowWaypointsPage()
@@ -916,7 +919,7 @@ namespace MuMech
                     {
                         if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                         {
-                            _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
+                            InsertWaypoint(SelIndex, new MechJebWaypoint(Core.Target.GetPositionTargetPosition()));
                             _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
                             _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
                             _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
@@ -946,7 +949,7 @@ namespace MuMech
                         {
                             if (SelIndex > -1 && SelIndex < _ap.Waypoints.Count)
                             {
-                                _ap.Waypoints.Insert(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
+                                InsertWaypoint(SelIndex, new MechJebWaypoint(mouseCoords.Latitude, mouseCoords.Longitude));
                                 _tmpRadius = _ap.Waypoints[SelIndex].Radius.ToString();
                                 _tmpLat = LatToString(_ap.Waypoints[SelIndex].Latitude);
                                 _tmpLon = LonToString(_ap.Waypoints[SelIndex].Longitude);
