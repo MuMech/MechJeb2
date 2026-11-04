@@ -64,12 +64,29 @@ namespace MechJebLibTest.ManeuversTests
             */
             V3 dv5 = ChangeOrbitalElement.ChangeSMA(mu, r, v, newR, true);
             Astro.SmaFromStateVectors(mu, r, v + dv5).ShouldEqual(newR, 1e-9);
+            // along the velocity, the cheapest burn to any speed
+            Assert.True(V3.Cross(dv5, v).magnitude <= 1e-12 * dv5.magnitude * v.magnitude);
 
             // now test changing the Ecc
             double newEcc = random.NextDouble() * 5 + 2.5;
             V3 dv6 = ChangeOrbitalElement.ChangeECC(mu, r, v, newEcc);
             (_, double ecc) = Astro.SmaEccFromStateVectors(mu, r, v + dv6);
             ecc.ShouldEqual(newEcc, 1e-9);
+        }
+
+        // an orbit through r = 1 has a semi-major axis above 1/2, or a negative one
+        [Theory]
+        [InlineData(0.5)]
+        [InlineData(0.25)]
+        [InlineData(0.0)]
+        private void ChangeSMATooSmallThrows(double sma) =>
+            Assert.Throws<ArgumentException>(() => ChangeOrbitalElement.ChangeSMA(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), sma));
+
+        [Fact]
+        private void ChangeSMAToHyperbolic()
+        {
+            V3 dv = ChangeOrbitalElement.ChangeSMA(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0), -2.0);
+            Astro.SmaFromStateVectors(1.0, new V3(1, 0, 0), new V3(0, 1.0, 0) + dv).ShouldEqual(-2.0, 1e-12);
         }
 
         [Fact]
