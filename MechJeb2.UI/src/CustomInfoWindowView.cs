@@ -77,7 +77,7 @@ namespace MuMech.UI
             void TitleAction(UnityEngine.Sprite icon, string letter, string tooltipKey, System.Action click)
             {
                 if (KodeWindow.ModernLayout) w.TitleIcon(icon, tooltipKey, click);
-                else Tooltips.Add(w.TitleButton(letter, click).gameObject, Localizer.Format(tooltipKey));
+                else Tooltips.Add(w.TitleButton(letter, click).gameObject, tooltipKey); // localized when shown
             }
 
             if (window.Core.GetComputerModule<MechJebModuleCustomWindowEditor>() is { TechLocked: false } editor)

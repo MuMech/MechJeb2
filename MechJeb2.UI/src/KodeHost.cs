@@ -52,6 +52,7 @@ namespace MuMech.UI
 
         MechJebCore core;
         MechJebModuleSettings settings;
+        string language;
 
         void Start()
         {
@@ -107,6 +108,14 @@ namespace MuMech.UI
                 settings = s;
                 broken.Clear(); // the broken modules were recreated as well
                 ApplyTheme();
+            }
+            // a language switch: the views keep many texts made when they were built (tooltips, button captions, cached
+            // readouts), so they are made again, as on a layout change
+            string lang = Localizer.CurrentLanguage;
+            if (lang != language)
+            {
+                if (language != null) DestroyViews();
+                language = lang;
             }
             if (core == null) return;
 

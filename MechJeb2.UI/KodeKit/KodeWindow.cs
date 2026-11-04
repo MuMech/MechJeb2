@@ -622,11 +622,11 @@ namespace KodeKit
         {
             t.text = Loc(textOrKey);
             if (textOrKey == null || textOrKey.Length < 2 || textOrKey[0] != '#') return;
-            string tip = TooltipFor?.Invoke(textOrKey);
-            if (tip != null && t.GetComponent<TooltipTrigger>() == null)
+            if (TooltipFor?.Invoke(textOrKey) != null && t.GetComponent<TooltipTrigger>() == null)
             {
                 t.raycastTarget = true;
-                Tooltips.Add(t.gameObject, tip);
+                // looked up when shown, so it follows a language switch like the label
+                Tooltips.Add(t.gameObject, () => TooltipFor?.Invoke(textOrKey));
             }
             t.GetComponentInParent<WindowBehaviour>()?.AddRelocalize(() => t.text = Loc(textOrKey));
         }
