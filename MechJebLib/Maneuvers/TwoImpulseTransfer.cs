@@ -25,6 +25,22 @@ namespace MechJebLib.Maneuvers
             public bool Capture;
         }
 
+        // the period of the orbit, or of a circular one at this radius for a hyperbola
+        private static double Period(double mu, V3 r, V3 v) =>
+            Astro.SmaFromStateVectors(mu, r, v) > 0 ? Astro.PeriodFromStateVectors(mu, r, v) : TAU * Sqrt(Powi(r.magnitude, 3) / mu);
+
+        // How far the search for a window steps: the synodic period, which can be infinite for orbits of the same size, so limited
+        // to the far end of what anyone would wait for.  With a hyperbola there is no synodic period, this is only a scale for the search.
+        private static double SearchPeriod(double mu, V3 r1, V3 v1, V3 r2, V3 v2)
+        {
+            const double MAX_ORBITS = 1e4;
+
+            double t1 = Period(mu, r1, v1);
+            double t2 = Period(mu, r2, v2);
+            int sign = Sign(V3.Dot(V3.Cross(r1, v1), V3.Cross(r2, v2)));
+            return Min(Abs(1.0 / (1.0 / t1 - sign / t2)), MAX_ORBITS * Min(t1, t2));
+        }
+
         private static (V3 dv1, V3 dv2) LambertFunction(double dt, double tt, double offset, Args args)
         {
             V3 r1 = args.R1;
@@ -134,7 +150,7 @@ namespace MechJebLib.Maneuvers
             alglib.minbleiccreatef(x, DIFFSTEP, out alglib.minbleicstate state);
             alglib.minbleicsetbc(state, bndl, bndu);
             alglib.minbleicsetcond(state, 0.0, 0.0, EPSX, MAXITS);
-            alglib.minbleicsetstpmax(state, Astro.SynodicPeriod(1.0, r1, v1, r2, v2) / 2);
+            alglib.minbleicsetstpmax(state, SearchPeriod(1.0, r1, v1, r2, v2) / 2);
 
             if (optguard)
             {
@@ -205,7 +221,7 @@ namespace MechJebLib.Maneuvers
                 // we have to try the other side of the target orbit since we might get eg. the DN instead of the AN when the AN is closer
                 // (this may be insufficient and may need more of a search box but then we're O(N^2) and i think basinhopping or porkchop
                 // plots will be the better solution)
-                double targetPeriod = Astro.PeriodFromStateVectors(mu, r2, v2);
+                double targetPeriod = Period(mu, r2, v2);
 
                 (V3 a, double b, V3 c, double d) =
                     Maneuver(mu, r1, v1, r2, v2, dtguess, targetPeriod * 0.5, coplanar, capture, optguard: optguard);
@@ -228,7 +244,7 @@ namespace MechJebLib.Maneuvers
         {
             Print($"[MechJebLib] Maneuvers.NextManeuver.TwoImpulseTransfer({mu}, {r1}, {r2}, {v1}, {v2}, maxiter: {maxiter}, lagTime: {lagTime}, coplanar: {coplanar}, rendezvous: {rendezvous}, capture: {capture}, fixedTime: {fixedTime}, optguard: {optguard})");
 
-            double synodicPeriod = Astro.SynodicPeriod(mu, r1, v1, r2, v2);
+            double synodicPeriod = SearchPeriod(mu, r1, v1, r2, v2);
 
             if (fixedTime)
                 return ManeuverInternal(mu, r1, v1, r2, v2, 0, coplanar: coplanar, rendezvous: rendezvous, capture: capture, optguard: optguard,
