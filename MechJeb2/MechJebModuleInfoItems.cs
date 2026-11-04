@@ -438,7 +438,7 @@ namespace MuMech
                 return GuiUtils.TimeToDHMS(ang * Vessel.mainBody.Radius / VesselState.SpeedSurfaceHorizontal);
             }
 
-            return GuiUtils.TimeToDHMS(Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time) - VesselState.Time);
+            return GuiUtils.TimeToDHMS(Orbit.MinimumSeparationTime(Core.Target.TargetOrbit, VesselState.Time) - VesselState.Time);
         }
 
         [ValueInfoItem("#MechJeb_ClosestApproachDistance", InfoItem.Category.Target)] //Closest approach distance
@@ -450,7 +450,7 @@ namespace MuMech
 
             if (double.IsNaN(Core.Target.TargetOrbit.semiMajorAxis)) { return "N/A"; }
 
-            return Orbit.NextClosestApproachDistance(Core.Target.TargetOrbit, VesselState.Time).ToSI() + "m";
+            return Orbit.MinimumSeparationDistance(Core.Target.TargetOrbit, VesselState.Time).ToSI() + "m";
         }
 
         [ValueInfoItem("#MechJeb_RelativeVelocityAtClosestApproach", InfoItem.Category.Target)] //Rel. vel. at closest approach
@@ -464,7 +464,7 @@ namespace MuMech
 
             try
             {
-                double ut = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
+                double ut = Orbit.MinimumSeparationTime(Core.Target.TargetOrbit, VesselState.Time);
 
                 if (double.IsNaN(ut))
                 {

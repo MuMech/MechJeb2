@@ -56,6 +56,9 @@ namespace MuMech
         //"Warning: neither ascending nor descending node exists."
         private static readonly string _maneuverException7 = Localizer.Format("#MechJeb_Maneu_Exception7");
 
+        //"Warning: target must be in the same sphere of influence."
+        private static readonly string _maneuverException8 = Localizer.Format("#MechJeb_Maneu_Exception8");
+
         //"No ascending node with the target exists."
         private static readonly string _relativeAscendingException = Localizer.Format("#MechJeb_Hohm_Exception3");
 
@@ -132,7 +135,9 @@ namespace MuMech
                 case TimeReference.CLOSEST_APPROACH:
                     if (!target.NormalTargetExists)
                         throw new OperationException(_maneuverException2);
-                    ut = o.NextClosestApproachTime(target.TargetOrbit, ut);
+                    if (target.TargetOrbit.referenceBody != o.referenceBody)
+                        throw new OperationException(_maneuverException8);
+                    ut = o.MinimumSeparationTime(target.TargetOrbit, ut);
                     break;
 
                 case TimeReference.ALTITUDE:

@@ -57,8 +57,8 @@ namespace MuMech
                     new OperationException(
                         Localizer.Format("#MechJeb_approach_Exception2")); //"target for course correction must be in the same sphere of influence"
 
-            if (o.NextClosestApproachTime(target.TargetOrbit, ut) < ut + 1 ||
-                o.NextClosestApproachDistance(target.TargetOrbit, ut) > target.TargetOrbit.semiMajorAxis * 0.2)
+            if (o.MinimumSeparationTime(target.TargetOrbit, ut) < ut + 1 ||
+                o.MinimumSeparationDistance(target.TargetOrbit, ut) > target.TargetOrbit.semiMajorAxis * 0.2)
             {
                 ErrorMessage = Localizer.Format(
                     "#MechJeb_Approach_errormsg"); //Warning: orbit before course correction doesn't seem to approach target very closely. Planned course correction may be extreme. Recommend plotting an approximate intercept orbit and then plotting a course correction.

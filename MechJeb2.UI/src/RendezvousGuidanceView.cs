@@ -28,7 +28,7 @@ namespace MuMech.UI
 
         protected override void BeforeSync()
         {
-            if (Mode() == 2) closestApproachTime = guidance.Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, guidance.VesselState.Time);
+            if (Mode() == 2) closestApproachTime = guidance.Orbit.MinimumSeparationTime(Core.Target.TargetOrbit, guidance.VesselState.Time);
         }
 
         // a burn that can't be computed says so, where it would otherwise only reach the log

@@ -81,7 +81,7 @@ namespace MuMech
 
         internal void MatchVelocitiesAtClosestApproach()
         {
-            double closestApproachUT = Orbit.NextClosestApproachTime(Core.Target.TargetOrbit, VesselState.Time);
+            double closestApproachUT = Orbit.MinimumSeparationTime(Core.Target.TargetOrbit, VesselState.Time);
             Vector3d dV = OrbitalManeuverCalculator.DeltaVToMatchVelocities(Orbit, closestApproachUT, Core.Target.TargetOrbit);
             Vessel.RemoveAllManeuverNodes();
 

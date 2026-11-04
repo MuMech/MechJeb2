@@ -236,7 +236,7 @@ namespace MuMech
         // This does a line-search to find the burnUT for the cheapest course correction that will intercept exactly
         public static Vector3d DeltaVAndTimeForCheapestCourseCorrection(Orbit o, double UT, Orbit target, out double burnUT)
         {
-            double closestApproachTime = o.NextClosestApproachTime(target, UT + 2); //+2 so that closestApproachTime is definitely > UT
+            double closestApproachTime = o.MinimumSeparationTime(target, UT + 2); //+2 so that closestApproachTime is definitely > UT
 
             burnUT = UT;
             (Vector3d dV, _) = DeltaVToInterceptAtTime(o, burnUT, target, closestApproachTime - burnUT);
@@ -280,7 +280,7 @@ namespace MuMech
         {
             Vector3d collisionDV = DeltaVAndTimeForCheapestCourseCorrection(o, UT, target, out burnUT);
             Orbit collisionOrbit = o.PerturbedOrbit(burnUT, collisionDV);
-            double collisionUT = collisionOrbit.NextClosestApproachTime(target, burnUT);
+            double collisionUT = collisionOrbit.MinimumSeparationTime(target, burnUT);
             Vector3d targetPos = target.WorldPositionAtUT(collisionUT);
 
             Vector3d interceptTarget = targetPos + target.NormalPlus(collisionUT) * caDistance;

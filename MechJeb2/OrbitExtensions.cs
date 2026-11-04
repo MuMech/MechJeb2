@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using MechJebLib.Functions;
 using MechJebLib.Primitives;
+using MechJebLib.TwoBody;
 using MechJebLibBindings;
 using UnityEngine;
 using static MechJebLib.Utils.Statics;
@@ -143,17 +144,26 @@ namespace MuMech
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Separation(this Orbit a, Orbit b, double ut) => (a.WorldPositionAtUT(ut) - b.WorldPositionAtUT(ut)).magnitude;
 
-        //Time during a's next orbit at which object a comes nearest to object b.
-        //If a is hyperbolic, the examined interval is the next 100 units of mean anomaly.
-        //This is quite a large segment of the hyperbolic arc. However, for extremely high
-        //hyperbolic eccentricity it may not find the actual closest approach.
-        //The search stops where the patch of a ends by leaving the sphere of influence, meeting a body or hitting one:
-        //a isn't on this orbit after that.
-        public static double NextClosestApproachTime(this Orbit a, Orbit b, double ut)
+        /// <summary>
+        ///     Finds when object a is nearest to object b during the window starting at ut.  This is the global minimum of the
+        ///     separation over the window, NOT the next local minimum: passes with a larger separation are skipped, however much
+        ///     sooner they come.
+        ///     The window is a's period, or the next 100 units of mean anomaly if a is hyperbolic.  That is quite a large segment
+        ///     of the hyperbolic arc, but with an extremely high eccentricity it may not reach the actual minimum.  The window
+        ///     stops where the patch of a ends by leaving the sphere of influence, meeting a body or hitting one, since a isn't on
+        ///     this orbit after that.
+        ///     The result can be an end of the window: ut when nothing ahead is closer, and the end when still closing there.
+        ///     Both orbits must share a reference body.
+        /// </summary>
+        /// <param name="a">The orbit that sets the window</param>
+        /// <param name="b">The other orbit</param>
+        /// <param name="ut">Start of the window</param>
+        /// <returns>The UT of the smallest separation, or ut if either orbit is not valid</returns>
+        public static double MinimumSeparationTime(this Orbit a, Orbit b, double ut)
         {
-            double closestApproachTime = ut;
-            double closestApproachDistance = double.MaxValue;
-            double minTime = ut;
+            if (a.referenceBody != b.referenceBody)
+                throw new ArgumentException($"MinimumSeparationTime: the orbits must share a reference body, not {a.referenceBody.bodyName} and {b.referenceBody.bodyName}");
+
             double interval = a.period;
             if (a.eccentricity >= 1)
             {
@@ -164,39 +174,19 @@ namespace MuMech
                 a.patchEndTransition == Orbit.PatchTransitionType.IMPACT;
             if (patchEnds && a.EndUT > ut) interval = Min(interval, a.EndUT - ut);
 
-            double maxTime = ut + interval;
-            const int NUM_DIVISIONS = 20;
-            const int MAX_FIRST_DIVISIONS = 1000;
+            //The UI calls this every frame, so a bad orbit returns ut instead of reaching the solver, which would throw.
+            if (double.IsNaN(a.semiMajorAxis) || double.IsNaN(b.semiMajorAxis) || !IsFinite(interval)) return ut;
 
-            //The first pass has to see every pass of the shorter orbit, or the refining can lock on to the wrong one.
-            double shorterPeriod = Min(a.period, b.period);
-            int firstDivisions = (int)Clamp(Ceiling(NUM_DIVISIONS * interval / shorterPeriod), NUM_DIVISIONS, MAX_FIRST_DIVISIONS);
+            (V3 ra, V3 va) = a.RightHandedStateVectorsAtUT(ut);
+            (V3 rb, V3 vb) = b.RightHandedStateVectorsAtUT(ut);
+            (double dt, double _) = MinimumSeparation.Solve(a.referenceBody.gravParameter, ra, va, rb, vb, interval);
 
-            for (int iter = 0; iter < 8; iter++)
-            {
-                int divisions = iter == 0 ? firstDivisions : NUM_DIVISIONS;
-                double dt = (maxTime - minTime) / divisions;
-                for (int i = 0; i < divisions; i++)
-                {
-                    double t = minTime + i * dt;
-                    double distance = a.Separation(b, t);
-                    if (distance < closestApproachDistance)
-                    {
-                        closestApproachDistance = distance;
-                        closestApproachTime = t;
-                    }
-                }
-
-                minTime = Clamp(closestApproachTime - dt, ut, ut + interval);
-                maxTime = Clamp(closestApproachTime + dt, ut, ut + interval);
-            }
-
-            return closestApproachTime;
+            return ut + dt;
         }
 
-        //Distance between a and b at the closest approach found by NextClosestApproachTime
+        //Distance between a and b at the time found by MinimumSeparationTime: see there for what that does and doesn't find.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double NextClosestApproachDistance(this Orbit a, Orbit b, double ut) => a.Separation(b, a.NextClosestApproachTime(b, ut));
+        public static double MinimumSeparationDistance(this Orbit a, Orbit b, double ut) => a.Separation(b, a.MinimumSeparationTime(b, ut));
 
         //The mean anomaly of the orbit.
         //For elliptical orbits, the value return is always between 0 and 2pi
