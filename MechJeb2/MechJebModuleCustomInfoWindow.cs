@@ -170,20 +170,41 @@ namespace MuMech
             return windowSharingString;
         }
 
-        public void FromSharingString(string[] lines, List<InfoItem> registry)
+        public const int MAX_SHARED_ITEMS = 200;
+        private const string NAME_PREFIX = "Name:";
+        private const string SHOW_IN_PREFIX = "Show in:";
+
+        /// <summary>Fills the window from a sharing string. Returns how many of its ids were not added: unknown, or over the item cap.</summary>
+        public int FromSharingString(string[] lines, List<InfoItem> registry)
         {
-            if (lines.Length > 1 && lines[1].StartsWith("Name: ")) title = lines[1].Trim().Substring("Name: ".Length);
-            if (lines.Length > 2 && lines[2].StartsWith("Show in:"))
+            int first = 1; // line 0 is the "--- MechJeb Custom Window ---" header
+            if (first < lines.Length && lines[first].StartsWith(NAME_PREFIX, StringComparison.Ordinal))
             {
-                ShowInEditor = lines[2].Contains("editor");
-                ShowInFlight = lines[2].Contains("flight");
+                // an empty title exports as "Name: " and its trailing space is trimmed away with the rest
+                title = lines[first].Substring(NAME_PREFIX.Length).Trim();
+                first++;
             }
 
-            for (int i = 3; i < lines.Length; i++)
+            if (first < lines.Length && lines[first].StartsWith(SHOW_IN_PREFIX, StringComparison.Ordinal))
             {
-                InfoItem match = InfoItem.Find(registry, lines[i].Trim());
-                if (match != null) items.Add(match);
+                ShowInEditor = lines[first].Contains("editor");
+                ShowInFlight = lines[first].Contains("flight");
+                first++;
             }
+
+            int skipped = 0;
+            for (int i = first; i < lines.Length; i++)
+            {
+                string id = lines[i].Trim();
+                if (id.StartsWith("-----", StringComparison.Ordinal)) break; // the footer
+                InfoItem match = items.Count < MAX_SHARED_ITEMS ? InfoItem.Find(registry, id) : null;
+                if (match != null)
+                    items.Add(match);
+                else
+                    skipped++;
+            }
+
+            return skipped;
         }
 
         public override string GetName() => title;
@@ -567,11 +588,17 @@ namespace MuMech
                 return null;
             }
 
+            // parse first: nothing is registered until the string has been read
             var window = new MechJebModuleCustomInfoWindow(Core);
+            int skipped = window.FromSharingString(lines, registry);
             Core.AddComputerModule(window);
             window.Enabled = true;
 
-            window.FromSharingString(lines, registry);
+            if (skipped > 0)
+            {
+                ScreenMessages.PostScreenMessage(Localizer.Format("#MechJeb_WindowEd_CustomInfoWindow_Scrmsg3", skipped), 5.0f,
+                    ScreenMessageStyle.UPPER_RIGHT); //<<1>> items of the pasted window are unknown and were left out.
+            }
 
             return window;
         }
