@@ -28,13 +28,7 @@ namespace MuMech.UI
         // ---- number formatting without allocation (also used by the window's own readouts) ----
 
         // MuUtils.PadPositive(x, "F3") without allocating: a space in front of non-negative numbers
-        internal static void Padded(CharText t, double v, int decimals)
-        {
-            bool negative = double.IsNegativeInfinity(v) ||
-                v < 0 && v > -1e15 && Math.Round(-(decimal)v, decimals, MidpointRounding.AwayFromZero) > 0;
-            if (!negative) t.Append(' ');
-            t.Append(v, decimals);
-        }
+        internal static void Padded(CharText t, double v, int decimals) => t.PadPositive(v, decimals);
 
         // MuUtils.PadPositiveSci(x, "F3"): above 1e6 "G3" (rare, allocates)
         internal static void PaddedSci(CharText t, double v)
@@ -44,16 +38,7 @@ namespace MuMech.UI
         }
 
         // MuUtils.PrettyPrint(vector): "[ x, y, z ]" with F3
-        internal static void Plain(CharText t, Vector3d v)
-        {
-            t.Append('[');
-            Padded(t, v.x, 3);
-            t.Append(", ");
-            Padded(t, v.y, 3);
-            t.Append(", ");
-            Padded(t, v.z, 3);
-            t.Append(" ]");
-        }
+        internal static void Plain(CharText t, Vector3d v) => t.PrettyPrint(v);
 
         // MuUtils.PrettyPrintSci(vector)
         internal static void PlainSci(CharText t, Vector3d v)
