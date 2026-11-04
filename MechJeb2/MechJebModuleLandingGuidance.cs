@@ -12,6 +12,15 @@ namespace MuMech
 {
     public class MechJebModuleLandingGuidance : DisplayModule
     {
+        private const string KSC_PAD_SITE = "KSC Pad";
+
+        // the sites of LandingSites.cfg that are KSC buildings: the game's facility, and the spawn point a vessel stands on
+        private static readonly (string Site, string Facility, string SpawnPoint)[] _kscSites =
+        {
+            (KSC_PAD_SITE, "LaunchPad", "LaunchPad"),
+            ("VAB", "VAB", null)
+        };
+
         private MechJebModuleLandingPredictions _predictor;
         public static List<LandingSite> LandingSites;
 
@@ -32,6 +41,54 @@ namespace MuMech
 
             if (LandingSites == null && HighLogic.LoadedSceneIsFlight)
                 InitLandingSitesList();
+
+            if (LandingSites != null && HighLogic.LoadedSceneIsFlight)
+                UseRealKscSites();
+        }
+
+        // LandingSites.cfg holds stock positions. The KSC keeps its size on a rescaled planet, so the latitude and longitude
+        // of its buildings change with the scale, and KSCSwitcher moves them altogether. The game knows where they are.
+        // A site is only updated from a vessel around its body, so call this again where a site is used.
+        public static void UseRealKscSites()
+        {
+            if (LandingSites == null)
+                return;
+
+            foreach ((string site, string facilityName, string spawnPointName) in _kscSites)
+            {
+                PSystemSetup.SpaceCenterFacility facility = PSystemSetup.Instance.GetSpaceCenterFacility(facilityName);
+                int index = LandingSites.FindIndex(x => x.Name == site);
+
+                if (facility?.hostBody == null || index < 0 || !TryGetPosition(facility, spawnPointName, out double latitude, out double longitude))
+                    continue;
+
+                LandingSites[index] = new LandingSite { Name = site, Latitude = latitude, Longitude = longitude, Body = facility.hostBody };
+            }
+        }
+
+        private static bool TryGetPosition(PSystemSetup.SpaceCenterFacility facility, string spawnPointName, out double latitude,
+            out double longitude)
+        {
+            PSystemSetup.SpaceCenterFacility.SpawnPoint spawnPoint = spawnPointName != null ? facility.GetSpawnPoint(spawnPointName) : null;
+
+            if (spawnPoint != null && spawnPoint.latlonaltSet)
+            {
+                latitude  = spawnPoint.latitude;
+                longitude = spawnPoint.longitude;
+                return true;
+            }
+
+            // The game sets the spawn point when a scene goes through the KSC. Loading straight into a flight doesn't, and
+            // doesn't build the pad's model either, so take the facility, a few metres from the pad's spawn point. Its
+            // float position is only precise near the origin, so only for a vessel around the same body.
+            if (facility.facilityTransform == null || facility.hostBody != FlightGlobals.currentMainBody)
+            {
+                latitude = longitude = 0;
+                return false;
+            }
+
+            facility.hostBody.GetLatLonAlt(facility.facilityTransform.position, out latitude, out longitude, out _);
+            return true;
         }
 
         internal void MoveByMeter(ref EditableAngle angle, double distance, double alt)
@@ -42,7 +99,8 @@ namespace MuMech
 
         public void SetAndLandTargetKSC()
         {
-            int index = LandingSites.FindIndex(x => x.Name == "KSC Pad" && x.Body == MainBody);
+            UseRealKscSites();
+            int index = LandingSites.FindIndex(x => x.Name == KSC_PAD_SITE && x.Body == MainBody);
             if (index < 0)
             {
                 ScreenMessages.PostScreenMessage("MechJeb: no KSC Pad landing site on " + MainBody.bodyName);

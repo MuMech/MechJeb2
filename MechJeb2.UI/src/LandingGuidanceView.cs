@@ -44,11 +44,12 @@ namespace MuMech.UI
             p.limitChutesStage = landing.LimitChutesStage;
         }
 
-        // landing sites of the current body, cached until the body or the list changes
+        // names of the landing sites of the current body, cached until the body or the list changes, and where they are in
+        // the list: the KSC sites move once the game knows its buildings, so the position is read when a site is set
         string[] siteNames = new string[0];
         CelestialBody siteBody;
         int siteCount = -1;
-        readonly List<MechJebModuleLandingGuidance.LandingSite> sites = new List<MechJebModuleLandingGuidance.LandingSite>();
+        readonly List<int> siteIndexes = new List<int>();
 
         string[] SiteNames()
         {
@@ -59,12 +60,12 @@ namespace MuMech.UI
 
             siteBody = body;
             siteCount = count;
-            sites.Clear();
+            siteIndexes.Clear();
             for (int i = 0; i < count; i++)
                 if (all[i].Body == body)
-                    sites.Add(all[i]);
-            siteNames = new string[sites.Count];
-            for (int i = 0; i < sites.Count; i++) siteNames[i] = sites[i].Name;
+                    siteIndexes.Add(i);
+            siteNames = new string[siteIndexes.Count];
+            for (int i = 0; i < siteIndexes.Count; i++) siteNames[i] = all[siteIndexes[i]].Name;
             return siteNames;
         }
 
@@ -210,8 +211,10 @@ namespace MuMech.UI
             KodeWindow.Button(siteRow, "Set", () =>
             {
                 SiteNames();
-                if (sites.Count == 0) return;
-                MechJebModuleLandingGuidance.LandingSite site = sites[Mathf.Clamp(guidance._landingSiteIdx, 0, sites.Count - 1)];
+                if (siteIndexes.Count == 0) return;
+                MechJebModuleLandingGuidance.UseRealKscSites();
+                MechJebModuleLandingGuidance.LandingSite site =
+                    MechJebModuleLandingGuidance.LandingSites[siteIndexes[Mathf.Clamp(guidance._landingSiteIdx, 0, siteIndexes.Count - 1)]];
                 Core.Target.SetPositionTarget(Body, site.Latitude, site.Longitude);
             });
             w.Visible(siteRow.gameObject, () => SiteNames().Length > 0);
