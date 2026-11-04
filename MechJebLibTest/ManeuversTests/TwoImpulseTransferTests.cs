@@ -124,9 +124,13 @@ namespace MechJebLibTest.ManeuversTests
             (V3 r2, V3 v2) = Astro.StateVectorsFromKeplerian(mu, 42164000, 0, 0, 0, 0, nu);
 
             (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2, coplanar: false);
+            // dt2 is from now, like dt1: the transfer meets the target there
             (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
-            (V3 _, V3 _) = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
-            (V3 _, V3 _) = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
+            (V3 rburn2, V3 vburn2) = Shepperd.Solve(mu, dt2 - dt1, rburn1, vburn1 + dv1);
+            (V3 rf, V3 vf) = Shepperd.Solve(mu, dt2, r2, v2);
+            // in metres and m/s: a component near zero can't be compared relatively
+            Assert.True((rf - rburn2).magnitude < 1e-2, $"misses the target by {(rf - rburn2).magnitude} m");
+            Assert.True((vf - (vburn2 + dv2)).magnitude < 1e-3, $"misses the target's velocity by {(vf - (vburn2 + dv2)).magnitude} m/s");
             double inc = Astro.IncFromStateVectors(rburn1, vburn1 + dv1);
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);
@@ -146,9 +150,11 @@ namespace MechJebLibTest.ManeuversTests
             (V3 r2, V3 v2) = Astro.StateVectorsFromKeplerian(mu, 42164000, 0, 0, 0, 0, 0);
 
             (V3 dv1, double dt1, V3 dv2, double dt2) = TwoImpulseTransfer.NextManeuver(mu, r1, v1, r2, v2, coplanar: false, rendezvous: false);
+            // without a rendezvous the transfer reaches the target's orbit, not the target, at dt2 (from now, like dt1)
             (V3 rburn1, V3 vburn1) = Shepperd.Solve(mu, dt1, r1, v1);
-            (V3 _, V3 _) = Shepperd.Solve(mu, dt2, rburn1, vburn1 + dv1);
-            (V3 _, V3 _) = Shepperd.Solve(mu, dt1 + dt2, r2, v2);
+            (V3 rburn2, V3 vburn2) = Shepperd.Solve(mu, dt2 - dt1, rburn1, vburn1 + dv1);
+            rburn2.magnitude.ShouldEqual(42164000, 1e-6);
+            Astro.EccFromStateVectors(mu, rburn2, vburn2 + dv2).ShouldEqual(0, 1e-6);
             double inc = Astro.IncFromStateVectors(rburn1, vburn1 + dv1);
 
             dv1.magnitude.ShouldEqual(2484.20137552452, 1e-4);
