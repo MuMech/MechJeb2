@@ -2,6 +2,7 @@ extern alias JetBrainsAnnotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using KSP.Localization;
@@ -81,18 +82,25 @@ namespace MuMech
 
         public MechJebWaypoint(ConfigNode node)
         {
-            if (node.HasValue("Latitude")) { double.TryParse(node.GetValue("Latitude"), out Latitude); }
+            // ConfigNode.AddValue writes numbers with the invariant culture, so they are read back with it
+            if (node.HasValue("Latitude"))
+            {
+                double.TryParse(node.GetValue("Latitude"), NumberStyles.Float, CultureInfo.InvariantCulture, out Latitude);
+            }
 
-            if (node.HasValue("Longitude")) { double.TryParse(node.GetValue("Longitude"), out Longitude); }
+            if (node.HasValue("Longitude"))
+            {
+                double.TryParse(node.GetValue("Longitude"), NumberStyles.Float, CultureInfo.InvariantCulture, out Longitude);
+            }
 
             Target = node.HasValue("Target") ? FlightGlobals.Vessels.Find(v => v.id.ToString() == node.GetValue("Target")) : null;
-            if (node.HasValue("Radius")) { float.TryParse(node.GetValue("Radius"), out Radius); }
+            if (node.HasValue("Radius")) { float.TryParse(node.GetValue("Radius"), NumberStyles.Float, CultureInfo.InvariantCulture, out Radius); }
             else { Radius = DEFAULT_RADIUS; }
 
             Name = node.HasValue("Name") ? node.GetValue("Name") : "";
-            if (node.HasValue("MinSpeed")) { float.TryParse(node.GetValue("MinSpeed"), out MinSpeed); }
+            if (node.HasValue("MinSpeed")) { float.TryParse(node.GetValue("MinSpeed"), NumberStyles.Float, CultureInfo.InvariantCulture, out MinSpeed); }
 
-            if (node.HasValue("MaxSpeed")) { float.TryParse(node.GetValue("MaxSpeed"), out MaxSpeed); }
+            if (node.HasValue("MaxSpeed")) { float.TryParse(node.GetValue("MaxSpeed"), NumberStyles.Float, CultureInfo.InvariantCulture, out MaxSpeed); }
 
             if (node.HasValue("Quicksave")) { bool.TryParse(node.GetValue("Quicksave"), out Quicksave); }
 
@@ -313,6 +321,7 @@ namespace MuMech
 
         private const string COORD_REG_EX =
             @"^([nsew])?\s*(-?\d+(?:\.\d+)?)(?:[°:\s]+(-?\d+(?:\.\d+)?))?(?:[':\s]+(-?\d+(?:\.\d+)?))?(?:[^nsew]*([nsew])?)?$";
+        private static readonly Regex _coordRegex = new Regex(COORD_REG_EX, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         internal string _titleAdd = "";
         internal string _saveName = "";
         internal bool _waitingForPick;
@@ -541,7 +550,7 @@ namespace MuMech
 
             float s = (float)lat;
 
-            return $"{ns} {h}° {m}' {s:F3}\"";
+            return string.Format(CultureInfo.InvariantCulture, "{0} {1}° {2}' {3:F3}\"", ns, h, m, s);
         }
 
         internal static string LonToString(double lon)
@@ -561,12 +570,16 @@ namespace MuMech
 
             float s = (float)lon;
 
-            return $"{ew} {h}° {m}' {s:F3}\"";
+            return string.Format(CultureInfo.InvariantCulture, "{0} {1}° {2}' {3:F3}\"", ew, h, m, s);
         }
 
-        internal static double ParseCoord(string latLon, bool isLongitute = false)
+        /// <summary>Parse a latitude or longitude as the edit fields show it; false (and 0) when the text is not a coordinate.</summary>
+        internal static bool TryParseCoord(string latLon, bool isLongitute, out double value)
         {
-            Match match = new Regex(COORD_REG_EX, RegexOptions.IgnoreCase).Match(latLon);
+            value = 0;
+            Match match = _coordRegex.Match(latLon ?? "");
+            if (!match.Success) return false;
+
             int range = isLongitute ? 180 : 90;
 
             float nsew = 1;
@@ -582,7 +595,7 @@ namespace MuMech
             }
 
             float h = 0;
-            if (match.Groups[2] != null) { float.TryParse(match.Groups[2].Value, out h); }
+            if (!float.TryParse(match.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out h) || float.IsInfinity(h)) return false;
 
             if (h < 0)
             {
@@ -591,18 +604,23 @@ namespace MuMech
             }
 
             float m = 0;
-            if (match.Groups[3] != null) { float.TryParse(match.Groups[3].Value, out m); }
+            if (match.Groups[3].Success && !float.TryParse(match.Groups[3].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out m)) return false;
 
             float s = 0;
-            if (match.Groups[4] != null) { float.TryParse(match.Groups[4].Value, out s); }
+            if (match.Groups[4].Success && !float.TryParse(match.Groups[4].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out s)) return false;
 
             h = (h + m / 60 + s / 3600) * nsew;
+            if (float.IsNaN(h) || float.IsInfinity(h)) return false;
+
+            // the loops below never end on a huge value
+            h %= range * 2;
 
             while (h > range) { h -= range * 2; }
 
             while (h < -range) { h += range * 2; }
 
-            return h;
+            value = h;
+            return true;
         }
 
         private int SortRoutes(MechJebWaypointRoute a, MechJebWaypointRoute b)

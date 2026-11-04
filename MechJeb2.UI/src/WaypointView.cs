@@ -117,21 +117,21 @@ namespace MuMech.UI
             EditFields.Field(w, limits, () => m._tmpRadius, s =>
             {
                 m._tmpRadius = s;
-                Selected(wp => float.TryParse(s, out wp.Radius));
+                Selected(wp => { if (float.TryParse(s, out float v)) wp.Radius = v; });
             }, 50);
             KodeWindow.Button(limits, "A", () => m.RadiusToRest(m.SelIndex));
             KodeWindow.Label(limits, "- Speed: ");
             EditFields.Field(w, limits, () => m._tmpMinSpeed, s =>
             {
                 m._tmpMinSpeed = s;
-                Selected(wp => float.TryParse(s, out wp.MinSpeed));
+                Selected(wp => { if (float.TryParse(s, out float v)) wp.MinSpeed = v; });
             }, 40);
             KodeWindow.Button(limits, "A", () => m.MinSpeedToRest(m.SelIndex));
             KodeWindow.Label(limits, " - ");
             EditFields.Field(w, limits, () => m._tmpMaxSpeed, s =>
             {
                 m._tmpMaxSpeed = s;
-                Selected(wp => float.TryParse(s, out wp.MaxSpeed));
+                Selected(wp => { if (float.TryParse(s, out float v)) wp.MaxSpeed = v; });
             }, 40);
             KodeWindow.Button(limits, "A", () => m.MaxSpeedToRest(m.SelIndex));
             KodeWindow.FlexibleSpace(limits);
@@ -143,13 +143,13 @@ namespace MuMech.UI
             EditFields.Field(w, coords, () => m._tmpLat, s =>
             {
                 m._tmpLat = s;
-                Selected(wp => wp.Latitude = MechJebModuleWaypointWindow.ParseCoord(s));
+                Selected(wp => { if (MechJebModuleWaypointWindow.TryParseCoord(s, false, out double v)) wp.Latitude = v; });
             }, 125);
             KodeWindow.Label(coords, " -  Lon ");
             EditFields.Field(w, coords, () => m._tmpLon, s =>
             {
                 m._tmpLon = s;
-                Selected(wp => wp.Longitude = MechJebModuleWaypointWindow.ParseCoord(s, true));
+                Selected(wp => { if (MechJebModuleWaypointWindow.TryParseCoord(s, true, out double v)) wp.Longitude = v; });
             }, 125);
             editPanel.gameObject.SetActive(false);
 
