@@ -452,6 +452,8 @@ namespace MuMech.UI
             }
 
             object target = item.Target;
+            double scale = item.Scale;
+            if (scale != 1) return () => scale * g(target);
             return () => g(target);
         }
     }

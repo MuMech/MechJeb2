@@ -748,6 +748,7 @@ namespace MuMech
         private readonly int siSigFigs; //only used with the "SI" format
         private readonly int siMaxPrecision; //only used with the "SI" format
         private readonly int timeDecimalPlaces; //only used with the "TIME" format
+        private readonly double scale; //numbers are multiplied by it before they are formatted
 
         private readonly Func<object, object> getValue;
         private static readonly Dictionary<MemberInfo, Func<object, object>> _getterCache = new Dictionary<MemberInfo, Func<object, object>>();
@@ -766,6 +767,7 @@ namespace MuMech
         public int SiSigFigs => siSigFigs;
         public int SiMaxPrecision => siMaxPrecision;
         public int TimeDecimalPlaces => timeDecimalPlaces;
+        public double Scale => scale;
         public float Width => width;
 
         /// <summary>The value as DrawItem shows it (refreshed like DrawItem does).</summary>
@@ -790,6 +792,7 @@ namespace MuMech
             siSigFigs = attribute.siSigFigs;
             siMaxPrecision = attribute.siMaxPrecision;
             timeDecimalPlaces = attribute.timeDecimalPlaces;
+            scale = attribute.scale;
             width = attribute.width;
 
 
@@ -873,6 +876,7 @@ namespace MuMech
             else if (value is Vector3) doubleValue = ((Vector3)value).magnitude;
             else if (value is EditableDouble) doubleValue = (EditableDouble)value;
             else if (value is IConvertible) doubleValue = Convert.ToDouble(value); // the other numeric types
+            doubleValue *= scale;
 
             if (format == TIME) return GuiUtils.TimeToDHMS(doubleValue, timeDecimalPlaces);
             if (format == ANGLE) return Coordinates.AngleToDMS(doubleValue);
@@ -1076,6 +1080,9 @@ namespace MuMech
         public readonly int siMaxPrecision = -33;
         public int timeDecimalPlaces = 0;
         public float width = -1;
+
+        // multiplies the value before it is formatted: 1000 shows a member in kN as N, so that SI can pick the prefix
+        public double scale = 1;
 
         public ValueInfoItemAttribute(string name, InfoItem.Category category) : base(name, category) { }
     }
