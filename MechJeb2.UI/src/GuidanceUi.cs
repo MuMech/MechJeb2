@@ -58,16 +58,11 @@ namespace MuMech.UI
             w.AddSync(() =>
             {
                 if (active != null && !active()) return;
-                try
-                {
-                    text.Clear();
-                    fill(text);
-                    text.Commit();
-                }
-                catch (Exception)
-                {
-                    // no vessel, no target, no prediction yet: keep what is shown
-                }
+                // a fill that throws keeps what is shown, and KodeWindow.Sync logs it once: no silent catch here,
+                // the active guard is what covers "no vessel, no target, no prediction yet"
+                text.Clear();
+                fill(text);
+                text.Commit();
             });
             return t;
         }
