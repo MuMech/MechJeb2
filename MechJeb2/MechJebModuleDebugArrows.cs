@@ -86,68 +86,89 @@ namespace MuMech
         public override void OnDestroy()
         {
             // Dirty cleanup. I m spending too much time on this already
-            if (comSphere == null)
-                return;
-
-            comSphere.Destroy();
+            // The objects are created when an option is first enabled, so any of them can be null
+            comSphere?.Destroy();
             comSphere = null;
 
-            colSphere.Destroy();
+            colSphere?.Destroy();
             colSphere = null;
-            cotSphere.Destroy();
+            cotSphere?.Destroy();
             cotSphere = null;
 
-            srfVelocityArrow.Destroy();
+            srfVelocityArrow?.Destroy();
             srfVelocityArrow = null;
 
-            obtVelocityArrow.Destroy();
+            obtVelocityArrow?.Destroy();
             obtVelocityArrow = null;
 
-            dotArrow.Destroy();
+            dotArrow?.Destroy();
             dotArrow = null;
 
-            forwardArrow.Destroy();
+            forwardArrow?.Destroy();
             forwardArrow = null;
             //avgForwardArrow.Destroy();
             //avgForwardArrow = null;
 
-            requestedAttitudeArrow.Destroy();
+            requestedAttitudeArrow?.Destroy();
             requestedAttitudeArrow = null;
 
-            debugArrow.Destroy();
+            debugArrow?.Destroy();
             debugArrow = null;
 
-            debugArrow2.Destroy();
+            debugArrow2?.Destroy();
             debugArrow2 = null;
+        }
+
+        private static void HideAll()
+        {
+            comSphere?.State(false);
+            colSphere?.State(false);
+            cotSphere?.State(false);
+            srfVelocityArrow?.State(false);
+            obtVelocityArrow?.State(false);
+            dotArrow?.State(false);
+            forwardArrow?.State(false);
+            requestedAttitudeArrow?.State(false);
+            debugArrow?.State(false);
+            debugArrow2?.State(false);
         }
 
         // TODO : I should probably use an array and an enum to lower code dup ...
         public override void OnUpdate()
         {
             if (Vessel != FlightGlobals.ActiveVessel)
-                return;
-
-            if (comSphere == null)
             {
-                comSphere = new DebugIcoSphere(XKCDColors.BloodRed, true);
+                // The objects are shared and only the active vessel's module drives them: if that vessel has no
+                // MechJeb, nothing else would hide them (a switch to a vessel with one is handled by its own module)
+                if (FlightGlobals.ActiveVessel.GetMasterMechJeb() == null)
+                    HideAll();
 
-                colSphere = new DebugIcoSphere(XKCDColors.Teal, true);
-                cotSphere = new DebugIcoSphere(XKCDColors.PurplePink, true);
-
-                srfVelocityArrow = new DebugArrow(Color.green);
-                obtVelocityArrow = new DebugArrow(Color.red);
-
-                dotArrow = new DebugArrow(XKCDColors.PurplePink);
-
-                forwardArrow = new DebugArrow(XKCDColors.ElectricBlue);
-                //avgForwardArrow = new DebugArrow(Color.blue);
-
-                requestedAttitudeArrow = new DebugArrow(Color.gray);
-
-                debugArrow = new DebugArrow(XKCDColors.Fuchsia);
-                debugArrow2 = new DebugArrow(XKCDColors.LightBlue);
+                return;
             }
 
+            // Each object is created the first time its option is enabled
+            if (comSphereActive)
+                comSphere ??= new DebugIcoSphere(XKCDColors.BloodRed, true);
+            if (colSphereActive)
+                colSphere ??= new DebugIcoSphere(XKCDColors.Teal, true);
+            if (cotSphereActive)
+                cotSphere ??= new DebugIcoSphere(XKCDColors.PurplePink, true);
+
+            if (srfVelocityArrowActive)
+                srfVelocityArrow ??= new DebugArrow(Color.green);
+            if (obtVelocityArrowActive)
+                obtVelocityArrow ??= new DebugArrow(Color.red);
+            if (dotArrowActive)
+                dotArrow ??= new DebugArrow(XKCDColors.PurplePink);
+            if (forwardArrowActive)
+                forwardArrow ??= new DebugArrow(XKCDColors.ElectricBlue);
+            //avgForwardArrow = new DebugArrow(Color.blue);
+            if (requestedAttitudeArrowActive)
+                requestedAttitudeArrow ??= new DebugArrow(Color.gray);
+            if (debugArrowActive)
+                debugArrow ??= new DebugArrow(XKCDColors.Fuchsia);
+            if (debugArrow2Active)
+                debugArrow2 ??= new DebugArrow(XKCDColors.LightBlue);
 
             Vector3d frameVel =
                 (VesselState.OrbitalVelocity - Krakensbane.GetFrameVelocity() - Vessel.orbit.GetRotFrameVel(Vessel.orbit.referenceBody).xzy) *
@@ -158,28 +179,28 @@ namespace MuMech
                 ? instantCoM
                 : (Vector3d)Vessel.ReferenceTransform.position;
 
-            comSphere.State(comSphereActive && Core.ShowGui);
+            comSphere?.State(comSphereActive && Core.ShowGui);
             if (comSphereActive)
             {
                 comSphere.Set(instantCoM);
                 comSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            colSphere.State(colSphereActive && VesselState.CoLWeightSum > 0 && Core.ShowGui);
+            colSphere?.State(colSphereActive && VesselState.CoLWeightSum > 0 && Core.ShowGui);
             if (colSphereActive)
             {
                 colSphere.Set(VesselState.CoL + frameVel);
                 colSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            cotSphere.State(cotSphereActive && VesselState.CoTWeightSum > 0 && Core.ShowGui);
+            cotSphere?.State(cotSphereActive && VesselState.CoTWeightSum > 0 && Core.ShowGui);
             if (cotSphereActive)
             {
                 cotSphere.Set(VesselState.CoT + frameVel);
                 cotSphere.SetRadius((float)comSphereRadius.Val);
             }
 
-            srfVelocityArrow.State(srfVelocityArrowActive && Core.ShowGui);
+            srfVelocityArrow?.State(srfVelocityArrowActive && Core.ShowGui);
             if (srfVelocityArrowActive)
             {
                 srfVelocityArrow.Set(arrowPos, Vessel.srf_velocity);
@@ -187,7 +208,7 @@ namespace MuMech
                 srfVelocityArrow.SeeThrough(seeThrough);
             }
 
-            obtVelocityArrow.State(obtVelocityArrowActive && Core.ShowGui);
+            obtVelocityArrow?.State(obtVelocityArrowActive && Core.ShowGui);
             if (obtVelocityArrowActive)
             {
                 obtVelocityArrow.Set(arrowPos, Vessel.obt_velocity);
@@ -195,7 +216,7 @@ namespace MuMech
                 obtVelocityArrow.SeeThrough(seeThrough);
             }
 
-            dotArrow.State(dotArrowActive && VesselState.ThrustCurrent > 0 && Core.ShowGui);
+            dotArrow?.State(dotArrowActive && VesselState.ThrustCurrent > 0 && Core.ShowGui);
             if (dotArrowActive)
             {
                 dotArrow.Set(VesselState.CoT + frameVel, VesselState.DoT);
@@ -203,7 +224,7 @@ namespace MuMech
                 dotArrow.SeeThrough(seeThrough);
             }
 
-            forwardArrow.State(forwardArrowActive && Core.ShowGui);
+            forwardArrow?.State(forwardArrowActive && Core.ShowGui);
             if (forwardArrowActive)
             {
                 forwardArrow.Set(arrowPos, Vessel.GetTransform().up);
@@ -221,7 +242,7 @@ namespace MuMech
             }
             */
 
-            requestedAttitudeArrow.State(requestedAttitudeArrowActive && Core.Attitude.Enabled && Core.ShowGui);
+            requestedAttitudeArrow?.State(requestedAttitudeArrowActive && Core.Attitude.Enabled && Core.ShowGui);
             if (requestedAttitudeArrowActive && Core.Attitude.Enabled)
             {
                 requestedAttitudeArrow.Set(arrowPos, Core.Attitude.RequestedAttitude);
@@ -229,7 +250,7 @@ namespace MuMech
                 requestedAttitudeArrow.SeeThrough(seeThrough);
             }
 
-            debugArrow.State(debugArrowActive && Core.ShowGui);
+            debugArrow?.State(debugArrowActive && Core.ShowGui);
             if (debugArrowActive)
             {
                 debugArrow.Set(Vessel.ReferenceTransform.position, debugVector);
@@ -237,7 +258,7 @@ namespace MuMech
                 debugArrow.SeeThrough(seeThrough);
             }
 
-            debugArrow2.State(debugArrow2Active && Core.ShowGui);
+            debugArrow2?.State(debugArrow2Active && Core.ShowGui);
             if (debugArrow2Active)
             {
                 Vector3d vector3d = VesselState.CoL - instantCoM + frameVel;
@@ -289,13 +310,28 @@ namespace MuMech
             _coneMeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _coneMeshRenderer.receiveShadows = false;
 
-            SeeThrough(seeThrough);
+            this.seeThrough = seeThrough;
+            ApplyShader();
         }
 
         public void Destroy()
         {
-            if (gameObject != null)
-                Object.Destroy(gameObject);
+            if (gameObject == null)
+                return;
+
+            // Destroying the GameObject leaves the instantiated meshes and materials behind
+            DestroyMeshAndMaterial(haft, _haftMeshRenderer);
+            DestroyMeshAndMaterial(cone, _coneMeshRenderer);
+            Object.Destroy(gameObject);
+        }
+
+        internal static void DestroyMeshAndMaterial(GameObject go, MeshRenderer renderer)
+        {
+            if (go != null && go.TryGetComponent(out MeshFilter filter) && filter.sharedMesh != null)
+                Object.Destroy(filter.sharedMesh);
+
+            if (renderer != null && renderer.sharedMaterial != null)
+                Object.Destroy(renderer.sharedMaterial);
         }
 
         public void SeeThrough(bool state)
@@ -303,9 +339,19 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _coneMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
-                _haftMeshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+                ApplyShader();
             }
+        }
+
+        // The field starts at the constructor's value, so the first shader has to be applied there. The bundle's shaders can be null if it failed to load.
+        private void ApplyShader()
+        {
+            Shader shader = seeThrough ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+            if (shader == null)
+                return;
+
+            _coneMeshRenderer.material.shader = shader;
+            _haftMeshRenderer.material.shader = shader;
         }
 
         public void SetLength(float length)
@@ -572,10 +618,18 @@ namespace MuMech
             _meshRenderer.receiveShadows = false;
 
             SetRadius(0.09f);
-            SeeThrough(seeThrough);
+            this.seeThrough = seeThrough;
+            ApplyShader();
         }
 
-        public void Destroy() => Object.Destroy(gameObject);
+        public void Destroy()
+        {
+            if (gameObject == null)
+                return;
+
+            DebugArrow.DestroyMeshAndMaterial(gameObject, _meshRenderer);
+            Object.Destroy(gameObject);
+        }
 
         public void Set(Vector3d position) => gameObject.transform.position = position;
 
@@ -598,8 +652,15 @@ namespace MuMech
             if (seeThrough != state)
             {
                 seeThrough = state;
-                _meshRenderer.material.shader = state ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+                ApplyShader();
             }
+        }
+
+        private void ApplyShader()
+        {
+            Shader shader = seeThrough ? MechJebBundlesManager.diffuseAmbientIgnoreZ : MechJebBundlesManager.diffuseAmbient;
+            if (shader != null)
+                _meshRenderer.material.shader = shader;
         }
 
         private static GameObject CreateIcoSphere(float radius, int recursionLevel = 3)
