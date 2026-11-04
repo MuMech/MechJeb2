@@ -12,6 +12,8 @@ namespace KodeKit
     /// KodeUI window. A placeholder cell takes part in the uGUI layout; one OnGUI draws every block with
     /// GUILayout.BeginArea over its placeholder and feeds the measured height back to the layout.
     /// Limits: IMGUI draws over all uGUI (an overlapping window does not hide it), and it keeps IMGUI's per-frame cost.
+    /// Remove ImguiBlock once we know that no mod publishes info items: they are the main reason it stays. Its other users
+    /// (maneuver operations from other mods, the autostage settings, the waypoint map marker) would need a port first.
     /// </summary>
     public class ImguiBlock
     {
