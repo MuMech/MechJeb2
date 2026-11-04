@@ -76,7 +76,7 @@ namespace MechJebLib.Maneuvers
 
             (V3 r1, V3 v1) = Shepperd.Solve(mu, dt, r, v);
             var h = V3.Cross(r1, v1);
-            return Astro.CircularVelocityFromHvec(mu, r, h) - v1;
+            return Astro.CircularVelocityFromHvec(mu, r1, h) - v1;
         }
 
         public static (V3 dv, double dt) ManeuverToCircularizeAtPeriapsis(double mu, V3 r, V3 v)
