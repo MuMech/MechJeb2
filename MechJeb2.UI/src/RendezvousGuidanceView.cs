@@ -62,8 +62,8 @@ namespace MuMech.UI
                 ct.AppendSI(Core.Target.TargetOrbit.PeA, 3).Append("m x ").AppendSI(Core.Target.TargetOrbit.ApA, 3).Append('m'), on);
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label5", "-1.23 Mm x 123 Gm", ct => //"Current orbit"
                 ct.AppendSI(guidance.Orbit.PeA, 3).Append("m x ").AppendSI(guidance.Orbit.ApA, 3).Append('m'), on);
-            GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label6", "-180.00º", ct => //"Relative inclination"
-                ct.Append(guidance.Orbit.RelativeInclination(Core.Target.TargetOrbit), 2).Append('º'), on);
+            GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label6", "-180.00°", ct => //"Relative inclination"
+                ct.Append(guidance.Orbit.RelativeInclination(Core.Target.TargetOrbit), 2).Append('°'), on);
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label7", "123y 123d 12h 12m 12s", ct => //"Time until closest approach"
                 ct.AppendDHMS(closestApproachTime - guidance.VesselState.Time, 0, GuidanceUi.HoursPerDay, GuidanceUi.DaysPerYear), on);
             GuidanceUi.Pair(w, main, "#MechJeb_RZplan_label8", "1234 Mm", ct => //"Separation at closest approach"

@@ -60,7 +60,7 @@ namespace MuMech.UI
             Layout phase = KodeWindow.Row(r);
             KodeWindow.Label(phase, "#MechJeb_WarpHelper_label4"); //"Phase Angle:"
             EditUi.Field(w, phase, () => helper.phaseAngle, 60);
-            KodeWindow.Label(phase, "º");
+            KodeWindow.Label(phase, "°");
             w.Visible(phase.gameObject, () => helper.warpTarget == MechJebModuleWarpHelper.WarpTarget.PhaseAngleT && TargetExists());
 
             Layout lead = KodeWindow.Row(r);
