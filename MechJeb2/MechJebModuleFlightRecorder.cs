@@ -108,8 +108,20 @@ namespace MuMech
 
         public int HistoryIdx = -1;
 
-        [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
-        public readonly int HistorySize = 3000;
+        // The most samples History holds (144 bytes each). History starts small and doubles up to it; once full, recording
+        // stops until the next Mark. A larger value takes effect when History next fills up (recording goes on if it had
+        // stopped), a smaller one at the next Mark.
+        [Persistent(pass = (int)Pass.GLOBAL)]
+        public int HistorySize = 3000;
+
+        public const int MIN_HISTORY_SIZE = 100;
+        public const int MAX_HISTORY_SIZE = 99999; // 5 digits: what the window's field shows
+
+        // what History starts with: a vessel left on the pad or flown for a minute needs no more
+        private const int INITIAL_HISTORY_SIZE = 256;
+
+        // HistorySize as edited in the config file can be anything
+        public int MaxHistorySize => Math.Min(Math.Max(HistorySize, MIN_HISTORY_SIZE), MAX_HISTORY_SIZE);
 
         [UsedImplicitly, Persistent(pass = (int)Pass.GLOBAL)]
         public readonly double Precision = 0.2;
@@ -237,6 +249,9 @@ namespace MuMech
                 Maximums[t] = double.MinValue;
             }
 
+            // a lowered HistorySize applies from here
+            if (History.Length > MaxHistorySize)
+                AllocateHistory();
             HistoryIdx = 0;
             Record(HistoryIdx);
         }
@@ -251,15 +266,20 @@ namespace MuMech
 
         public override void OnStart(PartModule.StartState state)
         {
-            if (History.Length != HistorySize)
-                History = new RecordStruct[HistorySize];
             Users.Add(this); //flight recorder should always run.
         }
 
         private double _lastRecordTime;
 
+        // Not in OnStart: only the vessel's master core runs OnFixedUpdate, so the other MechJeb parts of a vessel never
+        // allocate a History they would not use.
+        private void AllocateHistory() => History = new RecordStruct[Math.Min(INITIAL_HISTORY_SIZE, MaxHistorySize)];
+
         public override void OnFixedUpdate()
         {
+            if (History.Length < MIN_HISTORY_SIZE)
+                AllocateHistory();
+
             if (MarkUT == 0) Mark();
 
             TimeSinceMark = VesselState.Time - MarkUT;
@@ -284,6 +304,10 @@ namespace MuMech
             //int oldHistoryIdx = historyIdx;
 
             //historyIdx = Mathf.Min(Mathf.FloorToInt((float)(timeSinceMark / precision)), history.Length - 1);
+
+            // full: grow up to the max
+            if (HistoryIdx >= History.Length - 1 && History.Length < MaxHistorySize)
+                Array.Resize(ref History, Math.Min(History.Length * 2, MaxHistorySize));
 
             if (VesselState.Time >= _lastRecordTime + Precision && HistoryIdx < History.Length - 1)
             {

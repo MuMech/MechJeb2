@@ -145,7 +145,7 @@ namespace MuMech.UI
             if (storageText == null || idx != shownIdx)
             {
                 shownIdx = idx;
-                storageText = Localizer.Format("#MechJeb_Flightrecord_Label3", (100 * idx / (float)Rec.History.Length).ToString("F1")); //Storage: <<1>> %
+                storageText = Localizer.Format("#MechJeb_Flightrecord_Label3", (100 * idx / (float)Math.Max(Rec.History.Length, Rec.MaxHistorySize)).ToString("F1")); //Storage: <<1>> %
             }
 
             return storageText;
@@ -166,6 +166,34 @@ namespace MuMech.UI
             }
 
             return scaleText;
+        }
+
+        // the max samples field: the text as typed, until it is a size the recorder takes
+        string historySizeText;
+
+        string HistorySizeText() => historySizeText ?? (Rec == null ? "" : Number(Rec.HistorySize));
+
+        bool ParseHistorySize(string s, out int size) =>
+            int.TryParse(s, out size) && size >= MechJebModuleFlightRecorder.MIN_HISTORY_SIZE && size <= MechJebModuleFlightRecorder.MAX_HISTORY_SIZE;
+
+        void SetHistorySize(string s)
+        {
+            if (Rec != null && ParseHistorySize(s, out int size))
+            {
+                Rec.HistorySize = size;
+                historySizeText = null;
+            }
+            else historySizeText = s;
+        }
+
+        // "Max [3000]": how many samples the recorder keeps before it stops (144 bytes each). Short, so the
+        // chips beside it keep to two lines; the field is as wide as 5 digits
+        void HistorySizeField(KodeWindow w, UIObject parent)
+        {
+            Layout row = KodeWindow.Row(parent);
+            row.FlexibleLayout(0f, 0f);
+            KodeWindow.Label(row, KodeWindow.Loc("#MechJeb_Flightrecord_Label4")); //Max
+            EditFields.Field(w, row, HistorySizeText, SetHistorySize, 50, () => historySizeText == null);
         }
 
         static string Number(int n) => InfoText.Int(n);
@@ -356,6 +384,9 @@ namespace MuMech.UI
                 Colorize(w, w.Toggle(toggles, info.Label, () => g.displayed[(int)type], v => g.displayed[(int)type] = v), info.Color);
             }
 
+            KodeWindow.FlexibleSpace(toggles);
+            HistorySizeField(w, toggles);
+
             BuildPlot(w, r);
         }
 
@@ -421,13 +452,18 @@ namespace MuMech.UI
             UIText storage = w.BoundLabel(options, Localizer.Format("#MechJeb_Flightrecord_Label3", "100.0"), StorageText);
             KodeWindow.ToneText(storage, KodeWindow.Tone.Dim);
 
-            Layout chips = KodeWindow.FlowWrap(r, 4);
+            // the chips wrap; the max samples field sits at the right end of their last line
+            Layout chipsRow = KodeWindow.Row(r);
+            chipsRow.ChildAlignment(TextAnchor.LowerLeft);
+            Layout chips = KodeWindow.FlowWrap(chipsRow, 4);
             w.Chip(chips, "#MechJeb_Flightrecord_checkbox3", () => g.stages, v => g.stages = v); //"Stages"
             foreach (MechJebModuleFlightRecorderGraph.GraphInfo info in MechJebModuleFlightRecorderGraph.graphInfos)
             {
                 RecordType type = info.Type;
                 w.Chip(chips, info.Label, () => g.displayed[(int)type], v => g.displayed[(int)type] = v, info.Color);
             }
+
+            HistorySizeField(w, chipsRow);
         }
 
         /// <summary>[−] value [+] on a value the window computes (a scale, a plot size): a stepper without a field.</summary>
