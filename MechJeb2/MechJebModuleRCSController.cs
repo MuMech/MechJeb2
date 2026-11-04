@@ -31,7 +31,7 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL)), EditableInfoItem("#MechJeb_RCSTf", InfoItem.Category.Thrust)]
         //RCS Tf
-        public EditableDouble Tf = 1;
+        public readonly EditableDouble Tf = 1;
 
         [Persistent(pass = (int)(Pass.LOCAL | Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble Kp = 0.125;
@@ -82,13 +82,17 @@ namespace MuMech
             }
             else
             {
-                Tf = Math.Max(Tf, 0.02);
+                if (Tf.Val < 0.02)
+                    Tf.Val = 0.02;
 
                 pid.Kp = 0.53 / (3 * Math.Sqrt(2) * Tf * Tf);
                 pid.Ki = pid.Kp / (12 * Math.Sqrt(2) * Tf);
 
-                Kp.Val = pid.Kp;
-                Ki.Val = pid.Ki;
+                // only write when changed: each write rebuilds the text and allocates
+                if (Kp.Val != pid.Kp)
+                    Kp.Val = pid.Kp;
+                if (Ki.Val != pid.Ki)
+                    Ki.Val = pid.Ki;
             }
         }
 
