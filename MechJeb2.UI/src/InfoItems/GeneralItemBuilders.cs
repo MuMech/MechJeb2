@@ -66,7 +66,7 @@ namespace MuMech.UI
             ["General:SmartRcs.AutoDisableSmartRCS"] = (w, p, t, r) =>
             {
                 var s = (MechJebModuleSmartRcs)t;
-                w.Toggle(p, "#MechJeb_SmartRcs_checkbox1 ", () => s.autoDisableSmartRCS, v => s.autoDisableSmartRCS = v); //"Disable SmartRcs automatically"
+                w.Toggle(p, "#MechJeb_SmartRcs_checkbox1", () => s.autoDisableSmartRCS, v => s.autoDisableSmartRCS = v); //"Disable SmartRcs automatically"
             },
 
             // MechJebModuleThrustController, MechJebModuleThrustWindow, MechJebModuleWarpController
