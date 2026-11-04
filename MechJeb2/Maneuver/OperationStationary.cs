@@ -53,21 +53,18 @@ namespace MuMech
                 throw new OperationException(Localizer.Format("#MechJeb_stationary_Exception1", o.referenceBody.displayName.LocalizeRemoveGender()));
             }
 
+            // The orbit's epoch is ut, which is later when a node already exists: aim for the point above the target longitude
+            // then, which is the point above targetLongitude + turn now. On a 6 h day, a node an hour out turns it by 60 degrees,
+            // and a body that rotates retrograde has a negative rotationPeriod, so a negative turn.
+            double turn = 360 * (ut - Planetarium.GetUniversalTime()) / o.referenceBody.rotationPeriod;
             double syncAlt = syncSMA - o.referenceBody.Radius;
-            Vector3d targetWorldPos = o.referenceBody.GetWorldSurfacePosition(0, targetLongitude, syncAlt);
+            Vector3d targetWorldPos = o.referenceBody.GetWorldSurfacePosition(0, targetLongitude + turn, syncAlt);
             Vector3d radiusVector = targetWorldPos - o.referenceBody.position;
             double velMag = Math.Sqrt(o.referenceBody.gravParameter / syncSMA);
             Vector3d velDir = Vector3d.Cross(o.referenceBody.angularVelocity, radiusVector).normalized;
 
-            // That is the point above the target longitude now. The orbit's epoch is ut, which is later when a node already
-            // exists, so turn the point with the body until then: on a 6 h day, a node an hour out moves it by 60 degrees.
-            // velDir is the way the body turns, whichever that is.
-            double turn = 2 * Math.PI * (ut - Planetarium.GetUniversalTime()) / Math.Abs(o.referenceBody.rotationPeriod);
-            Vector3d radiusAtUT = radiusVector * Math.Cos(turn) + velDir * radiusVector.magnitude * Math.Sin(turn);
-            Vector3d velocityAtUT = (velDir * Math.Cos(turn) - radiusVector.normalized * Math.Sin(turn)) * velMag;
-
             // world vectors, which OrbitFromStateVectors turns into the orbit's frame
-            Orbit targOrbit = MuUtils.OrbitFromStateVectors(o.referenceBody.position + radiusAtUT, velocityAtUT, o.referenceBody, ut);
+            Orbit targOrbit = MuUtils.OrbitFromStateVectors(targetWorldPos, velDir * velMag, o.referenceBody, ut);
             targOrbit.eccentricity = 0;
             targOrbit.inclination = 0;
             targOrbit.Init();
