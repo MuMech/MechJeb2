@@ -750,6 +750,7 @@ namespace MuMech
                 }
 
                 _pid.Reset();
+                _transPrevThrust = LastThrottle;
                 _tmodeChanged = false;
                 FlightInputHandler.SetNeutralControls();
             }

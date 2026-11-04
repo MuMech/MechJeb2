@@ -206,7 +206,7 @@ namespace MuMech.AttitudeControllers
         {
             UpdatePredictionPI();
 
-            deltaEuler = _error * Mathf.Rad2Deg;
+            deltaEuler = Vector3d.Scale(_error, Ac.AxisControl) * Mathf.Rad2Deg;
 
             for (int i = 0; i < 3; i++)
                 if (Abs(_actuation[i]) < EPS || double.IsNaN(_actuation[i]))
@@ -274,7 +274,7 @@ namespace MuMech.AttitudeControllers
                         _posPID[i].SmoothOut = Clamp01(PosSmoothOut);
                         _posPID[i].MinOutput = -maxOmega;
                         _posPID[i].MaxOutput = maxOmega;
-                        _posPID[i].IntegralDeadband = PosDeadband * maxOmega;
+                        _posPID[i].IntegralDeadband = PosDeadband * (double.IsInfinity(maxOmega) ? _maxAlpha[i] * MaxStoppingTime : maxOmega);
                         _posPID[i].Clegg = PosClegg;
 
                         _targetOmega[i] = _posPID[i].Update(_desired[i], _current[i]);
