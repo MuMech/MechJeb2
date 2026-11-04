@@ -22,7 +22,7 @@ namespace MechJebLibTest.FunctionsTests
                 yield return new object[] { i };
         }
 
-        // the burn is on the parking orbit dt after the reference, and leaves it on a hyperbola with the requested v-infinity speed
+        // the burn is on the parking orbit dt after the reference, and leaves it on a hyperbola with the requested v-infinity
         [Theory]
         [MemberData(nameof(Seeds))]
         public void RandomOrbitsReachTheBurnAndTheSpeed(int seed)
@@ -45,6 +45,12 @@ namespace MechJebLibTest.FunctionsTests
             vBurn.ShouldEqual(vNeg, 1e-8);
 
             (0.5 * vPos.sqrMagnitude - 1.0 / r.magnitude).ShouldEqual(0.5 * vInf.sqrMagnitude, 1e-8);
+
+            // and it leaves along vInf: the outgoing asymptote is (sqrt(e^2 - 1) (h^ x e^) - e^) / e, with e the eccentricity vector
+            V3 eVec = Astro.EccVecFromStateVectors(1.0, r, vPos);
+            double e = eVec.magnitude;
+            V3 asymptote = (Sqrt(e * e - 1) * V3.Cross(V3.Cross(r, vPos).normalized, eVec / e) - eVec / e) / e;
+            Assert.True((asymptote - vInf.normalized).magnitude < 1e-8, $"leaves along {asymptote}, not {vInf.normalized}");
         }
 
         // An ellipse with its periapsis on +x, the reference at the apoapsis, and a v-infinity that puts the burn there too.

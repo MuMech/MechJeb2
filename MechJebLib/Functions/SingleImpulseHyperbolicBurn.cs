@@ -43,33 +43,8 @@ namespace MechJebLib.Functions
         /// </summary>
         private static ( V3 vNeg, V3 vPos, V3 r, double dt) SolveOptimized(double mu, V3 r0, V3 v0, V3 vInf, bool debug = false, double rtol = 1e-6)
         {
-            // FIXME: it isn't entirely clear what this bracket should be.
-            // The cost over it needn't have one minimum, which can make Brent run out of iterations: scan it coarsely first, and
-            // search only around the best sample, which is kept if the search still fails.
-            const int SAMPLES = 12;
-            const double STEP = PI / SAMPLES;
-            int best = 0;
-            double bestCost = double.PositiveInfinity;
-            for (int i = 0; i <= SAMPLES; i++)
-            {
-                double cost = Func(-PI / 2 + i * STEP, null);
-                if (cost < bestCost)
-                {
-                    bestCost = cost;
-                    best = i;
-                }
-            }
-
-            double rot = -PI / 2 + best * STEP;
-            try
-            {
-                (rot, _) = BrentMin.Solve(Func, Max(-PI / 2, rot - STEP), Min(PI / 2, rot + STEP), null, rtol);
-            }
-            catch (TimeoutException)
-            {
-                // keep the best sample
-            }
-
+            // FIXME: it isn't entirely clear what this bracket should be
+            (double rot, _) = BrentMin.Solve(Func, -PI / 2, PI / 2, null, rtol);
             return SolveAnalytic(mu, r0, v0, vInf, rot, debug);
 
             double Func(double testrot, object? o)
@@ -178,13 +153,12 @@ namespace MechJebLib.Functions
             // constant
             double k = -af / r1;
 
-            // angle between vInf and the r1 burn
-            double deltaNu = SafeAcos(V3.Dot(r1Hat, vInfHat));
+            // cosine and sine of the angle between vInf and the r1 burn (0 to pi): straight from the vectors, exact at 0 and pi
+            double cosdnu = V3.Dot(r1Hat, vInfHat);
+            double sindnu = V3.Cross(r1Hat, vInfHat).magnitude;
+            double sin2dnu = sindnu * sindnu;
 
             // eccentricity of the hyperbolic ejection orbit
-            double sindnu = Sin(deltaNu);
-            double sin2dnu = sindnu * sindnu;
-            double cosdnu = Cos(deltaNu);
             double ef = Max(
                 Sqrt(sin2dnu + 2 * k * k + 2 * k * (1 - cosdnu) + sindnu * Sqrt(sin2dnu + 4 * k * (1 - cosdnu))) / (Sqrt(2) * k),
                 1 + EPS);
@@ -195,8 +169,11 @@ namespace MechJebLib.Functions
             // true anomaly of the vInf on the hyperbolic ejection orbit
             /*double nuInf = SafeAcos(-1 / ef);*/
 
-            // true anomaly of the burn on the hyperbolic ejection orbit
-            double nu1F = SafeAcos(-1 / ef * cosdnu + Sqrt(ef * ef - 1) / ef * sindnu);
+            // true anomaly of the burn on the hyperbolic ejection orbit: nuInf - deltaNu, with cos(nuInf) = -1/ef and
+            // sin(nuInf) = sqrt(ef^2 - 1)/ef. It is negative for a burn before the periapsis: acos dropped that sign, and the
+            // burn then left on the mirror image of the hyperbola, with its asymptote off vInf.
+            double sqrtEf2M1 = Sqrt(ef * ef - 1);
+            double nu1F = Atan2(sqrtEf2M1 * cosdnu + sindnu, sqrtEf2M1 * sindnu - cosdnu);
 
             // turning angle of the hyperbolic orbit
             double delta = 2 * SafeAsin(1 / ef);
