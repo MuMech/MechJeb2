@@ -62,8 +62,9 @@ namespace MuMech
         [ValueInfoItem("#MechJeb_ThrottleTWR", InfoItem.Category.Vessel, format = "F2", showInEditor = false)] //Throttle TWR
         public double ThrottleTWR() => VesselState.ThrustCurrent / (VesselState.Mass * VesselState.GravityForce.magnitude);
 
-        [ValueInfoItem("#MechJeb_AtmosphericPressurePa", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa")] //Atmospheric pressure (Pa)
-        public double AtmosphericPressurekPa() => FlightGlobals.getStaticPressure(VesselState.CoM) * 1000;
+        // in kPa, as its name says; the item shows it in Pa so that SI picks the prefix
+        [ValueInfoItem("#MechJeb_AtmosphericPressurePa", InfoItem.Category.Misc, format = ValueInfoItem.SI, units = "Pa", scale = 1000)] //Atmospheric pressure (Pa)
+        public double AtmosphericPressurekPa() => FlightGlobals.getStaticPressure(VesselState.CoM);
 
         [ValueInfoItem("#MechJeb_AtmosphericPressure", InfoItem.Category.Misc, format = "F3", units = "atm")] //Atmospheric pressure
         public double AtmosphericPressure() => FlightGlobals.getStaticPressure(VesselState.CoM) * PhysicsGlobals.KpaToAtmospheres;
