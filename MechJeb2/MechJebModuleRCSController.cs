@@ -155,7 +155,7 @@ namespace MuMech
                     break;
 
                 case ControlType.VELOCITY_TARGET_REL:
-                    if (Core.Target.Target == null)
+                    if (!Core.Target.NormalTargetExists)
                     {
                         rcsDeactivate();
                         return;
