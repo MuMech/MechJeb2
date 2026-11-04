@@ -35,12 +35,11 @@ namespace MuMech.MechJebKos
                 "Local TWR."));
             AddSuffix("THROTTLETWR", new Suffix<ScalarValue>(() => Module.ThrottleTWR(),
                 "Throttle TWR."));
-            AddSuffix("ATMOSPHERICPRESSUREPA", new Suffix<ScalarValue>(() => 1000 * Module.AtmosphericPressurekPa(),
-                "Atmospheric pressure (Pa)."));
             AddSuffix("ATMOSPHERICPRESSUREKPA", new Suffix<ScalarValue>(() => Module.AtmosphericPressurekPa(),
                 "Atmospheric pressure (kPa)."));
-            AddSuffix("ATMOSPHERICPRESSURE", new Suffix<ScalarValue>(() => Module.AtmosphericPressure(),
-                "Atmospheric pressure."));
+            // ATMOSPHERICPRESSURE is the old name, kept for existing scripts
+            AddSuffix(new[] { "ATMOSPHERICPRESSUREATM", "ATMOSPHERICPRESSURE" }, new Suffix<ScalarValue>(() => Module.AtmosphericPressure(),
+                "Atmospheric pressure (atm)."));
             AddSuffix("GETCOORDINATESTRING", new Suffix<StringValue>(() => Module.GetCoordinateString(),
                 "Coordinates."));
             AddSuffix("MEANANOMALY", new Suffix<ScalarValue>(() => Module.MeanAnomaly(),
