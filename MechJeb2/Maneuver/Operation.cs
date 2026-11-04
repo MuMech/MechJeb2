@@ -55,11 +55,21 @@ namespace MuMech
 
                 // PlaceManeuverNode would throw on these, once the planner had started changing the existing nodes
                 ManeuverParameters? bad = nodes?.Find(n => !n.dV.IsFinite() || !n.UT.IsFinite());
-                if (bad == null)
+                if (bad != null)
+                {
+                    Debug.LogError($"[MechJeb] {GetName()} made a bad node: dV {bad.dV} at UT {bad.UT}");
+                    ErrorMessage = Localizer.Format("#MechJeb_Maneu_errorMessage"); //An error occurred while creating the node.
+                    return null;
+                }
+
+                // PlaceManeuverNode would move such a node to now, or the orbit after the last node would be the wrong one for it,
+                // and either way the dV was computed for another point of the orbit. A second of round-off is let through.
+                ManeuverParameters? past = nodes?.Find(n => n.UT < universalTime - 1);
+                if (past == null)
                     return nodes;
 
-                Debug.LogError($"[MechJeb] {GetName()} made a bad node: dV {bad.dV} at UT {bad.UT}");
-                ErrorMessage = Localizer.Format("#MechJeb_Maneu_errorMessage"); //An error occurred while creating the node.
+                Debug.LogWarning($"[MechJeb] {GetName()} made a node at UT {past.UT}, before the start at {universalTime}");
+                ErrorMessage = Localizer.Format("#MechJeb_Maneu_pastNodeError"); //The burn would be before the start of the orbit it is planned on.
                 return null;
             }
             catch (OperationException e)

@@ -380,7 +380,8 @@ namespace MuMech
 
             double inc = _targetInclinationFlag ? _targetInclination.Val : double.NaN;
 
-            return OrbitalManeuverCalculator.OptimizeEjectionToTarget(o, target, targetPeR, epoch, arrivalDt, arrivalDtLower, arrivalDtUpper, inc);
+            // the burn mustn't come before the start of the orbit it is planned on: ASAP's epoch is that start, and an old plot's is before it
+            return OrbitalManeuverCalculator.OptimizeEjectionToTarget(o, target, targetPeR, epoch, arrivalDt, arrivalDtLower, arrivalDtUpper, inc, ut);
         }
     }
 }
