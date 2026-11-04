@@ -469,7 +469,7 @@ namespace MuMech
                 float partAreaDrag = 0;
                 for (int f = 0; f < 6; f++)
                 {
-                    partAreaDrag = p.DragCubes.WeightedDrag[f] *
+                    partAreaDrag += p.DragCubes.WeightedDrag[f] *
                         p.DragCubes.AreaOccluded[f]; // * PhysicsGlobals.DragCurveValue(0.5, machNumber) but I ll assume it is 1 for now
                 }
 
