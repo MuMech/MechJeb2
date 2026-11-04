@@ -14,8 +14,12 @@ namespace MuMech
 
             public override AutopilotStep Drive(FlightCtrlState s)
             {
+                // the deorbit burn hands over at full throttle: without a prediction nothing else would close it, and the burn runs on
                 if (!Core.Landing.PredictionReady)
+                {
+                    Core.Thrust.ThrustOff();
                     return this;
+                }
 
                 // If the atomospheric drag is at least 100mm/s2 then start trying to target the overshoot using the parachutes
                 if (Core.Landing.DeployChutes)
@@ -53,6 +57,13 @@ namespace MuMech
                 // We are not in .90 anymore. Turning while under drag is a bad idea
                 if (VesselState.DragAcceleration > 0.1)
                 {
+                    return new CoastToDeceleration(Core);
+                }
+
+                // A vessel that has dropped its engines can't correct anything, and turning towards the burn takes its heat shield off the airflow
+                if (VesselState.LimitedMaxThrustAcceleration <= 0)
+                {
+                    Core.Thrust.ThrustOff();
                     return new CoastToDeceleration(Core);
                 }
 

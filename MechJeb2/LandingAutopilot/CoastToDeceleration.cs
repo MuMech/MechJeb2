@@ -64,7 +64,7 @@ namespace MuMech
                     double currentError = Vector3d.Distance(Core.Target.GetPositionTargetPosition(), Core.Landing.LandingSite);
                     if (currentError > 1000)
                     {
-                        if (!VesselState.ParachuteDeployed &&
+                        if (!VesselState.ParachuteDeployed && VesselState.LimitedMaxThrustAcceleration > 0 &&
                             VesselState.DragAcceleration <=
                             0.1) // However if there is already a parachute deployed or drag is high, then do not bother trying to correct the course as we will not have any attitude control anyway.
                         {
@@ -114,7 +114,7 @@ namespace MuMech
                 }
 
                 //Warp at a rate no higher than the rate that would have us impacting the ground 10 seconds from now:
-                if (_warpReady && Core.Node.Autowarp)
+                if (_warpReady && Core.Node.Autowarp && !Core.Landing.NearJettison)
                 {
                     // Make sure if we're hovering that we don't go straight into too fast of a warp
                     // (g * 5 is average velocity falling for 10 seconds from a hover)
