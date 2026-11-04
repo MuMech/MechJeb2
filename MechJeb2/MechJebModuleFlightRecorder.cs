@@ -1,5 +1,6 @@
 extern alias JetBrainsAnnotations;
 using System;
+using System.Globalization;
 using System.IO;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using static MechJebLib.Utils.Statics;
@@ -354,11 +355,11 @@ namespace MuMech
                 for (int idx = 0; idx <= HistoryIdx; idx++)
                 {
                     RecordStruct r = History[idx];
-                    writer.Write(r[0]);
+                    writer.Write(r[0].ToString(CultureInfo.InvariantCulture));
                     for (int i = 1; i < _typeCount; i++)
                     {
                         writer.Write(',');
-                        writer.Write(r[(RecordType)i]);
+                        writer.Write(r[(RecordType)i].ToString(CultureInfo.InvariantCulture));
                     }
 
                     writer.WriteLine();
