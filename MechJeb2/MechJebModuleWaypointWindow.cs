@@ -62,6 +62,23 @@ namespace MuMech
             Update();
         }
 
+        /// <summary>A copy that shares nothing with the original, for the saved routes.</summary>
+        public MechJebWaypoint Clone() => new MechJebWaypoint(this);
+
+        private MechJebWaypoint(MechJebWaypoint other)
+        {
+            Latitude = other.Latitude;
+            Longitude = other.Longitude;
+            Altitude = other.Altitude;
+            Position = other.Position;
+            Radius = other.Radius;
+            Name = other.Name;
+            Target = other.Target;
+            MinSpeed = other.MinSpeed;
+            MaxSpeed = other.MaxSpeed;
+            Quicksave = other.Quicksave;
+        }
+
         public MechJebWaypoint(ConfigNode node)
         {
             if (node.HasValue("Latitude")) { double.TryParse(node.GetValue("Latitude"), out Latitude); }
@@ -219,6 +236,9 @@ namespace MuMech
         internal MechJebModuleRoverController _ap;
         internal static readonly List<MechJebWaypointRoute> _routes = new List<MechJebWaypointRoute>();
 
+        // routes of a body that is not installed any more, kept as read so that saving does not drop them
+        private static readonly List<ConfigNode> _unresolvedRoutes = new List<ConfigNode>();
+
         [EditableInfoItem("#MechJeb_MohoMapdist", InfoItem.Category.Rover), Persistent(pass = (int)Pass.GLOBAL)]
         // Moho Mapdist
         public readonly EditableDouble MohoMapdist = 5000;
@@ -375,10 +395,18 @@ namespace MuMech
             if (wps.HasNode("Waypoints"))
             {
                 _routes.Clear();
+                _unresolvedRoutes.Clear();
                 RoutesVersion++;
                 foreach (ConfigNode cn in wps.GetNodes("Waypoints"))
                 {
-                    _routes.Add(new MechJebWaypointRoute(cn));
+                    var route = new MechJebWaypointRoute(cn);
+                    if (route.Body == null)
+                    {
+                        _unresolvedRoutes.Add(cn);
+                        continue;
+                    }
+
+                    _routes.Add(route);
                 }
 
                 _routes.Sort(SortRoutes);
@@ -396,6 +424,11 @@ namespace MuMech
                 {
                     cn.AddNode(r.ToConfigNode());
                 }
+            }
+
+            foreach (ConfigNode unresolved in _unresolvedRoutes)
+            {
+                cn.AddNode(unresolved);
             }
 
             cn.Save(MuUtils.GetCfgPath("mechjeb_routes.cfg"));
@@ -583,7 +616,7 @@ namespace MuMech
             return string.Compare(a.Name, b.Name, true);
         }
 
-        public MechJebWaypoint SelectedWaypoint() => SelIndex > -1 ? _ap.Waypoints[SelIndex] : null;
+        public MechJebWaypoint SelectedWaypoint() => SelIndex > -1 && SelIndex < _ap.Waypoints.Count ? _ap.Waypoints[SelIndex] : null;
 
         public int SelectedWaypointIndex
         {
@@ -717,7 +750,7 @@ namespace MuMech
                 _ap.WaypointIndex = -1;
                 _ap.Waypoints.Clear();
             }
-            else if (SelIndex >= 0)
+            else if (SelIndex >= 0 && SelIndex < _ap.Waypoints.Count)
             {
                 _ap.Waypoints.RemoveAt(SelIndex);
                 if (_ap.WaypointIndex > SelIndex) { _ap.WaypointIndex--; }
@@ -837,7 +870,7 @@ namespace MuMech
             {
                 MechJebWaypointRoute old = _routes.Find(r => r.Name == saveName && IsShownRoute(r));
                 var wps = new MechJebWaypointRoute(saveName, Vessel.mainBody);
-                _ap.Waypoints.ForEach(wp => wps.Add(wp));
+                _ap.Waypoints.ForEach(wp => wps.Add(wp.Clone()));
                 if (old == null)
                 {
                     _routes.Add(wps);
@@ -863,9 +896,10 @@ namespace MuMech
                 {
                     _ap.WaypointIndex = -1;
                     _ap.Waypoints.Clear();
+                    SelIndex = -1;
                 }
 
-                bodyRoutes[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp));
+                bodyRoutes[_saveIndex].ForEach(wp => _ap.Waypoints.Add(wp.Clone()));
             }
         }
 
@@ -1182,7 +1216,7 @@ namespace MuMech
                     _currPath.gameObject.layer = _nextPath.gameObject.layer = MapView.MapIsEnabled ? 9 : 0;
 
                 int sel = AP.Core.GetComputerModule<MechJebModuleWaypointWindow>().SelIndex;
-                _selWp.enabled = sel > -1 && !MapView.MapIsEnabled;
+                _selWp.enabled = sel > -1 && sel < AP.Waypoints.Count && !MapView.MapIsEnabled;
                 if (_selWp.enabled)
                 {
                     float w = Vector3.Distance(FlightCamera.fetch.mainCamera.transform.position, AP.Waypoints[sel].Position) / 600f + 0.1f;
