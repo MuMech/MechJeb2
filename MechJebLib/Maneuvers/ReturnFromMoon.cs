@@ -65,6 +65,7 @@ namespace MechJebLib.Maneuvers
         }
 
         private readonly Dual[] _duals = new Dual[NVARIABLES];
+        private readonly FsqpKktStop _kktStop = new FsqpKktStop();
 
         private void NLPFunction(double[] x, double[] fi, double[,] jac, object? obj = null)
         {
@@ -232,7 +233,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcsetalgosqp(state);
             alglib.minnlcsetcond(state, 0, MAXITS);
             alglib.minnlcsetnlc(state, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
-            alglib.minnlcoptimize(state, NLPFunction, null, null);
+            alglib.minnlcoptimize(state, NLPFunction, _kktStop.Attach(state), null);
             alglib.minnlcresults(state, out double[] x1, out alglib.minnlcreport rep1);
 
             double[] fi = new double[NEQUALITYCONSTRAINTS + NINEQUALITYCONSTRAINTS + 1];
@@ -255,7 +256,7 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcsetalgosqp(state2);
             alglib.minnlcsetcond(state2, 0, MAXITS);
             alglib.minnlcsetnlc(state2, NEQUALITYCONSTRAINTS, NINEQUALITYCONSTRAINTS);
-            alglib.minnlcoptimize(state2, NLPFunction, null, null);
+            alglib.minnlcoptimize(state2, NLPFunction, _kktStop.Attach(state2), null);
             alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
 
             NLPFunction(x2, fi, jac);

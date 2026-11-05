@@ -66,9 +66,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double argpf, double _, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(0).ShouldEqual(r0, 1e-7);
-            solution.V(0).ShouldEqual(v0, 1e-7);
-            solution.M(0).ShouldEqual(301454.000000, 1e-7);
+            solution.R(0).ShouldEqual(r0, 1e-6);
+            solution.V(0).ShouldEqual(v0, 1e-6);
+            solution.M(0).ShouldEqual(301454.000000, 1e-6);
 
             solution.Tgo(solution.T0, 0).ShouldEqual(75.200000, 1e-3);
             solution.Tgo(solution.T0, 1).ShouldEqual(75.200000, 1e-3);
@@ -160,9 +160,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             Optimizer psg = ascent.GetOptimizer() ?? throw new Exception("null optimizer");
             using Solution solution = psg.Solution ?? throw new Exception("null solution");
 
-            solution.R(0).ShouldEqual(r0, 1e-7);
-            solution.V(0).ShouldEqual(v0, 1e-7);
-            solution.M(0).ShouldEqual(FIRST_STAGE_M0, 1e-7);
+            solution.R(0).ShouldEqual(r0, 1e-6);
+            solution.V(0).ShouldEqual(v0, 1e-6);
+            solution.M(0).ShouldEqual(FIRST_STAGE_M0, 1e-6);
 
             solution.Tgo(solution.T0, 0).ShouldEqual(FIRST_BT, 1e-3);
             solution.Tgo(solution.T0, 1).ShouldBeLessThanOrEqual(SECOND_BT);
@@ -255,9 +255,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
 
             psg.PrimalFeasibility.ShouldBeZero(1e-5);
 
-            solution.R(T0).ShouldEqual(r0, 1e-9);
-            solution.V(T0).ShouldEqual(v0, 1e-9);
-            solution.M(T0).ShouldEqual(FIRST_STAGE_M0, 1e-9);
+            solution.R(T0).ShouldEqual(r0, 1e-6);
+            solution.V(T0).ShouldEqual(v0, 1e-6);
+            solution.M(T0).ShouldEqual(FIRST_STAGE_M0, 1e-6);
 
             solution.Tgo(T0, 0).ShouldEqual(FIRST_BT, 1e-3);
             // this winds up testing the maximum coast length

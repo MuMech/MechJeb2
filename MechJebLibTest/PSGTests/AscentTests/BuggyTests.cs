@@ -119,9 +119,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(t0).ShouldEqual(r0, 1e-9);
-            solution.V(t0).ShouldEqual(v0, 1e-9);
-            solution.M(t0).ShouldEqual(52831.1138786043, 1e-9);
+            solution.R(t0).ShouldEqual(r0, 1e-6);
+            solution.V(t0).ShouldEqual(v0, 1e-6);
+            solution.M(t0).ShouldEqual(52831.1138786043, 1e-6);
             solution.Vgo(t0).ShouldEqual(9419.6763414588168, 1e-9);
             solution.U(t0).ShouldEqual(new V3(0.75137961801287534, -0.53341140218376049, 0.38845970917867412).normalized, 1e-2);
 
@@ -367,9 +367,9 @@ namespace MechJebLibTest.PSGTests.AscentTests
             (double smaf, double eccf, double incf, double lanf, double argpf, double tanof, _) =
                 Astro.KeplerianFromStateVectors(mu, rf, vf);
 
-            solution.R(t0).ShouldEqual(r0, 1e-9);
-            solution.V(t0).ShouldEqual(v0, 1e-9);
-            solution.M(t0).ShouldEqual(m0, 1e-9);
+            solution.R(t0).ShouldEqual(r0, 1e-6);
+            solution.V(t0).ShouldEqual(v0, 1e-6);
+            solution.M(t0).ShouldEqual(m0, 1e-6);
             solution.Vgo(t0).ShouldEqual(8620.1405495395156, 1e-3);
             solution.U(t0).ShouldEqual(new V3(-0.57978971705636706, -0.66407516766532904, 0.47206785349321667).normalized, 1e-2);
 

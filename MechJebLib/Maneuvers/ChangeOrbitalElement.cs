@@ -12,6 +12,8 @@ namespace MechJebLib.Maneuvers
 {
     public static class ChangeOrbitalElement
     {
+        private static readonly ObjectPool<FsqpKktStop> _kktStopPool = new ObjectPool<FsqpKktStop>(() => new FsqpKktStop(), stop => stop.Detach());
+
         private enum Type { PERIAPSIS, APOAPSIS, ECC }
 
         private struct Args
@@ -146,7 +148,9 @@ namespace MechJebLib.Maneuvers
             alglib.minnlcoptguardsmoothness(state2);
             alglib.minnlcoptguardgradient(state2, DIFFSTEP);
 #endif
-            alglib.minnlcoptimize(state2, NLPFunction2, null, args);
+            FsqpKktStop kktStop = _kktStopPool.Borrow();
+            alglib.minnlcoptimize(state2, NLPFunction2, kktStop.Attach(state2), args);
+            _kktStopPool.Release(kktStop);
             alglib.minnlcresults(state2, out double[] x2, out alglib.minnlcreport rep2);
 
             if (rep2.terminationtype < 0)
