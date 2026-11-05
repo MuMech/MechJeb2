@@ -60,6 +60,7 @@ namespace MechJebLibTest.FuelFlowSimulationTests
                 Id = INTAKE_AIR,
                 Free = true,
                 FromIntake = true,
+                NeedsOxygen = true,
                 Density = INTAKE_AIR_DENSITY,
                 Residual = 0
             };

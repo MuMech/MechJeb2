@@ -30,6 +30,9 @@ namespace MechJebLibBindings.FuelFlowSimulation
         // the resources an intake on the vessel gathers from the air (IntakeAir, or a mod's)
         private readonly HashSet<int> _intakeResources = new HashSet<int>();
 
+        // of those, the ones at least one intake gathers without oxygen (checkForOxygen off)
+        private readonly HashSet<int> _intakeResourcesWithoutOxygen = new HashSet<int>();
+
         public double T => _vessel.T;
         public V3     R => _vessel.R;
         public V3     V => _vessel.V;
@@ -64,8 +67,8 @@ namespace MechJebLibBindings.FuelFlowSimulation
             // PrintVessel();
         }
 
-        public void SetConditions(double atmDensity, double atmPressure, double machNumber) =>
-            _vessel.SetConditions(atmDensity, atmPressure, machNumber);
+        public void SetConditions(double atmDensity, double atmPressure, double machNumber, bool atmOxygen = true) =>
+            _vessel.SetConditions(atmDensity, atmPressure, machNumber, atmOxygen);
 
         public void SetInitial(double t, V3 r, V3 v, V3 u) => _vessel.SetInitial(t, r, v, u);
 
@@ -81,6 +84,7 @@ namespace MechJebLibBindings.FuelFlowSimulation
             _inversePartMapping.Clear();
             _inversePartModuleMapping.Clear();
             _intakeResources.Clear();
+            _intakeResourcesWithoutOxygen.Clear();
         }
 
         public void Release()

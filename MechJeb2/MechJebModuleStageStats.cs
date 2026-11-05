@@ -121,17 +121,20 @@ namespace MuMech
             // the atmo run's conditions: the chosen body, altitude and mach in the editor, the vessel's own in flight.
             // atmDensity is in kg/m³: the engines divide by the sea level density themselves
             double staticPressureKpa, atmDensity, mach;
+            bool atmOxygen;
             if (HighLogic.LoadedSceneIsEditor)
             {
                 staticPressureKpa = EditorBody.atmosphere ? EditorBody.GetPressure(AltSLT) : 0;
                 atmDensity = EditorBody.GetDensity(EditorBody.GetPressure(AltSLT), EditorBody.GetTemperature(0));
                 mach = Mach;
+                atmOxygen = EditorBody.atmosphereContainsOxygen;
             }
             else
             {
                 staticPressureKpa = Vessel.staticPressurekPa;
                 atmDensity = Vessel.atmDensity;
                 mach = Vessel.mach;
+                atmOxygen = Vessel.mainBody.atmosphereContainsOxygen;
             }
 
             // XXX: we do a rebuild every time in the editor because apparently I don't know the right callbacks/magic to
@@ -166,7 +169,7 @@ namespace MuMech
             using (_newAtmoProfile.Auto())
             {
                 _vesselManagerAtmo.DVLinearThrust = DVLinearThrust;
-                _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach);
+                _vesselManagerAtmo.SetConditions(atmDensity, staticPressureKpa * PhysicsGlobals.KpaToAtmospheres, mach, atmOxygen);
                 _vesselManagerAtmo.SetInitial(VesselState.Time, VesselState.OrbitalPosition.WorldToV3Rotated(),
                     VesselState.OrbitalVelocity.WorldToV3Rotated(), VesselState.Forward.WorldToV3Rotated());
                 //_vesselManagerAtmo.PrintVessel();
