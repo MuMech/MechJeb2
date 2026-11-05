@@ -68,6 +68,13 @@ namespace MuMech
 
         public override void Drive(FlightCtrlState s)
         {
+            // the guidance needs a flight plan, which nothing else makes unless the Ascent window is open
+            if (Core.PSGSimulation.FlightPlan == null)
+            {
+                Core.StageStats.RequestUpdate();
+                Core.PSGSimulation.UpdateLogicalPlan(AscentSettings);
+            }
+
             if (Countdown.Active)
             {
                 if (Countdown.TMinus <= AscentSettings.WarpCountDown)
@@ -154,7 +161,8 @@ namespace MuMech
         {
             double dt = VesselState.MET - _pitchStartTime;
             double theta = dt * AscentSettings.PitchRate;
-            double pitch = 90 - theta;
+            // not below the horizon while waiting for guidance (no solution yet, or none at all)
+            double pitch = Math.Max(90 - theta, 0);
 
             Status.Set(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
 
