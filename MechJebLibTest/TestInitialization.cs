@@ -95,6 +95,37 @@ namespace MechJebLibTest
             IEnumerable<IXunitTestCase> testCases, object[] constructorArguments) =>
             new LoggingMethodRunner(testMethod, Class, method, testCases, DiagnosticMessageSink, MessageBus,
                 new ExceptionAggregator(Aggregator), CancellationTokenSource, constructorArguments).RunAsync();
+
+        // xunit runs the methods of a class one after another: for a [ParallelTestMethods] class, start them all at once,
+        // the way XunitTestAssemblyRunner starts the classes.
+        protected override async Task<RunSummary> RunTestMethodsAsync()
+        {
+            if (!Class.Type.IsDefined(typeof(ParallelTestMethodsAttribute), false))
+                return await base.RunTestMethodsAsync();
+
+            Func<Func<Task<RunSummary>>, Task<RunSummary>> start;
+            if (SynchronizationContext.Current != null)
+            {
+                TaskScheduler scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+                start = code => Task.Factory.StartNew(code, CancellationToken.None,
+                    TaskCreationOptions.DenyChildAttach | TaskCreationOptions.HideScheduler, scheduler).Unwrap();
+            }
+            else
+                start = code => Task.Run(code);
+
+            // each method gets its own copy of the arguments: xunit puts a test's ITestOutputHelper into them
+            object[] constructorArguments = CreateTestClassConstructorArguments();
+            Task<RunSummary>[] methods = TestCaseOrderer.OrderTestCases(TestCases)
+               .GroupBy(tc => tc.TestMethod.Method.Name)
+               .Select(cases => start(() => RunTestMethodAsync(cases.First().TestMethod, (IReflectionMethodInfo)cases.First().TestMethod.Method,
+                    cases, (object[])constructorArguments.Clone())))
+               .ToArray();
+
+            var summary = new RunSummary();
+            foreach (RunSummary method in await Task.WhenAll(methods))
+                summary.Aggregate(method);
+            return summary;
+        }
     }
 
     internal class LoggingMethodRunner : XunitTestMethodRunner

@@ -12,6 +12,7 @@ using static MechJebLib.Utils.Statics;
 
 namespace MechJebLibTest.PSGTests.AscentTests
 {
+    [ParallelTestMethods]
     public class TheStandardTests
     {
         // Carnasa's TheStandard rocket (ish).

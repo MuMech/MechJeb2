@@ -12,6 +12,7 @@ using Xunit;
 
 namespace MechJebLibTest.PSGTests.AscentTests
 {
+    [ParallelTestMethods]
     public class KerbinTests
     {
         private const double MU = 3531600000000;
