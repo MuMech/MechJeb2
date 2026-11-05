@@ -53,6 +53,7 @@ namespace MuMech
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble DesiredInclination = new EditableDouble(0.0);
 
+        // has no effect: nothing reads it. Kept so that kOS scripts setting RELATIVELAN still run.
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool RelativeLAN = false;
 

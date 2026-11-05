@@ -65,6 +65,7 @@ namespace MuMech
         {
             _launchingToPlane = false;
             _launchingToMatchLan = false;
+            _launchingToLan = false;
             _lastPSGSettingsEnabled = _psgSettingsMenu.Enabled;
             _lastSettingsMenuEnabled = _settingsMenu.Enabled;
             _psgSettingsMenu.Enabled = false;

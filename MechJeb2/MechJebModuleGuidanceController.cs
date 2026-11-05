@@ -77,7 +77,7 @@ namespace MuMech
             if (!Core.RssMode)
                 Core.Thrust.ThrustOff();
             Core.Thrust.Users.Remove(this);
-            Core.Staging.Users.Remove(this);
+            Core.Staging.AutoStageLimitRemove(this);
             Core.Spinup.Users.Remove(this);
             Solution = null;
             Status = PSGStatus.FINISHED;

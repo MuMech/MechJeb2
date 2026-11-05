@@ -345,8 +345,6 @@ namespace MuMech.UI
             w.Visible(targetLan.gameObject, () => targetExists && psg);
             Layout lan = AscentUi.ButtonBox(w, idle, "#MechJeb_Ascent_LaunchToLan", menu.LaunchToLan, Psgs.LAN, "°", 40); //Launch to LAN
             w.Visible(lan.gameObject, () => psg);
-            UnityEngine.UI.Toggle relative = w.Toggle(idle, "Use LAN relative to launch site", () => Settings.RelativeLAN, v => Settings.RelativeLAN = v);
-            w.Visible(KodeWindow.RowOf(relative), () => psg);
 
             // launching: timer and abort
             Layout launching = KodeWindow.Panel(box);
