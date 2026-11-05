@@ -9,6 +9,7 @@ using MechJebLib.Functions;
 using MechJebLib.Maneuvers;
 using MechJebLib.Primitives;
 using MechJebLib.TwoBody;
+using MechJebLib.Utils;
 using Xunit;
 using static MechJebLib.Utils.Statics;
 
@@ -47,6 +48,14 @@ namespace MechJebLibTest.ManeuversTests
 
         [Fact]
         public void LargePeriapsis() => DoTransfer(66167158, double.NaN, 1e-10);
+
+        // an inclination the arrival can't reach is reported, not returned as the least-bad trajectory
+        [Theory]
+        [InlineData(0.0)]
+        [InlineData(2.0)]
+        [InlineData(178.0)]
+        public void UnreachableInclinationThrows(double incDeg) =>
+            Assert.Throws<ConvergenceException>(() => DoTransfer(1737100 * 2, Deg2Rad(incDeg)));
 
         private void DoTransfer(double peR, double inc, double perEps = 1e-4, double incEps = 1e-4)
         {

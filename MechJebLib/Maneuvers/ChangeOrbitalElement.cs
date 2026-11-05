@@ -12,7 +12,7 @@ namespace MechJebLib.Maneuvers
 {
     public static class ChangeOrbitalElement
     {
-        private enum Type { PERIAPSIS, APOAPSIS, SMA, ECC }
+        private enum Type { PERIAPSIS, APOAPSIS, ECC }
 
         private struct Args
         {
@@ -56,13 +56,6 @@ namespace MechJebLib.Maneuvers
                     jac[1, 0] = apR0.D;
                     jac[1, 1] = apR1.D;
                     break;
-                case Type.SMA:
-                    Dual sma0 = 1.0 / Astro.SmaFromStateVectors(1.0, p, q + dv0) - 1.0 / value;
-                    Dual sma1 = 1.0 / Astro.SmaFromStateVectors(1.0, p, q + dv1) - 1.0 / value;
-                    fi[1] = sma0.M;
-                    jac[1, 0] = sma0.D;
-                    jac[1, 1] = sma1.D;
-                    break;
                 case Type.ECC:
                     Dual ecc0 = Astro.EccFromStateVectors(1.0, p, q + dv0) - value;
                     Dual ecc1 = Astro.EccFromStateVectors(1.0, p, q + dv1) - value;
@@ -93,9 +86,6 @@ namespace MechJebLib.Maneuvers
                 case Type.APOAPSIS:
                     fi[1] = 1.0 / Astro.ApoapsisFromStateVectors(1.0, p, q + dv) - 1.0 / value;
                     break;
-                case Type.SMA:
-                    fi[1] = 1.0 / Astro.SmaFromStateVectors(1.0, p, q + dv) - 1.0 / value;
-                    break;
                 case Type.ECC:
                     double ecc = Astro.EccFromStateVectors(1.0, p, q + dv);
                     fi[1] = ecc - value;
@@ -113,6 +103,8 @@ namespace MechJebLib.Maneuvers
                 throw new ArgumentException("bad v in ChangeOrbitalElement");
 
             const int MAXITS = 1000;
+            // relative, or absolute for the eccentricity: the solves that converge are within 1e-9
+            const double MAX_ERROR = 1e-6;
 
             const int NVARIABLES = 2;
             const int NEQUALITYCONSTRAINTS = 1;
@@ -169,6 +161,19 @@ namespace MechJebLib.Maneuvers
                     throw new Exception("alglib optguard caught an error, i should report better on errors now");
             }
 
+            // a positive termination type includes stopping at the iteration limit: check that the orbit has the element asked for
+            V3 qf = q + new V3(x2[0], x2[1], 0);
+            double achieved = type switch
+            {
+                Type.PERIAPSIS => Astro.PeriapsisFromStateVectors(1.0, p, qf),
+                Type.APOAPSIS  => Astro.ApoapsisFromStateVectors(1.0, p, qf),
+                _              => Astro.EccFromStateVectors(1.0, p, qf)
+            };
+            double tolerance = type == Type.ECC ? MAX_ERROR : MAX_ERROR * Math.Abs(args.Value);
+            if (!(Math.Abs(achieved - args.Value) <= tolerance))
+                throw new ConvergenceException(
+                    $"ChangeOrbitalElement.DeltaV({mu}, {r}, {v}, {value}, {type}): reached {achieved} for {args.Value} in scaled units (termination type {rep2.terminationtype})");
+
             return rot * new V3(x2[0], x2[1], 0) * scale.VelocityScale;
         }
 
@@ -197,12 +202,19 @@ namespace MechJebLib.Maneuvers
             return valueR <= r.magnitude ? DeltaV(mu, r, v, valueR, Type.PERIAPSIS, optguard) : DeltaV(mu, r, v, valueR, Type.APOAPSIS, optguard);
         }
 
+        // Vis-viva fixes the speed for a semi-major axis whatever the direction, so the cheapest burn keeps the direction of v and
+        // only changes the speed: v^2 = mu (2/r - 1/a). No optimizer is needed, and optguard is unused.
         public static V3 ChangeSMA(double mu, V3 r, V3 v, double sma, bool optguard = false)
         {
             if (!Statics.IsFinite(sma))
                 throw new ArgumentException($"Bad SMA in ChangeOrbitalElement = {sma}");
 
-            return DeltaV(mu, r, v, sma, Type.SMA, optguard);
+            // below zero for 0 < sma <= r/2: no orbit through r has that semi-major axis
+            double speedSquared = mu * (2 / r.magnitude - 1 / sma);
+            if (!(speedSquared > 0))
+                throw new ArgumentException($"No orbit through r = {r.magnitude} has an SMA of {sma}");
+
+            return Math.Sqrt(speedSquared) * v.normalized - v;
         }
 
         public static V3 ChangeECC(double mu, V3 r, V3 v, double ecc, bool optguard = false)

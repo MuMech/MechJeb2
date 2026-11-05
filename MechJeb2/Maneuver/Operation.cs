@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using KSP.Localization;
+using MechJebLib.Utils;
 using UnityEngine;
 
 namespace MuMech
@@ -65,6 +66,13 @@ namespace MuMech
             catch (OperationException e)
             {
                 ErrorMessage = e.Message;
+                return null;
+            }
+            catch (ConvergenceException e)
+            {
+                // the solver's own message is for the log; the request itself is what to change
+                Debug.LogWarning($"[MechJeb] {GetName()}: {e.Message}");
+                ErrorMessage = Localizer.Format("#MechJeb_Maneu_convergenceError"); //No maneuver meets these targets; try other values.
                 return null;
             }
             catch (Exception e)

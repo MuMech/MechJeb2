@@ -175,6 +175,9 @@ namespace MechJebLib.Maneuvers
         }
 
         private const int MAXITS = 2500;
+
+        // in the scaled units of the constraints, as InterplanetaryTransfer's "significantly infeasible"
+        private const double MAX_CONSTRAINT_ERROR = 1e-4;
         private const int NVARIABLES = 7;
         private const int NEQUALITYCONSTRAINTS = 5;
         private const int NINEQUALITYCONSTRAINTS = 1;
@@ -259,9 +262,9 @@ namespace MechJebLib.Maneuvers
             double longCost = fi[0];
             double longError = Max(Max(rep2.bcerr, rep2.lcerr), rep2.nlcerr);
 
-            Print($"termination type: {rep1.terminationtype}");
-            Print($"iterations count: {rep1.iterationscount}");
-            Print($"num function evals: {rep1.nfev}");
+            Print($"termination type: {rep2.terminationtype}");
+            Print($"iterations count: {rep2.iterationscount}");
+            Print($"num function evals: {rep2.nfev}");
             Print($"cost = {longCost}");
             Print($"maxerr = {longError}");
             for (int i = 0; i < fi.Length; i++)
@@ -273,6 +276,16 @@ namespace MechJebLib.Maneuvers
             bool decideOnError = longError > 1e-10 || shortError > 1e-10;
 
             bool pickShort = decideOnError ? shortError < longError : shortCost < longCost;
+
+            // the least-bad point of an infeasible request isn't a plan for it: check the picked branch's SOI patch and periapsis.
+            // The inclination stays the closest one reachable, as the tests ask for any (fi[5]), and so does the inequality (fi[6]).
+            _direction = pickShort ? TransferGeometry.ShortWay : TransferGeometry.LongWay;
+            NLPFunction(pickShort ? x1 : x2, fi, jac);
+            double error = 0;
+            for (int i = 1; i <= 4; i++)
+                error = Max(error, Abs(fi[i]));
+            if (!(error <= MAX_CONSTRAINT_ERROR))
+                throw new ConvergenceException($"ReturnFromMoon: the periapsis can't be met, constraint error {error:G3}");
 
             if (pickShort)
             {
