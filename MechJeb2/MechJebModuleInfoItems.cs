@@ -791,9 +791,8 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate();
 
-            if (stats.VacStats.Count == 0) return 0;
-
-            return stats.VacStats[stats.VacStats.Count - 1].DeltaV;
+            // the whole current stage: a stage has several segments when the number of running engines changes during it
+            return stats.CurrentStage?.Vac.DeltaV ?? 0;
         }
 
         [ValueInfoItem("#MechJeb_StageDV_atmo", InfoItem.Category.Vessel, format = "F0", units = "m/s", showInEditor = true)] //Stage ΔV (atmo)
@@ -802,9 +801,7 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate();
 
-            if (stats.AtmoStats.Count == 0) return 0;
-
-            return stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaV;
+            return stats.CurrentStage?.Atmo.DeltaV ?? 0;
         }
 
         [ValueInfoItem("#MechJeb_StageDV_atmo_vac", InfoItem.Category.Vessel, units = "m/s", showInEditor = true)] //Stage ΔV (atmo, vac)
@@ -819,8 +816,8 @@ namespace MuMech
         {
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate();
-            atmDv = stats.AtmoStats.Count == 0 ? 0 : stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaV;
-            vacDv = stats.VacStats.Count == 0 ? 0 : stats.VacStats[stats.VacStats.Count - 1].DeltaV;
+            atmDv = stats.CurrentStage?.Atmo.DeltaV ?? 0;
+            vacDv = stats.CurrentStage?.Vac.DeltaV ?? 0;
         }
 
         /// <summary>The vessel's total ΔV in atmosphere and vacuum: TotalDeltaVAtmosphereAndVac without the string.</summary>
@@ -846,11 +843,10 @@ namespace MuMech
             MechJebModuleStageStats stats = Core.GetComputerModule<MechJebModuleStageStats>();
             stats.RequestUpdate();
 
-            if (stats.AtmoStats.Count == 0) return 0;
-
             // the atmosphere stats are already at the vessel's conditions (in the editor at the chosen body and altitude), so
-            // no blend with vacuum: that would be wrong for a jet, whose vacuum time can be millions of seconds.
-            return (float)stats.AtmoStats[stats.AtmoStats.Count - 1].DeltaTime;
+            // no blend with vacuum: that would be wrong for a jet, whose vacuum time can be millions of seconds. The whole
+            // current stage, all its segments
+            return (float)(stats.CurrentStage?.Atmo.DeltaTime ?? 0);
         }
 
         [ValueInfoItem("#MechJeb_StageTimeCurrentThrottle", InfoItem.Category.Vessel, format = ValueInfoItem.TIME)] //Stage time (current throttle)

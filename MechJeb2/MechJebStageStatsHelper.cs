@@ -270,14 +270,17 @@ namespace MuMech
             stageHeaderData.Add(StageData.Time, CachedLocalizer.Instance.MechJebInfoItemsStatsColumn12 + SPACING);
         }
 
+        // one row per KSP stage, from the stats module's sums of each stage's segments in both lists (KSPStageSums). The rows
+        // are rebuilt only when the module publishes new stats, which it does in RequestUpdate: GatherStages runs right after
+        // it, and the table reads the rows in the same call
+        private List<KSPStageSums> _rows => stats.Stages;
+
         private void GatherStages(List<int> stages)
         {
-            BuildRows();
-
             stages.Clear();
             for (int i = 0; i < _rows.Count; i++)
             {
-                StageRow row = _rows[i];
+                KSPStageSums row = _rows[i];
                 // a stage is hidden only when it has nothing in either list
                 if (infoItems.showEmpty)
                     stages.Add(i);
@@ -286,125 +289,6 @@ namespace MuMech
                 else if (!infoItems.showRcs && (row.Atmo.DeltaV > 0 || row.Vac.DeltaV > 0))
                     stages.Add(i);
             }
-        }
-
-        // The simulation starts a segment whenever the number of running engines changes, so a KSP stage can have several,
-        // and not as many in vacuum as in the atmosphere (jets don't run in vacuum). The table has one row per KSP stage,
-        // its vacuum and atmosphere figures each summed from that list's own segments, so they always describe the same stage.
-        private sealed class StageSums
-        {
-            public bool   Present;
-            public double StartMass, EndMass, StagedMass, ControllableMass, Thrust, Isp, DeltaV, DeltaTime, MaxAccel;
-            public double MinRcsDeltaV, MaxRcsDeltaV, RcsISP, RcsThrust, RcsMass, RcsDeltaTime, RcsStartTMR, RcsEndTMR, RcsUllageTime;
-            private bool  _burned;
-
-            public double ResourceMass => StartMass - EndMass;
-
-            public double StartTWR(double geeASL)    => StartMass > 0 ? Thrust / (9.80665 * geeASL * StartMass) : 0;
-            public double MaxTWR(double geeASL)      => MaxAccel / (9.80665 * geeASL);
-            public double RcsStartTWR(double geeASL) => RcsStartTMR / (9.80665 * geeASL);
-            public double RcsMaxTWR(double geeASL)   => RcsEndTMR / (9.80665 * geeASL);
-
-            public void Clear()
-            {
-                Present = _burned = false;
-                StartMass = EndMass = StagedMass = ControllableMass = Thrust = Isp = DeltaV = DeltaTime = MaxAccel = 0;
-                MinRcsDeltaV = MaxRcsDeltaV = RcsISP = RcsThrust = RcsMass = RcsDeltaTime = RcsStartTMR = RcsEndTMR = RcsUllageTime = 0;
-            }
-
-            // Segments come in the order they burn. The simulation takes some RCS figures once, when a stage starts (an RCS
-            // burn at the stage's full mass: min Δv, ISP, thrust, mass, time, the TMR at the end of that burn, and ullage), so
-            // only the stage's first segment has them. It takes the others at the end of each segment (an RCS burn at the mass
-            // left: max Δv, the TMR at the start of that burn), so the stage's are its last segment's.
-            public void Add(FuelStats s)
-            {
-                if (!Present)
-                {
-                    Present = true;
-                    // the start of the stage: its masses, and the RCS figures the simulation takes when a stage starts
-                    StartMass = s.StartMass;
-                    ControllableMass = s.ControllableMass;
-                    Thrust = s.Thrust;
-                    Isp = s.Isp;
-                    MinRcsDeltaV = s.MinRcsDeltaV;
-                    RcsISP = s.RcsISP;
-                    RcsThrust = s.RcsThrust;
-                    RcsMass = s.RcsMass;
-                    RcsDeltaTime = s.RcsDeltaTime;
-                    RcsEndTMR = s.RcsEndTMR;
-                    RcsUllageTime = s.RcsUllageTime;
-                }
-
-                // thrust and Isp at the start of the burn: a segment with nothing running can come first
-                if (!_burned && s.DeltaTime > 0)
-                {
-                    _burned = true;
-                    Thrust = s.Thrust;
-                    Isp = s.Isp;
-                }
-
-                StagedMass += s.StagedMass;
-                DeltaV += s.DeltaV;
-                DeltaTime += s.DeltaTime;
-                MaxAccel = Math.Max(MaxAccel, s.MaxAccel);
-                // the end of the stage, and the RCS figures the simulation takes at a segment's end
-                EndMass = s.EndMass;
-                MaxRcsDeltaV = s.MaxRcsDeltaV;
-                RcsStartTMR = s.RcsStartTMR;
-            }
-        }
-
-        private sealed class StageRow
-        {
-            public int KSPStage;
-            public readonly StageSums Vac  = new StageSums();
-            public readonly StageSums Atmo = new StageSums();
-
-            // the masses, staged mass and ullage time come from the atmosphere's list, or the vacuum's for a stage it lacks
-            public StageSums Masses => Atmo.Present ? Atmo : Vac;
-        }
-
-        private readonly List<StageRow> _rows    = new List<StageRow>(8);
-        private readonly List<StageRow> _rowPool = new List<StageRow>(8);
-
-        private static readonly Comparison<StageRow> _byStage = (a, b) => a.KSPStage.CompareTo(b.KSPStage);
-
-        private void BuildRows()
-        {
-            _rowPool.AddRange(_rows);
-            _rows.Clear();
-
-            // the simulation reverses its segments at the end, so the lists hold them in the reverse of the order they burn:
-            // read them from the end, so that each stage's sums see its segments in the order they burn
-            for (int i = stats.AtmoStats.Count - 1; i >= 0; i--)
-                Row(stats.AtmoStats[i].KSPStage).Atmo.Add(stats.AtmoStats[i]);
-            for (int i = stats.VacStats.Count - 1; i >= 0; i--)
-                Row(stats.VacStats[i].KSPStage).Vac.Add(stats.VacStats[i]);
-
-            // the lists are in KSP stage order, the last stage first; keep that
-            _rows.Sort(_byStage);
-        }
-
-        private StageRow Row(int kspStage)
-        {
-            foreach (StageRow r in _rows)
-                if (r.KSPStage == kspStage)
-                    return r;
-
-            StageRow row;
-            if (_rowPool.Count > 0)
-            {
-                row = _rowPool[_rowPool.Count - 1];
-                _rowPool.RemoveAt(_rowPool.Count - 1);
-            }
-            else
-                row = new StageRow();
-
-            row.KSPStage = kspStage;
-            row.Vac.Clear();
-            row.Atmo.Clear();
-            _rows.Add(row);
-            return row;
         }
 
         private double _isp(int index)        => showRcs ? _rows[index].Vac.RcsISP : _rows[index].Vac.Isp;

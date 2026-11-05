@@ -22,8 +22,22 @@ namespace MuMech
 
         private int _vabRebuildTimer = 1;
 
+        // one entry per segment: a KSP stage has several when the number of running engines changes during it. PSG, the node
+        // executor and staging work on these
         public readonly List<FuelStats> AtmoStats = new List<FuelStats>();
         public readonly List<FuelStats> VacStats = new List<FuelStats>();
+
+        /// <summary>
+        ///     One entry per KSP stage, each with the sums of that stage's segments in both lists, in the order of the lists (the
+        ///     last stage first, the current stage last). Published with the lists. The Delta-V Stats table and the stage info
+        ///     items read these, so a stage's vacuum and atmosphere figures always describe the same stage.
+        /// </summary>
+        public readonly List<KSPStageSums> Stages = new List<KSPStageSums>();
+
+        private readonly List<KSPStageSums> _stagePool = new List<KSPStageSums>();
+
+        /// <summary>The stage burning now (the last of <see cref="Stages" />), or null with no stats.</summary>
+        public KSPStageSums CurrentStage => Stages.Count > 0 ? Stages[Stages.Count - 1] : null;
         public double AtmoT, VacT;
         public V3 AtmoR, VacR;
         public V3 AtmoV, VacV;
@@ -90,6 +104,8 @@ namespace MuMech
                 VacV = _vesselManagerVac.V;
                 VacU = _vesselManagerVac.U;
 
+                KSPStageSums.Build(VacStats, AtmoStats, Stages, _stagePool);
+
                 _lastFailure = null;
             }
             else
@@ -98,6 +114,7 @@ namespace MuMech
                 // the users already handle (no stages yet)
                 AtmoStats.Clear();
                 VacStats.Clear();
+                KSPStageSums.Build(VacStats, AtmoStats, Stages, _stagePool);
 
                 string failure = (atmo.IsCompleted ? "" : "atmo: " + (atmo.Exception?.ToString() ?? "no exception") + "\n") +
                                  (vac.IsCompleted ? "" : "vac: " + (vac.Exception?.ToString() ?? "no exception"));
