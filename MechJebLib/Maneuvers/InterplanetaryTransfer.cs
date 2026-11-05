@@ -210,7 +210,7 @@ namespace MechJebLib.Maneuvers
         private const double INC_CLAMP_MARGIN = 2 * DEG2RAD;
         private const int NVARIABLES = 16;
 
-        public (V3 dv, double dt1, double dt2, double dt3) Maneuver(V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi1, double mu2, V3 r2, V3 v2, double soi2, double mu3, double arrivalDT, double arrivalDTlower = 0, double arrivalDTupper = double.PositiveInfinity, double peR = double.PositiveInfinity, double inc = double.NaN, bool captureBurn = false, bool optguard = false)
+        public (V3 dv, double dt1, double dt2, double dt3) Maneuver(V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi1, double mu2, V3 r2, V3 v2, double soi2, double mu3, double arrivalDT, double arrivalDTlower = 0, double arrivalDTupper = double.PositiveInfinity, double peR = double.PositiveInfinity, double inc = double.NaN, bool captureBurn = false, bool optguard = false, double dt1Min = double.NegativeInfinity)
         {
             Print($"InterplanetaryTransfer.Maneuver({r0}, {v0}, {mu1:G17}, {r1}, {v1}, {soi1:G17}, {mu2:G17}, {r2}, {v2}, {soi2:G17}, {mu3:G17}, {arrivalDT:G17}, arrivalDTlower: {arrivalDTlower:G17} arrivalDTupper: {arrivalDTupper:G17}, peR: {peR:G17}, inc: {inc:G17}, captureBurn: {captureBurn})");
             Check.PositiveFinite(mu1);
@@ -322,8 +322,10 @@ namespace MechJebLib.Maneuvers
             }
 
             double period = Astro.PeriodFromStateVectors(1.0, _r0, _v0);
-            bndl[0] = -period;
-            bndu[0] = period;
+            // the burn may be up to a period before the epoch, but not before dt1Min (the start of the orbit it is planned on)
+            bndl[0] = Max(-period, dt1Min / _sourceScale.TimeScale);
+            bndu[0] = Max(period, bndl[0] + period);
+            x0[0]   = Clamp(x0[0], bndl[0], bndu[0]);
             bndl[1] = EPS;
             bndl[2] = Max(arrivalDTlower / _helioScale.TimeScale, EPS);
             bndu[2] = arrivalDTupper / _helioScale.TimeScale;

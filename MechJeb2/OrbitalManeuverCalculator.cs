@@ -522,10 +522,10 @@ namespace MuMech
 
         // This solves a planet-to-planet or moon-to-moon ejection maneuver.  It is not a global optimizer.
         // It needs to already have a guess at the correct epoch of the ejection burn (and it may return a burn in the
-        // "past" of the epoch).  It needs a decent guess at the arrivalUT and supports bounds around the arrivalUT.
+        // "past" of the epoch, though never before minUT).  It needs a decent guess at the arrivalUT and supports bounds around the arrivalUT.
         // The target may be a Celestial or a Vessel or Asteroid (so technically you can use this to eject from a moon
         // to rendezvous with a station in orbit around the planet).
-        public static List<ManeuverParameters> OptimizeEjectionToTarget(Orbit o, MechJebModuleTargetController target, double targetPeR, double epoch, double arrivalDt, double arrivalDtLower = 0, double arrivalDtUpper = double.PositiveInfinity, double inc = double.NaN)
+        public static List<ManeuverParameters> OptimizeEjectionToTarget(Orbit o, MechJebModuleTargetController target, double targetPeR, double epoch, double arrivalDt, double arrivalDtLower = 0, double arrivalDtUpper = double.PositiveInfinity, double inc = double.NaN, double minUT = double.NegativeInfinity)
         {
             Orbit targetOrbit = target.TargetOrbit;
             var targetBody = target.Target as CelestialBody;
@@ -544,7 +544,7 @@ namespace MuMech
 
             var maneuver = new InterplanetaryTransfer();
             (V3 dv, double dt, double _, double _) = maneuver.Maneuver(
-                r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDt, arrivalDtLower, arrivalDtUpper, per, Deg2Rad(inc)
+                r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDt, arrivalDtLower, arrivalDtUpper, per, Deg2Rad(inc), dt1Min: minUT - epoch
             );
 
             return new List<ManeuverParameters> { new ManeuverParameters(dv.V3ToWorld(), epoch + dt) };

@@ -58,6 +58,44 @@ namespace MechJebLibTest.ManeuversTests
             rsoi2.magnitude.ShouldEqual(soi2, 1e-6);
         }
 
+        // a burn bounded to after dt1Min stays after it, and still reaches both SOIs
+        [Fact]
+        private void EarthToMercuryNotBeforeDt1Min()
+        {
+            var r0 = new V3(-5393756.1398685, 2579906.9721393, -2964978.45117617);
+            var v0 = new V3(-3856.63799573101, -6569.97859538819, 1299.1134217111);
+            double mu1 = 398600435436096;
+            var r1 = new V3(142463209097.952, 147485866.387222, 38721854973.0728);
+            var v1 = new V3(2694.98267839614, 28693.1174312002, -8955.43648332019);
+            double soi1 = 924649202.461023;
+            double mu2 = 22031780000000;
+            var r2 = new V3(-17610435060.8862, 60947867948.4771, -28806334951.8025);
+            var v2 = new V3(-35202.7776429461, -13422.0371670933, -9917.35856458486);
+            double soi2 = 112408990.754424;
+            double mu3 = 1.32712440041939E+20;
+            double arrivalDT = 7646859.02846741;
+
+            (V3 _, double dt1Free, double _, double _) =
+                new InterplanetaryTransfer().Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: 0);
+
+            // forbid the free optimum: a quarter of the parking orbit's period after it
+            double dt1Min = dt1Free + 0.25 * Astro.PeriodFromStateVectors(mu1, r0, v0);
+
+            (V3 dv, double dt1out, double dt2out, double dt3out) =
+                new InterplanetaryTransfer().Maneuver(r0, v0, mu1, r1, v1, soi1, mu2, r2, v2, soi2, mu3, arrivalDT, peR: 0, dt1Min: dt1Min);
+            Logger.Print($"{dv} ({dv.magnitude}) {dt1out} {dt2out} {dt3out}, free {dt1Free}, min {dt1Min}");
+
+            Assert.True(dt1out >= dt1Min - 1e-3, $"burn at {dt1out}, before {dt1Min}");
+
+            (V3 rBurn, V3 vBurnMinus) = Shepperd.Solve(mu1, dt1out, r0, v0);
+            (V3 rsoi1, V3 vsoi1) = Shepperd.Solve(mu1, dt2out, rBurn, vBurnMinus + dv);
+            rsoi1.magnitude.ShouldEqual(soi1, 1e-6);
+            (V3 r1soi1, V3 v1soi1) = Shepperd.Solve(mu3, dt1out + dt2out, r1, v1);
+            (V3 rsoi2helio, V3 _) = Shepperd.Solve(mu3, dt3out - (dt1out + dt2out), rsoi1 + r1soi1, vsoi1 + v1soi1);
+            (V3 r2soi2, V3 _) = Shepperd.Solve(mu3, dt3out, r2, v2);
+            (rsoi2helio - r2soi2).magnitude.ShouldEqual(soi2, 1e-6);
+        }
+
         [Theory]
         [MemberData(nameof(Seeds))]
         private void EarthToMercuryRandom(int seed) => EarthToMercuryFromSeed(seed);
