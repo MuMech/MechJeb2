@@ -313,7 +313,9 @@ jobs:
           for tag in $tags; do
             IFS=- read -r _ version build <<< "$tag"
             # GitHub computes this sha256 itself at upload time, no need to download the zip to hash it
-            asset=$(gh release view "$tag" --json assets --jq '.assets[0] | "\(.name)\t\(.url)\t\(.size)\t\(.digest)"')
+            # the publish-dev job of a later merge may delete the oldest builds while this runs (KEEP): leave those out
+            asset=$(gh release view "$tag" --json assets --jq '.assets[0] | "\(.name)\t\(.url)\t\(.size)\t\(.digest)"') ||
+              { echo "::notice::$tag was deleted while this job ran"; continue; }
             IFS=$'\t' read -r asset_name asset_url asset_size asset_digest <<< "$asset"
             sha256=$(printf '%s' "${asset_digest#sha256:}" | tr a-f A-F)
 
