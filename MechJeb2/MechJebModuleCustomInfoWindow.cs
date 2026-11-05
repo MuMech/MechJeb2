@@ -1255,17 +1255,17 @@ Value:InfoItems.CurrentBiome
                     @"--- MechJeb Custom Window ---
 Name: " + Localizer.Format("#MechJeb_WindowEd_Presetname8") + @"
 Show in: flight
-Value:InfoItems.TargetOrbitSpeed
-Value:InfoItems.TargetApoapsis
 Value:InfoItems.TargetPeriapsis
+Value:InfoItems.TargetApoapsis
+Value:InfoItems.TargetInclination
+Value:InfoItems.TargetEccentricity
+Value:InfoItems.TargetSMA
+Value:InfoItems.TargetLAN
+Value:InfoItems.TargetAoP
 Value:InfoItems.TargetOrbitPeriod
 Value:InfoItems.TargetOrbitTimeToAp
 Value:InfoItems.TargetOrbitTimeToPe
-Value:InfoItems.TargetSMA
-Value:InfoItems.TargetInclination
-Value:InfoItems.TargetEccentricity
-Value:InfoItems.TargetLAN
-Value:InfoItems.TargetAoP
+Value:InfoItems.TargetOrbitSpeed
 Value:InfoItems.RelativeInclinationToTarget
 -----------------------------" //Target Orbit Info
             },
