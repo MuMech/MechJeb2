@@ -10,34 +10,66 @@ using static MechJebLib.Utils.Statics;
 
 namespace MuMech
 {
-    public class MechJebModuleAscentPSGAutopilot : MechJebModuleAscentBaseAutopilot
+    public class MechJebModuleAscentPSGAutopilot : ComputerModule, IAscentAutopilot
     {
         public MechJebModuleAscentPSGAutopilot(MechJebCore core) : base(core)
         {
         }
 
+        public AscentStatus Status { get; } = new AscentStatus();
+
+        UserPool IAscentAutopilot.Users => Users;
+
+        private MechJebModuleAscentSettings AscentSettings => Core.AscentSettings;
+
+        private MechJebModuleLaunchCountdown Countdown => Core.LaunchCountdown;
+
         protected override void OnModuleEnabled()
         {
-            base.OnModuleEnabled();
             Debug.Log("Enabling PSG Ascent Autopilot");
-            _mode = AscentMode.VERTICAL_ASCENT;
+            _mode = AscentMode.PRELAUNCH;
+
+            Core.Attitude.Users.Add(this);
+            Core.Thrust.Users.Add(this);
+            if (AscentSettings.Autostage) Core.Staging.Users.Add(this);
+            Countdown.Users.Add(this);
             Core.Guidance.Users.Add(this);
             Core.Guidance.CascadeDisable(this); // disable this module if guidance is disabled
+
+            Status.Set(Localizer.Format("#MechJeb_Ascent_status1")); //"Pre Launch"
         }
 
         protected override void OnModuleDisabled()
         {
-            base.OnModuleDisabled();
             Debug.Log("Disabling PSG Ascent Autopilot");
+            Core.Attitude.AttitudeDeactivate();
+            if (!Core.RssMode)
+                Core.Thrust.ThrustOff();
+            Core.Thrust.Users.Remove(this);
+            Core.Staging.Users.Remove(this);
+            Countdown.Users.Remove(this);
+
+            Status.Set(Localizer.Format("#MechJeb_Ascent_status2")); //"Off"
+
             Core.Guidance.Users.Remove(this);
             Core.PSGSimulation.Users.Remove(this);
         }
 
+        private enum AscentMode
+        {
+            PRELAUNCH,
+            VERTICAL_ASCENT,
+            PITCHPROGRAM,
+            GUIDANCE
+        }
+
+        private AscentMode _mode;
+
         public override void Drive(FlightCtrlState s)
         {
-            if (TimedLaunch)
+            if (Countdown.Active)
             {
-                if (TMinus <= AscentSettings.WarpCountDown)
+                if (Countdown.TMinus <= AscentSettings.WarpCountDown)
                 {
                     Core.PSGSimulation.Users.Add(this);
                     Core.Guidance.AssertStart(false);
@@ -53,21 +85,20 @@ namespace MuMech
                 Core.Guidance.AssertStart();
             }
 
-            base.Drive(s);
-        }
+            AscentSettings.LimitingAoA = false;
 
-        private enum AscentMode
-        {
-            VERTICAL_ASCENT,
-            PITCHPROGRAM,
-            GUIDANCE,
-            EXIT
-        }
+            if (_mode == AscentMode.PRELAUNCH)
+            {
+                if (Countdown.DrivePrelaunch(Status)) _mode = AscentMode.VERTICAL_ASCENT;
+                return;
+            }
 
-        private AscentMode _mode;
+            if (Countdown.HoldForLiftoff(Status)) return;
 
-        protected override bool DriveAscent2()
-        {
+            // null when a part's blacklist removed the controller
+            Core.Solarpanel?.DriveForAscent();
+            Core.AntennaControl?.DriveForAscent();
+
             // TODO: at some point we probably still need to:
             // 1. model vertical rise and pitchover in the solver
             // 2. freeze recomputation after launch
@@ -89,8 +120,6 @@ namespace MuMech
                     DriveGuidance();
                     break;
             }
-
-            return _mode != AscentMode.EXIT;
         }
 
         private double _pitchStartTime;
@@ -105,7 +134,7 @@ namespace MuMech
 
             if (!liftedOff)
             {
-                SetStatus(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
+                Status.Set(Localizer.Format("#MechJeb_Ascent_status12")); //"Awaiting liftoff"
                 return;
             }
 
@@ -117,7 +146,7 @@ namespace MuMech
             }
 
             double dh = AscentSettings.PitchStartHeight - VesselState.AltitudeBottom;
-            SetStatus($"Vertical ascent {dh:F2}m to go");
+            Status.Set($"Vertical ascent {dh:F2}m to go");
         }
 
         private void DrivePitchProgram()
@@ -126,7 +155,7 @@ namespace MuMech
             double theta = dt * AscentSettings.PitchRate;
             double pitch = 90 - theta;
 
-            SetStatus(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
+            Status.Set(Localizer.Format("#MechJeb_Ascent_status15", $"{pitch - Core.Guidance.Pitch:F}")); //Pitch program <<1>>° to guidance
 
             if (CheckForGuidanceTransition(pitch))
             {
@@ -150,7 +179,7 @@ namespace MuMech
         {
             if (Core.Guidance.Status == PSGStatus.FINISHED)
             {
-                _mode = AscentMode.EXIT;
+                Users.Clear();
                 return;
             }
 
@@ -158,13 +187,13 @@ namespace MuMech
             {
                 double pitch = Math.Min(Math.Min(90, SrfvelPitch()), VesselState.Pitch);
                 Core.Attitude.LimitedAttitudeTo(SrfvelHeading(), pitch, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
-                SetStatus(Localizer.Format("#MechJeb_Ascent_status16"), StatusLevel.WARNING); //"WARNING: Unstable Guidance"
+                Status.Set(Localizer.Format("#MechJeb_Ascent_status16"), AscentStatusLevel.WARNING); //"WARNING: Unstable Guidance"
             }
             else
             {
                 double ang = Vector3d.Angle(Core.Guidance.Inertial, VesselState.Forward);
-                StatusLevel severity = ang > 5 ? StatusLevel.ERROR : ang > 1 ? StatusLevel.WARNING : StatusLevel.NORMAL;
-                SetStatus($"Stable Guidance: {ang:F}° deviation", severity);
+                AscentStatusLevel severity = ang > 5 ? AscentStatusLevel.ERROR : ang > 1 ? AscentStatusLevel.WARNING : AscentStatusLevel.NORMAL;
+                Status.Set($"Stable Guidance: {ang:F}° deviation", severity);
                 Core.Attitude.LimitedAttitudeTo(Core.Guidance.Inertial, AscentSettings.ForceRoll, AscentSettings.TurnRoll, ApplyAoALimiter, this);
             }
         }
@@ -175,11 +204,15 @@ namespace MuMech
             AscentSettings.LimitingAoA = VesselState.DynamicPressure * Vector3.Angle(VesselState.SurfaceVelocity, desiredThrustVector) * UtilMath.Deg2Rad > lim;
             if (AscentSettings.LimitingAoA)
             {
-                CurrentMaxAoA = lim / VesselState.DynamicPressure * UtilMath.Rad2Deg;
-                desiredThrustVector = MathExtensions.RotateTowards(VesselState.SurfaceVelocity, desiredThrustVector, (float)(CurrentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
+                AscentSettings.CurrentMaxAoA = lim / VesselState.DynamicPressure * UtilMath.Rad2Deg;
+                desiredThrustVector = MathExtensions.RotateTowards(VesselState.SurfaceVelocity, desiredThrustVector, (float)(AscentSettings.CurrentMaxAoA * UtilMath.Deg2Rad), 1).normalized;
             }
 
             return desiredThrustVector;
         }
+
+        private double SrfvelPitch() => 90.0 - Vector3d.Angle(VesselState.SurfaceVelocity, VesselState.Up);
+
+        private double SrfvelHeading() => VesselState.HeadingFromDirection(VesselState.SurfaceVelocity.ProjectOnPlane(VesselState.Up));
     }
 }

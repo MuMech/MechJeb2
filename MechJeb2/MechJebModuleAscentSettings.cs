@@ -45,7 +45,7 @@ namespace MuMech
             }
         }
 
-        public MechJebModuleAscentBaseAutopilot AscentAutopilot => GetAscentModule(AscentType);
+        public IAscentAutopilot AscentAutopilot => GetAscentModule(AscentType);
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDoubleMult DesiredOrbitAltitude = new EditableDoubleMult(100000, 1000);
@@ -118,6 +118,9 @@ namespace MuMech
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public bool LimitingAoA = false;
+
+        // the AoA limit the ascent autopilot's limiter last computed, for the settings window
+        public double CurrentMaxAoA;
 
         [Persistent(pass = (int)(Pass.TYPE | Pass.GLOBAL))]
         public readonly EditableDouble LaunchLANDifference = LAUNCH_LAN_DIFFERENCE;
@@ -226,7 +229,7 @@ namespace MuMech
 
         private readonly AscentType[] _values = (AscentType[])Enum.GetValues(typeof(AscentType));
 
-        private MechJebModuleAscentBaseAutopilot GetAscentModule(AscentType type)
+        private IAscentAutopilot GetAscentModule(AscentType type)
         {
             return type switch
             {

@@ -8,7 +8,6 @@ using kOS.Safe.Encapsulation;
 using kOS.Safe.Encapsulation.Suffixes;
 using kOS.Safe.Exceptions;
 using kOS.Safe.Utilities;
-using MechJebLib.Functions;
 
 namespace MuMech.MechJebKos
 {
@@ -19,14 +18,11 @@ namespace MuMech.MechJebKos
     // ADDONS:MECHJEB:STAGINGCONTROLLER / :THRUSTCONTROLLER / :NODEEXECUTOR for those.
     [KOSNomenclature("MechJebAscentBase")]
     public abstract class AscentBindingBase<TAutopilot> : ComputerModuleBinding<TAutopilot>
-        where TAutopilot : MechJebModuleAscentBaseAutopilot
+        where TAutopilot : ComputerModule, IAscentAutopilot
     {
         protected AscentBindingBase(Func<MechJebCore?> core) : base(core) { }
 
         protected abstract AscentType TargetType { get; }
-
-        // The inclination this ascent type flies; LaunchIntoPlane() writes the signed result of MinimumTimeToPlane() here.
-        protected abstract EditableDouble InclinationSetting { get; }
 
         protected MechJebModuleAscentSettings AscentSettings => Core.AscentSettings;
 
@@ -54,7 +50,7 @@ namespace MuMech.MechJebKos
                 "Flip MechJeb to this ascent type and engage the autopilot immediately."));
             AddSuffix("DISENGAGE", new NoArgsVoidSuffix(Disengage,
                 "Disengage this ascent autopilot."));
-            AddSuffix("STATUS", new Suffix<StringValue>(() => Module.Status,
+            AddSuffix("STATUS", new Suffix<StringValue>(() => Module.Status.Text,
                 "Current ascent autopilot status text."));
 
             // --- target orbit ---
@@ -105,20 +101,7 @@ namespace MuMech.MechJebKos
                 throw new KOSException("Launch into plane requires the vessel to be landed.");
 
             Engage();
-            AscentSettings.LaunchingToPlane = true;
-
-            VesselState vs = Core.VesselState;
-            (double time, double inclination) = Astro.MinimumTimeToPlane(
-                Core.vessel.mainBody.rotationPeriod,
-                vs.Latitude,
-                vs.CelestialLongitude,
-                targetOrbit.LAN - AscentSettings.LaunchLANDifference,
-                targetOrbit.inclination);
-
-            InclinationSetting.Val = inclination;
-            double launchUT = vs.Time + time;
-            Module.StartCountdown(launchUT);
-            return launchUT;
+            return Core.LaunchCountdown.StartToPlaneOfTarget();
         }
     }
 }

@@ -129,8 +129,8 @@ namespace MuMech.UI
         // the autopilot status line: plain, yellow or red with the autopilot's severity (read with the text, by UpdateStrings)
         Tone StatusTone() => menu.autopilotStatusLevel switch
         {
-            MechJebModuleAscentBaseAutopilot.StatusLevel.ERROR => Tone.Bad,
-            MechJebModuleAscentBaseAutopilot.StatusLevel.WARNING => Tone.Warn,
+            AscentStatusLevel.ERROR => Tone.Bad,
+            AscentStatusLevel.WARNING => Tone.Warn,
             _ => Tone.Normal
         };
 

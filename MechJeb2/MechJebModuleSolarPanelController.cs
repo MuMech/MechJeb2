@@ -17,6 +17,8 @@ namespace MuMech
 
         protected override bool IsModules(ModuleDeployablePart p) => p is ModuleDeployableSolarPanel;
 
+        protected override bool AutoDeployDuringAscent => Core.AscentSettings.AutoDeploySolarPanels;
+
         protected override string GetButtonText(DeployablePartState deployablePartState)
         {
             return deployablePartState switch

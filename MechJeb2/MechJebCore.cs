@@ -49,10 +49,11 @@ namespace MuMech
         public MechJebModuleSettings Settings;
         public MechJebModuleStageStats StageStats;
         public MechJebModuleAscentSettings AscentSettings;
+        public MechJebModuleLaunchCountdown LaunchCountdown;
         public MechJebModuleSpinupController Spinup;
         public MechJebModuleHoverslamSimulation Hoverslam;
         public MechJebModuleSmartASS SmartASS;
-        public MechJebModuleAscentBaseAutopilot Ascent => AscentSettings.AscentAutopilot;
+        public IAscentAutopilot Ascent => AscentSettings.AscentAutopilot;
 
         public VesselState VesselState;
 
@@ -246,7 +247,7 @@ namespace MuMech
             if (masterMechJeb == null)
                 return;
 
-            MechJebModuleAscentBaseAutopilot autopilot = masterMechJeb.AscentSettings.AscentAutopilot;
+            IAscentAutopilot autopilot = masterMechJeb.AscentSettings.AscentAutopilot;
             MechJebModuleAscentMenu ascentMenu = GetComputerModule<MechJebModuleAscentMenu>();
 
             if (autopilot == null || ascentMenu == null)
@@ -754,7 +755,7 @@ namespace MuMech
                 try
                 {
                     if (t != typeof(ComputerModule) && t != typeof(DisplayModule) && t != typeof(MechJebModuleCustomInfoWindow)
-                        && t != typeof(AutopilotModule) && t != typeof(MechJebModuleAscentBaseAutopilot)
+                        && t != typeof(AutopilotModule)
                         && !blacklist.Contains(t.Name) && GetComputerModule(t.Name) == null)
                     {
                         ConstructorInfo constructorInfo = t.GetConstructor(new[] { typeof(MechJebCore) });
@@ -786,6 +787,7 @@ namespace MuMech
             PSGSimulation = GetComputerModule<MechJebModulePSGSimulation>();
             StageStats = GetComputerModule<MechJebModuleStageStats>();
             AscentSettings = GetComputerModule<MechJebModuleAscentSettings>();
+            LaunchCountdown = GetComputerModule<MechJebModuleLaunchCountdown>();
             Spinup = GetComputerModule<MechJebModuleSpinupController>();
             Hoverslam = GetComputerModule<MechJebModuleHoverslamSimulation>();
             SmartASS = GetComputerModule<MechJebModuleSmartASS>();

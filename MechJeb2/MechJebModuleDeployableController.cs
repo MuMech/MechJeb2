@@ -62,6 +62,31 @@ namespace MuMech
             return true;
         }
 
+        /// <summary>Whether the ascent settings have the ascent autopilot manage these parts.</summary>
+        protected abstract bool AutoDeployDuringAscent { get; }
+
+        /// <summary>An ascent autopilot's per-tick hook: retracted inside the atmosphere, extended above it.</summary>
+        public void DriveForAscent()
+        {
+            if (!AutoDeployDuringAscent)
+                return;
+
+            if (VesselState.AltitudeASL > MainBody.RealMaxAtmosphereAltitude())
+                ExtendAll();
+            else
+                RetractAll();
+        }
+
+        /// <summary>An ascent autopilot's prelaunch hook: retracts these parts and returns true once they are clear for launch.</summary>
+        public bool RetractForLaunch()
+        {
+            if (!AutoDeployDuringAscent || !MainBody.atmosphere)
+                return true;
+
+            RetractAll();
+            return AllRetracted();
+        }
+
         private bool ShouldDeploy()
         {
             if (!MainBody.atmosphere)
