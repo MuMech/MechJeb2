@@ -370,6 +370,8 @@ namespace MechJebLib.Maneuvers
             }
         }
 
+        private readonly FsqpKktStop _kktStop = new FsqpKktStop();
+
         private (double[] x, alglib.minnlcreport rep) RunPass(double[] x0, double[] bndl, double[] bndu, bool optguard)
         {
             alglib.minnlccreate(x0, out alglib.minnlcstate state);
@@ -381,7 +383,7 @@ namespace MechJebLib.Maneuvers
             if (optguard)
                 alglib.minnlcoptguardgradient(state, 1e-8);
 #endif
-            alglib.minnlcoptimize(state, NLPFunction, null, null);
+            alglib.minnlcoptimize(state, NLPFunction, _kktStop.Attach(state), null);
             alglib.minnlcresults(state, out double[] x, out alglib.minnlcreport rep);
 
 #if DEBUG
