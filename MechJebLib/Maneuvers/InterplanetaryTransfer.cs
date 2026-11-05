@@ -212,18 +212,18 @@ namespace MechJebLib.Maneuvers
         public (V3 dv, double dt1, double dt2, double dt3) Maneuver(V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi1, double mu2, V3 r2, V3 v2, double soi2, double mu3, double arrivalDT, double arrivalDTlower = 0, double arrivalDTupper = double.PositiveInfinity, double peR = double.PositiveInfinity, double inc = double.NaN, bool captureBurn = false, bool optguard = false)
         {
             Print($"InterplanetaryTransfer.Maneuver({r0}, {v0}, {mu1:G17}, {r1}, {v1}, {soi1:G17}, {mu2:G17}, {r2}, {v2}, {soi2:G17}, {mu3:G17}, {arrivalDT:G17}, arrivalDTlower: {arrivalDTlower:G17} arrivalDTupper: {arrivalDTupper:G17}, peR: {peR:G17}, inc: {inc:G17}, captureBurn: {captureBurn})");
-            CheckDebug.PositiveFinite(mu1);
-            CheckDebug.NonNegativeFinite(mu2);
-            CheckDebug.PositiveFinite(mu3);
-            CheckDebug.Finite(r0);
-            CheckDebug.Finite(v0);
-            CheckDebug.Finite(r1);
-            CheckDebug.Finite(v1);
-            CheckDebug.Finite(r2);
-            CheckDebug.Finite(v2);
-            CheckDebug.PositiveFinite(soi1);
-            CheckDebug.NonNegativeFinite(soi2);
-            CheckDebug.NonNegative(peR);
+            Check.PositiveFinite(mu1);
+            Check.NonNegativeFinite(mu2);
+            Check.PositiveFinite(mu3);
+            Check.Finite(r0);
+            Check.Finite(v0);
+            Check.Finite(r1);
+            Check.Finite(v1);
+            Check.Finite(r2);
+            Check.Finite(v2);
+            Check.PositiveFinite(soi1);
+            Check.NonNegativeFinite(soi2);
+            Check.NonNegative(peR);
 
             // problem scaling
 

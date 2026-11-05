@@ -29,6 +29,12 @@ namespace MuMech
                     o.referenceBody.Radius.ToSI(3) + "m)"); //new periapsis cannot be lower than minus the radius of <<1>>
             }
 
+            if (NewPeA + o.referenceBody.Radius > o.Radius(ut))
+            {
+                throw new OperationException(Localizer.Format("#MechJeb_Pe_Exception1") + " (" + (o.Radius(ut) - o.referenceBody.Radius).ToSI() +
+                    "m)"); //new periapsis cannot be higher than the altitude of the burn
+            }
+
             return new List<ManeuverParameters> { new ManeuverParameters(OrbitalManeuverCalculator.DeltaVToChangePeriapsis(o, ut, NewPeA + o.referenceBody.Radius), ut) };
         }
     }

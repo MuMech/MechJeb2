@@ -18,6 +18,9 @@ namespace MuMech
 
         protected override List<ManeuverParameters> MakeNodesImpl(Orbit o, double universalTime, MechJebModuleTargetController target)
         {
+            if (NewEcc < 0)
+                throw new OperationException("the eccentricity cannot be negative.");
+
             double ut = _timeSelector.ComputeManeuverTime(o, universalTime, target);
             Vector3d deltaV = OrbitalManeuverCalculator.DeltaVToChangeEccentricity(o, ut, NewEcc);
 

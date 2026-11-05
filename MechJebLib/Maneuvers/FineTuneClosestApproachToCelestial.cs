@@ -123,14 +123,15 @@ namespace MechJebLib.Maneuvers
         public (V3 dv, double dt1, double dt2) Maneuver(double mu0, V3 r0, V3 v0, double mu1, V3 r1, V3 v1, double soi, double tsoi, double peR, double dt = double.NaN, double inc = double.NaN)
         {
             Print($"FineTuneClosestApproachToCelestial.Maneuver({mu0:G17}, {r0}, {v0}, {mu1:G17}, {r1}, {v1}, {soi:G17}, {tsoi:G17}, {peR:G17}, {dt:G17}, {inc:G17})");
-            CheckDebug.PositiveFinite(mu0);
-            CheckDebug.Finite(r0);
-            CheckDebug.Finite(v0);
-            CheckDebug.PositiveFinite(mu1);
-            CheckDebug.Finite(r1);
-            CheckDebug.Finite(v1);
-            CheckDebug.PositiveFinite(soi);
-            CheckDebug.NonNegativeFinite(peR);
+            Check.PositiveFinite(mu0);
+            Check.Finite(r0);
+            Check.Finite(v0);
+            Check.PositiveFinite(mu1);
+            Check.Finite(r1);
+            Check.Finite(v1);
+            Check.PositiveFinite(soi);
+            Check.PositiveFinite(tsoi); // the coast to the SOI: a burn after the encounter, or an orbit that never leaves, has none
+            Check.NonNegativeFinite(peR);
 
             _planetScale = Scale.Create(mu0, Sqrt(r0.magnitude * r1.magnitude));
 
