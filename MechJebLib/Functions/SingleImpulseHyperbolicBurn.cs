@@ -118,7 +118,9 @@ namespace MechJebLib.Functions
             V3 r1Hat;
 
             // NOTE: the "rot" parameter should be used only for nearly circular, low eccentricity parking orbits
-            if (Abs(V3.Dot(h0Hat, vInfHat)) > 1e-10)
+            // eq 38 degenerates as the planes approach coincidence: the useful range of rot shrinks with the declination until
+            // it is below the line search's tolerance, so rotate r1_hat around h0_hat instead
+            if (Abs(V3.Dot(h0Hat, vInfHat)) > 1e-3)
             {
                 // if the planes are not coincident, rotate hf_hat around v_inf_hat
                 hfHat = Q3.AngleAxis(-rot, vInfHat) * hfHat; // (eq 38)
@@ -132,10 +134,12 @@ namespace MechJebLib.Functions
                 // if the planes are coincident, rotate r1_hat around h0_hat
                 // (this is an extension to what is in the paper to help with the nearly-circular, nearly-coplanar case)
                 r1Hat = Q3.AngleAxis(-rot, h0Hat) * r1Hat;
+                // keep r1_hat in the escape plane at any declination in this branch
+                hfHat = V3.Cross(r1Hat, vInfHat).normalized;
             }
 
-            // true anomaly of r1 on the parking orbit
-            double nu10 = Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r1Hat))) * SafeAcos(V3.Dot(rp0Hat, r1Hat));
+            // true anomaly of r1 on the parking orbit (eq 21, atan2 so sign(0) can't turn pi into 0)
+            double nu10 = Atan2(V3.Dot(h0Hat, V3.Cross(rp0Hat, r1Hat)), V3.Dot(rp0Hat, r1Hat));
 
             // length of the position vector of the burn on the parking orbit
             double r1 = p0 / (1 + ecc0 * Cos(nu10));
@@ -163,11 +167,12 @@ namespace MechJebLib.Functions
             // semi-latus rectum of hyperbolic ejection orbit
             double pf = af * (1 - ef * ef);
 
-            // true anomaly of the vInf on the hyperbolic ejection orbit
-            /*double nuInf = SafeAcos(-1 / ef);*/
+            // true anomaly of the vInf on the hyperbolic ejection orbit (eq 28b)
+            double nuInf = SafeAcos(-1 / ef);
 
-            // true anomaly of the burn on the hyperbolic ejection orbit
-            double nu1F = SafeAcos(-1 / ef * cosdnu + Sqrt(ef * ef - 1) / ef * sindnu);
+            // true anomaly of the burn on the hyperbolic ejection orbit (eq 41)
+            // NOTE: not eq 44b, whose acos and stated 0 < nu1f < pi range drop the sign for a burn before periapsis (deltaNu > nuInf)
+            double nu1F = nuInf - deltaNu;
 
             // turning angle of the hyperbolic orbit
             double delta = 2 * SafeAsin(1 / ef);
@@ -187,7 +192,7 @@ namespace MechJebLib.Functions
 
             // compute nu of the reference position on the parking orbit
             V3 r0Hat = r0 / r0.magnitude;
-            double nu0 = Sign(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat))) * SafeAcos(V3.Dot(rp0Hat, r0Hat));
+            double nu0 = Atan2(V3.Dot(h0Hat, V3.Cross(rp0Hat, r0Hat)), V3.Dot(rp0Hat, r0Hat));
 
             // mean angular motion of the parking orbit (rad/time)
             double n = 1 / Sqrt(a0 * a0 * a0 / mu);
